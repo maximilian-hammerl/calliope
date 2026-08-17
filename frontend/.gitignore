@@ -1,3 +1,6 @@
+src/api/
+#---
+
 # Logs
 logs
 *.log
