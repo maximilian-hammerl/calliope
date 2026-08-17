@@ -7,7 +7,7 @@ import { RATE_LIMIT_KEY_PREFIX } from "./middleware/rate_limit.ts";
 
 /** Registers a user and returns the session cookie to send back on later requests. */
 export async function registerUser(username: string): Promise<string> {
-  const response = await app.request("/auth/register", {
+  const response = await app.request("/api/auth/register", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -51,7 +51,7 @@ export async function createGroup(
   title: string,
   visibility: "public" | "private" = "private",
 ): Promise<{ id: string }> {
-  const response = await request("POST", "/groups", cookie, {
+  const response = await request("POST", "/api/groups", cookie, {
     title,
     description: "d",
     visibility,
@@ -72,7 +72,7 @@ export async function addMember(
 
   const invitation = await request(
     "POST",
-    `/groups/${groupId}/memberships`,
+    `/api/groups/${groupId}/memberships`,
     administratorCookie,
     { userId: await getUserId(username), role },
   );
@@ -80,7 +80,7 @@ export async function addMember(
 
   const acceptance = await request(
     "POST",
-    `/groups/${groupId}/memberships/me/accept`,
+    `/api/groups/${groupId}/memberships/me/accept`,
     cookie,
   );
   assertEquals(acceptance.status, STATUS_CODE.OK);

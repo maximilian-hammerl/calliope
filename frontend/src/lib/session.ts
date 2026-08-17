@@ -1,0 +1,31 @@
+import { getGetCurrentUserQueryKey, getGetCurrentUserQueryOptions } from '@/api/auth/auth'
+import type { GetCurrentUser200 } from '@/api/models'
+import { ApiError } from './api_fetch'
+import { queryClient } from './query_client'
+
+/**
+ * The session cookie is httpOnly, so asking the API is the only way to find out whether this
+ * browser is signed in. `ensureQueryData` reuses the cached answer, which keeps a navigation
+ * between guarded routes from producing a request each time.
+ *
+ * Returns undefined when signed out; anything else (an outage, a rate limit) is rethrown so
+ * it is not silently mistaken for a signed-out visitor.
+ */
+export async function fetchCurrentUser(): Promise<GetCurrentUser200 | undefined> {
+  try {
+    const response = await queryClient.ensureQueryData(getGetCurrentUserQueryOptions())
+    // The generated type is a union over every declared status; the mutator throws on all
+    // but the first, so this narrows what is already true at runtime.
+    return response.status === 200 ? response.data : undefined
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return undefined
+    }
+    throw error
+  }
+}
+
+/** Drops the cached session so the next guard run has to ask the API again. */
+export function forgetCurrentUser(): void {
+  queryClient.removeQueries({ queryKey: getGetCurrentUserQueryKey() })
+}

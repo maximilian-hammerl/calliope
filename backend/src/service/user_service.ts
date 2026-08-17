@@ -62,10 +62,12 @@ async function selectUser(
   return await db
     .selectFrom("user")
     .select(["id", "username", "emailAddress"])
+    // Addresses are stored lower-cased by the register route, so the comparison has to
+    // match that or a differently cased address would never be found.
     .where((eb) =>
       eb.or([
         eb("username", "=", usernameOrEmailAddress),
-        eb("emailAddress", "=", usernameOrEmailAddress),
+        eb("emailAddress", "=", usernameOrEmailAddress.toLowerCase()),
       ])
     )
     .where(

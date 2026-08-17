@@ -14,18 +14,18 @@ Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([owner, outsider]));
 
 function createGroup(cookie: string, visibility: "public" | "private") {
-  return request("POST", "/groups", cookie, {
+  return request("POST", "/api/groups", cookie, {
     title: "Vorher",
     description: "d",
     visibility,
   }).then((response) => response.json());
 }
 
-Deno.test("PATCH /groups/{groupId} updates a group the user administers", async () => {
+Deno.test("PATCH /api/groups/{groupId} updates a group the user administers", async () => {
   const cookie = await registerUser(owner);
   const created = await createGroup(cookie, "private");
 
-  const response = await request("PATCH", `/groups/${created.id}`, cookie, {
+  const response = await request("PATCH", `/api/groups/${created.id}`, cookie, {
     title: "Nachher",
     visibility: "public",
   });
@@ -38,14 +38,14 @@ Deno.test("PATCH /groups/{groupId} updates a group the user administers", async 
   assertEquals(updated.description, created.description);
 });
 
-Deno.test("PATCH /groups/{groupId} refuses a non-administrator of a public group", async () => {
+Deno.test("PATCH /api/groups/{groupId} refuses a non-administrator of a public group", async () => {
   const ownerCookie = await registerUser(owner);
   const created = await createGroup(ownerCookie, "public");
 
   const outsiderCookie = await registerUser(outsider);
   const response = await request(
     "PATCH",
-    `/groups/${created.id}`,
+    `/api/groups/${created.id}`,
     outsiderCookie,
     { title: "Übernommen" },
   );

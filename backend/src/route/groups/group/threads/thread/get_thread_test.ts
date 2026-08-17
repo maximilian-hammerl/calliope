@@ -21,7 +21,7 @@ async function groupWithThread() {
   const group = await createGroup(adminCookie, "Faden");
   const thread = await (await request(
     "POST",
-    `/groups/${group.id}/threads`,
+    `/api/groups/${group.id}/threads`,
     adminCookie,
     { title: "Kapitel 1" },
   )).json();
@@ -29,13 +29,13 @@ async function groupWithThread() {
   return { adminCookie, group, thread };
 }
 
-Deno.test("GET /groups/{groupId}/threads/{threadId} returns the thread to a reader", async () => {
+Deno.test("GET /api/groups/{groupId}/threads/{threadId} returns the thread to a reader", async () => {
   const { adminCookie, group, thread } = await groupWithThread();
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
   const response = await request(
     "GET",
-    `/groups/${group.id}/threads/${thread.id}`,
+    `/api/groups/${group.id}/threads/${thread.id}`,
     readerCookie,
   );
 
@@ -43,13 +43,13 @@ Deno.test("GET /groups/{groupId}/threads/{threadId} returns the thread to a read
   assertEquals((await response.json()).id, thread.id);
 });
 
-Deno.test("GET /groups/{groupId}/threads/{threadId} hides the thread from a non-member", async () => {
+Deno.test("GET /api/groups/{groupId}/threads/{threadId} hides the thread from a non-member", async () => {
   const { group, thread } = await groupWithThread();
   const outsiderCookie = await registerUser(outsider);
 
   const response = await request(
     "GET",
-    `/groups/${group.id}/threads/${thread.id}`,
+    `/api/groups/${group.id}/threads/${thread.id}`,
     outsiderCookie,
   );
 

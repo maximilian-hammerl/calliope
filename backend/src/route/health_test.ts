@@ -4,8 +4,8 @@ import app from "@/src/app.ts";
 import { API_TITLE, API_VERSION } from "@/src/open_api_specification.ts";
 import type { DatabaseHealth } from "@/src/database_health.ts";
 
-Deno.test("GET /health reports a healthy application without a session", async () => {
-  const response = await app.request("/health");
+Deno.test("GET /api/health reports a healthy application without a session", async () => {
+  const response = await app.request("/api/health");
 
   assertEquals(response.status, STATUS_CODE.OK);
   const body = await response.json();
@@ -19,8 +19,8 @@ Deno.test("GET /health reports a healthy application without a session", async (
   assertExists(Temporal.Instant.from(body.application.datetime));
 });
 
-Deno.test("GET /health reports every database separately", async () => {
-  const response = await app.request("/health");
+Deno.test("GET /api/health reports every database separately", async () => {
+  const response = await app.request("/api/health");
   const databases: Array<DatabaseHealth> = (await response.json()).databases;
 
   assertEquals(databases.map((database) => database.name), [
@@ -36,16 +36,16 @@ Deno.test("GET /health reports every database separately", async () => {
   }
 });
 
-Deno.test("GET /health is not counted against the rate limit", async () => {
+Deno.test("GET /api/health is not counted against the rate limit", async () => {
   // Probes poll far more often than the limit allows, so no budget may be spent.
-  const response = await app.request("/health");
+  const response = await app.request("/api/health");
 
   assertEquals(response.headers.get("ratelimit"), null);
   assertEquals(response.headers.get("ratelimit-policy"), null);
 });
 
-Deno.test("POST /health is rejected", async () => {
-  const response = await app.request("/health", { method: "POST" });
+Deno.test("POST /api/health is rejected", async () => {
+  const response = await app.request("/api/health", { method: "POST" });
 
   assertEquals(response.status, STATUS_CODE.MethodNotAllowed);
 });

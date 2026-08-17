@@ -16,17 +16,17 @@ const outsider = "list-memberships-outsider";
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([administrator, invitee, outsider]));
 
-Deno.test("QUERY /groups/{groupId}/memberships lists members and invitations", async () => {
+Deno.test("QUERY /api/groups/{groupId}/memberships lists members and invitations", async () => {
   const adminCookie = await registerUser(administrator);
   await registerUser(invitee);
   const group = await createGroup(adminCookie, "Mitglieder");
-  await request("POST", `/groups/${group.id}/memberships`, adminCookie, {
+  await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: await getUserId(invitee),
   });
 
   const response = await request(
     "QUERY",
-    `/groups/${group.id}/memberships`,
+    `/api/groups/${group.id}/memberships`,
     adminCookie,
     { limit: 10, sortAttribute: "status" },
   );
@@ -40,14 +40,14 @@ Deno.test("QUERY /groups/{groupId}/memberships lists members and invitations", a
   );
 });
 
-Deno.test("QUERY /groups/{groupId}/memberships hides a private group from an outsider", async () => {
+Deno.test("QUERY /api/groups/{groupId}/memberships hides a private group from an outsider", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Mitglieder");
 
   const response = await request(
     "QUERY",
-    `/groups/${group.id}/memberships`,
+    `/api/groups/${group.id}/memberships`,
     outsiderCookie,
     {},
   );

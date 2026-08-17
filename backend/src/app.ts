@@ -13,7 +13,9 @@ import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
 import health from "./route/health.ts";
 
-const app = new OpenAPIHono({
+// Everything the API serves, without the prefix it is mounted under. Keeping the prefix out
+// of here means a resource is added in one place and cannot be mounted at the wrong depth.
+const api = new OpenAPIHono({
   // Replaces the built-in handler, which stringifies the whole ZodError into `message`.
   // Inherited by routed sub-apps, so every validator reports failures the same way.
   defaultHook: (result, c) => {
@@ -32,7 +34,12 @@ const app = new OpenAPIHono({
       STATUS_CODE.BadRequest,
     );
   },
-});
+})
+  .route("/auth", auth)
+  .route("/groups", groups)
+  .route("/health", health);
+
+const app = new OpenAPIHono();
 
 app.use(logger());
 app.use(secureHeaders());
@@ -40,9 +47,9 @@ app.use(cors(corsOptions));
 app.use(methodNotAllowed({ app }));
 app.use(rateLimit);
 
-app.route("/auth", auth);
-app.route("/groups", groups);
-app.route("/health", health);
+// The one place the prefix is written. Caddy routes `/api/*` here and the Vite dev proxy
+// mirrors it, so both stay a single rule.
+app.route("/api", api);
 
 app.onError((error, c) => {
   // Hono and its middleware report expected failures as HTTPException, so those messages
@@ -63,6 +70,8 @@ app.onError((error, c) => {
   );
 });
 
-app.doc31("/openapi.json", openApiSpecification);
+// Registered on the root rather than on `api`, because the document is built from the app's
+// own registry: on `api` every path would be missing the prefix it is actually served under.
+app.doc31("/api/openapi.json", openApiSpecification);
 
 export default app;

@@ -13,10 +13,10 @@ const username = "create-group-test-user";
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([username]));
 
-Deno.test("POST /groups creates a group and makes the creator its administrator", async () => {
+Deno.test("POST /api/groups creates a group and makes the creator its administrator", async () => {
   const cookie = await registerUser(username);
 
-  const response = await request("POST", "/groups", cookie, {
+  const response = await request("POST", "/api/groups", cookie, {
     title: "Fantasy-Projekt",
     description: "Ein gemeinsames Projekt",
   });
@@ -45,10 +45,10 @@ Deno.test("POST /groups creates a group and makes the creator its administrator"
   );
 });
 
-Deno.test("POST /groups rejects a body without a title", async () => {
+Deno.test("POST /api/groups rejects a body without a title", async () => {
   const cookie = await registerUser(username);
 
-  const response = await request("POST", "/groups", cookie, {
+  const response = await request("POST", "/api/groups", cookie, {
     description: "Kein Titel",
   });
 

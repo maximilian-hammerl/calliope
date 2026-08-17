@@ -15,17 +15,17 @@ const invitee = "accept-invitation-invitee";
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([administrator, invitee]));
 
-Deno.test("POST /groups/{groupId}/memberships/me/accept joins the group", async () => {
+Deno.test("POST /api/groups/{groupId}/memberships/me/accept joins the group", async () => {
   const adminCookie = await registerUser(administrator);
   const inviteeCookie = await registerUser(invitee);
   const group = await createGroup(adminCookie, "Annahme");
-  await request("POST", `/groups/${group.id}/memberships`, adminCookie, {
+  await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: await getUserId(invitee),
   });
 
   const response = await request(
     "POST",
-    `/groups/${group.id}/memberships/me/accept`,
+    `/api/groups/${group.id}/memberships/me/accept`,
     inviteeCookie,
   );
 
@@ -33,7 +33,7 @@ Deno.test("POST /groups/{groupId}/memberships/me/accept joins the group", async 
   assertEquals((await response.json()).status, "joined");
 });
 
-Deno.test("POST /groups/{groupId}/memberships/me/accept needs an invitation", async () => {
+Deno.test("POST /api/groups/{groupId}/memberships/me/accept needs an invitation", async () => {
   const adminCookie = await registerUser(administrator);
   const inviteeCookie = await registerUser(invitee);
   const group = await createGroup(adminCookie, "Annahme", "public");
@@ -41,7 +41,7 @@ Deno.test("POST /groups/{groupId}/memberships/me/accept needs an invitation", as
   // Seeing a public group is not the same as being invited to it.
   const response = await request(
     "POST",
-    `/groups/${group.id}/memberships/me/accept`,
+    `/api/groups/${group.id}/memberships/me/accept`,
     inviteeCookie,
   );
 

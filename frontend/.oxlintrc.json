@@ -4,6 +4,8 @@
   "env": {
     "browser": true
   },
+  // The skill bundles are vendored reference material, not code we ship or maintain.
+  "ignorePatterns": [".claude/**"],
   "categories": {
     "correctness": "error"
   }

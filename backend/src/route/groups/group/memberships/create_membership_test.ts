@@ -15,14 +15,14 @@ const invitee = "create-membership-invitee";
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([administrator, invitee]));
 
-Deno.test("POST /groups/{groupId}/memberships invites a user", async () => {
+Deno.test("POST /api/groups/{groupId}/memberships invites a user", async () => {
   const adminCookie = await registerUser(administrator);
   await registerUser(invitee);
   const group = await createGroup(adminCookie, "Einladung");
 
   const response = await request(
     "POST",
-    `/groups/${group.id}/memberships`,
+    `/api/groups/${group.id}/memberships`,
     adminCookie,
     { userId: await getUserId(invitee) },
   );
@@ -34,7 +34,7 @@ Deno.test("POST /groups/{groupId}/memberships invites a user", async () => {
   assertEquals(membership.role, "writer");
 });
 
-Deno.test("POST /groups/{groupId}/memberships refuses a non-administrator", async () => {
+Deno.test("POST /api/groups/{groupId}/memberships refuses a non-administrator", async () => {
   const adminCookie = await registerUser(administrator);
   const inviteeCookie = await registerUser(invitee);
   const group = await createGroup(adminCookie, "Einladung", "public");
@@ -42,7 +42,7 @@ Deno.test("POST /groups/{groupId}/memberships refuses a non-administrator", asyn
   // The invitee can see the public group, but cannot invite anyone to it.
   const response = await request(
     "POST",
-    `/groups/${group.id}/memberships`,
+    `/api/groups/${group.id}/memberships`,
     inviteeCookie,
     { userId: await getUserId(invitee) },
   );

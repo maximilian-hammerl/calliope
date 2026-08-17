@@ -21,19 +21,19 @@ async function groupWithInvitee() {
   const group = await createGroup(adminCookie, "Rollen");
   const memberId = await getUserId(member);
 
-  await request("POST", `/groups/${group.id}/memberships`, adminCookie, {
+  await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: memberId,
   });
 
   return { adminCookie, memberCookie, group, memberId };
 }
 
-Deno.test("PATCH /groups/{groupId}/memberships/{userId} changes the role", async () => {
+Deno.test("PATCH /api/groups/{groupId}/memberships/{userId} changes the role", async () => {
   const { adminCookie, group, memberId } = await groupWithInvitee();
 
   const response = await request(
     "PATCH",
-    `/groups/${group.id}/memberships/${memberId}`,
+    `/api/groups/${group.id}/memberships/${memberId}`,
     adminCookie,
     { role: "reader" },
   );
@@ -45,12 +45,12 @@ Deno.test("PATCH /groups/{groupId}/memberships/{userId} changes the role", async
   assertEquals(membership.status, "invited");
 });
 
-Deno.test("PATCH /groups/{groupId}/memberships/{userId} cannot set the status", async () => {
+Deno.test("PATCH /api/groups/{groupId}/memberships/{userId} cannot set the status", async () => {
   const { adminCookie, group, memberId } = await groupWithInvitee();
 
   const response = await request(
     "PATCH",
-    `/groups/${group.id}/memberships/${memberId}`,
+    `/api/groups/${group.id}/memberships/${memberId}`,
     adminCookie,
     { status: "joined" },
   );

@@ -22,7 +22,7 @@ async function threadByWriter() {
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
   const thread = await (await request(
     "POST",
-    `/groups/${group.id}/threads`,
+    `/api/groups/${group.id}/threads`,
     writerCookie,
     { title: "Vorher" },
   )).json();
@@ -30,12 +30,12 @@ async function threadByWriter() {
   return { adminCookie, writerCookie, group, thread };
 }
 
-Deno.test("PATCH /groups/{groupId}/threads/{threadId} lets an administrator rename another's thread", async () => {
+Deno.test("PATCH /api/groups/{groupId}/threads/{threadId} lets an administrator rename another's thread", async () => {
   const { adminCookie, group, thread } = await threadByWriter();
 
   const response = await request(
     "PATCH",
-    `/groups/${group.id}/threads/${thread.id}`,
+    `/api/groups/${group.id}/threads/${thread.id}`,
     adminCookie,
     { title: "Nachher" },
   );
@@ -44,14 +44,14 @@ Deno.test("PATCH /groups/{groupId}/threads/{threadId} lets an administrator rena
   assertEquals((await response.json()).title, "Nachher");
 });
 
-Deno.test("PATCH /groups/{groupId}/threads/{threadId} refuses another writer", async () => {
+Deno.test("PATCH /api/groups/{groupId}/threads/{threadId} refuses another writer", async () => {
   const { adminCookie, group, thread } = await threadByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
 
   // A writer may start threads, but not edit somebody else's.
   const response = await request(
     "PATCH",
-    `/groups/${group.id}/threads/${thread.id}`,
+    `/api/groups/${group.id}/threads/${thread.id}`,
     otherCookie,
     { title: "Übernommen" },
   );

@@ -7,7 +7,7 @@ import { rateLimiterRedisClient } from "@/src/redis/client.ts";
  * Liveness probes run far more often than the limit allows — one every three seconds
  * would exhaust it — so they are not counted.
  */
-const UNCOUNTED_PATHS = new Set(["/health"]);
+const UNCOUNTED_PATHS = new Set(["/api/health"]);
 
 /** Exported so tests can clear the counters they generate. */
 export const RATE_LIMIT_KEY_PREFIX = "rate-limit:";

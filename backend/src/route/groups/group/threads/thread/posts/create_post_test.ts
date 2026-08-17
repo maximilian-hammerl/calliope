@@ -18,20 +18,24 @@ Deno.test.afterEach(() => deleteUsers([administrator, reader]));
 async function thread() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Beiträge");
-  const created =
-    await (await request("POST", `/groups/${group.id}/threads`, adminCookie, {
+  const created = await (await request(
+    "POST",
+    `/api/groups/${group.id}/threads`,
+    adminCookie,
+    {
       title: "Kapitel 1",
-    })).json();
+    },
+  )).json();
 
   return { adminCookie, group, thread: created };
 }
 
-Deno.test("POST /groups/{groupId}/threads/{threadId}/posts writes a published post", async () => {
+Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts writes a published post", async () => {
   const { adminCookie, group, thread: created } = await thread();
 
   const response = await request(
     "POST",
-    `/groups/${group.id}/threads/${created.id}/posts`,
+    `/api/groups/${group.id}/threads/${created.id}/posts`,
     adminCookie,
     { text: "Es war einmal" },
   );
@@ -43,13 +47,13 @@ Deno.test("POST /groups/{groupId}/threads/{threadId}/posts writes a published po
   assertEquals(post.isDraft, false);
 });
 
-Deno.test("POST /groups/{groupId}/threads/{threadId}/posts refuses a reader", async () => {
+Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts refuses a reader", async () => {
   const { adminCookie, group, thread: created } = await thread();
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
   const response = await request(
     "POST",
-    `/groups/${group.id}/threads/${created.id}/posts`,
+    `/api/groups/${group.id}/threads/${created.id}/posts`,
     readerCookie,
     { text: "Nein" },
   );

@@ -13,9 +13,9 @@ const outsider = "get-group-outsider";
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([owner, outsider]));
 
-Deno.test("GET /groups/{groupId} returns a public group to a non-member", async () => {
+Deno.test("GET /api/groups/{groupId} returns a public group to a non-member", async () => {
   const ownerCookie = await registerUser(owner);
-  const created = await (await request("POST", "/groups", ownerCookie, {
+  const created = await (await request("POST", "/api/groups", ownerCookie, {
     title: "Öffentlich",
     description: "d",
     visibility: "public",
@@ -24,7 +24,7 @@ Deno.test("GET /groups/{groupId} returns a public group to a non-member", async 
   const outsiderCookie = await registerUser(outsider);
   const response = await request(
     "GET",
-    `/groups/${created.id}`,
+    `/api/groups/${created.id}`,
     outsiderCookie,
   );
 
@@ -32,9 +32,9 @@ Deno.test("GET /groups/{groupId} returns a public group to a non-member", async 
   assertEquals((await response.json()).id, created.id);
 });
 
-Deno.test("GET /groups/{groupId} reports a private group as missing to a non-member", async () => {
+Deno.test("GET /api/groups/{groupId} reports a private group as missing to a non-member", async () => {
   const ownerCookie = await registerUser(owner);
-  const created = await (await request("POST", "/groups", ownerCookie, {
+  const created = await (await request("POST", "/api/groups", ownerCookie, {
     title: "Privat",
     description: "d",
   })).json();
@@ -42,7 +42,7 @@ Deno.test("GET /groups/{groupId} reports a private group as missing to a non-mem
   const outsiderCookie = await registerUser(outsider);
   const response = await request(
     "GET",
-    `/groups/${created.id}`,
+    `/api/groups/${created.id}`,
     outsiderCookie,
   );
 

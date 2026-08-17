@@ -35,7 +35,7 @@
   ],
   "components": { "schemas": {}, "parameters": {} },
   "paths": {
-    "/auth/register": {
+    "/api/auth/register": {
       "post": {
         "tags": ["auth"],
         "summary": "Register a user and start a session",
@@ -173,7 +173,7 @@
         }
       }
     },
-    "/auth/login": {
+    "/api/auth/login": {
       "post": {
         "tags": ["auth"],
         "summary": "Log a user in and start a session",
@@ -186,7 +186,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "login": { "type": "string" },
+                  "login": { "type": "string", "minLength": 1 },
                   "password": { "type": "string", "minLength": 1 }
                 },
                 "required": ["login", "password"]
@@ -310,7 +310,7 @@
         }
       }
     },
-    "/auth/logout": {
+    "/api/auth/logout": {
       "post": {
         "tags": ["auth"],
         "summary": "Log the current user out and end the session",
@@ -407,7 +407,108 @@
         }
       }
     },
-    "/groups": {
+    "/api/auth/me": {
+      "get": {
+        "tags": ["auth"],
+        "summary": "Read the currently signed-in user",
+        "description": "Reports who the session cookie belongs to. The session cookie is httpOnly, so this is the only way for a client to find out whether it is signed in and as whom.",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "The signed-in user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "username": { "type": "string" },
+                    "emailAddress": { "type": "string" }
+                  },
+                  "required": ["id", "username", "emailAddress"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/groups": {
       "post": {
         "tags": ["groups"],
         "summary": "Create a group, with the creating user as its administrator",
@@ -758,7 +859,7 @@
         }
       }
     },
-    "/groups/{groupId}": {
+    "/api/groups/{groupId}": {
       "get": {
         "tags": ["groups"],
         "summary": "Fetch a public group, or a private one the user belongs to",
@@ -1153,7 +1254,7 @@
         }
       }
     },
-    "/groups/{groupId}/memberships": {
+    "/api/groups/{groupId}/memberships": {
       "post": {
         "tags": ["memberships"],
         "summary": "Invite a user to a group the current user administers",
@@ -1618,7 +1719,7 @@
         }
       }
     },
-    "/groups/{groupId}/memberships/me/accept": {
+    "/api/groups/{groupId}/memberships/me/accept": {
       "post": {
         "tags": ["memberships"],
         "summary": "Accept the current user's invitation to a group",
@@ -1818,7 +1919,7 @@
         }
       }
     },
-    "/groups/{groupId}/memberships/me/leave": {
+    "/api/groups/{groupId}/memberships/me/leave": {
       "delete": {
         "tags": ["memberships"],
         "summary": "Leave a group, or decline its invitation",
@@ -1976,7 +2077,7 @@
         }
       }
     },
-    "/groups/{groupId}/memberships/{userId}": {
+    "/api/groups/{groupId}/memberships/{userId}": {
       "patch": {
         "tags": ["memberships"],
         "summary": "Change a member's role in a group the current user administers",
@@ -2386,7 +2487,7 @@
         }
       }
     },
-    "/groups/{groupId}/threads": {
+    "/api/groups/{groupId}/threads": {
       "post": {
         "tags": ["threads"],
         "summary": "Start a thread in a group the current user writes in",
@@ -2813,7 +2914,7 @@
         }
       }
     },
-    "/groups/{groupId}/threads/{threadId}": {
+    "/api/groups/{groupId}/threads/{threadId}": {
       "get": {
         "tags": ["threads"],
         "summary": "Fetch a thread of a group the current user belongs to",
@@ -3388,7 +3489,7 @@
         }
       }
     },
-    "/groups/{groupId}/threads/{threadId}/posts": {
+    "/api/groups/{groupId}/threads/{threadId}/posts": {
       "post": {
         "tags": ["posts"],
         "summary": "Add a post to a thread in a group the current user writes in",
@@ -3831,7 +3932,7 @@
         }
       }
     },
-    "/groups/{groupId}/threads/{threadId}/posts/{postId}": {
+    "/api/groups/{groupId}/threads/{threadId}/posts/{postId}": {
       "get": {
         "tags": ["posts"],
         "summary": "Fetch a post of a thread the current user can read",
@@ -4430,7 +4531,7 @@
         }
       }
     },
-    "/health": {
+    "/api/health": {
       "get": {
         "tags": ["operations"],
         "summary": "Report whether the application and its databases are usable",

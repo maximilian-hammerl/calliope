@@ -19,11 +19,15 @@ async function postsByWriter() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Beitrag");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread =
-    await (await request("POST", `/groups/${group.id}/threads`, adminCookie, {
+  const thread = await (await request(
+    "POST",
+    `/api/groups/${group.id}/threads`,
+    adminCookie,
+    {
       title: "Kapitel 1",
-    })).json();
-  const posts = `/groups/${group.id}/threads/${thread.id}/posts`;
+    },
+  )).json();
+  const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
   const published = await (await request("POST", posts, writerCookie, {
     text: "Veröffentlicht",
   })).json();

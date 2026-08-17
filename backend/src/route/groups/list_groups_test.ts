@@ -21,7 +21,7 @@ async function createGroup(
   title: string,
   visibility: "public" | "private",
 ) {
-  const response = await request("POST", "/groups", cookie, {
+  const response = await request("POST", "/api/groups", cookie, {
     title,
     description: "d",
     visibility,
@@ -33,7 +33,7 @@ async function createGroup(
 type Page = { results: Array<{ title: string }>; totalResults: number };
 
 async function list(cookie: string, body: unknown = {}): Promise<Page> {
-  const response = await request("QUERY", "/groups", cookie, body);
+  const response = await request("QUERY", "/api/groups", cookie, body);
   assertEquals(response.status, STATUS_CODE.OK);
   return await response.json();
 }
@@ -48,7 +48,7 @@ function ownTitles(page: Page): Array<string> {
 // Totals count every group the user can see, so the assertions are relative to whatever
 // the database already holds rather than to an absolute number.
 
-Deno.test("QUERY /groups returns the user's own groups with a total", async () => {
+Deno.test("QUERY /api/groups returns the user's own groups with a total", async () => {
   const cookie = await registerUser(owner);
   const before = await list(cookie);
 
@@ -65,7 +65,7 @@ Deno.test("QUERY /groups returns the user's own groups with a total", async () =
   ]);
 });
 
-Deno.test("QUERY /groups applies its defaults to an empty body", async () => {
+Deno.test("QUERY /api/groups applies its defaults to an empty body", async () => {
   const cookie = await registerUser(owner);
   await createGroup(cookie, FIRST_TITLE, "private");
 
@@ -76,7 +76,7 @@ Deno.test("QUERY /groups applies its defaults to an empty body", async () => {
   assertEquals(page.results[0].title, FIRST_TITLE);
 });
 
-Deno.test("QUERY /groups sorts by the requested attribute and order", async () => {
+Deno.test("QUERY /api/groups sorts by the requested attribute and order", async () => {
   const cookie = await registerUser(owner);
   await createGroup(cookie, SECOND_TITLE, "private");
   await createGroup(cookie, FIRST_TITLE, "private");
@@ -96,10 +96,10 @@ Deno.test("QUERY /groups sorts by the requested attribute and order", async () =
   assertEquals(ownTitles(descending), [SECOND_TITLE, FIRST_TITLE]);
 });
 
-Deno.test("QUERY /groups rejects an attribute it cannot sort by", async () => {
+Deno.test("QUERY /api/groups rejects an attribute it cannot sort by", async () => {
   const cookie = await registerUser(owner);
 
-  const response = await request("QUERY", "/groups", cookie, {
+  const response = await request("QUERY", "/api/groups", cookie, {
     sortAttribute: "hashedPassword",
   });
 
@@ -111,11 +111,13 @@ Deno.test("QUERY /groups rejects an attribute it cannot sort by", async () => {
   );
 });
 
-Deno.test("QUERY /groups rejects a limit that is not a number", async () => {
+Deno.test("QUERY /api/groups rejects a limit that is not a number", async () => {
   const cookie = await registerUser(owner);
 
   // A JSON body carries real types, so a numeric string is simply wrong here.
-  const response = await request("QUERY", "/groups", cookie, { limit: "20" });
+  const response = await request("QUERY", "/api/groups", cookie, {
+    limit: "20",
+  });
 
   assertEquals(response.status, STATUS_CODE.BadRequest);
   assertEquals(
@@ -124,7 +126,7 @@ Deno.test("QUERY /groups rejects a limit that is not a number", async () => {
   );
 });
 
-Deno.test("QUERY /groups hides another user's private group", async () => {
+Deno.test("QUERY /api/groups hides another user's private group", async () => {
   const ownerCookie = await registerUser(owner);
   await createGroup(ownerCookie, FIRST_TITLE, "private");
   await createGroup(ownerCookie, SECOND_TITLE, "public");

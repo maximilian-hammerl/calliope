@@ -12,8 +12,8 @@ import {
 } from "@/src/response.ts";
 
 const LOGIN_BODY = z.object({
-  // Username or password
-  login: z.string(),
+  // Either identifier is accepted, so a member need not remember which they signed up with.
+  login: z.string().min(1),
   password: z.string().min(1),
 });
 
@@ -43,9 +43,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { login: usernameOrPassword, password } = c.req.valid("json");
+    const { login: usernameOrEmailAddress, password } = c.req.valid("json");
 
-    const user = await UserService.selectUser(usernameOrPassword, password);
+    const user = await UserService.selectUser(usernameOrEmailAddress, password);
 
     if (user === undefined) {
       return c.json({ error: "Invalid credentials" }, STATUS_CODE.Unauthorized);
