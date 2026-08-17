@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Calliope database dump
+
+[Timer]
+OnCalendar=daily
+# Spreads the load a little, and Persistent catches up a run missed while the server was off.
+RandomizedDelaySec=30m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
