@@ -1,0 +1,16 @@
+/* Motion is barely there: no bounce, no slide-in, no attention-seeking. */
+:root {
+  --duration-fast: 120ms; /* @kind other */
+  --duration-base: 180ms; /* @kind other */
+  --duration-rail: 220ms; /* @kind other */
+  --ease: cubic-bezier(.2, .0, .2, 1); /* @kind other */
+  --spinner-duration: .9s; /* @kind other */
+}
+@keyframes calliope-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms; /* @kind other */
+    --duration-base: 0ms; /* @kind other */
+    --duration-rail: 0ms; /* @kind other */
+  }
+}

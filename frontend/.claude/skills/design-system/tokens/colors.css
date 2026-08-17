@@ -1,0 +1,71 @@
+/* Calliope colour system — one warm paper family, one ink family, one accent.
+   Rule: no second hue. Colour never encodes status, ranking or achievement. */
+:root {
+  /* Paper — surfaces, lightest to most saturated */
+  --paper-0: #fffdf9;   /* raised: top bar, composer, active tab, inset cards */
+  --paper-1: #f7f4ee;   /* app canvas, thread column */
+  --paper-2: #f2ede3;   /* rails (recessed) */
+  --paper-3: #eee5d3;   /* quiet button fill, active rail row */
+  --paper-4: #e5d9c2;   /* avatar fill, strongest paper */
+  --paper-edge: #efe9de; /* collapsed rail edge strip */
+
+  /* Lines — hairlines, borders, dividers */
+  --line-1: #f0e9dc;
+  --line-2: #e8e0d2;
+  --line-3: #e6dfd2;
+  --line-4: #ddd2bd;
+  --line-5: #cdbfa6;
+
+  /* Ink — text, darkest to lightest */
+  --ink-1: #2b2620;
+  --ink-2: #302a23;
+  --ink-3: #4a4238;
+  --ink-4: #5c5346;
+  --ink-5: #6d6153;
+  --ink-6: #7d7364;
+  --ink-rail-label: #6f6455;
+
+  /* Accent — the only chromatic move: burnt oak */
+  --accent: #8a6a3a;
+  --accent-deep: #4f4132;
+  --accent-deeper: #3f3427;
+
+  /* Signals — intentional additions, not present in the mockups. Use sparingly. */
+  --signal-error: #8a3f37;
+  --signal-ok: #4a6b4f;
+
+  /* ── Semantic aliases: prefer these in components ── */
+  --surface-raised: var(--paper-0);
+  --surface-app: var(--paper-1);
+  --surface-rail: var(--paper-2);
+  --surface-quiet: var(--paper-3);
+  --surface-edge: var(--paper-edge);
+  --surface-avatar: var(--paper-4);
+
+  --text-title: var(--ink-1);
+  --text-prose: var(--ink-2);
+  --text-draft: var(--ink-3);
+  --text-secondary: var(--ink-4);
+  --text-muted: var(--ink-5);
+  --text-meta: var(--ink-6);
+  --text-label: var(--ink-rail-label);
+  --text-on-solid: var(--paper-0);
+
+  --border-hairline: var(--line-1);
+  --border-divider: var(--line-2);
+  --border-subtle: var(--line-3);
+  --border-default: var(--line-4);
+  --border-strong: var(--line-5);
+
+  --action-solid-bg: var(--accent-deep);
+  --action-solid-bg-hover: var(--accent-deeper);
+  --action-solid-fg: var(--text-on-solid);
+  --action-quiet-bg: var(--surface-quiet);
+  --action-quiet-fg: var(--accent-deep);
+  --action-quiet-border: var(--border-strong);
+  --action-plain-fg: var(--text-muted);
+
+  --tab-active-underline: var(--accent);
+  --focus-ring: var(--accent);
+  --caret: var(--accent);
+}

@@ -1,0 +1,41 @@
+<!-- @dsCard group="App (Mobile)" viewport="700x760" name="Thread page, 390px" subtitle="Tabs stay tabs, rails become sheets, composer expands on focus" -->
+<!-- @startingPoint section="App (Mobile)" subtitle="Mobile group thread with context sheet" viewport="390x844" -->
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>Calliope — mobil</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  html,body{margin:0;background:var(--paper-2)}
+  .stage{display:flex;gap:24px;align-items:flex-start;padding:20px}
+  .phone{width:390px;height:720px;flex:none;background:var(--surface-app);border:1px solid var(--border-strong);overflow:hidden}
+  .note{font:var(--text-hint);color:var(--ink-5);line-height:1.8;max-width:250px;font-family:var(--font-ui)}
+</style>
+</head><body>
+<div class="stage">
+  <div class="phone"><div id="root" style="height:100%"></div></div>
+  <div class="note">
+    <strong style="color:var(--ink-4)">390 × 720</strong><br><br>
+    Tippe „Gruppen-Kontext" für die rechte Schiene als Sheet, „Gruppen" unten für die linke.
+    Tippe „Weiterschreiben …", um den Editor aufzuklappen.<br><br>
+    Der Fließtext bleibt bei 17px — die Lesegröße wird auf keinem Gerät verkleinert.
+    Jedes Ziel ist mindestens 44px hoch.
+  </div>
+</div>
+<script>
+  (function () {
+    var need = ["ThreadTabs","Post","NotesThread","Badge","Avatar","StepList","MemberList","FileList","StoryStatus","Label","Button","SearchField"];
+    window.DS = window.CalliopeDesignSystem_d27ed6 || window;
+  })();
+</script>
+<script type="text/babel" src="MobileThread.jsx"></script>
+<script type="text/babel">
+  if (!window.Kit || typeof window.DS.Post !== "function") {
+    document.getElementById("root").innerHTML = "<div style='font:400 13px/1.7 var(--font-ui);color:var(--ink-5);padding:16px;max-width:520px'><strong style=\"color:var(--ink-4)\">Calliope — Gruppen-Thread (mobil)</strong><br>Die Komponenten-Bibliothek <code>_ds_bundle.js</code> wird erst erzeugt, wenn dieses Projekt im Share-Menü als <strong>Design System</strong> gespeichert ist. Danach rendert diese Ansicht automatisch.</div>";
+  } else {
+    ReactDOM.createRoot(document.getElementById("root")).render(<window.Kit.MobileThread />);
+  }
+</script>
+</body></html>

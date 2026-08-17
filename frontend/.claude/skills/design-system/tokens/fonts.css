@@ -1,0 +1,5 @@
+/* Webfonts are loaded from Google Fonts — no binaries are vendored in this system.
+   Newsreader ....... prose + headings (the reading voice)
+   IBM Plex Sans .... interface chrome
+   IBM Plex Mono .... rail labels, file type tags */
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");

@@ -1,0 +1,57 @@
+<!-- @dsCard group="Components" viewport="700x380" name="Group context" subtitle="Next steps, story status, files, sticky member list" -->
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:16px;background:var(--surface-app)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+  const need = ["StepList","MemberList","FileList","StoryStatus","Label"];
+  const ns = window.CalliopeDesignSystem_d27ed6 || window.DS || window;
+  const { StepList, MemberList, FileList, StoryStatus, Label } = ns;
+  const initial = [
+    {id:"1",text:"Keshs Motiv festlegen",author:"Bob"},
+    {id:"2",text:"Kapitel 2 anlegen",author:"Alice"},
+    {id:"3",text:"Zeitleiste nachziehen",author:"Alice"},
+    {id:"4",text:"Marktnamen sammeln",author:"Carol"},
+    {id:"5",text:"Marktszene beginnen",done:true},
+    {id:"6",text:"Mira benennen",done:true},
+  ];
+  function Demo() {
+    const [steps, setSteps] = React.useState(initial);
+    const [doneOpen, setDoneOpen] = React.useState(false);
+    const toggle = (id) => setSteps(s => s.map(x => x.id === id ? {...x, done: !x.done} : x));
+    return (
+      <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+        <div style={{width:262,boxSizing:"border-box",background:"var(--surface-rail)",border:"1px solid var(--border-subtle)",
+                     padding:"16px 14px",display:"flex",flexDirection:"column",gap:22,height:346,overflowY:"auto"}}>
+          <Label>Gruppen-Kontext</Label>
+          <StepList steps={steps} onToggle={toggle} onAdd={() => {}} doneOpen={doneOpen} onToggleDone={() => setDoneOpen(v => !v)} />
+          <StoryStatus fields={[
+            {label:"Status",value:"Wird geschrieben",strong:true},
+            {label:"Genre",value:"Fantasy, Mystery"},
+            {label:"Perspektive",value:"3. Person, Vergangenheit"}]} />
+          <FileList total={12} onAll={() => {}} files={[
+            {name:"stadtkarte.png",type:"png"},{name:"mira-referenz.png",type:"png"},{name:"zeitleiste.md",type:"md"}]} />
+          <MemberList members={[{name:"Alice",role:"Admin"},{name:"Bob",role:"Autor"},{name:"Carol",role:"Leserin"}]} onInvite={() => {}} />
+        </div>
+        <div style={{font:"var(--text-hint)",color:"var(--ink-5)",lineHeight:1.8,maxWidth:380}}>
+          Alles in dieser Schiene gilt für die <strong>Gruppe</strong>, nicht für den einzelnen Thread —
+          in jedem Thread derselben Gruppe steht hier dasselbe.<br /><br />
+          „Nächste Schritte" zeigt nur Offenes samt Urheber; Erledigtes klappt zu.
+          Die Liste scrollt ab vier Einträgen, damit die Schiene nicht endlos wächst.<br /><br />
+          „Mitglieder" klebt am unteren Rand und bleibt erreichbar. „Privat" steht bewusst
+          nicht hier — das sagt schon der Gruppentitel.
+        </div>
+      </div>
+    );
+  }
+  if (need.some(n => typeof ns[n] !== "function")) {
+    document.getElementById("root").innerHTML = "<div style='font:400 13px/1.7 var(--font-ui);color:var(--ink-5);padding:16px;max-width:520px'><strong style=\"color:var(--ink-4)\">Gruppen-Kontext-Komponenten</strong><br>Die Komponenten-Bibliothek <code>_ds_bundle.js</code> wird erst erzeugt, wenn dieses Projekt im Share-Menü als <strong>Design System</strong> gespeichert ist. Danach rendert diese Ansicht automatisch.</div>";
+  } else {
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+  }
+</script>
+</body></html>

@@ -1,0 +1,48 @@
+<!-- @dsCard group="Components" viewport="700x330" name="Navigation" subtitle="Top bar, group list, thread tabs, collapsed rail strips" -->
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-app)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+  const need = ["TopBar","GroupList","ThreadTabs","RailToggle"];
+  const ns = window.CalliopeDesignSystem_d27ed6 || window.DS || window;
+  const { TopBar, GroupList, ThreadTabs, RailToggle } = ns;
+  const threads = [
+    {id:"k1",name:"Kapitel 1"},{id:"k2",name:"Kapitel 2"},{id:"ip",name:"Ideen & Planung"},
+    {id:"ch",name:"Charaktere"},{id:"wb",name:"Worldbuilding"},{id:"ag",name:"Allgemein"}
+  ];
+  function Demo() {
+    const [tab, setTab] = React.useState("k1");
+    const [nav, setNav] = React.useState("Meine Gruppen");
+    const [g, setG] = React.useState("em");
+    return (
+      <div>
+        <TopBar active={nav} onSelect={setNav} />
+        <div style={{display:"flex",height:250}}>
+          <div style={{width:216,boxSizing:"border-box",background:"var(--surface-rail)",borderRight:"1px solid var(--border-subtle)",padding:"16px 11px"}}>
+            <GroupList
+              groups={[{id:"em",name:"Der Erinnerungsmarkt"},{id:"ka",name:"Königreich aus Asche",unread:3},{id:"mr",name:"Mondlicht & Rosen"}]}
+              activeId={g} onSelect={setG} onCreate={() => {}} />
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <ThreadTabs threads={threads} activeId={tab} onSelect={setTab} onCreate={() => {}} />
+            <div style={{padding:"20px var(--thread-gutter)",font:"var(--text-hint)",color:"var(--ink-5)"}}>
+              Aktiver Thread: {threads.find(t => t.id === tab).name} — der Streifen scrollt horizontal, die Bildlaufleiste ist verborgen.
+            </div>
+          </div>
+          <RailToggle side="right" label="Gruppen-Kontext" onClick={() => {}} />
+        </div>
+      </div>
+    );
+  }
+  if (need.some(n => typeof ns[n] !== "function")) {
+    document.getElementById("root").innerHTML = "<div style='font:400 13px/1.7 var(--font-ui);color:var(--ink-5);padding:16px;max-width:520px'><strong style=\"color:var(--ink-4)\">Navigations-Komponenten</strong><br>Die Komponenten-Bibliothek <code>_ds_bundle.js</code> wird erst erzeugt, wenn dieses Projekt im Share-Menü als <strong>Design System</strong> gespeichert ist. Danach rendert diese Ansicht automatisch.</div>";
+  } else {
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+  }
+</script>
+</body></html>

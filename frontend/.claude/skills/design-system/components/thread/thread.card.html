@@ -1,0 +1,50 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Thread" subtitle="Group header, thread header, posts, annotations, composer" -->
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-app)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+  const need = ["GroupHeader","ThreadHeader","Post","NotesThread","Composer"];
+  const ns = window.CalliopeDesignSystem_d27ed6 || window.DS || window;
+  const { GroupHeader, ThreadHeader, Post, NotesThread, Composer } = ns;
+  function Demo() {
+    const [notesOpen, setNotesOpen] = React.useState(true);
+    const [draft, setDraft] = React.useState("Mira antwortete nicht sofort. Sie zählte die Laternen —");
+    const [collapsed, setCollapsed] = React.useState(false);
+    return (
+      <div style={{display:"flex",flexDirection:"column",height:400}}>
+        <GroupHeader name="Der Erinnerungsmarkt" visibility="Privat" threadCount={6} threadLimit={12} />
+        <div style={{flex:1,overflow:"auto",padding:"var(--space-11) var(--thread-gutter) var(--space-12)"}}>
+          <div style={{maxWidth:"var(--reading-max)"}}>
+            <ThreadHeader title="Kapitel 1 — Der Markt öffnet" postCount={14}
+              lastActivity="vor 12 Minuten" lastAuthor="Bob" onFilter={() => {}} />
+            <Post author="Alice" time="Dienstag, 09:14" notesCount={2}
+                  notesOpen={notesOpen} onToggleNotes={() => setNotesOpen(v => !v)} style={{paddingTop:0}}>
+              <p>Der Markt öffnete immer erst, wenn das letzte Licht aus den Fenstern der Weberstraße gewichen war.</p>
+              {notesOpen && <NotesThread onWrite={() => {}} notes={[
+                {author:"Bob",time:"vor 20 Min.",text:"Der zweite Absatz ist stark."},
+                {author:"Carol",time:"vor 8 Min.",text:"Als Leserin: der Einstieg hat mich sofort drin gehabt."}
+              ]} />}
+            </Post>
+            <Post author="Bob" time="vor 12 Minuten" edited bookmarked divider={false}>
+              <p>„Du willst etwas verkaufen", sagte er, ohne aufzublicken.</p>
+            </Post>
+          </div>
+        </div>
+        <Composer value={draft} onChange={(e) => setDraft(e.target.value)} saveState="saving"
+          onPreview={() => {}} onSubmit={() => {}}
+          collapsed={collapsed} onToggleCollapse={() => setCollapsed(v => !v)} />
+      </div>
+    );
+  }
+  if (need.some(n => typeof ns[n] !== "function")) {
+    document.getElementById("root").innerHTML = "<div style='font:400 13px/1.7 var(--font-ui);color:var(--ink-5);padding:16px;max-width:520px'><strong style=\"color:var(--ink-4)\">Thread-Komponenten</strong><br>Die Komponenten-Bibliothek <code>_ds_bundle.js</code> wird erst erzeugt, wenn dieses Projekt im Share-Menü als <strong>Design System</strong> gespeichert ist. Danach rendert diese Ansicht automatisch.</div>";
+  } else {
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+  }
+</script>
+</body></html>

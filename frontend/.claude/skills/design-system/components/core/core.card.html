@@ -1,0 +1,60 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Core" subtitle="Button levels, badges, avatars, search, panel card, label" -->
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body{margin:0;padding:16px;background:var(--surface-app)}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .sec{font:var(--text-hint);color:var(--ink-5);width:74px;flex:none}
+  .rail{background:var(--surface-rail);border:1px solid var(--border-subtle);border-radius:var(--radius-control);padding:10px;width:230px;box-sizing:border-box}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+  const need = ["Button","Badge","Avatar","SearchField","PanelCard","Label"];
+  const ns = window.CalliopeDesignSystem_d27ed6 || window.DS || window;
+  const { Button, Badge, Avatar, SearchField, PanelCard, Label } = ns;
+  function Demo() {
+    const [q, setQ] = React.useState("");
+    return (
+      <div>
+        <div className="row"><span className="sec">Buttons</span>
+          <Button level="solid" size="lg">Beitrag senden</Button>
+          <Button level="outline">Vorschau</Button>
+          <Button level="quiet">＋ Schritt</Button>
+          <Button level="plain">Antworten</Button>
+          <Button disabled>Deaktiviert</Button>
+        </div>
+        <div className="row"><span className="sec">Badges</span>
+          <Badge>Privat</Badge><Badge>Öffentlich</Badge>
+          <Badge variant="tag">gemerkt</Badge><Badge variant="tag">3 neu</Badge>
+        </div>
+        <div className="row"><span className="sec">Avatare</span>
+          <Avatar name="Alice" size="lg" /><Avatar name="Bob" /><Avatar name="Carol" size="sm" />
+          <span style={{font:"var(--text-hint)",color:"var(--ink-5)"}}>initials only — no images</span>
+        </div>
+        <div className="row"><span className="sec">Suche</span>
+          <SearchField value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="row" style={{alignItems:"flex-start"}}><span className="sec">Rail</span>
+          <div className="rail">
+            <Label>Nächste Schritte</Label>
+            <div style={{display:"flex",flexDirection:"column",gap:7,marginTop:10}}>
+              <PanelCard><span style={{color:"var(--text-meta)"}}>☐</span> Keshs Motiv festlegen</PanelCard>
+              <PanelCard><span style={{color:"var(--text-meta)"}}>☐</span> Kapitel 2 anlegen</PanelCard>
+            </div>
+            <div style={{marginTop:10}}><Button level="quiet" block>Mitglied einladen</Button></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (need.some(n => typeof ns[n] !== "function")) {
+    document.getElementById("root").innerHTML = "<div style='font:400 13px/1.7 var(--font-ui);color:var(--ink-5);padding:16px;max-width:520px'><strong style=\"color:var(--ink-4)\">Core-Komponenten</strong><br>Die Komponenten-Bibliothek <code>_ds_bundle.js</code> wird erst erzeugt, wenn dieses Projekt im Share-Menü als <strong>Design System</strong> gespeichert ist. Danach rendert diese Ansicht automatisch.</div>";
+  } else {
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+  }
+</script>
+</body></html>

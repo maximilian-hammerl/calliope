@@ -1,0 +1,15 @@
+/* Sparse radii on purpose: "zu viele abgerundete Ecken" was explicit test feedback.
+   Nothing in the reading surface is rounded; only controls are. No card shadows. */
+:root {
+  --radius-tag: 3px;
+  --radius-xs: 4px;
+  --radius-control: 6px;
+  --radius-circle: 50%;
+
+  --border-w: 1px;
+  --border-w-emphasis: 2px;   /* active tab underline, quote/notes rule */
+
+  --shadow-none: none;
+  --shadow-drag: 0 3px 8px rgba(90, 70, 40, .14);   /* only while dragging */
+  --shadow-sheet: 0 -2px 12px rgba(90, 70, 40, .10); /* mobile bottom sheet */
+}

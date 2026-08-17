@@ -1,0 +1,23 @@
+/* Minimal resets. Everything else is component-level. */
+body {
+  margin: 0;
+  background: var(--surface-app);
+  color: var(--text-title);
+  font: var(--text-nav);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent-deep); text-decoration: none; }
+a:hover { color: var(--accent-deeper); }
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+::selection { background: var(--paper-3); }
+.calliope-label {
+  font: var(--text-label);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+.calliope-prose { font: var(--text-post); color: var(--text-prose); text-wrap: pretty; }
+.calliope-prose p { margin: 0 0 16px; }
+.calliope-prose p:last-child { margin-bottom: 0; }
+.calliope-scroll-x { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.calliope-scroll-x::-webkit-scrollbar { display: none; }
