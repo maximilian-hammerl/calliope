@@ -9,7 +9,13 @@ import {
 
 export type Thread = Pick<
   Selectable<DatabaseThread>,
-  "id" | "writingGroupId" | "title" | "createdBy" | "createdAt" | "updatedAt"
+  | "id"
+  | "writingGroupId"
+  | "title"
+  | "createdBy"
+  | "createdAt"
+  | "updatedAt"
+  | "lastActivityAt"
 >;
 
 const SELECTED_COLUMNS = [
@@ -19,6 +25,7 @@ const SELECTED_COLUMNS = [
   "thread.createdBy",
   "thread.createdAt",
   "thread.updatedAt",
+  "thread.lastActivityAt",
 ] as const;
 
 const RETURNED_COLUMNS = [
@@ -28,6 +35,7 @@ const RETURNED_COLUMNS = [
   "createdBy",
   "createdAt",
   "updatedAt",
+  "lastActivityAt",
 ] as const;
 
 function insertThread(

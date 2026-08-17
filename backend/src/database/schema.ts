@@ -29,6 +29,7 @@ export interface Thread {
   createdAt: Generated<string>;
   createdBy: string | null;
   id: Generated<string>;
+  lastActivityAt: Generated<string>;
   title: string;
   updatedAt: Generated<string>;
   writingGroupId: string;
@@ -66,6 +67,7 @@ export interface WritingGroup {
   createdBy: string | null;
   description: string;
   id: Generated<string>;
+  lastActivityAt: Generated<string>;
   title: string;
   updatedAt: Generated<string>;
   visibility: Generated<WritingGroupVisibility>;
@@ -117,6 +119,7 @@ export const THREAD_SCHEMA = z.object({
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  lastActivityAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_SCHEMA = z.object({
@@ -154,4 +157,5 @@ export const WRITING_GROUP_SCHEMA = z.object({
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+  lastActivityAt: z.iso.datetime({ offset: true }),
 });

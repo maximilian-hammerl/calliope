@@ -21,6 +21,7 @@ export type WritingGroup = Pick<
   | "createdBy"
   | "createdAt"
   | "updatedAt"
+  | "lastActivityAt"
 >;
 
 const SELECTED_COLUMNS = [
@@ -31,6 +32,7 @@ const SELECTED_COLUMNS = [
   "writingGroup.createdBy",
   "writingGroup.createdAt",
   "writingGroup.updatedAt",
+  "writingGroup.lastActivityAt",
 ] as const;
 
 /**

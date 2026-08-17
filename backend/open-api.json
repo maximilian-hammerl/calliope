@@ -554,7 +554,11 @@
                       "format": "uuid"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "updatedAt": { "type": "string", "format": "date-time" }
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   },
                   "required": [
                     "id",
@@ -563,7 +567,8 @@
                     "visibility",
                     "createdBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "lastActivityAt"
                   ]
                 }
               }
@@ -737,6 +742,10 @@
                           "updatedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "lastActivityAt": {
+                            "type": "string",
+                            "format": "date-time"
                           }
                         },
                         "required": [
@@ -746,7 +755,8 @@
                           "visibility",
                           "createdBy",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "lastActivityAt"
                         ]
                       }
                     }
@@ -893,7 +903,11 @@
                       "format": "uuid"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "updatedAt": { "type": "string", "format": "date-time" }
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   },
                   "required": [
                     "id",
@@ -902,7 +916,8 @@
                     "visibility",
                     "createdBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "lastActivityAt"
                   ]
                 }
               }
@@ -1086,7 +1101,11 @@
                       "format": "uuid"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "updatedAt": { "type": "string", "format": "date-time" }
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   },
                   "required": [
                     "id",
@@ -1095,7 +1114,8 @@
                     "visibility",
                     "createdBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "lastActivityAt"
                   ]
                 }
               }
@@ -2529,7 +2549,11 @@
                       "format": "uuid"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "updatedAt": { "type": "string", "format": "date-time" }
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   },
                   "required": [
                     "id",
@@ -2537,7 +2561,8 @@
                     "title",
                     "createdBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "lastActivityAt"
                   ]
                 }
               }
@@ -2768,6 +2793,10 @@
                           "updatedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "lastActivityAt": {
+                            "type": "string",
+                            "format": "date-time"
                           }
                         },
                         "required": [
@@ -2776,7 +2805,8 @@
                           "title",
                           "createdBy",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "lastActivityAt"
                         ]
                       }
                     }
@@ -2950,7 +2980,11 @@
                       "format": "uuid"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "updatedAt": { "type": "string", "format": "date-time" }
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   },
                   "required": [
                     "id",
@@ -2958,7 +2992,8 @@
                     "title",
                     "createdBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "lastActivityAt"
                   ]
                 }
               }
@@ -3138,7 +3173,11 @@
                       "format": "uuid"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "updatedAt": { "type": "string", "format": "date-time" }
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   },
                   "required": [
                     "id",
@@ -3146,7 +3185,8 @@
                     "title",
                     "createdBy",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "lastActivityAt"
                   ]
                 }
               }
