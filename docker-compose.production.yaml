@@ -31,9 +31,14 @@ services:
   frontend-build:
     image: node:24-alpine
     working_dir: /app
-    command: sh -c "npm ci && npm run build"
+    # The API client is generated rather than committed, so it has to be produced here or
+    # the type check fails on imports that do not exist yet in a fresh checkout.
+    command: sh -c "npm ci && npm run open-api:generate-client && npm run build"
     volumes:
       - ./frontend:/app
+      # orval reads the specification at ../backend/open-api.json, which is outside the
+      # mount above; this puts it where that relative path resolves to.
+      - ./backend/open-api.json:/backend/open-api.json:ro
       # Keeps the container's dependencies out of the checkout.
       - frontend-node-modules:/app/node_modules
 
