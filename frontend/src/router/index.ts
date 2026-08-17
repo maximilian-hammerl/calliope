@@ -13,7 +13,13 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { public: true },
+      meta: { guestOnly: true },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('../views/RegisterView.vue'),
+      meta: { guestOnly: true },
     },
   ],
 })
@@ -23,12 +29,16 @@ router.beforeEach(async (to) => {
   // rate limit also lands on the login view rather than blocking navigation outright.
   const user = await fetchCurrentUser().catch(() => undefined)
 
-  if (user === undefined && to.meta.public !== true) {
+  // Every route needs a session unless it is marked as being for signed-out visitors. A page
+  // that should be readable by both would need a flag of its own.
+  const guestOnly = to.meta.guestOnly === true
+
+  if (user === undefined && !guestOnly) {
     // `redirect` carries where they were headed, so signing in resumes it.
     return { name: 'login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
   }
 
-  if (user !== undefined && to.name === 'login') {
+  if (user !== undefined && guestOnly) {
     return { name: 'home' }
   }
 

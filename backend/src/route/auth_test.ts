@@ -81,6 +81,18 @@ Deno.test("POST /api/auth/register reports every schema violation", async () => 
   );
 });
 
+Deno.test("POST /api/auth/register accepts what a browser accepts", async () => {
+  // The schema uses the same pattern as input[type=email], so an address the form let
+  // through cannot be refused here. This one is rejected by Zod's stricter default.
+  const response = await postJson("/api/auth/register", {
+    username,
+    password,
+    emailAddress: "a@b",
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
+});
+
 Deno.test("POST /api/auth/register reports a malformed body as JSON", async () => {
   // Hono raises an HTTPException here rather than reaching the validator, so this only
   // matches the documented shape because of the global error handler.

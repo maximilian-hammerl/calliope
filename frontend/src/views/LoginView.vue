@@ -106,6 +106,13 @@ async function submit() {
           Anmelden
         </Button>
       </form>
+
+      <p class="mt-6 text-[13px] leading-[1.5] text-ink-5">
+        Noch kein Konto?
+        <RouterLink :to="{ name: 'register' }" class="text-oak-deep underline underline-offset-2">
+          Konto erstellen
+        </RouterLink>
+      </p>
     </div>
   </main>
 </template>

@@ -3,8 +3,10 @@
 CREATE
 EXTENSION pgcrypto;
 
-CREATE FUNCTION public.set_updated_at() RETURNS TRIGGER AS
-$$
+CREATE FUNCTION public.set_updated_at()
+    RETURNS TRIGGER
+    set search_path to ''
+    AS $$
 BEGIN
     IF OLD IS DISTINCT FROM NEW THEN
         NEW.updated_at = now();

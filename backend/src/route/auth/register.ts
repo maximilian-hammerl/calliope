@@ -18,7 +18,12 @@ const REGISTER_BODY = USER_SCHEMA
     username: USER_SCHEMA.shape.username.min(1),
     // The column is only text; the address itself is validated here, and normalised so
     // the UNIQUE constraint cannot be bypassed by changing the case.
-    emailAddress: z.email().toLowerCase(),
+    //
+    // The HTML5 pattern is the one browsers apply to input[type=email], so the form and this
+    // schema agree exactly and no address can pass the client only to be refused here. It is
+    // deliberately more permissive than Zod's default — `a@b` and `alice@localhost` are
+    // accepted — which is the price of that agreement while nothing verifies the address.
+    emailAddress: z.email({ pattern: z.regexes.html5Email }).toLowerCase(),
     // Never stored as given, so it has no column of its own.
     password: z.string().min(1),
   });
