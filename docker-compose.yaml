@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:18
+    restart: always
+
+    environment:
+      POSTGRES_DB: calliope
+      POSTGRES_USER: calliope
+      POSTGRES_PASSWORD: calliope
+
+    ports:
+      - "54322:5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calliope -d calliope"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+    restart: always
+
+    ports:
+      - "63792:6379"
+
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 1s
+      timeout: 5s
+      retries: 10

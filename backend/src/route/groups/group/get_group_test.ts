@@ -1,0 +1,52 @@
+import { assertEquals } from "@std/assert";
+import { STATUS_CODE } from "@std/http/status";
+import {
+  clearRateLimits,
+  deleteUsers,
+  registerUser,
+  request,
+} from "@/src/test_support.ts";
+
+const owner = "get-group-owner";
+const outsider = "get-group-outsider";
+
+Deno.test.beforeEach(clearRateLimits);
+Deno.test.afterEach(() => deleteUsers([owner, outsider]));
+
+Deno.test("GET /groups/{groupId} returns a public group to a non-member", async () => {
+  const ownerCookie = await registerUser(owner);
+  const created = await (await request("POST", "/groups", ownerCookie, {
+    title: "Öffentlich",
+    description: "d",
+    visibility: "public",
+  })).json();
+
+  const outsiderCookie = await registerUser(outsider);
+  const response = await request(
+    "GET",
+    `/groups/${created.id}`,
+    outsiderCookie,
+  );
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  assertEquals((await response.json()).id, created.id);
+});
+
+Deno.test("GET /groups/{groupId} reports a private group as missing to a non-member", async () => {
+  const ownerCookie = await registerUser(owner);
+  const created = await (await request("POST", "/groups", ownerCookie, {
+    title: "Privat",
+    description: "d",
+  })).json();
+
+  const outsiderCookie = await registerUser(outsider);
+  const response = await request(
+    "GET",
+    `/groups/${created.id}`,
+    outsiderCookie,
+  );
+
+  // 404 rather than 403, so that the group's existence does not leak.
+  assertEquals(response.status, STATUS_CODE.NotFound);
+  assertEquals(await response.json(), { error: "Group not found" });
+});

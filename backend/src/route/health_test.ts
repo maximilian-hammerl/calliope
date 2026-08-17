@@ -1,0 +1,51 @@
+import { assertEquals, assertExists, assertMatch } from "@std/assert";
+import { STATUS_CODE } from "@std/http/status";
+import app from "@/src/app.ts";
+import { API_TITLE, API_VERSION } from "@/src/open_api_specification.ts";
+import type { DatabaseHealth } from "@/src/database_health.ts";
+
+Deno.test("GET /health reports a healthy application without a session", async () => {
+  const response = await app.request("/health");
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  const body = await response.json();
+
+  assertEquals(body.health, { databases: true });
+  assertEquals(body.application.name, API_TITLE);
+  assertEquals(body.application.version, API_VERSION);
+  assertEquals(body.application.hostname, "localhost");
+  // An ISO 8601 duration, so the value stays parseable by whatever polls this.
+  assertMatch(body.application.uptime, /^PT[\d.]+S$/);
+  assertExists(Temporal.Instant.from(body.application.datetime));
+});
+
+Deno.test("GET /health reports every database separately", async () => {
+  const response = await app.request("/health");
+  const databases: Array<DatabaseHealth> = (await response.json()).databases;
+
+  assertEquals(databases.map((database) => database.name), [
+    "postgres",
+    "redis",
+  ]);
+
+  for (const database of databases) {
+    assertEquals(database.health, true);
+    assertEquals(database.essential, true);
+    assertEquals(database.error, undefined);
+    assertEquals(typeof database.latency, "number");
+  }
+});
+
+Deno.test("GET /health is not counted against the rate limit", async () => {
+  // Probes poll far more often than the limit allows, so no budget may be spent.
+  const response = await app.request("/health");
+
+  assertEquals(response.headers.get("ratelimit"), null);
+  assertEquals(response.headers.get("ratelimit-policy"), null);
+});
+
+Deno.test("POST /health is rejected", async () => {
+  const response = await app.request("/health", { method: "POST" });
+
+  assertEquals(response.status, STATUS_CODE.MethodNotAllowed);
+});

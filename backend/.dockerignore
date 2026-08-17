@@ -1,0 +1,4 @@
+open-api.json
+.spectral.yaml
+**/*_test.ts
+src/test_support.ts

@@ -1,0 +1,12 @@
+import { OpenAPIHono } from "@hono/zod-openapi";
+import getGroup from "./group/get_group.ts";
+import updateGroup from "./group/update_group.ts";
+import memberships from "./group/memberships.ts";
+import threads from "./group/threads.ts";
+
+// Mounted by groups.ts at /:groupId, which becomes {groupId} in the OpenAPI document.
+export default new OpenAPIHono()
+  .route("/", getGroup)
+  .route("/", updateGroup)
+  .route("/memberships", memberships)
+  .route("/threads", threads);

@@ -1,0 +1,21 @@
+# The site address comes from HOST_URL, so the domain is configured in one place and the
+# backend's CORS origin, the OpenAPI `servers` entry and the certificate always agree.
+{$HOST_URL} {
+	encode zstd gzip
+
+	# Everything the backend serves. A new top-level resource has to be added here.
+	# Both the collection itself and everything under it: `path /groups/*` does not
+	# match a bare `/groups`, which is where groups are created and listed.
+	@api path /auth/* /groups /groups/* /health /openapi.json
+	handle @api {
+		reverse_proxy backend:8000
+	}
+
+	# The single page application. Unknown paths fall back to its entry point, so a
+	# client-side route survives a reload.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

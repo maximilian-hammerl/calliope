@@ -1,0 +1,29 @@
+{
+  "tasks": {
+    "db:create": "dbmate --env-file ../.env create",
+    "db:up": "dbmate --env-file ../.env up",
+    "db:drop": "dbmate --env-file ../.env drop",
+    "db:down": "deno task db:drop",
+    "db:wait": "dbmate --env-file ../.env wait",
+    "migrations:migrate": "dbmate --env-file ../.env migrate",
+    "migrations:up": "deno task migrations:migrate",
+    "migrations:rollback": "dbmate --env-file ../.env rollback",
+    "migrations:down": "deno task migrations:rollback",
+    "migrations:new": "dbmate --env-file ../.env new",
+    "migrations:reset": "deno task migrations:down && deno task migrations:up",
+    "migrations:status": "dbmate --env-file ../.env status",
+    "types:generate": "deno run --env-file=../.env --allow-sys --allow-env --allow-read --allow-write --allow-net npm:kysely-codegen",
+    "format:fix": "deno fmt",
+    "format:check": "deno fmt --check",
+    "lint:fix": "deno lint --fix",
+    "lint:check": "deno lint",
+    "type-check": "deno check .",
+    "validate:fix": "deno task format:fix && deno task lint:fix && deno task type-check",
+    "validate:check": "deno task format:check && deno task lint:check && deno task type-check"
+  },
+  "imports": {
+    "kysely-codegen": "npm:kysely-codegen@0.20.0",
+    "pg": "npm:pg@8.23.0",
+    "typescript": "npm:typescript@6.0.3"
+  }
+}

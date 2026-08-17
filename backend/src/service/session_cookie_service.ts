@@ -1,0 +1,37 @@
+import type { Context } from "hono";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { SESSION_LIFETIME, UserSession } from "./user_service.ts";
+
+const SESSION_COOKIE_KEY = "session";
+
+function getUserSession(c: Context): UserSession | undefined {
+  const sessionCookie = getCookie(c, SESSION_COOKIE_KEY);
+  if (!sessionCookie) {
+    return undefined;
+  }
+
+  const [id, token] = sessionCookie.split(".");
+  return { id, token };
+}
+
+function setUserSession(c: Context, userSession: UserSession): void {
+  setCookie(c, "session", `${userSession.id}.${userSession.token}`, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "Lax",
+    path: "/",
+    // Must match the database session lifetime, otherwise the browser keeps sending
+    // a cookie whose session has already expired.
+    maxAge: SESSION_LIFETIME.total("seconds"),
+  });
+}
+
+function deleteUserSession(c: Context): void {
+  deleteCookie(c, SESSION_COOKIE_KEY);
+}
+
+export const SessionCookieService = {
+  getUserSession,
+  setUserSession,
+  deleteUserSession,
+};

@@ -1,0 +1,83 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create .env from the example
+        run: cp .env.example .env
+        working-directory: .
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+          cache-hash: ${{ hashFiles('backend/deno.lock') }}
+
+      - name: Install dependencies
+        run: deno install
+
+      - name: Check formatting, lints and types
+        run: deno task validate:check
+
+      - name: Check the OpenAPI specification is up to date
+        run: deno task open-api:check
+
+      - name: Lint the OpenAPI specification
+        run: deno task open-api:lint
+
+      # dbmate is a plain binary rather than a Deno dependency, so installing it lets the
+      # pipeline run the repository's own tasks instead of restating their configuration.
+      - name: Install dbmate
+        run: |
+          curl -fsSL -o /usr/local/bin/dbmate \
+            https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          chmod +x /usr/local/bin/dbmate
+
+      # `--wait` blocks on the healthchecks in the compose file, so nothing races the
+      # databases becoming reachable.
+      - name: Start the databases
+        run: docker compose up -d --wait
+        working-directory: .
+
+      - name: Apply migrations
+        run: deno task migrations:migrate
+        working-directory: database
+
+      - name: Run tests
+        run: deno task test
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting, lints and types
+        run: npm run validate:check

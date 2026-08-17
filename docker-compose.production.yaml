@@ -1,0 +1,123 @@
+name: calliope
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+
+    # 443/udp carries HTTP/3. Port 80 is what Let's Encrypt redirects from and validates on.
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+
+    environment:
+      HOST_URL: ${HOST_URL:?set HOST_URL in .env}
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv:ro
+      # Issued certificates live here; losing this volume means requesting them again.
+      - caddy-data:/data
+      - caddy-config:/config
+
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend-build:
+        condition: service_completed_successfully
+
+  # Built on the server, because the output is not committed. Runs to completion and exits.
+  frontend-build:
+    image: node:24-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run build"
+    volumes:
+      - ./frontend:/app
+      # Keeps the container's dependencies out of the checkout.
+      - frontend-node-modules:/app/node_modules
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+
+    environment:
+      HOST_URL: ${HOST_URL:?set HOST_URL in .env}
+      DATABASE_URL: postgres://calliope:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/calliope?sslmode=disable
+      REDIS_URL: redis://redis:6379
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+    # /health reports 503 when a database is unreachable, which restarts the container
+    # rather than leaving it serving errors. Addressed by IP: `localhost` resolves to ::1
+    # first, and the server listens on 0.0.0.0.
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  migrate:
+    image: amacneil/dbmate:2.35.0
+    command: migrate
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    environment:
+      DATABASE_URL: postgres://calliope:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/calliope?sslmode=disable
+      DBMATE_MIGRATIONS_TABLE: migration.schema_migration
+      DBMATE_STRICT: "true"
+      DBMATE_NO_DUMP_SCHEMA: "true"
+
+    volumes:
+      - ./database/migrations:/db/migrations
+
+  db:
+    image: postgres:18
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: calliope
+      POSTGRES_USER: calliope
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+
+    # postgres:18 keeps its data under /var/lib/postgresql/18/docker and declares
+    # /var/lib/postgresql as the volume, so the mount goes on the parent directory.
+    volumes:
+      - db-data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calliope -d calliope"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+    restart: unless-stopped
+
+    volumes:
+      - redis-data:/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:
+  redis-data:
+  caddy-data:
+  caddy-config:
+  frontend-node-modules:
