@@ -1,1 +1,82 @@
-# calliope
+# Calliope
+
+A community for German-speaking writers: a public forum wrapped around many private, member-created writing groups.
+Members meet in the open, form a group, and write together in threads inside it.
+
+Calliope replaces [Yooco](docs/yooco-research-report.md) for an existing community. What it has to preserve, and what it
+should do better, is written up in
+[the product requirements](docs/product-requirements-feature-specification.md), which grew out
+of [interviews with members](docs/interviews.md).
+
+Live at <https://calliope.hammerl.dev>.
+
+## Layout
+
+| Directory     | What it is                                                                      |
+|---------------|---------------------------------------------------------------------------------|
+| `backend/`    | Deno + Hono API, documented with OpenAPI                                        |
+| `frontend/`   | Vue single page application, built with Vite                                    |
+| `database/`   | dbmate migrations, and the code generator for the backend's types               |
+| `deployment/` | Backup script, systemd units and the [deployment runbook](deployment/README.md) |
+| `docs/`       | Product requirements and the research behind them                               |
+
+## Running it locally
+
+Requires [Deno](https://deno.com), [Node](https://nodejs.org),
+[Docker](https://docs.docker.com/engine/install/) and
+[dbmate](https://github.com/amacneil/dbmate).
+
+```bash
+cp .env.example .env
+docker compose up -d --wait
+cd database && deno task migrations:migrate
+```
+
+Then the backend on <http://localhost:8000>:
+
+```bash
+cd backend && deno task dev
+```
+
+and the frontend on <http://localhost:5173>:
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+The compose file publishes Postgres on `54322` and Redis on `63792`, so it does not collide with anything already
+running on the default ports.
+
+## Checks
+
+Both projects have the same two entry points, `validate:check` to verify and `validate:fix`
+to repair what can be repaired:
+
+```bash
+cd backend  && deno task validate:check   # format, lint, type-check
+cd frontend && npm run validate:check
+```
+
+The backend has two more, both run in CI:
+
+```bash
+deno task open-api:check   # regenerates open-api.json and fails if it changed
+deno task open-api:lint    # validates the document with Spectral
+```
+
+The test suite needs Postgres and Redis running and the migrations applied:
+
+```bash
+cd backend && deno task test
+```
+
+## Deployment
+
+`git pull` and `docker compose -f docker-compose.production.yaml up -d --build` on the server.
+The [deployment runbook](deployment/README.md) covers provisioning a fresh machine, the backup timer, and how to restore
+a dump.
+
+## Conventions
+
+[AGENTS.md](AGENTS.md) describes how this codebase is written — naming, the shape of a route, what has to be regenerated
+after a change. It is worth reading before the first contribution, whether you are a person or not.
