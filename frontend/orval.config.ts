@@ -7,9 +7,13 @@ export default defineConfig({
     },
 
     output: {
+      client: 'vue-query',
+      httpClient: 'fetch',
+
       mode: 'tags-split',
+
       target: 'src/api/calliope.ts',
-      schemas: 'src/api/model',
+      schemas: 'src/api/models',
     },
   },
 });
