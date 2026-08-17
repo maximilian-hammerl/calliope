@@ -100,7 +100,7 @@ Deno.test("POST /auth/register reports a malformed body as JSON", async () => {
 Deno.test("POST /auth/login starts a session for valid credentials", async () => {
   await register();
 
-  const response = await postJson("/auth/login", { username, password });
+  const response = await postJson("/auth/login", { login: username, password });
 
   assertEquals(response.status, STATUS_CODE.OK);
   assertEquals(await response.json(), { ok: true });
@@ -111,7 +111,7 @@ Deno.test("POST /auth/login rejects a wrong password", async () => {
   await register();
 
   const response = await postJson("/auth/login", {
-    username,
+    login: username,
     password: "not-the-password",
   });
 

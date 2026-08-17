@@ -177,7 +177,7 @@
       "post": {
         "tags": ["auth"],
         "summary": "Log a user in and start a session",
-        "description": "Exchanges a username and password for a session cookie. Answers the same way whether the username or the password was wrong.",
+        "description": "Exchanges a username or e-mail address and password for a session cookie. Answers the same way whether the username, e-mail address or the password was wrong.",
         "operationId": "loginUser",
         "requestBody": {
           "required": true,
@@ -186,10 +186,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "username": { "type": "string", "minLength": 1 },
+                  "login": { "type": "string" },
                   "password": { "type": "string", "minLength": 1 }
                 },
-                "required": ["username", "password"]
+                "required": ["login", "password"]
               }
             }
           }

@@ -56,13 +56,18 @@ async function insertUser(
 }
 
 async function selectUser(
-  username: string,
+  usernameOrEmailAddress: string,
   password: string,
 ): Promise<User | undefined> {
   return await db
     .selectFrom("user")
     .select(["id", "username", "emailAddress"])
-    .where("username", "=", username)
+    .where((eb) =>
+      eb.or([
+        eb("username", "=", usernameOrEmailAddress),
+        eb("emailAddress", "=", usernameOrEmailAddress),
+      ])
+    )
     .where(
       "hashedPassword",
       "=",
