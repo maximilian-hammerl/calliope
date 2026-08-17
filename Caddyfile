@@ -13,6 +13,25 @@
 	# client-side route survives a reload.
 	handle {
 		root * /srv
+
+		# The backend sets its own headers through Hono's secureHeaders, which never runs
+		# for these static files — without this the document that loads all the JavaScript
+		# would be the only unprotected response. Kept in step with that middleware's
+		# defaults, plus a policy it does not set.
+		header {
+			Strict-Transport-Security "max-age=15552000; includeSubDomains"
+			X-Content-Type-Options nosniff
+			X-Frame-Options SAMEORIGIN
+			Referrer-Policy no-referrer
+			Cross-Origin-Opener-Policy same-origin
+			Cross-Origin-Resource-Policy same-origin
+
+			# `style-src` has to allow inline styles because the dropdown positions itself
+			# through the style attribute; scripts stay strict, which is the part that
+			# matters. The font hosts are the design system's Google Fonts import.
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		}
+
 		try_files {path} /index.html
 		file_server
 	}

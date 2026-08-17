@@ -87,6 +87,21 @@ docker compose -f docker-compose.production.yaml up -d --build
 
 Migrations run automatically as part of `up`.
 
+### After changing only the Caddyfile
+
+`Caddyfile` is bind-mounted and Caddy reads it once, at startup. `up -d` compares the
+*service definition*, which a changed file does not alter, so it leaves the container
+running and Caddy keeps serving the previous configuration — the deploy reports success
+while nothing about the routing has changed. Force it:
+
+```bash
+docker compose -f docker-compose.production.yaml up -d --force-recreate caddy
+```
+
+This only bites when the Caddyfile is the sole change. Anything that also alters the
+compose file recreates Caddy along with it. Verify afterwards against a path the change
+should affect, not just that the container is up.
+
 ## Backups
 
 The systemd units are tracked in this directory but have to be installed into the system
