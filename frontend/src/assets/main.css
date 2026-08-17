@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -14,9 +14,9 @@
    ───────────────────────────────────────────────────────────── */
 
 @theme inline {
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   /* Headings and everything members write are Newsreader, not the UI sans. */
   --font-heading: var(--font-serif);
 
@@ -54,9 +54,9 @@
 
   /* Calliope radii are deliberately sparse: nothing in the reading surface is
      rounded, only controls are. --radius is the control radius (6px). */
-  --radius-sm: 3px;                     /* tags */
-  --radius-md: 4px;                     /* --radius-xs */
-  --radius-lg: var(--radius);           /* 6px, controls */
+  --radius-sm: 3px; /* tags */
+  --radius-md: 4px; /* --radius-xs */
+  --radius-lg: var(--radius); /* 6px, controls */
   --radius-xl: 8px;
 
   /* Raw Calliope palette, available as utilities (bg-paper-1, text-ink-2, …) */
@@ -82,28 +82,28 @@
 }
 
 :root {
-  --radius: 6px;                        /* --radius-control */
+  --radius: 6px; /* --radius-control */
 
-  --background: #f7f4ee;                /* --paper-1, app canvas */
-  --foreground: #302a23;                /* --ink-2, prose */
-  --card: #fffdf9;                      /* --paper-0, raised */
+  --background: #f7f4ee; /* --paper-1, app canvas */
+  --foreground: #302a23; /* --ink-2, prose */
+  --card: #fffdf9; /* --paper-0, raised */
   --card-foreground: #302a23;
   --popover: #fffdf9;
   --popover-foreground: #302a23;
 
-  --primary: #4f4132;                   /* --accent-deep, solid action */
+  --primary: #4f4132; /* --accent-deep, solid action */
   --primary-foreground: #fffdf9;
-  --secondary: #eee5d3;                 /* --paper-3, quiet button fill */
+  --secondary: #eee5d3; /* --paper-3, quiet button fill */
   --secondary-foreground: #4f4132;
-  --muted: #f2ede3;                     /* --paper-2, rails */
-  --muted-foreground: #6d6153;          /* --ink-5 */
-  --accent: #eee5d3;                    /* hover/active surface, not a hue */
+  --muted: #f2ede3; /* --paper-2, rails */
+  --muted-foreground: #6d6153; /* --ink-5 */
+  --accent: #eee5d3; /* hover/active surface, not a hue */
   --accent-foreground: #4f4132;
-  --destructive: #8a3f37;               /* --signal-error, use sparingly */
+  --destructive: #8a3f37; /* --signal-error, use sparingly */
 
-  --border: #e6dfd2;                    /* --line-3, hairlines */
-  --input: #ddd2bd;                     /* --line-4 */
-  --ring: #8a6a3a;                      /* --accent, focus ring + caret */
+  --border: #e6dfd2; /* --line-3, hairlines */
+  --input: #ddd2bd; /* --line-4 */
+  --ring: #8a6a3a; /* --accent, focus ring + caret */
 
   /* Calliope has no data-viz palette; these are ink/oak steps, not new hues. */
   --chart-1: #8a6a3a;
@@ -112,11 +112,11 @@
   --chart-4: #cdbfa6;
   --chart-5: #e5d9c2;
 
-  --sidebar: #f2ede3;                   /* --surface-rail */
-  --sidebar-foreground: #4a4238;        /* --ink-3 */
+  --sidebar: #f2ede3; /* --surface-rail */
+  --sidebar-foreground: #4a4238; /* --ink-3 */
   --sidebar-primary: #4f4132;
   --sidebar-primary-foreground: #fffdf9;
-  --sidebar-accent: #eee5d3;            /* active rail row */
+  --sidebar-accent: #eee5d3; /* active rail row */
   --sidebar-accent-foreground: #4f4132;
   --sidebar-border: #e6dfd2;
   --sidebar-ring: #8a6a3a;
@@ -167,7 +167,9 @@
     -webkit-font-smoothing: antialiased;
   }
   /* Member-written text and headings read in Newsreader. */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     @apply font-serif font-normal;
   }
   /* Thread reading size never shrinks, on any device (17px / 1.8). */
@@ -179,9 +181,11 @@
   /* Mono rail labels: always uppercase with tracking. */
   .label-rail {
     font: 600 10.5px/1 var(--font-mono);
-    letter-spacing: .12em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #6f6455;
   }
-  ::selection { background: #eee5d3; }
+  ::selection {
+    background: #eee5d3;
+  }
 }
