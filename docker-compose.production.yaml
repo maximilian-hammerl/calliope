@@ -55,11 +55,11 @@ services:
       migrate:
         condition: service_completed_successfully
 
-    # /health reports 503 when a database is unreachable, which restarts the container
+    # /api/health reports 503 when a database is unreachable, which restarts the container
     # rather than leaving it serving errors. Addressed by IP: `localhost` resolves to ::1
     # first, and the server listens on 0.0.0.0.
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8000/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5

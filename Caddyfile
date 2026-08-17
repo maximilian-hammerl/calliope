@@ -3,11 +3,9 @@
 {$HOST_URL} {
 	encode zstd gzip
 
-	# Everything the backend serves. A new top-level resource has to be added here.
-	# Both the collection itself and everything under it: `path /groups/*` does not
-	# match a bare `/groups`, which is where groups are created and listed.
-	@api path /auth/* /groups /groups/* /health /openapi.json
-	handle @api {
+	# Everything the backend serves lives under one prefix, so adding a resource needs no
+	# change here and no route can be forgotten.
+	handle /api/* {
 		reverse_proxy backend:8000
 	}
 

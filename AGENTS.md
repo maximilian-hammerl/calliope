@@ -36,6 +36,11 @@ route/groups/group.ts              → mounts everything under /groups/{groupId}
 route/groups/group/get_group.ts    → GET /groups/{groupId}
 ```
 
+`app.ts` mounts all of it under `/api`, so the served paths are `/api/groups`, and so on.
+Route files themselves never repeat the prefix. Everything the backend serves lives under
+that one prefix, which is what lets the Caddy matcher and the Vite dev proxy each be a
+single rule instead of a list that has to be kept in step with the routes.
+
 Each leaf exports `new OpenAPIHono().openapi(createRoute({…}), handler)`. Use
 `app.openapi()` rather than `defineOpenAPIRoute`: only the former derives the handler's
 environment from the route's middleware, so `c.get("user")` stays typed.
