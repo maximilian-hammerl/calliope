@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRegisterUser } from '@/api/auth/auth'
-import { ApiError } from '@/lib/api_fetch'
+import { ApiError } from '@/lib/apiFetch'
 import { forgetCurrentUser } from '@/lib/session'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -217,10 +217,7 @@ async function submit() {
 
       <p class="mt-6 text-[13px] leading-[1.5] text-ink-5">
         Du hast schon ein Konto?
-        <RouterLink
-          :to="{ name: 'login' }"
-          class="text-oak-deep underline underline-offset-2"
-        >
+        <RouterLink :to="{ name: 'login' }" class="text-oak-deep underline underline-offset-2">
           Anmelden
         </RouterLink>
       </p>

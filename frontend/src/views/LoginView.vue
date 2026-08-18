@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLoginUser } from '@/api/auth/auth'
-import { ApiError } from '@/lib/api_fetch'
+import { ApiError } from '@/lib/apiFetch'
 import { forgetCurrentUser } from '@/lib/session'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'

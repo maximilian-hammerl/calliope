@@ -10,7 +10,9 @@ const { data } = useGetCurrentUser()
 
 // The generated type is a union over every declared status, and only the 200 branch carries
 // a user.
-const user = computed<GetCurrentUser200 | undefined>(() => (data.value?.status === 200 ? data.value.data : undefined))
+const user = computed<GetCurrentUser200 | undefined>(() =>
+  data.value?.status === 200 ? data.value.data : undefined,
+)
 </script>
 
 <template>

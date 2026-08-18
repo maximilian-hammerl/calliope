@@ -4,10 +4,26 @@ import { fetchCurrentUser } from '@/lib/session'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // Where signing in and registering land.
     {
       path: '/',
       name: 'home',
       component: () => import('../views/HomeView.vue'),
+    },
+    {
+      path: '/groups',
+      name: 'groups',
+      component: () => import('../views/GroupsView.vue'),
+    },
+    {
+      path: '/groups/:groupId',
+      name: 'group',
+      component: () => import('../views/GroupView.vue'),
+    },
+    {
+      path: '/groups/:groupId/threads/:threadId',
+      name: 'thread',
+      component: () => import('../views/ThreadView.vue'),
     },
     {
       path: '/login',

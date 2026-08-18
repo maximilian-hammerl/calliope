@@ -36,7 +36,9 @@ async function signOut() {
 </script>
 
 <template>
-  <header class="flex h-[52px] items-center gap-7 border-b border-line-3 bg-paper-0 px-6 md:h-[54px]">
+  <header
+    class="flex h-[52px] items-center gap-7 border-b border-line-3 bg-paper-0 px-6 md:h-[54px]"
+  >
     <!-- There is no logo: the design system sets the word itself in Newsreader 600. -->
     <RouterLink
       :to="{ name: 'home' }"
@@ -46,14 +48,13 @@ async function signOut() {
     </RouterLink>
 
     <nav class="flex h-full gap-5">
-      <!-- Points at the home view because that is where the overview will live; it becomes
-           its own route once there is more than one destination. The active mark is the
-           2px underline at the foot of the bar, never a filled chip. -->
+      <!-- Active on every page below /groups, since they all live under this destination.
+           The active mark is the 2px underline at the foot of the bar, never a filled chip. -->
       <RouterLink
-        :to="{ name: 'home' }"
+        :to="{ name: 'groups' }"
         class="flex h-full items-center border-b-2 text-[13.5px] leading-[1.2]"
         :class="
-          route.name === 'home'
+          String(route.name).startsWith('group') || route.name === 'thread'
             ? 'border-oak font-semibold text-ink-1'
             : 'border-transparent text-ink-5'
         "

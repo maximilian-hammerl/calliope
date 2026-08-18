@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/vue-query'
-import { ApiError } from './api_fetch'
+import { ApiError } from './apiFetch'
 
 /**
  * Shared instance rather than the one the plugin would create, so the router guard can read
