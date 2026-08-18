@@ -42,6 +42,11 @@ CREATE TRIGGER set_updated_at
     FOR EACH ROW
 EXECUTE FUNCTION public.set_updated_at();
 
+CREATE INDEX writing_group_created_by_idx ON public.writing_group (created_by);
+-- The primary key leads with user_id, so listing a group's members cannot use it.
+CREATE INDEX user_in_writing_group_writing_group_id_idx
+    ON public.user_in_writing_group (writing_group_id);
+
 -- migrate:down
 
 DROP TABLE public.user_in_writing_group;

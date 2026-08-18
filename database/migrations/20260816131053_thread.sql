@@ -39,6 +39,11 @@ CREATE TRIGGER set_updated_at
     FOR EACH ROW
 EXECUTE FUNCTION public.set_updated_at();
 
+CREATE INDEX thread_writing_group_id_idx ON public.thread (writing_group_id);
+CREATE INDEX thread_created_by_idx ON public.thread (created_by);
+CREATE INDEX post_thread_id_idx ON public.post (thread_id);
+CREATE INDEX post_created_by_idx ON public.post (created_by);
+
 -- migrate:down
 
 DROP TABLE public.post;
