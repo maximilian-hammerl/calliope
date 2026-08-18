@@ -61,7 +61,7 @@
                   "password": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 72
+                    "maxLength": 256
                   }
                 },
                 "required": ["username", "emailAddress", "password"]
@@ -231,7 +231,7 @@
                   "password": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 72
+                    "maxLength": 256
                   }
                 },
                 "required": ["login", "password"]

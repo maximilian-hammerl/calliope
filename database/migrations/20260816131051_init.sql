@@ -1,8 +1,5 @@
 -- migrate:up
 
-CREATE
-    EXTENSION pgcrypto;
-
 CREATE FUNCTION public.set_updated_at()
     RETURNS TRIGGER
     set search_path to ''
@@ -65,5 +62,3 @@ DROP TABLE public.user_session;
 DROP TABLE public.user;
 
 DROP FUNCTION public.set_updated_at();
-
-DROP EXTENSION pgcrypto;

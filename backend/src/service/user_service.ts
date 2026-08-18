@@ -1,5 +1,10 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
+import { hashPassword, verifyPassword } from "@/src/util/password.ts";
+import {
+  generateSessionToken,
+  hashSessionToken,
+} from "@/src/util/session_token.ts";
 import type {
   User as DatabaseUser,
   UserSession as DatabaseUserSession,
@@ -27,10 +32,11 @@ export const SESSION_LIFETIME = Temporal.Duration.from({ hours: 24 });
 const SESSION_REFRESH_INTERVAL = Temporal.Duration.from({ minutes: 15 });
 
 /**
- * bcrypt work factor. pgcrypto defaults to 6, which is far too cheap on current hardware.
- * Raising it slows every login and registration by design.
+ * Hashed once at startup and compared against whenever no account matches, so that a
+ * username that does not exist costs the same as one with the wrong password. Without it the
+ * quick answer would tell an attacker which usernames are real.
  */
-const BCRYPT_COST = 12;
+const ABSENT_USER_HASH = await hashPassword(generateSessionToken());
 
 async function insertUser(
   username: string,
@@ -39,17 +45,11 @@ async function insertUser(
 ): Promise<User | undefined> {
   return await db
     .insertInto("user")
-    .values((eb) => ({
+    .values({
       username,
-      hashedPassword: eb.fn<string>("crypt", [
-        eb.val(password),
-        eb.fn<string>("gen_salt", [
-          eb.val("bf"),
-          eb.val(BCRYPT_COST),
-        ]),
-      ]),
+      hashedPassword: await hashPassword(password),
       emailAddress,
-    }))
+    })
     .onConflict((oc) => oc.doNothing())
     .returning(["id", "username", "emailAddress"])
     .executeTakeFirst();
@@ -59,9 +59,9 @@ async function selectUser(
   usernameOrEmailAddress: string,
   password: string,
 ): Promise<User | undefined> {
-  return await db
+  const user = await db
     .selectFrom("user")
-    .select(["id", "username", "emailAddress"])
+    .select(["id", "username", "emailAddress", "hashedPassword"])
     // Addresses are stored lower-cased by the register route, so the comparison has to
     // match that or a differently cased address would never be found.
     .where((eb) =>
@@ -70,29 +70,38 @@ async function selectUser(
         eb("emailAddress", "=", usernameOrEmailAddress.toLowerCase()),
       ])
     )
-    .where(
-      "hashedPassword",
-      "=",
-      (eb) => eb.fn<string>("crypt", [eb.val(password), "hashedPassword"]),
-    )
     .executeTakeFirst();
+
+  // The comparison used to happen in SQL, which hid this: hashing only when a row exists
+  // makes an unknown username measurably faster to reject than a known one.
+  if (user === undefined) {
+    await verifyPassword(password, ABSENT_USER_HASH);
+    return undefined;
+  }
+
+  if (!await verifyPassword(password, user.hashedPassword)) {
+    return undefined;
+  }
+
+  return {
+    id: user.id,
+    username: user.username,
+    emailAddress: user.emailAddress,
+  };
 }
 
 async function insertSessionForUser(
   user: User,
 ): Promise<UserSession> {
-  const sessionToken = crypto.randomUUID();
+  const sessionToken = generateSessionToken();
 
   const userSession = await db
     .insertInto("userSession")
-    .values((eb) => ({
+    .values({
       userId: user.id,
-      hashedToken: eb.fn<Buffer>("digest", [
-        eb.val(sessionToken),
-        eb.val("sha256"),
-      ]),
+      hashedToken: await hashSessionToken(sessionToken),
       expiresAt: Temporal.Now.instant().add(SESSION_LIFETIME).toString(),
-    }))
+    })
     .returning(["id"])
     .executeTakeFirstOrThrow();
 
@@ -109,12 +118,7 @@ async function selectUserForSession(
     .selectFrom("userSession")
     .select(["id", "userId", "expiresAt"])
     .where("id", "=", userSession.id)
-    .where(
-      "hashedToken",
-      "=",
-      (eb) =>
-        eb.fn<Buffer>("digest", [eb.val(userSession.token), eb.val("sha256")]),
-    )
+    .where("hashedToken", "=", await hashSessionToken(userSession.token))
     .executeTakeFirst();
 
   if (databaseUserSession === undefined) {
@@ -156,12 +160,7 @@ async function deleteSession(userSession: UserSession): Promise<boolean> {
   const result = await db
     .deleteFrom("userSession")
     .where("id", "=", userSession.id)
-    .where(
-      "hashedToken",
-      "=",
-      (eb) =>
-        eb.fn<Buffer>("digest", [eb.val(userSession.token), eb.val("sha256")]),
-    )
+    .where("hashedToken", "=", await hashSessionToken(userSession.token))
     .executeTakeFirst();
 
   return result.numDeletedRows > 0n;

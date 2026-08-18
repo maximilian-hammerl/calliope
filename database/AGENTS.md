@@ -19,6 +19,12 @@ Every `migrate:down` must actually reverse its `migrate:up`, including dropping 
 and trigger functions. Test the round trip against a throwaway database rather than the one
 you are working in.
 
+## No pgcrypto
+
+Passwords and session tokens are hashed in the backend, so nothing in the schema needs the
+extension — `uuidv7()` and `gen_random_uuid()` are core in Postgres 18. Do not reach for
+`crypt()` or `digest()` in a migration; hashing belongs where the plaintext already is.
+
 ## Triggers
 
 New tables need a `set_updated_at` trigger, or `updated_at` never changes:

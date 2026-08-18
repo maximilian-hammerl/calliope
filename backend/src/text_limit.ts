@@ -12,11 +12,11 @@ export const TEXT_LIMIT = {
   /** The longest address SMTP has to accept, RFC 5321 §4.5.3.1.3. */
   emailAddress: 254,
   /**
-   * bcrypt reads at most 72 bytes and silently ignores the rest, so a longer passphrase
-   * would be weaker than it looks. Rejecting is honest; pre-hashing would lift the limit.
-   * Note this counts characters, and an umlaut costs two bytes.
+   * scrypt reads the whole input, so unlike bcrypt — which stopped at 72 bytes and silently
+   * ignored the rest — a long passphrase is worth what it looks like. The bound is here only
+   * to keep the hashing input finite.
    */
-  password: 72,
+  password: 256,
   /** A group title sits on one line beside its privacy badge. */
   groupTitle: 120,
   /** A few paragraphs about the story, not the story itself. */

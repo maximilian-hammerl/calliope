@@ -113,6 +113,21 @@ the same value CI uses — which is why CI copies `.env.example`.
 operations are legal, and Spectral only understands up to 3.1, so it silently falls back to
 validating against the 3.0 schema.
 
+## Passwords and session tokens
+
+Hashed in the application, never in the database: `util/password.ts` (scrypt) and
+`util/session_token.ts` (SHA-256). pgcrypto is gone, and with it the plaintext password's
+trip into Postgres, where statement logging could have captured it.
+
+A stored password reads `scrypt$cost$blockSize$parallelisation$salt$hash`. The parameters
+travel with the hash, so raising the cost does not lock anyone out of an account whose hash
+predates the change — a test covers exactly that. `verifyPassword` never throws on an
+unreadable record; it simply does not match.
+
+`selectUser` hashes against a throwaway hash when no account matches, so an unknown username
+costs the same as a known one with the wrong password. Removing that would turn the response
+time into a way to enumerate accounts.
+
 ## Tests
 
 Co-located as `<module>_test.ts` beside the code, one positive and one negative case per
