@@ -142,44 +142,22 @@ async function acceptInvitation(
     .executeTakeFirstOrThrow();
 }
 
-export type MembershipRemoval = {
-  removed: boolean;
-  /** Groups exist only for their members, so the last one out takes the group with them. */
-  writingGroupDeleted: boolean;
-};
-
+/**
+ * Removing the last member also removes the group, but that is a database trigger rather
+ * than something this has to remember: an account deleted directly would bypass a rule that
+ * only lived here.
+ */
 async function deleteMembership(
   writingGroupId: string,
   userId: string,
-): Promise<MembershipRemoval> {
-  return await db.transaction().execute(async (transaction) => {
-    const deletion = await transaction
-      .deleteFrom("userInWritingGroup")
-      .where("writingGroupId", "=", writingGroupId)
-      .where("userId", "=", userId)
-      .executeTakeFirst();
+): Promise<boolean> {
+  const deletion = await db
+    .deleteFrom("userInWritingGroup")
+    .where("writingGroupId", "=", writingGroupId)
+    .where("userId", "=", userId)
+    .executeTakeFirst();
 
-    if (deletion.numDeletedRows === 0n) {
-      return { removed: false, writingGroupDeleted: false };
-    }
-
-    const { remaining } = await transaction
-      .selectFrom("userInWritingGroup")
-      .select((eb) => eb.fn.countAll<number>().as("remaining"))
-      .where("writingGroupId", "=", writingGroupId)
-      .executeTakeFirstOrThrow();
-
-    if (Number(remaining) > 0) {
-      return { removed: true, writingGroupDeleted: false };
-    }
-
-    await transaction
-      .deleteFrom("writingGroup")
-      .where("id", "=", writingGroupId)
-      .execute();
-
-    return { removed: true, writingGroupDeleted: true };
-  });
+  return deletion.numDeletedRows > 0n;
 }
 
 export const UserInWritingGroupService = {
