@@ -6,7 +6,13 @@
 	# Everything the backend serves lives under one prefix, so adding a resource needs no
 	# change here and no route can be forgotten.
 	handle /api/* {
-		reverse_proxy backend:8000
+		reverse_proxy backend:8000 {
+			# The rate limiter buckets by the first entry of X-Forwarded-For, so this has to
+			# replace whatever the client sent rather than append to it. Caddy's default
+			# already does, but a limiter that can be side-stepped by a header is not
+			# something to leave resting on a default.
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	# The single page application. Unknown paths fall back to its entry point, so a
