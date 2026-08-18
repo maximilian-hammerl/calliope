@@ -92,3 +92,6 @@ jobs:
 
       - name: Check formatting, lints and types
         run: npm run validate:check
+
+      - name: Run tests
+        run: npm run test:unit -- --run
