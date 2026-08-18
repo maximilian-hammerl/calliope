@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { GROUP_RESPONSE } from "@/src/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -17,7 +18,12 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 // At least one field is required, otherwise the update would have nothing to set.
 const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
   .pick({ title: true, description: true, visibility: true })
-  .extend({ title: WRITING_GROUP_SCHEMA.shape.title.min(1) })
+  .extend({
+    description: WRITING_GROUP_SCHEMA.shape.description.max(
+      TEXT_LIMIT.groupDescription,
+    ),
+    title: WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
+  })
   .partial()
   .refine(
     (changes) => Object.values(changes).some((value) => value !== undefined),

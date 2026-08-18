@@ -5,9 +5,11 @@ import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { methodNotAllowed } from "hono/method-not-allowed";
+import { bodyLimit } from "hono/body-limit";
 import corsOptions from "./cors_options.ts";
 import openApiSpecification from "./open_api_specification.ts";
 import rateLimit from "./middleware/rate_limit.ts";
+import { REQUEST_BODY_LIMIT_BYTES } from "./text_limit.ts";
 import { type ErrorResponse } from "./response.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
@@ -42,6 +44,17 @@ const api = new OpenAPIHono({
 const app = new OpenAPIHono();
 
 app.use(logger());
+// Before anything reads the body, so an oversized one is refused rather than buffered.
+app.use(
+  bodyLimit({
+    maxSize: REQUEST_BODY_LIMIT_BYTES,
+    onError: (c) =>
+      c.json(
+        { error: "Request body too large" } satisfies ErrorResponse,
+        STATUS_CODE.ContentTooLarge,
+      ),
+  }),
+);
 app.use(secureHeaders());
 app.use(cors(corsOptions));
 app.use(methodNotAllowed({ app }));

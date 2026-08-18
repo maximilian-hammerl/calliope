@@ -9,8 +9,8 @@ import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
+  OK_RESPONSE,
 } from "@/src/response.ts";
-import { MEMBERSHIP_REMOVAL_RESPONSE } from "@/src/route/groups/group/memberships/removal_response.ts";
 import {
   USER_IN_WRITING_GROUP_SCHEMA,
   WRITING_GROUP_SCHEMA,
@@ -35,7 +35,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "The membership was removed",
-        content: jsonContent(MEMBERSHIP_REMOVAL_RESPONSE),
+        content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
@@ -75,13 +75,13 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const { removed, writingGroupDeleted } = await UserInWritingGroupService
+    const removed = await UserInWritingGroupService
       .deleteMembership(groupId, userId);
 
     if (!removed) {
       return c.json({ error: "Membership not found" }, STATUS_CODE.NotFound);
     }
 
-    return c.json({ ok: true, writingGroupDeleted } as const, STATUS_CODE.OK);
+    return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

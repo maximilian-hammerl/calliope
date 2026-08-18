@@ -32,7 +32,7 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} removes a member", 
 
   assertEquals(response.status, STATUS_CODE.OK);
   // The administrator is still there, so the group survives.
-  assertEquals(await response.json(), { ok: true, writingGroupDeleted: false });
+  assertEquals(await response.json(), { ok: true });
 });
 
 Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} refuses a non-administrator", async () => {

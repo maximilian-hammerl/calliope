@@ -191,3 +191,33 @@ Deno.test("POST /api/auth/logout rejects a request without a session", async () 
   assertEquals(response.status, STATUS_CODE.Unauthorized);
   assertEquals(await response.json(), { error: "Unauthorized" });
 });
+
+Deno.test("POST /api/auth/register refuses an oversized field", async () => {
+  const response = await postJson("/api/auth/register", {
+    username: "x".repeat(33),
+    password,
+    emailAddress,
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+    "username",
+  ]);
+});
+
+Deno.test("a body beyond the limit is refused before it is parsed", async () => {
+  // Previously this was stored: a 20 MB post reached the database intact.
+  const response = await app.request("/api/auth/register", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      username: "x".repeat(2_000_000),
+      password,
+      emailAddress,
+    }),
+  });
+
+  assertEquals(response.status, STATUS_CODE.ContentTooLarge);
+  assertEquals(await response.json(), { error: "Request body too large" });
+});

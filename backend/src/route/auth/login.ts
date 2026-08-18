@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
@@ -12,9 +13,10 @@ import {
 } from "@/src/response.ts";
 
 const LOGIN_BODY = z.object({
-  // Either identifier is accepted, so a member need not remember which they signed up with.
-  login: z.string().min(1),
-  password: z.string().min(1),
+  // Either identifier is accepted, so a member need not remember which they signed up with,
+  // and the bound is the longer of the two.
+  login: z.string().min(1).max(TEXT_LIMIT.emailAddress),
+  password: z.string().min(1).max(TEXT_LIMIT.password),
 });
 
 export default new OpenAPIHono().openapi(

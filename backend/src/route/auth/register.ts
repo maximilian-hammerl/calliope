@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
@@ -15,7 +16,7 @@ import {
 const REGISTER_BODY = USER_SCHEMA
   .pick({ username: true, emailAddress: true })
   .extend({
-    username: USER_SCHEMA.shape.username.min(1),
+    username: USER_SCHEMA.shape.username.min(1).max(TEXT_LIMIT.username),
     // The column is only text; the address itself is validated here, and normalised so
     // the UNIQUE constraint cannot be bypassed by changing the case.
     //
@@ -23,9 +24,11 @@ const REGISTER_BODY = USER_SCHEMA
     // schema agree exactly and no address can pass the client only to be refused here. It is
     // deliberately more permissive than Zod's default — `a@b` and `alice@localhost` are
     // accepted — which is the price of that agreement while nothing verifies the address.
-    emailAddress: z.email({ pattern: z.regexes.html5Email }).toLowerCase(),
+    emailAddress: z.email({ pattern: z.regexes.html5Email })
+      .max(TEXT_LIMIT.emailAddress)
+      .toLowerCase(),
     // Never stored as given, so it has no column of its own.
-    password: z.string().min(1),
+    password: z.string().min(1).max(TEXT_LIMIT.password),
   });
 
 export default new OpenAPIHono().openapi(

@@ -27,10 +27,14 @@ export const ERROR_RESPONSE = z.object({
 export type ErrorResponse = z.infer<typeof ERROR_RESPONSE>;
 
 /**
- * Produced by the rate limiter and the global error handler, so every route can return
- * them regardless of what its own handler does.
+ * Produced by the body limit, the rate limiter and the global error handler, so every route
+ * can return them regardless of what its own handler does.
  */
 export const COMMON_RESPONSES = {
+  [STATUS_CODE.ContentTooLarge]: {
+    description: "Request body too large",
+    content: jsonContent(ERROR_RESPONSE),
+  },
   [STATUS_CODE.TooManyRequests]: {
     description: "Rate limit exceeded",
     content: jsonContent(ERROR_RESPONSE),

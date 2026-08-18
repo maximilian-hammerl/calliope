@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { GROUP_RESPONSE } from "@/src/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -15,8 +16,11 @@ import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
   .pick({ title: true, description: true, visibility: true })
   .extend({
+    description: WRITING_GROUP_SCHEMA.shape.description.max(
+      TEXT_LIMIT.groupDescription,
+    ),
     // The column only requires text; an empty title is not useful.
-    title: WRITING_GROUP_SCHEMA.shape.title.min(1),
+    title: WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
     // Private unless asked otherwise, per the "private by default" principle.
     visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
   });

@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { THREAD_RESPONSE } from "@/src/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -21,7 +22,9 @@ const THREAD_PARAMS = z.object({
 
 const UPDATE_THREAD_BODY = THREAD_SCHEMA
   .pick({ title: true })
-  .extend({ title: THREAD_SCHEMA.shape.title.min(1) });
+  .extend({
+    title: THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
+  });
 
 export default new OpenAPIHono().openapi(
   createRoute({

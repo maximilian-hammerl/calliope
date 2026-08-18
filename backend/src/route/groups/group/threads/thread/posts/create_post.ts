@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { POST_RESPONSE } from "@/src/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -27,7 +28,7 @@ const THREAD_PARAMS = z.object({
 const CREATE_POST_BODY = POST_SCHEMA
   .pick({ text: true, isDraft: true })
   .extend({
-    text: POST_SCHEMA.shape.text.min(1),
+    text: POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
     // Published unless the author says otherwise.
     isDraft: POST_SCHEMA.shape.isDraft.default(false),
   });

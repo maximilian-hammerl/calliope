@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { POST_RESPONSE } from "@/src/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -27,7 +28,7 @@ const POST_PARAMS = z.object({
 // Setting isDraft to false is how a draft gets published.
 const UPDATE_POST_BODY = POST_SCHEMA
   .pick({ text: true, isDraft: true })
-  .extend({ text: POST_SCHEMA.shape.text.min(1) })
+  .extend({ text: POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText) })
   .partial()
   .refine(
     (changes) => Object.values(changes).some((value) => value !== undefined),
