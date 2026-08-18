@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListThreadsQueryKey, useCreateThread } from '@/api/threads/threads'
+import { TEXT_LIMIT } from '@/api/textLimit'
 import { listKeyPrefix } from '@/lib/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,8 @@ const open = defineModel<boolean>('open', { required: true })
 
 const router = useRouter()
 const queryClient = useQueryClient()
+
+const LIMIT = TEXT_LIMIT.createThread
 
 const title = ref<string>('')
 const titleError = ref<string | undefined>(undefined)
@@ -94,6 +97,7 @@ async function submit() {
               v-model="title"
               class="h-11 md:h-9"
               name="title"
+              :maxlength="LIMIT.title.maxLength"
               placeholder="z. B. Plot oder Steckbriefe"
               required
               :aria-invalid="titleError !== undefined ? true : undefined"

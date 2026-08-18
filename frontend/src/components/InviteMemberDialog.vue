@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListMembershipsQueryKey, useInviteMember } from '@/api/memberships/memberships'
 import { useListUsers } from '@/api/users/users'
+import { TEXT_LIMIT } from '@/api/textLimit'
 import type { InviteMemberBodyRole, ListUsers200ResultsItem } from '@/api/models'
 import { ApiError } from '@/lib/apiFetch'
 import { listKeyPrefix } from '@/lib/queryKeys'
@@ -30,11 +31,11 @@ const selected = ref<ListUsers200ResultsItem | undefined>(undefined)
 const role = ref<InviteMemberBodyRole>('writer')
 const formError = ref<string | undefined>(undefined)
 
-/** The API's own minimum. Below it nothing is asked for at all. */
-const MINIMUM_TERM_LENGTH = 3
+/** The API's own bounds. Below the minimum nothing is asked for at all. */
+const LIMIT = TEXT_LIMIT.listUsers.search
 
 const trimmedTerm = computed<string>(() => term.value.trim())
-const termIsLongEnough = computed<boolean>(() => trimmedTerm.value.length >= MINIMUM_TERM_LENGTH)
+const termIsLongEnough = computed<boolean>(() => trimmedTerm.value.length >= LIMIT.minLength)
 
 const { data: usersData, isFetching } = useListUsers(
   () => ({ search: trimmedTerm.value, limit: 8 }),
@@ -127,6 +128,7 @@ async function submit() {
               v-model="term"
               class="h-11 md:h-9"
               name="search"
+              :maxlength="LIMIT.maxLength"
               placeholder="z. B. mira"
               autocomplete="off"
               autocapitalize="none"
@@ -139,7 +141,7 @@ async function submit() {
              keystroke, and a native menu would close over the field being typed into. -->
         <div class="min-h-[44px]">
           <p v-if="!termIsLongEnough" class="text-[12.5px] leading-[1.5] text-ink-5">
-            Gib mindestens {{ MINIMUM_TERM_LENGTH }} Zeichen ein. Ein Teil des Namens genügt.
+            Gib mindestens {{ LIMIT.minLength }} Zeichen ein. Ein Teil des Namens genügt.
           </p>
           <p v-else-if="isFetching" class="text-[12.5px] leading-[1.5] text-ink-5">
             Wird gesucht …

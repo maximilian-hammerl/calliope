@@ -89,6 +89,12 @@ validation entirely and the schema's defaults never apply.
 `sortAttribute` must be an enum derived from the table's own columns, because its value
 reaches `dynamic.ref`. An unchecked value there is an injection.
 
+`text_limit.ts` is the origin of every bound, and they do not stop at the API: they travel
+through the Zod request schemas into `open-api.json`, and the frontend generates
+`src/api/textLimit.ts` from that document so its inputs enforce the same numbers. Changing a
+limit here changes the interface too, after `open-api:generate`. Never restate a bound at a
+route — import it.
+
 `search` comes with `listQuerySchema()`, so every list endpoint takes it and they stay in
 step; which columns it looks at is the endpoint's own business. Build the pattern with
 `searchPattern()` from `list_endpoint_query.ts` rather than interpolating — `%` and `_` are

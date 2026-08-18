@@ -6,11 +6,16 @@
     "vitest.config.*",
     "cypress.config.*",
     "playwright.config.*",
-    "eslint.config.*"
+    "eslint.config.*",
+    "scripts/**/*"
   ],
   "compilerOptions": {
     // Most tools use transpilation instead of Node.js's native type-stripping.
     // Bundler mode provides a smoother developer experience.
+    // Node strips types without checking them, so anything it cannot simply erase — enum,
+    // namespace, parameter properties — has to fail here instead of at run time.
+    "erasableSyntaxOnly": true,
+
     "module": "preserve",
     "moduleResolution": "bundler",
 

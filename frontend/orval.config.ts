@@ -1,4 +1,4 @@
-import { defineConfig } from 'orval';
+import { defineConfig } from 'orval'
 
 export default defineConfig({
   calliope: {
@@ -24,7 +24,7 @@ export default defineConfig({
           listThreads: { query: { useQuery: true } },
           listPosts: { query: { useQuery: true } },
           listMemberships: { query: { useQuery: true } },
-        listUsers: { query: { useQuery: true } },
+          listUsers: { query: { useQuery: true } },
         },
         // The generated client resolves for every status, so vue-query would see a 401 as a
         // success. The mutator throws instead. It lives outside src/api because that whole
@@ -36,4 +36,4 @@ export default defineConfig({
       },
     },
   },
-});
+})

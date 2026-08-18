@@ -2,7 +2,10 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLoginUser } from '@/api/auth/auth'
+import { TEXT_LIMIT } from '@/api/textLimit'
+import { formatCount } from '@/lib/formatNumber'
 import { ApiError } from '@/lib/apiFetch'
+import { type FieldMessages, fieldMessage } from '@/lib/fieldMessage'
 import { forgetCurrentUser } from '@/lib/session'
 import CalliopeLogo from '@/components/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -26,14 +29,25 @@ const { mutateAsync: signIn, isPending } = useLoginUser()
 
 const FIELD_NAMES = ['login', 'password'] as const
 
+/** The API's own bounds, so the form cannot disagree with what the server will accept. */
+const LIMIT = TEXT_LIMIT.loginUser
+
 /**
- * The inputs' own `required` and `pattern` decide what counts as invalid; this only decides
- * how it is phrased. The API reports the same failures but words them in English, so its
- * issues are mapped onto these too.
+ * The inputs' own `required`, `pattern` and `maxlength` decide what counts as invalid; this
+ * only decides how it is phrased. The API reports the same failures but words them in
+ * English, so its issues are mapped onto these too.
  */
-const FIELD_MESSAGES: Record<FieldName, string> = {
-  login: 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.',
-  password: 'Gib dein Passwort ein.',
+const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {
+  login: {
+    missing: 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.',
+    malformed: 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.',
+    tooLong: `Das darf höchstens ${formatCount(LIMIT.login.maxLength)} Zeichen lang sein.`,
+  },
+  password: {
+    missing: 'Gib dein Passwort ein.',
+    malformed: 'Gib dein Passwort ein.',
+    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
+  },
 }
 
 const formElement = ref<HTMLFormElement | null>(null)
@@ -54,7 +68,7 @@ function validate(): boolean {
   for (const name of FIELD_NAMES) {
     const input = form.elements.namedItem(name)
     if (input instanceof HTMLInputElement && !input.validity.valid) {
-      errors[name] = FIELD_MESSAGES[name]
+      errors[name] = fieldMessage(FIELD_MESSAGES[name], input.validity)
     }
   }
 
@@ -75,7 +89,7 @@ function applyServerIssues(apiError: ApiError): boolean {
       return false
     }
     const field = issue.path as FieldName
-    errors[field] = FIELD_MESSAGES[field]
+    errors[field] = FIELD_MESSAGES[field].malformed
   }
 
   fieldErrors.value = errors
@@ -144,6 +158,7 @@ async function submit() {
               class="h-11 md:h-9"
               name="login"
               pattern=".*\S.*"
+              :maxlength="LIMIT.login.maxLength"
               autocomplete="username"
               autocapitalize="none"
               spellcheck="false"
@@ -161,6 +176,7 @@ async function submit() {
               class="h-11 md:h-9"
               name="password"
               type="password"
+              :maxlength="LIMIT.password.maxLength"
               autocomplete="current-password"
               required
               :aria-invalid="fieldErrors.password !== undefined ? true : undefined"

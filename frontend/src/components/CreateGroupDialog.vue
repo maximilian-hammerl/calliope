@@ -3,6 +3,8 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListGroupsQueryKey, useCreateGroup } from '@/api/groups/groups'
+import { TEXT_LIMIT } from '@/api/textLimit'
+import { formatCount } from '@/lib/formatNumber'
 import { listKeyPrefix } from '@/lib/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -41,7 +43,10 @@ const PERSPECTIVES = [
   '3. Person, Vergangenheit',
 ] as const
 
+const LIMIT = TEXT_LIMIT.createGroup
+
 const titleError = ref<string | undefined>(undefined)
+const descriptionError = ref<string | undefined>(undefined)
 const formError = ref<string | undefined>(undefined)
 
 const { mutateAsync: createGroup, isPending } = useCreateGroup()
@@ -56,15 +61,22 @@ watch(open, (isOpen) => {
   genre.value = ''
   perspective.value = ''
   titleError.value = undefined
+  descriptionError.value = undefined
   formError.value = undefined
 })
 
 async function submit() {
   titleError.value = undefined
+  descriptionError.value = undefined
   formError.value = undefined
 
   if (title.value.trim().length === 0) {
     titleError.value = 'Gib deiner Gruppe einen Titel.'
+    return
+  }
+
+  if (description.value.trim().length > LIMIT.description.maxLength) {
+    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.description.maxLength)} Zeichen lang sein.`
     return
   }
 
@@ -113,6 +125,7 @@ async function submit() {
               v-model="title"
               class="h-11 md:h-9"
               name="title"
+              :maxlength="LIMIT.title.maxLength"
               placeholder="z. B. Der Erinnerungsmarkt"
               required
               :aria-invalid="titleError !== undefined ? true : undefined"
@@ -120,7 +133,7 @@ async function submit() {
             <FieldError :errors="[titleError]" />
           </Field>
 
-          <Field>
+          <Field :data-invalid="descriptionError !== undefined ? true : undefined">
             <FieldLabel for="group-description">Worum geht es?</FieldLabel>
             <Textarea
               id="group-description"
@@ -128,7 +141,9 @@ async function submit() {
               name="description"
               rows="3"
               placeholder="z. B. Ein Markt, der nur nach Einbruch der Dunkelheit öffnet."
+              :aria-invalid="descriptionError !== undefined ? true : undefined"
             />
+            <FieldError :errors="[descriptionError]" />
           </Field>
 
           <Field>

@@ -98,6 +98,12 @@ founding a group is a social act.
 "Entwurf gespeichert" · "14 Beiträge · zuletzt vor 12 Minuten von Bob" · "3 offen" ·
 "Erledigt (5)". No "Super!", no "Ups!", no exclamation marks anywhere.
 
+**A limit is stated when it is reached, never as a running total.** Short fields simply stop
+accepting input at the bound. Prose fields — a group description, a post — accept whatever is
+typed and say why on submit, keeping the draft: "Der Beitrag ist zu lang. Er darf höchstens
+100.000 Zeichen haben." No live counter, on either kind; that is the word-counter finding
+again, and the same pressure. Limits read as German numerals: 100.000, not 100000.
+
 **Numbers get a noun.** A bare badge number was tested and misread — nobody could tell what "3"
 meant. Always "3 neu", "6 von 12 Threads", "2 Anmerkungen", "Erledigt (5)".
 
@@ -106,6 +112,14 @@ meant. Always "3 neu", "6 von 12 Threads", "2 Anmerkungen", "Erledigt (5)".
 
 **Reassurance is factual, not warm-fuzzy.** "Privat — nur Alice, Bob und Carol sehen diesen
 Thread." State who can see it; do not promise safety.
+
+**Say what a field will be used for, beside the field.** Registration states it for both:
+"Andere Mitglieder sehen deinen Benutzernamen und finden dich darüber. Wähle nichts, was privat
+bleiben soll." and "Deine E-Mail-Adresse sieht niemand außer dir. Sie wird weder anderen
+Mitgliedern angezeigt noch weitergegeben." Both are `FieldDescription`, not a link to a policy
+page — the moment someone is choosing a username is the only moment the choice is still free,
+and it cannot be changed afterwards. Note the form: what happens to the value, then what the
+member should do about it. Never "wir schützen deine Daten".
 
 **No emoji. Anywhere.** Emoji reactions were built in round 1 and explicitly removed. The only
 non-alphabetic glyphs allowed are the interface marks listed under Iconography.

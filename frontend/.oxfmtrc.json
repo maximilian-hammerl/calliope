@@ -3,6 +3,9 @@
   "semi": false,
   "singleQuote": true,
   "ignorePatterns": [
-    "**/*.md"
+    "**/*.md",
+    // The skill bundles are vendored reference material, not code we ship or maintain.
+    // Kept in step with the same exclusion in .oxlintrc.json.
+    ".claude/**"
   ]
 }

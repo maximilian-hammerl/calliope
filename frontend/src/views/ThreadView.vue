@@ -20,6 +20,8 @@ import ThreadTabs from '@/components/ThreadTabs.vue'
 import CreateThreadDialog from '@/components/CreateThreadDialog.vue'
 import ThreadHeader from '@/components/ThreadHeader.vue'
 import PostItem from '@/components/PostItem.vue'
+import { TEXT_LIMIT } from '@/api/textLimit'
+import { formatCount } from '@/lib/formatNumber'
 import PostComposer from '@/components/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
@@ -79,6 +81,13 @@ async function submit() {
   sendError.value = undefined
   const text = draft.value.trim()
   if (text.length === 0) {
+    return
+  }
+
+  // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word
+  // with no explanation is worse than being told why, and the draft is kept either way.
+  if (text.length > TEXT_LIMIT.createPost.text.maxLength) {
+    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.text.maxLength)} Zeichen haben.`
     return
   }
 

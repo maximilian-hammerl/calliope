@@ -121,3 +121,29 @@ npx vitest run
 The old platform had none, and that was a top complaint. Every target is at least 44px on a
 phone (`h-11 md:h-9` on controls), the reading size never shrinks below 17px, and both rails
 are hidden rather than shrunk. Check 375px before calling a surface done.
+
+## Length limits
+
+Never write a bound as a literal. `src/api/textLimit.ts` is generated from
+`backend/open-api.json` by `scripts/generateTextLimit.ts` as part of
+`npm run open-api:generate-client`, keyed by operation and request-body property:
+`TEXT_LIMIT.registerUser.username.maxLength`. It lives in the gitignored `src/api/`, so it is
+rebuilt from the document every time and cannot go stale.
+
+The generator is TypeScript run by Node's own type stripping — `node scripts/…​.ts`, no build
+step and no runner. Stripping erases types without checking them, so `tsconfig.node.json`
+includes `scripts/**/*` to put the file under `vue-tsc --build`, and sets `erasableSyntaxOnly`
+so syntax stripping cannot handle (`enum`, `namespace`, parameter properties) fails the type
+check rather than the run. The numbers originate in
+`backend/src/text_limit.ts`.
+
+Short fields — names, titles, addresses, a search term — bind them straight to `minlength` and
+`maxlength`, and let `fieldMessage()` in `lib/fieldMessage.ts` phrase what the browser found
+wrong. It exists because the fallback wording was actively misleading: an over-long username
+used to report "Gib einen Benutzernamen ein." beside the name just typed.
+
+**Prose fields take no `maxlength`.** A group description and a post body are checked on submit
+instead, and the draft is left untouched. Typing that stops dead mid-word with no explanation is
+the opposite of what the research asked for, and a live "97.500 / 100.000" is worse still — word
+counters were rejected outright as pressure. Say what the limit is once, at the moment it
+matters. Interpolate limits through `formatCount()` so they read as German (100.000, not 100000).

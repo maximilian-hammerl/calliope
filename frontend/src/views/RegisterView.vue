@@ -2,7 +2,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRegisterUser } from '@/api/auth/auth'
+import { TEXT_LIMIT } from '@/api/textLimit'
+import { formatCount } from '@/lib/formatNumber'
 import { ApiError } from '@/lib/apiFetch'
+import { type FieldMessages, fieldMessage } from '@/lib/fieldMessage'
 import { forgetCurrentUser } from '@/lib/session'
 import CalliopeLogo from '@/components/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -26,23 +29,31 @@ const { mutateAsync: signUp, isPending } = useRegisterUser()
 
 const FIELD_NAMES = ['username', 'emailAddress', 'password'] as const
 
+/** The API's own bounds, so the form cannot disagree with what the server will accept. */
+const LIMIT = TEXT_LIMIT.registerUser
+
 /**
- * The inputs' own `required`, `type` and `pattern` decide what counts as invalid; this only
- * decides how it is phrased. The API reports the same failures but words them in English, so
- * its issues are mapped onto these too.
+ * The inputs' own `required`, `type`, `pattern`, `minlength` and `maxlength` decide what
+ * counts as invalid; this only decides how it is phrased. The API reports the same failures
+ * but words them in English, so its issues are mapped onto these too.
  */
-const FIELD_MESSAGES: Record<FieldName, { missing: string; malformed: string }> = {
+const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {
   username: {
+    // Whitespace-only trips `pattern`, which for a member is the same as leaving it empty.
     missing: 'Gib einen Benutzernamen ein.',
     malformed: 'Gib einen Benutzernamen ein.',
+    tooShort: `Der Benutzername braucht mindestens ${formatCount(LIMIT.username.minLength)} Zeichen.`,
+    tooLong: `Der Benutzername darf höchstens ${formatCount(LIMIT.username.maxLength)} Zeichen lang sein.`,
   },
   emailAddress: {
     missing: 'Gib eine E-Mail-Adresse ein.',
     malformed: 'Das sieht nicht nach einer E-Mail-Adresse aus.',
+    tooLong: `Die E-Mail-Adresse darf höchstens ${formatCount(LIMIT.emailAddress.maxLength)} Zeichen lang sein.`,
   },
   password: {
     missing: 'Wähle ein Passwort.',
     malformed: 'Wähle ein Passwort.',
+    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
   },
 }
 
@@ -69,9 +80,7 @@ function validate(): boolean {
     if (!(input instanceof HTMLInputElement) || input.validity.valid) {
       continue
     }
-    errors[name] = input.validity.valueMissing
-      ? FIELD_MESSAGES[name].missing
-      : FIELD_MESSAGES[name].malformed
+    errors[name] = fieldMessage(FIELD_MESSAGES[name], input.validity)
   }
 
   fieldErrors.value = errors
@@ -164,6 +173,8 @@ async function submit() {
               class="h-11 md:h-9"
               name="username"
               pattern=".*\S.*"
+              :minlength="LIMIT.username.minLength"
+              :maxlength="LIMIT.username.maxLength"
               autocomplete="username"
               autocapitalize="none"
               spellcheck="false"
@@ -185,6 +196,7 @@ async function submit() {
               class="h-11 md:h-9"
               name="emailAddress"
               type="email"
+              :maxlength="LIMIT.emailAddress.maxLength"
               autocomplete="email"
               autocapitalize="none"
               spellcheck="false"
@@ -206,6 +218,7 @@ async function submit() {
               class="h-11 md:h-9"
               name="password"
               type="password"
+              :maxlength="LIMIT.password.maxLength"
               autocomplete="new-password"
               required
               :aria-invalid="fieldErrors.password !== undefined ? true : undefined"
