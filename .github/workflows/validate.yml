@@ -111,7 +111,10 @@ jobs:
 
       - name: Check the migrations roll back and forward again
         run: |
-          for _ in $(seq 1 20); do deno task migrations:rollback || break; done
+          # One rollback per migration file, so this neither stops short of the oldest one
+          # nor runs past it. A failure here is a `migrate:down` that does not reverse its
+          # `migrate:up`, and it has to fail the step rather than be swallowed.
+          for migration in migrations/*.sql; do deno task migrations:rollback; done
           deno task migrations:migrate
 
       - name: Run tests
