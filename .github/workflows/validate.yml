@@ -65,6 +65,58 @@ jobs:
       - name: Run tests
         run: deno task test
 
+  database:
+    name: Database
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: database
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create .env from the example
+        run: cp .env.example .env
+        working-directory: .
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+          cache-hash: ${{ hashFiles('database/deno.lock') }}
+
+      - name: Install dependencies
+        run: deno install
+
+      - name: Check formatting, lints and types
+        run: deno task validate:check
+
+      # dbmate is a plain binary rather than a Deno dependency, so installing it lets the
+      # pipeline run the repository's own tasks instead of restating their configuration.
+      - name: Install dbmate
+        run: |
+          curl -fsSL -o /usr/local/bin/dbmate \
+            https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+          chmod +x /usr/local/bin/dbmate
+
+      - name: Start the database
+        run: docker compose up -d --wait db
+        working-directory: .
+
+      # The migrations are what these tests exercise, so they are applied here rather than
+      # assumed. Rolling all the way down and up again proves every `migrate:down` really
+      # reverses its `migrate:up` — a trigger function left behind breaks the next deploy.
+      - name: Apply migrations
+        run: deno task migrations:migrate
+
+      - name: Check the migrations roll back and forward again
+        run: |
+          for _ in $(seq 1 20); do deno task migrations:rollback || break; done
+          deno task migrations:migrate
+
+      - name: Run tests
+        run: deno task test
+
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
