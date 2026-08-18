@@ -43,6 +43,10 @@
     {
       "name": "notifications",
       "description": "What happened to a member: invitations, role changes, and activity in their groups"
+    },
+    {
+      "name": "search",
+      "description": "Finding groups, threads and members by name in one request"
     }
   ],
   "components": { "schemas": {}, "parameters": {} },
@@ -8198,6 +8202,290 @@
           },
           "404": {
             "description": "No such chat, or not one of the current user's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "query": {
+        "tags": ["search"],
+        "summary": "Search groups, threads and members at once",
+        "description": "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Posts are not searched yet.",
+        "operationId": "search",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "search": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 120
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "default": 5
+                  }
+                },
+                "required": ["search"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What was found, by kind",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "groups": {
+                      "type": "object",
+                      "properties": {
+                        "totalResults": { "type": "integer", "minimum": 0 },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "title": { "type": "string" },
+                              "description": { "type": "string" },
+                              "visibility": {
+                                "type": "string",
+                                "enum": ["private", "public"]
+                              },
+                              "createdBy": {
+                                "type": ["string", "null"],
+                                "format": "uuid"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "lastActivityAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "createdByUsername": {
+                                "type": ["string", "null"]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "description",
+                              "visibility",
+                              "createdBy",
+                              "createdAt",
+                              "lastActivityAt",
+                              "createdByUsername"
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["totalResults", "results"]
+                    },
+                    "threads": {
+                      "type": "object",
+                      "properties": {
+                        "totalResults": { "type": "integer", "minimum": 0 },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "writingGroupId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "title": { "type": "string" },
+                              "createdBy": {
+                                "type": ["string", "null"],
+                                "format": "uuid"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "lastActivityAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "createdByUsername": {
+                                "type": ["string", "null"]
+                              },
+                              "writingGroupTitle": { "type": "string" }
+                            },
+                            "required": [
+                              "id",
+                              "writingGroupId",
+                              "title",
+                              "createdBy",
+                              "createdAt",
+                              "lastActivityAt",
+                              "createdByUsername",
+                              "writingGroupTitle"
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["totalResults", "results"]
+                    },
+                    "users": {
+                      "type": "object",
+                      "properties": {
+                        "totalResults": { "type": "integer", "minimum": 0 },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "username": { "type": "string" }
+                            },
+                            "required": ["id", "username"]
+                          }
+                        }
+                      },
+                      "required": ["totalResults", "results"]
+                    }
+                  },
+                  "required": ["groups", "threads", "users"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
             "content": {
               "application/json": {
                 "schema": {

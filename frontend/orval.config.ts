@@ -26,6 +26,7 @@ export default defineConfig({
           listMemberships: { query: { useQuery: true } },
           listUsers: { query: { useQuery: true } },
           listNotifications: { query: { useQuery: true } },
+          search: { query: { useQuery: true } },
           listChats: { query: { useQuery: true } },
           listMessages: { query: { useQuery: true } },
           listChatMemberships: { query: { useQuery: true } },

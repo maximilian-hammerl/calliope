@@ -146,3 +146,12 @@ export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA
     joinedAt: true,
   })
   .extend({ username: z.string() });
+
+/**
+ * A thread found by a search carries the title of its group. A result that can come from
+ * anywhere has to say where it came from — „Plot" alone is meaningless when it could be from
+ * any group, which is the same reason a notification about a post names both.
+ */
+export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE.extend({
+  writingGroupTitle: z.string(),
+});

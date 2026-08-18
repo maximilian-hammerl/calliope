@@ -2,12 +2,20 @@ import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
+import type { User } from "@/src/service/user_service.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
 } from "@/src/list_endpoint_query.ts";
+
+/**
+ * A thread found by a search, which can come from any group the member may see — so it says
+ * which one. A thread listed inside a group never needs that, because the group is the page
+ * you are already on.
+ */
+export type FoundThread = Thread & { writingGroupTitle: string };
 
 export type Thread =
   & Pick<
@@ -97,6 +105,53 @@ function listThreads(
 }
 
 /** Returns nothing when there is no such thread. Authorisation is the caller's job. */
+/**
+ * Threads across every group the member may see: their own, and public ones they have not
+ * joined — the same rule the group list uses, applied one level down. Inner joins, because a
+ * thread without a group cannot exist.
+ */
+function listVisibleThreads(
+  user: User,
+  query: ListQuery,
+): Promise<ListResults<FoundThread>> {
+  let threads = db
+    .selectFrom("writingThread")
+    .innerJoin(
+      "writingGroup",
+      "writingGroup.id",
+      "writingThread.writingGroupId",
+    )
+    .leftJoin(
+      "userInWritingGroup",
+      (join) =>
+        join
+          .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+          .on("userInWritingGroup.userId", "=", user.id),
+    )
+    .leftJoin("user", "user.id", "writingThread.createdBy")
+    .where((eb) =>
+      eb.or([
+        eb("writingGroup.visibility", "=", "public"),
+        eb("userInWritingGroup.userId", "is not", null),
+      ])
+    )
+    .select([
+      ...SELECTED_COLUMNS,
+      "user.username as createdByUsername",
+      "writingGroup.title as writingGroupTitle",
+    ]);
+
+  if (query.search !== undefined) {
+    threads = threads.where(
+      "writingThread.title",
+      "ilike",
+      searchPattern(query.search),
+    );
+  }
+
+  return listResultsWithCount(threads, query);
+}
+
 async function updateThread(
   threadId: string,
   changes: { title?: string },
@@ -131,6 +186,7 @@ export const WritingThreadService = {
   insertThread,
   selectThread,
   listThreads,
+  listVisibleThreads,
   updateThread,
   deleteThread,
 };

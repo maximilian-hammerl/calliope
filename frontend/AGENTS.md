@@ -122,6 +122,18 @@ The old platform had none, and that was a top complaint. Every target is at leas
 phone (`h-11 md:h-9` on controls), the reading size never shrinks below 17px, and both rails
 are hidden rather than shrunk. Check 375px before calling a surface done.
 
+## Components built on reka-ui
+
+`components/ui/` is generated territory — shadcn-vue writes there, and a hand-written file
+could be overwritten by the next `add`. Anything we build ourselves goes in `components/`,
+named for what it does (`SearchField`, `SearchResults`) rather than the primitive it wraps.
+
+Reaching for reka directly is not a departure: shadcn-vue is a generator rather than a
+dependency, and reka is what all forty-odd `ui/` components already stand on. Match their
+conventions when you do it — `cn()` for class merging, a `data-slot` attribute, `class?:
+HTMLAttributes['class']` as a prop — so the result does not read as foreign. Let reka position
+its own floating content; an `absolute` of our own fights it and sends the popover off-screen.
+
 ## Exhaustive switches
 
 `lib/assertUnreachable.ts` in the `default` branch of any `switch` over a union. It is a

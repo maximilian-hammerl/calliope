@@ -355,7 +355,16 @@ reference for this decision.
 Everything below has no direct counterpart in the mockups and was added because a real product
 needs it. Each is marked so nobody mistakes it for tested ground:
 
-- `SearchField` as a real input (the mockups only show its resting state in the top bar).
+- `SearchField` as a real input, with the popover under it (the mockups only show its resting
+  state in the top bar). Results are grouped by kind under mono-ish 11.5px headings — Gruppen,
+  Threads, Mitglieder — five per kind, and a section that found nothing is omitted rather than
+  shown empty. Under each section, „N weitere Treffer" when there are more, because a number
+  gets a noun and an imprecise search should say so rather than look complete.
+  **A result that can come from anywhere says where it came from**: a thread carries its
+  group's title beneath it, for the same reason a notification about a post names both.
+  A member has nowhere to go until profiles exist, so those rows are text rather than links.
+  From `md` up the field sits in the top bar; below that it takes its own full-width row under
+  it, because the bar had 29px to spare and the wordmark would have paid for it.
 - `--signal-error` / `--signal-ok` for form validation.
 - `Avatar`, `Label`, `PanelCard` — extracted as primitives from patterns that repeat in the mockup.
 - Lucide as the icon set, at 1.5px stroke — anticipated by this document, adopted once the
