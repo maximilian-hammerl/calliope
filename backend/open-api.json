@@ -1577,7 +1577,12 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
+                    "invitedBy": {
+                      "type": ["string", "null"],
+                      "format": "uuid"
+                    },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "invitedByUsername": { "type": ["string", "null"] },
                     "username": { "type": "string" }
                   },
                   "required": [
@@ -1587,7 +1592,9 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
+                    "invitedBy",
                     "createdAt",
+                    "invitedByUsername",
                     "username"
                   ]
                 }
@@ -1878,10 +1885,15 @@
                             "type": ["string", "null"],
                             "format": "date-time"
                           },
+                          "invitedBy": {
+                            "type": ["string", "null"],
+                            "format": "uuid"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
                           },
+                          "invitedByUsername": { "type": ["string", "null"] },
                           "username": { "type": "string" }
                         },
                         "required": [
@@ -1891,7 +1903,9 @@
                           "status",
                           "invitedAt",
                           "joinedAt",
+                          "invitedBy",
                           "createdAt",
+                          "invitedByUsername",
                           "username"
                         ]
                       }
@@ -2095,7 +2109,12 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
+                    "invitedBy": {
+                      "type": ["string", "null"],
+                      "format": "uuid"
+                    },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "invitedByUsername": { "type": ["string", "null"] },
                     "username": { "type": "string" }
                   },
                   "required": [
@@ -2105,7 +2124,9 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
+                    "invitedBy",
                     "createdAt",
+                    "invitedByUsername",
                     "username"
                   ]
                 }
@@ -2533,7 +2554,12 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
+                    "invitedBy": {
+                      "type": ["string", "null"],
+                      "format": "uuid"
+                    },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "invitedByUsername": { "type": ["string", "null"] },
                     "username": { "type": "string" }
                   },
                   "required": [
@@ -2543,7 +2569,9 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
+                    "invitedBy",
                     "createdAt",
+                    "invitedByUsername",
                     "username"
                   ]
                 }
@@ -5857,6 +5885,77 @@
                               "writingGroupId",
                               "writingGroupTitle",
                               "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "occurredAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "readAt": {
+                                "type": ["string", "null"],
+                                "format": "date-time"
+                              },
+                              "actorUsername": { "type": ["string", "null"] },
+                              "writingGroupId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "writingGroupTitle": { "type": "string" },
+                              "type": {
+                                "type": "string",
+                                "enum": ["invitation_accepted"]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "occurredAt",
+                              "readAt",
+                              "actorUsername",
+                              "writingGroupId",
+                              "writingGroupTitle",
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "occurredAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "readAt": {
+                                "type": ["string", "null"],
+                                "format": "date-time"
+                              },
+                              "actorUsername": { "type": ["string", "null"] },
+                              "writingGroupId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "writingGroupTitle": { "type": "string" },
+                              "type": {
+                                "type": "string",
+                                "enum": ["visibility_changed_in_writing_group"]
+                              },
+                              "visibility": {
+                                "type": "string",
+                                "enum": ["private", "public"]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "occurredAt",
+                              "readAt",
+                              "actorUsername",
+                              "writingGroupId",
+                              "writingGroupTitle",
+                              "type",
+                              "visibility"
                             ]
                           },
                           {

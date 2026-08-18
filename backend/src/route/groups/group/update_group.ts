@@ -93,6 +93,7 @@ export default new OpenAPIHono().openapi(
     const updated = await WritingGroupService.updateWritingGroup(
       groupId,
       changes,
+      user.id,
     );
 
     if (updated === undefined) {

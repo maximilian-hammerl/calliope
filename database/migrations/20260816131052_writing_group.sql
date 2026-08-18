@@ -29,6 +29,10 @@ CREATE TABLE public.user_in_writing_group
     invited_at       TIMESTAMPTZ,
     joined_at        TIMESTAMPTZ,
 
+    -- Who did the inviting. Null for the founder of a group, who was invited by nobody, and
+    -- null again once that account is gone — the membership outlives whoever opened the door.
+    invited_by       UUID                                REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
+
     created_at       TIMESTAMPTZ                         NOT NULL DEFAULT now()
 );
 

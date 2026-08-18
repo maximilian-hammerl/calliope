@@ -31,6 +31,13 @@ export function notificationText(notification: ListNotifications200ResultsItem):
   switch (notification.type) {
     case 'invited_to_writing_group':
       return `${actor} hat dich zu „${notification.writingGroupTitle}“ eingeladen.`
+    case 'invitation_accepted':
+      return `${actor} ist „${notification.writingGroupTitle}“ beigetreten.`
+    case 'visibility_changed_in_writing_group':
+      // Named plainly, because it changes who can read what everybody has written.
+      return notification.visibility === 'public'
+        ? `${actor} hat „${notification.writingGroupTitle}“ öffentlich gemacht. Alle können jetzt mitlesen.`
+        : `${actor} hat „${notification.writingGroupTitle}“ auf privat gestellt. Nur Mitglieder können mitlesen.`
     case 'role_changed_in_writing_group':
       return `${actor} hat deine Rolle in „${notification.writingGroupTitle}“ geändert: ${
         ROLE_CLAUSES[notification.role] ?? notification.role
@@ -60,7 +67,9 @@ export function notificationTarget(
         },
       }
     case 'invited_to_writing_group':
+    case 'invitation_accepted':
     case 'role_changed_in_writing_group':
+    case 'visibility_changed_in_writing_group':
       // An invitation lands on the group page, which is where accepting it lives.
       return { name: 'group', params: { groupId: notification.writingGroupId } }
     default:

@@ -218,3 +218,126 @@ Deno.test("an invited member is not told what the group is writing", async () =>
 
   await deleteUsers(["producers-pending"]);
 });
+
+Deno.test("turning a group public tells its members, not the administrator", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+
+  const response = await request(
+    "PATCH",
+    `/api/groups/${created.id}`,
+    adminCookie,
+    {
+      visibility: "public",
+    },
+  );
+  assertEquals(response.status, STATUS_CODE.OK);
+
+  const [notification] = ofType(
+    await notificationsOf(writerCookie),
+    "visibility_changed_in_writing_group",
+  );
+  assertEquals(notification.actorUsername, administrator);
+  assertEquals(
+    ofType(
+      await notificationsOf(adminCookie),
+      "visibility_changed_in_writing_group",
+    ).length,
+    0,
+  );
+});
+
+Deno.test("a visibility that does not move tells nobody", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+
+  // The group is already private, and a form may well send the value it started with.
+  await request("PATCH", `/api/groups/${created.id}`, adminCookie, {
+    visibility: "private",
+  });
+  // Renaming is not a change to who can see the writing.
+  await request("PATCH", `/api/groups/${created.id}`, adminCookie, {
+    title: "Anders",
+  });
+
+  assertEquals(
+    ofType(
+      await notificationsOf(writerCookie),
+      "visibility_changed_in_writing_group",
+    ).length,
+    0,
+  );
+});
+
+Deno.test("flipping visibility twice leaves one notification", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+
+  await request("PATCH", `/api/groups/${created.id}`, adminCookie, {
+    visibility: "public",
+  });
+  await request("PATCH", `/api/groups/${created.id}`, adminCookie, {
+    visibility: "private",
+  });
+
+  const changes = ofType(
+    await notificationsOf(writerCookie),
+    "visibility_changed_in_writing_group",
+  );
+  assertEquals(changes.length, 1, "what matters is what the group is now");
+});
+
+Deno.test("accepting an invitation tells whoever sent it", async () => {
+  const adminCookie = await registerUser(administrator);
+  const created = await createGroup(adminCookie, "Der Erinnerungsmarkt");
+  const invitedCookie = await registerUser(writer);
+  const invitedId = await getUserId(writer);
+
+  await request("POST", `/api/groups/${created.id}/memberships`, adminCookie, {
+    userId: invitedId,
+    role: "writer",
+  });
+  await request(
+    "POST",
+    `/api/groups/${created.id}/memberships/me/accept`,
+    invitedCookie,
+  );
+
+  const [notification] = ofType(
+    await notificationsOf(adminCookie),
+    "invitation_accepted",
+  );
+  assertEquals(notification.actorUsername, writer);
+  // The person accepting is not told about their own doing.
+  assertEquals(
+    ofType(await notificationsOf(invitedCookie), "invitation_accepted").length,
+    0,
+  );
+});
+
+Deno.test("the member list says who did the inviting, while it is still an invitation", async () => {
+  const adminCookie = await registerUser(administrator);
+  const created = await createGroup(adminCookie, "Der Erinnerungsmarkt");
+  await registerUser(writer);
+  const invitedId = await getUserId(writer);
+
+  await request("POST", `/api/groups/${created.id}/memberships`, adminCookie, {
+    userId: invitedId,
+    role: "writer",
+  });
+
+  const page = await (await request(
+    "QUERY",
+    `/api/groups/${created.id}/memberships`,
+    adminCookie,
+    {},
+  )).json();
+
+  const invited = page.results.find((m: { username: string }) =>
+    m.username === writer
+  );
+  assertEquals(invited.invitedByUsername, administrator);
+
+  // The founder was invited by nobody.
+  const founder = page.results.find((m: { username: string }) =>
+    m.username === administrator
+  );
+  assertEquals(founder.invitedByUsername, null);
+});

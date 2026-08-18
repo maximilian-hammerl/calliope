@@ -161,6 +161,9 @@ an event cannot exist unannounced. Three rules they all share:
 - **Never the actor.** `actor_id IS DISTINCT FROM recipient_id` is a constraint, so a producer
   that forgets does not merely say something odd — it fails the whole request. An administrator
   may change their own role, which is exactly where this bites.
+- **Only a change that changes something.** A visibility notification is written when the
+  value actually moves; a request that sends the value it already has, or renames the group,
+  tells nobody. The producer reads the old row inside the same transaction to know.
 - **Joined members only.** Group activity skips people who were invited and have not accepted:
   telling somebody what is being written in a group they are not part of yet is noise.
 - **Drafts tell nobody.** A draft is visible only to its author, so `new_writing_post` is

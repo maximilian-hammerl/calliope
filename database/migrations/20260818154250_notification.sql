@@ -2,7 +2,9 @@
 
 CREATE TYPE public.notification_type AS ENUM (
     'invited_to_writing_group',
+    'invitation_accepted',
     'role_changed_in_writing_group',
+    'visibility_changed_in_writing_group',
     'new_writing_thread',
     'new_writing_post'
     );
@@ -48,6 +50,10 @@ CREATE TABLE public.notification
         CASE type
             WHEN 'invited_to_writing_group' THEN
                 writing_thread_id IS NULL AND writing_post_id IS NULL
+            WHEN 'invitation_accepted' THEN
+                writing_thread_id IS NULL AND writing_post_id IS NULL
+            WHEN 'visibility_changed_in_writing_group' THEN
+                writing_thread_id IS NULL AND writing_post_id IS NULL
             WHEN 'role_changed_in_writing_group' THEN
                 writing_thread_id IS NULL AND writing_post_id IS NULL
             WHEN 'new_writing_thread' THEN
@@ -70,6 +76,12 @@ CREATE TABLE public.notification
 CREATE UNIQUE INDEX notification_one_role_change_per_membership
     ON public.notification (recipient_id, writing_group_id)
     WHERE type = 'role_changed_in_writing_group';
+
+-- Visibility is a state as much as a role is: what matters is what the group is now, not the
+-- sequence of flips that got it there. One row, whose occurred_at moves.
+CREATE UNIQUE INDEX notification_one_visibility_change_per_membership
+    ON public.notification (recipient_id, writing_group_id)
+    WHERE type = 'visibility_changed_in_writing_group';
 
 CREATE INDEX notification_recipient_id_occurred_at_idx
     ON public.notification (recipient_id, occurred_at DESC);

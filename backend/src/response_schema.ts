@@ -30,6 +30,8 @@ export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
 export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME);
 
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
+  /** Null for a group's founder, and once the inviter's account is gone. */
+  invitedByUsername: z.string().nullable(),
   username: z.string(),
 });
 
@@ -79,6 +81,18 @@ export const NOTIFICATION_RESPONSE = z.discriminatedUnion("type", [
     ...NOTIFICATION_BASE,
     ...GROUP_SUBJECT,
     type: z.literal("invited_to_writing_group"),
+  }),
+  z.object({
+    ...NOTIFICATION_BASE,
+    ...GROUP_SUBJECT,
+    type: z.literal("invitation_accepted"),
+  }),
+  z.object({
+    ...NOTIFICATION_BASE,
+    ...GROUP_SUBJECT,
+    type: z.literal("visibility_changed_in_writing_group"),
+    /** What the group is now — joined, like the role, because one row holds the latest. */
+    visibility: WRITING_GROUP_SCHEMA.shape.visibility,
   }),
   z.object({
     ...NOTIFICATION_BASE,

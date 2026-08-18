@@ -165,6 +165,14 @@ the avatar and nothing else. A count in the bar tells you how far behind you are
 pressure the research warned about; a dot only says something happened. The number is said
 once, with its noun, on the menu item itself („Mitteilungen · 3 neu").
 
+**A change to who can see the writing is said outright.** „mira hat „Der Erinnerungsmarkt"
+öffentlich gemacht. Alle können jetzt mitlesen." — the consequence, not just the setting. It is
+the one notification about a group's own state that changes who may read what its members
+wrote, and the system's rule is to state who can see something rather than promise safety.
+
+**A pending invitation names who sent it**: „eingeladen vor 3 Tagen von mira". Only while it is
+pending — once somebody has joined, who opened the door stops being what a reader wants.
+
 **A role reads as a clause, not as a column heading.** „Admin", „Schreibt" and „Liest" label a
 column in the member list and read badly in a sentence — „geändert: Liest." In prose the role
 becomes what it lets you do: „Du verwaltest die Gruppe.", „Du schreibst mit.", „Du liest mit."

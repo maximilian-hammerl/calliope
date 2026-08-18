@@ -1,5 +1,8 @@
 import { z } from "@hono/zod-openapi";
-import type { NotificationType } from "@/src/database/schema.ts";
+import type {
+  NotificationType,
+  WritingGroupVisibility,
+} from "@/src/database/schema.ts";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import { NOTIFICATION_RESPONSE } from "@/src/response_schema.ts";
@@ -53,6 +56,7 @@ type NotificationRow = {
   actorUsername: string | null;
   writingGroupId: string;
   writingGroupTitle: string;
+  visibility: WritingGroupVisibility;
   role: UserInWritingGroupRole;
   writingThreadId: string | null;
   writingThreadTitle: string | null;
@@ -73,7 +77,10 @@ function toNotification(row: NotificationRow): Notification {
 
   switch (row.type) {
     case "invited_to_writing_group":
+    case "invitation_accepted":
       return { ...base, ...group, type: row.type };
+    case "visibility_changed_in_writing_group":
+      return { ...base, ...group, type: row.type, visibility: row.visibility };
     case "role_changed_in_writing_group":
       return { ...base, ...group, type: row.type, role: row.role };
     case "new_writing_thread":
@@ -146,6 +153,7 @@ function notificationsFor(recipientId: string) {
       "user.username as actorUsername",
       "notification.writingGroupId",
       "writingGroup.title as writingGroupTitle",
+      "writingGroup.visibility",
       "userInWritingGroup.role",
       "notification.writingThreadId",
       "writingThread.title as writingThreadTitle",
@@ -289,6 +297,81 @@ async function insertGroupActivityNotifications(
     .execute();
 }
 
+/**
+ * Told to whoever opened the door, once it is walked through. Nobody else needs it: an
+ * administrator who did not invite this person has no loop to close.
+ */
+async function insertInvitationAcceptedNotification(
+  transaction: Transaction,
+  acceptance: {
+    invitedBy: string | null;
+    writingGroupId: string;
+    actorId: string;
+  },
+): Promise<void> {
+  // A founder was invited by nobody, and nobody is told about their own doing.
+  if (
+    acceptance.invitedBy === null || acceptance.invitedBy === acceptance.actorId
+  ) {
+    return;
+  }
+
+  await transaction
+    .insertInto("notification")
+    .values({
+      recipientId: acceptance.invitedBy,
+      writingGroupId: acceptance.writingGroupId,
+      actorId: acceptance.actorId,
+      type: "invitation_accepted",
+    })
+    .execute();
+}
+
+/**
+ * Everyone in the group, minus whoever changed it. A group turning public means everything
+ * its members have written becomes readable by anyone with an account, which is the one
+ * change here that alters who can see somebody's writing.
+ *
+ * Collapsed like a role change: the state is what the group is now, not the sequence of flips
+ * that got it there, which is also why the visibility itself is joined rather than stored.
+ */
+async function insertVisibilityChangeNotifications(
+  transaction: Transaction,
+  change: { writingGroupId: string; actorId: string },
+): Promise<void> {
+  const recipients = await transaction
+    .selectFrom("userInWritingGroup")
+    .select("userId")
+    .where("writingGroupId", "=", change.writingGroupId)
+    .where("status", "=", "joined")
+    .where("userId", "!=", change.actorId)
+    .execute();
+
+  if (recipients.length === 0) {
+    return;
+  }
+
+  await transaction
+    .insertInto("notification")
+    .values(recipients.map(({ userId }) => ({
+      recipientId: userId,
+      writingGroupId: change.writingGroupId,
+      actorId: change.actorId,
+      type: "visibility_changed_in_writing_group" as const,
+    })))
+    .onConflict((oc) =>
+      oc
+        .columns(["recipientId", "writingGroupId"])
+        .where("type", "=", "visibility_changed_in_writing_group")
+        .doUpdateSet({
+          occurredAt: Temporal.Now.instant().toString(),
+          readAt: null,
+          actorId: change.actorId,
+        })
+    )
+    .execute();
+}
+
 export const NotificationService = {
   listNotifications,
   countUnread,
@@ -296,4 +379,6 @@ export const NotificationService = {
   insertInvitationNotification,
   insertRoleChangeNotification,
   insertGroupActivityNotifications,
+  insertInvitationAcceptedNotification,
+  insertVisibilityChangeNotifications,
 };

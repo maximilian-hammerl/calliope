@@ -58,9 +58,14 @@ const memberIds = computed<string[]>(() => props.memberships.map((membership) =>
  */
 function membershipDate(membership: ListMemberships200ResultsItem): string | undefined {
   if (membership.status === 'invited') {
-    return membership.invitedAt === null
-      ? undefined
-      : `eingeladen ${formatActivityTime(membership.invitedAt)}`
+    if (membership.invitedAt === null) {
+      return undefined
+    }
+    // Who did the inviting matters while it is still an invitation: an administrator looking
+    // at a pending row wants to know whether it was theirs to chase.
+    const invitedBy =
+      membership.invitedByUsername === null ? '' : ` von ${membership.invitedByUsername}`
+    return `eingeladen ${formatActivityTime(membership.invitedAt)}${invitedBy}`
   }
 
   return membership.joinedAt === null

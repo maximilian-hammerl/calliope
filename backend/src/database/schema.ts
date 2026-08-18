@@ -10,10 +10,12 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   : ColumnType<T, T | undefined, T>;
 
 export type NotificationType =
+  | "invitation_accepted"
   | "invited_to_writing_group"
   | "new_writing_post"
   | "new_writing_thread"
-  | "role_changed_in_writing_group";
+  | "role_changed_in_writing_group"
+  | "visibility_changed_in_writing_group";
 
 export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 
@@ -46,6 +48,7 @@ export interface User {
 export interface UserInWritingGroup {
   createdAt: Generated<string>;
   invitedAt: string | null;
+  invitedBy: string | null;
   joinedAt: string | null;
   role: UserInWritingGroupRole;
   status: UserInWritingGroupStatus;
@@ -122,10 +125,12 @@ export const USER_IN_WRITING_GROUP_STATUS_SCHEMA = z.enum(
 );
 
 export const NOTIFICATION_TYPES = [
+  "invitation_accepted",
   "invited_to_writing_group",
   "new_writing_post",
   "new_writing_thread",
   "role_changed_in_writing_group",
+  "visibility_changed_in_writing_group",
 ] as const;
 export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
 
@@ -158,6 +163,7 @@ export const USER_IN_WRITING_GROUP_SCHEMA = z.object({
   status: USER_IN_WRITING_GROUP_STATUS_SCHEMA,
   invitedAt: z.iso.datetime({ offset: true }).nullable(),
   joinedAt: z.iso.datetime({ offset: true }).nullable(),
+  invitedBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 

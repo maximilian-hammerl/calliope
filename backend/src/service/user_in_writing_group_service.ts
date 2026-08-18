@@ -21,10 +21,13 @@ export type UserInWritingGroup =
     | "status"
     | "invitedAt"
     | "joinedAt"
+    | "invitedBy"
     | "createdAt"
   >
   // Never null: the membership is cascade-deleted with its user.
-  & { username: string };
+  & { username: string }
+  // Null for a founder, and once the inviter's account is gone.
+  & { invitedByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "userInWritingGroup.userId",
@@ -33,6 +36,7 @@ const SELECTED_COLUMNS = [
   "userInWritingGroup.status",
   "userInWritingGroup.invitedAt",
   "userInWritingGroup.joinedAt",
+  "userInWritingGroup.invitedBy",
   "userInWritingGroup.createdAt",
 ] as const;
 
@@ -43,6 +47,7 @@ const RETURNED_COLUMNS = [
   "status",
   "invitedAt",
   "joinedAt",
+  "invitedBy",
   "createdAt",
 ] as const;
 
@@ -54,7 +59,16 @@ function membershipsWithUsername(executor: typeof db | Transaction = db) {
   return executor
     .selectFrom("userInWritingGroup")
     .innerJoin("user", "user.id", "userInWritingGroup.userId")
-    .select([...SELECTED_COLUMNS, "user.username"]);
+    .select([...SELECTED_COLUMNS, "user.username"])
+    // A correlated subquery rather than a second join: an aliased table would widen the
+    // builder's table union past what the shared list helper accepts.
+    .select((eb) =>
+      eb
+        .selectFrom("user as inviter")
+        .select("inviter.username")
+        .whereRef("inviter.id", "=", "userInWritingGroup.invitedBy")
+        .as("invitedByUsername")
+    );
 }
 
 /**
@@ -84,7 +98,13 @@ async function insertInvitation(
   return await db.transaction().execute(async (transaction) => {
     const invitation = await transaction
       .insertInto("userInWritingGroup")
-      .values({ writingGroupId, userId, role, status: "invited" })
+      .values({
+        writingGroupId,
+        userId,
+        role,
+        status: "invited",
+        invitedBy,
+      })
       // Nothing to do when the user is already invited or a member.
       .onConflict((oc) => oc.doNothing())
       .returning(RETURNED_COLUMNS)
@@ -167,21 +187,32 @@ async function acceptInvitation(
   writingGroupId: string,
   userId: string,
 ): Promise<UserInWritingGroup | undefined> {
-  const updated = await db
-    .updateTable("userInWritingGroup")
-    .set({ status: "joined" })
-    .where("writingGroupId", "=", writingGroupId)
-    .where("userId", "=", userId)
-    .where("status", "=", "invited")
-    .returning(RETURNED_COLUMNS)
-    .executeTakeFirst();
+  return await db.transaction().execute(async (transaction) => {
+    const updated = await transaction
+      .updateTable("userInWritingGroup")
+      .set({ status: "joined" })
+      .where("writingGroupId", "=", writingGroupId)
+      .where("userId", "=", userId)
+      .where("status", "=", "invited")
+      .returning(RETURNED_COLUMNS)
+      .executeTakeFirst();
 
-  if (updated === undefined) {
-    return undefined;
-  }
+    if (updated === undefined) {
+      return undefined;
+    }
 
-  return await membershipWithUsername(writingGroupId, userId)
-    .executeTakeFirstOrThrow();
+    await NotificationService.insertInvitationAcceptedNotification(
+      transaction,
+      {
+        invitedBy: updated.invitedBy,
+        writingGroupId,
+        actorId: userId,
+      },
+    );
+
+    return await membershipWithUsername(writingGroupId, userId, transaction)
+      .executeTakeFirstOrThrow();
+  });
 }
 
 /**

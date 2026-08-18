@@ -1,5 +1,6 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
+import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
   UserInWritingGroupRole,
   WritingGroup as DatabaseWritingGroup,
@@ -161,25 +162,53 @@ async function updateWritingGroup(
     description?: string;
     visibility?: WritingGroupVisibility;
   },
+  changedBy: string,
 ): Promise<WritingGroup | undefined> {
-  const updated = await db
-    .updateTable("writingGroup")
-    .set(changes)
-    .where("id", "=", writingGroupId)
-    .returning(["writingGroup.id"])
-    .executeTakeFirst();
+  return await db.transaction().execute(async (transaction) => {
+    // Read first: only a change that actually moves the visibility is worth telling anybody
+    // about, and a request may well send the value it already has.
+    const before = await transaction
+      .selectFrom("writingGroup")
+      .select("visibility")
+      .where("id", "=", writingGroupId)
+      .executeTakeFirst();
 
-  if (updated === undefined) {
-    return undefined;
-  }
+    if (before === undefined) {
+      return undefined;
+    }
 
-  // Re-read rather than RETURNING, which cannot reach the joined author name.
-  return await db
-    .selectFrom("writingGroup")
-    .leftJoin("user", "user.id", "writingGroup.createdBy")
-    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
-    .where("writingGroup.id", "=", updated.id)
-    .executeTakeFirstOrThrow();
+    const updated = await transaction
+      .updateTable("writingGroup")
+      .set(changes)
+      .where("id", "=", writingGroupId)
+      .returning(["writingGroup.id"])
+      .executeTakeFirst();
+
+    if (updated === undefined) {
+      return undefined;
+    }
+
+    if (
+      changes.visibility !== undefined &&
+      changes.visibility !== before.visibility
+    ) {
+      await NotificationService.insertVisibilityChangeNotifications(
+        transaction,
+        {
+          writingGroupId,
+          actorId: changedBy,
+        },
+      );
+    }
+
+    // Re-read rather than RETURNING, which cannot reach the joined author name.
+    return await transaction
+      .selectFrom("writingGroup")
+      .leftJoin("user", "user.id", "writingGroup.createdBy")
+      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
+      .where("writingGroup.id", "=", updated.id)
+      .executeTakeFirstOrThrow();
+  });
 }
 
 export const WritingGroupService = {
