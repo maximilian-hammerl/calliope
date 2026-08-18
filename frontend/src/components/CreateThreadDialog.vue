@@ -73,7 +73,8 @@ async function submit() {
       <DialogHeader>
         <DialogTitle>Thread anlegen</DialogTitle>
         <DialogDescription>
-          Ein Thread sammelt zusammengehörende Beiträge, etwa ein Kapitel oder die Planung.
+          Ein Thread sammelt zusammengehörende Beiträge, etwa der Plot, Steckbriefe, Planung oder
+          Inspiration.
         </DialogDescription>
       </DialogHeader>
 
@@ -90,6 +91,7 @@ async function submit() {
               v-model="title"
               class="h-11 md:h-9"
               name="title"
+              placeholder="z. B. Plot oder Steckbriefe"
               required
               :aria-invalid="titleError !== undefined ? true : undefined"
             />

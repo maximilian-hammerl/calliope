@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
@@ -30,6 +30,15 @@ const visibility = ref<'private' | 'public'>('private')
 // the standardising metadata, but nothing is sent or stored.
 const genre = ref<string>('')
 const perspective = ref<string>('')
+
+// Taken from the design system's own dialog rather than invented, so they already match what
+// the column will hold once perspective is stored.
+const PERSPECTIVES = [
+  '1. Person, Gegenwart',
+  '1. Person, Vergangenheit',
+  '3. Person, Gegenwart',
+  '3. Person, Vergangenheit',
+] as const
 
 const titleError = ref<string | undefined>(undefined)
 const formError = ref<string | undefined>(undefined)
@@ -103,6 +112,7 @@ async function submit() {
               v-model="title"
               class="h-11 md:h-9"
               name="title"
+              placeholder="z. B. Der Erinnerungsmarkt"
               required
               :aria-invalid="titleError !== undefined ? true : undefined"
             />
@@ -111,7 +121,13 @@ async function submit() {
 
           <Field>
             <FieldLabel for="group-description">Worum geht es?</FieldLabel>
-            <Textarea id="group-description" v-model="description" name="description" rows="3" />
+            <Textarea
+              id="group-description"
+              v-model="description"
+              name="description"
+              rows="3"
+              placeholder="z. B. Ein Markt, der nur nach Einbruch der Dunkelheit öffnet."
+            />
           </Field>
 
           <Field>
@@ -129,19 +145,32 @@ async function submit() {
 
           <Field>
             <FieldLabel for="group-genre">Genre</FieldLabel>
-            <Input id="group-genre" v-model="genre" class="h-11 md:h-9" name="genre" />
-            <p class="text-[11.5px] text-ink-5">Wird noch nicht gespeichert.</p>
+            <Input
+              id="group-genre"
+              v-model="genre"
+              class="h-11 md:h-9"
+              name="genre"
+              placeholder="z. B. Fantasy, Mystery"
+            />
+            <FieldDescription>Wird noch nicht gespeichert.</FieldDescription>
           </Field>
 
           <Field>
             <FieldLabel for="group-perspective">Perspektive</FieldLabel>
-            <Input
+            <!-- A list rather than free text: "Perspektive" is the one field whose expected
+                 answer a newcomer cannot guess, and the design system already fixes the four. -->
+            <select
               id="group-perspective"
               v-model="perspective"
-              class="h-11 md:h-9"
               name="perspective"
-            />
-            <p class="text-[11.5px] text-ink-5">Wird noch nicht gespeichert.</p>
+              class="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm md:h-9"
+            >
+              <option value="">Bitte wählen</option>
+              <option v-for="option in PERSPECTIVES" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
+            <FieldDescription>Wird noch nicht gespeichert.</FieldDescription>
           </Field>
         </FieldGroup>
 
