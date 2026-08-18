@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLoginUser } from '@/api/auth/auth'
 import { ApiError } from '@/lib/apiFetch'
 import { forgetCurrentUser } from '@/lib/session'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+
+type FieldName = 'login' | 'password'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,32 +18,96 @@ const router = useRouter()
 const login = ref<string>('')
 const password = ref<string>('')
 
-const { mutateAsync: signIn, isPending, error } = useLoginUser()
+const fieldErrors = ref<Partial<Record<FieldName, string>>>({})
+const formError = ref<string | undefined>(undefined)
+
+const { mutateAsync: signIn, isPending } = useLoginUser()
+
+const FIELD_NAMES = ['login', 'password'] as const
 
 /**
- * Wrong credentials are an expected answer rather than a fault, so they read as a plain
- * statement. Anything else says what happened without guessing at a cause.
+ * The inputs' own `required` and `pattern` decide what counts as invalid; this only decides
+ * how it is phrased. The API reports the same failures but words them in English, so its
+ * issues are mapped onto these too.
  */
-const errorMessage = computed<string | undefined>(() => {
-  if (!error.value) {
-    return undefined
+const FIELD_MESSAGES: Record<FieldName, string> = {
+  login: 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.',
+  password: 'Gib dein Passwort ein.',
+}
+
+const formElement = ref<HTMLFormElement | null>(null)
+
+/**
+ * Reads the constraints already declared on the inputs rather than restating them. The form
+ * carries `novalidate` so the browser shows no bubbles of its own — those appear one at a
+ * time, in the browser's language rather than the page's, and cannot be styled.
+ */
+function validate(): boolean {
+  const form = formElement.value
+  if (form === null) {
+    return false
   }
-  if (error.value instanceof ApiError) {
-    if (error.value.status === 401) {
-      return 'Benutzername, E-Mail-Adresse oder Passwort ist nicht korrekt.'
-    }
-    if (error.value.status === 429) {
-      return 'Zu viele Anmeldeversuche. Versuche es in einigen Minuten noch einmal.'
+
+  const errors: Partial<Record<FieldName, string>> = {}
+
+  for (const name of FIELD_NAMES) {
+    const input = form.elements.namedItem(name)
+    if (input instanceof HTMLInputElement && !input.validity.valid) {
+      errors[name] = FIELD_MESSAGES[name]
     }
   }
-  return 'Die Anmeldung ist gerade nicht möglich. Versuche es später noch einmal.'
-})
+
+  fieldErrors.value = errors
+  return Object.keys(errors).length === 0
+}
+
+/** Returns whether every reported issue belonged to a field that is shown. */
+function applyServerIssues(apiError: ApiError): boolean {
+  const issues = apiError.body.issues ?? []
+  if (issues.length === 0) {
+    return false
+  }
+
+  const errors: Partial<Record<FieldName, string>> = {}
+  for (const issue of issues) {
+    if (!(issue.path in FIELD_MESSAGES)) {
+      return false
+    }
+    const field = issue.path as FieldName
+    errors[field] = FIELD_MESSAGES[field]
+  }
+
+  fieldErrors.value = errors
+  return true
+}
 
 async function submit() {
+  formError.value = undefined
+
+  if (!validate()) {
+    return
+  }
+
   try {
-    await signIn({ data: { login: login.value, password: password.value } })
-  } catch {
-    // The message is rendered from `error`; the rejection itself needs no further handling.
+    // Only the identifier is trimmed: a password may legitimately begin or end with a space.
+    await signIn({ data: { login: login.value.trim(), password: password.value } })
+  } catch (error) {
+    if (error instanceof ApiError) {
+      // A rejected sign-in is an expected answer rather than a fault, and it cannot be
+      // attributed to one field, so it stays a plain statement above the form.
+      if (error.status === 401) {
+        formError.value = 'Benutzername, E-Mail-Adresse oder Passwort ist nicht korrekt.'
+        return
+      }
+      if (error.status === 400 && applyServerIssues(error)) {
+        return
+      }
+      if (error.status === 429) {
+        formError.value = 'Zu viele Anmeldeversuche. Versuche es in einigen Minuten noch einmal.'
+        return
+      }
+    }
+    formError.value = 'Die Anmeldung ist gerade nicht möglich. Versuche es später noch einmal.'
     return
   }
 
@@ -67,37 +133,42 @@ async function submit() {
         <p class="text-[13.5px] leading-[1.5] text-ink-5">Melde dich an, um weiterzuschreiben.</p>
       </div>
 
-      <form class="mt-7 flex flex-col gap-5" novalidate @submit.prevent="submit">
-        <Alert v-if="errorMessage" variant="destructive" role="alert">
-          <AlertDescription>{{ errorMessage }}</AlertDescription>
+      <form ref="formElement" class="mt-7 flex flex-col gap-5" novalidate @submit.prevent="submit">
+        <Alert v-if="formError" variant="destructive" role="alert">
+          <AlertDescription>{{ formError }}</AlertDescription>
         </Alert>
 
         <FieldGroup>
-          <Field>
+          <Field :data-invalid="fieldErrors.login !== undefined ? true : undefined">
             <FieldLabel for="login">Benutzername oder E-Mail-Adresse</FieldLabel>
             <Input
               id="login"
-              class="h-11 md:h-9"
               v-model="login"
+              class="h-11 md:h-9"
               name="login"
+              pattern=".*\S.*"
               autocomplete="username"
               autocapitalize="none"
               spellcheck="false"
               required
+              :aria-invalid="fieldErrors.login !== undefined ? true : undefined"
             />
+            <FieldError :errors="[fieldErrors.login]" />
           </Field>
 
-          <Field>
+          <Field :data-invalid="fieldErrors.password !== undefined ? true : undefined">
             <FieldLabel for="password">Passwort</FieldLabel>
             <Input
               id="password"
-              class="h-11 md:h-9"
               v-model="password"
+              class="h-11 md:h-9"
               name="password"
               type="password"
               autocomplete="current-password"
               required
+              :aria-invalid="fieldErrors.password !== undefined ? true : undefined"
             />
+            <FieldError :errors="[fieldErrors.password]" />
           </Field>
         </FieldGroup>
 
