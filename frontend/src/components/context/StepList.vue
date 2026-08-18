@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Plus, Square } from '@lucide/vue'
 import PanelCard from '@/components/PanelCard.vue'
 
 // Placeholder: "Nächste Schritte" has no backend yet, so these are fixed examples and
@@ -19,7 +20,7 @@ const PLACEHOLDER_STEPS = [
     <div class="flex flex-col gap-[6px]">
       <PanelCard v-for="step in PLACEHOLDER_STEPS" :key="step.text">
         <div class="flex items-start gap-2">
-          <span class="text-ink-6">☐</span>
+          <Square :size="14" :stroke-width="1.5" class="mt-[2px] shrink-0 text-ink-6" />
           <span class="flex-1">
             {{ step.text }}
             <br />
@@ -33,9 +34,10 @@ const PLACEHOLDER_STEPS = [
       type="button"
       disabled
       title="Noch nicht verfügbar"
-      class="mt-[9px] rounded-lg border border-line-5 bg-paper-3 px-[10px] py-[5px] text-[12.5px] font-medium text-oak-deep disabled:opacity-50"
+      class="mt-[9px] flex items-center gap-[4px] rounded-lg border border-line-5 bg-paper-3 px-[10px] py-[5px] text-[12.5px] font-medium text-oak-deep disabled:opacity-50"
     >
-      ＋ Schritt
+      <Plus :size="14" :stroke-width="1.5" />
+      Schritt
     </button>
   </div>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Plus } from '@lucide/vue'
 import type { ListThreads200ResultsItem } from '@/api/models'
 
 defineProps<{
@@ -36,10 +37,11 @@ defineEmits<{ create: [] }>()
       <button
         v-if="mayWrite"
         type="button"
-        class="flex-none border-b-2 border-transparent pb-[11px] text-ink-5"
+        class="flex flex-none items-center gap-[4px] border-b-2 border-transparent pb-[11px] text-ink-5"
         @click="$emit('create')"
       >
-        ＋ Thread
+        <Plus :size="14" :stroke-width="1.5" />
+        Thread
       </button>
     </div>
   </div>

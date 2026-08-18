@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Plus } from '@lucide/vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 
 defineProps<{ groups: ListGroups200ResultsItem[]; activeId?: string }>()
@@ -28,10 +29,11 @@ defineEmits<{ create: [] }>()
 
     <button
       type="button"
-      class="mt-2 rounded-lg border border-line-5 bg-paper-3 px-[10px] py-[9px] text-center text-[12.5px] font-medium text-oak-deep hover:bg-paper-4"
+      class="mt-2 flex items-center justify-center gap-[6px] rounded-lg border border-line-5 bg-paper-3 px-[10px] py-[9px] text-[12.5px] font-medium text-oak-deep hover:bg-paper-4"
       @click="$emit('create')"
     >
-      ＋ Gruppe gründen
+      <Plus :size="14" :stroke-width="1.5" />
+      Gruppe gründen
     </button>
   </div>
 </template>

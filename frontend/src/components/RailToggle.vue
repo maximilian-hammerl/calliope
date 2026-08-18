@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
 defineProps<{ side: 'left' | 'right'; label: string }>()
 defineEmits<{ click: [] }>()
 </script>
@@ -13,7 +14,8 @@ defineEmits<{ click: [] }>()
     :title="`${label} einblenden`"
     @click="$emit('click')"
   >
-    <span class="text-[13px] leading-none">{{ side === 'left' ? '›' : '‹' }}</span>
+    <ChevronRight v-if="side === 'left'" :size="14" :stroke-width="1.5" />
+    <ChevronLeft v-else :size="14" :stroke-width="1.5" />
     <span
       class="font-mono text-[10.5px] font-semibold tracking-[0.14em] uppercase [writing-mode:vertical-rl]"
     >

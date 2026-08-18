@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Plus } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
@@ -38,7 +39,10 @@ const creating = ref<boolean>(false)
             Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, oder warte
             auf eine Einladung.
           </p>
-          <Button class="mt-5" @click="creating = true">＋ Gruppe gründen</Button>
+          <Button class="mt-5" @click="creating = true">
+            <Plus data-icon="inline-start" :stroke-width="1.5" />
+            Gruppe gründen
+          </Button>
         </div>
 
         <div v-else>

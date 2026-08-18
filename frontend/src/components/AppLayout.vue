@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useListGroups } from '@/api/groups/groups'
 import type { GetCurrentUser200, ListGroups200ResultsItem } from '@/api/models'
@@ -47,7 +48,7 @@ const hasRail = computed<boolean>(() => props.activeGroupId !== undefined)
             aria-label="Gruppen einklappen"
             @click="leftOpen = false"
           >
-            ‹
+            <ChevronLeft :size="14" :stroke-width="1.5" />
           </button>
         </div>
         <GroupList :groups="groups" :active-id="activeGroupId" @create="$emit('createGroup')" />
@@ -77,7 +78,7 @@ const hasRail = computed<boolean>(() => props.activeGroupId !== undefined)
               aria-label="Gruppen-Kontext einklappen"
               @click="rightOpen = false"
             >
-              ›
+              <ChevronRight :size="14" :stroke-width="1.5" />
             </button>
           </div>
           <slot name="rail" />

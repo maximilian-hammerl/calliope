@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronDown } from '@lucide/vue'
 import { computed } from 'vue'
 import { countLabel, formatActivityTime } from '@/lib/formatTime'
 
@@ -34,7 +35,8 @@ const meta = computed<string>(() =>
       class="ml-auto hidden items-center gap-[6px] sm:flex rounded-lg border border-line-4 bg-paper-1 px-[11px] py-[6px] text-[12.5px] text-oak-deep disabled:opacity-50"
       title="Noch nicht verfügbar"
     >
-      Alle Beiträge <span class="text-[9px] text-ink-5">▾</span>
+      Alle Beiträge
+      <ChevronDown :size="14" :stroke-width="1.5" class="text-ink-5" />
     </button>
   </div>
 </template>

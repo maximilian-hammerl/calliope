@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronDown, ChevronUp } from '@lucide/vue'
 import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -22,8 +23,11 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
   >
     <div class="flex max-w-[684px] items-center gap-3 text-[12.5px] text-ink-5">
       <span class="font-semibold text-ink-4">Weiterschreiben</span>
-      <span class="ml-auto rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep">
-        Editor ausklappen ⌃
+      <span
+        class="ml-auto flex items-center gap-[4px] rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"
+      >
+        Editor ausklappen
+        <ChevronUp :size="14" :stroke-width="1.5" />
       </span>
     </div>
   </div>
@@ -35,10 +39,11 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
         <!-- Placeholder: nothing saves a draft yet, so no save state is claimed. -->
         <button
           type="button"
-          class="ml-auto rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"
+          class="ml-auto flex items-center gap-[4px] rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"
           @click="collapsed = true"
         >
-          Editor einklappen ⌄
+          Editor einklappen
+          <ChevronDown :size="14" :stroke-width="1.5" />
         </button>
       </div>
 
