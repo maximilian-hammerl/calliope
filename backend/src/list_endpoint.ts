@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "./text_limit.ts";
 
 export const SORT_ORDER = z.enum(["asc", "desc"]);
 
@@ -23,6 +24,12 @@ export function listQuerySchema<
 ) {
   return z.object({
     limit: z.number().int().min(1).max(100).default(20),
+    /**
+     * Free-text filter. Every list endpoint takes it so they stay in step; which columns it
+     * looks at is the endpoint's own business.
+     */
+    search: z.string().min(TEXT_MINIMUM.search).max(TEXT_LIMIT.search)
+      .optional(),
     offset: z.number().int().min(0).default(0),
     sortAttribute,
     sortOrder: SORT_ORDER.default(defaultSortOrder),

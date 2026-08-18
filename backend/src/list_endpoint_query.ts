@@ -8,7 +8,20 @@ export type ListQuery = {
   offset: number;
   sortAttribute: string;
   sortOrder: SortOrder;
+  search?: string;
 };
+
+/**
+ * Wraps a search term for a case-insensitive `like`, escaping the wildcards first: `%` and
+ * `_` are meaningful to LIKE, so a member searching for "100%" or "a_b" would otherwise get
+ * matches that have nothing to do with what they typed.
+ *
+ * The pattern is a substring match on purpose — someone looking for a person often knows the
+ * middle of a name rather than its start.
+ */
+export function searchPattern(search: string): string {
+  return `%${search.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+}
 
 export type ListResults<Result> = {
   results: Array<Result>;

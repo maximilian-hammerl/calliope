@@ -19,6 +19,8 @@ export const TEXT_LIMIT = {
   password: 256,
   /** A group title sits on one line beside its privacy badge. */
   groupTitle: 120,
+  /** Long enough for any name or title being looked for, short enough to bound the scan. */
+  search: 120,
   /** A few paragraphs about the story, not the story itself. */
   groupDescription: 2_000,
   threadTitle: 120,
@@ -32,3 +34,20 @@ export const TEXT_LIMIT = {
  * all. Comfortably above the largest legitimate request, which is a full-length post.
  */
 export const REQUEST_BODY_LIMIT_BYTES = 1_048_576;
+
+/**
+ * Lower bounds, where a value that is merely non-empty would be useless.
+ */
+export const TEXT_MINIMUM = {
+  /**
+   * Matched to the search minimum below: a shorter username could be registered and then
+   * never turn up in a search, which would make its owner impossible to invite.
+   */
+  username: 3,
+  /**
+   * A search term shorter than this is close enough to no filter at all, and would let the
+   * user list be walked page by page — the thing a directory of a private platform must not
+   * allow.
+   */
+  search: 3,
+} as const;

@@ -5,6 +5,7 @@ import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
+  searchPattern,
 } from "@/src/list_endpoint_query.ts";
 
 export type Post =
@@ -100,11 +101,15 @@ function listPosts(
   query: ListQuery,
 ): Promise<ListResults<Post>> {
   return listResultsWithCount(
-    postsWithAuthor(viewerId).where(
-      "writingPost.writingThreadId",
-      "=",
-      threadId,
-    ),
+    postsWithAuthor(viewerId)
+      .where("writingPost.writingThreadId", "=", threadId)
+      // The body rather than a title: a post has none.
+      .$if(query.search !== undefined, (queryBuilder) =>
+        queryBuilder.where(
+          "writingPost.text",
+          "ilike",
+          searchPattern(query.search!),
+        )),
     query,
   );
 }

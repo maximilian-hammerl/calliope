@@ -14,6 +14,7 @@ import { type ErrorResponse } from "./response.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
 import health from "./route/health.ts";
+import users from "./route/users.ts";
 
 // Everything the API serves, without the prefix it is mounted under. Keeping the prefix out
 // of here means a resource is added in one place and cannot be mounted at the wrong depth.
@@ -39,7 +40,8 @@ const api = new OpenAPIHono({
 })
   .route("/auth", auth)
   .route("/groups", groups)
-  .route("/health", health);
+  .route("/health", health)
+  .route("/users", users);
 
 const app = new OpenAPIHono();
 

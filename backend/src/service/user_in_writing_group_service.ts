@@ -8,6 +8,7 @@ import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
+  searchPattern,
 } from "@/src/list_endpoint_query.ts";
 
 export type UserInWritingGroup =
@@ -90,7 +91,13 @@ function listMemberships(
 ): Promise<ListResults<UserInWritingGroup>> {
   return listResultsWithCount(
     membershipsWithUsername()
-      .where("userInWritingGroup.writingGroupId", "=", writingGroupId),
+      .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
+      .$if(query.search !== undefined, (queryBuilder) =>
+        queryBuilder.where(
+          "user.username",
+          "ilike",
+          searchPattern(query.search!),
+        )),
     query,
   );
 }

@@ -20,6 +20,7 @@ route/groups/create_group.ts       → POST /groups
 route/groups/list_groups.ts        → QUERY /groups
 route/groups/group.ts              → mounts everything under /groups/{groupId}
 route/groups/group/get_group.ts    → GET /groups/{groupId}
+route/users/list_users.ts          → QUERY /users
 ```
 
 `app.ts` builds one `api` app and mounts it at `/api`, so the served paths are
@@ -87,6 +88,24 @@ validation entirely and the schema's defaults never apply.
 
 `sortAttribute` must be an enum derived from the table's own columns, because its value
 reaches `dynamic.ref`. An unchecked value there is an injection.
+
+`search` comes with `listQuerySchema()`, so every list endpoint takes it and they stay in
+step; which columns it looks at is the endpoint's own business. Build the pattern with
+`searchPattern()` from `list_endpoint_query.ts` rather than interpolating — `%` and `_` are
+meaningful to `like`, so an unescaped term matches rows the member never asked for. Matching
+is `ilike` on a substring, because someone looking for a name often remembers its middle
+rather than its start.
+
+Apply it with Kysely's `$if()` rather than reassigning the builder through an `if` — the
+[conditional-selects recipe](https://kysely.dev/docs/recipes/conditional-selects) is explicit
+about this, and reassignment loses the builder's type as it accumulates. The non-null
+assertion inside the callback is the accepted cost of that pattern.
+
+The term has a minimum length (`TEXT_MINIMUM.search`), which is what keeps a list from being
+walked page by page under a one-character filter. It is optional everywhere, `QUERY /users`
+included: the five endpoints behave alike. That endpoint's response is `USER_RESPONSE` — id
+and username only. A username is public within the platform; an email address never is, and
+the schema *picks* rather than omits so a column added later cannot leak by being forgotten.
 
 ## Authorisation
 

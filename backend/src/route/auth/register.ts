@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
@@ -16,7 +16,9 @@ import {
 const REGISTER_BODY = USER_SCHEMA
   .pick({ username: true, emailAddress: true })
   .extend({
-    username: USER_SCHEMA.shape.username.min(1).max(TEXT_LIMIT.username),
+    username: USER_SCHEMA.shape.username
+      .min(TEXT_MINIMUM.username)
+      .max(TEXT_LIMIT.username),
     // The column is only text; the address itself is validated here, and normalised so
     // the UNIQUE constraint cannot be bypassed by changing the case.
     //

@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import {
   USER_IN_WRITING_GROUP_SCHEMA,
+  USER_SCHEMA,
   WRITING_GROUP_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
@@ -30,3 +31,13 @@ export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME);
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   username: z.string(),
 });
+
+/**
+ * What one member looks like to another. Picked rather than omitted on purpose: a column
+ * added to the users table later joins this only if someone names it here, so a new private
+ * field cannot leak by being forgotten.
+ *
+ * A username is public within the platform — it is what members type to invite one another.
+ * An email address never is.
+ */
+export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });

@@ -5,6 +5,7 @@ import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
+  searchPattern,
 } from "@/src/list_endpoint_query.ts";
 
 export type Thread =
@@ -75,11 +76,14 @@ function listThreads(
   query: ListQuery,
 ): Promise<ListResults<Thread>> {
   return listResultsWithCount(
-    threadsWithAuthor().where(
-      "writingThread.writingGroupId",
-      "=",
-      writingGroupId,
-    ),
+    threadsWithAuthor()
+      .where("writingThread.writingGroupId", "=", writingGroupId)
+      .$if(query.search !== undefined, (queryBuilder) =>
+        queryBuilder.where(
+          "writingThread.title",
+          "ilike",
+          searchPattern(query.search!),
+        )),
     query,
   );
 }

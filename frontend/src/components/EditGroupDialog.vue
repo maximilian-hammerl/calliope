@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
-import { getListGroupsQueryKey, useCreateGroup } from '@/api/groups/groups'
+import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from '@/api/groups/groups'
+import type { GetGroup200 } from '@/api/models'
 import { listKeyPrefix } from '@/lib/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -14,49 +14,37 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 
+const props = defineProps<{ group: GetGroup200 }>()
 const open = defineModel<boolean>('open', { required: true })
 
-const router = useRouter()
 const queryClient = useQueryClient()
 
 const title = ref<string>('')
 const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
-// Not columns on writing_group yet. Present because members asked that founding a group force
-// the standardising metadata, but nothing is sent or stored.
-const genre = ref<string>('')
-const perspective = ref<string>('')
-
-// Taken from the design system's own dialog rather than invented, so they already match what
-// the column will hold once perspective is stored.
-const PERSPECTIVES = [
-  '1. Person, Gegenwart',
-  '1. Person, Vergangenheit',
-  '3. Person, Gegenwart',
-  '3. Person, Vergangenheit',
-] as const
 
 const titleError = ref<string | undefined>(undefined)
 const formError = ref<string | undefined>(undefined)
 
-const { mutateAsync: createGroup, isPending } = useCreateGroup()
+const { mutateAsync: updateGroup, isPending } = useUpdateGroup()
 
+// Filled on opening rather than at setup, so a second visit shows what the group says now
+// instead of what it said when the page was first rendered.
 watch(open, (isOpen) => {
-  if (isOpen) {
-    return
-  }
-  title.value = ''
-  description.value = ''
-  visibility.value = 'private'
-  genre.value = ''
-  perspective.value = ''
   titleError.value = undefined
   formError.value = undefined
+
+  if (!isOpen) {
+    return
+  }
+  title.value = props.group.title
+  description.value = props.group.description
+  visibility.value = props.group.visibility
 })
 
 async function submit() {
@@ -68,9 +56,9 @@ async function submit() {
     return
   }
 
-  let created
   try {
-    created = await createGroup({
+    await updateGroup({
+      groupId: props.group.id,
       data: {
         title: title.value.trim(),
         description: description.value.trim(),
@@ -78,16 +66,16 @@ async function submit() {
       },
     })
   } catch {
-    formError.value = 'Die Gruppe konnte nicht gegründet werden. Versuche es noch einmal.'
+    formError.value = 'Die Änderungen konnten nicht gespeichert werden. Versuche es noch einmal.'
     return
   }
 
-  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) })
+  // The group list shows the title and the privacy badge, so it goes stale with this too.
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) }),
+    queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) }),
+  ])
   open.value = false
-
-  if (created.status === 201) {
-    await router.push({ name: 'group', params: { groupId: created.data.id } })
-  }
 }
 </script>
 
@@ -95,9 +83,10 @@ async function submit() {
   <Dialog v-model:open="open">
     <DialogContent class="sm:max-w-[440px]">
       <DialogHeader>
-        <!-- Founding a group is a social act, so the verb is not "erstellen". -->
-        <DialogTitle>Gruppe gründen</DialogTitle>
-        <DialogDescription> Eine private Gruppe sehen nur ihre Mitglieder. </DialogDescription>
+        <DialogTitle>Gruppe bearbeiten</DialogTitle>
+        <DialogDescription>
+          Titel, Beschreibung und Sichtbarkeit gelten für alle Mitglieder.
+        </DialogDescription>
       </DialogHeader>
 
       <form class="flex flex-col gap-5" novalidate @submit.prevent="submit">
@@ -107,9 +96,9 @@ async function submit() {
 
         <FieldGroup>
           <Field :data-invalid="titleError !== undefined ? true : undefined">
-            <FieldLabel for="group-title">Titel</FieldLabel>
+            <FieldLabel for="edit-group-title">Titel</FieldLabel>
             <Input
-              id="group-title"
+              id="edit-group-title"
               v-model="title"
               class="h-11 md:h-9"
               name="title"
@@ -121,9 +110,9 @@ async function submit() {
           </Field>
 
           <Field>
-            <FieldLabel for="group-description">Worum geht es?</FieldLabel>
+            <FieldLabel for="edit-group-description">Worum geht es?</FieldLabel>
             <Textarea
-              id="group-description"
+              id="edit-group-description"
               v-model="description"
               name="description"
               rows="3"
@@ -132,9 +121,9 @@ async function submit() {
           </Field>
 
           <Field>
-            <FieldLabel for="group-visibility">Sichtbarkeit</FieldLabel>
+            <FieldLabel for="edit-group-visibility">Sichtbarkeit</FieldLabel>
             <select
-              id="group-visibility"
+              id="edit-group-visibility"
               v-model="visibility"
               name="visibility"
               class="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm md:h-9"
@@ -142,36 +131,6 @@ async function submit() {
               <option value="private">Privat — nur Mitglieder sehen die Gruppe</option>
               <option value="public">Öffentlich — alle können mitlesen</option>
             </select>
-          </Field>
-
-          <Field>
-            <FieldLabel for="group-genre">Genre</FieldLabel>
-            <Input
-              id="group-genre"
-              v-model="genre"
-              class="h-11 md:h-9"
-              name="genre"
-              placeholder="z. B. Fantasy, Mystery"
-            />
-            <FieldDescription>Wird noch nicht gespeichert.</FieldDescription>
-          </Field>
-
-          <Field>
-            <FieldLabel for="group-perspective">Perspektive</FieldLabel>
-            <!-- A list rather than free text: "Perspektive" is the one field whose expected
-                 answer a newcomer cannot guess, and the design system already fixes the four. -->
-            <select
-              id="group-perspective"
-              v-model="perspective"
-              name="perspective"
-              class="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm md:h-9"
-            >
-              <option value="">Bitte wählen</option>
-              <option v-for="option in PERSPECTIVES" :key="option" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <FieldDescription>Wird noch nicht gespeichert.</FieldDescription>
           </Field>
         </FieldGroup>
 
@@ -181,7 +140,7 @@ async function submit() {
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" data-icon="inline-start" />
-            Gruppe gründen
+            Änderungen speichern
           </Button>
         </DialogFooter>
       </form>

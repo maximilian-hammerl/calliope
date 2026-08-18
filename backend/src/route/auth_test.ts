@@ -206,6 +206,22 @@ Deno.test("POST /api/auth/register refuses an oversized field", async () => {
   ]);
 });
 
+Deno.test("POST /api/auth/register refuses a two-character username", async () => {
+  // Matched to the search minimum: a shorter name could never be found, and so its owner
+  // could never be invited to a group.
+  const response = await postJson("/api/auth/register", {
+    username: "xy",
+    password,
+    emailAddress,
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+    "username",
+  ]);
+});
+
 Deno.test("a body beyond the limit is refused before it is parsed", async () => {
   // Previously this was stored: a 20 MB post reached the database intact.
   const response = await app.request("/api/auth/register", {

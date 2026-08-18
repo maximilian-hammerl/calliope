@@ -9,10 +9,13 @@ import type {
   ListMemberships200ResultsItem,
   ListThreads200ResultsItem,
 } from '@/api/models'
+import { PencilIcon } from '@lucide/vue'
 import AppLayout from '@/components/AppLayout.vue'
 import CreateGroupDialog from '@/components/CreateGroupDialog.vue'
 import CreateThreadDialog from '@/components/CreateThreadDialog.vue'
+import EditGroupDialog from '@/components/EditGroupDialog.vue'
 import GroupHeader from '@/components/GroupHeader.vue'
+import GroupMembers from '@/components/GroupMembers.vue'
 import ThreadTabs from '@/components/ThreadTabs.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
@@ -46,10 +49,11 @@ const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
 )
 
-const { mayWrite } = useGroupRole(memberships)
+const { mayWrite, mayAdminister } = useGroupRole(memberships)
 
 const creatingGroup = ref<boolean>(false)
 const creatingThread = ref<boolean>(false)
+const editingGroup = ref<boolean>(false)
 </script>
 
 <template>
@@ -82,6 +86,25 @@ const creatingThread = ref<boolean>(false)
           <p v-else class="mt-7 text-[13.5px] leading-[1.7] text-ink-4">
             Wähle oben einen Thread, um weiterzulesen.
           </p>
+
+          <!-- Only here, not in GroupHeader: that header also renders on the thread page,
+               where editing the group would sit beside the writing and pull attention. -->
+          <Button
+            v-if="mayAdminister"
+            variant="outline"
+            size="sm"
+            class="mt-7"
+            @click="editingGroup = true"
+          >
+            <PencilIcon :stroke-width="1.5" />
+            Gruppe bearbeiten
+          </Button>
+
+          <GroupMembers
+            :group-id="groupId"
+            :memberships="memberships"
+            :may-administer="mayAdminister"
+          />
         </div>
       </div>
     </template>
@@ -109,4 +132,5 @@ const creatingThread = ref<boolean>(false)
 
   <CreateGroupDialog v-model:open="creatingGroup" />
   <CreateThreadDialog v-model:open="creatingThread" :group-id="groupId" />
+  <EditGroupDialog v-if="group" v-model:open="editingGroup" :group="group" />
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import CalliopeBadge from '@/components/CalliopeBadge.vue'
 import { countLabel } from '@/lib/formatTime'
 
@@ -8,7 +9,9 @@ const props = defineProps<{
   threadCount?: number
 }>()
 
-const visibilityLabel = props.visibility === 'private' ? 'Privat' : 'Öffentlich'
+const visibilityLabel = computed<string>(() =>
+  props.visibility === 'private' ? 'Privat' : 'Öffentlich',
+)
 </script>
 
 <template>

@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListThreadsQueryKey, useCreateThread } from '@/api/threads/threads'
+import { listKeyPrefix } from '@/lib/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -55,7 +56,9 @@ async function submit() {
     return
   }
 
-  await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(props.groupId) })
+  await queryClient.invalidateQueries({
+    queryKey: listKeyPrefix(getListThreadsQueryKey(props.groupId)),
+  })
   open.value = false
 
   if (created.status === 201) {

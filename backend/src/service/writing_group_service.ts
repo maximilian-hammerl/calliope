@@ -10,6 +10,7 @@ import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
+  searchPattern,
 } from "@/src/list_endpoint_query.ts";
 
 export type WritingGroup =
@@ -113,7 +114,24 @@ function listVisibleWritingGroups(
   query: ListQuery,
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
-    visibleToUser(user).select([...SELECTED_COLUMNS, AUTHOR_COLUMN]),
+    visibleToUser(user)
+      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
+      // Title and description both, since a group is as often remembered by what it is
+      // about as by what it is called.
+      .$if(
+        query.search !== undefined,
+        (queryBuilder) =>
+          queryBuilder.where((eb) =>
+            eb.or([
+              eb("writingGroup.title", "ilike", searchPattern(query.search!)),
+              eb(
+                "writingGroup.description",
+                "ilike",
+                searchPattern(query.search!),
+              ),
+            ])
+          ),
+      ),
     query,
   );
 }

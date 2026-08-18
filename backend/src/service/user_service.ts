@@ -5,6 +5,12 @@ import {
   generateSessionToken,
   hashSessionToken,
 } from "@/src/util/session_token.ts";
+import {
+  type ListQuery,
+  type ListResults,
+  listResultsWithCount,
+  searchPattern,
+} from "@/src/list_endpoint_query.ts";
 import type {
   User as DatabaseUser,
   UserSession as DatabaseUserSession,
@@ -14,6 +20,9 @@ export type User = Pick<
   Selectable<DatabaseUser>,
   "id" | "username" | "emailAddress"
 >;
+
+/** What one member may see of another. Deliberately narrower than {@link User}. */
+export type PublicUser = Pick<Selectable<DatabaseUser>, "id" | "username">;
 
 export type UserSession =
   & Pick<
@@ -179,8 +188,28 @@ async function deleteExpiredSessions(): Promise<number> {
   return Number(result.numDeletedRows);
 }
 
+/**
+ * Finds members by a substring of their name, so someone can be invited by the part of a
+ * name that is actually remembered.
+ */
+function listUsers(query: ListQuery): Promise<ListResults<PublicUser>> {
+  return listResultsWithCount(
+    db
+      .selectFrom("user")
+      .select(["user.id", "user.username"])
+      .$if(query.search !== undefined, (queryBuilder) =>
+        queryBuilder.where(
+          "user.username",
+          "ilike",
+          searchPattern(query.search!),
+        )),
+    query,
+  );
+}
+
 export const UserService = {
   insertUser,
+  listUsers,
   selectUser,
   insertSessionForUser,
   selectUserForSession,

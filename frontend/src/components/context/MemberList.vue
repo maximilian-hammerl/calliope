@@ -25,13 +25,5 @@ const ROLE_LABELS: Record<string, string> = {
         </span>
       </div>
     </div>
-    <button
-      type="button"
-      disabled
-      title="Noch nicht verfügbar"
-      class="mt-[10px] rounded-lg border border-line-5 bg-paper-3 px-[10px] py-[5px] text-[12.5px] font-medium text-oak-deep disabled:opacity-50"
-    >
-      Mitglied einladen
-    </button>
   </div>
 </template>

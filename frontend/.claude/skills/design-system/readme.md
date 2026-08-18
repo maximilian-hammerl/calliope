@@ -63,6 +63,10 @@ These are not style preferences; they are findings the design must honour:
    be off by default and easy to disable.
 2. **Nothing duplicated.** Threads live in tabs, so they must not also appear in the left rail.
    The group's privacy is stated once, next to its title, never repeated in a rail.
+   *One deliberate exception:* members appear both in the rail and on the group page. The two
+   are not the same thing — the rail answers "who is here" while reading, the page is where an
+   administrator invites and removes. The rail carries no actions at all, so nothing is offered
+   twice; the "Mitglied einladen" button that used to sit there was moved to the page.
 3. **Everything in the right rail is group-level**, identical across all threads of that group:
    next steps, story status, files, members. Never per-thread.
 4. **The writing surface must not lose work.** Autosave is visible and continuous
@@ -109,7 +113,13 @@ non-alphabetic glyphs allowed are the interface marks listed under Iconography.
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
 Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
 Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
-Editor einklappen · Editor ausklappen · Gruppen-Kontext.
+Editor einklappen · Editor ausklappen · Gruppen-Kontext · Gruppe bearbeiten ·
+Änderungen speichern · Entfernen · Einladung zurückziehen.
+
+**A pending invitation is a state, not a member.** It reads "· eingeladen" after the role, and
+a member count counts only those who have joined — an invitation is not yet a person in the
+group. Withdrawing one is "Einladung zurückziehen", never "Entfernen": nothing is being taken
+away from anybody.
 
 ## Visual foundations
 
@@ -217,6 +227,7 @@ never matched the hairline weight and changed shape from platform to platform.
 | `☐` `☑` | `Square` `SquareCheck` | open / done step in Nächste Schritte |
 | `⌕` | `Search` | search |
 | `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
+| — | `Pencil` | edit an existing thing ("Gruppe bearbeiten") |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px
@@ -259,3 +270,8 @@ needs it. Each is marked so nobody mistakes it for tested ground:
 - `Avatar`, `Label`, `PanelCard` — extracted as primitives from patterns that repeat in the mockup.
 - Lucide as the icon set, at 1.5px stroke — anticipated by this document, adopted once the
   unicode marks proved to be missing from all three fonts.
+- `Pencil` for editing, and the member-management section on the group page (invite, remove,
+  withdraw an invitation). The mockups show members only as the rail's read-only list; a group
+  whose membership cannot be changed is not a usable product. "Gruppe bearbeiten" sits on the
+  group page alone and never in `GroupHeader`, which also renders above a thread, where it would
+  put an administrative control beside the writing.

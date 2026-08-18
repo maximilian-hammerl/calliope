@@ -10,6 +10,7 @@ import type { ListMemberships200ResultsItem } from '@/api/models'
 export function useGroupRole(memberships: Ref<ListMemberships200ResultsItem[]>): {
   role: ComputedRef<ListMemberships200ResultsItem['role'] | undefined>
   mayWrite: ComputedRef<boolean>
+  mayAdminister: ComputedRef<boolean>
 } {
   const { data } = useGetCurrentUser()
 
@@ -26,5 +27,7 @@ export function useGroupRole(memberships: Ref<ListMemberships200ResultsItem[]>):
   // Readers may read and comment; writing is for writers and administrators.
   const mayWrite = computed(() => role.value === 'writer' || role.value === 'administrator')
 
-  return { role, mayWrite }
+  const mayAdminister = computed(() => role.value === 'administrator')
+
+  return { role, mayWrite, mayAdminister }
 }

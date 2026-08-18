@@ -138,3 +138,27 @@ Deno.test("QUERY /api/groups hides another user's private group", async () => {
   assertEquals(titles.includes(SECOND_TITLE), true);
   assertFalse(titles.includes(FIRST_TITLE));
 });
+
+Deno.test("QUERY /api/groups filters by a substring of the title", async () => {
+  const cookie = await registerUser(owner);
+
+  await createGroup(cookie, FIRST_TITLE, "private");
+  await createGroup(cookie, SECOND_TITLE, "private");
+
+  // "Aaa" and "Zzz" differ; the shared word does not.
+  assertEquals(ownTitles(await list(cookie, { search: "Aaa" })), [FIRST_TITLE]);
+  assertEquals(
+    ownTitles(await list(cookie, { search: "Schreibkreis" })).length,
+    2,
+  );
+});
+
+Deno.test("QUERY /api/groups rejects a search term shorter than three characters", async () => {
+  const cookie = await registerUser(owner);
+
+  const response = await request("QUERY", "/api/groups", cookie, {
+    search: "Aa",
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+});
