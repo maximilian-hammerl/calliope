@@ -1,0 +1,220 @@
+import { assertEquals } from "@std/assert";
+import { STATUS_CODE } from "@std/http/status";
+import {
+  addMember,
+  clearRateLimits,
+  createGroup,
+  deleteUsers,
+  getUserId,
+  registerUser,
+  request,
+} from "@/src/test_support.ts";
+
+const administrator = "producers-admin";
+const writer = "producers-writer";
+const reader = "producers-reader";
+
+Deno.test.beforeEach(clearRateLimits);
+Deno.test.afterEach(() => deleteUsers([administrator, writer, reader]));
+
+/** A group with an administrator and two members who have accepted. */
+async function group() {
+  const adminCookie = await registerUser(administrator);
+  const created = await createGroup(adminCookie, "Der Erinnerungsmarkt");
+  const writerCookie = await addMember(
+    adminCookie,
+    created.id,
+    writer,
+    "writer",
+  );
+  const readerCookie = await addMember(
+    adminCookie,
+    created.id,
+    reader,
+    "reader",
+  );
+  return { adminCookie, writerCookie, readerCookie, group: created };
+}
+
+async function notificationsOf(cookie: string) {
+  const response = await request("QUERY", "/api/notifications", cookie, {
+    limit: 50,
+  });
+  assertEquals(response.status, STATUS_CODE.OK);
+  return (await response.json()).results as Array<
+    { type: string; actorUsername: string }
+  >;
+}
+
+type Notification = { type: string; actorUsername: string };
+
+const ofType = (notifications: Notification[], type: string) =>
+  notifications.filter((notification) => notification.type === type);
+
+Deno.test("a new thread tells the group but not its author", async () => {
+  const { adminCookie, writerCookie, readerCookie, group: created } =
+    await group();
+
+  const response = await request(
+    "POST",
+    `/api/groups/${created.id}/threads`,
+    writerCookie,
+    { title: "Kapitel 1" },
+  );
+  assertEquals(response.status, STATUS_CODE.Created);
+
+  for (const cookie of [adminCookie, readerCookie]) {
+    const [notification] = ofType(
+      await notificationsOf(cookie),
+      "new_writing_thread",
+    );
+    assertEquals(notification.actorUsername, writer);
+  }
+  assertEquals(
+    ofType(await notificationsOf(writerCookie), "new_writing_thread").length,
+    0,
+  );
+});
+
+Deno.test("a published post tells the group but not its author", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+  const thread = await (await request(
+    "POST",
+    `/api/groups/${created.id}/threads`,
+    adminCookie,
+    { title: "Kapitel 1" },
+  )).json();
+
+  await request(
+    "POST",
+    `/api/groups/${created.id}/threads/${thread.id}/posts`,
+    writerCookie,
+    { text: "Die Laternen gingen aus." },
+  );
+
+  assertEquals(
+    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
+    1,
+  );
+  assertEquals(
+    ofType(await notificationsOf(writerCookie), "new_writing_post").length,
+    0,
+  );
+});
+
+Deno.test("a draft tells nobody until it is published", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+  const thread = await (await request(
+    "POST",
+    `/api/groups/${created.id}/threads`,
+    adminCookie,
+    { title: "Kapitel 1" },
+  )).json();
+  const posts = `/api/groups/${created.id}/threads/${thread.id}/posts`;
+
+  const draft = await (await request("POST", posts, writerCookie, {
+    text: "Noch nicht fertig.",
+    isDraft: true,
+  })).json();
+
+  // Nobody can see it, so nobody is told about it.
+  assertEquals(
+    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
+    0,
+  );
+
+  await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
+    isDraft: false,
+  });
+
+  assertEquals(
+    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
+    1,
+  );
+});
+
+Deno.test("editing a published post does not announce it again", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+  const thread = await (await request(
+    "POST",
+    `/api/groups/${created.id}/threads`,
+    adminCookie,
+    { title: "Kapitel 1" },
+  )).json();
+  const posts = `/api/groups/${created.id}/threads/${thread.id}/posts`;
+  const post = await (await request("POST", posts, writerCookie, {
+    text: "Die Laternen gingen aus.",
+  })).json();
+
+  await request("PATCH", `${posts}/${post.id}`, writerCookie, {
+    text: "Doch anders.",
+  });
+
+  assertEquals(
+    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
+    1,
+  );
+});
+
+Deno.test("a role change tells the member, and twice leaves one notification", async () => {
+  const { adminCookie, writerCookie, group: created } = await group();
+  const writerId = await getUserId(writer);
+  const membership = `/api/groups/${created.id}/memberships/${writerId}`;
+
+  await request("PATCH", membership, adminCookie, { role: "reader" });
+  await request("PATCH", membership, adminCookie, { role: "writer" });
+
+  const changes = ofType(
+    await notificationsOf(writerCookie),
+    "role_changed_in_writing_group",
+  );
+  assertEquals(
+    changes.length,
+    1,
+    "a role is a state, not a series of occurrences",
+  );
+  assertEquals(changes[0].actorUsername, administrator);
+});
+
+Deno.test("an administrator changing their own role is not told about it", async () => {
+  const { adminCookie, group: created } = await group();
+  const administratorId = await getUserId(administrator);
+
+  // The constraint forbids notifying the actor, so an unguarded producer would fail this
+  // request outright rather than merely say something odd.
+  const response = await request(
+    "PATCH",
+    `/api/groups/${created.id}/memberships/${administratorId}`,
+    adminCookie,
+    { role: "reader" },
+  );
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  assertEquals(
+    ofType(await notificationsOf(adminCookie), "role_changed_in_writing_group")
+      .length,
+    0,
+  );
+});
+
+Deno.test("an invited member is not told what the group is writing", async () => {
+  const { adminCookie, group: created } = await group();
+  // Invited, never accepted.
+  const pendingCookie = await registerUser("producers-pending");
+  const pendingId = await getUserId("producers-pending");
+  await request("POST", `/api/groups/${created.id}/memberships`, adminCookie, {
+    userId: pendingId,
+    role: "writer",
+  });
+
+  await request("POST", `/api/groups/${created.id}/threads`, adminCookie, {
+    title: "Kapitel 1",
+  });
+
+  const notifications = await notificationsOf(pendingCookie);
+  assertEquals(ofType(notifications, "new_writing_thread").length, 0);
+  // Their invitation is still there; only the activity is not.
+  assertEquals(ofType(notifications, "invited_to_writing_group").length, 1);
+
+  await deleteUsers(["producers-pending"]);
+});

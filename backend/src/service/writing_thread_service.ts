@@ -1,5 +1,6 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
+import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
 import {
   type ListQuery,
@@ -34,8 +35,8 @@ const SELECTED_COLUMNS = [
  * The author's name is joined in rather than stored, so it follows a rename. The join is
  * left: an account that has been deleted leaves the post behind with no author.
  */
-function threadsWithAuthor() {
-  return db
+function threadsWithAuthor(executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("writingThread")
     .leftJoin("user", "user.id", "writingThread.createdBy")
     .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
@@ -46,16 +47,25 @@ async function insertThread(
   title: string,
   createdBy: string,
 ): Promise<Thread> {
-  const { id } = await db
-    .insertInto("writingThread")
-    .values({ writingGroupId, title, createdBy })
-    .returning(["id"])
-    .executeTakeFirstOrThrow();
+  return await db.transaction().execute(async (transaction) => {
+    const { id } = await transaction
+      .insertInto("writingThread")
+      .values({ writingGroupId, title, createdBy })
+      .returning(["id"])
+      .executeTakeFirstOrThrow();
 
-  // Re-read rather than RETURNING, which cannot reach the joined author name.
-  return await threadsWithAuthor()
-    .where("writingThread.id", "=", id)
-    .executeTakeFirstOrThrow();
+    await NotificationService.insertGroupActivityNotifications(transaction, {
+      type: "new_writing_thread",
+      writingGroupId,
+      writingThreadId: id,
+      actorId: createdBy,
+    });
+
+    // Re-read rather than RETURNING, which cannot reach the joined author name.
+    return await threadsWithAuthor(transaction)
+      .where("writingThread.id", "=", id)
+      .executeTakeFirstOrThrow();
+  });
 }
 
 /** Scoped to the group, so a thread id from another group cannot be reached through it. */

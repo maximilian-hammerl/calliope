@@ -91,6 +91,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const post = await WritingPostService.insertPost(
+      groupId,
       threadId,
       text,
       isDraft,

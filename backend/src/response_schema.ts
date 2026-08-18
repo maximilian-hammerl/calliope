@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import {
+  NOTIFICATION_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
   USER_SCHEMA,
   WRITING_GROUP_SCHEMA,
@@ -41,3 +42,62 @@ export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
  * An email address never is.
  */
 export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
+
+/**
+ * A notification as the interface needs it, discriminated on `type` so each kind carries the
+ * subjects it is about and nothing else — the CHECK constraint on the table, expressed in the
+ * contract. The titles and the name are joined at read time rather than stored, so a renamed
+ * group renames everywhere and nothing survives the reader losing access to it.
+ */
+/**
+ * What every notification has, whatever it is about. The group is deliberately *not* here:
+ * the types that exist today all belong to one, but the requirements describe private
+ * messages, moderation notices and system announcements, and none of those does. Keeping the
+ * group on the variants that have one means those can be added without loosening this.
+ */
+const NOTIFICATION_BASE = {
+  ...NOTIFICATION_SCHEMA.pick({
+    id: true,
+    occurredAt: true,
+    readAt: true,
+  }).shape,
+  actorUsername: z.string().nullable(),
+};
+
+const GROUP_SUBJECT = {
+  writingGroupId: NOTIFICATION_SCHEMA.shape.writingGroupId,
+  writingGroupTitle: z.string(),
+};
+
+const THREAD_SUBJECT = {
+  writingThreadId: NOTIFICATION_SCHEMA.shape.writingThreadId.unwrap(),
+  writingThreadTitle: z.string(),
+};
+
+export const NOTIFICATION_RESPONSE = z.discriminatedUnion("type", [
+  z.object({
+    ...NOTIFICATION_BASE,
+    ...GROUP_SUBJECT,
+    type: z.literal("invited_to_writing_group"),
+  }),
+  z.object({
+    ...NOTIFICATION_BASE,
+    ...GROUP_SUBJECT,
+    type: z.literal("role_changed_in_writing_group"),
+    /** The recipient's role now, which for this type is what the change was. */
+    role: USER_IN_WRITING_GROUP_SCHEMA.shape.role,
+  }),
+  z.object({
+    ...NOTIFICATION_BASE,
+    ...GROUP_SUBJECT,
+    ...THREAD_SUBJECT,
+    type: z.literal("new_writing_thread"),
+  }),
+  z.object({
+    ...NOTIFICATION_BASE,
+    ...GROUP_SUBJECT,
+    ...THREAD_SUBJECT,
+    type: z.literal("new_writing_post"),
+    writingPostId: NOTIFICATION_SCHEMA.shape.writingPostId.unwrap(),
+  }),
+]);

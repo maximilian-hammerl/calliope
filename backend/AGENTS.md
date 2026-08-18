@@ -121,6 +121,55 @@ asked what a group or a thread last changed, and a column that exists without a 
 into being trusted for things it never meant. Where a time genuinely matters it is named for
 what it means — `last_activity_at`, `edited_at`.
 
+## Never raw SQL without asking
+
+Kysely's builder is checked; a template string is not. `sql\`nov()\`` compiles, ships, and
+fails at run time — nothing between writing it and production notices. Use the builder, and
+where a value is needed use TypeScript: `Temporal.Now.instant().toString()` rather than
+`sql\`now()\``.
+
+If something genuinely cannot be expressed through the builder, **ask before writing it**.
+There are two raw fragments in the codebase and both are deliberate: the liveness probe in
+`database/client.ts`, which is a ping rather than a query, and the tests under `database/test/`,
+whose whole purpose is to exercise the SQL itself.
+
+## Exhaustive switches
+
+A `switch` over a union ends with `default: return assertUnreachable(value)`
+(`util/assert_unreachable.ts`, duplicated in the frontend as `lib/assertUnreachable.ts`).
+TypeScript only narrows to `never` once every case is handled, so adding a notification type —
+or a role, or a status — becomes a compile error naming the missing one, instead of a silent
+fallthrough. Verified by deleting a case: the error reports which type is unhandled.
+
+## Response shapes
+
+Define the Zod schema and infer the TypeScript type from it — `z.infer<typeof X_RESPONSE>` —
+rather than writing both. Most services get this for free by deriving from the generated
+`database/schema.ts`; a response built out of joins does not, and that is exactly where a
+hand-written second copy drifts.
+
+Where a response covers several kinds of the same thing, make it a discriminated union rather
+than one flat shape with nullable columns. `NOTIFICATION_RESPONSE` mirrors the table's CHECK
+constraint that way, and it reaches the frontend through the generated client: reading a thread
+title off an invitation is a type error there, where it used to be a silent empty string.
+
+## Who is told what
+
+Producers write their notification inside the same transaction as the thing that happened, so
+an event cannot exist unannounced. Three rules they all share:
+
+- **Never the actor.** `actor_id IS DISTINCT FROM recipient_id` is a constraint, so a producer
+  that forgets does not merely say something odd — it fails the whole request. An administrator
+  may change their own role, which is exactly where this bites.
+- **Joined members only.** Group activity skips people who were invited and have not accepted:
+  telling somebody what is being written in a group they are not part of yet is noise.
+- **Drafts tell nobody.** A draft is visible only to its author, so `new_writing_post` is
+  written when a post is published — on insert if it goes straight out, on the update that
+  clears `is_draft` otherwise. Editing an already-published post announces nothing.
+
+Timestamps in these paths come from the database clock (`sql\`now()\``), not the application's,
+so rows written in one transaction agree with each other and with column defaults.
+
 ## Memberships
 
 `invited_at` and `joined_at` are maintained by `set_membership_timestamps`, never by a caller.

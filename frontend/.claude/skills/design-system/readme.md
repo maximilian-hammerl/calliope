@@ -145,6 +145,35 @@ member should do about it. Never "wir schützen deine Daten".
 **No emoji. Anywhere.** Emoji reactions were built in round 1 and explicitly removed. The only
 non-alphabetic glyphs allowed are the interface marks listed under Iconography.
 
+**The top bar is shared; the avatar menu is personal.** The bar carries what everyone has in
+common and what stays put — Meine Gruppen, and the search the system reserves room for.
+Anything belonging to one member lives behind their avatar: Mitteilungen, Nachrichten,
+Einstellungen, Abmelden. That split is also what keeps the bar from growing: two long German
+nav words plus the lockup do not fit a 375px phone, and every future personal feature would
+have pushed harder.
+
+**„Mitteilungen", not „Benachrichtigungen".** The shorter word is the one German interfaces use
+for this (it is Apple's), and it leaves „Nachrichten" free for private messages later.
+
+**Personal things open where you are.** Mitteilungen is a dialog, not a page: somebody halfway
+through a long post who wants to answer something should not lose the page they are on. The
+same will hold for Nachrichten. A dialog is right while the content is a single list; the
+moment it needs the categories the requirements describe, it has outgrown one.
+
+**One mark, not a number, and never both.** An unread notification puts a 7px `--oak` dot on
+the avatar and nothing else. A count in the bar tells you how far behind you are, which is the
+pressure the research warned about; a dot only says something happened. The number is said
+once, with its noun, on the menu item itself („Mitteilungen · 3 neu").
+
+**A role reads as a clause, not as a column heading.** „Admin", „Schreibt" and „Liest" label a
+column in the member list and read badly in a sentence — „geändert: Liest." In prose the role
+becomes what it lets you do: „Du verwaltest die Gruppe.", „Du schreibst mit.", „Du liest mit."
+Verbs also keep it neutral, where a noun would force a guess at somebody's gender.
+
+**A notification is one line, and unread is a matter of ink.** Hairline rows, the sentence in
+`--ink-1` at medium weight while unread and `--ink-4` once read, the time right-aligned in
+`--ink-6`. Opening the list is what marks it read — nobody dismisses lines one at a time.
+
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
 Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
 Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·

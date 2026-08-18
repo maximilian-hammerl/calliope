@@ -98,6 +98,7 @@ export default new OpenAPIHono().openapi(
       postId,
       changes,
       post.isDraft,
+      { writingGroupId: groupId, writingThreadId: threadId, actorId: user.id },
     );
     if (updated === undefined) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);

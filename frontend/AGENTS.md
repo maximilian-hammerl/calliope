@@ -122,6 +122,28 @@ The old platform had none, and that was a top complaint. Every target is at leas
 phone (`h-11 md:h-9` on controls), the reading size never shrinks below 17px, and both rails
 are hidden rather than shrunk. Check 375px before calling a surface done.
 
+## Exhaustive switches
+
+`lib/assertUnreachable.ts` in the `default` branch of any `switch` over a union. It is a
+duplicate of the backend's `util/assert_unreachable.ts` — the two projects share no code, and
+four lines twice costs less than a build-time dependency between them.
+
+## Notifications
+
+`lib/notificationText.ts` writes the sentence; the API returns the event and the joined
+titles, never a rendered string. That is what lets a renamed group read correctly in an old
+notification, and why nothing survives the reader losing access to what it is about.
+
+`NotificationsDialog` marks everything read on open and then invalidates **only** the
+current-user query, never its own list. That clears the mark on the avatar while leaving the
+dialog showing what was new when it was opened; refetching would mark them read in front of
+the reader. Its query is `enabled` on the dialog being open — it lives in the top bar on every
+page, and a list nobody is looking at is not worth fetching.
+
+Personal features are dialogs opened from the avatar menu rather than routes, so they do not
+take a member off the page they are on. `PlaceholderDialog` stands in for the ones that do not
+exist yet and says so plainly.
+
 ## Length limits
 
 Never write a bound as a literal. `src/api/textLimit.ts` is generated from

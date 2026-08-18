@@ -1,19 +1,26 @@
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import requireSession from "@/src/middleware/require_session.ts";
+import { NotificationService } from "@/src/service/notification_service.ts";
 import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/response.ts";
 
-const CURRENT_USER_RESPONSE = USER_SCHEMA.pick({
-  id: true,
-  username: true,
-  emailAddress: true,
-});
+const CURRENT_USER_RESPONSE = USER_SCHEMA
+  .pick({
+    id: true,
+    username: true,
+    emailAddress: true,
+  })
+  .extend({
+    // Carried here rather than on an endpoint of its own: the interface already asks who is
+    // signed in on every page, and a second poll for one integer would be noise.
+    unreadNotifications: z.number().int(),
+  });
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -37,5 +44,10 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
-  (c) => c.json(c.get("user"), STATUS_CODE.OK),
+  async (c) => {
+    const user = c.get("user");
+    const unreadNotifications = await NotificationService.countUnread(user.id);
+
+    return c.json({ ...user, unreadNotifications }, STATUS_CODE.OK);
+  },
 );

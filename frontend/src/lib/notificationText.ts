@@ -1,0 +1,71 @@
+import type { ListNotifications200ResultsItem } from '@/api/models'
+import type { RouteLocationRaw } from 'vue-router'
+import { assertUnreachable } from '@/lib/assertUnreachable'
+
+/**
+ * A notification is stored as the event, never as the sentence, so the sentence is written
+ * here. Group and thread titles come from the response, joined at read time, which is why a
+ * renamed group reads correctly in an old notification.
+ */
+
+/**
+ * What the role lets you do, as a clause. The member list's labels („Admin", „Schreibt",
+ * „Liest") are column headings and read badly mid-sentence — „geändert: Liest." Verbs also
+ * keep this neutral, where a noun would force a guess at somebody's gender.
+ */
+const ROLE_CLAUSES: Record<string, string> = {
+  administrator: 'Du verwaltest die Gruppe.',
+  writer: 'Du schreibst mit.',
+  reader: 'Du liest mit.',
+}
+
+/** The writing survives the account, so a notification about it has to as well. */
+function actorOf(notification: ListNotifications200ResultsItem): string {
+  return notification.actorUsername ?? 'Gelöschtes Konto'
+}
+
+export function notificationText(notification: ListNotifications200ResultsItem): string {
+  const actor = actorOf(notification)
+
+  // Narrowed by `type`, so each sentence can only reach for what its own kind carries.
+  switch (notification.type) {
+    case 'invited_to_writing_group':
+      return `${actor} hat dich zu „${notification.writingGroupTitle}“ eingeladen.`
+    case 'role_changed_in_writing_group':
+      return `${actor} hat deine Rolle in „${notification.writingGroupTitle}“ geändert: ${
+        ROLE_CLAUSES[notification.role] ?? notification.role
+      }`
+    case 'new_writing_thread':
+      return `${actor} hat den Thread „${notification.writingThreadTitle}“ in „${notification.writingGroupTitle}“ angelegt.`
+    case 'new_writing_post':
+      // Both names: somebody in several groups cannot place a thread title on its own.
+      return `${actor} hat in „${notification.writingThreadTitle}“ in „${notification.writingGroupTitle}“ geschrieben.`
+    default:
+      return assertUnreachable(notification)
+  }
+}
+
+/** Where the notification takes you: the thread if its kind has one, otherwise the group. */
+export function notificationTarget(
+  notification: ListNotifications200ResultsItem,
+): RouteLocationRaw {
+  switch (notification.type) {
+    case 'new_writing_thread':
+    case 'new_writing_post':
+      return {
+        name: 'thread',
+        params: {
+          groupId: notification.writingGroupId,
+          threadId: notification.writingThreadId,
+        },
+      }
+    case 'invited_to_writing_group':
+    case 'role_changed_in_writing_group':
+      // An invitation lands on the group page, which is where accepting it lives.
+      return { name: 'group', params: { groupId: notification.writingGroupId } }
+    default:
+      // A new notification type reaches here as a compile error, not a silent fallthrough to
+      // some group page that may not be what it was about.
+      return assertUnreachable(notification)
+  }
+}

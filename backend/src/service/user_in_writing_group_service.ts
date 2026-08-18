@@ -1,5 +1,6 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
+import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
   UserInWritingGroup as DatabaseUserInWritingGroup,
   UserInWritingGroupRole,
@@ -49,16 +50,24 @@ const RETURNED_COLUMNS = [
  * The member's name is joined in rather than stored, so it follows a rename. Inner, because
  * a membership cannot outlive the user it belongs to.
  */
-function membershipsWithUsername() {
-  return db
+function membershipsWithUsername(executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("userInWritingGroup")
     .innerJoin("user", "user.id", "userInWritingGroup.userId")
     .select([...SELECTED_COLUMNS, "user.username"]);
 }
 
-/** Reads one membership back after a write, when the caller has already authorised it. */
-function membershipWithUsername(writingGroupId: string, userId: string) {
-  return membershipsWithUsername()
+/**
+ * Reads one membership back after a write, when the caller has already authorised it. Takes
+ * the executor because a read through `db` inside a transaction runs on another connection
+ * and cannot see what that transaction has not committed yet.
+ */
+function membershipWithUsername(
+  writingGroupId: string,
+  userId: string,
+  executor: typeof db | Transaction = db,
+) {
+  return membershipsWithUsername(executor)
     .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
     .where("userInWritingGroup.userId", "=", userId);
 }
@@ -68,21 +77,33 @@ async function insertInvitation(
   writingGroupId: string,
   userId: string,
   role: UserInWritingGroupRole,
+  invitedBy: string,
 ): Promise<UserInWritingGroup | undefined> {
-  const invitation = await db
-    .insertInto("userInWritingGroup")
-    .values({ writingGroupId, userId, role, status: "invited" })
-    // Nothing to do when the user is already invited or a member.
-    .onConflict((oc) => oc.doNothing())
-    .returning(RETURNED_COLUMNS)
-    .executeTakeFirst();
+  // One transaction, because an invitation nobody is told about is the failure that matters:
+  // the person never finds out, and nothing in the interface would show it went missing.
+  return await db.transaction().execute(async (transaction) => {
+    const invitation = await transaction
+      .insertInto("userInWritingGroup")
+      .values({ writingGroupId, userId, role, status: "invited" })
+      // Nothing to do when the user is already invited or a member.
+      .onConflict((oc) => oc.doNothing())
+      .returning(RETURNED_COLUMNS)
+      .executeTakeFirst();
 
-  if (invitation === undefined) {
-    return undefined;
-  }
+    if (invitation === undefined) {
+      // Nothing happened, so nobody is told.
+      return undefined;
+    }
 
-  return await membershipWithUsername(writingGroupId, userId)
-    .executeTakeFirstOrThrow();
+    await NotificationService.insertInvitationNotification(transaction, {
+      recipientId: userId,
+      writingGroupId,
+      actorId: invitedBy,
+    });
+
+    return await membershipWithUsername(writingGroupId, userId, transaction)
+      .executeTakeFirstOrThrow();
+  });
 }
 
 async function selectMembership(
@@ -115,27 +136,33 @@ async function updateRole(
   writingGroupId: string,
   userId: string,
   role: UserInWritingGroupRole,
+  changedBy: string,
 ): Promise<UserInWritingGroup | undefined> {
-  const updated = await db
-    .updateTable("userInWritingGroup")
-    .set({ role })
-    .where("writingGroupId", "=", writingGroupId)
-    .where("userId", "=", userId)
-    .returning(RETURNED_COLUMNS)
-    .executeTakeFirst();
+  return await db.transaction().execute(async (transaction) => {
+    const updated = await transaction
+      .updateTable("userInWritingGroup")
+      .set({ role })
+      .where("writingGroupId", "=", writingGroupId)
+      .where("userId", "=", userId)
+      .returning(RETURNED_COLUMNS)
+      .executeTakeFirst();
 
-  if (updated === undefined) {
-    return undefined;
-  }
+    if (updated === undefined) {
+      return undefined;
+    }
 
-  return await membershipWithUsername(writingGroupId, userId)
-    .executeTakeFirstOrThrow();
+    await NotificationService.insertRoleChangeNotification(transaction, {
+      recipientId: userId,
+      writingGroupId,
+      actorId: changedBy,
+    });
+
+    return await membershipWithUsername(writingGroupId, userId, transaction)
+      .executeTakeFirstOrThrow();
+  });
 }
 
-/**
- * Only an invitation can be accepted, so a membership that is already joined is left
- * alone and reported back as unchanged.
- */
+/** Only the invited user can turn their invitation into a membership. */
 async function acceptInvitation(
   writingGroupId: string,
   userId: string,

@@ -161,8 +161,10 @@ Deno.test("GET /api/auth/me reports the signed-in user", async () => {
   assertEquals(Object.keys(body).toSorted(), [
     "emailAddress",
     "id",
+    "unreadNotifications",
     "username",
   ]);
+  assertEquals(body.unreadNotifications, 0);
 });
 
 Deno.test("GET /api/auth/me rejects a request without a session", async () => {

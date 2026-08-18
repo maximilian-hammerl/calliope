@@ -9,11 +9,30 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export type NotificationType =
+  | "invited_to_writing_group"
+  | "new_writing_post"
+  | "new_writing_thread"
+  | "role_changed_in_writing_group";
+
 export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 
 export type UserInWritingGroupStatus = "invited" | "joined";
 
 export type WritingGroupVisibility = "private" | "public";
+
+export interface Notification {
+  actorId: string | null;
+  createdAt: Generated<string>;
+  id: Generated<string>;
+  occurredAt: Generated<string>;
+  readAt: string | null;
+  recipientId: string;
+  type: NotificationType;
+  writingGroupId: string;
+  writingPostId: string | null;
+  writingThreadId: string | null;
+}
 
 export interface User {
   createdAt: Generated<string>;
@@ -73,6 +92,7 @@ export interface WritingThread {
 }
 
 export interface DB {
+  notification: Notification;
   user: User;
   userInWritingGroup: UserInWritingGroup;
   userSession: UserSession;
@@ -100,6 +120,27 @@ export const USER_IN_WRITING_GROUP_STATUSES = ["invited", "joined"] as const;
 export const USER_IN_WRITING_GROUP_STATUS_SCHEMA = z.enum(
   USER_IN_WRITING_GROUP_STATUSES,
 );
+
+export const NOTIFICATION_TYPES = [
+  "invited_to_writing_group",
+  "new_writing_post",
+  "new_writing_thread",
+  "role_changed_in_writing_group",
+] as const;
+export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
+
+export const NOTIFICATION_SCHEMA = z.object({
+  id: z.uuidv7(),
+  recipientId: z.uuidv7(),
+  type: NOTIFICATION_TYPE_SCHEMA,
+  actorId: z.uuidv7().nullable(),
+  writingGroupId: z.uuidv7(),
+  writingThreadId: z.uuidv7().nullable(),
+  writingPostId: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  occurredAt: z.iso.datetime({ offset: true }),
+  readAt: z.iso.datetime({ offset: true }).nullable(),
+});
 
 export const USER_SCHEMA = z.object({
   id: z.uuidv7(),

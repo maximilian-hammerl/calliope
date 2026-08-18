@@ -142,3 +142,47 @@ export async function lastActivityOf(
   );
   return Number(rows[0].epoch);
 }
+
+/** An invitation notification for a member of a group. Returns its id. */
+export async function insertNotification(
+  groupId: string,
+  recipientId: string,
+  { actorId = null, type = "invited_to_writing_group" }: {
+    actorId?: string | null;
+    type?: string;
+  } = {},
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO public.notification (recipient_id, writing_group_id, type, actor_id)
+     VALUES ($1, $2, $3::public.notification_type, $4) RETURNING id`,
+    [recipientId, groupId, type, actorId],
+  );
+  return rows[0].id;
+}
+
+export async function countNotifications(recipientId: string): Promise<number> {
+  const { rows } = await client.query<{ count: string }>(
+    `SELECT count(*) FROM public.notification WHERE recipient_id = $1`,
+    [recipientId],
+  );
+  return Number(rows[0].count);
+}
+
+/**
+ * Both timestamps as epoch seconds. The driver parses timestamptz into a JS `Date`, which
+ * only has milliseconds, so two statements less than a millisecond apart come back equal —
+ * the same trap `lastActivityOf` exists to avoid.
+ */
+export async function notificationTimestamps(
+  recipientId: string,
+): Promise<{ createdAt: number; occurredAt: number }> {
+  const { rows } = await client.query<
+    { created_at: number; occurred_at: number }
+  >(
+    `SELECT extract(epoch from created_at)  AS created_at,
+            extract(epoch from occurred_at) AS occurred_at
+     FROM public.notification WHERE recipient_id = $1`,
+    [recipientId],
+  );
+  return { createdAt: rows[0].created_at, occurredAt: rows[0].occurred_at };
+}

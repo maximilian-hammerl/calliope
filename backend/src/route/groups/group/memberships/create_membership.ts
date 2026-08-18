@@ -98,6 +98,7 @@ export default new OpenAPIHono().openapi(
       groupId,
       userId,
       role,
+      user.id,
     );
 
     if (invitation === undefined) {
