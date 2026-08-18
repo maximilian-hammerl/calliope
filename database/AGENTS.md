@@ -1,0 +1,66 @@
+# Database
+
+Postgres 18, migrated with [dbmate](https://github.com/amacneil/dbmate), typed with
+`kysely-codegen`. Tasks are `deno task …` — see the root [AGENTS.md](../AGENTS.md) for the
+conventions shared with the other projects.
+
+## Migrations are deployed
+
+Add a new migration; **never edit an applied one**. dbmate records a migration by version, so
+editing a file that has already run changes nothing on any database that has it — the old
+definition stays live while the file says otherwise. If you have to correct one that only
+exists locally, roll it back and re-apply:
+
+```bash
+deno task migrations:rollback && deno task migrations:migrate
+```
+
+Every `migrate:down` must actually reverse its `migrate:up`, including dropping enum types
+and trigger functions. Test the round trip against a throwaway database rather than the one
+you are working in.
+
+## Triggers
+
+New tables need a `set_updated_at` trigger, or `updated_at` never changes:
+
+```sql
+CREATE TRIGGER set_updated_at
+	BEFORE UPDATE ON public.thing
+	FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+```
+
+Writing-group and thread activity is tracked separately in `last_activity_at`, which a child
+row's insert, update or delete bumps on its parent. Note the side effect: because that is a
+real `UPDATE` on the parent, `updated_at` moves with it, so on those two tables `updated_at`
+no longer means "this row's own fields were edited".
+
+**A trigger function's body is not checked until it runs.** `dbmate migrate` succeeding
+proves only that the DDL parsed. Exercise every path — insert, update, delete and a cascade —
+before believing it.
+
+Two mistakes that pass review easily:
+
+- **`NEW IS NOT NULL` does not mean what it looks like.** For a *record*, `IS NOT NULL` is
+  true only when every field is non-null, so one nullable column sends it down the wrong
+  branch. Dispatch on `TG_OP` instead.
+- **Column names are only resolved at execution time**, so `NEW.group_id` against a column
+  actually called `writing_group_id` migrates cleanly and fails on the first insert.
+
+## Regenerating types
+
+After any migration:
+
+```bash
+deno task types:generate
+```
+
+Commit the regenerated `backend/src/database/schema.ts`. Its output is not `deno fmt`-clean,
+so format the backend afterwards. Because the backend builds its request and response schemas
+from that file, an added column surfaces as a compile error wherever a route promises it but
+the service does not select it — which is the point.
+
+## Serialiser
+
+`kysely_zod_serializer.ts` emits both the Kysely types and the zod schemas. Column comments
+become `.describe()`, and enum values and comments are escaped through `JSON.stringify`, so
+an apostrophe in a comment cannot break the generated file.
