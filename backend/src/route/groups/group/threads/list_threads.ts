@@ -23,7 +23,7 @@ const SORT_ATTRIBUTE = WRITING_THREAD_SCHEMA
   .keyof()
   .extract(["createdAt", "updatedAt", "lastActivityAt", "title"])
   .default("createdAt")
-  .transform((attribute) => `thread.${attribute}` as const);
+  .transform((attribute) => `writingThread.${attribute}` as const);
 
 const LIST_THREADS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "desc");
 

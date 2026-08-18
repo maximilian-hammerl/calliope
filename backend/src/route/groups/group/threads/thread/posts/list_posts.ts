@@ -29,7 +29,7 @@ const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
   .extract(["createdAt", "updatedAt"])
   .default("createdAt")
   // Oldest first by default, because a thread reads in the order it was written.
-  .transform((attribute) => `post.${attribute}` as const);
+  .transform((attribute) => `writingPost.${attribute}` as const);
 
 const LIST_POSTS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "asc");
 

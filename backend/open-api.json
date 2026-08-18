@@ -4120,7 +4120,7 @@
                   "type": "object",
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
-                    "threadId": { "type": "string", "format": "uuid" },
+                    "writingThreadId": { "type": "string", "format": "uuid" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -4133,7 +4133,7 @@
                   },
                   "required": [
                     "id",
-                    "threadId",
+                    "writingThreadId",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -4385,7 +4385,10 @@
                         "type": "object",
                         "properties": {
                           "id": { "type": "string", "format": "uuid" },
-                          "threadId": { "type": "string", "format": "uuid" },
+                          "writingThreadId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
                           "text": { "type": "string" },
                           "isDraft": { "type": "boolean" },
                           "createdBy": {
@@ -4404,7 +4407,7 @@
                         },
                         "required": [
                           "id",
-                          "threadId",
+                          "writingThreadId",
                           "text",
                           "isDraft",
                           "createdBy",
@@ -4608,7 +4611,7 @@
                   "type": "object",
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
-                    "threadId": { "type": "string", "format": "uuid" },
+                    "writingThreadId": { "type": "string", "format": "uuid" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -4621,7 +4624,7 @@
                   },
                   "required": [
                     "id",
-                    "threadId",
+                    "writingThreadId",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -4837,7 +4840,7 @@
                   "type": "object",
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
-                    "threadId": { "type": "string", "format": "uuid" },
+                    "writingThreadId": { "type": "string", "format": "uuid" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -4850,7 +4853,7 @@
                   },
                   "required": [
                     "id",
-                    "threadId",
+                    "writingThreadId",
                     "text",
                     "isDraft",
                     "createdBy",
