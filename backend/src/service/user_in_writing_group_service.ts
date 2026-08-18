@@ -10,10 +10,13 @@ import {
   listResultsWithCount,
 } from "@/src/list_endpoint_query.ts";
 
-export type UserInWritingGroup = Pick<
-  Selectable<DatabaseUserInWritingGroup>,
-  "userId" | "writingGroupId" | "role" | "status" | "createdAt" | "updatedAt"
->;
+export type UserInWritingGroup =
+  & Pick<
+    Selectable<DatabaseUserInWritingGroup>,
+    "userId" | "writingGroupId" | "role" | "status" | "createdAt" | "updatedAt"
+  >
+  // Never null: the membership is cascade-deleted with its user.
+  & { username: string };
 
 const SELECTED_COLUMNS = [
   "userInWritingGroup.userId",
@@ -33,30 +36,51 @@ const RETURNED_COLUMNS = [
   "updatedAt",
 ] as const;
 
+/**
+ * The member's name is joined in rather than stored, so it follows a rename. Inner, because
+ * a membership cannot outlive the user it belongs to.
+ */
+function membershipsWithUsername() {
+  return db
+    .selectFrom("userInWritingGroup")
+    .innerJoin("user", "user.id", "userInWritingGroup.userId")
+    .select([...SELECTED_COLUMNS, "user.username"]);
+}
+
+/** Reads one membership back after a write, when the caller has already authorised it. */
+function membershipWithUsername(writingGroupId: string, userId: string) {
+  return membershipsWithUsername()
+    .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
+    .where("userInWritingGroup.userId", "=", userId);
+}
+
 /** Always starts as an invitation; only the invited user can turn it into a membership. */
 async function insertInvitation(
   writingGroupId: string,
   userId: string,
   role: UserInWritingGroupRole,
 ): Promise<UserInWritingGroup | undefined> {
-  return await db
+  const invitation = await db
     .insertInto("userInWritingGroup")
     .values({ writingGroupId, userId, role, status: "invited" })
     // Nothing to do when the user is already invited or a member.
     .onConflict((oc) => oc.doNothing())
     .returning(RETURNED_COLUMNS)
     .executeTakeFirst();
+
+  if (invitation === undefined) {
+    return undefined;
+  }
+
+  return await membershipWithUsername(writingGroupId, userId)
+    .executeTakeFirstOrThrow();
 }
 
 async function selectMembership(
   writingGroupId: string,
   userId: string,
 ): Promise<UserInWritingGroup | undefined> {
-  return await db
-    .selectFrom("userInWritingGroup")
-    .select(SELECTED_COLUMNS)
-    .where("writingGroupId", "=", writingGroupId)
-    .where("userId", "=", userId)
+  return await membershipWithUsername(writingGroupId, userId)
     .executeTakeFirst();
 }
 
@@ -65,10 +89,8 @@ function listMemberships(
   query: ListQuery,
 ): Promise<ListResults<UserInWritingGroup>> {
   return listResultsWithCount(
-    db
-      .selectFrom("userInWritingGroup")
-      .select(SELECTED_COLUMNS)
-      .where("writingGroupId", "=", writingGroupId),
+    membershipsWithUsername()
+      .where("userInWritingGroup.writingGroupId", "=", writingGroupId),
     query,
   );
 }
@@ -79,13 +101,20 @@ async function updateRole(
   userId: string,
   role: UserInWritingGroupRole,
 ): Promise<UserInWritingGroup | undefined> {
-  return await db
+  const updated = await db
     .updateTable("userInWritingGroup")
     .set({ role })
     .where("writingGroupId", "=", writingGroupId)
     .where("userId", "=", userId)
     .returning(RETURNED_COLUMNS)
     .executeTakeFirst();
+
+  if (updated === undefined) {
+    return undefined;
+  }
+
+  return await membershipWithUsername(writingGroupId, userId)
+    .executeTakeFirstOrThrow();
 }
 
 /**
@@ -96,7 +125,7 @@ async function acceptInvitation(
   writingGroupId: string,
   userId: string,
 ): Promise<UserInWritingGroup | undefined> {
-  return await db
+  const updated = await db
     .updateTable("userInWritingGroup")
     .set({ status: "joined" })
     .where("writingGroupId", "=", writingGroupId)
@@ -104,6 +133,13 @@ async function acceptInvitation(
     .where("status", "=", "invited")
     .returning(RETURNED_COLUMNS)
     .executeTakeFirst();
+
+  if (updated === undefined) {
+    return undefined;
+  }
+
+  return await membershipWithUsername(writingGroupId, userId)
+    .executeTakeFirstOrThrow();
 }
 
 export type MembershipRemoval = {

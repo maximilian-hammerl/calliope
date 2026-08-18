@@ -7,16 +7,19 @@ import {
   listResultsWithCount,
 } from "@/src/list_endpoint_query.ts";
 
-export type Post = Pick<
-  Selectable<DatabasePost>,
-  | "id"
-  | "threadId"
-  | "text"
-  | "isDraft"
-  | "createdBy"
-  | "createdAt"
-  | "updatedAt"
->;
+export type Post =
+  & Pick<
+    Selectable<DatabasePost>,
+    | "id"
+    | "threadId"
+    | "text"
+    | "isDraft"
+    | "createdBy"
+    | "createdAt"
+    | "updatedAt"
+  >
+  // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
+  & { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "post.id",
@@ -28,27 +31,30 @@ const SELECTED_COLUMNS = [
   "post.updatedAt",
 ] as const;
 
-const RETURNED_COLUMNS = [
-  "id",
-  "threadId",
-  "text",
-  "isDraft",
-  "createdBy",
-  "createdAt",
-  "updatedAt",
-] as const;
+/** Reads one post back with its author, bypassing the draft filter: after a write the
+ * caller has already established that it may see the row. */
+function postWithAuthorById(postId: string) {
+  return db
+    .selectFrom("post")
+    .leftJoin("user", "user.id", "post.createdBy")
+    .select([...SELECTED_COLUMNS, "user.username as createdByUsername"])
+    .where("post.id", "=", postId);
+}
 
-function insertPost(
+async function insertPost(
   threadId: string,
   text: string,
   isDraft: boolean,
   createdBy: string,
 ): Promise<Post> {
-  return db
+  const { id } = await db
     .insertInto("post")
     .values({ threadId, text, isDraft, createdBy })
-    .returning(RETURNED_COLUMNS)
+    .returning(["id"])
     .executeTakeFirstOrThrow();
+
+  // Re-read rather than RETURNING, which cannot reach the joined author name.
+  return await postWithAuthorById(id).executeTakeFirstOrThrow();
 }
 
 /**
@@ -66,14 +72,23 @@ function readableBy(viewerId: string) {
     );
 }
 
+/**
+ * The author's name is joined in rather than stored, so it follows a rename. The join is
+ * left: an account that has been deleted leaves the post behind with no author.
+ */
+function postsWithAuthor(viewerId: string) {
+  return readableBy(viewerId)
+    .leftJoin("user", "user.id", "post.createdBy")
+    .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
+}
+
 /** Scoped to the thread, so a post id from another thread cannot be reached through it. */
 async function selectPost(
   threadId: string,
   postId: string,
   viewerId: string,
 ): Promise<Post | undefined> {
-  return await readableBy(viewerId)
-    .select(SELECTED_COLUMNS)
+  return await postsWithAuthor(viewerId)
     .where("post.threadId", "=", threadId)
     .where("post.id", "=", postId)
     .executeTakeFirst();
@@ -85,9 +100,7 @@ function listPosts(
   query: ListQuery,
 ): Promise<ListResults<Post>> {
   return listResultsWithCount(
-    readableBy(viewerId)
-      .select(SELECTED_COLUMNS)
-      .where("post.threadId", "=", threadId),
+    postsWithAuthor(viewerId).where("post.threadId", "=", threadId),
     query,
   );
 }
@@ -97,12 +110,18 @@ async function updatePost(
   postId: string,
   changes: { text?: string; isDraft?: boolean },
 ): Promise<Post | undefined> {
-  return await db
+  const updated = await db
     .updateTable("post")
     .set(changes)
     .where("id", "=", postId)
-    .returning(RETURNED_COLUMNS)
+    .returning(["id"])
     .executeTakeFirst();
+
+  if (updated === undefined) {
+    return undefined;
+  }
+
+  return await postWithAuthorById(updated.id).executeTakeFirstOrThrow();
 }
 
 async function deletePost(postId: string): Promise<boolean> {

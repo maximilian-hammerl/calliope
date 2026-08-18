@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { THREAD_RESPONSE } from "@/src/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
@@ -17,7 +18,7 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
 const SORT_ATTRIBUTE = THREAD_SCHEMA
   .keyof()
-  .extract(["createdAt", "updatedAt", "title"])
+  .extract(["createdAt", "updatedAt", "lastActivityAt", "title"])
   .default("createdAt")
   .transform((attribute) => `thread.${attribute}` as const);
 
@@ -40,7 +41,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "A page of threads",
-        content: jsonContent(listResponseSchema(THREAD_SCHEMA)),
+        content: jsonContent(listResponseSchema(THREAD_RESPONSE)),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",

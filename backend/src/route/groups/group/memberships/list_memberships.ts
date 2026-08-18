@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { MEMBERSHIP_RESPONSE } from "@/src/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
@@ -43,7 +44,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "A page of memberships",
-        content: jsonContent(listResponseSchema(USER_IN_WRITING_GROUP_SCHEMA)),
+        content: jsonContent(listResponseSchema(MEMBERSHIP_RESPONSE)),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",

@@ -7,16 +7,19 @@ import {
   listResultsWithCount,
 } from "@/src/list_endpoint_query.ts";
 
-export type Thread = Pick<
-  Selectable<DatabaseThread>,
-  | "id"
-  | "writingGroupId"
-  | "title"
-  | "createdBy"
-  | "createdAt"
-  | "updatedAt"
-  | "lastActivityAt"
->;
+export type Thread =
+  & Pick<
+    Selectable<DatabaseThread>,
+    | "id"
+    | "writingGroupId"
+    | "title"
+    | "createdBy"
+    | "createdAt"
+    | "updatedAt"
+    | "lastActivityAt"
+  >
+  // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
+  & { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "thread.id",
@@ -28,25 +31,31 @@ const SELECTED_COLUMNS = [
   "thread.lastActivityAt",
 ] as const;
 
-const RETURNED_COLUMNS = [
-  "id",
-  "writingGroupId",
-  "title",
-  "createdBy",
-  "createdAt",
-  "updatedAt",
-  "lastActivityAt",
-] as const;
+/**
+ * The author's name is joined in rather than stored, so it follows a rename. The join is
+ * left: an account that has been deleted leaves the post behind with no author.
+ */
+function threadsWithAuthor() {
+  return db
+    .selectFrom("thread")
+    .leftJoin("user", "user.id", "thread.createdBy")
+    .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
+}
 
-function insertThread(
+async function insertThread(
   writingGroupId: string,
   title: string,
   createdBy: string,
 ): Promise<Thread> {
-  return db
+  const { id } = await db
     .insertInto("thread")
     .values({ writingGroupId, title, createdBy })
-    .returning(RETURNED_COLUMNS)
+    .returning(["id"])
+    .executeTakeFirstOrThrow();
+
+  // Re-read rather than RETURNING, which cannot reach the joined author name.
+  return await threadsWithAuthor()
+    .where("thread.id", "=", id)
     .executeTakeFirstOrThrow();
 }
 
@@ -55,9 +64,7 @@ async function selectThread(
   writingGroupId: string,
   threadId: string,
 ): Promise<Thread | undefined> {
-  return await db
-    .selectFrom("thread")
-    .select(SELECTED_COLUMNS)
+  return await threadsWithAuthor()
     .where("thread.writingGroupId", "=", writingGroupId)
     .where("thread.id", "=", threadId)
     .executeTakeFirst();
@@ -68,10 +75,7 @@ function listThreads(
   query: ListQuery,
 ): Promise<ListResults<Thread>> {
   return listResultsWithCount(
-    db
-      .selectFrom("thread")
-      .select(SELECTED_COLUMNS)
-      .where("thread.writingGroupId", "=", writingGroupId),
+    threadsWithAuthor().where("thread.writingGroupId", "=", writingGroupId),
     query,
   );
 }
@@ -81,12 +85,20 @@ async function updateThread(
   threadId: string,
   changes: { title?: string },
 ): Promise<Thread | undefined> {
-  return await db
+  const updated = await db
     .updateTable("thread")
     .set(changes)
     .where("id", "=", threadId)
-    .returning(RETURNED_COLUMNS)
+    .returning(["id"])
     .executeTakeFirst();
+
+  if (updated === undefined) {
+    return undefined;
+  }
+
+  return await threadsWithAuthor()
+    .where("thread.id", "=", updated.id)
+    .executeTakeFirstOrThrow();
 }
 
 async function deleteThread(threadId: string): Promise<boolean> {

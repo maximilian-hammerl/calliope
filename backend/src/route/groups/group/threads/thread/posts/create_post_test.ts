@@ -30,6 +30,22 @@ async function thread() {
   return { adminCookie, group, thread: created };
 }
 
+Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts names the author", async () => {
+  const { adminCookie, group, thread: created } = await thread();
+
+  const response = await request(
+    "POST",
+    `/api/groups/${group.id}/threads/${created.id}/posts`,
+    adminCookie,
+    { text: "Es war einmal" },
+  );
+
+  const post = await response.json();
+  // Joined rather than stored, so a client never has to resolve the id itself.
+  assertEquals(post.createdByUsername, administrator);
+  assertEquals(post.createdBy !== undefined, true);
+});
+
 Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts writes a published post", async () => {
   const { adminCookie, group, thread: created } = await thread();
 

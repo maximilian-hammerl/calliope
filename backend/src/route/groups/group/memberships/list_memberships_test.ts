@@ -34,6 +34,11 @@ Deno.test("QUERY /api/groups/{groupId}/memberships lists members and invitations
   assertEquals(response.status, STATUS_CODE.OK);
   const page = await response.json();
   assertEquals(page.totalResults, 2);
+  // The name comes back with the membership, so the member list needs no second lookup.
+  assertEquals(
+    page.results.map((m: { username: string }) => m.username).toSorted(),
+    [administrator, invitee].toSorted(),
+  );
   assertEquals(
     page.results.map((m: { status: string }) => m.status),
     ["invited", "joined"],

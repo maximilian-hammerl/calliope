@@ -12,17 +12,20 @@ import {
   listResultsWithCount,
 } from "@/src/list_endpoint_query.ts";
 
-export type WritingGroup = Pick<
-  Selectable<DatabaseWritingGroup>,
-  | "id"
-  | "title"
-  | "description"
-  | "visibility"
-  | "createdBy"
-  | "createdAt"
-  | "updatedAt"
-  | "lastActivityAt"
->;
+export type WritingGroup =
+  & Pick<
+    Selectable<DatabaseWritingGroup>,
+    | "id"
+    | "title"
+    | "description"
+    | "visibility"
+    | "createdBy"
+    | "createdAt"
+    | "updatedAt"
+    | "lastActivityAt"
+  >
+  // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
+  & { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "writingGroup.id",
@@ -63,7 +66,7 @@ async function insertWritingGroup(
       })
       .execute();
 
-    return writingGroup;
+    return { ...writingGroup, createdByUsername: creator.username };
   });
 }
 
@@ -81,6 +84,8 @@ function visibleToUser(user: User) {
           .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
           .on("userInWritingGroup.userId", "=", user.id),
     )
+    // Left as well: an account that has been deleted leaves the group behind with no author.
+    .leftJoin("user", "user.id", "writingGroup.createdBy")
     .where((eb) =>
       eb.or([
         eb("writingGroup.visibility", "=", "public"),
@@ -89,13 +94,16 @@ function visibleToUser(user: User) {
     );
 }
 
+/** The author's name is joined in rather than stored, so it follows a rename. */
+const AUTHOR_COLUMN = "user.username as createdByUsername" as const;
+
 /** Returns nothing when the group does not exist or is private and not the user's. */
 async function selectVisibleWritingGroup(
   user: User,
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
-    .select(SELECTED_COLUMNS)
+    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
     .where("writingGroup.id", "=", writingGroupId)
     .executeTakeFirst();
 }
@@ -105,7 +113,7 @@ function listVisibleWritingGroups(
   query: ListQuery,
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
-    visibleToUser(user).select(SELECTED_COLUMNS),
+    visibleToUser(user).select([...SELECTED_COLUMNS, AUTHOR_COLUMN]),
     query,
   );
 }
@@ -138,12 +146,24 @@ async function updateWritingGroup(
     visibility?: WritingGroupVisibility;
   },
 ): Promise<WritingGroup | undefined> {
-  return await db
+  const updated = await db
     .updateTable("writingGroup")
     .set(changes)
     .where("id", "=", writingGroupId)
-    .returning(SELECTED_COLUMNS)
+    .returning(["writingGroup.id"])
     .executeTakeFirst();
+
+  if (updated === undefined) {
+    return undefined;
+  }
+
+  // Re-read rather than RETURNING, which cannot reach the joined author name.
+  return await db
+    .selectFrom("writingGroup")
+    .leftJoin("user", "user.id", "writingGroup.createdBy")
+    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
+    .where("writingGroup.id", "=", updated.id)
+    .executeTakeFirstOrThrow();
 }
 
 export const WritingGroupService = {

@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { POST_RESPONSE } from "@/src/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
@@ -36,7 +37,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "The post",
-        content: jsonContent(POST_SCHEMA),
+        content: jsonContent(POST_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
