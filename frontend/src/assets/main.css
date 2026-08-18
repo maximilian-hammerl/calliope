@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Everything a post looks like, read or being written. Kept apart because it is the one part
+   of the stylesheet that grows with the editor, and because the shadcn CLI rewrites this file
+   whenever a component is added. */
+@import './post.css';
+
 /* Self-hosted rather than fetched from Google: no third-party request on any page load,
    nothing for the shadcn CLI to overwrite, and the content security policy can stay 'self'.
    Subsetted to latin + latin-ext, which is all a German interface needs.
@@ -229,12 +234,6 @@
   h2,
   h3 {
     @apply font-serif font-normal;
-  }
-  /* Thread reading size never shrinks, on any device (17px / 1.8). */
-  .prose-post {
-    font: 400 17px/1.8 var(--font-serif);
-    color: #302a23;
-    text-wrap: pretty;
   }
   /* Mono rail labels: always uppercase with tracking. */
   .label-rail {

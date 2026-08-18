@@ -26,7 +26,30 @@ export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
   CREATED_BY_USERNAME,
 );
 
-export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME);
+/**
+ * The document is typed loosely on the way out and strictly on the way in — nothing can be
+ * stored that the whitelist in `document.ts` did not accept, so what comes back is already
+ * known to be safe. It is declared here rather than inherited from the generated schema
+ * because `z.unknown()` makes the key optional, and Hono's response inference gives up on the
+ * resulting route type with "type instantiation is excessively deep".
+ */
+export const POST_RESPONSE = z.object({
+  ...WRITING_POST_SCHEMA.shape,
+  ...CREATED_BY_USERNAME,
+  // Loose on the way out and strict on the way in: nothing can be stored that the whitelist
+  // in `document.ts` refused, so what comes back is already known to be safe. Spread into a
+  // flat object rather than chained through `.extend()` — this route's type sits close to
+  // TypeScript's instantiation ceiling, and the chain is what tips it over.
+  // `any`, and deliberately so. Every other type — `unknown`, `json`, even `string` — pushes
+  // this route's inference past TypeScript's instantiation ceiling ("excessively deep"), and
+  // `any` is the one that short-circuits it. Nothing is lost: the document was validated
+  // against the whitelist in `document.ts` before it could be stored, so what comes back out
+  // is already known to be safe. The strictness that matters is on the way in.
+  document: z.any().openapi({
+    type: "object",
+    description: "A ProseMirror document",
+  }),
+});
 
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   username: z.string(),

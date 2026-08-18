@@ -9,6 +9,18 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export type Json = JsonValue;
+
+export type JsonArray = JsonValue[];
+
+export type JsonObject = {
+  [x: string]: JsonValue | undefined;
+};
+
+export type JsonPrimitive = boolean | number | string | null;
+
+export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
+
 export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 
 export type UserInWritingGroupStatus = "invited" | "joined";
@@ -56,6 +68,7 @@ export interface WritingGroup {
 export interface WritingPost {
   createdAt: Generated<string>;
   createdBy: string | null;
+  document: Json;
   editedAt: string | null;
   id: Generated<string>;
   isDraft: boolean;
@@ -142,6 +155,7 @@ export const WRITING_GROUP_SCHEMA = z.object({
 export const WRITING_POST_SCHEMA = z.object({
   id: z.uuidv7(),
   writingThreadId: z.uuidv7(),
+  document: z.unknown(),
   text: z.string(),
   isDraft: z.boolean(),
   createdBy: z.uuidv7().nullable(),

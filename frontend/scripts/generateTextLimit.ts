@@ -19,10 +19,16 @@ import { fileURLToPath } from 'node:url'
 /** Only the corner of OpenAPI this reads. Request bodies are inline — there are no $refs. */
 type Bound = { minLength?: number; maxLength?: number }
 
+/**
+ * A document's bound is on the prose inside it, so it cannot be a JSON Schema `maxLength` on
+ * a string. The API publishes it as this extension instead.
+ */
+type Property = Bound & { 'x-max-text-length'?: number }
+
 type Operation = {
   operationId?: string
   requestBody?: {
-    content?: Record<string, { schema?: { properties?: Record<string, Bound> } }>
+    content?: Record<string, { schema?: { properties?: Record<string, Property> } }>
   }
 }
 
@@ -42,6 +48,9 @@ function boundsOf(operation: Operation): Record<string, Bound> {
     const bound: Bound = {}
     if (typeof definition.minLength === 'number') bound.minLength = definition.minLength
     if (typeof definition.maxLength === 'number') bound.maxLength = definition.maxLength
+    if (typeof definition['x-max-text-length'] === 'number') {
+      bound.maxLength = definition['x-max-text-length']
+    }
     if (Object.keys(bound).length > 0) bounds[property] = bound
   }
 

@@ -110,3 +110,11 @@ export async function clearRateLimits(): Promise<void> {
     await redis.del(...keys);
   }
 }
+
+/** A minimal valid post document holding one paragraph, for tests that only care about text. */
+export function documentOf(text: string) {
+  return {
+    type: "doc",
+    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+  };
+}

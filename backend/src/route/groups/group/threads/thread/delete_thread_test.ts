@@ -5,6 +5,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  documentOf,
   registerUser,
   request,
 } from "@/src/test_support.ts";
@@ -32,7 +33,7 @@ Deno.test("DELETE /api/groups/{groupId}/threads/{threadId} deletes the thread an
     "POST",
     `/api/groups/${group.id}/threads/${thread.id}/posts`,
     writerCookie,
-    { text: "Es war einmal" },
+    { document: documentOf("Es war einmal") },
   )).json();
 
   // The author may delete their own thread.

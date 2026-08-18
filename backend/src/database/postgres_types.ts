@@ -46,9 +46,25 @@ const timestamptz = {
   serialize: (value: string) => value,
 };
 
+/**
+ * Supplying `types` at all means the driver uses only what is listed here, so a jsonb column
+ * comes back as the raw string unless it is named. Without this a stored post document
+ * reaches the API as text, and the editor loads it by typing the JSON out.
+ *
+ * `serialize` tolerates a value that is already a string so a caller may pass either.
+ */
+const jsonb: postgres.PostgresType<unknown> = {
+  to: 3802,
+  from: [114, 3802],
+  parse: (value: string) => JSON.parse(value),
+  serialize: (value: unknown) =>
+    typeof value === "string" ? value : JSON.stringify(value),
+};
+
 export const postgresTypes = {
   int8,
   numeric,
   timestamp,
   timestamptz,
+  jsonb,
 };

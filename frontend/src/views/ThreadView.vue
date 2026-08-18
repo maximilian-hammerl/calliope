@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
@@ -22,8 +22,11 @@ import ThreadHeader from '@/components/ThreadHeader.vue'
 import PostItem from '@/components/PostItem.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/formatNumber'
+import { documentText, EMPTY_DOCUMENT, isEmptyDocument } from '@/lib/postDocument'
 import { useDraft } from '@/lib/useDraft'
-import PostComposer from '@/components/PostComposer.vue'
+// Loaded only once somebody may actually write: the editor is the largest thing on this page
+// by far, and a reader never needs it.
+const PostComposer = defineAsyncComponent(() => import('@/components/PostComposer.vue'))
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
 import FileList from '@/components/context/FileList.vue'
@@ -71,7 +74,7 @@ const memberships = computed<ListMemberships200ResultsItem[]>(() =>
 
 const { mayWrite } = useGroupRole(memberships)
 
-const draft = ref<string>('')
+const draft = ref<unknown>(structuredClone(EMPTY_DOCUMENT))
 const sendError = ref<string | undefined>(undefined)
 const creatingGroup = ref<boolean>(false)
 const creatingThread = ref<boolean>(false)
@@ -85,17 +88,19 @@ const { status: draftStatus, draftId, forget: forgetDraft } = useDraft(groupId, 
 
 async function submit() {
   sendError.value = undefined
-  const text = draft.value.trim()
-  if (text.length === 0) {
+  if (isEmptyDocument(draft.value)) {
     return
   }
 
-  // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word
-  // with no explanation is worse than being told why, and the draft is kept either way.
-  if (text.length > TEXT_LIMIT.createPost.text.maxLength) {
-    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.text.maxLength)} Zeichen haben.`
+  // Checked on submit rather than by stopping the typing: prose that halts mid-word with no
+  // explanation is worse than being told why, and the draft is kept either way.
+  const length = documentText(draft.value).length
+  if (length > TEXT_LIMIT.createPost.document.maxLength) {
+    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.document.maxLength)} Zeichen haben.`
     return
   }
+
+  const document = draft.value as Record<string, unknown>
 
   try {
     // Publishing an existing draft clears its flag rather than writing a second post — the
@@ -105,11 +110,11 @@ async function submit() {
         groupId: groupId.value,
         threadId: threadId.value,
         postId: draftId.value,
-        data: { text, isDraft: false },
+        data: { document, isDraft: false },
       })
       forgetDraft()
     } else {
-      await createPost({ groupId: groupId.value, threadId: threadId.value, data: { text } })
+      await createPost({ groupId: groupId.value, threadId: threadId.value, data: { document } })
     }
   } catch {
     sendError.value = 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
@@ -117,7 +122,7 @@ async function submit() {
   }
 
   // Only cleared once the post is really stored, so nothing a member wrote is lost.
-  draft.value = ''
+  draft.value = structuredClone(EMPTY_DOCUMENT)
   await queryClient.invalidateQueries({
     queryKey: getListPostsQueryKey(groupId.value, threadId.value, postsQuery),
   })

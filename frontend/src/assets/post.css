@@ -1,0 +1,65 @@
+/* How a post looks, both as it is read and as it is written.
+ *
+ * The two share these rules on purpose: what the composer shows while somebody types has to
+ * be what the thread shows afterwards, and a single set of selectors is the only way that
+ * stays true. `.prose-post` is the rendered post, `.post-editor` is Tiptap's surface.
+ *
+ * Colour and font come from the tokens in main.css, which is imported before this. */
+
+@layer base {
+  /* Thread reading size never shrinks, on any device (17px / 1.8). */
+  .prose-post {
+    font: 400 17px/1.8 var(--font-serif);
+    color: #302a23;
+    text-wrap: pretty;
+  }
+
+  /* The structures a post may contain. Paragraphs carry the spacing rather than the
+     container, so a single-paragraph post has no trailing gap. */
+  .prose-post :is(p, ul, ol, blockquote, h2, h3) + :is(p, ul, ol, blockquote, h2, h3),
+  .post-editor :is(p, ul, ol, blockquote, h2, h3) + :is(p, ul, ol, blockquote, h2, h3) {
+    margin-top: 0.85em;
+  }
+  .prose-post :is(h2, h3),
+  .post-editor :is(h2, h3) {
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-ink-1);
+  }
+  .prose-post h2,
+  .post-editor h2 {
+    font-size: 19px;
+  }
+  .prose-post h3,
+  .post-editor h3 {
+    font-size: 17px;
+  }
+  /* One of the two places 2px is allowed: a quote block's rule. */
+  .prose-post blockquote,
+  .post-editor blockquote {
+    border-left: 2px solid var(--color-line-5);
+    padding-left: 14px;
+    color: var(--color-ink-3);
+  }
+  .prose-post :is(ul, ol),
+  .post-editor :is(ul, ol) {
+    padding-left: 1.35em;
+  }
+  .prose-post ul,
+  .post-editor ul {
+    list-style: disc;
+  }
+  .prose-post ol,
+  .post-editor ol {
+    list-style: decimal;
+  }
+
+  /* Tiptap renders the placeholder as an attribute on the first empty paragraph. */
+  .post-editor p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--color-ink-6);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+}

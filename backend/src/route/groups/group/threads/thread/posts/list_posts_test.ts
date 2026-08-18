@@ -5,6 +5,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  documentOf,
   registerUser,
   request,
 } from "@/src/test_support.ts";
@@ -29,9 +30,11 @@ async function threadWithDraft() {
   )).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
 
-  await request("POST", posts, writerCookie, { text: "Veröffentlicht" });
   await request("POST", posts, writerCookie, {
-    text: "Entwurf",
+    document: documentOf("Veröffentlicht"),
+  });
+  await request("POST", posts, writerCookie, {
+    document: documentOf("Entwurf"),
     isDraft: true,
   });
 

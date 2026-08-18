@@ -4115,14 +4115,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100000
+                  "document": {
+                    "type": "object",
+                    "description": "A ProseMirror document",
+                    "x-max-text-length": 100000
                   },
                   "isDraft": { "type": "boolean", "default": false }
                 },
-                "required": ["text"]
+                "required": ["document"]
               }
             }
           }
@@ -4137,6 +4137,10 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": {
+                      "type": "object",
+                      "description": "A ProseMirror document"
+                    },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -4414,6 +4418,10 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "document": {
+                            "type": "object",
+                            "description": "A ProseMirror document"
+                          },
                           "text": { "type": "string" },
                           "isDraft": { "type": "boolean" },
                           "createdBy": {
@@ -4637,6 +4645,10 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": {
+                      "type": "object",
+                      "description": "A ProseMirror document"
+                    },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -4848,10 +4860,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100000
+                  "document": {
+                    "type": "object",
+                    "description": "A ProseMirror document",
+                    "x-max-text-length": 100000
                   },
                   "isDraft": { "type": "boolean" }
                 }
@@ -4869,6 +4881,10 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": {
+                      "type": "object",
+                      "description": "A ProseMirror document"
+                    },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {

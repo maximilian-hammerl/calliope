@@ -1,5 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import {
+  documentBodySchema,
+  documentToText,
+  parseDocument,
+} from "@/src/document.ts";
 import { POST_RESPONSE } from "@/src/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -25,13 +30,13 @@ const POST_PARAMS = z.object({
   postId: WRITING_POST_SCHEMA.shape.id,
 });
 
-// Setting isDraft to false is how a draft gets published.
-const UPDATE_POST_BODY = WRITING_POST_SCHEMA
-  .pick({ text: true, isDraft: true })
-  .extend({
-    text: WRITING_POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
+// Setting isDraft to false is how a draft gets published. `text` is not accepted: it is
+// derived from the document, so the two can never disagree.
+const UPDATE_POST_BODY = z
+  .object({
+    document: documentBodySchema(TEXT_LIMIT.postText).optional(),
+    isDraft: WRITING_POST_SCHEMA.shape.isDraft.optional(),
   })
-  .partial()
   .refine(
     (changes) => Object.values(changes).some((value) => value !== undefined),
     { message: "Provide at least one field to update" },
@@ -94,9 +99,19 @@ export default new OpenAPIHono().openapi(
       );
     }
 
+    // Validated by the body schema above; parsing again is what strips anything not ours.
+    const document = changes.document === undefined
+      ? undefined
+      : parseDocument(changes.document);
+
     const updated = await WritingPostService.updatePost(
       postId,
-      changes,
+      {
+        ...changes,
+        document,
+        // Kept in step with the document rather than accepted separately.
+        ...(document === undefined ? {} : { text: documentToText(document) }),
+      },
       post.isDraft,
     );
     if (updated === undefined) {

@@ -1,4 +1,5 @@
-import { type Selectable, sql } from "kysely";
+import type { Selectable } from "kysely";
+import type { PostDocument } from "@/src/document.ts";
 import { db } from "@/src/database/client.ts";
 import type { WritingPost as DatabaseWritingPost } from "@/src/database/schema.ts";
 import {
@@ -13,6 +14,7 @@ export type Post =
     Selectable<DatabaseWritingPost>,
     | "id"
     | "writingThreadId"
+    | "document"
     | "text"
     | "isDraft"
     | "createdBy"
@@ -25,6 +27,7 @@ export type Post =
 const SELECTED_COLUMNS = [
   "writingPost.id",
   "writingPost.writingThreadId",
+  "writingPost.document",
   "writingPost.text",
   "writingPost.isDraft",
   "writingPost.createdBy",
@@ -44,13 +47,20 @@ function postWithAuthorById(postId: string) {
 
 async function insertPost(
   threadId: string,
+  document: PostDocument,
   text: string,
   isDraft: boolean,
   createdBy: string,
 ): Promise<Post> {
   const { id } = await db
     .insertInto("writingPost")
-    .values({ writingThreadId: threadId, text, isDraft, createdBy })
+    .values({
+      writingThreadId: threadId,
+      document,
+      text,
+      isDraft,
+      createdBy,
+    })
     .returning(["id"])
     .executeTakeFirstOrThrow();
 
@@ -123,21 +133,24 @@ function listPosts(
  */
 async function updatePost(
   postId: string,
-  changes: { text?: string; isDraft?: boolean },
+  changes: { document?: PostDocument; text?: string; isDraft?: boolean },
   wasDraft: boolean,
 ): Promise<Post | undefined> {
   const isPublishing = wasDraft && changes.isDraft === false;
-  const isEditingPublished = !wasDraft && changes.text !== undefined;
+  const isEditingPublished = !wasDraft && changes.document !== undefined;
 
   const updated = await db
     .updateTable("writingPost")
     .set({
       ...changes,
+
       // A post is born when it is published, not when its draft was first autosaved: a piece
       // drafted over three days would otherwise appear dated three days ago and sort into the
       // middle of the thread it belongs at the end of.
-      ...(isPublishing ? { createdAt: sql<string>`now()` } : {}),
-      ...(isEditingPublished ? { editedAt: sql<string>`now()` } : {}),
+      ...(isPublishing ? { createdAt: Temporal.Now.instant().toString() } : {}),
+      ...(isEditingPublished
+        ? { editedAt: Temporal.Now.instant().toString() }
+        : {}),
     })
     .where("id", "=", postId)
     .returning(["id"])

@@ -19,7 +19,15 @@ CREATE TABLE public.writing_post
     id                UUID PRIMARY KEY     DEFAULT uuidv7(),
     writing_thread_id UUID        NOT NULL REFERENCES public.writing_thread (id) ON UPDATE CASCADE ON DELETE CASCADE,
 
+    -- The post as written: a ProseMirror document, validated against the whitelist in the
+    -- backend's document.ts before it is ever stored.
+    document          JSONB       NOT NULL,
+
+    -- The same prose with the markup taken out, derived on write. Search runs against this
+    -- rather than the document, so looking for "stark" finds the word and not a bold mark,
+    -- and the length limit counts characters somebody actually typed.
     text              TEXT        NOT NULL,
+
     is_draft          BOOLEAN     NOT NULL,
 
     created_by        uuid        references public.user (id) on update cascade on delete set null,

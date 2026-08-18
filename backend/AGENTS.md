@@ -121,6 +121,27 @@ asked what a group or a thread last changed, and a column that exists without a 
 into being trusted for things it never meant. Where a time genuinely matters it is named for
 what it means — `last_activity_at`, `edited_at`.
 
+## Post documents
+
+A post is a ProseMirror document in a `jsonb` column, with its prose derived into `text` on
+write. Search, previews and the length limit all run against `text`, so looking for "stark"
+finds the word rather than every bold mark.
+
+`document.ts` holds the whitelist: a document is valid only if every node and mark in it is
+listed there. That is the security boundary, not a sanitising pass — nothing outside it can be
+stored, so nothing outside it can come back. Link hrefs are restricted to http, https and
+mailto, and unknown attributes are dropped rather than kept. The editor's extension list in
+the frontend says the same thing a second time on purpose; the server is the one that counts.
+
+Two traps worth knowing:
+
+- **Do not `JSON.stringify` a document before handing it to Kysely.** The driver serialises it
+  too, and the column ends up holding a jsonb *string* rather than an object. `postgres_types.ts`
+  registers the `jsonb` parser — supplying `types` at all means the driver uses only what is
+  listed, so without it every document comes back as raw text.
+- **The document is `z.any()` in `POST_RESPONSE`.** Every other type pushes that route past
+  TypeScript's instantiation ceiling. Safe, because the strictness is on the way in.
+
 ## Memberships
 
 `invited_at` and `joined_at` are maintained by `set_membership_timestamps`, never by a caller.

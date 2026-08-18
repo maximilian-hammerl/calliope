@@ -1,5 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import {
+  documentBodySchema,
+  documentToText,
+  parseDocument,
+} from "@/src/document.ts";
 import { POST_RESPONSE } from "@/src/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -25,13 +30,12 @@ const THREAD_PARAMS = z.object({
   threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
-const CREATE_POST_BODY = WRITING_POST_SCHEMA
-  .pick({ text: true, isDraft: true })
-  .extend({
-    text: WRITING_POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
-    // Published unless the author says otherwise.
-    isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
-  });
+// `text` is not accepted: it is derived from the document, so the two can never disagree.
+const CREATE_POST_BODY = z.object({
+  document: documentBodySchema(TEXT_LIMIT.postText),
+  // Published unless the author says otherwise.
+  isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -70,7 +74,9 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const { groupId, threadId } = c.req.valid("param");
-    const { text, isDraft } = c.req.valid("json");
+    const { document: rawDocument, isDraft } = c.req.valid("json");
+    // Validated by the body schema; this is the same parse, and it strips what is not ours.
+    const document = parseDocument(rawDocument);
     const user = c.get("user");
 
     const role = await WritingGroupService.selectRoleForUser(user, groupId);
@@ -92,7 +98,8 @@ export default new OpenAPIHono().openapi(
 
     const post = await WritingPostService.insertPost(
       threadId,
-      text,
+      document,
+      documentToText(document),
       isDraft,
       user.id,
     );

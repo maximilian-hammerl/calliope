@@ -122,6 +122,22 @@ The old platform had none, and that was a top complaint. Every target is at leas
 phone (`h-11 md:h-9` on controls), the reading size never shrinks below 17px, and both rails
 are hidden rather than shrunk. Check 375px before calling a surface done.
 
+## The editor
+
+The composer is Tiptap, assembled from individual extensions in `lib/postEditor.ts` rather
+than from StarterKit — the schema *is* the whitelist, so it must contain only what the API
+accepts. Adding an extension without adding the matching node or mark to the backend's
+`document.ts` produces documents the server will refuse.
+
+Published posts are rendered by `PostDocument.vue`, which walks the node tree and emits
+elements. Not `v-html`, which would put an injection surface on every post, and not a
+read-only editor, which would mount a ProseMirror instance per post. The composer is loaded
+with `defineAsyncComponent` so a reader never downloads the editor at all.
+
+`lib/postDocument.ts` mirrors the backend's text derivation for the composer's emptiness and
+length checks. The server derives its own copy from what it stores, so the two cannot drift
+into disagreeing about a post.
+
 ## Length limits
 
 Never write a bound as a literal. `src/api/textLimit.ts` is generated from

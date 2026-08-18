@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PostDocument from '@/components/PostDocument.vue'
+import { type PostNode, nodesOf } from '@/lib/postDocument'
 import { computed } from 'vue'
 import { formatActivityTime } from '@/lib/formatTime'
 import type { ListPosts200ResultsItem } from '@/api/models'
@@ -14,13 +16,7 @@ const meta = computed<string>(() => {
     .join(' · ')
 })
 
-// Members write paragraphs, and a plain textarea carries them as blank lines.
-const paragraphs = computed<string[]>(() =>
-  props.post.text
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter((paragraph) => paragraph.length > 0),
-)
+const nodes = computed<PostNode[]>(() => nodesOf(props.post.document))
 </script>
 
 <template>
@@ -33,9 +29,9 @@ const paragraphs = computed<string[]>(() =>
     </div>
 
     <div class="flex flex-col gap-[0.9em]">
-      <p v-for="(paragraph, index) in paragraphs" :key="index" class="prose-post">
-        {{ paragraph }}
-      </p>
+      <div class="prose-post">
+        <PostDocument :nodes="nodes" />
+      </div>
     </div>
 
     <!-- Placeholders: replying, quoting, bookmarking and annotations have no backend yet. -->

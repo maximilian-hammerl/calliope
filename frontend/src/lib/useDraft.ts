@@ -2,6 +2,7 @@ import { computed, type ComputedRef, ref, type Ref, toValue, watch } from 'vue'
 import { useEventListener, watchDebounced } from '@vueuse/core'
 import { createPost, deletePost, listPosts, updatePost } from '@/api/posts/posts'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { documentText, isEmptyDocument } from '@/lib/postDocument'
 
 export type DraftStatus = 'idle' | 'saving' | 'saved' | 'failed'
 
@@ -17,7 +18,7 @@ export type DraftStatus = 'idle' | 'saving' | 'saved' | 'failed'
 export function useDraft(
   groupId: Ref<string> | (() => string),
   threadId: Ref<string> | (() => string),
-  text: Ref<string>,
+  document: Ref<unknown>,
 ): {
   status: ComputedRef<DraftStatus>
   /** The draft's id once it exists on the server, so publishing can update it in place. */
@@ -31,8 +32,8 @@ export function useDraft(
   const failed = ref<boolean>(false)
   const savedOnce = ref<boolean>(false)
 
-  /** What the server currently holds, so an unchanged draft is never written again. */
-  let storedText = ''
+  /** What the server holds, serialised, so an unchanged draft is never written again. */
+  let stored = ''
 
   const status = computed<DraftStatus>(() => {
     if (failed.value) return 'failed'
@@ -45,7 +46,7 @@ export function useDraft(
     draftId.value = undefined
     savedOnce.value = false
     failed.value = false
-    storedText = ''
+    stored = ''
 
     try {
       // At most one draft per member per thread, enforced by a partial unique index.
@@ -56,8 +57,8 @@ export function useDraft(
       const existing = response.status === 200 ? response.data.results[0] : undefined
       if (existing !== undefined) {
         draftId.value = existing.id
-        storedText = existing.text
-        text.value = existing.text
+        stored = JSON.stringify(existing.document)
+        document.value = existing.document
         savedOnce.value = true
       }
     } catch {
@@ -71,15 +72,15 @@ export function useDraft(
     // Before the existing draft has arrived, saving would create a second one and lose it.
     if (!loaded.value) return
 
-    const current = text.value.trim()
-    if (current === storedText) return
-    if (current.length > TEXT_LIMIT.createPost.text.maxLength) return
+    const current = JSON.stringify(document.value)
+    if (current === stored) return
+    if (documentText(document.value).length > TEXT_LIMIT.createPost.document.maxLength) return
 
     saving.value = true
     failed.value = false
 
     try {
-      if (current.length === 0) {
+      if (isEmptyDocument(document.value)) {
         // An emptied composer means the draft is abandoned, and `text` may not be empty.
         if (draftId.value !== undefined) {
           await deletePost(toValue(groupId), toValue(threadId), draftId.value)
@@ -88,18 +89,18 @@ export function useDraft(
         }
       } else if (draftId.value === undefined) {
         const created = await createPost(toValue(groupId), toValue(threadId), {
-          text: current,
+          document: document.value as Record<string, unknown>,
           isDraft: true,
         })
         if (created.status === 201) draftId.value = created.data.id
         savedOnce.value = true
       } else {
         await updatePost(toValue(groupId), toValue(threadId), draftId.value, {
-          text: current,
+          document: document.value as Record<string, unknown>,
         })
         savedOnce.value = true
       }
-      storedText = current
+      stored = current
     } catch {
       // The text is never cleared on failure, and the next keystroke tries again.
       failed.value = true
@@ -113,7 +114,7 @@ export function useDraft(
    * what keeps a long stretch of writing from spending the shared rate-limit budget — it is
    * 300 requests per fifteen minutes and counted per address, so a household shares one.
    */
-  watchDebounced(text, save, { debounce: 2_000, maxWait: 10_000 })
+  watchDebounced(document, save, { debounce: 2_000, maxWait: 10_000, deep: true })
 
   watch([() => toValue(groupId), () => toValue(threadId)], load, { immediate: true })
 
@@ -125,8 +126,8 @@ export function useDraft(
   })
 
   function flush() {
-    const current = text.value.trim()
-    if (!loaded.value || current === storedText || current.length === 0) return
+    const current = JSON.stringify(document.value)
+    if (!loaded.value || current === stored || isEmptyDocument(document.value)) return
     if (draftId.value === undefined) return
 
     const url = `/api/groups/${toValue(groupId)}/threads/${toValue(threadId)}/posts/${draftId.value}`
@@ -134,7 +135,7 @@ export function useDraft(
       .fetch(url, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text: current }),
+        body: JSON.stringify({ document: document.value }),
         credentials: 'same-origin',
         keepalive: true,
       })
@@ -146,7 +147,7 @@ export function useDraft(
     draftId.value = undefined
     savedOnce.value = false
     failed.value = false
-    storedText = ''
+    stored = ''
   }
 
   return { status, draftId, loaded, forget }

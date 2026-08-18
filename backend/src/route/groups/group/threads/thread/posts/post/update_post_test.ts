@@ -5,6 +5,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  documentOf,
   registerUser,
   request,
 } from "@/src/test_support.ts";
@@ -30,7 +31,7 @@ async function draftByWriter() {
   )).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
   const draft = await (await request("POST", posts, writerCookie, {
-    text: "Entwurf",
+    document: documentOf("Entwurf"),
     isDraft: true,
   })).json();
 
@@ -79,7 +80,7 @@ Deno.test("PATCH …/posts/{postId} does not mark an autosaved draft as edited",
   // Every keystroke in the composer is one of these. None of them is an edit.
   const saved =
     await (await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
-      text: "Weiter geschrieben.",
+      document: documentOf("Weiter geschrieben."),
     })).json();
 
   assertEquals(saved.editedAt, null);
@@ -99,7 +100,7 @@ Deno.test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
     "PATCH",
     `${posts}/${draft.id}`,
     writerCookie,
-    { text: "Doch anders." },
+    { document: documentOf("Doch anders.") },
   )).json();
 
   // Publication must not have blunted the signal that actually means "edited".
@@ -111,7 +112,7 @@ Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {
   const { adminCookie, writerCookie, group, posts } = await draftByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
   const published = await (await request("POST", posts, writerCookie, {
-    text: "Veröffentlicht",
+    document: documentOf("Veröffentlicht"),
   })).json();
 
   const response = await request(
@@ -119,7 +120,7 @@ Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {
     `${posts}/${published.id}`,
     otherCookie,
     {
-      text: "Übernommen",
+      document: documentOf("Übernommen"),
     },
   );
 

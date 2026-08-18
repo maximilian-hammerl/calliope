@@ -145,6 +145,16 @@ member should do about it. Never "wir schützen deine Daten".
 **No emoji. Anywhere.** Emoji reactions were built in round 1 and explicitly removed. The only
 non-alphabetic glyphs allowed are the interface marks listed under Iconography.
 
+**The formatting row shows only what works.** Bold, italic, „“, Überschrift, Liste, Zitat —
+each one does something. Bild and Datei were removed rather than left disabled: a control that
+never responds teaches nothing, and on a phone its "Noch nicht verfügbar" tooltip is invisible.
+A link needs no button at all; typing or pasting an address makes one.
+
+**A post may hold** paragraphs, two levels of heading, bold, italic, bullet and ordered lists,
+blockquote and links. Nothing else — no code blocks, no underline, no strike, no horizontal
+rules. A heading inside a post is 19px/17px semibold, well under the 25px group title it sits
+beneath, and a quote keeps the 2px rule that is one of the two places 2px is allowed.
+
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
 Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
 Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
