@@ -7,7 +7,7 @@ import { forgetCurrentUser } from '@/lib/session'
 import CalliopeLogo from '@/components/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -170,6 +170,10 @@ async function submit() {
               required
               :aria-invalid="fieldErrors.username !== undefined ? true : undefined"
             />
+            <FieldDescription>
+              Andere Mitglieder sehen deinen Benutzernamen und finden dich darüber. Wähle nichts,
+              was privat bleiben soll.
+            </FieldDescription>
             <FieldError :errors="[fieldErrors.username]" />
           </Field>
 
@@ -187,6 +191,10 @@ async function submit() {
               required
               :aria-invalid="fieldErrors.emailAddress !== undefined ? true : undefined"
             />
+            <FieldDescription>
+              Deine E-Mail-Adresse sieht niemand außer dir. Sie wird weder anderen Mitgliedern
+              angezeigt noch weitergegeben.
+            </FieldDescription>
             <FieldError :errors="[fieldErrors.emailAddress]" />
           </Field>
 
