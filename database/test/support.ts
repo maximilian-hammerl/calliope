@@ -63,12 +63,30 @@ export async function insertGroup(title: string): Promise<string> {
 export async function addMember(
   groupId: string,
   userId: string,
+  status: "invited" | "joined" = "joined",
 ): Promise<void> {
   await client.query(
     `INSERT INTO public.user_in_writing_group (user_id, writing_group_id, role, status)
-     VALUES ($1, $2, 'administrator', 'joined')`,
-    [userId, groupId],
+     VALUES ($1, $2, 'administrator', $3)`,
+    [userId, groupId, status],
   );
+}
+
+/** The two timestamps the membership trigger maintains, as epoch seconds or null. */
+export async function membershipTimestamps(
+  groupId: string,
+  userId: string,
+): Promise<{ invitedAt: number | null; joinedAt: number | null }> {
+  const { rows } = await client.query<
+    { invited_at: number | null; joined_at: number | null }
+  >(
+    `SELECT extract(epoch from invited_at) AS invited_at,
+            extract(epoch from joined_at)  AS joined_at
+     FROM public.user_in_writing_group
+     WHERE writing_group_id = $1 AND user_id = $2`,
+    [groupId, userId],
+  );
+  return { invitedAt: rows[0].invited_at, joinedAt: rows[0].joined_at };
 }
 
 export async function insertThread(

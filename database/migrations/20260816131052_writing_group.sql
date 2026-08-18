@@ -25,8 +25,42 @@ CREATE TABLE public.user_in_writing_group
     PRIMARY KEY (user_id, writing_group_id),
     role             public.user_in_writing_group_role   not null,
     status           public.user_in_writing_group_status not null,
+
+    invited_at       TIMESTAMPTZ,
+    joined_at        TIMESTAMPTZ,
+
     created_at       TIMESTAMPTZ                         NOT NULL DEFAULT now()
 );
+
+---
+
+CREATE FUNCTION public.set_invited_joined_at_for_user_in_writing_group()
+    RETURNS TRIGGER
+    set search_path to ''
+AS
+$$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        NEW.invited_at = now();
+
+        IF NEW.status = 'joined' THEN
+            NEW.joined_at = now();
+        END IF;
+
+    ELSIF NEW.status = 'joined' AND OLD.status IS DISTINCT FROM 'joined' THEN
+        NEW.joined_at = now();
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_invited_joined_at_for_user_in_writing_group
+    BEFORE INSERT OR UPDATE
+    ON public.user_in_writing_group
+    FOR EACH ROW
+EXECUTE FUNCTION public.set_invited_joined_at_for_user_in_writing_group();
 
 ---
 
@@ -70,6 +104,7 @@ CREATE INDEX user_in_writing_group_writing_group_id_idx
 -- migrate:down
 
 DROP TABLE public.user_in_writing_group;
+DROP FUNCTION public.set_invited_joined_at_for_user_in_writing_group();
 DROP TABLE public.writing_group;
 
 DROP FUNCTION public.delete_writing_group_after_last_user_leaves();

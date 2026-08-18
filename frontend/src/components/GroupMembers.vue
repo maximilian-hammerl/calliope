@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getListMembershipsQueryKey, useRemoveMember } from '@/api/memberships/memberships'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import type { ListMemberships200ResultsItem } from '@/api/models'
-import { countLabel } from '@/lib/formatTime'
+import { countLabel, formatActivityTime } from '@/lib/formatTime'
 import { listKeyPrefix } from '@/lib/queryKeys'
 import InviteMemberDialog from '@/components/InviteMemberDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -51,6 +51,22 @@ const joinedCount = computed<number>(
 )
 
 const memberIds = computed<string[]>(() => props.memberships.map((membership) => membership.userId))
+
+/**
+ * The date of the state the row is actually in: when an invitation was sent, or when a member
+ * joined. Once somebody is in the group, when they were asked stopped mattering.
+ */
+function membershipDate(membership: ListMemberships200ResultsItem): string | undefined {
+  if (membership.status === 'invited') {
+    return membership.invitedAt === null
+      ? undefined
+      : `eingeladen ${formatActivityTime(membership.invitedAt)}`
+  }
+
+  return membership.joinedAt === null
+    ? undefined
+    : `beigetreten ${formatActivityTime(membership.joinedAt)}`
+}
 
 const inviting = ref<boolean>(false)
 const removalError = ref<string | undefined>(undefined)
@@ -111,11 +127,18 @@ async function remove(membership: ListMemberships200ResultsItem) {
           </AvatarFallback>
         </Avatar>
 
-        <span class="min-w-0 truncate text-[13.5px] text-ink-2">{{ membership.username }}</span>
-        <span class="text-[12px] whitespace-nowrap text-ink-5">
-          {{ ROLE_LABELS[membership.role] ?? membership.role }}
-          <template v-if="membership.status === 'invited'">· eingeladen</template>
-        </span>
+        <div class="flex min-w-0 flex-col">
+          <div class="flex flex-wrap items-baseline gap-x-3">
+            <span class="min-w-0 truncate text-[13.5px] text-ink-2">{{ membership.username }}</span>
+            <span class="text-[12px] whitespace-nowrap text-ink-5">
+              {{ ROLE_LABELS[membership.role] ?? membership.role }}
+              <template v-if="membership.status === 'invited'">· eingeladen</template>
+            </span>
+          </div>
+          <span v-if="membershipDate(membership)" class="text-[11.5px] text-ink-6">
+            {{ membershipDate(membership) }}
+          </span>
+        </div>
 
         <!-- Leaving is the member's own act and lives elsewhere, so the viewer's own row
              carries no remove control even for an administrator. -->

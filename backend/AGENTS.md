@@ -121,6 +121,17 @@ asked what a group or a thread last changed, and a column that exists without a 
 into being trusted for things it never meant. Where a time genuinely matters it is named for
 what it means — `last_activity_at`, `edited_at`.
 
+## Memberships
+
+`invited_at` and `joined_at` are maintained by `set_membership_timestamps`, never by a caller.
+Joining is a *transition*, not only an insert — a member invited on Monday and accepting on
+Wednesday is UPDATEd from invited to joined — so the trigger covers both, and a service that
+only stamped inserts would record nothing but the founder of each group. Both are nullable
+because a row can exist without having reached the state a column records.
+
+The interface shows whichever date matches the row's status — the invitation for a pending
+one, the joining for a member — so both columns are stored, but only one is ever read per row.
+
 ## Drafts
 
 A draft is a `writing_post` with `is_draft` set, not a separate table, and a partial unique

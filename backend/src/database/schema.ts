@@ -26,6 +26,8 @@ export interface User {
 
 export interface UserInWritingGroup {
   createdAt: Generated<string>;
+  invitedAt: string | null;
+  joinedAt: string | null;
   role: UserInWritingGroupRole;
   status: UserInWritingGroupStatus;
   userId: string;
@@ -113,6 +115,8 @@ export const USER_IN_WRITING_GROUP_SCHEMA = z.object({
   writingGroupId: z.uuidv7(),
   role: USER_IN_WRITING_GROUP_ROLE_SCHEMA,
   status: USER_IN_WRITING_GROUP_STATUS_SCHEMA,
+  invitedAt: z.iso.datetime({ offset: true }).nullable(),
+  joinedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 

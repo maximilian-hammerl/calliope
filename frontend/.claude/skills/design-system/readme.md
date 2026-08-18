@@ -123,6 +123,11 @@ again, and the same pressure. Limits read as German numerals: 100.000, not 10000
 **Numbers get a noun.** A bare badge number was tested and misread — nobody could tell what "3"
 meant. Always "3 neu", "6 von 12 Threads", "2 Anmerkungen", "Erledigt (5)".
 
+**A membership shows one date, the one its state is about**: "eingeladen vor 3 Tagen" while an
+invitation is pending, "beigetreten vor 2 Tagen" once it has been accepted. Both are participles
+and both take the usual relative-then-absolute time. When somebody is in the group, when they
+were asked is no longer what a reader wants to know.
+
 **Relative time under a day, absolute above it.** "vor 12 Minuten" → "Dienstag, 09:14" →
 "12. Februar". Edits are disclosed quietly, appended: "· bearbeitet".
 

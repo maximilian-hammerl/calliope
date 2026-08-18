@@ -14,7 +14,13 @@ import {
 export type UserInWritingGroup =
   & Pick<
     Selectable<DatabaseUserInWritingGroup>,
-    "userId" | "writingGroupId" | "role" | "status" | "createdAt"
+    | "userId"
+    | "writingGroupId"
+    | "role"
+    | "status"
+    | "invitedAt"
+    | "joinedAt"
+    | "createdAt"
   >
   // Never null: the membership is cascade-deleted with its user.
   & { username: string };
@@ -24,6 +30,8 @@ const SELECTED_COLUMNS = [
   "userInWritingGroup.writingGroupId",
   "userInWritingGroup.role",
   "userInWritingGroup.status",
+  "userInWritingGroup.invitedAt",
+  "userInWritingGroup.joinedAt",
   "userInWritingGroup.createdAt",
 ] as const;
 
@@ -32,6 +40,8 @@ const RETURNED_COLUMNS = [
   "writingGroupId",
   "role",
   "status",
+  "invitedAt",
+  "joinedAt",
   "createdAt",
 ] as const;
 
