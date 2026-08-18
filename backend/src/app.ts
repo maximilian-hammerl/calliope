@@ -14,6 +14,7 @@ import { type ErrorResponse } from "./response.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
 import health from "./route/health.ts";
+import chats from "./route/chats.ts";
 import notifications from "./route/notifications.ts";
 import users from "./route/users.ts";
 
@@ -43,7 +44,8 @@ const api = new OpenAPIHono({
   .route("/groups", groups)
   .route("/health", health)
   .route("/users", users)
-  .route("/notifications", notifications);
+  .route("/notifications", notifications)
+  .route("/chats", chats);
 
 const app = new OpenAPIHono();
 

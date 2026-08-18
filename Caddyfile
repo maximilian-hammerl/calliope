@@ -7,6 +7,12 @@
 	# change here and no route can be forgotten.
 	handle /api/* {
 		reverse_proxy backend:8000 {
+			# The chat stream is an endless text/event-stream. Caddy buffers responses by
+			# default, which would hold every message until the connection closed — that is,
+			# forever. This works locally without it and delivers nothing in production, so it
+			# is the one setting here that cannot be verified before deploying.
+			flush_interval -1
+
 			# The rate limiter buckets by the first entry of X-Forwarded-For, so this has to
 			# replace whatever the client sent rather than append to it. Caddy's default
 			# already does, but a limiter that can be side-stepped by a header is not

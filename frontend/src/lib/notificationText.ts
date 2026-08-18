@@ -47,31 +47,51 @@ export function notificationText(notification: ListNotifications200ResultsItem):
     case 'new_writing_post':
       // Both names: somebody in several groups cannot place a thread title on its own.
       return `${actor} hat in „${notification.writingThreadTitle}“ in „${notification.writingGroupTitle}“ geschrieben.`
+    case 'invited_to_chat_group':
+      // „zum Chat“ rather than the group wording: the two invitations are different things
+      // and land in different places.
+      return `${actor} hat dich zum Chat „${notification.chatGroupTitle}“ eingeladen.`
     default:
       return assertUnreachable(notification)
   }
 }
 
-/** Where the notification takes you: the thread if its kind has one, otherwise the group. */
-export function notificationTarget(
+/**
+ * Where the notification takes you. Not a route in every case: a chat lives in the Nachrichten
+ * dialog rather than at a URL, so this is a verdict the caller acts on rather than something
+ * that can be handed to `RouterLink`.
+ */
+export type NotificationAction =
+  | { kind: 'route'; to: RouteLocationRaw }
+  | { kind: 'chat'; chatGroupId: string }
+
+export function notificationAction(
   notification: ListNotifications200ResultsItem,
-): RouteLocationRaw {
+): NotificationAction {
   switch (notification.type) {
     case 'new_writing_thread':
     case 'new_writing_post':
       return {
-        name: 'thread',
-        params: {
-          groupId: notification.writingGroupId,
-          threadId: notification.writingThreadId,
+        kind: 'route',
+        to: {
+          name: 'thread',
+          params: {
+            groupId: notification.writingGroupId,
+            threadId: notification.writingThreadId,
+          },
         },
       }
     case 'invited_to_writing_group':
     case 'invitation_accepted':
-    case 'role_changed_in_writing_group':
     case 'visibility_changed_in_writing_group':
+    case 'role_changed_in_writing_group':
       // An invitation lands on the group page, which is where accepting it lives.
-      return { name: 'group', params: { groupId: notification.writingGroupId } }
+      return {
+        kind: 'route',
+        to: { name: 'group', params: { groupId: notification.writingGroupId } },
+      }
+    case 'invited_to_chat_group':
+      return { kind: 'chat', chatGroupId: notification.chatGroupId }
     default:
       // A new notification type reaches here as a compile error, not a silent fallthrough to
       // some group page that may not be what it was about.

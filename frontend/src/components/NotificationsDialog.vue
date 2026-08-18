@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
 import { useListNotifications, useReadNotifications } from '@/api/notifications/notifications'
 import type { ListNotifications200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/formatTime'
-import { notificationTarget, notificationText } from '@/lib/notificationText'
+import { notificationAction, notificationText } from '@/lib/notificationText'
 import {
   Dialog,
   DialogDescription,
@@ -15,6 +16,26 @@ import {
 } from '@/components/ui/dialog'
 
 const open = defineModel<boolean>('open', { required: true })
+
+const emit = defineEmits<{ openChat: [chatGroupId: string] }>()
+
+const router = useRouter()
+
+/**
+ * Chats have no URL — they live in the Nachrichten dialog — so this either navigates or asks
+ * the top bar, which owns both dialogs, to open the other one.
+ */
+function follow(notification: ListNotifications200ResultsItem) {
+  const action = notificationAction(notification)
+  open.value = false
+
+  if (action.kind === 'route') {
+    void router.push(action.to)
+    return
+  }
+
+  emit('openChat', action.chatGroupId)
+}
 
 const queryClient = useQueryClient()
 
@@ -77,12 +98,13 @@ watch(notifications, async (loaded) => {
           class="border-b border-line-2"
           :class="index === 0 ? 'border-t' : ''"
         >
-          <!-- Closing on the way out is the point of the dialog: you land on the thing the
-               notification is about, from wherever you were. -->
-          <RouterLink
-            :to="notificationTarget(notification)"
-            class="flex min-h-[44px] flex-wrap items-baseline gap-x-3 gap-y-1 py-[12px]"
-            @click="open = false"
+          <!-- A button rather than a link, because not every notification leads to a URL: a
+               chat opens the Nachrichten dialog instead. Closing on the way out is the point
+               either way — you land on the thing it is about, from wherever you were. -->
+          <button
+            type="button"
+            class="flex min-h-[44px] w-full flex-wrap items-baseline gap-x-3 gap-y-1 py-[12px] text-left"
+            @click="follow(notification)"
           >
             <span
               class="text-[13.5px] leading-[1.6]"
@@ -93,7 +115,7 @@ watch(notifications, async (loaded) => {
             <span class="ml-auto text-[11.5px] whitespace-nowrap text-ink-6">
               {{ formatActivityTime(notification.occurredAt) }}
             </span>
-          </RouterLink>
+          </button>
         </li>
       </ul>
     </DialogScrollContent>

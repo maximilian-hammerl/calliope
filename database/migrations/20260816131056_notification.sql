@@ -6,7 +6,8 @@ CREATE TYPE public.notification_type AS ENUM (
     'role_changed_in_writing_group',
     'visibility_changed_in_writing_group',
     'new_writing_thread',
-    'new_writing_post'
+    'new_writing_post',
+    'invited_to_chat_group'
     );
 
 CREATE TABLE public.notification
@@ -20,10 +21,12 @@ CREATE TABLE public.notification
     -- still worth reading.
     actor_id          UUID                              REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
 
-    -- Always set, and half of the membership key below, so a notification cannot outlive the
-    -- recipient's place in the group it is about. No foreign key of its own: the composite one
-    -- already guarantees a membership, which guarantees the group.
-    writing_group_id  UUID                     NOT NULL,
+    -- Exactly one of these is set, decided by `type` and enforced below. Each is half of a
+    -- membership key, so a notification cannot outlive the recipient's place in whatever it is
+    -- about. Neither has a foreign key of its own: the composite ones already guarantee a
+    -- membership, which guarantees the group.
+    writing_group_id  UUID,
+    chat_group_id     UUID,
 
     writing_thread_id UUID                              REFERENCES public.writing_thread (id) ON UPDATE CASCADE ON DELETE CASCADE,
     writing_post_id   UUID                              REFERENCES public.writing_post (id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -44,22 +47,43 @@ CREATE TABLE public.notification
         REFERENCES public.user_in_writing_group (user_id, writing_group_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
 
+    -- A composite foreign key with a NULL column is satisfied vacuously, so the two coexist:
+    -- whichever group column is set is the one that is enforced.
+    FOREIGN KEY (recipient_id, chat_group_id)
+        REFERENCES public.user_in_chat_group (user_id, chat_group_id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+
     -- The polymorphism, as a constraint rather than a convention. A new type with no branch
     -- here yields NULL and is rejected, so adding one forces the decision.
+    -- The polymorphism, as a constraint rather than a convention. `ELSE false` matters: a
+    -- CHECK passes when its expression is NULL, so a CASE with no matching branch would let a
+    -- new type through unchecked rather than stopping it.
     CONSTRAINT notification_subject_matches_type CHECK (
         CASE type
             WHEN 'invited_to_writing_group' THEN
-                writing_thread_id IS NULL AND writing_post_id IS NULL
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NULL AND writing_post_id IS NULL
             WHEN 'invitation_accepted' THEN
-                writing_thread_id IS NULL AND writing_post_id IS NULL
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NULL AND writing_post_id IS NULL
             WHEN 'visibility_changed_in_writing_group' THEN
-                writing_thread_id IS NULL AND writing_post_id IS NULL
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NULL AND writing_post_id IS NULL
             WHEN 'role_changed_in_writing_group' THEN
-                writing_thread_id IS NULL AND writing_post_id IS NULL
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NULL AND writing_post_id IS NULL
             WHEN 'new_writing_thread' THEN
-                writing_thread_id IS NOT NULL AND writing_post_id IS NULL
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NOT NULL AND writing_post_id IS NULL
             WHEN 'new_writing_post' THEN
-                writing_thread_id IS NOT NULL AND writing_post_id IS NOT NULL
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NOT NULL AND writing_post_id IS NOT NULL
+            -- A chat needs no per-message notification: the chat list counts unread from
+            -- last_read_at, and a row per message would say the same thing twice, loudly.
+            WHEN 'invited_to_chat_group' THEN
+                chat_group_id IS NOT NULL AND writing_group_id IS NULL
+                    AND writing_thread_id IS NULL AND writing_post_id IS NULL
+            ELSE false
             END
         ),
 

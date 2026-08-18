@@ -153,6 +153,24 @@ than one flat shape with nullable columns. `NOTIFICATION_RESPONSE` mirrors the t
 constraint that way, and it reaches the frontend through the generated client: reading a thread
 title off an invitation is a type error there, where it used to be a silent empty string.
 
+## Chats, and the single-instance constraint
+
+Chat messages reach open streams through `chat/chat_events.ts`, which fans out **in process**.
+That is correct while the backend runs as exactly one container, which it does — and it fails
+*silently* if a second one ever appears: a member connected to one instance simply never sees
+a message sent through the other. Swapping the two functions there for a Redis pub/sub pair is
+the fix, and the client's refetch-on-reconnect means nobody loses anything across the change.
+
+The stream itself (`route/chats/chat_events_stream.ts`) is a plain Hono route, not an OpenAPI
+one: an endless `text/event-stream` cannot be described by `createRoute`, and pretending it
+returns JSON would put a lie in the specification. Three things keep it alive — a heartbeat,
+`flush_interval -1` in the Caddyfile so Caddy does not buffer it into oblivion, and closing
+open streams on the shutdown signal so a deploy does not hang.
+
+Chat history pages by **cursor**, not offset: messages arrive while somebody reads, and an
+offset would repeat or skip whatever crossed the boundary. Ids are uuidv7, so comparing them
+orders the conversation and one index serves both.
+
 ## Who is told what
 
 Producers write their notification inside the same transaction as the thing that happened, so

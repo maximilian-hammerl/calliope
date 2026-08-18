@@ -102,6 +102,13 @@ This only bites when the Caddyfile is the sole change. Anything that also alters
 compose file recreates Caddy along with it. Verify afterwards against a path the change
 should affect, not just that the container is up.
 
+## The backend must stay a single instance
+
+Chat messages are fanned out to open streams inside the backend process. Running two
+containers would not error — members connected to one would simply stop receiving messages
+sent through the other. Before scaling out, move the fan-out in `backend/src/chat/chat_events.ts`
+to Redis pub/sub; the seam is two functions in that one file.
+
 ## Backups
 
 The systemd units are tracked in this directory but have to be installed into the system

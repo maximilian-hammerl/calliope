@@ -54,13 +54,17 @@ type NotificationRow = {
   occurredAt: string;
   readAt: string | null;
   actorUsername: string | null;
-  writingGroupId: string;
-  writingGroupTitle: string;
-  visibility: WritingGroupVisibility;
-  role: UserInWritingGroupRole;
+  // Nullable now that a notification may belong to a chat instead. Which of the two is
+  // present is decided by `type`, and the CHECK constraint on the table enforces it.
+  writingGroupId: string | null;
+  writingGroupTitle: string | null;
+  visibility: WritingGroupVisibility | null;
+  role: UserInWritingGroupRole | null;
   writingThreadId: string | null;
   writingThreadTitle: string | null;
   writingPostId: string | null;
+  chatGroupId: string | null;
+  chatGroupTitle: string | null;
 };
 
 function toNotification(row: NotificationRow): Notification {
@@ -70,23 +74,35 @@ function toNotification(row: NotificationRow): Notification {
     readAt: row.readAt,
     actorUsername: row.actorUsername,
   };
-  const group = {
-    writingGroupId: row.writingGroupId,
-    writingGroupTitle: row.writingGroupTitle,
-  };
+  // A function, not a value: the columns are nullable because a notification belongs to one
+  // kind of group or the other, so building this eagerly would throw on every chat row.
+  const writingGroup = () => ({
+    writingGroupId: required(row.writingGroupId, "writingGroupId"),
+    writingGroupTitle: required(row.writingGroupTitle, "writingGroupTitle"),
+  });
 
   switch (row.type) {
     case "invited_to_writing_group":
     case "invitation_accepted":
-      return { ...base, ...group, type: row.type };
+      return { ...base, ...writingGroup(), type: row.type };
     case "visibility_changed_in_writing_group":
-      return { ...base, ...group, type: row.type, visibility: row.visibility };
+      return {
+        ...base,
+        ...writingGroup(),
+        type: row.type,
+        visibility: required(row.visibility, "visibility"),
+      };
     case "role_changed_in_writing_group":
-      return { ...base, ...group, type: row.type, role: row.role };
+      return {
+        ...base,
+        ...writingGroup(),
+        type: row.type,
+        role: required(row.role, "role"),
+      };
     case "new_writing_thread":
       return {
         ...base,
-        ...group,
+        ...writingGroup(),
         type: row.type,
         writingThreadId: required(row.writingThreadId, "writingThreadId"),
         writingThreadTitle: required(
@@ -97,7 +113,7 @@ function toNotification(row: NotificationRow): Notification {
     case "new_writing_post":
       return {
         ...base,
-        ...group,
+        ...writingGroup(),
         type: row.type,
         writingThreadId: required(row.writingThreadId, "writingThreadId"),
         writingThreadTitle: required(
@@ -105,6 +121,13 @@ function toNotification(row: NotificationRow): Notification {
           "writingThreadTitle",
         ),
         writingPostId: required(row.writingPostId, "writingPostId"),
+      };
+    case "invited_to_chat_group":
+      return {
+        ...base,
+        type: row.type,
+        chatGroupId: required(row.chatGroupId, "chatGroupId"),
+        chatGroupTitle: required(row.chatGroupTitle, "chatGroupTitle"),
       };
     default:
       // A new notification type reaches here as a compile error, not a missing line.
@@ -120,7 +143,11 @@ function toNotification(row: NotificationRow): Notification {
 function notificationsFor(recipientId: string) {
   return db
     .selectFrom("notification")
-    .innerJoin(
+    // Left, not inner: a notification belongs to a writing group or to a chat, never both,
+    // so an inner join on either would drop the other kind entirely. The composite foreign
+    // keys already guarantee that whichever one is set has a membership behind it, which is
+    // what makes access need no `where` of its own.
+    .leftJoin(
       "userInWritingGroup",
       (join) =>
         join
@@ -131,11 +158,12 @@ function notificationsFor(recipientId: string) {
           )
           .onRef("userInWritingGroup.userId", "=", "notification.recipientId"),
     )
-    .innerJoin(
+    .leftJoin(
       "writingGroup",
       "writingGroup.id",
       "notification.writingGroupId",
     )
+    .leftJoin("chatGroup", "chatGroup.id", "notification.chatGroupId")
     // No alias: this is the only join to `user` here, and an alias would add a table
     // key the shared list helper cannot accept.
     .leftJoin("user", "user.id", "notification.actorId")
@@ -158,6 +186,8 @@ function notificationsFor(recipientId: string) {
       "notification.writingThreadId",
       "writingThread.title as writingThreadTitle",
       "notification.writingPostId",
+      "notification.chatGroupId",
+      "chatGroup.title as chatGroupTitle",
     ]);
 }
 
@@ -372,11 +402,23 @@ async function insertVisibilityChangeNotifications(
     .execute();
 }
 
+/** The one chat notification: messages are counted by the chat list, not announced here. */
+async function insertChatInvitationNotification(
+  transaction: Transaction,
+  invitation: { recipientId: string; chatGroupId: string; actorId: string },
+): Promise<void> {
+  await transaction
+    .insertInto("notification")
+    .values({ ...invitation, type: "invited_to_chat_group" })
+    .execute();
+}
+
 export const NotificationService = {
   listNotifications,
   countUnread,
   markAllRead,
   insertInvitationNotification,
+  insertChatInvitationNotification,
   insertRoleChangeNotification,
   insertGroupActivityNotifications,
   insertInvitationAcceptedNotification,

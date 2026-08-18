@@ -40,6 +40,9 @@ export async function cleanUp(): Promise<void> {
   await client.query(`DELETE FROM public.writing_group WHERE title LIKE $1`, [
     `${TEST_PREFIX}%`,
   ]);
+  await client.query(`DELETE FROM public.chat_group WHERE title LIKE $1`, [
+    `${TEST_PREFIX}%`,
+  ]);
 }
 
 export async function insertUser(name: string): Promise<string> {
@@ -185,4 +188,36 @@ export async function notificationTimestamps(
     [recipientId],
   );
   return { createdAt: rows[0].created_at, occurredAt: rows[0].occurred_at };
+}
+
+export async function insertChatGroup(title: string): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO public.chat_group (title) VALUES ($1) RETURNING id`,
+    [TEST_PREFIX + title],
+  );
+  return rows[0].id;
+}
+
+export async function addChatMember(
+  chatGroupId: string,
+  userId: string,
+  status: "invited" | "joined" = "joined",
+): Promise<void> {
+  await client.query(
+    `INSERT INTO public.user_in_chat_group (user_id, chat_group_id, status)
+     VALUES ($1, $2, $3)`,
+    [userId, chatGroupId, status],
+  );
+}
+
+export async function insertChatMessage(
+  chatGroupId: string,
+  authorId: string | null = null,
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO public.chat_message (chat_group_id, text, created_by)
+     VALUES ($1, 'Kurz.', $2) RETURNING id`,
+    [chatGroupId, authorId],
+  );
+  return rows[0].id;
 }

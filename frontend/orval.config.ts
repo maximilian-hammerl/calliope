@@ -26,6 +26,9 @@ export default defineConfig({
           listMemberships: { query: { useQuery: true } },
           listUsers: { query: { useQuery: true } },
           listNotifications: { query: { useQuery: true } },
+          listChats: { query: { useQuery: true } },
+          listMessages: { query: { useQuery: true } },
+          listChatMemberships: { query: { useQuery: true } },
         },
         // The generated client resolves for every status, so vue-query would see a 401 as a
         // success. The mutator throws instead. It lives outside src/api because that whole

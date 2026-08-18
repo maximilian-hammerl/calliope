@@ -1,6 +1,9 @@
 import { z } from "@hono/zod-openapi";
 import {
+  CHAT_GROUP_SCHEMA,
+  CHAT_MESSAGE_SCHEMA,
   NOTIFICATION_SCHEMA,
+  USER_IN_CHAT_GROUP_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
   USER_SCHEMA,
   WRITING_GROUP_SCHEMA,
@@ -114,4 +117,32 @@ export const NOTIFICATION_RESPONSE = z.discriminatedUnion("type", [
     type: z.literal("new_writing_post"),
     writingPostId: NOTIFICATION_SCHEMA.shape.writingPostId.unwrap(),
   }),
+  z.object({
+    ...NOTIFICATION_BASE,
+    type: z.literal("invited_to_chat_group"),
+    chatGroupId: NOTIFICATION_SCHEMA.shape.chatGroupId.unwrap(),
+    chatGroupTitle: z.string(),
+  }),
 ]);
+
+/** A chat as its list entry: the group, its founder's name, and this member's unread count. */
+export const CHAT_GROUP_RESPONSE = CHAT_GROUP_SCHEMA.extend({
+  /** The reader's own standing in it, so the interface knows whether to show a conversation. */
+  status: USER_IN_CHAT_GROUP_SCHEMA.shape.status,
+  createdByUsername: z.string().nullable(),
+  unreadMessages: z.number().int(),
+});
+
+export const CHAT_MESSAGE_RESPONSE = CHAT_MESSAGE_SCHEMA.extend({
+  createdByUsername: z.string().nullable(),
+});
+
+export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA
+  .pick({
+    userId: true,
+    chatGroupId: true,
+    status: true,
+    invitedAt: true,
+    joinedAt: true,
+  })
+  .extend({ username: z.string() });

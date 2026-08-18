@@ -11,11 +11,14 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 
 export type NotificationType =
   | "invitation_accepted"
+  | "invited_to_chat_group"
   | "invited_to_writing_group"
   | "new_writing_post"
   | "new_writing_thread"
   | "role_changed_in_writing_group"
   | "visibility_changed_in_writing_group";
+
+export type UserInChatGroupStatus = "invited" | "joined";
 
 export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 
@@ -23,15 +26,32 @@ export type UserInWritingGroupStatus = "invited" | "joined";
 
 export type WritingGroupVisibility = "private" | "public";
 
+export interface ChatGroup {
+  createdAt: Generated<string>;
+  createdBy: string | null;
+  id: Generated<string>;
+  lastActivityAt: Generated<string>;
+  title: string;
+}
+
+export interface ChatMessage {
+  chatGroupId: string;
+  createdAt: Generated<string>;
+  createdBy: string | null;
+  id: Generated<string>;
+  text: string;
+}
+
 export interface Notification {
   actorId: string | null;
+  chatGroupId: string | null;
   createdAt: Generated<string>;
   id: Generated<string>;
   occurredAt: Generated<string>;
   readAt: string | null;
   recipientId: string;
   type: NotificationType;
-  writingGroupId: string;
+  writingGroupId: string | null;
   writingPostId: string | null;
   writingThreadId: string | null;
 }
@@ -43,6 +63,16 @@ export interface User {
   id: Generated<string>;
   updatedAt: Generated<string>;
   username: string;
+}
+
+export interface UserInChatGroup {
+  chatGroupId: string;
+  createdAt: Generated<string>;
+  invitedAt: string | null;
+  joinedAt: string | null;
+  lastReadAt: string | null;
+  status: UserInChatGroupStatus;
+  userId: string;
 }
 
 export interface UserInWritingGroup {
@@ -95,8 +125,11 @@ export interface WritingThread {
 }
 
 export interface DB {
+  chatGroup: ChatGroup;
+  chatMessage: ChatMessage;
   notification: Notification;
   user: User;
+  userInChatGroup: UserInChatGroup;
   userInWritingGroup: UserInWritingGroup;
   userSession: UserSession;
   writingGroup: WritingGroup;
@@ -124,8 +157,14 @@ export const USER_IN_WRITING_GROUP_STATUS_SCHEMA = z.enum(
   USER_IN_WRITING_GROUP_STATUSES,
 );
 
+export const USER_IN_CHAT_GROUP_STATUSES = ["invited", "joined"] as const;
+export const USER_IN_CHAT_GROUP_STATUS_SCHEMA = z.enum(
+  USER_IN_CHAT_GROUP_STATUSES,
+);
+
 export const NOTIFICATION_TYPES = [
   "invitation_accepted",
+  "invited_to_chat_group",
   "invited_to_writing_group",
   "new_writing_post",
   "new_writing_thread",
@@ -134,12 +173,29 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
 
+export const CHAT_GROUP_SCHEMA = z.object({
+  id: z.uuidv7(),
+  title: z.string(),
+  createdBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  lastActivityAt: z.iso.datetime({ offset: true }),
+});
+
+export const CHAT_MESSAGE_SCHEMA = z.object({
+  id: z.uuidv7(),
+  chatGroupId: z.uuidv7(),
+  text: z.string(),
+  createdBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+});
+
 export const NOTIFICATION_SCHEMA = z.object({
   id: z.uuidv7(),
   recipientId: z.uuidv7(),
   type: NOTIFICATION_TYPE_SCHEMA,
   actorId: z.uuidv7().nullable(),
-  writingGroupId: z.uuidv7(),
+  writingGroupId: z.uuidv7().nullable(),
+  chatGroupId: z.uuidv7().nullable(),
   writingThreadId: z.uuidv7().nullable(),
   writingPostId: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
@@ -154,6 +210,16 @@ export const USER_SCHEMA = z.object({
   emailAddress: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+});
+
+export const USER_IN_CHAT_GROUP_SCHEMA = z.object({
+  userId: z.uuidv7(),
+  chatGroupId: z.uuidv7(),
+  status: USER_IN_CHAT_GROUP_STATUS_SCHEMA,
+  invitedAt: z.iso.datetime({ offset: true }).nullable(),
+  joinedAt: z.iso.datetime({ offset: true }).nullable(),
+  lastReadAt: z.iso.datetime({ offset: true }).nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_IN_WRITING_GROUP_SCHEMA = z.object({

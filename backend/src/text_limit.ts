@@ -21,6 +21,10 @@ export const TEXT_LIMIT = {
   groupTitle: 120,
   /** Long enough for any name or title being looked for, short enough to bound the scan. */
   search: 120,
+  /** A chat's name sits on one line in a narrow list beside the unread count. */
+  chatTitle: 80,
+  /** A message is a remark, not a chapter. Long enough for a paragraph, far short of a post. */
+  messageText: 4_000,
   /** A few paragraphs about the story, not the story itself. */
   groupDescription: 2_000,
   threadTitle: 120,

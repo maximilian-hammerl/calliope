@@ -7,6 +7,7 @@ import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/session'
 import CalliopeLogo from '@/components/CalliopeLogo.vue'
 import NotificationsDialog from '@/components/NotificationsDialog.vue'
+import MessagesDialog from '@/components/MessagesDialog.vue'
 import PlaceholderDialog from '@/components/PlaceholderDialog.vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,17 @@ const unread = computed<number>(() => props.user.unreadNotifications)
 // should not cost you your place on the page.
 const showingNotifications = ref<boolean>(false)
 const showingMessages = ref<boolean>(false)
+/** Set when a chat invitation was followed out of the notifications dialog. */
+const startChatAt = ref<string | undefined>(undefined)
+
+/**
+ * A chat has no URL, so following its notification means swapping one dialog for the other.
+ * Both live here, which is the only place that can do it.
+ */
+function openChat(chatGroupId: string) {
+  startChatAt.value = chatGroupId
+  showingMessages.value = true
+}
 const showingSettings = ref<boolean>(false)
 
 const { mutateAsync: logout, isPending } = useLogoutUser()
@@ -127,12 +139,8 @@ async function signOut() {
     </div>
   </header>
 
-  <NotificationsDialog v-model:open="showingNotifications" />
-  <PlaceholderDialog
-    v-model:open="showingMessages"
-    title="Nachrichten"
-    description="Nachrichten zwischen Mitgliedern, unabhängig von einer Gruppe."
-  />
+  <NotificationsDialog v-model:open="showingNotifications" @open-chat="openChat" />
+  <MessagesDialog v-model:open="showingMessages" :start-at="startChatAt" />
   <PlaceholderDialog
     v-model:open="showingSettings"
     title="Einstellungen"
