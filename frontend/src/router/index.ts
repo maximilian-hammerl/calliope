@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { fetchCurrentUser } from '@/lib/session'
+import { fetchCurrentUser, forgetCurrentUser } from '@/lib/session'
+import { setSessionLostHandler } from '@/lib/queryClient'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,6 +60,15 @@ router.beforeEach(async (to) => {
   }
 
   return true
+})
+
+// A session that ends mid-visit returns the reader to the sign-in page, carrying where they
+// were so it resumes afterwards. Which requests may legitimately answer 401 is decided in
+// the query client, not here.
+setSessionLostHandler(() => {
+  forgetCurrentUser()
+  const from = router.currentRoute.value.fullPath
+  void router.replace({ name: 'login', query: from === '/' ? {} : { redirect: from } })
 })
 
 export default router
