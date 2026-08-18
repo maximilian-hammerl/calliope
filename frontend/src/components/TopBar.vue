@@ -5,6 +5,7 @@ import { LogOutIcon } from '@lucide/vue'
 import { useLogoutUser } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/session'
+import CalliopeLogo from '@/components/CalliopeLogo.vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,12 +40,8 @@ async function signOut() {
   <header
     class="flex h-[52px] items-center gap-7 border-b border-line-3 bg-paper-0 px-6 md:h-[54px]"
   >
-    <!-- There is no logo: the design system sets the word itself in Newsreader 600. -->
-    <RouterLink
-      :to="{ name: 'home' }"
-      class="font-serif text-[16px] leading-none font-semibold tracking-[0.01em] text-[#3a3229]"
-    >
-      Calliope
+    <RouterLink :to="{ name: 'home' }" aria-label="Calliope, zur Startseite">
+      <CalliopeLogo :size="22" wordmark />
     </RouterLink>
 
     <nav class="flex h-full gap-5">

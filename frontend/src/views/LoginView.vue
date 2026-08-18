@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useLoginUser } from '@/api/auth/auth'
 import { ApiError } from '@/lib/apiFetch'
 import { forgetCurrentUser } from '@/lib/session'
+import CalliopeLogo from '@/components/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -124,11 +125,7 @@ async function submit() {
   <main class="flex min-h-svh items-center justify-center px-6 py-12">
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
-        <span
-          class="font-serif text-[16px] leading-none font-semibold tracking-[0.01em] text-[#3a3229]"
-        >
-          Calliope
-        </span>
+        <CalliopeLogo :size="40" wordmark class="mb-1" />
         <h1 class="text-[25px] leading-[1.2]">Anmelden</h1>
         <p class="text-[13.5px] leading-[1.5] text-ink-5">Melde dich an, um weiterzuschreiben.</p>
       </div>

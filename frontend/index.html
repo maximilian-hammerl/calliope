@@ -2,7 +2,13 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
+    <!-- Modern browsers take the SVG, which flips to the cream cut in dark browser chrome;
+         the .ico covers older ones and Windows pinned sites. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#4f4132" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calliope</title>
   </head>

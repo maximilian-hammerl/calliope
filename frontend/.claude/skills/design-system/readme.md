@@ -23,8 +23,35 @@ and consolidated into one direction.
   direction and the visual source of truth for everything here.
 - Two rounds of written feedback from Yooco members.
 
-**There is no logo and no brand mark.** Nothing in the sources contains one. Wherever a mark would
-sit, the system sets the word *Calliope* in Newsreader 600. Do not draw or invent one.
+**The mark is the Versal C** — the capital C of Newsreader, the face the wordmark and all member
+prose are set in. Nothing in the original sources contained a logo, and for a while the system had
+none: wherever a mark would sit, it set the word *Calliope* in Newsreader 600. The C keeps that
+principle rather than breaking it. Nothing was invented; the letter *is* the typeface, which is the
+honest mark for a product in which typography is everything.
+
+It is **outlined from the font**, not set as live text, so it renders identically with no webfont
+loaded — as an `<img>`, in email, at a printer. Do not recreate it by typing "C" in Newsreader, and
+do not draw a second mark beside it.
+
+**Two cuts, and the boundary is 32/33.** The regular cut is outlined at optical size 36, the small
+one at optical size 8, where Newsreader is drawn with sturdier strokes for small text. Below 33px
+the regular cut's thin top and bottom drop out, which is precisely what the `opsz` axis exists to
+fix — so the small cut is the same letter at its own optical size, not a thickened copy. The
+product's nav mark is 22px and therefore uses the small cut.
+
+**Lockup geometry**, stated identically in the SVG, the `CalliopeLogo` component and the asset set:
+the gap between mark and wordmark is **0.45 × the mark height**, and the wordmark is set at
+**0.73 × the mark height** in Newsreader 600, `#3a3229`. The two share a baseline — the letter's own
+baseline sits 57.14 down its 64-unit box, so the mark hangs below the box's bottom edge by the
+overshoot. At the nav's 22px that is a 10px gap and a 16px wordmark.
+
+**Colour.** Ink `#2b2620` on paper, cream `#fffdf9` on `--accent-deep` `#4f4132` or any dark ground.
+Never in `--accent` `#8a6a3a`, never two-tone, never on a photograph, never with a gradient or a
+shadow. Clear space on all four sides is 0.25 × the mark height, measured from the box rather than
+from the ink. Minimum size is 16px on screen with the small cut.
+
+Do not rotate, stretch, add a keyline, or place it in a circle or a rounded square other than the
+supplied tile.
 
 ## What the research demands
 
