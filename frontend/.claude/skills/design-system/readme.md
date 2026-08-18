@@ -80,8 +80,8 @@ Thread." State who can see it; do not promise safety.
 non-alphabetic glyphs allowed are the interface marks listed under Iconography.
 
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
-Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · ＋ Gruppe gründen · ＋ Thread ·
-＋ Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
+Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
+Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
 Editor einklappen · Editor ausklappen · Gruppen-Kontext.
 
 ## Visual foundations
@@ -107,7 +107,9 @@ all interface chrome; IBM Plex Mono only for uppercase rail labels and file-type
 17px/1.8 — generous, book-like. Headings stay at 400 weight: a group title is 25px Newsreader
 regular, not bold. Interface text runs 11.5–13.5px. Prose always carries `text-wrap: pretty`.
 Metadata (author · time) sits at 12px in `--ink-6` — deliberately recessed, per feedback that post
-headers were competing with the writing.
+headers were competing with the writing. Production serves all three families from its own
+origin as subsetted WOFF2 rather than from Google, so no page makes a third-party request; the
+typefaces and their axes are unchanged.
 
 **Backgrounds.** Flat colour only. No images, no gradients, no textures, no patterns, no
 illustrations. The one exception is the diagonal hatch placeholder used for image thumbnails that
@@ -171,31 +173,45 @@ least 44px (`--tap-min`).
 
 ## Iconography
 
-The sources contain **no icon set, no icon font and no SVG assets**, and none were invented for
-this system. The design deliberately runs on **words plus a handful of unicode marks**:
+The sources contained **no icon set, no icon font and no SVG assets**, and the system first ran
+on words plus a handful of unicode marks. It now uses **Lucide at 1.5px stroke** — the weight
+this document already named as the closest match to its hairlines — because the marks turned
+out not to be there: `＋` `⌄` `⌃` `▾` `☐` are absent from Newsreader, IBM Plex Sans *and* IBM
+Plex Mono, so every one of them was drawn by whichever font the browser fell back to. They
+never matched the hairline weight and changed shape from platform to platform.
 
-| Glyph | Use |
-| --- | --- |
-| `＋` (U+FF0B) | prefix on additive actions: ＋ Thread, ＋ Schritt, ＋ Gruppe gründen |
-| `‹` `›` | collapse / expand a rail (direction points where it will go) |
-| `⌄` `⌃` | collapse / expand the composer |
-| `▸` `▾` | closed / open disclosure ("Erledigt (5) ▸") |
-| `▾` | menu affordance ("Alle Beiträge ▾") |
-| `☐` `☑` | open / done step in Nächste Schritte |
-| `⌕` | search |
-| `⠿` | drag handle (only if drag-reorder ships) |
-| `PNG` `MD` `JPG` | file type, as mono text — not a file icon |
+| Was | Now | Use |
+| --- | --- | --- |
+| `＋` (U+FF0B) | `Plus` | prefix on additive actions: Thread, Schritt, Gruppe gründen |
+| `‹` `›` | `ChevronLeft` `ChevronRight` | collapse / expand a rail (direction points where it will go) |
+| `⌄` `⌃` | `ChevronDown` `ChevronUp` | collapse / expand the composer |
+| `▸` `▾` | `ChevronRight` `ChevronDown` | closed / open disclosure ("Erledigt (5)") |
+| `▾` | `ChevronDown` | menu affordance ("Alle Beiträge") |
+| `☐` `☑` | `Square` `SquareCheck` | open / done step in Nächste Schritte |
+| `⌕` | `Search` | search |
+| `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
 
-Avatars are initials on `--surface-avatar`, never generated images. **No emoji** — the round-1
-emoji reactions were removed on explicit feedback.
+Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
+anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px
+interface text — and let them inherit `currentColor` rather than carrying a colour.
 
-If a real icon set is ever needed, take Lucide at 1.5px stroke (closest match to the hairline
-weight of this system), and add it to this document.
+**Words still come first.** An icon accompanies a label, it does not replace one: the buttons
+read "Gruppe gründen" and "Thread", with the mark in front. Nothing becomes an icon-only
+control.
+
+Unchanged: file types stay mono text (`PNG` `MD` `JPG`), never a file icon. Avatars are
+initials on `--surface-avatar`, never generated images. **No emoji** — the round-1 emoji
+reactions were removed on explicit feedback.
+
+The prototype components under `components/` and `ui_kits/` still render the unicode marks;
+they have no Lucide dependency and are for throwaway mockups. The production interface is the
+reference for this decision.
 
 ## Index
 
 - `styles.css` — the entry point consumers link. `@import` lines only.
-- `tokens/` — `fonts.css` (Google Fonts import), `colors.css`, `typography.css`, `spacing.css`,
+- `tokens/` — `fonts.css` (Google Fonts import, for prototypes; production self-hosts the
+  same families as subsetted WOFF2), `colors.css`, `typography.css`, `spacing.css`,
   `borders.css`, `motion.css`, `base.css` (resets + three utility classes).
 - `guidelines/` — foundation specimen cards (Type, Colors, Spacing, Brand).
 - `components/core/` — Button, Badge, SearchField, Avatar, PanelCard, Label
@@ -214,3 +230,5 @@ needs it. Each is marked so nobody mistakes it for tested ground:
 - `SearchField` as a real input (the mockups only show its resting state in the top bar).
 - `--signal-error` / `--signal-ok` for form validation.
 - `Avatar`, `Label`, `PanelCard` — extracted as primitives from patterns that repeat in the mockup.
+- Lucide as the icon set, at 1.5px stroke — anticipated by this document, adopted once the
+  unicode marks proved to be missing from all three fonts.

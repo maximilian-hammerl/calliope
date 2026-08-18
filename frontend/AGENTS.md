@@ -23,6 +23,15 @@ before adding a surface.
 Where shadcn's defaults contradict it, the component is patched once rather than overridden at
 each call site — `shadow-xs` is already stripped from Input and the outline Button.
 
+**Keep it updated.** When the interface departs from what that document says — a new icon set,
+a changed rule, a pattern it does not cover — change the document in the same piece of work.
+A source of truth that lags the code stops being one, and the next person follows the stale
+version. Its `readme.md` is the file to edit; the prototype components under `components/` and
+`ui_kits/` are throwaway mockups and need not follow.
+
+Icons are **Lucide at `stroke-width="1.5"`** — Lucide's default of 2 is heavier than anything
+else on the page. They accompany a label rather than replacing it.
+
 ## shadcn-vue: the CLI will undo things
 
 `npx shadcn-vue@latest add …` rewrites `src/assets/main.css` on **every** run: it replaces the

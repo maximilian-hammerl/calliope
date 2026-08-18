@@ -34,9 +34,15 @@
 
 			# `style-src` has to allow inline styles because the dropdown positions itself
 			# through the style attribute; scripts stay strict, which is the part that
-			# matters. The font hosts are the design system's Google Fonts import.
-			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+			# matters. The fonts are served from here, so no third party is named at all.
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		}
+
+		# Everything under /assets carries a content hash in its name — scripts, styles and
+		# fonts alike — so a given name can never change meaning and a year is safe. The
+		# entry point itself stays uncached, which is what lets a deploy take effect.
+		@fingerprinted path /assets/*
+		header @fingerprinted Cache-Control "public, max-age=31536000, immutable"
 
 		try_files {path} /index.html
 		file_server
