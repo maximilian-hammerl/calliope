@@ -20,6 +20,11 @@ const content = computed(() => {
     ).values(),
   ]
 
+  // An empty array is truthy, so without this the `v-if` below renders an empty alert for
+  // every field that has no error — invisible, but it still consumes the Field's gap and
+  // leaves a live region that never announces anything.
+  if (uniqueErrors.length === 0) return null
+
   if (uniqueErrors.length === 1 && uniqueErrors[0]) {
     return typeof uniqueErrors[0] === 'string' ? uniqueErrors[0] : uniqueErrors[0].message
   }
