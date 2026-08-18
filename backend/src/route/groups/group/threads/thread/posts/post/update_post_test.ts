@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import {
   addMember,
@@ -54,6 +54,57 @@ Deno.test("PATCH …/posts/{postId} publishes the author's own draft", async () 
   assertEquals(published.isDraft, false);
   // The text was left alone.
   assertEquals(published.text, "Entwurf");
+});
+
+Deno.test("PATCH …/posts/{postId} dates a published post from its publication", async () => {
+  const { writerCookie, posts, draft } = await draftByWriter();
+
+  const published = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    writerCookie,
+    { isDraft: false },
+  )).json();
+
+  // The draft may have been sitting for days while it was written. Its post is new, so it
+  // sorts to the end of the thread rather than into the middle of it...
+  assert(published.createdAt > draft.createdAt);
+  // ...and it does not announce itself as edited the moment it appears.
+  assertEquals(published.editedAt, null);
+});
+
+Deno.test("PATCH …/posts/{postId} does not mark an autosaved draft as edited", async () => {
+  const { writerCookie, posts, draft } = await draftByWriter();
+
+  // Every keystroke in the composer is one of these. None of them is an edit.
+  const saved =
+    await (await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
+      text: "Weiter geschrieben.",
+    })).json();
+
+  assertEquals(saved.editedAt, null);
+});
+
+Deno.test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
+  const { writerCookie, posts, draft } = await draftByWriter();
+
+  const published = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    writerCookie,
+    { isDraft: false },
+  )).json();
+
+  const edited = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    writerCookie,
+    { text: "Doch anders." },
+  )).json();
+
+  // Publication must not have blunted the signal that actually means "edited".
+  assertEquals(edited.createdAt, published.createdAt);
+  assert(edited.editedAt !== null);
 });
 
 Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {

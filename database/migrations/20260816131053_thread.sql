@@ -9,15 +9,8 @@ CREATE TABLE public.writing_thread
 
     created_by       uuid        references public.user (id) on update cascade on delete set null,
 
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
-CREATE TRIGGER set_updated_at
-    BEFORE UPDATE
-    ON public.writing_thread
-    FOR EACH ROW
-EXECUTE FUNCTION public.set_updated_at();
 
 ---
 
@@ -32,14 +25,13 @@ CREATE TABLE public.writing_post
     created_by        uuid        references public.user (id) on update cascade on delete set null,
 
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
-CREATE TRIGGER set_updated_at
-    BEFORE UPDATE
-    ON public.writing_post
-    FOR EACH ROW
-EXECUTE FUNCTION public.set_updated_at();
+    -- Null until the post is changed after it was published, which is the only edit a reader
+    -- is told about ("· bearbeitet"). Writing a draft is not an edit, and neither is
+    -- publishing one. Stated outright rather than inferred from two timestamps disagreeing,
+    -- which could not tell those three apart.
+    edited_at         TIMESTAMPTZ
+);
 
 ---
 
@@ -47,6 +39,13 @@ CREATE INDEX writing_thread_writing_group_id_idx ON public.writing_thread (writi
 CREATE INDEX writing_thread_created_by_idx ON public.writing_thread (created_by);
 CREATE INDEX writing_post_writing_thread_id_idx ON public.writing_post (writing_thread_id);
 CREATE INDEX writing_post_created_by_idx ON public.writing_post (created_by);
+
+-- The composer holds exactly one draft per thread, so two tabs cannot quietly leave a second
+-- one behind. Authors are compared as ids: a draft whose author was deleted has created_by
+-- NULL, and NULLs are distinct here, which is right — such a row is unreachable anyway.
+CREATE UNIQUE INDEX writing_post_one_draft_per_author
+    ON public.writing_post (writing_thread_id, created_by)
+    WHERE is_draft;
 
 -- migrate:down
 

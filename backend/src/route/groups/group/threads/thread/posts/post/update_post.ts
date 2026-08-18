@@ -94,7 +94,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await WritingPostService.updatePost(postId, changes);
+    const updated = await WritingPostService.updatePost(
+      postId,
+      changes,
+      post.isDraft,
+    );
     if (updated === undefined) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
     }

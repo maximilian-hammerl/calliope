@@ -21,7 +21,7 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
 const SORT_ATTRIBUTE = WRITING_THREAD_SCHEMA
   .keyof()
-  .extract(["createdAt", "updatedAt", "lastActivityAt", "title"])
+  .extract(["createdAt", "lastActivityAt", "title"])
   .default("createdAt")
   .transform((attribute) => `writingThread.${attribute}` as const);
 

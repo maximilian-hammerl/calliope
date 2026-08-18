@@ -16,7 +16,6 @@ export type Thread =
     | "title"
     | "createdBy"
     | "createdAt"
-    | "updatedAt"
     | "lastActivityAt"
   >
   // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
@@ -28,7 +27,6 @@ const SELECTED_COLUMNS = [
   "writingThread.title",
   "writingThread.createdBy",
   "writingThread.createdAt",
-  "writingThread.updatedAt",
   "writingThread.lastActivityAt",
 ] as const;
 

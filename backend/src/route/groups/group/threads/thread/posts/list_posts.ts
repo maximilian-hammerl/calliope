@@ -26,12 +26,19 @@ const THREAD_PARAMS = z.object({
 
 const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
   .keyof()
-  .extract(["createdAt", "updatedAt"])
+  .extract(["createdAt"])
   .default("createdAt")
   // Oldest first by default, because a thread reads in the order it was written.
   .transform((attribute) => `writingPost.${attribute}` as const);
 
-const LIST_POSTS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "asc");
+/**
+ * Published by default, so a client that says nothing never renders a draft into the thread.
+ * Passing `true` returns the caller's own drafts — `readableBy` already makes another
+ * member's draft unreachable, whatever is asked for here.
+ */
+const LIST_POSTS_BODY = listQuerySchema(SORT_ATTRIBUTE, {
+  isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
+}, "asc");
 
 export default new OpenAPIHono().openapi(
   createRoute({

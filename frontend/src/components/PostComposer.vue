@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronUp } from '@lucide/vue'
 import { ref } from 'vue'
+import type { DraftStatus } from '@/lib/useDraft'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 
-defineProps<{ sending: boolean }>()
+defineProps<{ sending: boolean; draftStatus: DraftStatus }>()
 const text = defineModel<string>({ required: true })
 const emit = defineEmits<{ submit: [] }>()
 
@@ -36,7 +37,25 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
     <div class="max-w-[684px]">
       <div class="mb-[10px] flex items-center gap-[14px] text-[12.5px] text-ink-5">
         <span class="font-semibold text-ink-4">Weiterschreiben</span>
-        <!-- Placeholder: nothing saves a draft yet, so no save state is claimed. -->
+
+        <!-- Continuous and without a timestamp: the point is that saving is happening, not
+             when it last did. The failure is stated plainly and nothing is cleared. -->
+        <span
+          v-if="draftStatus !== 'idle'"
+          class="flex items-center gap-[5px]"
+          :class="draftStatus === 'failed' ? 'text-destructive' : ''"
+          role="status"
+        >
+          <Spinner v-if="draftStatus === 'saving'" class="size-3" />
+          {{
+            draftStatus === 'saving'
+              ? 'Entwurf wird gespeichert'
+              : draftStatus === 'failed'
+                ? 'Entwurf nicht gespeichert'
+                : 'Entwurf gespeichert'
+          }}
+        </span>
+
         <button
           type="button"
           class="ml-auto flex items-center gap-[4px] rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"

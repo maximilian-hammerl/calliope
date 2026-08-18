@@ -72,6 +72,12 @@ These are not style preferences; they are findings the design must honour:
 4. **The writing surface must not lose work.** Autosave is visible and continuous
    ("Entwurf wird gespeichert" with a spinner, no timestamp). Double-submits must be impossible;
    two consecutive posts by the same person must remain possible.
+   A failed save says "Entwurf nicht gespeichert" and **changes nothing else** — the text stays
+   exactly where it is and the next keystroke tries again. Never clear a composer to reflect a
+   state the server has; the member's copy is the one that matters.
+   A draft is private until it is published, so writing one moves no timestamp anybody can see:
+   the thread does not jump to "zuletzt gerade eben" and the group list does not reorder while
+   somebody is composing in silence.
 5. **Calm, warm, supportive.** Warm paper beat neutral grey in testing on emotional grounds:
    *"beige gefällt mir als farben besser, weil wärmer"* / grey *"fühlt sich emotionslos an."*
 6. **Sparse rounding.** *"Zu viele abgerundete Ecken. Fühlt sich damit überladen an."*
@@ -105,7 +111,7 @@ Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gr
 founding a group is a social act.
 
 **System state is stated plainly and without exclamation.** "Entwurf wird gespeichert" ·
-"Entwurf gespeichert" · "14 Beiträge · zuletzt vor 12 Minuten von Bob" · "3 offen" ·
+"Entwurf gespeichert" · "Entwurf nicht gespeichert" · "14 Beiträge · zuletzt vor 12 Minuten von Bob" · "3 offen" ·
 "Erledigt (5)". No "Super!", no "Ups!", no exclamation marks anywhere.
 
 **A limit is stated when it is reached, never as a running total.** Short fields simply stop

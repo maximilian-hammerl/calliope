@@ -113,6 +113,35 @@ included: the five endpoints behave alike. That endpoint's response is `USER_RES
 and username only. A username is public within the platform; an email address never is, and
 the schema *picks* rather than omits so a column added later cannot leak by being forgotten.
 
+## Timestamps
+
+Only `user` and `user_session` carry `updated_at`, where it is a debugging convenience. No
+other table has one, and none of them has a `set_updated_at` trigger: nothing in the product
+asked what a group or a thread last changed, and a column that exists without a reader drifts
+into being trusted for things it never meant. Where a time genuinely matters it is named for
+what it means — `last_activity_at`, `edited_at`.
+
+## Drafts
+
+A draft is a `writing_post` with `is_draft` set, not a separate table, and a partial unique
+index allows one per member per thread — the composer holds exactly one. Three things follow,
+and all three are covered by tests:
+
+- **A draft moves no activity.** `set_last_activity_at_for_writing_thread` skips rows that are
+  drafts. Otherwise every autosave would advance the thread and its group, which is untrue and
+  discloses that a particular member is typing right now.
+- **A post is dated from its publication.** Clearing `is_draft` also sets `created_at` to the
+  transaction's `now()`. The draft's own creation is when writing *began*, which for a piece
+  drafted over days would sort the post into the middle of the thread and mark it edited the
+  moment it appeared.
+- **An edit is `edited_at`, not two timestamps disagreeing.** It stays null through every
+  autosave and through publication, and is set only when an already-published post is changed
+  — the one case a reader is told about ("· bearbeitet"). `updatePost` is given the row's
+  previous draft state to tell the three apart.
+- **`listPosts` returns published posts by default.** Pass `isDraft: true` to get the caller's
+  own. The filter selects among rows that are already readable; it cannot widen visibility,
+  because `readableBy` still restricts drafts to their author.
+
 ## Authorisation
 
 Check what the user may *see* before what they may *do*, and report anything they may not

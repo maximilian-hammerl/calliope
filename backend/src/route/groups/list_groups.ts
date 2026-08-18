@@ -17,7 +17,7 @@ import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 // schema, and only these values can ever reach `dynamic.ref`.
 const SORT_ATTRIBUTE = WRITING_GROUP_SCHEMA
   .keyof()
-  .extract(["createdAt", "updatedAt", "lastActivityAt", "title"])
+  .extract(["createdAt", "lastActivityAt", "title"])
   .default("createdAt")
   .transform((attribute) => `writingGroup.${attribute}` as const);
 

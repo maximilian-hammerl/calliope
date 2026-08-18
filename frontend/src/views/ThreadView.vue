@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetThread, useListThreads } from '@/api/threads/threads'
-import { getListPostsQueryKey, useCreatePost, useListPosts } from '@/api/posts/posts'
+import { getListPostsQueryKey, useCreatePost, useListPosts, useUpdatePost } from '@/api/posts/posts'
 import { useListMemberships } from '@/api/memberships/memberships'
 import type {
   GetGroup200,
@@ -22,6 +22,7 @@ import ThreadHeader from '@/components/ThreadHeader.vue'
 import PostItem from '@/components/PostItem.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/formatNumber'
+import { useDraft } from '@/lib/useDraft'
 import PostComposer from '@/components/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
@@ -76,6 +77,11 @@ const creatingGroup = ref<boolean>(false)
 const creatingThread = ref<boolean>(false)
 
 const { mutateAsync: createPost, isPending: sending } = useCreatePost()
+const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost()
+
+// Owns the composer's text between visits: loads any existing draft into it, saves as it is
+// written, and lets go of the row once it has been published.
+const { status: draftStatus, draftId, forget: forgetDraft } = useDraft(groupId, threadId, draft)
 
 async function submit() {
   sendError.value = undefined
@@ -92,7 +98,19 @@ async function submit() {
   }
 
   try {
-    await createPost({ groupId: groupId.value, threadId: threadId.value, data: { text } })
+    // Publishing an existing draft clears its flag rather than writing a second post — the
+    // autosaved row and the published one have to be the same row.
+    if (draftId.value !== undefined) {
+      await publishDraft({
+        groupId: groupId.value,
+        threadId: threadId.value,
+        postId: draftId.value,
+        data: { text, isDraft: false },
+      })
+      forgetDraft()
+    } else {
+      await createPost({ groupId: groupId.value, threadId: threadId.value, data: { text } })
+    }
   } catch {
     sendError.value = 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
     return
@@ -154,7 +172,13 @@ async function submit() {
       </div>
 
       <!-- Readers may read and comment, so they get no composer. -->
-      <PostComposer v-if="mayWrite" v-model="draft" :sending="sending" @submit="submit" />
+      <PostComposer
+        v-if="mayWrite"
+        v-model="draft"
+        :sending="sending || publishing"
+        :draft-status="draftStatus"
+        @submit="submit"
+      />
     </template>
 
     <div v-else-if="isPending" class="px-[18px] py-5 text-[12.5px] text-ink-5 md:px-10">

@@ -28,7 +28,6 @@ export interface UserInWritingGroup {
   createdAt: Generated<string>;
   role: UserInWritingGroupRole;
   status: UserInWritingGroupStatus;
-  updatedAt: Generated<string>;
   userId: string;
   writingGroupId: string;
 }
@@ -49,17 +48,16 @@ export interface WritingGroup {
   id: Generated<string>;
   lastActivityAt: Generated<string>;
   title: string;
-  updatedAt: Generated<string>;
   visibility: Generated<WritingGroupVisibility>;
 }
 
 export interface WritingPost {
   createdAt: Generated<string>;
   createdBy: string | null;
+  editedAt: string | null;
   id: Generated<string>;
   isDraft: boolean;
   text: string;
-  updatedAt: Generated<string>;
   writingThreadId: string;
 }
 
@@ -69,7 +67,6 @@ export interface WritingThread {
   id: Generated<string>;
   lastActivityAt: Generated<string>;
   title: string;
-  updatedAt: Generated<string>;
   writingGroupId: string;
 }
 
@@ -117,7 +114,6 @@ export const USER_IN_WRITING_GROUP_SCHEMA = z.object({
   role: USER_IN_WRITING_GROUP_ROLE_SCHEMA,
   status: USER_IN_WRITING_GROUP_STATUS_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_SESSION_SCHEMA = z.object({
@@ -136,7 +132,6 @@ export const WRITING_GROUP_SCHEMA = z.object({
   visibility: WRITING_GROUP_VISIBILITY_SCHEMA,
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
   lastActivityAt: z.iso.datetime({ offset: true }),
 });
 
@@ -147,7 +142,7 @@ export const WRITING_POST_SCHEMA = z.object({
   isDraft: z.boolean(),
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
+  editedAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
 export const WRITING_THREAD_SCHEMA = z.object({
@@ -156,6 +151,5 @@ export const WRITING_THREAD_SCHEMA = z.object({
   title: z.string(),
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
   lastActivityAt: z.iso.datetime({ offset: true }),
 });

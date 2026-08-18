@@ -84,11 +84,17 @@ export async function insertThread(
   return rows[0].id;
 }
 
-export async function insertPost(threadId: string): Promise<string> {
+export async function insertPost(
+  threadId: string,
+  { isDraft = false, authorId = null }: {
+    isDraft?: boolean;
+    authorId?: string | null;
+  } = {},
+): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
-    `INSERT INTO public.writing_post (writing_thread_id, text, is_draft)
-     VALUES ($1, 'Ein Absatz.', false) RETURNING id`,
-    [threadId],
+    `INSERT INTO public.writing_post (writing_thread_id, text, is_draft, created_by)
+     VALUES ($1, 'Ein Absatz.', $2, $3) RETURNING id`,
+    [threadId, isDraft, authorId],
   );
   return rows[0].id;
 }

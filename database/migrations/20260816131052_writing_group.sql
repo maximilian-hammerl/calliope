@@ -9,15 +9,8 @@ CREATE TABLE public.writing_group
     description TEXT                            NOT NULL,
     visibility  public.writing_group_visibility NOT NULL DEFAULT 'private',
     created_by  uuid                            references public.user (id) on update cascade on delete set null,
-    created_at  TIMESTAMPTZ                     NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ                     NOT NULL DEFAULT now()
+    created_at  TIMESTAMPTZ                     NOT NULL DEFAULT now()
 );
-
-CREATE TRIGGER set_updated_at
-    BEFORE UPDATE
-    ON public.writing_group
-    FOR EACH ROW
-EXECUTE FUNCTION public.set_updated_at();
 
 ---
 
@@ -32,15 +25,8 @@ CREATE TABLE public.user_in_writing_group
     PRIMARY KEY (user_id, writing_group_id),
     role             public.user_in_writing_group_role   not null,
     status           public.user_in_writing_group_status not null,
-    created_at       TIMESTAMPTZ                         NOT NULL DEFAULT now(),
-    updated_at       TIMESTAMPTZ                         NOT NULL DEFAULT now()
+    created_at       TIMESTAMPTZ                         NOT NULL DEFAULT now()
 );
-
-CREATE TRIGGER set_updated_at
-    BEFORE UPDATE
-    ON public.user_in_writing_group
-    FOR EACH ROW
-EXECUTE FUNCTION public.set_updated_at();
 
 ---
 

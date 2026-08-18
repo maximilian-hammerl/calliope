@@ -43,6 +43,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- A draft is visible to nobody but its author, so writing one must not make the thread look
+-- active. Without the exemption every autosave would move the thread and its group to
+-- "zuletzt gerade eben" and reorder the group list, which is both untrue and a disclosure
+-- that a particular member is composing right now.
+--
+-- Publishing still counts: it is an UPDATE whose NEW row has is_draft false. So does deleting
+-- a published post. Only rows that are drafts at the moment they are written are skipped.
 CREATE FUNCTION public.set_last_activity_at_for_writing_thread()
     RETURNS TRIGGER
     set search_path to ''
@@ -50,11 +57,19 @@ AS
 $$
 BEGIN
     IF (TG_OP = 'DELETE') THEN
+        IF OLD.is_draft THEN
+            RETURN NULL;
+        END IF;
+
         UPDATE public.writing_thread
         SET last_activity_at = now()
         WHERE id = OLD.writing_thread_id;
 
     ELSE
+        IF NEW.is_draft THEN
+            RETURN NULL;
+        END IF;
+
         UPDATE public.writing_thread
         SET last_activity_at = now()
         WHERE id = NEW.writing_thread_id;

@@ -8,7 +8,7 @@ const props = defineProps<{ post: ListPosts200ResultsItem; divider: boolean; fir
 // Metadata is deliberately recessed: post headers were competing with the writing.
 const meta = computed<string>(() => {
   const author = props.post.createdByUsername ?? 'Gelöschtes Konto'
-  const edited = props.post.updatedAt !== props.post.createdAt
+  const edited = props.post.editedAt !== null
   return [author, formatActivityTime(props.post.createdAt), edited ? 'bearbeitet' : undefined]
     .filter((part) => part !== undefined)
     .join(' · ')

@@ -22,7 +22,6 @@ export type WritingGroup =
     | "visibility"
     | "createdBy"
     | "createdAt"
-    | "updatedAt"
     | "lastActivityAt"
   >
   // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
@@ -35,7 +34,6 @@ const SELECTED_COLUMNS = [
   "writingGroup.visibility",
   "writingGroup.createdBy",
   "writingGroup.createdAt",
-  "writingGroup.updatedAt",
   "writingGroup.lastActivityAt",
 ] as const;
 

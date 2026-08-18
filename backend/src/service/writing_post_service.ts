@@ -1,4 +1,4 @@
-import type { Selectable } from "kysely";
+import { type Selectable, sql } from "kysely";
 import { db } from "@/src/database/client.ts";
 import type { WritingPost as DatabaseWritingPost } from "@/src/database/schema.ts";
 import {
@@ -17,7 +17,7 @@ export type Post =
     | "isDraft"
     | "createdBy"
     | "createdAt"
-    | "updatedAt"
+    | "editedAt"
   >
   // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
   & { createdByUsername: string | null };
@@ -29,7 +29,7 @@ const SELECTED_COLUMNS = [
   "writingPost.isDraft",
   "writingPost.createdBy",
   "writingPost.createdAt",
-  "writingPost.updatedAt",
+  "writingPost.editedAt",
 ] as const;
 
 /** Reads one post back with its author, bypassing the draft filter: after a write the
@@ -98,11 +98,12 @@ async function selectPost(
 function listPosts(
   threadId: string,
   viewerId: string,
-  query: ListQuery,
+  query: ListQuery & { isDraft: boolean },
 ): Promise<ListResults<Post>> {
   return listResultsWithCount(
     postsWithAuthor(viewerId)
       .where("writingPost.writingThreadId", "=", threadId)
+      .where("writingPost.isDraft", "=", query.isDraft)
       // The body rather than a title: a post has none.
       .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where(
@@ -115,13 +116,29 @@ function listPosts(
 }
 
 /** Returns nothing when there is no such post. Authorisation is the caller's job. */
+/**
+ * `wasDraft` is the row's state before this change, which is what separates the three ways a
+ * post can be written to: autosaving a draft, publishing one, and editing what is already
+ * published. Only the last is an edit a reader is told about.
+ */
 async function updatePost(
   postId: string,
   changes: { text?: string; isDraft?: boolean },
+  wasDraft: boolean,
 ): Promise<Post | undefined> {
+  const isPublishing = wasDraft && changes.isDraft === false;
+  const isEditingPublished = !wasDraft && changes.text !== undefined;
+
   const updated = await db
     .updateTable("writingPost")
-    .set(changes)
+    .set({
+      ...changes,
+      // A post is born when it is published, not when its draft was first autosaved: a piece
+      // drafted over three days would otherwise appear dated three days ago and sort into the
+      // middle of the thread it belongs at the end of.
+      ...(isPublishing ? { createdAt: sql<string>`now()` } : {}),
+      ...(isEditingPublished ? { editedAt: sql<string>`now()` } : {}),
+    })
     .where("id", "=", postId)
     .returning(["id"])
     .executeTakeFirst();

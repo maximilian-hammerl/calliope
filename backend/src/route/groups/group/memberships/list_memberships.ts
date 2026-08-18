@@ -21,7 +21,7 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
 const SORT_ATTRIBUTE = USER_IN_WRITING_GROUP_SCHEMA
   .keyof()
-  .extract(["createdAt", "updatedAt", "role", "status"])
+  .extract(["createdAt", "role", "status"])
   .default("createdAt")
   .transform((attribute) => `userInWritingGroup.${attribute}` as const);
 
