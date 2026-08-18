@@ -5,7 +5,7 @@ import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { ThreadService } from "@/src/service/thread_service.ts";
+import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayModify } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -13,17 +13,20 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/response.ts";
-import { THREAD_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import {
+  WRITING_GROUP_SCHEMA,
+  WRITING_THREAD_SCHEMA,
+} from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
-  threadId: THREAD_SCHEMA.shape.id,
+  threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
-const UPDATE_THREAD_BODY = THREAD_SCHEMA
+const UPDATE_THREAD_BODY = WRITING_THREAD_SCHEMA
   .pick({ title: true })
   .extend({
-    title: THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
+    title: WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
   });
 
 export default new OpenAPIHono().openapi(
@@ -71,7 +74,7 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const thread = await ThreadService.selectThread(groupId, threadId);
+    const thread = await WritingThreadService.selectThread(groupId, threadId);
     if (thread === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }
@@ -83,7 +86,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await ThreadService.updateThread(threadId, { title });
+    const updated = await WritingThreadService.updateThread(threadId, {
+      title,
+    });
     if (updated === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

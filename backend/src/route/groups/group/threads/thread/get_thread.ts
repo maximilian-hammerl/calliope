@@ -4,18 +4,21 @@ import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { ThreadService } from "@/src/service/thread_service.ts";
+import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/response.ts";
-import { THREAD_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import {
+  WRITING_GROUP_SCHEMA,
+  WRITING_THREAD_SCHEMA,
+} from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
-  threadId: THREAD_SCHEMA.shape.id,
+  threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
 export default new OpenAPIHono().openapi(
@@ -57,7 +60,7 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const thread = await ThreadService.selectThread(groupId, threadId);
+    const thread = await WritingThreadService.selectThread(groupId, threadId);
     if (thread === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

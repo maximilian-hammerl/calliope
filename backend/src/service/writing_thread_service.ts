@@ -1,6 +1,6 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
-import type { Thread as DatabaseThread } from "@/src/database/schema.ts";
+import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -9,7 +9,7 @@ import {
 
 export type Thread =
   & Pick<
-    Selectable<DatabaseThread>,
+    Selectable<DatabaseWritingThread>,
     | "id"
     | "writingGroupId"
     | "title"
@@ -22,13 +22,13 @@ export type Thread =
   & { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
-  "thread.id",
-  "thread.writingGroupId",
-  "thread.title",
-  "thread.createdBy",
-  "thread.createdAt",
-  "thread.updatedAt",
-  "thread.lastActivityAt",
+  "writingThread.id",
+  "writingThread.writingGroupId",
+  "writingThread.title",
+  "writingThread.createdBy",
+  "writingThread.createdAt",
+  "writingThread.updatedAt",
+  "writingThread.lastActivityAt",
 ] as const;
 
 /**
@@ -37,8 +37,8 @@ const SELECTED_COLUMNS = [
  */
 function threadsWithAuthor() {
   return db
-    .selectFrom("thread")
-    .leftJoin("user", "user.id", "thread.createdBy")
+    .selectFrom("writingThread")
+    .leftJoin("user", "user.id", "writingThread.createdBy")
     .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
 }
 
@@ -48,14 +48,14 @@ async function insertThread(
   createdBy: string,
 ): Promise<Thread> {
   const { id } = await db
-    .insertInto("thread")
+    .insertInto("writingThread")
     .values({ writingGroupId, title, createdBy })
     .returning(["id"])
     .executeTakeFirstOrThrow();
 
   // Re-read rather than RETURNING, which cannot reach the joined author name.
   return await threadsWithAuthor()
-    .where("thread.id", "=", id)
+    .where("writingThread.id", "=", id)
     .executeTakeFirstOrThrow();
 }
 
@@ -65,8 +65,8 @@ async function selectThread(
   threadId: string,
 ): Promise<Thread | undefined> {
   return await threadsWithAuthor()
-    .where("thread.writingGroupId", "=", writingGroupId)
-    .where("thread.id", "=", threadId)
+    .where("writingThread.writingGroupId", "=", writingGroupId)
+    .where("writingThread.id", "=", threadId)
     .executeTakeFirst();
 }
 
@@ -75,7 +75,11 @@ function listThreads(
   query: ListQuery,
 ): Promise<ListResults<Thread>> {
   return listResultsWithCount(
-    threadsWithAuthor().where("thread.writingGroupId", "=", writingGroupId),
+    threadsWithAuthor().where(
+      "writingThread.writingGroupId",
+      "=",
+      writingGroupId,
+    ),
     query,
   );
 }
@@ -86,7 +90,7 @@ async function updateThread(
   changes: { title?: string },
 ): Promise<Thread | undefined> {
   const updated = await db
-    .updateTable("thread")
+    .updateTable("writingThread")
     .set(changes)
     .where("id", "=", threadId)
     .returning(["id"])
@@ -97,21 +101,21 @@ async function updateThread(
   }
 
   return await threadsWithAuthor()
-    .where("thread.id", "=", updated.id)
+    .where("writingThread.id", "=", updated.id)
     .executeTakeFirstOrThrow();
 }
 
 async function deleteThread(threadId: string): Promise<boolean> {
   // Posts go with the thread through the foreign key's cascade.
   const deletion = await db
-    .deleteFrom("thread")
+    .deleteFrom("writingThread")
     .where("id", "=", threadId)
     .executeTakeFirst();
 
   return deletion.numDeletedRows > 0n;
 }
 
-export const ThreadService = {
+export const WritingThreadService = {
   insertThread,
   selectThread,
   listThreads,

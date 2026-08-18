@@ -1,9 +1,9 @@
 import { z } from "@hono/zod-openapi";
 import {
-  POST_SCHEMA,
-  THREAD_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
   WRITING_GROUP_SCHEMA,
+  WRITING_POST_SCHEMA,
+  WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
 
 /**
@@ -21,9 +21,11 @@ const CREATED_BY_USERNAME = {
 
 export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA.extend(CREATED_BY_USERNAME);
 
-export const THREAD_RESPONSE = THREAD_SCHEMA.extend(CREATED_BY_USERNAME);
+export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
+  CREATED_BY_USERNAME,
+);
 
-export const POST_RESPONSE = POST_SCHEMA.extend(CREATED_BY_USERNAME);
+export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME);
 
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   username: z.string(),

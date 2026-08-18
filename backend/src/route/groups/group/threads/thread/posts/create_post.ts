@@ -5,8 +5,8 @@ import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { ThreadService } from "@/src/service/thread_service.ts";
-import { PostService } from "@/src/service/post_service.ts";
+import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayWrite } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -15,22 +15,22 @@ import {
   jsonContent,
 } from "@/src/response.ts";
 import {
-  POST_SCHEMA,
-  THREAD_SCHEMA,
   WRITING_GROUP_SCHEMA,
+  WRITING_POST_SCHEMA,
+  WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
-  threadId: THREAD_SCHEMA.shape.id,
+  threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
-const CREATE_POST_BODY = POST_SCHEMA
+const CREATE_POST_BODY = WRITING_POST_SCHEMA
   .pick({ text: true, isDraft: true })
   .extend({
-    text: POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
+    text: WRITING_POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
     // Published unless the author says otherwise.
-    isDraft: POST_SCHEMA.shape.isDraft.default(false),
+    isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
   });
 
 export default new OpenAPIHono().openapi(
@@ -85,12 +85,17 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const thread = await ThreadService.selectThread(groupId, threadId);
+    const thread = await WritingThreadService.selectThread(groupId, threadId);
     if (thread === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }
 
-    const post = await PostService.insertPost(threadId, text, isDraft, user.id);
+    const post = await WritingPostService.insertPost(
+      threadId,
+      text,
+      isDraft,
+      user.id,
+    );
 
     return c.json(post, STATUS_CODE.Created);
   },

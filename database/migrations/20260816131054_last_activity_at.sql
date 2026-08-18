@@ -2,7 +2,7 @@
 
 ALTER TABLE public.writing_group
     ADD COLUMN last_activity_at timestamptz NOT NULL DEFAULT now();
-ALTER TABLE public.thread
+ALTER TABLE public.writing_thread
     ADD COLUMN last_activity_at timestamptz NOT NULL DEFAULT now();
 
 ---
@@ -43,21 +43,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION public.set_last_activity_at_for_thread()
+CREATE FUNCTION public.set_last_activity_at_for_writing_thread()
     RETURNS TRIGGER
     set search_path to ''
 AS
 $$
 BEGIN
     IF (TG_OP = 'DELETE') THEN
-        UPDATE public.thread
+        UPDATE public.writing_thread
         SET last_activity_at = now()
-        WHERE id = OLD.thread_id;
+        WHERE id = OLD.writing_thread_id;
 
     ELSE
-        UPDATE public.thread
+        UPDATE public.writing_thread
         SET last_activity_at = now()
-        WHERE id = NEW.thread_id;
+        WHERE id = NEW.writing_thread_id;
 
     END IF;
 
@@ -75,34 +75,34 @@ EXECUTE FUNCTION public.set_last_activity_at();
 
 CREATE TRIGGER set_last_activity_at_for_writing_group
     AFTER INSERT OR UPDATE OR DELETE
-    ON public.thread
+    ON public.writing_thread
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at_for_writing_group();
 
 CREATE TRIGGER set_last_activity_at
     BEFORE UPDATE
-    ON public.thread
+    ON public.writing_thread
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at();
 
-CREATE TRIGGER set_last_activity_at_for_thread
+CREATE TRIGGER set_last_activity_at_for_writing_thread
     AFTER INSERT OR UPDATE OR DELETE
-    ON public.post
+    ON public.writing_post
     FOR EACH ROW
-EXECUTE FUNCTION public.set_last_activity_at_for_thread();
+EXECUTE FUNCTION public.set_last_activity_at_for_writing_thread();
 
 -- migrate:down
 
-DROP TRIGGER set_last_activity_at_for_thread ON public.post;
-DROP TRIGGER set_last_activity_at ON public.thread;
-DROP TRIGGER set_last_activity_at_for_writing_group ON public.thread;
+DROP TRIGGER set_last_activity_at_for_writing_thread ON public.writing_post;
+DROP TRIGGER set_last_activity_at ON public.writing_thread;
+DROP TRIGGER set_last_activity_at_for_writing_group ON public.writing_thread;
 DROP TRIGGER set_last_activity_at ON public.writing_group;
 
-DROP FUNCTION public.set_last_activity_at_for_thread();
+DROP FUNCTION public.set_last_activity_at_for_writing_thread();
 DROP FUNCTION public.set_last_activity_at_for_writing_group();
 DROP FUNCTION public.set_last_activity_at();
 
-ALTER TABLE public.thread
+ALTER TABLE public.writing_thread
     DROP COLUMN last_activity_at;
 ALTER TABLE public.writing_group
     DROP COLUMN last_activity_at;

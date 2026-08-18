@@ -13,6 +13,7 @@
     "migrations:reset": "deno task migrations:down && deno task migrations:up",
     "migrations:status": "dbmate --env-file ../.env status",
     "types:generate": "deno run --env-file=../.env --allow-sys --allow-env --allow-read --allow-write --allow-net npm:kysely-codegen",
+    "test": "deno test --env-file=../.env --allow-env --allow-net --allow-read --allow-sys test/",
     "format:fix": "deno fmt",
     "format:check": "deno fmt --check",
     "lint:fix": "deno lint --fix",
@@ -23,7 +24,11 @@
   },
   "imports": {
     "kysely-codegen": "npm:kysely-codegen@0.20.0",
+    "@std/assert": "jsr:@std/assert@1.0.19",
     "pg": "npm:pg@8.23.0",
     "typescript": "npm:typescript@6.0.3"
+  },
+  "fmt": {
+    "exclude": ["*.md"]
   }
 }

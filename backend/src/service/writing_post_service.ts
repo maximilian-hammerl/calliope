@@ -1,6 +1,6 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
-import type { Post as DatabasePost } from "@/src/database/schema.ts";
+import type { WritingPost as DatabaseWritingPost } from "@/src/database/schema.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -9,9 +9,9 @@ import {
 
 export type Post =
   & Pick<
-    Selectable<DatabasePost>,
+    Selectable<DatabaseWritingPost>,
     | "id"
-    | "threadId"
+    | "writingThreadId"
     | "text"
     | "isDraft"
     | "createdBy"
@@ -22,23 +22,23 @@ export type Post =
   & { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
-  "post.id",
-  "post.threadId",
-  "post.text",
-  "post.isDraft",
-  "post.createdBy",
-  "post.createdAt",
-  "post.updatedAt",
+  "writingPost.id",
+  "writingPost.writingThreadId",
+  "writingPost.text",
+  "writingPost.isDraft",
+  "writingPost.createdBy",
+  "writingPost.createdAt",
+  "writingPost.updatedAt",
 ] as const;
 
 /** Reads one post back with its author, bypassing the draft filter: after a write the
  * caller has already established that it may see the row. */
 function postWithAuthorById(postId: string) {
   return db
-    .selectFrom("post")
-    .leftJoin("user", "user.id", "post.createdBy")
+    .selectFrom("writingPost")
+    .leftJoin("user", "user.id", "writingPost.createdBy")
     .select([...SELECTED_COLUMNS, "user.username as createdByUsername"])
-    .where("post.id", "=", postId);
+    .where("writingPost.id", "=", postId);
 }
 
 async function insertPost(
@@ -48,8 +48,8 @@ async function insertPost(
   createdBy: string,
 ): Promise<Post> {
   const { id } = await db
-    .insertInto("post")
-    .values({ threadId, text, isDraft, createdBy })
+    .insertInto("writingPost")
+    .values({ writingThreadId: threadId, text, isDraft, createdBy })
     .returning(["id"])
     .executeTakeFirstOrThrow();
 
@@ -63,11 +63,11 @@ async function insertPost(
  */
 function readableBy(viewerId: string) {
   return db
-    .selectFrom("post")
+    .selectFrom("writingPost")
     .where((eb) =>
       eb.or([
-        eb("post.isDraft", "=", false),
-        eb("post.createdBy", "=", viewerId),
+        eb("writingPost.isDraft", "=", false),
+        eb("writingPost.createdBy", "=", viewerId),
       ])
     );
 }
@@ -78,7 +78,7 @@ function readableBy(viewerId: string) {
  */
 function postsWithAuthor(viewerId: string) {
   return readableBy(viewerId)
-    .leftJoin("user", "user.id", "post.createdBy")
+    .leftJoin("user", "user.id", "writingPost.createdBy")
     .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
 }
 
@@ -89,8 +89,8 @@ async function selectPost(
   viewerId: string,
 ): Promise<Post | undefined> {
   return await postsWithAuthor(viewerId)
-    .where("post.threadId", "=", threadId)
-    .where("post.id", "=", postId)
+    .where("writingPost.writingThreadId", "=", threadId)
+    .where("writingPost.id", "=", postId)
     .executeTakeFirst();
 }
 
@@ -100,7 +100,11 @@ function listPosts(
   query: ListQuery,
 ): Promise<ListResults<Post>> {
   return listResultsWithCount(
-    postsWithAuthor(viewerId).where("post.threadId", "=", threadId),
+    postsWithAuthor(viewerId).where(
+      "writingPost.writingThreadId",
+      "=",
+      threadId,
+    ),
     query,
   );
 }
@@ -111,7 +115,7 @@ async function updatePost(
   changes: { text?: string; isDraft?: boolean },
 ): Promise<Post | undefined> {
   const updated = await db
-    .updateTable("post")
+    .updateTable("writingPost")
     .set(changes)
     .where("id", "=", postId)
     .returning(["id"])
@@ -126,14 +130,14 @@ async function updatePost(
 
 async function deletePost(postId: string): Promise<boolean> {
   const deletion = await db
-    .deleteFrom("post")
+    .deleteFrom("writingPost")
     .where("id", "=", postId)
     .executeTakeFirst();
 
   return deletion.numDeletedRows > 0n;
 }
 
-export const PostService = {
+export const WritingPostService = {
   insertPost,
   selectPost,
   listPosts,

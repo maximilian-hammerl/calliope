@@ -4,7 +4,7 @@ import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { PostService } from "@/src/service/post_service.ts";
+import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,15 +12,15 @@ import {
   jsonContent,
 } from "@/src/response.ts";
 import {
-  POST_SCHEMA,
-  THREAD_SCHEMA,
   WRITING_GROUP_SCHEMA,
+  WRITING_POST_SCHEMA,
+  WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
 
 const POST_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
-  threadId: THREAD_SCHEMA.shape.id,
-  postId: POST_SCHEMA.shape.id,
+  threadId: WRITING_THREAD_SCHEMA.shape.id,
+  postId: WRITING_POST_SCHEMA.shape.id,
 });
 
 export default new OpenAPIHono().openapi(
@@ -61,7 +61,7 @@ export default new OpenAPIHono().openapi(
     }
 
     // Another member's draft is reported as missing rather than forbidden.
-    const post = await PostService.selectPost(threadId, postId, user.id);
+    const post = await WritingPostService.selectPost(threadId, postId, user.id);
     if (post === undefined) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
     }

@@ -53,6 +53,8 @@ CREATE TRIGGER set_updated_at
     FOR EACH ROW
 EXECUTE FUNCTION public.set_updated_at();
 
+---
+
 CREATE INDEX user_session_user_id_idx ON public.user_session (user_id);
 -- The expiry sweep deletes by this column alone.
 CREATE INDEX user_session_expires_at_idx ON public.user_session (expires_at);

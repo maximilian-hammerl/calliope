@@ -4,7 +4,7 @@ import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { ThreadService } from "@/src/service/thread_service.ts";
+import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { listQuerySchema, listResponseSchema } from "@/src/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -12,11 +12,14 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/response.ts";
-import { THREAD_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import {
+  WRITING_GROUP_SCHEMA,
+  WRITING_THREAD_SCHEMA,
+} from "@/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
-const SORT_ATTRIBUTE = THREAD_SCHEMA
+const SORT_ATTRIBUTE = WRITING_THREAD_SCHEMA
   .keyof()
   .extract(["createdAt", "updatedAt", "lastActivityAt", "title"])
   .default("createdAt")
@@ -67,7 +70,10 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const page = await ThreadService.listThreads(groupId, c.req.valid("json"));
+    const page = await WritingThreadService.listThreads(
+      groupId,
+      c.req.valid("json"),
+    );
 
     return c.json(page, STATUS_CODE.OK);
   },

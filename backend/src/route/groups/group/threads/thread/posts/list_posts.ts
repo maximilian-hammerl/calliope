@@ -4,8 +4,8 @@ import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { ThreadService } from "@/src/service/thread_service.ts";
-import { PostService } from "@/src/service/post_service.ts";
+import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { listQuerySchema, listResponseSchema } from "@/src/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -14,17 +14,17 @@ import {
   jsonContent,
 } from "@/src/response.ts";
 import {
-  POST_SCHEMA,
-  THREAD_SCHEMA,
   WRITING_GROUP_SCHEMA,
+  WRITING_POST_SCHEMA,
+  WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
-  threadId: THREAD_SCHEMA.shape.id,
+  threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
-const SORT_ATTRIBUTE = POST_SCHEMA
+const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
   .keyof()
   .extract(["createdAt", "updatedAt"])
   .default("createdAt")
@@ -73,13 +73,13 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const thread = await ThreadService.selectThread(groupId, threadId);
+    const thread = await WritingThreadService.selectThread(groupId, threadId);
     if (thread === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }
 
     // Other members' drafts are not published yet, so they stay out of the page.
-    const page = await PostService.listPosts(
+    const page = await WritingPostService.listPosts(
       threadId,
       user.id,
       c.req.valid("json"),

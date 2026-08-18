@@ -15,26 +15,6 @@ export type UserInWritingGroupStatus = "invited" | "joined";
 
 export type WritingGroupVisibility = "private" | "public";
 
-export interface Post {
-  createdAt: Generated<string>;
-  createdBy: string | null;
-  id: Generated<string>;
-  isDraft: boolean;
-  text: string;
-  threadId: string;
-  updatedAt: Generated<string>;
-}
-
-export interface Thread {
-  createdAt: Generated<string>;
-  createdBy: string | null;
-  id: Generated<string>;
-  lastActivityAt: Generated<string>;
-  title: string;
-  updatedAt: Generated<string>;
-  writingGroupId: string;
-}
-
 export interface User {
   createdAt: Generated<string>;
   emailAddress: string;
@@ -73,13 +53,33 @@ export interface WritingGroup {
   visibility: Generated<WritingGroupVisibility>;
 }
 
+export interface WritingPost {
+  createdAt: Generated<string>;
+  createdBy: string | null;
+  id: Generated<string>;
+  isDraft: boolean;
+  text: string;
+  updatedAt: Generated<string>;
+  writingThreadId: string;
+}
+
+export interface WritingThread {
+  createdAt: Generated<string>;
+  createdBy: string | null;
+  id: Generated<string>;
+  lastActivityAt: Generated<string>;
+  title: string;
+  updatedAt: Generated<string>;
+  writingGroupId: string;
+}
+
 export interface DB {
-  post: Post;
-  thread: Thread;
   user: User;
   userInWritingGroup: UserInWritingGroup;
   userSession: UserSession;
   writingGroup: WritingGroup;
+  writingPost: WritingPost;
+  writingThread: WritingThread;
 }
 import * as z from "zod";
 
@@ -101,26 +101,6 @@ export const USER_IN_WRITING_GROUP_STATUSES = ["invited", "joined"] as const;
 export const USER_IN_WRITING_GROUP_STATUS_SCHEMA = z.enum(
   USER_IN_WRITING_GROUP_STATUSES,
 );
-
-export const POST_SCHEMA = z.object({
-  id: z.uuidv7(),
-  threadId: z.uuidv7(),
-  text: z.string(),
-  isDraft: z.boolean(),
-  createdBy: z.uuidv7().nullable(),
-  createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
-});
-
-export const THREAD_SCHEMA = z.object({
-  id: z.uuidv7(),
-  writingGroupId: z.uuidv7(),
-  title: z.string(),
-  createdBy: z.uuidv7().nullable(),
-  createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
-  lastActivityAt: z.iso.datetime({ offset: true }),
-});
 
 export const USER_SCHEMA = z.object({
   id: z.uuidv7(),
@@ -154,6 +134,26 @@ export const WRITING_GROUP_SCHEMA = z.object({
   title: z.string(),
   description: z.string(),
   visibility: WRITING_GROUP_VISIBILITY_SCHEMA,
+  createdBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  lastActivityAt: z.iso.datetime({ offset: true }),
+});
+
+export const WRITING_POST_SCHEMA = z.object({
+  id: z.uuidv7(),
+  writingThreadId: z.uuidv7(),
+  text: z.string(),
+  isDraft: z.boolean(),
+  createdBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+
+export const WRITING_THREAD_SCHEMA = z.object({
+  id: z.uuidv7(),
+  writingGroupId: z.uuidv7(),
+  title: z.string(),
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),

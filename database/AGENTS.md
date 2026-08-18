@@ -46,6 +46,20 @@ Two mistakes that pass review easily:
 - **Column names are only resolved at execution time**, so `NEW.group_id` against a column
   actually called `writing_group_id` migrates cleanly and fails on the first insert.
 
+## Tests
+
+`test/` holds them, run with `deno task test`. They talk to Postgres directly through `pg`
+rather than through the backend's Kysely client, because what they assert is the database's
+own behaviour — triggers, cascades, constraints — and a failure should point at the SQL.
+
+Rows are named with a `db-test-` prefix and removed afterwards, so the suite can run against
+a development database without taking anything else with it. Point `DATABASE_URL` at a
+throwaway database when the schema is mid-change.
+
+Prove a new trigger test fails without its trigger before trusting it — `ALTER TABLE … 
+DISABLE TRIGGER` is enough. Compare timestamps as `extract(epoch …)`, never as the driver's
+Date: its string form compares lexicographically and orders "Tue" before "Wed".
+
 ## Regenerating types
 
 After any migration:
