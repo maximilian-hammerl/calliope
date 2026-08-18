@@ -39,13 +39,20 @@ const creating = ref<boolean>(false)
             Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, oder warte
             auf eine Einladung.
           </p>
-          <Button class="mt-5" @click="creating = true">
+          <!-- Only below md: from there up the left rail carries this, and two buttons for
+               one action on one screen is what this replaced. -->
+          <Button class="mt-5 md:hidden" @click="creating = true">
             <Plus data-icon="inline-start" :stroke-width="1.5" />
             Gruppe gründen
           </Button>
         </div>
 
         <div v-else>
+          <Button class="mb-6 md:hidden" @click="creating = true">
+            <Plus data-icon="inline-start" :stroke-width="1.5" />
+            Gruppe gründen
+          </Button>
+
           <!-- Hairline rows, no cards: nothing in the reading surface is boxed or rounded. -->
           <div
             v-for="(group, index) in groups"

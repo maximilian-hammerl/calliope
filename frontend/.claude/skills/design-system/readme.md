@@ -90,6 +90,16 @@ and in UI copy alike.
 Title Case and never ALL CAPS — with the single exception of the mono rail labels
 ("MEINE GRUPPEN", "GRUPPEN-KONTEXT"), where the caps are a typographic device.
 
+**In a strip, the create action is the bare noun.** "+ Thread" in the tab strip, "+ Gruppe" in
+the left rail — the `Plus` carries the verb, and the full phrase ("Thread anlegen", "Gruppe
+gründen") is the title of the dialog it opens and its `aria-label`, so nothing is lost to a
+screen reader. Everywhere else the verb is written out. The action sits in the strip with a
+transparent segment of the rule, which is what separates it from the items.
+
+**One action, one place per screen.** The rail's create button is the only one from `md` up; the
+Meine-Gruppen page carries its own below that breakpoint, because there is no rail on a phone.
+Two buttons for one action on one screen is what this replaced.
+
 **Verbs are what the member does, not what the system does.** "Weiterschreiben", not "Neuer
 Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gruppe erstellen" —
 founding a group is a social act.
@@ -168,8 +178,14 @@ have no asset yet.
 
 **Borders and dividers.** 1px hairlines carry all structure. Posts are separated by a full-width
 `--border-divider` rule with `--post-gap` (26px) above and below — boxed posts were rejected in
-round 1, but round 2 showed posts need *some* separation. 2px is used only twice: the active tab
-underline and the vertical rule marking a notes/quote block.
+round 1, but round 2 showed posts need *some* separation. 2px marks a current position — the
+active tab underline, the active group's rule in the left rail — and the vertical rule of a
+notes/quote block.
+
+**Inactive tabs are underlined too**, at 1.5px in `--line-5`. A transparent underline left them
+looking like plain words beside the active tab; the lighter rule says they are the same kind of
+thing, one seat along. 1.5px is the only place a third weight is used, and it exists so the
+active tab still wins on thickness as well as colour.
 
 **Corner radii.** Deliberately sparse: `--radius-tag` 3px (privacy badge, "gemerkt" tag),
 `--radius-xs` 4px (rail toggles), `--radius-control` 6px (buttons, inputs, filter menu, panel
@@ -202,6 +218,18 @@ a filled chip. Disabled is `--ink-6` on `--paper-2` with no border change.
 (`cubic-bezier(.2,0,.2,1)`) — a size change, no slide-in, no fade-through. The autosave spinner is
 the only looping animation in the product. No bounces, no attention-seeking motion; everything
 honours `prefers-reduced-motion`.
+
+**Selection is a rule, never a box.** The left rail lists groups the way the thread strip lists
+threads, turned on its side: a continuous 2px rule down the left of the column, the active
+segment in `--oak`, the rest in `--line-4`. Rows sit flush so the rule is unbroken, which is what
+says they are one set. The earlier treatment — the active row as raised paper with a hairline and
+a radius — was dropped: it read as a card rather than a position, and it left the other rows with
+no affordance at all. Hover matches the tabs exactly (text to `--ink-1`, rule one shade darker);
+no fill, or a hovered row would look more selected than the selected one.
+
+**The group title is the way back.** Above a thread it is a link to the group page, underlined on
+hover at 6px offset. On the group page itself it is the heading and links nowhere — the same
+component, told which it is rather than guessing from the route.
 
 **Layout rules.** Fixed top bar (54px). Both rails collapse to a 34px edge strip with a vertical
 mono label and a chevron — the strip is the affordance to reopen, and left and right behave

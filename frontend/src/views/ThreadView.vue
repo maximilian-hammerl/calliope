@@ -109,7 +109,12 @@ async function submit() {
 <template>
   <AppLayout :active-group-id="groupId" @create-group="creatingGroup = true">
     <template v-if="thread">
-      <GroupHeader v-if="group" :title="group.title" :visibility="group.visibility" />
+      <GroupHeader
+        v-if="group"
+        :title="group.title"
+        :visibility="group.visibility"
+        :group-id="groupId"
+      />
 
       <ThreadTabs
         :group-id="groupId"

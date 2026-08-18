@@ -7,6 +7,9 @@ const props = defineProps<{
   title: string
   visibility: 'private' | 'public'
   threadCount?: number
+  // Given only where the header is not already the group's own page: the way back from a
+  // thread. On the group page the title is the page's own heading and links nowhere.
+  groupId?: string
 }>()
 
 const visibilityLabel = computed<string>(() =>
@@ -18,7 +21,16 @@ const visibilityLabel = computed<string>(() =>
   <div class="px-[18px] pt-5 md:px-10">
     <div class="flex flex-wrap items-baseline gap-3">
       <!-- A group title is 25px Newsreader regular, never bold. -->
-      <h1 class="text-[25px] leading-[1.2] text-ink-1">{{ title }}</h1>
+      <h1 class="text-[25px] leading-[1.2] text-ink-1">
+        <RouterLink
+          v-if="groupId !== undefined"
+          :to="{ name: 'group', params: { groupId } }"
+          class="underline-offset-[6px] hover:underline"
+        >
+          {{ title }}
+        </RouterLink>
+        <template v-else>{{ title }}</template>
+      </h1>
       <CalliopeBadge>{{ visibilityLabel }}</CalliopeBadge>
       <span v-if="threadCount !== undefined" class="text-[11.5px] whitespace-nowrap text-ink-5">
         {{ countLabel(threadCount, 'Thread', 'Threads') }}

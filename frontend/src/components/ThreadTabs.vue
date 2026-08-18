@@ -24,11 +24,11 @@ defineEmits<{ create: [] }>()
         v-for="thread in threads"
         :key="thread.id"
         :to="{ name: 'thread', params: { groupId, threadId: thread.id } }"
-        class="flex-none border-b-2 pb-[11px]"
+        class="flex-none pb-[11px]"
         :class="
           thread.id === activeId
-            ? 'border-oak font-medium text-ink-1'
-            : 'border-transparent text-ink-5'
+            ? 'border-b-2 border-oak font-medium text-ink-1'
+            : 'border-b-[1.5px] border-line-5 text-ink-5 hover:text-ink-2'
         "
       >
         {{ thread.title }}
@@ -37,7 +37,8 @@ defineEmits<{ create: [] }>()
       <button
         v-if="mayWrite"
         type="button"
-        class="flex flex-none items-center gap-[4px] border-b-2 border-transparent pb-[11px] text-ink-5"
+        class="flex flex-none items-center gap-[4px] border-b-2 border-transparent pb-[11px] text-ink-5 hover:text-oak-deep"
+        aria-label="Thread anlegen"
         @click="$emit('create')"
       >
         <Plus :size="14" :stroke-width="1.5" />
