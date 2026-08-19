@@ -13,6 +13,18 @@
 			# is the one setting here that cannot be verified before deploying.
 			flush_interval -1
 
+			# Hold a request for a few seconds while the backend container is being replaced,
+			# instead of answering 502 the instant it is not listening. A deploy is usually
+			# over well inside this, so most members never see the outage at all.
+			#
+			# Only a failed dial is retried — the request never reached the backend, so there
+			# is nothing to duplicate. Verified: a POST issued across a restart created exactly
+			# one row, and a QUERY had its JSON body replayed intact.
+			#
+			# This does nothing when Caddy itself is down, which is why the interface handles
+			# an unreachable API as well.
+			lb_try_duration 5s
+
 			# The rate limiter buckets by the first entry of X-Forwarded-For, so this has to
 			# replace whatever the client sent rather than append to it. Caddy's default
 			# already does, but a limiter that can be side-stepped by a header is not
