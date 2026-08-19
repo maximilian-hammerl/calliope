@@ -26,3 +26,5 @@ export function fieldMessage(messages: FieldMessages, validity: ValidityState): 
   }
   return messages.malformed
 }
+
+export const PASSWORDS_DIFFER = 'Die Passwörter stimmen nicht überein.'

@@ -5,7 +5,7 @@ import { useRegisterUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { ApiError } from '@/lib/api/apiFetch'
-import { type FieldMessages, fieldMessage } from '@/lib/validation/fieldMessage'
+import { type FieldMessages, fieldMessage, PASSWORDS_DIFFER } from '@/lib/validation/fieldMessage'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,20 +14,21 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
-type FieldName = 'username' | 'emailAddress' | 'password'
+type FieldName = 'username' | 'emailAddress' | 'password' | 'passwordConfirmation'
 
 const router = useRouter()
 
 const username = ref<string>('')
 const emailAddress = ref<string>('')
 const password = ref<string>('')
+const passwordConfirmation = ref<string>('')
 
 const fieldErrors = ref<Partial<Record<FieldName, string>>>({})
 const formError = ref<string | undefined>(undefined)
 
 const { mutateAsync: signUp, isPending } = useRegisterUser()
 
-const FIELD_NAMES = ['username', 'emailAddress', 'password'] as const
+const FIELD_NAMES = ['username', 'emailAddress', 'password', 'passwordConfirmation'] as const
 
 /** The API's own bounds, so the form cannot disagree with what the server will accept. */
 const LIMIT = TEXT_LIMIT.registerUser
@@ -53,6 +54,11 @@ const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {
   password: {
     missing: 'Wähle ein Passwort.',
     malformed: 'Wähle ein Passwort.',
+    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
+  },
+  passwordConfirmation: {
+    missing: 'Wiederhole dein Passwort.',
+    malformed: 'Wiederhole dein Passwort.',
     tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
   },
 }
@@ -81,6 +87,12 @@ function validate(): boolean {
       continue
     }
     errors[name] = fieldMessage(FIELD_MESSAGES[name], input.validity)
+  }
+
+  // After the native rules, so an empty repeat reads as missing rather than as not matching.
+  // Only the repeat is marked: the password itself is not wrong, the second field disagrees.
+  if (errors.passwordConfirmation === undefined && passwordConfirmation.value !== password.value) {
+    errors.passwordConfirmation = PASSWORDS_DIFFER
   }
 
   fieldErrors.value = errors
@@ -224,6 +236,22 @@ async function submit() {
               :aria-invalid="fieldErrors.password !== undefined ? true : undefined"
             />
             <FieldError :errors="[fieldErrors.password]" />
+          </Field>
+
+          <Field :data-invalid="fieldErrors.passwordConfirmation !== undefined ? true : undefined">
+            <FieldLabel for="passwordConfirmation">Passwort wiederholen</FieldLabel>
+            <Input
+              id="passwordConfirmation"
+              v-model="passwordConfirmation"
+              class="h-11 md:h-9"
+              name="passwordConfirmation"
+              type="password"
+              :maxlength="LIMIT.password.maxLength"
+              autocomplete="new-password"
+              required
+              :aria-invalid="fieldErrors.passwordConfirmation !== undefined ? true : undefined"
+            />
+            <FieldError :errors="[fieldErrors.passwordConfirmation]" />
           </Field>
         </FieldGroup>
 

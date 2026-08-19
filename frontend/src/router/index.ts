@@ -1,6 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { fetchCurrentUser, forgetCurrentUser } from '@/lib/auth/session'
 import { setSessionLostHandler } from '@/lib/api/queryClient'
+import { assertUnreachable } from '@/lib/assertUnreachable'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /**
+     * Who may open the route. One value rather than a flag per case: separate booleans let a
+     * route claim to be both guests-only and open to everyone, which means nothing and which
+     * nothing would catch. Omitting it means `member`, so forgetting to mark a route locks
+     * it rather than exposing it.
+     */
+    access?: 'member' | 'guest' | 'anyone'
+  }
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,13 +50,25 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { guestOnly: true },
+      meta: { access: 'guest' },
     },
     {
       path: '/register',
       name: 'register',
       component: () => import('../views/RegisterView.vue'),
-      meta: { guestOnly: true },
+      meta: { access: 'guest' },
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgotPassword',
+      component: () => import('../views/ForgotPasswordView.vue'),
+      meta: { access: 'guest' },
+    },
+    {
+      path: '/reset-password',
+      name: 'resetPassword',
+      component: () => import('../views/ResetPasswordView.vue'),
+      meta: { access: 'anyone' },
     },
   ],
 })
@@ -53,20 +78,26 @@ router.beforeEach(async (to) => {
   // rate limit also lands on the login view rather than blocking navigation outright.
   const user = await fetchCurrentUser().catch(() => undefined)
 
-  // Every route needs a session unless it is marked as being for signed-out visitors. A page
-  // that should be readable by both would need a flag of its own.
-  const guestOnly = to.meta.guestOnly === true
+  // Bound rather than switched on inline, so TypeScript narrows it to `never` in the default
+  // branch and a fourth kind of access cannot be added without handling it here.
+  const access = to.meta.access ?? 'member'
 
-  if (user === undefined && !guestOnly) {
-    // `redirect` carries where they were headed, so signing in resumes it.
-    return { name: 'login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
+  switch (access) {
+    case 'member':
+      // `redirect` carries where they were headed, so signing in resumes it.
+      return user === undefined
+        ? { name: 'login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
+        : true
+
+    case 'guest':
+      return user === undefined ? true : { name: 'home' }
+
+    case 'anyone':
+      return true
+
+    default:
+      return assertUnreachable(access)
   }
-
-  if (user !== undefined && guestOnly) {
-    return { name: 'home' }
-  }
-
-  return true
 })
 
 // A session that ends mid-visit returns the reader to the sign-in page, carrying where they
