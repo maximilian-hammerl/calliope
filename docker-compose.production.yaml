@@ -63,8 +63,8 @@ services:
       SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST in .env}
       SMTP_PORT: ${SMTP_PORT:?set SMTP_PORT in .env}
       SMTP_SECURE: ${SMTP_SECURE:?set SMTP_SECURE in .env}
-      SMTP_USERNAME: ${SMTP_USERNAME:?set SMTP_HOST in .env}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_HOST in .env}
+      SMTP_USERNAME: ${SMTP_USERNAME:?set SMTP_USERNAME in .env}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD in .env}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?set MAIL_FROM_ADDRESS in .env}
 
     depends_on:
