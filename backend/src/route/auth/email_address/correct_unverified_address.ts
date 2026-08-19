@@ -23,7 +23,7 @@ const CHANGE_EMAIL_ADDRESS_BODY = z.object({
 export default new OpenAPIHono().openapi(
   createRoute({
     method: "patch",
-    path: "/email-address",
+    path: "/",
     tags: [AUTH_TAG],
     summary: "Correct an address that has not been verified yet",
     description:

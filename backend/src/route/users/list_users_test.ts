@@ -5,7 +5,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const searcher = "list-users-searcher";
 // The distinctive middle syllable is what the substring tests look for; no prefix of it

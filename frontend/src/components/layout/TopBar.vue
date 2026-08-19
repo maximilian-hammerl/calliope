@@ -11,7 +11,7 @@ import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import SearchField from '@/components/search/SearchField.vue'
 import NotificationsDialog from '@/components/notification/NotificationsDialog.vue'
 import MessagesDialog from '@/components/chat/MessagesDialog.vue'
-import PlaceholderDialog from '@/components/common/PlaceholderDialog.vue'
+import SettingsDialog from '@/components/settings/SettingsDialog.vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -154,9 +154,5 @@ async function signOut() {
 
   <NotificationsDialog v-model:open="showingNotifications" @open-chat="openChat" />
   <MessagesDialog v-model:open="showingMessages" :start-at="startChatAt" />
-  <PlaceholderDialog
-    v-model:open="showingSettings"
-    title="Einstellungen"
-    description="Dein Konto, und worüber du benachrichtigt wirst."
-  />
+  <SettingsDialog v-model:open="showingSettings" />
 </template>

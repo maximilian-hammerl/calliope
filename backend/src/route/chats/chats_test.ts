@@ -6,7 +6,7 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const founder = "chats-founder";
 const invited = "chats-invited";

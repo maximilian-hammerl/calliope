@@ -24,7 +24,10 @@ export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 
 export type UserInWritingGroupStatus = "invited" | "joined";
 
-export type UserTokenPurpose = "email_verification" | "password_reset";
+export type UserTokenPurpose =
+  | "email_change"
+  | "email_verification"
+  | "password_reset";
 
 export type WritingGroupVisibility = "private" | "public";
 
@@ -104,6 +107,7 @@ export interface UserToken {
   expiresAt: string;
   hashedToken: Buffer;
   id: Generated<string>;
+  newEmailAddress: string | null;
   purpose: UserTokenPurpose;
   userId: string;
 }
@@ -188,6 +192,7 @@ export const NOTIFICATION_TYPES = [
 export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
 
 export const USER_TOKEN_PURPOSES = [
+  "email_change",
   "email_verification",
   "password_reset",
 ] as const;
@@ -271,6 +276,7 @@ export const USER_TOKEN_SCHEMA = z.object({
   expiresAt: z.iso.datetime({ offset: true }),
   consumedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
+  newEmailAddress: z.string().nullable(),
 });
 
 export const WRITING_GROUP_SCHEMA = z.object({

@@ -6,7 +6,7 @@ import { retry } from "@std/async/retry";
  * only place its plaintext exists and testing the flow means fetching the mail.
  *
  * Mailpit is in `docker-compose.yaml` beside Postgres and Redis; its web interface is on the
- * port after its SMTP one. Not named `*_test.ts`, so the runner does not collect it.
+ * port after its SMTP one.
  */
 const MAILPIT_URL = `http://${getRequiredEnvVariable("SMTP_HOST")}:8025`;
 

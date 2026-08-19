@@ -5,7 +5,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const owner = "get-group-owner";
 const outsider = "get-group-outsider";

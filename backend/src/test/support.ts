@@ -1,9 +1,13 @@
+/**
+ * Fixtures shared across the suite. Everything in `test/` is test-only: files ending in
+ * `_test.ts` announce themselves, these do not, so the directory says it instead of the name.
+ */
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
-import app from "./app.ts";
-import { db } from "./database/client.ts";
-import { redis } from "./redis/client.ts";
-import { RATE_LIMIT_KEY_PREFIX } from "./middleware/rate_limit.ts";
+import app from "@/src/app.ts";
+import { db } from "@/src/database/client.ts";
+import { redis } from "@/src/redis/client.ts";
+import { RATE_LIMIT_KEY_PREFIX } from "@/src/middleware/rate_limit.ts";
 
 /**
  * Registers a user, confirms their address, and returns the session cookie.

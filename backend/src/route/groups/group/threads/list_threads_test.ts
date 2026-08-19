@@ -7,7 +7,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const administrator = "list-threads-admin";
 const reader = "list-threads-reader";

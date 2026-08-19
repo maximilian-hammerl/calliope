@@ -78,6 +78,21 @@ const router = createRouter({
       component: () => import('../views/VerifyEmailView.vue'),
       meta: { access: 'anyone' },
     },
+    // Both reached from a mailed link, so neither may depend on a session: confirming is done
+    // from the new address's mailbox, and cancelling by whoever still reads the old one — who,
+    // in the case worth defending against, is not the person holding the session.
+    {
+      path: '/confirm-email-change',
+      name: 'confirmEmailChange',
+      component: () => import('../views/ConfirmEmailChangeView.vue'),
+      meta: { access: 'anyone' },
+    },
+    {
+      path: '/cancel-email-change',
+      name: 'cancelEmailChange',
+      component: () => import('../views/CancelEmailChangeView.vue'),
+      meta: { access: 'anyone' },
+    },
     // Where a signed-in member with an unconfirmed address is held. An ordinary member route
     // — it needs a session — and the guard below keeps everyone else off it.
     {

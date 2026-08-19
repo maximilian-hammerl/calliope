@@ -1,14 +1,12 @@
 import { assertExists } from "@std/assert";
 import app from "@/src/app.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { deleteAllMail } from "@/src/mail/mailpit_test_support.ts";
+import { deleteAllMail } from "@/src/test/mailpit.ts";
 
 /**
- * What the auth tests share. They cannot use `test_support.ts`'s `registerUser` and `request`,
+ * What the auth tests share. They cannot use `test/support.ts`'s `registerUser` and `request`,
  * because registering and sending a session *is* what they are testing — these go through the
  * app by hand so a malformed body or a missing cookie can be exercised.
- *
- * Not named `*_test.ts`, so the runner does not collect it as a test file of its own.
  */
 export const username = "route-test-user";
 export const password = "a-complex-password";

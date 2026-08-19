@@ -7,7 +7,7 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const administrator = "notifications-admin";
 const invited = "notifications-invited";

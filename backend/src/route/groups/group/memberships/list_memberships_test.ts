@@ -7,7 +7,7 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const administrator = "list-memberships-admin";
 const invitee = "list-memberships-invitee";

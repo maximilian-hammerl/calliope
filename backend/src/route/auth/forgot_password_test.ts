@@ -1,18 +1,14 @@
 import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
-import { clearRateLimits, deleteUsers } from "@/src/test_support.ts";
+import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import {
-  countMail,
-  deleteAllMail,
-  waitForMail,
-} from "@/src/mail/mailpit_test_support.ts";
+import { countMail, deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
 import {
   emailAddress,
   postJson,
   registerAndDiscardVerificationMail,
   username,
-} from "./auth_test_support.ts";
+} from "@/src/test/auth.ts";
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();

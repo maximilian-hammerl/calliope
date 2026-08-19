@@ -52,7 +52,10 @@ async function issuePasswordReset(
     return;
   }
 
-  const token = await UserTokenService.issueToken(user.id, "password_reset");
+  const token = await UserTokenService.issueToken({
+    userId: user.id,
+    purpose: "password_reset",
+  });
 
   if (token === undefined) {
     return;
@@ -80,27 +83,27 @@ async function resetPassword(
   const hashedPassword = await hashPassword(password);
 
   return await db.transaction().execute(async (transaction) => {
-    const userId = await UserTokenService.consumeToken(
+    const consumed = await UserTokenService.consumeToken(
       transaction,
       token,
       "password_reset",
     );
 
-    if (userId === undefined) {
+    if (consumed === undefined) {
       return "invalid_token";
     }
 
     await transaction
       .updateTable("user")
       .set({ hashedPassword })
-      .where("id", "=", userId)
+      .where("id", "=", consumed.userId)
       .execute();
 
     // Whoever asked for this could not sign in, which is a fair sign the account may have
     // been someone else's. Every existing session goes, including any the attacker holds.
     await transaction
       .deleteFrom("userSession")
-      .where("userId", "=", userId)
+      .where("userId", "=", consumed.userId)
       .execute();
 
     return "reset";

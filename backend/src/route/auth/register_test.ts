@@ -1,14 +1,14 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test_support.ts";
+import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import {
   emailAddress,
   password,
   postJson,
   register,
   username,
-} from "./auth_test_support.ts";
+} from "@/src/test/auth.ts";
 
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([username]));

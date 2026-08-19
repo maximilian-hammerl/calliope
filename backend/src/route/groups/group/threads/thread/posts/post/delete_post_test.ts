@@ -7,7 +7,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test_support.ts";
+} from "@/src/test/support.ts";
 
 const administrator = "delete-post-admin";
 const writer = "delete-post-writer";

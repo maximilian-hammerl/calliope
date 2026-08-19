@@ -45,11 +45,12 @@ it is: `http/` (response helpers and their schemas), `list/` (the shared list co
 `operations/` (liveness, matching the `OPERATIONS_TAG` the spec already uses), `event/`
 (in-process fan-out for SSE, infrastructure like `database/` and `redis/` rather than a
 service), `mail/` (the SMTP transport and the messages themselves, infrastructure for the
-same reason), `service/`, `util/`, `middleware/`, `database/`, `redis/`.
+same reason), `service/`, `util/`, `middleware/`, `database/`, `redis/`, `test/` (fixtures
+and helpers, never imported by anything that ships).
 
 A few files stay at `src/`'s root deliberately: `app.ts` composes everything, `text_limit.ts`
-is domain constants read across layers, `test_support.ts` is test-only, and
-`open_api_specification.ts`, `cron.ts` and `cors_options.ts` are app-wide configuration.
+is domain constants read across layers, and `open_api_specification.ts`, `cron.ts` and
+`cors_options.ts` are app-wide configuration.
 
 `service/` is flat on purpose. Grouping it by domain would give `service/writing/writing_group_service.ts`
 — the word twice — so it would also mean dropping the prefixes, turning a move into renaming
@@ -64,10 +65,9 @@ rebuilds the old path. Nothing else outside TypeScript names a backend source pa
 `<module>_test.ts` beside the module, one file per route. `auth/` shows the shape: `login_test.ts`,
 `logout_test.ts`, `me_test.ts` and `register_test.ts` next to their routes, with `auth_test.ts`
 keeping only what is not about a single one — the body-limit test, which is about the app and
-merely uses a route to get there. Setup those files share lives in `auth/auth_test_support.ts`,
-which is not named `*_test.ts` so the runner does not collect it.
+merely uses a route to get there. Setup those files share lives in `test/auth.ts`.
 
-Auth tests cannot use `test_support.ts`'s `registerUser` and `request`: registering and sending
+Auth tests cannot use `test/support.ts`'s `registerUser` and `request`: registering and sending
 a session is the thing under test, so they go through the app by hand.
 
 ## Route files mirror the URL
@@ -353,7 +353,7 @@ said. Three things about it are load-bearing:
   message goes out, which is an account oracle. The cost is that a failure can only be
   logged, which is why the sending mailbox is read by hand; see `deployment/README.md`.
 - **Tests read the message.** Mailpit is in `docker-compose.yaml` alongside Postgres and
-  Redis, and `mail/mailpit_test_support.ts` fetches from it. A reset token is stored hashed,
+  Redis, and `test/mailpit.ts` fetches from it. A reset token is stored hashed,
   so the message is the only place its plaintext exists — testing the flow at all means
   going through the mail, which covers the link's shape for free. Await
   `Mailer.flushPendingSends()` first, or the assertion races the send.
@@ -379,16 +379,50 @@ Every gated route therefore declares 403. Where the route has no reason of its o
 `FORBIDDEN_RESPONSE`; the twenty-four that refuse for their own reasons keep their own, more
 specific description.
 
-**Changing a verified address is a different feature.** `changeUnverifiedEmailAddress` exists
-to fix a typo before anything has been proven, and it must never touch an address that has.
-Three things enforce that and the last is the real guarantee: the route checks, the service
-checks, and the `UPDATE` itself carries `email_verified_at IS NULL`. A test proves the
-database guard alone still refuses with the service check removed — because a stolen session
-that could move the account to another inbox is an account takeover, not a papercut. Changing
-a proven address has to notify the old one and offer an undo, and that is not built.
+**Changing a verified address is a different endpoint, deliberately.**
+`changeUnverifiedEmailAddress` exists to fix a typo before anything has been proven, and it
+must never touch an address that has. Three things enforce that and the last is the real
+guarantee: the route checks, the service checks, and the `UPDATE` itself carries
+`email_verified_at IS NULL`. A test proves the database guard alone still refuses with the
+service check removed. Moving a *proven* address is `email_change_service.ts` — see below.
 
 Correcting the address also deletes the outstanding token, or whoever received the mistyped
 mail could still confirm somebody else's account.
+
+## Moving a verified address
+
+Three routes under `/auth/email-address`, and one URL that behaved two ways would be exactly
+the confusion this feature cannot afford, so correcting an unproven address stays separate.
+
+- **The current password is required.** A stolen session is the likely way in, and without the
+  password it gets no further. That is the whole reason this is not the unverified endpoint.
+- **Nothing moves on request.** The requested address waits on the token, so an expired or
+  cancelled request leaves no trace. Only opening the link sent to the new address applies it,
+  and confirming re-checks that nobody registered that address in the meantime.
+- **The old address is told, and can stop it.** Both mails carry the *same* token: cancelling
+  only ever restores what is already true, so sharing it costs nothing and saves a second kind
+  of token. This is the mail that matters if the password has leaked.
+- **Confirming ends every session**, including the one that asked.
+
+There is no undo once confirmed — the window is the hour before. A real one needs a
+longer-lived token and a policy for what reverting means, and is not built.
+
+`requestEmailChange` answers **401** for a wrong password, which is an *answer*, not a lost
+session. The frontend's `EXPECTED_401_MUTATIONS` has to list it or the global handler signs the
+member out mid-form; it did, once.
+
+## Changing a password while signed in
+
+`PATCH /auth/password`, the counterpart to resetting one while locked out, and it asks for the
+current password for the same reason the address change does.
+
+Two things differ from a reset. **This session survives** — signing somebody out of the tab
+they are working in punishes good hygiene — while every other session goes. And **any
+outstanding reset link is deleted**: a link requested earlier would otherwise still set a
+password of somebody else's choosing, which is exactly what changing it was meant to stop.
+
+The route reads the session id from the cookie rather than taking it from `c.get("user")`,
+because the cookie is the only thing that says *which* session is asking.
 
 ## Tokens in links
 
@@ -430,7 +464,12 @@ useful to somebody guessing.
 
 Co-located as `<module>_test.ts` beside the code, one positive and one negative case per
 route. They run against real Postgres and Redis, so start the compose stack and apply the
-migrations first. Fixtures live in `src/test_support.ts`.
+migrations first.
+
+**Everything test-only lives in `src/test/`** — `support.ts` for the shared fixtures,
+`auth.ts`, `mailpit.ts`, `email_change.ts` for what a group of tests shares. A file ending in
+`_test.ts` announces itself; these do not, so the directory says it instead of the name and
+they cannot be mistaken for production code. `database/test/support.ts` does the same.
 
 Prefer assertions that would fail for the right reason: check that a *different* user still
 sees the group, not just that the status code is 200.

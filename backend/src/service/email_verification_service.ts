@@ -23,10 +23,10 @@ function sendVerificationMail(
   runInBackground(
     "Issuing an email verification link",
     async () => {
-      const token = await UserTokenService.issueToken(
-        user.id,
-        "email_verification",
-      );
+      const token = await UserTokenService.issueToken({
+        userId: user.id,
+        purpose: "email_verification",
+      });
 
       // The cooldown swallowed it, which means one is already on its way.
       if (token === undefined) {
@@ -53,13 +53,13 @@ export type VerifyEmailResult = "verified" | "invalid_token";
  */
 async function verifyEmail(token: string): Promise<VerifyEmailResult> {
   return await db.transaction().execute(async (transaction) => {
-    const userId = await UserTokenService.consumeToken(
+    const consumed = await UserTokenService.consumeToken(
       transaction,
       token,
       "email_verification",
     );
 
-    if (userId === undefined) {
+    if (consumed === undefined) {
       return "invalid_token";
     }
 
@@ -68,7 +68,7 @@ async function verifyEmail(token: string): Promise<VerifyEmailResult> {
       .set({ emailVerifiedAt: Temporal.Now.instant().toString() })
       // Already verified is not an error, but it must not move the timestamp: that would
       // rewrite when the address was actually proven.
-      .where("id", "=", userId)
+      .where("id", "=", consumed.userId)
       .where("emailVerifiedAt", "is", null)
       .execute();
 

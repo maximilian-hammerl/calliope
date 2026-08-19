@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test_support.ts";
-import { emailAddress, password, username } from "./auth/auth_test_support.ts";
+import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
+import { emailAddress, password, username } from "@/src/test/auth.ts";
 
 /**
  * What is left once each route's own behaviour moved next to it: this is about the app's body
