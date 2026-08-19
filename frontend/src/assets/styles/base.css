@@ -1,0 +1,68 @@
+/* Element and role defaults, plus the handful of named classes that are not expressible as
+   utilities. A utility always outranks this file whatever the selector, so what belongs here
+   is only what should hold until something deliberately overrides it. */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* Tailwind v3's preflight gave buttons a pointer; v4 leaves them at the browser default,
+     which is an arrow. The design system asks for a pointer on anything pressable, so it is
+     restored once here rather than as a utility on every control. The roles cover reka-ui,
+     whose menu and tab items are divs and would otherwise stay missed. */
+  button,
+  select,
+  summary,
+  label[for],
+  [role='button'],
+  [role='menuitem'],
+  [role='menuitemcheckbox'],
+  [role='menuitemradio'],
+  [role='option'],
+  [role='tab'],
+  [role='switch'] {
+    cursor: pointer;
+  }
+  /* Last and at least as specific as the rules above, so it always wins. */
+  :disabled,
+  [aria-disabled='true'],
+  [data-disabled] {
+    cursor: default;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Member-written text and headings read in Newsreader. */
+  h1,
+  h2,
+  h3 {
+    @apply font-serif font-normal;
+  }
+  /* Thread reading size never shrinks, on any device (17px / 1.8). */
+  .prose-post {
+    font: 400 17px/1.8 var(--font-serif);
+    color: #302a23;
+    text-wrap: pretty;
+  }
+  /* Mono rail labels: always uppercase with tracking. */
+  .label-rail {
+    font: 600 10.5px/1 var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6f6455;
+  }
+  /* The thread tab strip scrolls horizontally with its scrollbar hidden; nothing else
+     lives inside that scroll container. */
+  .scroll-x-hidden {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scroll-x-hidden::-webkit-scrollbar {
+    display: none;
+  }
+  ::selection {
+    background: #eee5d3;
+  }
+}

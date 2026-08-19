@@ -1,0 +1,61 @@
+<!-- @dsCard group="Brand" viewport="700x340" name="Interactive states" subtitle="Everything pressable takes a pointer — hover fills the row, selection is a rule, never a fill" -->
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+body{margin:0;padding:16px;background:var(--surface-app);font-family:var(--font-ui)}
+h4{font:var(--text-hint);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-5);margin:0 0 8px}
+.sec{margin-bottom:18px}
+.row{display:flex;align-items:center;gap:10px;min-height:34px;padding:6px 10px;font:var(--text-ui);color:var(--ink-4);border-bottom:1px solid var(--line-3)}
+.row.hov{background:var(--paper-2);color:var(--ink-1)}
+.row.sel{border-left:2px solid var(--accent);background:none;color:var(--ink-1);font-weight:500;padding-left:8px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+.gutter{width:5px;flex:none}
+.chev{margin-left:auto;color:var(--ink-6)}
+.note{font:var(--text-hint);color:var(--ink-5);margin-top:10px}
+.cur{display:flex;gap:22px;flex-wrap:wrap;font:var(--text-hint);color:var(--ink-4)}
+.cur b{color:var(--ink-2);font-weight:600}
+</style>
+</head><body>
+
+<div class="sec">
+  <h4>Cursor</h4>
+  <div class="cur">
+    <span><b>pointer</b> — button, select, summary, label[for], and role=button / menuitem / option / tab / switch</span>
+    <span><b>default</b> — :disabled, [aria-disabled], [data-disabled]</span>
+    <span><b>text</b> — the composer and any prose</span>
+  </div>
+  <div class="note">
+    Tailwind v4's preflight dropped v3's <code>button { cursor: pointer }</code>. Restore it once in
+    the base layer — never as a utility per control, or it goes missing again.
+  </div>
+  <div class="note">
+    The base layer states the default; a utility is a deliberate exception. So the cursor is
+    declared in exactly one place, and a component carries <code>cursor-*</code> only where it
+    genuinely differs — shadcn's <code>cursor-default</code> on menu and select rows was
+    restating Tailwind v3's default, not overriding it, so it is deleted rather than inverted.
+    A utility always beats the base layer whatever the selector, so a leftover one silently
+    wins; the shadcn CLI re-adds them on update, so re-check after one.
+  </div>
+</div>
+
+<div class="sec">
+  <h4>Row states</h4>
+  <div class="row"><span class="gutter"></span>Ruhend — hairline only</div>
+  <div class="row hov"><span class="gutter"></span>Hover — paper-2 fill, ink to ink-1, bled to the container edge<span class="chev">›</span></div>
+  <div class="row sel">Ausgewählt — 2px accent rule on the left, no fill</div>
+  <div class="row"><span class="dot"></span>Ungelesen — accent dot in a fixed gutter, so read and unread stay aligned</div>
+  <div class="note">
+    Selection is the rule, as it is for thread tabs and the group rail. A filled block reads as
+    disabled. A row that leads somewhere carries a chevron at rest, because touch never hovers.
+  </div>
+</div>
+
+<div class="sec">
+  <h4>Focus</h4>
+  <div class="note" style="margin-top:0">
+    2px <code>--focus-ring</code> at 2px offset, from <code>:focus-visible</code> only · no lift, no
+    scale, no colour change · every hover state must have a keyboard-reachable equivalent.
+  </div>
+</div>
+
+</body></html>

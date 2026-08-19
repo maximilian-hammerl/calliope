@@ -1,0 +1,57 @@
+/* Self-hosted rather than fetched from Google: no third-party request on any page load,
+   nothing for the shadcn CLI to overwrite, and the content security policy can stay 'self'.
+   Subsetted to latin + latin-ext, which is all a German interface needs.
+   Referenced relatively — ../fonts, since this file sits a level down — so the build
+   fingerprints them, which is what makes a long cache safe; the licences sit beside them. */
+
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  /* One variable file covers the whole range the design system asks for, and the opsz axis
+     is applied automatically through font-optical-sizing. */
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../fonts/newsreader.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../fonts/newsreader-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-sans.woff2') format('woff2');
+}
+
+/* IBM Plex Mono ships no variable font, so the three weights the rail labels and file tags
+   use are separate faces. */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-600.woff2') format('woff2');
+}

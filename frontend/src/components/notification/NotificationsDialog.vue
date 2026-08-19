@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
+import { ChevronRight } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
@@ -90,8 +91,11 @@ watch(notifications, async (loaded) => {
         Im Moment ist es still.
       </p>
 
-      <ul v-else>
-        <!-- Hairline rows, no cards. Unread is a matter of ink, not a badge. -->
+      <!-- Pulled out to the dialog's padding so a hovered row fills to the edges and reads as
+           a row rather than as a hovered paragraph. -->
+      <ul v-else class="-mx-2">
+        <!-- Hairline rows, no cards. Unread is a matter of ink — and of one oak dot, which
+             weight alone was too quiet to supply when only a single row is new. -->
         <li
           v-for="(notification, index) in notifications"
           :key="notification.id"
@@ -103,18 +107,32 @@ watch(notifications, async (loaded) => {
                either way — you land on the thing it is about, from wherever you were. -->
           <button
             type="button"
-            class="flex min-h-[44px] w-full flex-wrap items-baseline gap-x-3 gap-y-1 py-[12px] text-left"
+            class="group flex min-h-[44px] w-full items-start gap-3 px-2 py-[12px] text-left hover:bg-paper-1"
             @click="follow(notification)"
           >
+            <!-- Always in the flow, coloured only when unread, so read and unread rows keep
+                 the same left edge. -->
             <span
-              class="text-[13.5px] leading-[1.6]"
+              class="mt-[8px] size-[5px] shrink-0 rounded-full"
+              :class="notification.readAt === null ? 'bg-oak' : 'bg-transparent'"
+              aria-hidden="true"
+            />
+            <span
+              class="min-w-0 flex-1 text-[13.5px] leading-[1.6]"
               :class="notification.readAt === null ? 'font-medium text-ink-1' : 'text-ink-4'"
             >
               {{ notificationText(notification) }}
             </span>
-            <span class="ml-auto text-[11.5px] whitespace-nowrap text-ink-6">
+            <span class="mt-[3px] text-[11.5px] whitespace-nowrap text-ink-6">
               {{ formatActivityTime(notification.occurredAt) }}
             </span>
+            <!-- Present at rest rather than on hover: this is what says the row leads
+                 somewhere, and touch never hovers. -->
+            <ChevronRight
+              class="mt-[4px] shrink-0 text-ink-6 group-hover:text-ink-3"
+              :size="14"
+              :stroke-width="1.5"
+            />
           </button>
         </li>
       </ul>

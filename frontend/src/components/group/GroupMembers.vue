@@ -6,6 +6,7 @@ import { getListMembershipsQueryKey, useRemoveMember } from '@/api/memberships/m
 import { useGetCurrentUser } from '@/api/auth/auth'
 import type { ListMemberships200ResultsItem } from '@/api/models'
 import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
+import { userInitial } from '@/lib/format/formatUser'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -128,7 +129,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
       >
         <Avatar class="size-7 shrink-0">
           <AvatarFallback class="bg-paper-4 text-[11.5px] font-semibold text-[#5c4a2d]">
-            {{ membership.username.trim().charAt(0).toUpperCase() }}
+            {{ userInitial(membership.username) }}
           </AvatarFallback>
         </Avatar>
 

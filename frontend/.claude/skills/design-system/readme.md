@@ -181,6 +181,9 @@ Verbs also keep it neutral, where a noun would force a guess at somebody's gende
 **A notification is one line, and unread is a matter of ink.** Hairline rows, the sentence in
 `--ink-1` at medium weight while unread and `--ink-4` once read, the time right-aligned in
 `--ink-6`. Opening the list is what marks it read — nobody dismisses lines one at a time.
+Weight alone turned out to be too quiet to find when a single row is unread, so it is joined by a
+5px `--oak` dot in a fixed gutter at the left, empty on the rows that have been read so both stay
+aligned. It is still one mark and still not a count.
 
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
 Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
@@ -262,6 +265,23 @@ never removed; the spec requires keyboard operability throughout. Active navigat
 underline in `--accent`, and active rail rows are `--paper-0` with a 1px `--border-default` — never
 a filled chip. Disabled is `--ink-6` on `--paper-2` with no border change.
 
+**Anything pressable takes a pointer**, and only what is disabled takes the arrow. Tailwind's
+preflight supplied this for buttons until v4 dropped it, so the rule is stated once in the app's
+base layer — never as a utility per control, or the next control to be written will go without.
+It has to name roles as well as elements: a menu item or a tab from reka-ui is a `div`, and the
+browser gives a `div` nothing. A row that leads somewhere also carries a `ChevronRight` at rest
+rather than only on hover, because touch never hovers.
+
+The base layer states the default and a utility is the deliberate exception, which is what keeps
+this to one declaration. shadcn ships `cursor-default` on its dropdown and select rows and
+`cursor-not-allowed` on disabled fields; both were restating a Tailwind v3 default rather than
+overriding it, so they are **deleted** rather than inverted, and the base rule reaches the rows
+through their reka-ui roles. A utility beats the base layer whatever the selector, so a leftover
+one wins silently — and the shadcn CLI puts them back on update, so re-check after one. What stays
+in a component is only what the base rule cannot say: a `Label` whose *peer* is disabled. Disabled
+is `cursor: default` throughout, including form fields, `not-allowed` being louder than anything
+else this product does with a disabled control.
+
 **Motion.** Almost none. Rails and the composer collapse in 220ms with `--ease`
 (`cubic-bezier(.2,0,.2,1)`) — a size change, no slide-in, no fade-through. The autosave spinner is
 the only looping animation in the product. No bounces, no attention-seeking motion; everything
@@ -341,7 +361,7 @@ reference for this decision.
 - `tokens/` — `fonts.css` (Google Fonts import, for prototypes; production self-hosts the
   same families as subsetted WOFF2), `colors.css`, `typography.css`, `spacing.css`,
   `borders.css`, `motion.css`, `base.css` (resets + three utility classes).
-- `guidelines/` — foundation specimen cards (Type, Colors, Spacing, Brand).
+- `guidelines/` — foundation specimen cards (Type, Colors, Spacing, Brand, Interactive states).
 - `components/core/` — Button, Badge, SearchField, Avatar, PanelCard, Label
 - `components/navigation/` — TopBar, GroupList, ThreadTabs, RailToggle
 - `components/thread/` — GroupHeader, ThreadHeader, Post, NotesThread, Composer

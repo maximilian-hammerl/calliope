@@ -1,0 +1,80 @@
+/* ─────────────────────────────────────────────────────────────
+   Calliope design system → shadcn-vue theme
+   Source of truth: Calliope Design System (tokens/colors.css,
+   tokens/typography.css, tokens/borders.css).
+   One warm paper family, one ink family, one accent (burnt oak).
+   Colour never encodes status, ranking or achievement.
+   ───────────────────────────────────────────────────────────── */
+
+/* What `dark:` keys off. The values themselves are in colors.css. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  /* Headings and everything members write are Newsreader, not the UI sans. */
+  --font-heading: var(--font-serif);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  /* Calliope radii are deliberately sparse: nothing in the reading surface is
+     rounded, only controls are. --radius is the control radius (6px). */
+  --radius-sm: 3px; /* tags */
+  --radius-md: 4px; /* --radius-xs */
+  --radius-lg: var(--radius); /* 6px, controls */
+  --radius-xl: 8px;
+
+  /* Raw Calliope palette, available as utilities (bg-paper-1, text-ink-2, …) */
+  --color-paper-0: #fffdf9;
+  --color-paper-1: #f7f4ee;
+  --color-paper-2: #f2ede3;
+  --color-paper-3: #eee5d3;
+  --color-paper-4: #e5d9c2;
+  --color-line-1: #f0e9dc;
+  --color-line-2: #e8e0d2;
+  --color-line-3: #e6dfd2;
+  --color-line-4: #ddd2bd;
+  --color-line-5: #cdbfa6;
+  --color-ink-1: #2b2620;
+  --color-ink-2: #302a23;
+  --color-ink-3: #4a4238;
+  --color-ink-4: #5c5346;
+  --color-ink-5: #6d6153;
+  --color-ink-6: #7d7364;
+  --color-paper-edge: #efe9de;
+  --color-ink-label: #6f6455;
+  --color-oak: #8a6a3a;
+  --color-oak-deep: #4f4132;
+  --color-oak-deeper: #3f3427;
+}

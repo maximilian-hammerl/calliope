@@ -1,0 +1,80 @@
+/* The token values themselves, in the shadcn variable names theme.css maps to Tailwind
+   utilities. Light on :root, dark under .dark. Nothing here is referenced directly by a
+   component — they use the utilities. */
+
+:root {
+  --radius: 6px; /* --radius-control */
+
+  --background: #f7f4ee; /* --paper-1, app canvas */
+  --foreground: #302a23; /* --ink-2, prose */
+  --card: #fffdf9; /* --paper-0, raised */
+  --card-foreground: #302a23;
+  --popover: #fffdf9;
+  --popover-foreground: #302a23;
+
+  --primary: #4f4132; /* --accent-deep, solid action */
+  --primary-foreground: #fffdf9;
+  --secondary: #eee5d3; /* --paper-3, quiet button fill */
+  --secondary-foreground: #4f4132;
+  --muted: #f2ede3; /* --paper-2, rails */
+  --muted-foreground: #6d6153; /* --ink-5 */
+  --accent: #eee5d3; /* hover/active surface, not a hue */
+  --accent-foreground: #4f4132;
+  --destructive: #8a3f37; /* --signal-error, use sparingly */
+
+  --border: #e6dfd2; /* --line-3, hairlines */
+  --input: #ddd2bd; /* --line-4 */
+  --ring: #8a6a3a; /* --accent, focus ring + caret */
+
+  /* Calliope has no data-viz palette; these are ink/oak steps, not new hues. */
+  --chart-1: #8a6a3a;
+  --chart-2: #4f4132;
+  --chart-3: #7d7364;
+  --chart-4: #cdbfa6;
+  --chart-5: #e5d9c2;
+
+  --sidebar: #f2ede3; /* --surface-rail */
+  --sidebar-foreground: #4a4238; /* --ink-3 */
+  --sidebar-primary: #4f4132;
+  --sidebar-primary-foreground: #fffdf9;
+  --sidebar-accent: #eee5d3; /* active rail row */
+  --sidebar-accent-foreground: #4f4132;
+  --sidebar-border: #e6dfd2;
+  --sidebar-ring: #8a6a3a;
+}
+
+/* Calliope defines no dark theme — this is an extrapolation of the ink family,
+   kept so shadcn's dark variant does not fall back to greys. Review before use. */
+.dark {
+  --background: #201c17;
+  --foreground: #efe9de;
+  --card: #262119;
+  --card-foreground: #efe9de;
+  --popover: #262119;
+  --popover-foreground: #efe9de;
+  --primary: #e5d9c2;
+  --primary-foreground: #2b2620;
+  --secondary: #322b22;
+  --secondary-foreground: #efe9de;
+  --muted: #2b251d;
+  --muted-foreground: #b3a795;
+  --accent: #322b22;
+  --accent-foreground: #efe9de;
+  --destructive: #b4655c;
+  --border: #fffdf91a;
+  --input: #fffdf926;
+  --ring: #b08b52;
+  --chart-1: #b08b52;
+  --chart-2: #e5d9c2;
+  --chart-3: #b3a795;
+  --chart-4: #7d7364;
+  --chart-5: #4f4132;
+  --sidebar: #262119;
+  --sidebar-foreground: #efe9de;
+  --sidebar-primary: #e5d9c2;
+  --sidebar-primary-foreground: #2b2620;
+  --sidebar-accent: #322b22;
+  --sidebar-accent-foreground: #efe9de;
+  --sidebar-border: #fffdf91a;
+  --sidebar-ring: #b08b52;
+}

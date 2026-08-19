@@ -6,6 +6,7 @@ import { LogOutIcon } from '@lucide/vue'
 import { useLogoutUser } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/auth/session'
+import { userInitial } from '@/lib/format/formatUser'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import SearchField from '@/components/search/SearchField.vue'
 import NotificationsDialog from '@/components/notification/NotificationsDialog.vue'
@@ -28,7 +29,7 @@ const props = defineProps<{ user: GetCurrentUser200 }>()
 const route = useRoute()
 const router = useRouter()
 
-const initial = computed<string>(() => props.user.username.trim().charAt(0).toUpperCase())
+const initial = computed<string>(() => userInitial(props.user.username))
 
 const unread = computed<number>(() => props.user.unreadNotifications)
 
