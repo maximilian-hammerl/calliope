@@ -9,6 +9,33 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 - **File names are `snake_case`**, and so are test files: `user_service.ts`,
   `user_service_test.ts`.
 
+## Seed data
+
+`deno task db:seed` fills a local database with a fixed fixture: four accounts sharing the
+password `calliope`, a private and a public group, every membership state, threads with posts
+and one unpublished draft, a chat with messages, and the notifications the invitations imply.
+It prints the accounts and the URLs when it finishes.
+
+Three things about it are deliberate:
+
+- **Hard-coded ids.** A URL you bookmarked still works after a re-seed. `uuidv7()` is only a
+  column default, so explicit ids are fine; they are obviously synthetic
+  (`01a00000-0000-7000-8000-…`) so a seeded row is recognisable in a query.
+- **Real password hashing.** It calls `hashPassword`, because scrypt lives in the application
+  and pgcrypto was removed on purpose. A hard-coded hash would rot the day its parameters
+  changed and the accounts would silently stop being able to sign in.
+- **It owns its four usernames.** Cleanup matches id *or* username, so an account somebody made
+  by hand as `mira` cannot block a re-run — and neither can renumbering the ids later.
+
+It refuses any `DATABASE_URL` host that is not obviously local unless passed `--force`, because
+it deletes rows. It refreshes only its own fixture, so half-built state you are testing
+survives.
+
+Inserted through Kysely rather than the services, since those generate their own ids. Database
+triggers still apply — `invited_at`, `joined_at`, `last_activity_at`. What it restates rather
+than invokes is service-level behaviour, notably the notification an invitation produces; if
+that rule changes, this file changes with it.
+
 ## Where things live
 
 `route/` mirrors the URL and is not reorganised — see below. Everything else is grouped by what
