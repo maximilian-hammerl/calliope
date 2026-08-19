@@ -46,6 +46,14 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
 )
 
+/**
+ * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
+ * this is what lets an outage leave the list standing instead of replacing it with an error —
+ * and what keeps the empty state, which is a statement about the data, from being shown when
+ * there is no data to make it about.
+ */
+const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
 const creating = ref<boolean>(false)
 </script>
 
@@ -85,14 +93,8 @@ const creating = ref<boolean>(false)
           </FieldDescription>
         </Field>
 
-        <p v-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
-
-        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-          Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
-        </p>
-
         <p
-          v-else-if="groups.length === 0"
+          v-if="hasLoaded && groups.length === 0"
           class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
         >
           <template v-if="settled === ''">
@@ -103,7 +105,7 @@ const creating = ref<boolean>(false)
           </template>
         </p>
 
-        <div v-else>
+        <div v-else-if="hasLoaded">
           <GroupRow
             v-for="(group, index) in groups"
             :key="group.id"
@@ -123,6 +125,12 @@ const creating = ref<boolean>(false)
             </template>
           </GroupRow>
         </div>
+
+        <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
+
+        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+          Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
+        </p>
       </div>
     </div>
   </AppLayout>

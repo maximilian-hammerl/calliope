@@ -51,6 +51,14 @@ const notifications = computed<ListNotifications200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
 )
 
+/**
+ * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
+ * this is what lets an outage leave the list standing instead of replacing it with an error —
+ * and what keeps the empty state, which is a statement about the data, from being shown when
+ * there is no data to make it about.
+ */
+const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
 const { mutateAsync: markAllRead } = useReadNotifications()
 
 /**
@@ -78,14 +86,8 @@ watch(notifications, async (loaded) => {
         <DialogDescription>Was in deinen Gruppen passiert ist.</DialogDescription>
       </DialogHeader>
 
-      <p v-if="isPending" class="text-[12.5px] text-ink-5">Wird geladen …</p>
-
-      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-        Die Mitteilungen lassen sich gerade nicht laden. Versuche es später noch einmal.
-      </p>
-
       <p
-        v-else-if="notifications.length === 0"
+        v-if="hasLoaded && notifications.length === 0"
         class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
       >
         Im Moment ist es still.
@@ -93,7 +95,7 @@ watch(notifications, async (loaded) => {
 
       <!-- Pulled out to the dialog's padding so a hovered row fills to the edges and reads as
            a row rather than as a hovered paragraph. -->
-      <ul v-else class="-mx-2">
+      <ul v-else-if="hasLoaded" class="-mx-2">
         <!-- Hairline rows, no cards. Unread is a matter of ink — and of one oak dot, which
              weight alone was too quiet to supply when only a single row is new. -->
         <li
@@ -136,6 +138,12 @@ watch(notifications, async (loaded) => {
           </button>
         </li>
       </ul>
+
+      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Wird geladen …</p>
+
+      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+        Die Mitteilungen lassen sich gerade nicht laden. Versuche es später noch einmal.
+      </p>
     </DialogScrollContent>
   </Dialog>
 </template>

@@ -37,6 +37,13 @@ const messages = computed<ListMessages200ResultsItem[]>(() => {
   return [...fetched, ...props.live.filter((message) => !known.has(message.id))]
 })
 
+/**
+ * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
+ * an outage leaves the conversation on screen rather than replacing it with an error, and
+ * "nothing written yet" is only said when a load actually came back empty.
+ */
+const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
 const { data: membersData } = useListChatMemberships(() => props.chatGroupId, { limit: 50 })
 
 const members = computed(() =>
@@ -138,20 +145,14 @@ async function submit() {
     </div>
 
     <div ref="scroller" class="min-h-0 flex-1 overflow-y-auto pr-1">
-      <p v-if="isPending" class="text-[12.5px] text-ink-5">Wird geladen …</p>
-
-      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-        Die Nachrichten lassen sich gerade nicht laden.
-      </p>
-
       <p
-        v-else-if="messages.length === 0"
+        v-if="hasLoaded && messages.length === 0"
         class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
       >
         Noch nichts geschrieben. Fang an.
       </p>
 
-      <ul v-else class="flex flex-col gap-[14px]">
+      <ul v-else-if="messages.length > 0" class="flex flex-col gap-[14px]">
         <li v-for="message in messages" :key="message.id">
           <div class="flex items-baseline gap-2">
             <span class="text-[12.5px] font-semibold text-ink-3">
@@ -167,6 +168,12 @@ async function submit() {
           </p>
         </li>
       </ul>
+
+      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Wird geladen …</p>
+
+      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+        Die Nachrichten lassen sich gerade nicht laden.
+      </p>
     </div>
 
     <Alert v-if="sendError" variant="destructive" role="alert" class="mt-3">

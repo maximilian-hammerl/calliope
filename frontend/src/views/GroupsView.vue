@@ -23,6 +23,14 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
 )
 
 /**
+ * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
+ * this is what lets an outage leave the list standing instead of replacing it with an error —
+ * and what keeps the empty state, which is a statement about the data, from being shown when
+ * there is no data to make it about.
+ */
+const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
+/**
  * Invitations are a separate ask, so they are a separate query rather than a filter over one
  * list. They are not in the rail either: the rail is the groups you are in.
  */
@@ -65,13 +73,7 @@ const creating = ref<boolean>(false)
 
         <h1 class="mb-5 text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
 
-        <p v-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
-
-        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-          Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
-        </p>
-
-        <div v-else-if="groups.length === 0" class="max-w-[46ch]">
+        <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
           <p class="text-[13.5px] leading-[1.7] text-ink-4">
             Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
             bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
@@ -84,7 +86,7 @@ const creating = ref<boolean>(false)
           </Button>
         </div>
 
-        <div v-else>
+        <div v-else-if="hasLoaded">
           <Button class="mb-6 md:hidden" @click="creating = true">
             <Plus data-icon="inline-start" :stroke-width="1.5" />
             Gruppe gründen
@@ -107,6 +109,12 @@ const creating = ref<boolean>(false)
             </template>
           </GroupRow>
         </div>
+
+        <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
+
+        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+          Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
+        </p>
 
         <!-- The way out of this page: without it, listing only your own groups would leave
              no way to find a public one. -->
