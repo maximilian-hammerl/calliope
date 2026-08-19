@@ -80,6 +80,8 @@ export default new OpenAPIHono().openapi(
         // Most recently active first: the closest thing to relevance without ranking.
         sortAttribute: "writingGroup.lastActivityAt",
         sortOrder: "desc",
+        // Search looks everywhere the reader may look, which is what the default narrows.
+        membership: "any",
       }),
       WritingThreadService.listVisibleThreads(user, {
         search,

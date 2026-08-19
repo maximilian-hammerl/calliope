@@ -30,7 +30,6 @@ import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { useGroupRole } from '@/composables/useGroupRole'
 
 const route = useRoute()
 const queryClient = useQueryClient()
@@ -69,7 +68,16 @@ const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
 )
 
-const { mayWrite } = useGroupRole(memberships)
+/**
+ * The group reports the reader's own standing, so the role no longer has to be read out of
+ * the member list. Only a joined membership carries it: an invitation may be looked at but
+ * not written into.
+ */
+const mayWrite = computed<boolean>(
+  () =>
+    group.value?.status === 'joined' &&
+    (group.value.role === 'writer' || group.value.role === 'administrator'),
+)
 
 const draft = ref<string>('')
 const sendError = ref<string | undefined>(undefined)

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useGetGroup } from '@/api/groups/groups'
+import { useGetCurrentUser } from '@/api/auth/auth'
 import { useListThreads } from '@/api/threads/threads'
 import { useListMemberships } from '@/api/memberships/memberships'
 import type {
@@ -22,10 +23,12 @@ import StoryStatus from '@/components/context/StoryStatus.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Button } from '@/components/ui/button'
-import { useGroupRole } from '@/composables/useGroupRole'
+import GroupInvitation from '@/components/group/GroupInvitation.vue'
 
 const route = useRoute()
 const groupId = computed<string>(() => String(route.params.groupId))
+
+const { data: currentUserData } = useGetCurrentUser()
 
 const { data: groupData, isPending, isError } = useGetGroup(groupId)
 const group = computed<GetGroup200 | undefined>(() =>
@@ -49,7 +52,23 @@ const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
 )
 
-const { mayWrite, mayAdminister } = useGroupRole(memberships)
+/**
+ * Straight off the group, which reports the reader's own standing. Only a joined membership
+ * carries authority: somebody invited as an administrator has not accepted yet.
+ */
+const isInvited = computed<boolean>(() => group.value?.status === 'invited')
+const role = computed<GetGroup200['role']>(() =>
+  group.value?.status === 'joined' ? group.value.role : null,
+)
+// Readers may read and comment; writing is for writers and administrators.
+const mayWrite = computed<boolean>(() => role.value === 'writer' || role.value === 'administrator')
+const mayAdminister = computed<boolean>(() => role.value === 'administrator')
+
+/** The reader's own row, for who invited them and when. */
+const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => {
+  const userId = currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined
+  return memberships.value.find((membership) => membership.userId === userId)
+})
 
 const creatingGroup = ref<boolean>(false)
 const creatingThread = ref<boolean>(false)
@@ -75,6 +94,16 @@ const editingGroup = ref<boolean>(false)
 
       <div class="flex-1 overflow-auto px-[18px] pt-7 pb-8 md:px-10">
         <div class="max-w-[684px]">
+          <!-- Above the group's own text: what to do about the invitation comes before
+               reading further into a group you have not joined. -->
+          <GroupInvitation
+            v-if="isInvited && group.role"
+            class="mb-7"
+            :group-id="groupId"
+            :role="group.role"
+            :own="ownMembership"
+          />
+
           <p v-if="group.description" class="max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
             {{ group.description }}
           </p>

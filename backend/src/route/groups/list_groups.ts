@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -24,7 +24,24 @@ const SORT_ATTRIBUTE = WRITING_GROUP_SCHEMA
   .default("createdAt")
   .transform((attribute) => `writingGroup.${attribute}` as const);
 
-const LIST_GROUPS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "desc");
+/**
+ * Which groups, relative to the caller. The default is `joined`, because the list this backs
+ * is "Meine Gruppen" and a group somebody merely may read is not theirs. `none` is the
+ * discovery list, `any` the older behaviour of everything they are allowed to see.
+ */
+const MEMBERSHIP = z
+  .enum(["joined", "invited", "none", "any"])
+  .default("joined")
+  .meta({
+    description:
+      "Which groups relative to the caller: ones they have joined, ones they have been invited to, public ones they are not in, or everything they may see.",
+  });
+
+const LIST_GROUPS_BODY = listQuerySchema(
+  SORT_ATTRIBUTE,
+  { membership: MEMBERSHIP },
+  "desc",
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -32,9 +49,9 @@ export default new OpenAPIHono().openapi(
     method: "query",
     path: "/",
     tags: [GROUPS_TAG],
-    summary: "List the groups visible to the current user",
+    summary: "List groups, by default the current user's own",
     description:
-      "Returns a page of the groups the current user may see: every public group, plus the private ones they belong to.",
+      "Returns a page of groups, by default the ones the current user has joined. The membership filter selects invitations, public groups they are not in, or everything they may see instead.",
     operationId: "listGroups",
     middleware: requireSession,
     // Required, so that an absent body cannot skip validation and lose the defaults.

@@ -30,7 +30,22 @@ async function createGroup(
   return await response.json();
 }
 
-type Page = { results: Array<{ title: string }>; totalResults: number };
+type Page = {
+  results: Array<{
+    id: string;
+    title: string;
+    status: string | null;
+    role: string | null;
+  }>;
+  totalResults: number;
+};
+
+/** The invitation tests need the id of the account being invited. */
+async function currentUserId(cookie: string): Promise<string> {
+  const response = await request("GET", "/api/auth/me", cookie);
+  assertEquals(response.status, STATUS_CODE.OK);
+  return (await response.json()).id;
+}
 
 async function list(cookie: string, body: unknown = {}): Promise<Page> {
   const response = await request("QUERY", "/api/groups", cookie, body);
@@ -132,11 +147,98 @@ Deno.test("QUERY /api/groups hides another user's private group", async () => {
   await createGroup(ownerCookie, SECOND_TITLE, "public");
 
   const outsiderCookie = await registerUser(outsider);
-  const page = await list(outsiderCookie, { limit: 100 });
+  // "any" is the widest this endpoint goes: everything the caller may look at.
+  const page = await list(outsiderCookie, { limit: 100, membership: "any" });
   const titles = page.results.map((group) => group.title);
 
   assertEquals(titles.includes(SECOND_TITLE), true);
   assertFalse(titles.includes(FIRST_TITLE));
+});
+
+Deno.test("QUERY /api/groups leaves out a public group the caller is not in", async () => {
+  const ownerCookie = await registerUser(owner);
+  await createGroup(ownerCookie, SECOND_TITLE, "public");
+
+  const outsiderCookie = await registerUser(outsider);
+  // The default is the caller's own groups. Being allowed to read a group is not belonging
+  // to it, which is what the old default conflated.
+  const page = await list(outsiderCookie, { limit: 100 });
+
+  assertFalse(page.results.map((group) => group.title).includes(SECOND_TITLE));
+});
+
+Deno.test("QUERY /api/groups reports the caller's own standing in each group", async () => {
+  const cookie = await registerUser(owner);
+  await createGroup(cookie, FIRST_TITLE, "private");
+
+  const [group] = (await list(cookie, { limit: 100 })).results;
+
+  // The founder joined their own group as its administrator.
+  assertEquals(group.status, "joined");
+  assertEquals(group.role, "administrator");
+});
+
+Deno.test("QUERY /api/groups separates an invitation from a membership", async () => {
+  const ownerCookie = await registerUser(owner);
+  const group = await createGroup(ownerCookie, FIRST_TITLE, "private");
+
+  const outsiderCookie = await registerUser(outsider);
+  const outsiderId = await currentUserId(outsiderCookie);
+
+  const invited = await request(
+    "POST",
+    `/api/groups/${group.id}/memberships`,
+    ownerCookie,
+    { userId: outsiderId, role: "writer" },
+  );
+  assertEquals(invited.status, STATUS_CODE.Created);
+
+  // An invitation is not a membership: it belongs in neither the rail nor "Meine Gruppen".
+  assertFalse(ownTitles(await list(outsiderCookie, { limit: 100 })).length > 0);
+
+  const pending = await list(outsiderCookie, {
+    limit: 100,
+    membership: "invited",
+  });
+  assertEquals(ownTitles(pending), [FIRST_TITLE]);
+  // The role being offered is stated while the invitation is pending; the status is what
+  // says it may not be acted on yet.
+  assertEquals(pending.results[0].status, "invited");
+  assertEquals(pending.results[0].role, "writer");
+});
+
+Deno.test("QUERY /api/groups discovers public groups the caller is not in", async () => {
+  const ownerCookie = await registerUser(owner);
+  await createGroup(ownerCookie, FIRST_TITLE, "private");
+  await createGroup(ownerCookie, SECOND_TITLE, "public");
+
+  const outsiderCookie = await registerUser(outsider);
+  const page = await list(outsiderCookie, { limit: 100, membership: "none" });
+
+  // Only the public one, and with no standing of their own in it.
+  assertEquals(ownTitles(page), [SECOND_TITLE]);
+  assertEquals(page.results[0].status, null);
+  assertEquals(page.results[0].role, null);
+
+  // The founder is in it, so it is not theirs to discover.
+  assertFalse(
+    ownTitles(await list(ownerCookie, { limit: 100, membership: "none" }))
+      .includes(SECOND_TITLE),
+  );
+});
+
+Deno.test("QUERY /api/groups rejects a membership filter it does not know", async () => {
+  const cookie = await registerUser(owner);
+
+  const response = await request("QUERY", "/api/groups", cookie, {
+    membership: "everything",
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assertEquals(
+    (await response.json()).issues.map((issue: { path: string }) => issue.path),
+    ["membership"],
+  );
 });
 
 Deno.test("QUERY /api/groups filters by a substring of the title", async () => {

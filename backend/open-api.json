@@ -700,7 +700,15 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "status": {
+                      "type": ["string", "null"],
+                      "enum": ["invited", "joined", null]
+                    },
+                    "role": {
+                      "type": ["string", "null"],
+                      "enum": ["administrator", "reader", "writer", null]
+                    }
                   },
                   "required": [
                     "id",
@@ -710,7 +718,9 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "status",
+                    "role"
                   ]
                 }
               }
@@ -845,8 +855,8 @@
       },
       "query": {
         "tags": ["groups"],
-        "summary": "List the groups visible to the current user",
-        "description": "Returns a page of the groups the current user may see: every public group, plus the private ones they belong to.",
+        "summary": "List groups, by default the current user's own",
+        "description": "Returns a page of groups, by default the ones the current user has joined. The membership filter selects invitations, public groups they are not in, or everything they may see instead.",
         "operationId": "listGroups",
         "requestBody": {
           "required": true,
@@ -876,6 +886,12 @@
                     "type": "string",
                     "enum": ["asc", "desc"],
                     "default": "desc"
+                  },
+                  "membership": {
+                    "type": "string",
+                    "enum": ["joined", "invited", "none", "any"],
+                    "default": "joined",
+                    "description": "Which groups relative to the caller: ones they have joined, ones they have been invited to, public ones they are not in, or everything they may see."
                   }
                 }
               }
@@ -915,7 +931,15 @@
                             "type": "string",
                             "format": "date-time"
                           },
-                          "createdByUsername": { "type": ["string", "null"] }
+                          "createdByUsername": { "type": ["string", "null"] },
+                          "status": {
+                            "type": ["string", "null"],
+                            "enum": ["invited", "joined", null]
+                          },
+                          "role": {
+                            "type": ["string", "null"],
+                            "enum": ["administrator", "reader", "writer", null]
+                          }
                         },
                         "required": [
                           "id",
@@ -925,7 +949,9 @@
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
-                          "createdByUsername"
+                          "createdByUsername",
+                          "status",
+                          "role"
                         ]
                       }
                     }
@@ -1101,7 +1127,15 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "status": {
+                      "type": ["string", "null"],
+                      "enum": ["invited", "joined", null]
+                    },
+                    "role": {
+                      "type": ["string", "null"],
+                      "enum": ["administrator", "reader", "writer", null]
+                    }
                   },
                   "required": [
                     "id",
@@ -1111,7 +1145,9 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "status",
+                    "role"
                   ]
                 }
               }
@@ -1328,7 +1364,15 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "status": {
+                      "type": ["string", "null"],
+                      "enum": ["invited", "joined", null]
+                    },
+                    "role": {
+                      "type": ["string", "null"],
+                      "enum": ["administrator", "reader", "writer", null]
+                    }
                   },
                   "required": [
                     "id",
@@ -1338,7 +1382,9 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "status",
+                    "role"
                   ]
                 }
               }
@@ -8367,6 +8413,19 @@
                               },
                               "createdByUsername": {
                                 "type": ["string", "null"]
+                              },
+                              "status": {
+                                "type": ["string", "null"],
+                                "enum": ["invited", "joined", null]
+                              },
+                              "role": {
+                                "type": ["string", "null"],
+                                "enum": [
+                                  "administrator",
+                                  "reader",
+                                  "writer",
+                                  null
+                                ]
                               }
                             },
                             "required": [
@@ -8377,7 +8436,9 @@
                               "createdBy",
                               "createdAt",
                               "lastActivityAt",
-                              "createdByUsername"
+                              "createdByUsername",
+                              "status",
+                              "role"
                             ]
                           }
                         }

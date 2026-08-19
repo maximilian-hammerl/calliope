@@ -24,7 +24,23 @@ const CREATED_BY_USERNAME = {
   createdByUsername: z.string().nullable(),
 };
 
-export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA.extend(CREATED_BY_USERNAME);
+/**
+ * A group plus the reader's own standing in it, the way a chat already reports it. Without
+ * this the interface cannot tell a group somebody belongs to from a public one they have
+ * merely stumbled on, and has to read its own role out of the member list.
+ *
+ * Both are null for a public group the reader is not part of. Role is stated even while an
+ * invitation is pending, because the invitation names the role being offered — whether it
+ * may be acted on is decided by the status, never by the role alone.
+ */
+const OWN_MEMBERSHIP = {
+  status: USER_IN_WRITING_GROUP_SCHEMA.shape.status.nullable(),
+  role: USER_IN_WRITING_GROUP_SCHEMA.shape.role.nullable(),
+};
+
+export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
+  .extend(CREATED_BY_USERNAME)
+  .extend(OWN_MEMBERSHIP);
 
 export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
   CREATED_BY_USERNAME,

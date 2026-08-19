@@ -191,6 +191,24 @@ Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bild
 Editor einklappen · Editor ausklappen · Gruppen-Kontext · Gruppe bearbeiten ·
 Änderungen speichern · Entfernen · Einladung zurückziehen.
 
+**„Meine Gruppen" means the ones you belong to.** Being allowed to read a public group is not
+belonging to it, and a list that mixes the two answers neither question — a member seeing three
+entries could not tell which were theirs. So the page and the rail both show joined groups only,
+public ones the member is not in live under **Gruppen entdecken**, and pending invitations are a
+section above the heading on Meine Gruppen. Three lists, one question each.
+
+**An invitation is answered where it is found.** It carries Beitreten and Ablehnen both in that
+section and on the group's own page, because deciding about three invitations should not be three
+visits, and because the notification leads to the group rather than to the list. Declining is the
+same act as leaving — both end with no membership — and returns the member to Meine Gruppen, since
+a declined private group stops being readable. Invitations stay out of the left rail: the rail is
+what you are in.
+
+**Discovery states what it does not offer.** A public group can be read by anyone but joined only
+by invitation, so its row offers "Gruppe ansehen" and the page says so in words — "Mitlesen kannst
+du sofort; mitschreiben, sobald dich jemand einlädt." A "Beitreten" button that would fail is
+worse than no button.
+
 **A pending invitation is a state, not a member.** It reads "· eingeladen" after the role, and
 a member count counts only those who have joined — an invitation is not yet a person in the
 group. Withdrawing one is "Einladung zurückziehen", never "Entfernen": nothing is being taken
@@ -389,6 +407,9 @@ needs it. Each is marked so nobody mistakes it for tested ground:
 - `Avatar`, `Label`, `PanelCard` — extracted as primitives from patterns that repeat in the mockup.
 - Lucide as the icon set, at 1.5px stroke — anticipated by this document, adopted once the
   unicode marks proved to be missing from all three fonts.
+- **Gruppen entdecken** as its own destination, and the Einladungen section above Meine Gruppen.
+  The mockups show one list of groups; one list cannot be "mine", "on offer" and "out there" at
+  once, and the accepted design predates there being invitations to answer at all.
 - `Pencil` for editing, and the member-management section on the group page (invite, remove,
   withdraw an invitation). The mockups show members only as the rail's read-only list; a group
   whose membership cannot be changed is not a usable product. "Gruppe bearbeiten" sits on the

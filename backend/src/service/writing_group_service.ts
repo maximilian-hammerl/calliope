@@ -3,6 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
   UserInWritingGroupRole,
+  UserInWritingGroupStatus,
   WritingGroup as DatabaseWritingGroup,
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
@@ -26,7 +27,21 @@ export type WritingGroup =
     | "lastActivityAt"
   >
   // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
-  & { createdByUsername: string | null };
+  & { createdByUsername: string | null }
+  // The reader's own standing, null for a public group they are not part of.
+  & {
+    status: UserInWritingGroupStatus | null;
+    role: UserInWritingGroupRole | null;
+  };
+
+/**
+ * Which groups a list is asking for, relative to the reader.
+ *
+ * `joined` is the default because "Meine Gruppen" means the ones somebody belongs to. The
+ * older behaviour — every public group plus your own — is `any`, which is right for a search
+ * across everything and wrong for a list called mine.
+ */
+export type MembershipFilter = "joined" | "invited" | "none" | "any";
 
 const SELECTED_COLUMNS = [
   "writingGroup.id",
@@ -66,7 +81,14 @@ async function insertWritingGroup(
       })
       .execute();
 
-    return { ...writingGroup, createdByUsername: creator.username };
+    // The membership was just written in this transaction, so it is stated rather than
+    // re-read: the founder joined their own group as its administrator.
+    return {
+      ...writingGroup,
+      createdByUsername: creator.username,
+      status: "joined",
+      role: "administrator",
+    };
   });
 }
 
@@ -97,24 +119,53 @@ function visibleToUser(user: User) {
 /** The author's name is joined in rather than stored, so it follows a rename. */
 const AUTHOR_COLUMN = "user.username as createdByUsername" as const;
 
+/**
+ * Null whenever the left join found no membership, which is exactly the case the interface
+ * needs to tell apart: a public group the reader has merely come across.
+ */
+const OWN_MEMBERSHIP_COLUMNS = [
+  "userInWritingGroup.status",
+  "userInWritingGroup.role",
+] as const;
+
 /** Returns nothing when the group does not exist or is private and not the user's. */
 async function selectVisibleWritingGroup(
   user: User,
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
-    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
+    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
     .where("writingGroup.id", "=", writingGroupId)
     .executeTakeFirst();
 }
 
 function listVisibleWritingGroups(
   user: User,
-  query: ListQuery,
+  query: ListQuery & { membership: MembershipFilter },
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
     visibleToUser(user)
-      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
+      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+      // Narrows what visibleToUser allows; it never widens it, so a private group the reader
+      // has nothing to do with stays out however this is set. One $if per value rather than
+      // one clever one: the status literals then type themselves, and "any" is simply the
+      // case that matches none of them.
+      .$if(
+        query.membership === "none",
+        // A public group the reader has no membership row for at all.
+        (queryBuilder) =>
+          queryBuilder.where("userInWritingGroup.userId", "is", null),
+      )
+      .$if(
+        query.membership === "invited",
+        (queryBuilder) =>
+          queryBuilder.where("userInWritingGroup.status", "=", "invited"),
+      )
+      .$if(
+        query.membership === "joined",
+        (queryBuilder) =>
+          queryBuilder.where("userInWritingGroup.status", "=", "joined"),
+      )
       // Title and description both, since a group is as often remembered by what it is
       // about as by what it is called.
       .$if(
@@ -201,11 +252,19 @@ async function updateWritingGroup(
       );
     }
 
-    // Re-read rather than RETURNING, which cannot reach the joined author name.
+    // Re-read rather than RETURNING, which cannot reach the joined author name — nor the
+    // editor's own membership, which the response carries like every other group does.
     return await transaction
       .selectFrom("writingGroup")
       .leftJoin("user", "user.id", "writingGroup.createdBy")
-      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN])
+      .leftJoin(
+        "userInWritingGroup",
+        (join) =>
+          join
+            .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+            .on("userInWritingGroup.userId", "=", changedBy),
+      )
+      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
       .where("writingGroup.id", "=", updated.id)
       .executeTakeFirstOrThrow();
   });

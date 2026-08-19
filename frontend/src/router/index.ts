@@ -16,6 +16,13 @@ const router = createRouter({
       name: 'groups',
       component: () => import('../views/GroupsView.vue'),
     },
+    // Before the dynamic route only for reading order — vue-router ranks a static segment
+    // above a parameter regardless of where it is declared.
+    {
+      path: '/groups/discover',
+      name: 'discover',
+      component: () => import('../views/DiscoverView.vue'),
+    },
     {
       path: '/groups/:groupId',
       name: 'group',
