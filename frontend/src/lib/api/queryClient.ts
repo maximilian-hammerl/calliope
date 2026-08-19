@@ -51,10 +51,13 @@ export function setSessionLostHandler(handler: () => void): void {
 
 /**
  * Operations whose 401 is an answer rather than a failure: signing in, registering, signing
- * out, re-authenticating to change an address, and the guard's own session check.
+ * out, the two that re-authenticate with the current password, and the guard's own session
+ * check.
  *
- * Leaving one out is not a small bug. A wrong password at `requestEmailAddressChange` came back 401,
- * was read as a lost session, and signed the member out mid-form.
+ * Leaving one out is not a small bug, and it hides well. A wrong password comes back 401, is
+ * read as a lost session, and replaces the member onto the home page — dialog closed, whatever
+ * they typed gone. The session itself survives, so it does not look like being signed out, and
+ * from the home page the redirect lands where they already are and nothing appears to happen.
  *
  * Discriminating on the current route instead does not work — during a navigation the router
  * still reports the route being *left*, so the guard's 401 on the sign-in page looks like a
@@ -66,6 +69,7 @@ const EXPECTED_401_MUTATIONS = new Set([
   'registerUser',
   'logoutUser',
   'requestEmailAddressChange',
+  'changePassword',
 ])
 
 /** Taken from the generated client rather than written out, so a path change follows. */
