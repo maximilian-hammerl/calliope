@@ -104,9 +104,23 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  // A failed check cannot be told apart from a signed-out visitor here, so an outage or a
-  // rate limit also lands on the login view rather than blocking navigation outright.
-  const user = await fetchCurrentUser().catch(() => undefined)
+  let user: Awaited<ReturnType<typeof fetchCurrentUser>>
+
+  try {
+    user = await fetchCurrentUser()
+  } catch {
+    /**
+     * The check itself failed, which is not the same as there being no session — during a
+     * deploy the cookie is still perfectly good. Sending somebody to the sign-in page here
+     * would throw them off their page over an outage that lasts seconds, so the navigation
+     * is allowed and the connection notice covers the app until the API answers again.
+     *
+     * Nothing is exposed by letting it through: every request the page makes needs the
+     * cookie, and if it turns out there is no session the first 401 hands over to
+     * `setSessionLostHandler` below.
+     */
+    return true
+  }
 
   // Bound rather than switched on inline, so TypeScript narrows it to `never` in the default
   // branch and a fourth kind of access cannot be added without handling it here.

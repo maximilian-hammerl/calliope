@@ -1,6 +1,39 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/vue-query'
+import { ref } from 'vue'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
 import { ApiError } from './apiFetch'
+
+/**
+ * Whether the API answered at all, last time anything asked it. False during a deploy or a
+ * restart, which the interface shows rather than letting every page fail on its own.
+ *
+ * This is the one place that already sees every query and every mutation, so it is where the
+ * question is cheapest to answer honestly.
+ */
+export const backendReachable = ref<boolean>(true)
+
+/**
+ * Only the reverse proxy failing to reach the application counts. Caddy answers 502 when
+ * nothing is listening on the backend — verified against a stopped container — and 504 when
+ * it connects but gets no reply in time.
+ *
+ * Not every 5xx: a 500 or a 501 was produced by the application itself, which means it is
+ * running and something in it went wrong. That is a different problem, it will not fix itself
+ * by waiting, and dressing it up as "no connection" would hide a real fault behind a
+ * reconnection notice. 503 is excluded for the same reason — here it comes from this API's own
+ * health check reporting an unreachable database, not from the proxy.
+ *
+ * A rejected fetch has no status at all — nothing listening, DNS, TLS, the whole stack down —
+ * and surfaces as a `TypeError`.
+ */
+const GATEWAY_FAILURE_STATUSES: ReadonlySet<number> = new Set([502, 504])
+
+function isUnreachable(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return GATEWAY_FAILURE_STATUSES.has(error.status)
+  }
+  return error instanceof TypeError
+}
 
 /**
  * Called when a request comes back 401 that was not *asking* whether there is a session,
@@ -49,6 +82,8 @@ function isExpected(key: readonly unknown[] | undefined): boolean {
 }
 
 function handleError(error: unknown, key: readonly unknown[] | undefined): void {
+  backendReachable.value = !isUnreachable(error)
+
   if (error instanceof ApiError && error.status === 401 && !isExpected(key)) {
     onSessionLost?.()
   }
@@ -61,10 +96,17 @@ function handleError(error: unknown, key: readonly unknown[] | undefined): void 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => handleError(error, query.queryKey),
+    // Any answer at all means the API is back, which is what clears the connection notice.
+    onSuccess: () => {
+      backendReachable.value = true
+    },
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) =>
       handleError(error, mutation.options.mutationKey),
+    onSuccess: () => {
+      backendReachable.value = true
+    },
   }),
   defaultOptions: {
     queries: {
