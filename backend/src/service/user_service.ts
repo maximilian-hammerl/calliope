@@ -15,7 +15,7 @@ import type {
 
 export type User = Pick<
   Selectable<DatabaseUser>,
-  "id" | "username" | "emailAddress"
+  "id" | "username" | "emailAddress" | "emailVerifiedAt"
 >;
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
@@ -57,7 +57,7 @@ async function insertUser(
       emailAddress,
     })
     .onConflict((oc) => oc.doNothing())
-    .returning(["id", "username", "emailAddress"])
+    .returning(["id", "username", "emailAddress", "emailVerifiedAt"])
     .executeTakeFirst();
 }
 
@@ -67,7 +67,13 @@ async function selectUser(
 ): Promise<User | undefined> {
   const user = await db
     .selectFrom("user")
-    .select(["id", "username", "emailAddress", "hashedPassword"])
+    .select([
+      "id",
+      "username",
+      "emailAddress",
+      "emailVerifiedAt",
+      "hashedPassword",
+    ])
     // Addresses are stored lower-cased by the register route, so the comparison has to
     // match that or a differently cased address would never be found.
     .where((eb) =>
@@ -93,6 +99,7 @@ async function selectUser(
     id: user.id,
     username: user.username,
     emailAddress: user.emailAddress,
+    emailVerifiedAt: user.emailVerifiedAt,
   };
 }
 
@@ -153,7 +160,7 @@ async function selectUserForSession(
 
   return await db
     .selectFrom("user")
-    .select(["id", "username", "emailAddress"])
+    .select(["id", "username", "emailAddress", "emailVerifiedAt"])
     .where("id", "=", databaseUserSession.userId)
     .executeTakeFirst();
 }

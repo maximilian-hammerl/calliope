@@ -7,6 +7,7 @@ import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service
 import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
 import { CHAT_GROUP_SCHEMA } from "@/src/database/schema.ts";
@@ -35,6 +36,7 @@ const accept = new OpenAPIHono().openapi(
         description: "No invitation to accept",
         content: jsonContent(ERROR_RESPONSE),
       },
+      ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },
   }),
@@ -78,6 +80,7 @@ const leave = new OpenAPIHono().openapi(
         description: "Not in that chat",
         content: jsonContent(ERROR_RESPONSE),
       },
+      ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },
   }),

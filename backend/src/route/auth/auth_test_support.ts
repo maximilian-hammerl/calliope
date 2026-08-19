@@ -1,5 +1,7 @@
 import { assertExists } from "@std/assert";
 import app from "@/src/app.ts";
+import { flushBackgroundWork } from "@/src/util/background.ts";
+import { deleteAllMail } from "@/src/mail/mailpit_test_support.ts";
 
 /**
  * What the auth tests share. They cannot use `test_support.ts`'s `registerUser` and `request`,
@@ -12,9 +14,14 @@ export const username = "route-test-user";
 export const password = "a-complex-password";
 export const emailAddress = "route-test-user@example.com";
 
-export function postJson(path: string, body?: unknown, cookie?: string) {
+export function sendJson(
+  method: string,
+  path: string,
+  body?: unknown,
+  cookie?: string,
+) {
   return app.request(path, {
-    method: "POST",
+    method,
     headers: {
       "content-type": "application/json",
       ...(cookie === undefined ? {} : { cookie }),
@@ -22,6 +29,9 @@ export function postJson(path: string, body?: unknown, cookie?: string) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }
+
+export const postJson = (path: string, body?: unknown, cookie?: string) =>
+  sendJson("POST", path, body, cookie);
 
 export const register = () =>
   postJson("/api/auth/register", { username, password, emailAddress });
@@ -31,4 +41,16 @@ export function sessionCookie(response: Response): string {
   const setCookie = response.headers.get("set-cookie");
   assertExists(setCookie, "expected the response to set a session cookie");
   return setCookie.split(";")[0];
+}
+
+/**
+ * Registers, then drops the verification mail registering sends. Both mails go to the same
+ * address, so a test asserting on messages would otherwise count — or read the link out of —
+ * the wrong one.
+ */
+export async function registerAndDiscardVerificationMail(): Promise<Response> {
+  const response = await register();
+  await flushBackgroundWork();
+  await deleteAllMail();
+  return response;
 }

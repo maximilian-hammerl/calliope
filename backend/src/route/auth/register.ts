@@ -5,6 +5,7 @@ import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
+import { EmailVerificationService } from "@/src/service/email_verification_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -70,8 +71,12 @@ export default new OpenAPIHono().openapi(
       );
     }
 
+    // A session is started even though the address is unverified: without one there is no
+    // way back in to correct a typo, and the account would be orphaned by a single slip.
     const sessionToken = await UserService.insertSessionForUser(user);
     SessionCookieService.setUserSession(c, sessionToken);
+
+    EmailVerificationService.sendVerificationMail(user);
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

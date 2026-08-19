@@ -11,9 +11,11 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 
 ## Seed data
 
-`deno task db:seed` fills a local database with a fixed fixture: four accounts sharing the
+`deno task db:seed` fills a local database with a fixed fixture: five accounts sharing the
 password `calliope`, a private and a public group, every membership state, threads with posts
-and one unpublished draft, a chat with messages, and the notifications the invitations imply.
+and one unpublished draft, a chat with messages, and the notifications the invitations imply. A fifth account, `unverified`, has no confirmed
+address and so reaches nothing but the verification wall — that screen is otherwise only
+reachable by registering by hand and digging the link out of Mailpit.
 It prints the accounts and the URLs when it finishes.
 
 Three things about it are deliberate:
@@ -359,10 +361,42 @@ said. Three things about it are load-bearing:
   same words is one more thing to keep in step, and the clients that prefer it are the ones
   most likely to rewrite the link.
 
+## Verifying an address
+
+Registering leaves `user.email_verified_at` null and starts a session anyway. That session is
+the point: without one there is no way back in to correct a mistyped address, and a single
+slip at registration would orphan the account for good.
+
+**Gating is the default, not an opt-in.** `require_session.ts` refuses an unverified member
+with **403** — the session is fine, so 401 would send them back to the sign-in page they came
+from. The four routes somebody needs *in order to* verify use
+`require_session_allowing_unverified_email.ts` instead: reading who they are, signing out,
+resending, and correcting the address. Choosing nothing gets the strict one, so a forgotten
+route fails closed. Both share `session_user.ts`, so how a session is read cannot drift
+between them.
+
+Every gated route therefore declares 403. Where the route has no reason of its own it spreads
+`FORBIDDEN_RESPONSE`; the twenty-four that refuse for their own reasons keep their own, more
+specific description.
+
+**Changing a verified address is a different feature.** `changeUnverifiedEmailAddress` exists
+to fix a typo before anything has been proven, and it must never touch an address that has.
+Three things enforce that and the last is the real guarantee: the route checks, the service
+checks, and the `UPDATE` itself carries `email_verified_at IS NULL`. A test proves the
+database guard alone still refuses with the service check removed — because a stolen session
+that could move the account to another inbox is an account takeover, not a papercut. Changing
+a proven address has to notify the old one and offer an undo, and that is not built.
+
+Correcting the address also deletes the outstanding token, or whoever received the mistyped
+mail could still confirm somebody else's account.
+
 ## Tokens in links
 
 `user_token` is one table for every link mailed to a member, keyed by a `purpose` enum —
-`password_reset` today, verifying and changing an address later. The purpose is stored rather
+`password_reset` and `email_verification`, with changing a verified address still to come.
+`user_token_service.ts` owns the mechanics both flows share, including the one lifetime and
+the one resend cooldown; the flows themselves only decide what a spent token authorises.
+Consuming takes the caller's transaction, so the token and what it unlocks commit together. The purpose is stored rather
 than implied so a token issued for one thing cannot be spent on another.
 
 Tokens are hashed with `util/token.ts`, which also owns the transport format: `formatToken`

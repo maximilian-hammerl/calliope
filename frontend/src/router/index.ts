@@ -70,6 +70,21 @@ const router = createRouter({
       component: () => import('../views/ResetPasswordView.vue'),
       meta: { access: 'anyone' },
     },
+    // Same reasoning as the reset link: a verification link is often opened in a different
+    // browser from the one that registered.
+    {
+      path: '/verify-email',
+      name: 'verifyEmail',
+      component: () => import('../views/VerifyEmailView.vue'),
+      meta: { access: 'anyone' },
+    },
+    // Where a signed-in member with an unconfirmed address is held. An ordinary member route
+    // — it needs a session — and the guard below keeps everyone else off it.
+    {
+      path: '/verify-email-required',
+      name: 'verifyEmailRequired',
+      component: () => import('../views/VerifyEmailRequiredView.vue'),
+    },
   ],
 })
 
@@ -81,6 +96,21 @@ router.beforeEach(async (to) => {
   // Bound rather than switched on inline, so TypeScript narrows it to `never` in the default
   // branch and a fourth kind of access cannot be added without handling it here.
   const access = to.meta.access ?? 'member'
+
+  // Verification is orthogonal to access: `access` asks whether there is a session, this asks
+  // what state that session's account is in. Only member routes are affected — a verification
+  // link has to work signed out, and the wall itself would otherwise redirect to itself.
+  if (user !== undefined && access === 'member') {
+    const addressIsUnconfirmed = user.emailVerifiedAt === null
+
+    if (addressIsUnconfirmed && to.name !== 'verifyEmailRequired') {
+      return { name: 'verifyEmailRequired' }
+    }
+
+    if (!addressIsUnconfirmed && to.name === 'verifyEmailRequired') {
+      return { name: 'home' }
+    }
+  }
 
   switch (access) {
     case 'member':

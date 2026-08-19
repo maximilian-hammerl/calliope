@@ -9,6 +9,7 @@ import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
 import {
@@ -48,6 +49,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       ...BAD_REQUEST_RESPONSE,
+      ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },
   }),

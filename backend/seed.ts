@@ -37,6 +37,7 @@ const USER = {
   annelie: id("a2"),
   tomas: id("a3"),
   bernadette: id("a4"),
+  unverified: id("a5"),
 } as const;
 
 const GROUP = { market: id("b1"), workshop: id("b2") } as const;
@@ -101,14 +102,26 @@ async function removePreviousSeed(): Promise<void> {
 async function seed(): Promise<void> {
   const hashedPassword = await hashPassword(PASSWORD);
 
+  // Verified, because every gated route refuses an unverified member and the fixture is
+  // meant for working on everything else. `unverified` below is the one exception.
   await db.insertInto("user").values(
     (["mira", "annelie", "tomas", "bernadette"] as const).map((name) => ({
       id: USER[name],
       username: name,
       emailAddress: `${name}@example.test`,
       hashedPassword,
+      emailVerifiedAt: Temporal.Now.instant().toString(),
     })),
   ).execute();
+
+  // Reaches the verification wall and nothing else, so that screen can be worked on without
+  // registering by hand and digging the link out of Mailpit each time.
+  await db.insertInto("user").values({
+    id: USER.unverified,
+    username: "unverified",
+    emailAddress: "unverified@example.test",
+    hashedPassword,
+  }).execute();
 
   await db.insertInto("writingGroup").values([
     {
@@ -274,6 +287,7 @@ console.log(`Seeded. Every account's password is "${PASSWORD}".
   annelie      writer in Der Erinnerungsmarkt, in the chat
   tomas        reader in Der Erinnerungsmarkt, invited to the chat
   bernadette   invited to Der Erinnerungsmarkt, has not accepted
+  unverified   address not confirmed, so only the verification wall is reachable
 
   /groups/${GROUP.market}
   /groups/${GROUP.market}/threads/${THREAD.plot}

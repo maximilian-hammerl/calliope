@@ -10,7 +10,7 @@ import {
 import {
   emailAddress,
   postJson,
-  register,
+  registerAndDiscardVerificationMail,
   username,
 } from "./auth_test_support.ts";
 
@@ -24,7 +24,7 @@ const forgotPassword = (login: string) =>
   postJson("/api/auth/forgot-password", { login });
 
 Deno.test("POST /api/auth/forgot-password mails a link to a registered address", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   const response = await forgotPassword(emailAddress);
   assertEquals(response.status, STATUS_CODE.OK);
@@ -40,7 +40,7 @@ Deno.test("POST /api/auth/forgot-password mails a link to a registered address",
 });
 
 Deno.test("POST /api/auth/forgot-password answers the same way for an unknown address", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   const response = await forgotPassword("nobody-has-this@example.com");
 
@@ -54,7 +54,7 @@ Deno.test("POST /api/auth/forgot-password answers the same way for an unknown ad
 });
 
 Deno.test("POST /api/auth/forgot-password matches the address in any case", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   const response = await forgotPassword(emailAddress.toUpperCase());
   assertEquals(response.status, STATUS_CODE.OK);
@@ -64,7 +64,7 @@ Deno.test("POST /api/auth/forgot-password matches the address in any case", asyn
 });
 
 Deno.test("POST /api/auth/forgot-password also takes the username", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   // Whoever cannot sign in may not remember which of the two they registered with; the mail
   // still goes to the address on the account either way.
@@ -76,7 +76,7 @@ Deno.test("POST /api/auth/forgot-password also takes the username", async () => 
 });
 
 Deno.test("POST /api/auth/forgot-password sends only one link within the cooldown", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   await forgotPassword(emailAddress);
   await flushBackgroundWork();

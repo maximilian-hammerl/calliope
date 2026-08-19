@@ -6,14 +6,14 @@ import { clearRateLimits, deleteUsers } from "@/src/test_support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import {
   deleteAllMail,
-  tokenFromResetMail,
+  tokenFromMail,
   waitForMail,
 } from "@/src/mail/mailpit_test_support.ts";
 import {
   emailAddress,
   password,
   postJson,
-  register,
+  registerAndDiscardVerificationMail,
   sessionCookie,
   username,
 } from "./auth_test_support.ts";
@@ -30,7 +30,7 @@ const newPassword = "an-entirely-different-password";
 async function requestResetToken(): Promise<string> {
   await postJson("/api/auth/forgot-password", { login: emailAddress });
   await flushBackgroundWork();
-  return tokenFromResetMail(await waitForMail(emailAddress));
+  return tokenFromMail(await waitForMail(emailAddress));
 }
 
 const resetPassword = (token: string, to: string) =>
@@ -40,7 +40,7 @@ const login = (withPassword: string) =>
   postJson("/api/auth/login", { login: username, password: withPassword });
 
 Deno.test("POST /api/auth/reset-password replaces the password", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
   const response = await resetPassword(token, newPassword);
@@ -53,7 +53,7 @@ Deno.test("POST /api/auth/reset-password replaces the password", async () => {
 });
 
 Deno.test("POST /api/auth/reset-password ends every existing session", async () => {
-  const cookie = sessionCookie(await register());
+  const cookie = sessionCookie(await registerAndDiscardVerificationMail());
 
   // The session works before the reset, so the assertion afterwards fails for the right
   // reason rather than because the cookie was never valid.
@@ -71,7 +71,7 @@ Deno.test("POST /api/auth/reset-password ends every existing session", async () 
 });
 
 Deno.test("POST /api/auth/reset-password spends the token exactly once", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
   assertEquals(
@@ -87,7 +87,7 @@ Deno.test("POST /api/auth/reset-password spends the token exactly once", async (
 });
 
 Deno.test("POST /api/auth/reset-password rejects an expired token", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
   await db
@@ -106,7 +106,7 @@ Deno.test("POST /api/auth/reset-password rejects an expired token", async () => 
 });
 
 Deno.test("POST /api/auth/reset-password rejects an unknown token", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   const response = await resetPassword(
     "not-a-token-anyone-issued",
@@ -118,7 +118,7 @@ Deno.test("POST /api/auth/reset-password rejects an unknown token", async () => 
 });
 
 Deno.test("POST /api/auth/reset-password rejects a real id with the wrong secret", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
   const [id] = token.split(".");
 
@@ -131,7 +131,7 @@ Deno.test("POST /api/auth/reset-password rejects a real id with the wrong secret
 });
 
 Deno.test("POST /api/auth/reset-password rejects a malformed token", async () => {
-  await register();
+  await registerAndDiscardVerificationMail();
 
   // The id reaches a uuid column, so this must be a miss rather than a database error.
   const response = await resetPassword(

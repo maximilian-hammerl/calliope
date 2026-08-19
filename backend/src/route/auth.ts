@@ -1,10 +1,13 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import changeEmailAddress from "./auth/change_email_address.ts";
 import forgotPassword from "./auth/forgot_password.ts";
 import login from "./auth/login.ts";
 import logout from "./auth/logout.ts";
 import me from "./auth/me.ts";
 import register from "./auth/register.ts";
+import resendVerification from "./auth/resend_verification.ts";
 import resetPassword from "./auth/reset_password.ts";
+import verifyEmail from "./auth/verify_email.ts";
 
 export default new OpenAPIHono()
   .route("/", register)
@@ -12,4 +15,7 @@ export default new OpenAPIHono()
   .route("/", logout)
   .route("/", me)
   .route("/", forgotPassword)
-  .route("/", resetPassword);
+  .route("/", resetPassword)
+  .route("/", verifyEmail)
+  .route("/", resendVerification)
+  .route("/", changeEmailAddress);

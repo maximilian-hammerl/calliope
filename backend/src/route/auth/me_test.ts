@@ -24,6 +24,7 @@ Deno.test("GET /api/auth/me reports the signed-in user", async () => {
   // The password hash must not leak through the response schema.
   assertEquals(Object.keys(body).toSorted(), [
     "emailAddress",
+    "emailVerifiedAt",
     "id",
     "unreadNotifications",
     "username",

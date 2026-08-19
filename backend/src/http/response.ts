@@ -45,6 +45,18 @@ export const COMMON_RESPONSES = {
   },
 } as const;
 
+/**
+ * Returned by the session middleware when the address behind an otherwise good session has
+ * not been verified. Routes that also refuse for a reason of their own declare their own 403
+ * with a description saying which, and do not spread this.
+ */
+export const FORBIDDEN_RESPONSE = {
+  [STATUS_CODE.Forbidden]: {
+    description: "Email address not verified",
+    content: jsonContent(ERROR_RESPONSE),
+  },
+} as const;
+
 /** Returned by the validator whenever a request fails its schema. */
 export const BAD_REQUEST_RESPONSE = {
   [STATUS_CODE.BadRequest]: {

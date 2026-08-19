@@ -5,7 +5,13 @@ import { db } from "./database/client.ts";
 import { redis } from "./redis/client.ts";
 import { RATE_LIMIT_KEY_PREFIX } from "./middleware/rate_limit.ts";
 
-/** Registers a user and returns the session cookie to send back on later requests. */
+/**
+ * Registers a user, confirms their address, and returns the session cookie.
+ *
+ * The confirmation is part of the fixture because almost every test is about something else,
+ * and an unverified member is refused by every gated route. Tests that are *about* verification
+ * register through the app by hand instead — see `route/auth/`.
+ */
 export async function registerUser(username: string): Promise<string> {
   const response = await app.request("/api/auth/register", {
     method: "POST",
@@ -19,6 +25,13 @@ export async function registerUser(username: string): Promise<string> {
 
   const setCookie = response.headers.get("set-cookie");
   assertExists(setCookie, `could not register ${username}`);
+
+  await db
+    .updateTable("user")
+    .set({ emailVerifiedAt: Temporal.Now.instant().toString() })
+    .where("username", "=", username)
+    .execute();
+
   return setCookie.split(";")[0];
 }
 

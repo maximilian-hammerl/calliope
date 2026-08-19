@@ -63,8 +63,8 @@ export async function waitForMail(address: string): Promise<ReceivedMail> {
   }, { minTimeout: 20, maxAttempts: 8 });
 }
 
-/** The reset link is the only URL in the message, so this cannot pick up the wrong one. */
-export function tokenFromResetMail(mail: ReceivedMail): string {
+/** The link is the only URL in these messages, so this cannot pick up the wrong one. */
+export function tokenFromMail(mail: ReceivedMail): string {
   const link = mail.text.match(/https?:\/\/\S+/)?.[0];
 
   if (link === undefined) {

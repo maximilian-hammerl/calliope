@@ -6,6 +6,7 @@ import { NotificationService } from "@/src/service/notification_service.ts";
 import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
 
@@ -30,6 +31,7 @@ export default new OpenAPIHono().openapi(
         description: "No valid session",
         content: jsonContent(ERROR_RESPONSE),
       },
+      ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },
   }),
