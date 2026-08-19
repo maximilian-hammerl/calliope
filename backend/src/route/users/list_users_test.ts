@@ -1,4 +1,4 @@
-import { assertEquals, assertFalse } from "@std/assert";
+import { assertEquals, assertExists, assertFalse } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import {
   clearRateLimits,
@@ -55,7 +55,9 @@ Deno.test("QUERY /api/users ignores case", async () => {
   const page = await searchOk(cookie, { search: "QUENYA" });
 
   assertEquals(page.totalResults, 1);
-  assertEquals(page.results[0].username, findable);
+  const [found] = page.results;
+  assertExists(found);
+  assertEquals(found.username, findable);
 });
 
 Deno.test("QUERY /api/users returns the id and username only", async () => {
@@ -66,7 +68,9 @@ Deno.test("QUERY /api/users returns the id and username only", async () => {
 
   // Spelled out rather than checked for absence, so a column added to the table later
   // fails this instead of quietly joining the response.
-  assertEquals(Object.keys(page.results[0]).sort(), ["id", "username"]);
+  const [found] = page.results;
+  assertExists(found);
+  assertEquals(Object.keys(found).sort(), ["id", "username"]);
 });
 
 Deno.test("QUERY /api/users treats a wildcard as a literal character", async () => {

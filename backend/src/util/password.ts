@@ -86,11 +86,21 @@ export async function verifyPassword(
   stored: string,
 ): Promise<boolean> {
   const parts = stored.split("$");
-  if (parts.length !== 6 || parts[0] !== ALGORITHM) {
+  const [algorithm, cost, blockSize, parallelisation, salt, hash] = parts;
+
+  // The length check is what makes the five below defined, but indexing a string[] cannot
+  // say so, hence each one again.
+  if (
+    parts.length !== 6 ||
+    algorithm !== ALGORITHM ||
+    cost === undefined ||
+    blockSize === undefined ||
+    parallelisation === undefined ||
+    salt === undefined ||
+    hash === undefined
+  ) {
     return false;
   }
-
-  const [, cost, blockSize, parallelisation, salt, hash] = parts;
   const parameters = {
     cost: Number(cost),
     blockSize: Number(blockSize),

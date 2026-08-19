@@ -52,7 +52,7 @@ async function listMessages(
 
   return {
     results,
-    nextCursor: rows.length > limit ? results[results.length - 1].id : null,
+    nextCursor: rows.length > limit ? results.at(-1)?.id ?? null : null,
   };
 }
 

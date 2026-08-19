@@ -36,7 +36,7 @@ export async function registerUser(username: string): Promise<string> {
     .where("username", "=", username)
     .execute();
 
-  return setCookie.split(";")[0];
+  return setCookie.split(";")[0] ?? setCookie;
 }
 
 export async function request(

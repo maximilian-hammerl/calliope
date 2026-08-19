@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import {
   addMember,
@@ -69,6 +69,7 @@ Deno.test("a new thread tells the group but not its author", async () => {
       await notificationsOf(cookie),
       "new_writing_thread",
     );
+    assertExists(notification);
     assertEquals(notification.actorUsername, writer);
   }
   assertEquals(
@@ -174,7 +175,9 @@ Deno.test("a role change tells the member, and twice leaves one notification", a
     1,
     "a role is a state, not a series of occurrences",
   );
-  assertEquals(changes[0].actorUsername, administrator);
+  const [change] = changes;
+  assertExists(change);
+  assertEquals(change.actorUsername, administrator);
 });
 
 Deno.test("an administrator changing their own role is not told about it", async () => {
@@ -237,6 +240,7 @@ Deno.test("turning a group public tells its members, not the administrator", asy
     await notificationsOf(writerCookie),
     "visibility_changed_in_writing_group",
   );
+  assertExists(notification);
   assertEquals(notification.actorUsername, administrator);
   assertEquals(
     ofType(
@@ -305,6 +309,7 @@ Deno.test("accepting an invitation tells whoever sent it", async () => {
     await notificationsOf(adminCookie),
     "invitation_accepted",
   );
+  assertExists(notification);
   assertEquals(notification.actorUsername, writer);
   // The person accepting is not told about their own doing.
   assertEquals(

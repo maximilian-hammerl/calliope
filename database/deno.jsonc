@@ -30,6 +30,14 @@
   },
   // The full set, unlike backend/: no Kysely builders here and no German, so the five it
   // leaves out all pass.
+  "compilerOptions": {
+    "noErrorTruncation": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true
+  },
   "lint": {
     "rules": {
       "tags": ["recommended"],

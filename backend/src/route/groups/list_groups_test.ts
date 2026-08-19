@@ -1,4 +1,4 @@
-import { assertEquals, assertFalse } from "@std/assert";
+import { assertEquals, assertExists, assertFalse } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import {
   clearRateLimits,
@@ -88,7 +88,9 @@ Deno.test("QUERY /api/groups applies its defaults to an empty body", async () =>
   const page = await list(cookie, {});
 
   assertEquals(page.results.length <= 20, true);
-  assertEquals(page.results[0].title, FIRST_TITLE);
+  const [first] = page.results;
+  assertExists(first);
+  assertEquals(first.title, FIRST_TITLE);
 });
 
 Deno.test("QUERY /api/groups sorts by the requested attribute and order", async () => {
@@ -172,6 +174,7 @@ Deno.test("QUERY /api/groups reports the caller's own standing in each group", a
   await createGroup(cookie, FIRST_TITLE, "private");
 
   const [group] = (await list(cookie, { limit: 100 })).results;
+  assertExists(group);
 
   // The founder joined their own group as its administrator.
   assertEquals(group.status, "joined");
@@ -203,8 +206,10 @@ Deno.test("QUERY /api/groups separates an invitation from a membership", async (
   assertEquals(ownTitles(pending), [FIRST_TITLE]);
   // The role being offered is stated while the invitation is pending; the status is what
   // says it may not be acted on yet.
-  assertEquals(pending.results[0].status, "invited");
-  assertEquals(pending.results[0].role, "writer");
+  const [invitation] = pending.results;
+  assertExists(invitation);
+  assertEquals(invitation.status, "invited");
+  assertEquals(invitation.role, "writer");
 });
 
 Deno.test("QUERY /api/groups discovers public groups the caller is not in", async () => {
@@ -217,8 +222,10 @@ Deno.test("QUERY /api/groups discovers public groups the caller is not in", asyn
 
   // Only the public one, and with no standing of their own in it.
   assertEquals(ownTitles(page), [SECOND_TITLE]);
-  assertEquals(page.results[0].status, null);
-  assertEquals(page.results[0].role, null);
+  const [stranger] = page.results;
+  assertExists(stranger);
+  assertEquals(stranger.status, null);
+  assertEquals(stranger.role, null);
 
   // The founder is in it, so it is not theirs to discover.
   assertFalse(

@@ -15,6 +15,14 @@
     "open-api:check": "deno task open-api:generate && test -z \"$(git status --porcelain open-api.json)\" && echo 'OpenAPI spec is up-to-date' || (echo 'OpenAPI spec is out-of-date, run: deno task open-api:generate' && exit 1)",
     "open-api:lint": "deno x --yes --unstable-detect-cjs npm:@stoplight/spectral-cli lint open-api.json --ruleset .spectral.yaml --fail-severity warn"
   },
+  "compilerOptions": {
+    "noErrorTruncation": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true
+  },
   "lint": {
     "rules": {
       "tags": ["recommended"],

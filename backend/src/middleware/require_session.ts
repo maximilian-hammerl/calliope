@@ -27,4 +27,5 @@ export default createMiddleware<{
   c.set("user", user);
 
   await next();
+  return;
 });

@@ -25,7 +25,7 @@ export const REQUESTS_PER_WINDOW = 300;
 function getClientKey(c: Context): string {
   const forwardedFor = c.req.header("x-forwarded-for");
   if (forwardedFor !== undefined) {
-    return forwardedFor.split(",")[0].trim();
+    return (forwardedFor.split(",")[0] ?? forwardedFor).trim();
   }
 
   try {

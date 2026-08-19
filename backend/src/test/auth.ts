@@ -38,7 +38,7 @@ export const register = () =>
 export function sessionCookie(response: Response): string {
   const setCookie = response.headers.get("set-cookie");
   assertExists(setCookie, "expected the response to set a session cookie");
-  return setCookie.split(";")[0];
+  return setCookie.split(";")[0] ?? setCookie;
 }
 
 /**

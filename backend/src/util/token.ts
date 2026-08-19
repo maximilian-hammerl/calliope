@@ -45,10 +45,12 @@ export function parseToken(
   token: string,
 ): { id: string; secret: string } | undefined {
   const [id, secret] = token.split(".");
+  const parsedId = TOKEN_ID.safeParse(id);
 
-  if (!TOKEN_ID.safeParse(id).success || !secret) {
+  if (!parsedId.success || !secret) {
     return undefined;
   }
 
-  return { id, secret };
+  // The parsed value rather than the raw one, so what is returned is what was checked.
+  return { id: parsedId.data, secret };
 }

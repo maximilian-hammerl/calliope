@@ -71,7 +71,7 @@ Deno.test("PATCH /api/auth/password keeps this session and ends the others", asy
   const other = await login(currentPassword);
   const setCookie = other.headers.get("set-cookie");
   assertExists(setCookie, "the second login should have started a session");
-  const otherCookie = setCookie.split(";")[0];
+  const otherCookie = setCookie.split(";")[0] ?? setCookie;
   assertEquals(
     (await app.request("/api/auth/me", { headers: { cookie: otherCookie } }))
       .status,
