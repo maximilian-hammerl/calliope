@@ -4,6 +4,7 @@ import {
   cleanUp,
   client,
   connect,
+  firstRow,
   insertChatGroup,
   insertChatMessage,
   insertUser,
@@ -28,7 +29,7 @@ async function countChatGroups(chatGroupId: string): Promise<number> {
     `SELECT count(*) FROM public.chat_group WHERE id = $1`,
     [chatGroupId],
   );
-  return Number(rows[0].count);
+  return Number(firstRow(rows).count);
 }
 
 async function lastActivityOfChat(chatGroupId: string): Promise<number> {
@@ -37,7 +38,7 @@ async function lastActivityOfChat(chatGroupId: string): Promise<number> {
      FROM public.chat_group WHERE id = $1`,
     [chatGroupId],
   );
-  return rows[0].last_activity_at;
+  return firstRow(rows).last_activity_at;
 }
 
 Deno.test("an invitation records when it was sent, and nothing else", async () => {
@@ -53,8 +54,8 @@ Deno.test("an invitation records when it was sent, and nothing else", async () =
      WHERE chat_group_id = $1 AND user_id = $2`,
     [chatGroupId, userId],
   );
-  assert(rows[0].invited_at !== null);
-  assertEquals(rows[0].joined_at, null, "nobody has accepted yet");
+  assert(firstRow(rows).invited_at !== null);
+  assertEquals(firstRow(rows).joined_at, null, "nobody has accepted yet");
 });
 
 Deno.test("accepting an invitation records when it was accepted", async () => {
@@ -73,7 +74,7 @@ Deno.test("accepting an invitation records when it was accepted", async () => {
      WHERE chat_group_id = $1 AND user_id = $2`,
     [chatGroupId, userId],
   );
-  assert(rows[0].joined_at !== null);
+  assert(firstRow(rows).joined_at !== null);
 });
 
 Deno.test("a message moves the chat's last activity", async () => {
@@ -120,8 +121,8 @@ Deno.test("messages go with the chat, and survive their author", async () => {
      FROM public.chat_message WHERE chat_group_id = $1`,
     [chatGroupId],
   );
-  assertEquals(Number(rows[0].count), 1);
-  assertEquals(rows[0].created_by, null);
+  assertEquals(Number(firstRow(rows).count), 1);
+  assertEquals(firstRow(rows).created_by, null);
 });
 
 Deno.test("a chat notification does not outlive the membership", async () => {
@@ -142,7 +143,7 @@ Deno.test("a chat notification does not outlive the membership", async () => {
     `SELECT count(*) FROM public.notification WHERE recipient_id = $1`,
     [memberId],
   );
-  assertEquals(Number(rows[0].count), 0);
+  assertEquals(Number(firstRow(rows).count), 0);
 });
 
 Deno.test("a notification carries one group, never both and never neither", async () => {

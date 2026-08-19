@@ -5,6 +5,7 @@ import {
   client,
   close,
   connect,
+  firstRow,
   insertGroup,
   insertPost,
   insertThread,
@@ -90,7 +91,7 @@ Deno.test("deleting a group with content does not error on the way down", async 
     `SELECT count(*)::text AS count FROM public.writing_thread WHERE writing_group_id = $1`,
     [groupId],
   );
-  assertEquals(Number(rows[0].count), 0);
+  assertEquals(Number(firstRow(rows).count), 0);
 });
 
 // The pool would otherwise hold the process open after the last test.

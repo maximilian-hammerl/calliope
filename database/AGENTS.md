@@ -66,6 +66,19 @@ Prove a new trigger test fails without its trigger before trusting it — `ALTER
 DISABLE TRIGGER` is enough. Compare timestamps as `extract(epoch …)`, never as the driver's
 Date: its string form compares lexicographically and orders "Tue" before "Wed".
 
+## pg is typed, so name the row
+
+`@types/pg` is in the import map and `test/support.ts` pulls it in with `// @ts-types`. Without
+it every `client.query(...)` returned `any`, so a column that did not exist type-checked
+happily and failed at run time -- which is exactly how renaming `description` to `blurb` broke
+this suite while all three projects reported clean.
+
+Two things follow. Give every query its row type -- `client.query<{ id: string }>(...)` -- or
+the generic defaults to `any` and the types buy nothing. And read the first row through
+`firstRow(rows)`: with `noUncheckedIndexedAccess` on, `rows[0]` is `T | undefined`, and an
+empty result in a test is a broken test rather than a missing value, so it should say so
+instead of failing later on a property of undefined.
+
 ## Regenerating types
 
 After any migration:

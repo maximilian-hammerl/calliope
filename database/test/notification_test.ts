@@ -5,6 +5,7 @@ import {
   client,
   connect,
   countNotifications,
+  firstRow,
   insertGroup,
   insertNotification,
   insertThread,
@@ -84,7 +85,7 @@ Deno.test("a deleted account leaves its notifications readable", async () => {
     `SELECT actor_id FROM public.notification WHERE recipient_id = $1`,
     [recipientId],
   );
-  assertEquals(rows[0].actor_id, null);
+  assertEquals(firstRow(rows).actor_id, null);
 });
 
 Deno.test("nobody is told about their own doing", async () => {
@@ -157,13 +158,13 @@ Deno.test("a role change collapses onto one notification per membership", async 
   );
 
   assertEquals(await countNotifications(recipientId), 1);
-  assertEquals(rows[0].actor_id, secondActorId);
+  assertEquals(firstRow(rows).actor_id, secondActorId);
 
   const { rows: read } = await client.query<{ read_at: string | null }>(
     `SELECT read_at FROM public.notification WHERE recipient_id = $1`,
     [recipientId],
   );
-  assertEquals(read[0].read_at, null, "a fresh change is unread again");
+  assertEquals(firstRow(read).read_at, null, "a fresh change is unread again");
 
   // created_at is when the row appeared and does not move; occurred_at is the event.
   const { createdAt, occurredAt } = await notificationTimestamps(recipientId);

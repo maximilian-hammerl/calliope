@@ -1,3 +1,4 @@
+// @ts-types="@types/pg"
 import pg from "pg";
 
 const DATABASE_URL = Deno.env.get("DATABASE_URL");
@@ -45,13 +46,28 @@ export async function cleanUp(): Promise<void> {
   ]);
 }
 
+/**
+ * The first row of a query that has to return one. Now that `@types/pg` is in place, `firstRow(rows)`
+ * is `T | undefined`, and an empty result here is a broken test rather than a missing value,
+ * so it says so rather than failing later on a property of undefined.
+ */
+export function firstRow<T>(rows: T[]): T {
+  const [row] = rows;
+
+  if (row === undefined) {
+    throw new Error("expected the query to return at least one row");
+  }
+
+  return row;
+}
+
 export async function insertUser(name: string): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
     `INSERT INTO public."user" (username, hashed_password, email_address)
      VALUES ($1, 'not-a-real-hash', $2) RETURNING id`,
     [`${TEST_PREFIX}${name}`, `${TEST_PREFIX}${name}@example.com`],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }
 
 export async function insertGroup(title: string): Promise<string> {
@@ -60,7 +76,7 @@ export async function insertGroup(title: string): Promise<string> {
      VALUES ($1, 'Beschreibung', 'private') RETURNING id`,
     [`${TEST_PREFIX}${title}`],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }
 
 export async function addMember(
@@ -89,7 +105,10 @@ export async function membershipTimestamps(
      WHERE writing_group_id = $1 AND user_id = $2`,
     [groupId, userId],
   );
-  return { invitedAt: rows[0].invited_at, joinedAt: rows[0].joined_at };
+  return {
+    invitedAt: firstRow(rows).invited_at,
+    joinedAt: firstRow(rows).joined_at,
+  };
 }
 
 export async function insertThread(
@@ -102,7 +121,7 @@ export async function insertThread(
      VALUES ($1, $2, $3) RETURNING id`,
     [groupId, title, createdBy],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }
 
 export async function insertPost(
@@ -117,7 +136,7 @@ export async function insertPost(
      VALUES ($1, 'Ein Absatz.', $2, $3) RETURNING id`,
     [threadId, isDraft, authorId],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }
 
 export async function countRows(table: string, id: string): Promise<number> {
@@ -125,7 +144,7 @@ export async function countRows(table: string, id: string): Promise<number> {
     `SELECT count(*)::text AS count FROM public.${table} WHERE id = $1`,
     [id],
   );
-  return Number(rows[0].count);
+  return Number(firstRow(rows).count);
 }
 
 /**
@@ -143,7 +162,7 @@ export async function lastActivityOf(
      FROM public.${table} WHERE id = $1`,
     [id],
   );
-  return Number(rows[0].epoch);
+  return Number(firstRow(rows).epoch);
 }
 
 /** An invitation notification for a member of a group. Returns its id. */
@@ -160,7 +179,7 @@ export async function insertNotification(
      VALUES ($1, $2, $3::public.notification_type, $4) RETURNING id`,
     [recipientId, groupId, type, actorId],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }
 
 export async function countNotifications(recipientId: string): Promise<number> {
@@ -168,7 +187,7 @@ export async function countNotifications(recipientId: string): Promise<number> {
     `SELECT count(*) FROM public.notification WHERE recipient_id = $1`,
     [recipientId],
   );
-  return Number(rows[0].count);
+  return Number(firstRow(rows).count);
 }
 
 /**
@@ -187,7 +206,10 @@ export async function notificationTimestamps(
      FROM public.notification WHERE recipient_id = $1`,
     [recipientId],
   );
-  return { createdAt: rows[0].created_at, occurredAt: rows[0].occurred_at };
+  return {
+    createdAt: firstRow(rows).created_at,
+    occurredAt: firstRow(rows).occurred_at,
+  };
 }
 
 export async function insertChatGroup(title: string): Promise<string> {
@@ -195,7 +217,7 @@ export async function insertChatGroup(title: string): Promise<string> {
     `INSERT INTO public.chat_group (title) VALUES ($1) RETURNING id`,
     [TEST_PREFIX + title],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }
 
 export async function addChatMember(
@@ -219,5 +241,5 @@ export async function insertChatMessage(
      VALUES ($1, 'Kurz.', $2) RETURNING id`,
     [chatGroupId, authorId],
   );
-  return rows[0].id;
+  return firstRow(rows).id;
 }

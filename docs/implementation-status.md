@@ -201,10 +201,6 @@ Worth doing when they are convenient, none blocking:
 - **A mail outbox**, if mail lost on restart ever matters. Writing the intent in the same
   transaction as the token is the only design where a token cannot exist unannounced.
 - **Bounce handling.** Reading the sending mailbox over IMAP would replace the manual check.
-- **`@types/pg`** in `database/`. Its query results are `any` today, so a mistyped column in a
-  test passes silently. Adding the types surfaces 26 errors. This is not theoretical: renaming
-  `description` to `blurb` left `test/support.ts` inserting a column that no longer existed,
-  and every project type-checked clean — the suite failed at run time instead.
 - **Post search**, once an index and snippet extraction are worth it.
 - **The frontend's oxlint config**, which has not had the pass `backend/` and `database/`
   got. Its `compilerOptions` now match theirs, which was the half that mattered: oxlint
