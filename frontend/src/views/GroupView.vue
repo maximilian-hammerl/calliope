@@ -93,7 +93,7 @@ const editingGroup = ref<boolean>(false)
       />
 
       <div class="flex-1 overflow-auto px-[18px] pt-7 pb-8 md:px-10">
-        <div class="max-w-[684px]">
+        <div class="reading-column">
           <!-- Above the group's own text: what to do about the invitation comes before
                reading further into a group you have not joined. -->
           <GroupInvitation
@@ -139,10 +139,10 @@ const editingGroup = ref<boolean>(false)
     </template>
 
     <div v-else-if="isPending" class="px-[18px] py-5 text-[12.5px] text-ink-5 md:px-10">
-      Gruppe wird geladen …
+      <div class="reading-column">Gruppe wird geladen …</div>
     </div>
 
-    <div v-else-if="isError" class="px-[18px] py-5 md:px-10">
+    <div v-else-if="isError" class="reading-column px-[18px] py-5 md:px-10">
       <p class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
         Diese Gruppe gibt es nicht, oder sie ist privat und du gehörst nicht dazu.
       </p>

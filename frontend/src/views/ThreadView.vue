@@ -151,7 +151,7 @@ async function submit() {
       />
 
       <div class="flex-1 overflow-auto px-[18px] pt-7 pb-8 md:px-10">
-        <div class="max-w-[684px]">
+        <div class="reading-column">
           <ThreadHeader
             :title="thread.title"
             :post-count="postCount"
@@ -174,7 +174,7 @@ async function submit() {
       </div>
 
       <div v-if="sendError" class="px-[18px] pb-3 md:px-10">
-        <Alert variant="destructive" role="alert" class="max-w-[684px]">
+        <Alert variant="destructive" role="alert" class="reading-column">
           <AlertDescription>{{ sendError }}</AlertDescription>
         </Alert>
       </div>
@@ -189,11 +189,14 @@ async function submit() {
       />
     </template>
 
-    <div v-else-if="isPending" class="px-[18px] py-5 text-[12.5px] text-ink-5 md:px-10">
+    <div
+      v-else-if="isPending"
+      class="reading-column px-[18px] py-5 text-[12.5px] text-ink-5 md:px-10"
+    >
       Thread wird geladen …
     </div>
 
-    <div v-else-if="isError" class="px-[18px] py-5 md:px-10">
+    <div v-else-if="isError" class="reading-column px-[18px] py-5 md:px-10">
       <p class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
         Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
       </p>

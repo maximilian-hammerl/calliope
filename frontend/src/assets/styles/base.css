@@ -45,6 +45,15 @@
     color: #302a23;
     text-wrap: pretty;
   }
+  /* The reading column: 684px, per the design system, centred in whatever space is left once
+     the rails have taken theirs. Bands that carry a full-width border (the group header, the
+     thread tabs, the composer) keep the border and put this on their inner content, so the
+     banding still reaches the rails while the text lines up with the posts. */
+  .reading-column {
+    width: 100%;
+    max-width: 684px;
+    margin-inline: auto;
+  }
   /* Mono rail labels: always uppercase with tracking. */
   .label-rail {
     font: 600 10.5px/1 var(--font-mono);

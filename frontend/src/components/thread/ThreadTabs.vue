@@ -18,7 +18,7 @@ defineEmits<{ create: [] }>()
     class="sticky top-0 z-[2] bg-paper-1 px-[18px] pt-[15px] shadow-[0_1px_0_var(--color-line-3)] md:px-10"
   >
     <div
-      class="scroll-x-hidden flex items-baseline gap-5 text-[13.5px] leading-[1.2] whitespace-nowrap"
+      class="reading-column scroll-x-hidden flex items-baseline gap-5 text-[13.5px] leading-[1.2] whitespace-nowrap"
     >
       <RouterLink
         v-for="thread in threads"

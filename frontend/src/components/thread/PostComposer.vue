@@ -22,7 +22,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
     class="flex-none cursor-pointer border-t border-line-3 bg-paper-0 px-[18px] py-[13px] md:px-10"
     @click="collapsed = false"
   >
-    <div class="flex max-w-[684px] items-center gap-3 text-[12.5px] text-ink-5">
+    <div class="reading-column flex items-center gap-3 text-[12.5px] text-ink-5">
       <span class="font-semibold text-ink-4">Weiterschreiben</span>
       <span
         class="ml-auto flex items-center gap-[4px] rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"
@@ -34,7 +34,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
   </div>
 
   <div v-else class="flex-none border-t border-line-3 bg-paper-0 px-[18px] pt-[13px] pb-4 md:px-10">
-    <div class="max-w-[684px]">
+    <div class="reading-column">
       <div class="mb-[10px] flex items-center gap-[14px] text-[12.5px] text-ink-5">
         <span class="font-semibold text-ink-4">Weiterschreiben</span>
 

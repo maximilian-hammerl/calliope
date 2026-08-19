@@ -322,7 +322,12 @@ mono label and a chevron — the strip is the affordance to reopen, and left and
 identically. The thread tab strip is sticky under the group title and scrolls horizontally with
 its scrollbar hidden; nothing else lives inside the scroll container. Posts scroll; the composer
 is fixed to the bottom of the thread column and can itself collapse to a single line. The reading
-column is capped at 684px regardless of window width. The Mitglieder block is sticky to the bottom
+column is capped at 684px regardless of window width, and is **centred** in whatever space the
+rails leave — left-aligning it stranded up to 278px of void beside it on a wide screen. Bands
+that carry a full-width border (group header, thread tabs, composer) keep the border spanning
+rail to rail and centre only their content, so the banding still reads as horizontal while the
+text lines up with the posts. The `.reading-column` class in `styles/base.css` is the one
+place this is expressed. The Mitglieder block is sticky to the bottom
 of the right rail.
 
 **Density.** Roughly one reading column of ~65 characters, 26px between posts, 20–22px between

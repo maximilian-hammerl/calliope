@@ -19,7 +19,7 @@ const visibilityLabel = computed<string>(() =>
 
 <template>
   <div class="px-[18px] pt-5 md:px-10">
-    <div class="flex flex-wrap items-baseline gap-3">
+    <div class="reading-column flex flex-wrap items-baseline gap-3">
       <!-- A group title is 25px Newsreader regular, never bold. -->
       <h1 class="text-[25px] leading-[1.2] text-ink-1">
         <RouterLink
