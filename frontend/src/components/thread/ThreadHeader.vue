@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown } from '@lucide/vue'
 import { computed } from 'vue'
-import { countLabel, formatActivityTime } from '@/lib/formatTime'
+import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
 
 const props = defineProps<{
   title: string

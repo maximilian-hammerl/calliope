@@ -10,19 +10,19 @@ import type {
   ListThreads200ResultsItem,
 } from '@/api/models'
 import { PencilIcon } from '@lucide/vue'
-import AppLayout from '@/components/AppLayout.vue'
-import CreateGroupDialog from '@/components/CreateGroupDialog.vue'
-import CreateThreadDialog from '@/components/CreateThreadDialog.vue'
-import EditGroupDialog from '@/components/EditGroupDialog.vue'
-import GroupHeader from '@/components/GroupHeader.vue'
-import GroupMembers from '@/components/GroupMembers.vue'
-import ThreadTabs from '@/components/ThreadTabs.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
+import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
+import EditGroupDialog from '@/components/group/EditGroupDialog.vue'
+import GroupHeader from '@/components/group/GroupHeader.vue'
+import GroupMembers from '@/components/group/GroupMembers.vue'
+import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Button } from '@/components/ui/button'
-import { useGroupRole } from '@/lib/useGroupRole'
+import { useGroupRole } from '@/composables/useGroupRole'
 
 const route = useRoute()
 const groupId = computed<string>(() => String(route.params.groupId))

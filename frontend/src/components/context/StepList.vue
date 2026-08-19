@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus, Square } from '@lucide/vue'
-import PanelCard from '@/components/PanelCard.vue'
+import PanelCard from '@/components/common/PanelCard.vue'
 
 // Placeholder: "Nächste Schritte" has no backend yet, so these are fixed examples and
 // nothing can be ticked. Kept because the rail's shape is part of the accepted design.

@@ -122,6 +122,25 @@ The old platform had none, and that was a top complaint. Every target is at leas
 phone (`h-11 md:h-9` on controls), the reading size never shrinks below 17px, and both rails
 are hidden rather than shrunk. Check 375px before calling a surface done.
 
+## Where things live
+
+`components/` is grouped by **domain**, not by kind: `group/`, `thread/`, `chat/`,
+`notification/`, `search/`, plus `layout/` for the frame around a page, `common/` for pieces
+with no subject of their own, and `context/` for the right rail. A dialog goes with its
+subject — `CreateGroupDialog` is in `group/`, `MessagesDialog` in `chat/` — because it changes
+when groups or chats change, not when dialogs do. A `dialogs/` directory would only move the
+problem down a level and put unrelated things side by side again. A directory holding one file
+is better than a file in the wrong directory.
+
+`composables/` holds every `use*`, which is also what `components.json` already declares.
+`lib/` is grouped the same way: `api/`, `auth/`, `format/`, `validation/`, `notification/`.
+
+Two things stay put at `lib/`'s root: `utils.ts`, because `components.json` pins
+`"utils": "@/lib/utils"` and forty-odd generated components import it — moving it breaks them
+and every future `shadcn add`; and `assertUnreachable.ts`, which belongs to no domain.
+
+`components/ui/` is generated territory and is not reorganised.
+
 ## Components built on reka-ui
 
 `components/ui/` is generated territory — shadcn-vue writes there, and a hand-written file

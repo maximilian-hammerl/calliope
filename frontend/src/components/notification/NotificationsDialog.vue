@@ -5,8 +5,8 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
 import { useListNotifications, useReadNotifications } from '@/api/notifications/notifications'
 import type { ListNotifications200ResultsItem } from '@/api/models'
-import { formatActivityTime } from '@/lib/formatTime'
-import { notificationAction, notificationText } from '@/lib/notificationText'
+import { formatActivityTime } from '@/lib/format/formatTime'
+import { notificationAction, notificationText } from '@/lib/notification/notificationText'
 import {
   Dialog,
   DialogDescription,

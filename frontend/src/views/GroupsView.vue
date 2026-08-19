@@ -3,11 +3,11 @@ import { Plus } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
-import AppLayout from '@/components/AppLayout.vue'
-import CalliopeBadge from '@/components/CalliopeBadge.vue'
-import CreateGroupDialog from '@/components/CreateGroupDialog.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import { Button } from '@/components/ui/button'
-import { formatActivityTime } from '@/lib/formatTime'
+import { formatActivityTime } from '@/lib/format/formatTime'
 
 const { data, isPending, isError } = useListGroups({
   limit: 100,

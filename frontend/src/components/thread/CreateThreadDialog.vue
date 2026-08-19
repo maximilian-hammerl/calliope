@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListThreadsQueryKey, useCreateThread } from '@/api/threads/threads'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { listKeyPrefix } from '@/lib/queryKeys'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {

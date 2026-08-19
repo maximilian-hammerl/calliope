@@ -35,7 +35,7 @@ export default defineConfig({
         // success. The mutator throws instead. It lives outside src/api because that whole
         // directory is generated and git-ignored.
         mutator: {
-          path: 'src/lib/apiFetch.ts',
+          path: 'src/lib/api/apiFetch.ts',
           name: 'apiFetch',
         },
       },

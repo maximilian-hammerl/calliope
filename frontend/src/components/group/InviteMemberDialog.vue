@@ -5,8 +5,8 @@ import { getListMembershipsQueryKey, useInviteMember } from '@/api/memberships/m
 import { useListUsers } from '@/api/users/users'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import type { InviteMemberBodyRole, ListUsers200ResultsItem } from '@/api/models'
-import { ApiError } from '@/lib/apiFetch'
-import { listKeyPrefix } from '@/lib/queryKeys'
+import { ApiError } from '@/lib/api/apiFetch'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {

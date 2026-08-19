@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatActivityTime } from '@/lib/formatTime'
+import { formatActivityTime } from '@/lib/format/formatTime'
 import type { ListPosts200ResultsItem } from '@/api/models'
 
 const props = defineProps<{ post: ListPosts200ResultsItem; divider: boolean; first: boolean }>()

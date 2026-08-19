@@ -2,9 +2,9 @@
 import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import type { Search200 } from '@/api/models'
-import { countLabel } from '@/lib/formatTime'
+import { countLabel } from '@/lib/format/formatTime'
 import { cn } from '@/lib/utils'
-import CalliopeBadge from '@/components/CalliopeBadge.vue'
+import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
 const props = defineProps<{
   results: Search200 | undefined

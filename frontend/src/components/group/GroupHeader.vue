@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import CalliopeBadge from '@/components/CalliopeBadge.vue'
-import { countLabel } from '@/lib/formatTime'
+import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import { countLabel } from '@/lib/format/formatTime'
 
 const props = defineProps<{
   title: string

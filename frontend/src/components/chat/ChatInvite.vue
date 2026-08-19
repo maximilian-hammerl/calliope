@@ -6,8 +6,8 @@ import { getListChatMembershipsQueryKey, useInviteToChat } from '@/api/chats/cha
 import { useListUsers } from '@/api/users/users'
 import type { ListUsers200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { ApiError } from '@/lib/apiFetch'
-import { listKeyPrefix } from '@/lib/queryKeys'
+import { ApiError } from '@/lib/api/apiFetch'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 

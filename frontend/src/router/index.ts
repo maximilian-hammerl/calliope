@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { fetchCurrentUser, forgetCurrentUser } from '@/lib/session'
-import { setSessionLostHandler } from '@/lib/queryClient'
+import { fetchCurrentUser, forgetCurrentUser } from '@/lib/auth/session'
+import { setSessionLostHandler } from '@/lib/api/queryClient'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

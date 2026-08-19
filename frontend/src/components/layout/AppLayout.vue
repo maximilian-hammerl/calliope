@@ -4,10 +4,10 @@ import { computed, ref } from 'vue'
 import { useListGroups } from '@/api/groups/groups'
 import type { GetCurrentUser200, ListGroups200ResultsItem } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
-import TopBar from '@/components/TopBar.vue'
-import GroupList from '@/components/GroupList.vue'
-import RailLabel from '@/components/RailLabel.vue'
-import RailToggle from '@/components/RailToggle.vue'
+import TopBar from '@/components/layout/TopBar.vue'
+import GroupList from '@/components/group/GroupList.vue'
+import RailLabel from '@/components/layout/RailLabel.vue'
+import RailToggle from '@/components/layout/RailToggle.vue'
 
 const props = defineProps<{ activeGroupId?: string }>()
 defineEmits<{ createGroup: [] }>()

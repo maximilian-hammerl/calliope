@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronUp } from '@lucide/vue'
 import { ref } from 'vue'
-import type { DraftStatus } from '@/lib/useDraft'
+import type { DraftStatus } from '@/composables/useDraft'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 

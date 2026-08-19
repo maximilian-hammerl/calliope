@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { GetCurrentUser200 } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
-import TopBar from '@/components/TopBar.vue'
+import TopBar from '@/components/layout/TopBar.vue'
 
 // The route guard has already resolved this query, so the cached answer is read here rather
 // than fetched again.

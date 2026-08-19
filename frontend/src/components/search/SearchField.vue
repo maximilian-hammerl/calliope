@@ -5,8 +5,8 @@ import { Search } from '@lucide/vue'
 import { ComboboxAnchor, ComboboxContent, ComboboxInput, ComboboxRoot } from 'reka-ui'
 import { useRoute } from 'vue-router'
 import { cn } from '@/lib/utils'
-import { useSearch } from '@/lib/useSearch'
-import SearchResults from '@/components/SearchResults.vue'
+import { useSearch } from '@/composables/useSearch'
+import SearchResults from '@/components/search/SearchResults.vue'
 
 /**
  * Built on reka's Combobox rather than a generated `ui/` component: this lives in the top bar

@@ -10,10 +10,10 @@ import {
 } from '@/api/chats/chats'
 import type { ListChats200ResultsItem, ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatActivityTime } from '@/lib/formatTime'
-import { listKeyPrefix } from '@/lib/queryKeys'
-import { useChatStream } from '@/lib/useChatStream'
-import ChatConversation from '@/components/ChatConversation.vue'
+import { formatActivityTime } from '@/lib/format/formatTime'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { useChatStream } from '@/composables/useChatStream'
+import ChatConversation from '@/components/chat/ChatConversation.vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

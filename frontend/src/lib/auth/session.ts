@@ -1,7 +1,7 @@
 import { getGetCurrentUserQueryKey, getGetCurrentUserQueryOptions } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
-import { ApiError } from './apiFetch'
-import { queryClient } from './queryClient'
+import { ApiError } from '@/lib/api/apiFetch'
+import { queryClient } from '@/lib/api/queryClient'
 
 /**
  * The session cookie is httpOnly, so asking the API is the only way to find out whether this
