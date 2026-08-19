@@ -14,8 +14,10 @@ import {
 Deno.test.beforeEach(connect);
 Deno.test.afterEach(cleanUp);
 
-/** A member, their group and a thread in it — the setting every test here needs. */
-async function scenario(name: string) {
+/** A member, their group and a thread in it: the setting every test here needs. */
+async function scenario(
+  name: string,
+): Promise<{ userId: string; groupId: string; threadId: string }> {
   const userId = await insertUser(`${name}-author`);
   const groupId = await insertGroup(`${name}-group`);
   await addMember(groupId, userId);

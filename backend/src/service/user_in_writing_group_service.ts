@@ -145,6 +145,7 @@ function listMemberships(
         queryBuilder.where(
           "user.username",
           "ilike",
+          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
           searchPattern(query.search!),
         )),
     query,

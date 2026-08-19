@@ -75,6 +75,7 @@ Deno.test("QUERY /api/users treats a wildcard as a literal character", async () 
 
   // Unescaped, `%` and `_` would match anything and return the whole table.
   for (const term of ["%%%", "___"]) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const page = await searchOk(cookie, { search: term });
     assertEquals(page.totalResults, 0, `${term} should match nothing`);
   }

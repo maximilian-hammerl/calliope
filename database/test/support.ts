@@ -173,7 +173,7 @@ export async function countNotifications(recipientId: string): Promise<number> {
 
 /**
  * Both timestamps as epoch seconds. The driver parses timestamptz into a JS `Date`, which
- * only has milliseconds, so two statements less than a millisecond apart come back equal —
+ * only has milliseconds, so two statements less than a millisecond apart come back equal -
  * the same trap `lastActivityOf` exists to avoid.
  */
 export async function notificationTimestamps(

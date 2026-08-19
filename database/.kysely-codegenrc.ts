@@ -61,7 +61,14 @@ const config: Config = {
         },
       });
 
-      return typeScriptTypes + zodSchemas;
+      const generated = typeScriptTypes + zodSchemas;
+
+      // `bytea` maps to Buffer, which is a Node global rather than a Deno one - emitted here
+      // because a hand-added import would be wiped by the next generation. Conditional, so a
+      // schema without a bytea column does not get an unused import.
+      return generated.includes("Buffer")
+        ? 'import { Buffer } from "node:buffer";\n\n' + generated
+        : generated;
     },
   },
 };

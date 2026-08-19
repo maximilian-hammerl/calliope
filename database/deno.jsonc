@@ -28,6 +28,38 @@
     "pg": "npm:pg@8.23.0",
     "typescript": "npm:typescript@6.0.3"
   },
+  // The full set, unlike backend/: no Kysely builders here and no German, so the five it
+  // leaves out all pass.
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": [
+        "camelcase",
+        "default-param-last",
+        "eqeqeq",
+        "explicit-function-return-type",
+        "explicit-module-boundary-types",
+        "guard-for-in",
+        "no-await-in-loop",
+        "no-eval",
+        "no-external-import",
+        "no-implicit-declare-namespace-export",
+        "no-node-globals",
+        "no-non-null-asserted-optional-chain",
+        "no-non-null-assertion",
+        "no-process-global",
+        "no-self-compare",
+        "no-sparse-arrays",
+        "no-sync-fn-in-async-fn",
+        "no-throw-literal",
+        "no-undef",
+        "no-useless-rename",
+        "prefer-ascii",
+        "single-var-declarator",
+        "triple-slash-reference"
+      ]
+    }
+  },
   "fmt": {
     "exclude": ["*.md"]
   }

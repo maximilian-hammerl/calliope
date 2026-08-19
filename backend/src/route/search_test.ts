@@ -74,12 +74,12 @@ Deno.test("QUERY /api/search says which group a thread came from", async () => {
   await thread(cookie, group.id, `${TERM} Thread`);
 
   const found = await search(cookie, { search: TERM });
-  const found_thread = found.threads.results.find(
+  const foundThread = found.threads.results.find(
     (result) => result.title === `${TERM} Thread`,
   );
 
   // A result that can come from anywhere has to say where it came from.
-  assertEquals(found_thread?.writingGroupTitle, `${TERM} Gruppe`);
+  assertEquals(foundThread?.writingGroupTitle, `${TERM} Gruppe`);
 });
 
 Deno.test("QUERY /api/search hides threads in a private group you are not in", async () => {
@@ -107,13 +107,13 @@ Deno.test("QUERY /api/search finds threads in a public group you have not joined
   await thread(ownerCookie, publicGroup.id, `${TERM} Offener Thread`);
 
   const found = await search(outsiderCookie, { search: TERM });
-  const found_thread = found.threads.results.find(
+  const foundThread = found.threads.results.find(
     (result) => result.title === `${TERM} Offener Thread`,
   );
 
   // The same rule the group list uses, applied one level down.
   assertEquals(found.threads.totalResults, before.threads + 1);
-  assertEquals(found_thread?.writingGroupTitle, `${TERM} Offen`);
+  assertEquals(foundThread?.writingGroupTitle, `${TERM} Offen`);
 });
 
 Deno.test("QUERY /api/search reports how many more there are", async () => {
@@ -121,6 +121,7 @@ Deno.test("QUERY /api/search reports how many more there are", async () => {
   const before = totals(await search(cookie, { search: TERM }));
 
   for (let index = 0; index < 7; index++) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     await createGroup(cookie, `${TERM} Gruppe ${index}`);
   }
 

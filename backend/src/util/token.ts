@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import * as z from "zod";
+import { Buffer } from "node:buffer";
 
 /**
  * Session tokens and the tokens inside mailed links are both random secrets rather than

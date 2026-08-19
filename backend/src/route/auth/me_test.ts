@@ -50,6 +50,7 @@ Deno.test("GET /api/auth/me treats a malformed session cookie as no session", as
       "session=01a019ee-ab02-7a82-9796-3767b50ed584",
     ]
   ) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await app.request("/api/auth/me", { headers: { cookie } });
 
     assertEquals(
@@ -57,6 +58,7 @@ Deno.test("GET /api/auth/me treats a malformed session cookie as no session", as
       STATUS_CODE.Unauthorized,
       `expected ${cookie} to be unauthorised`,
     );
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     await response.body?.cancel();
   }
 });

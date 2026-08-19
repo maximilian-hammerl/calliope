@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
 import { db } from "@/src/database/client.ts";
@@ -69,7 +69,9 @@ Deno.test("PATCH /api/auth/password keeps this session and ends the others", asy
   const cookie = await signedIn();
 
   const other = await login(currentPassword);
-  const otherCookie = other.headers.get("set-cookie")!.split(";")[0];
+  const setCookie = other.headers.get("set-cookie");
+  assertExists(setCookie, "the second login should have started a session");
+  const otherCookie = setCookie.split(";")[0];
   assertEquals(
     (await app.request("/api/auth/me", { headers: { cookie: otherCookie } }))
       .status,

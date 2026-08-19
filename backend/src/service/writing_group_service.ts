@@ -173,10 +173,12 @@ function listVisibleWritingGroups(
         (queryBuilder) =>
           queryBuilder.where((eb) =>
             eb.or([
+              // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
               eb("writingGroup.title", "ilike", searchPattern(query.search!)),
               eb(
                 "writingGroup.description",
                 "ilike",
+                // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
                 searchPattern(query.search!),
               ),
             ])

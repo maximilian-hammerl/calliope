@@ -47,6 +47,7 @@ Deno.test("rateLimit rejects the request after the window is exhausted", async (
   const clientAddress = "198.51.100.2";
 
   for (let sent = 0; sent < REQUESTS_PER_WINDOW; sent++) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     assertEquals((await request(clientAddress)).status, STATUS_CODE.OK);
   }
 

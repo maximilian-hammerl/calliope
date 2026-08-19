@@ -50,6 +50,7 @@ Deno.test("an unreadable stored hash does not match and does not throw", async (
       "argon2$16384$8$1$c2FsdA==$aGFzaA==",
     ]
   ) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     assertEquals(await verifyPassword(password, stored), false, stored);
   }
 });

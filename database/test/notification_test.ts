@@ -16,7 +16,9 @@ Deno.test.beforeEach(connect);
 Deno.test.afterEach(cleanUp);
 
 /** An administrator, a member they can act on, and the group both belong to. */
-async function group(name: string) {
+async function group(
+  name: string,
+): Promise<{ actorId: string; recipientId: string; groupId: string }> {
   const actorId = await insertUser(`${name}-actor`);
   const recipientId = await insertUser(`${name}-recipient`);
   const groupId = await insertGroup(`${name}-group`);
@@ -175,6 +177,7 @@ Deno.test("occurrence notifications are not collapsed", async () => {
   const threadId = await insertThread(groupId, "Kapitel 1", actorId);
 
   for (let index = 0; index < 2; index++) {
+    // deno-lint-ignore no-await-in-loop -- the second insert must land after the first
     await client.query(
       `INSERT INTO public.notification
          (recipient_id, writing_group_id, type, actor_id, writing_thread_id)

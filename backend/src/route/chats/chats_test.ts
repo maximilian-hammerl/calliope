@@ -152,6 +152,7 @@ Deno.test("messages page by cursor, oldest reachable from newest", async () => {
   const { founderCookie, chat: created } = await chat();
 
   for (const text of ["eins", "zwei", "drei"]) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     await request("POST", `/api/chats/${created.id}/messages`, founderCookie, {
       text,
     });

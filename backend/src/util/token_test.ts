@@ -5,6 +5,7 @@ import {
   hashToken,
   parseToken,
 } from "@/src/util/token.ts";
+import { Buffer } from "node:buffer";
 
 Deno.test("every token is different", async () => {
   const tokens = new Set(

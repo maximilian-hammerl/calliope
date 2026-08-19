@@ -12,7 +12,9 @@ import {
 Deno.test.beforeEach(connect);
 Deno.test.afterEach(cleanUp);
 
-async function chat(name: string) {
+async function chat(
+  name: string,
+): Promise<{ memberId: string; otherId: string; chatGroupId: string }> {
   const memberId = await insertUser(`${name}-member`);
   const otherId = await insertUser(`${name}-other`);
   const chatGroupId = await insertChatGroup(`${name}-chat`);
@@ -110,7 +112,7 @@ Deno.test("messages go with the chat, and survive their author", async () => {
 
   await client.query(`DELETE FROM public.user WHERE id = $1`, [memberId]);
 
-  // The writing outlives the account, so a message does too — with no author.
+  // The writing outlives the account, so a message does too, with no author.
   const { rows } = await client.query<
     { count: string; created_by: string | null }
   >(

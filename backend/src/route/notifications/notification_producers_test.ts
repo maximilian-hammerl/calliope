@@ -65,6 +65,7 @@ Deno.test("a new thread tells the group but not its author", async () => {
 
   for (const cookie of [adminCookie, readerCookie]) {
     const [notification] = ofType(
+      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
       await notificationsOf(cookie),
       "new_writing_thread",
     );

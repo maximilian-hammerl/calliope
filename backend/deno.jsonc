@@ -15,6 +15,38 @@
     "open-api:check": "deno task open-api:generate && test -z \"$(git status --porcelain open-api.json)\" && echo 'OpenAPI spec is up-to-date' || (echo 'OpenAPI spec is out-of-date, run: deno task open-api:generate' && exit 1)",
     "open-api:lint": "deno x --yes --unstable-detect-cjs npm:@stoplight/spectral-cli lint open-api.json --ruleset .spectral.yaml --fail-severity warn"
   },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": [
+        "camelcase",
+        "default-param-last",
+        "eqeqeq",
+        "guard-for-in",
+        "no-await-in-loop",
+        "no-eval",
+        "no-implicit-declare-namespace-export",
+        "no-node-globals",
+        "no-non-null-asserted-optional-chain",
+        "no-non-null-assertion",
+        "no-process-global",
+        "no-self-compare",
+        "no-sparse-arrays",
+        "no-sync-fn-in-async-fn",
+        "no-throw-literal",
+        "no-useless-rename",
+        "single-var-declarator",
+        "triple-slash-reference"
+        // Left out, each having been tried:
+        // "explicit-function-return-type", "explicit-module-boundary-types" — Kysely
+        //   builders infer types too large to write and they change with every select.
+        // "no-external-import" — flags node:crypto and node:buffer, which no-node-globals'
+        //   own --fix adds. No remote URLs here anyway.
+        // "no-undef" — 38 false positives on Temporal; deno check covers this properly.
+        // "prefer-ascii" — 160 hits, all correct: Calliope is German.
+      ]
+    }
+  },
   "unstable": ["cron"],
   "permissions": {
     "default": {

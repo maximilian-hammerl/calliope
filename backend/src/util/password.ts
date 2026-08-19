@@ -1,4 +1,5 @@
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { Buffer } from "node:buffer";
 
 /**
  * Password hashing, in the application rather than in the database. pgcrypto's `crypt()`
