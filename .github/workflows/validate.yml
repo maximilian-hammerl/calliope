@@ -54,7 +54,7 @@ jobs:
 
       # `--wait` blocks on the healthchecks in the compose file, so nothing races the
       # databases becoming reachable.
-      - name: Start the databases
+      - name: Start the databases and the mail catcher
         run: docker compose up -d --wait
         working-directory: .
 

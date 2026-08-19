@@ -50,7 +50,9 @@ cd frontend && npm install && npm run dev
 ```
 
 The compose file publishes Postgres on `54322` and Redis on `63792`, so it does not collide with anything already
-running on the default ports.
+running on the default ports. It also runs [Mailpit](https://mailpit.axllent.org), which accepts every message the
+backend sends and delivers none of them — read them at <http://localhost:8025>. Nothing in development or in the tests
+reaches a real mail server.
 
 ## Checks
 
@@ -69,7 +71,8 @@ deno task open-api:check   # regenerates open-api.json and fails if it changed
 deno task open-api:lint    # validates the document with Spectral
 ```
 
-The test suite needs Postgres and Redis running and the migrations applied:
+The test suite needs Postgres, Redis and Mailpit running and the migrations applied — the
+password reset tests read the message they sent, because the token exists nowhere else:
 
 ```bash
 cd backend && deno task test

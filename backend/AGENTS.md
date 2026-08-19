@@ -42,7 +42,8 @@ that rule changes, this file changes with it.
 it is: `http/` (response helpers and their schemas), `list/` (the shared list convention),
 `operations/` (liveness, matching the `OPERATIONS_TAG` the spec already uses), `event/`
 (in-process fan-out for SSE, infrastructure like `database/` and `redis/` rather than a
-service), `service/`, `util/`, `middleware/`, `database/`, `redis/`.
+service), `mail/` (the SMTP transport and the messages themselves, infrastructure for the
+same reason), `service/`, `util/`, `middleware/`, `database/`, `redis/`.
 
 A few files stay at `src/`'s root deliberately: `app.ts` composes everything, `text_limit.ts`
 is domain constants read across layers, `test_support.ts` is test-only, and
@@ -322,7 +323,7 @@ validating against the 3.0 schema.
 ## Passwords and session tokens
 
 Hashed in the application, never in the database: `util/password.ts` (scrypt) and
-`util/session_token.ts` (SHA-256). pgcrypto is gone, and with it the plaintext password's
+`util/token.ts` (SHA-256). pgcrypto is gone, and with it the plaintext password's
 trip into Postgres, where statement logging could have captured it.
 
 A stored password reads `scrypt$cost$blockSize$parallelisation$salt$hash`. The parameters
@@ -333,6 +334,55 @@ unreadable record; it simply does not match.
 `selectUser` hashes against a throwaway hash when no account matches, so an unknown username
 costs the same as a known one with the wrong password. Removing that would turn the response
 time into a way to enumerate accounts.
+
+`util/token.ts` is not session-specific despite where it started: session tokens and the
+tokens inside mailed links are the same kind of secret and share one implementation. Keep
+them apart by *purpose* in the database, not by hashing them differently.
+
+## Mail
+
+`mail/` holds the transport and the messages; `service/` decides that something should be
+said. Three things about it are load-bearing:
+
+- **Handlers never await a send.** `Mailer.sendInBackground` returns immediately. A send
+  takes as long as the remote server feels like taking — one measurement against the
+  production relay spent thirty seconds just opening the connection — and awaiting it would
+  also make "no account has this address" answer measurably faster than the case where a
+  message goes out, which is an account oracle. The cost is that a failure can only be
+  logged, which is why the sending mailbox is read by hand; see `deployment/README.md`.
+- **Tests read the message.** Mailpit is in `docker-compose.yaml` alongside Postgres and
+  Redis, and `mail/mailpit_test_support.ts` fetches from it. A reset token is stored hashed,
+  so the message is the only place its plaintext exists — testing the flow at all means
+  going through the mail, which covers the link's shape for free. Await
+  `Mailer.flushPendingSends()` first, or the assertion races the send.
+- **Text, not HTML.** These messages are a few lines and a link. A second HTML copy of the
+  same words is one more thing to keep in step, and the clients that prefer it are the ones
+  most likely to rewrite the link.
+
+## Tokens in links
+
+`user_token` is one table for every link mailed to a member, keyed by a `purpose` enum —
+`password_reset` today, verifying and changing an address later. The purpose is stored rather
+than implied so a token issued for one thing cannot be spent on another.
+
+Tokens are hashed with `util/token.ts` and carried the way a session cookie carries one:
+`id.secret`, where the id finds the row by primary key and the secret is compared against
+`hashed_token`. Do not make `hashed_token` unique and look up by it — `user_session` started
+that way and moved off it.
+
+A partial unique index allows one outstanding token per member per purpose: issuing a link
+deletes the previous one, and the index makes that an invariant rather than a habit. Insert
+with `onConflict` anyway — two requests arriving together each delete nothing the other has
+inserted yet, and without it the loser violates the index and fails the request.
+
+Spending a token is one transaction that marks it consumed, sets the password and deletes
+every session of that member. The `UPDATE … WHERE consumed_at IS NULL` is what makes a link
+single-use under concurrency: the second request waits on the row lock and then no longer
+matches. Consumed rows stay until the hourly sweep, so a second click can be told the link is
+used rather than unknown.
+
+Answer a spent, expired or unknown token identically. Which of the three it was is only ever
+useful to somebody guessing.
 
 ## Tests
 

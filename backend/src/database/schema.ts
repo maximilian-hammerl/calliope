@@ -24,6 +24,8 @@ export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 
 export type UserInWritingGroupStatus = "invited" | "joined";
 
+export type UserTokenPurpose = "password_reset";
+
 export type WritingGroupVisibility = "private" | "public";
 
 export interface ChatGroup {
@@ -95,6 +97,16 @@ export interface UserSession {
   userId: string;
 }
 
+export interface UserToken {
+  consumedAt: string | null;
+  createdAt: Generated<string>;
+  expiresAt: string;
+  hashedToken: Buffer;
+  id: Generated<string>;
+  purpose: UserTokenPurpose;
+  userId: string;
+}
+
 export interface WritingGroup {
   createdAt: Generated<string>;
   createdBy: string | null;
@@ -132,6 +144,7 @@ export interface DB {
   userInChatGroup: UserInChatGroup;
   userInWritingGroup: UserInWritingGroup;
   userSession: UserSession;
+  userToken: UserToken;
   writingGroup: WritingGroup;
   writingPost: WritingPost;
   writingThread: WritingThread;
@@ -172,6 +185,9 @@ export const NOTIFICATION_TYPES = [
   "visibility_changed_in_writing_group",
 ] as const;
 export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
+
+export const USER_TOKEN_PURPOSES = ["password_reset"] as const;
+export const USER_TOKEN_PURPOSE_SCHEMA = z.enum(USER_TOKEN_PURPOSES);
 
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
@@ -240,6 +256,16 @@ export const USER_SESSION_SCHEMA = z.object({
   expiresAt: z.iso.datetime({ offset: true }),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
+});
+
+export const USER_TOKEN_SCHEMA = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+  purpose: USER_TOKEN_PURPOSE_SCHEMA,
+  hashedToken: z.instanceof(Uint8Array),
+  expiresAt: z.iso.datetime({ offset: true }),
+  consumedAt: z.iso.datetime({ offset: true }).nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const WRITING_GROUP_SCHEMA = z.object({

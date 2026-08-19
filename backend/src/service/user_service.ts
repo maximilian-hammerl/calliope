@@ -1,10 +1,7 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import { hashPassword, verifyPassword } from "@/src/util/password.ts";
-import {
-  generateSessionToken,
-  hashSessionToken,
-} from "@/src/util/session_token.ts";
+import { generateToken, hashToken } from "@/src/util/token.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -45,7 +42,7 @@ const SESSION_REFRESH_INTERVAL = Temporal.Duration.from({ minutes: 15 });
  * username that does not exist costs the same as one with the wrong password. Without it the
  * quick answer would tell an attacker which usernames are real.
  */
-const ABSENT_USER_HASH = await hashPassword(generateSessionToken());
+const ABSENT_USER_HASH = await hashPassword(generateToken());
 
 async function insertUser(
   username: string,
@@ -102,13 +99,13 @@ async function selectUser(
 async function insertSessionForUser(
   user: User,
 ): Promise<UserSession> {
-  const sessionToken = generateSessionToken();
+  const sessionToken = generateToken();
 
   const userSession = await db
     .insertInto("userSession")
     .values({
       userId: user.id,
-      hashedToken: await hashSessionToken(sessionToken),
+      hashedToken: await hashToken(sessionToken),
       expiresAt: Temporal.Now.instant().add(SESSION_LIFETIME).toString(),
     })
     .returning(["id"])
@@ -127,7 +124,7 @@ async function selectUserForSession(
     .selectFrom("userSession")
     .select(["id", "userId", "expiresAt"])
     .where("id", "=", userSession.id)
-    .where("hashedToken", "=", await hashSessionToken(userSession.token))
+    .where("hashedToken", "=", await hashToken(userSession.token))
     .executeTakeFirst();
 
   if (databaseUserSession === undefined) {
@@ -169,7 +166,7 @@ async function deleteSession(userSession: UserSession): Promise<boolean> {
   const result = await db
     .deleteFrom("userSession")
     .where("id", "=", userSession.id)
-    .where("hashedToken", "=", await hashSessionToken(userSession.token))
+    .where("hashedToken", "=", await hashToken(userSession.token))
     .executeTakeFirst();
 
   return result.numDeletedRows > 0n;

@@ -114,6 +114,43 @@ containers would not error — members connected to one would simply stop receiv
 sent through the other. Before scaling out, move the fan-out in `backend/src/chat/chat_events.ts`
 to Redis pub/sub; the seam is two functions in that one file.
 
+## Outgoing mail
+
+The backend sends through an external SMTP account — the `SMTP_*` and `MAIL_FROM_ADDRESS`
+variables in `.env`. Do not send from this host directly: a VPS has generic reverse DNS and
+no sending reputation, which fails an `iprev` check on its own and lands the mail in spam.
+
+The sending domain needs all three of SPF, DKIM and DMARC, and `MAIL_FROM_ADDRESS` has to be
+a mailbox the SMTP account may send as, or DKIM will not align with the `From:` header a
+member actually sees. A subdomain does not inherit its parent's SPF or DKIM; sending as the
+parent domain avoids publishing and warming a second set of records.
+
+Verify the whole chain from the server after any change to the account or the DNS, rather
+than trusting the control panel:
+
+```bash
+python3 -c "import smtplib,ssl;s=smtplib.SMTP_SSL('<smtp-host>',465,timeout=20,context=ssl.create_default_context());s.login('<username>',input('pw: '));print('AUTH OK');s.quit()"
+```
+
+Mail delivered *within* the provider's own server is not signed by its outbound relay, so a
+message sent to an address on the same domain proves nothing about DKIM. Send one to
+`check-auth@verifier.port25.com`, which replies to the sender with an SPF, DKIM and `iprev`
+report.
+
+### Bounces are not handled
+
+Nothing reads delivery failures. A member who mistypes their address at registration gets a
+bounce into the `MAIL_FROM_ADDRESS` mailbox, and the application never learns the message did
+not arrive — it will keep believing the link was sent.
+
+**Read that mailbox by hand every few days** and act on what is in it. This is the accepted
+gap for now; the alternative is having the backend poll the mailbox over IMAP and mark
+addresses undeliverable, which is worth building only once the volume justifies it.
+
+DMARC aggregate reports go wherever the `rua=` address in the DMARC record points. Send them
+somewhere other than `MAIL_FROM_ADDRESS`, or daily XML from every provider the mail touches
+buries the bounces this section is about.
+
 ## Backups
 
 The systemd units are tracked in this directory but have to be installed into the system
@@ -165,5 +202,9 @@ does *not* read a dump needs `</dev/null` — otherwise it swallows the rest of 
 - **The dumps never leave the server.** They cover mistakes in the data, not the loss of
   the machine. Offsite copies, encrypted, are still to be set up.
 - **No deploy automation.** Redeploying is the manual `git pull` above.
+- **Bounces are read by a person**, not by the application — see above.
+- **Mail still in flight is lost on restart.** Sends are deliberately not awaited by the
+  request that triggered them, and nothing drains them on shutdown; a member caught by a
+  deploy has to ask for the link again.
 - The dumps hold email addresses and password hashes; they are `0600` in a `0700`
   directory, and must be encrypted before they are ever copied elsewhere.

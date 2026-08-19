@@ -29,3 +29,18 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
+
+  # Local mail capture
+  mailpit:
+    image: axllent/mailpit:v1.30.7
+    restart: always
+
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web interface
+
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
