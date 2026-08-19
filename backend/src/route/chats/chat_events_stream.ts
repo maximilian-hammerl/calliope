@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import requireSession from "@/src/middleware/require_session.ts";
-import { subscribeToChatEvents } from "@/src/chat/chat_events.ts";
+import { subscribeToChatEvents } from "@/src/event/chat_events.ts";
 import { addShutdownSignalListener } from "@/src/util/shutdown_signal.ts";
 
 /**

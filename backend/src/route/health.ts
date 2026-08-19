@@ -8,8 +8,8 @@ import {
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { databaseHealthCheck } from "@/src/database/client.ts";
 import { redisHealthCheck } from "@/src/redis/client.ts";
-import { COMMON_RESPONSES, jsonContent } from "@/src/response.ts";
-import { HEALTH_RESPONSE } from "@/src/database_health.ts";
+import { COMMON_RESPONSES, jsonContent } from "@/src/http/response.ts";
+import { HEALTH_RESPONSE } from "@/src/operations/database_health.ts";
 
 const startup = Temporal.Now.zonedDateTimeISO();
 

@@ -1,8 +1,13 @@
 # Deployment
 
-Calliope runs on a single netcup VPS (Debian 13, arm64) at <https://calliope.hammerl.dev>,
-as a Docker Compose stack: Caddy terminates TLS and serves the frontend, the backend runs
-behind it, and Postgres and Redis are reachable only inside the compose network.
+Calliope runs on a single small VPS as a Docker Compose stack: Caddy terminates TLS and
+serves the frontend, the backend runs behind it, and Postgres and Redis are reachable only
+inside the compose network. One instance is the supported shape — see the note on the chat
+fan-out below.
+
+The commands below assume Debian 13 on arm64, which is what the `apt` and Docker repository
+lines are written for; on anything else those two sections need adjusting and the rest
+carries over. The domain is never written down here — it comes from `HOST_URL` in `.env`.
 
 The checkout lives at `/opt/calliope`.
 

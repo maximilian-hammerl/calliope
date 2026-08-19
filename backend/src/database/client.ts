@@ -9,7 +9,10 @@ import { DB } from "./schema.ts";
 import { postgresTypes } from "./postgres_types.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { addShutdownSignalListener } from "@/src/util/shutdown_signal.ts";
-import { type DatabaseHealth, probeDatabase } from "@/src/database_health.ts";
+import {
+  type DatabaseHealth,
+  probeDatabase,
+} from "@/src/operations/database_health.ts";
 
 export type Database = Kysely<DB>;
 export type Transaction = KyselyTransaction<DB>;

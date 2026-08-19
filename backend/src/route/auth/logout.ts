@@ -9,7 +9,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 export default new OpenAPIHono().openapi(
   createRoute({

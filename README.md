@@ -8,7 +8,8 @@ should do better, is written up in
 [the product requirements](docs/product-requirements-feature-specification.md), which grew out
 of [interviews with members](docs/interviews.md).
 
-Live at <https://calliope.hammerl.dev>.
+Self-hosted: one Docker Compose stack behind Caddy, described in the
+[deployment runbook](deployment/README.md).
 
 ## Layout
 

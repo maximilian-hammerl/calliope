@@ -8,7 +8,7 @@ import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 const CURRENT_USER_RESPONSE = USER_SCHEMA
   .pick({

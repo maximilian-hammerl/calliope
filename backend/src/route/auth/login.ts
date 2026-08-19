@@ -10,7 +10,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 const LOGIN_BODY = z.object({
   // Either identifier is accepted, so a member need not remember which they signed up with,

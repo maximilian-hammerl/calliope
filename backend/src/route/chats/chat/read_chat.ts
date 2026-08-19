@@ -8,7 +8,7 @@ import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 import { CHAT_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const CHAT_PARAMS = z.object({ chatId: CHAT_GROUP_SCHEMA.shape.id });

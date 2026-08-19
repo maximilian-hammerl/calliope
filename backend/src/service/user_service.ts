@@ -10,7 +10,7 @@ import {
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list_endpoint_query.ts";
+} from "@/src/list/list_endpoint_query.ts";
 import type {
   User as DatabaseUser,
   UserSession as DatabaseUserSession,

@@ -9,6 +9,37 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 - **File names are `snake_case`**, and so are test files: `user_service.ts`,
   `user_service_test.ts`.
 
+## Where things live
+
+`route/` mirrors the URL and is not reorganised — see below. Everything else is grouped by what
+it is: `http/` (response helpers and their schemas), `list/` (the shared list convention),
+`operations/` (liveness, matching the `OPERATIONS_TAG` the spec already uses), `event/`
+(in-process fan-out for SSE, infrastructure like `database/` and `redis/` rather than a
+service), `service/`, `util/`, `middleware/`, `database/`, `redis/`.
+
+A few files stay at `src/`'s root deliberately: `app.ts` composes everything, `text_limit.ts`
+is domain constants read across layers, `test_support.ts` is test-only, and
+`open_api_specification.ts`, `cron.ts` and `cors_options.ts` are app-wide configuration.
+
+`service/` is flat on purpose. Grouping it by domain would give `service/writing/writing_group_service.ts`
+— the word twice — so it would also mean dropping the prefixes, turning a move into renaming
+every module. The prefixes already sort them by domain.
+
+**Careful with `database/`.** `database/.kysely-codegenrc.ts` has
+`outFile: "../backend/src/database/schema.ts"`; move that directory and the generator silently
+rebuilds the old path. Nothing else outside TypeScript names a backend source path.
+
+## Tests sit next to what they test
+
+`<module>_test.ts` beside the module, one file per route. `auth/` shows the shape: `login_test.ts`,
+`logout_test.ts`, `me_test.ts` and `register_test.ts` next to their routes, with `auth_test.ts`
+keeping only what is not about a single one — the body-limit test, which is about the app and
+merely uses a route to get there. Setup those files share lives in `auth/auth_test_support.ts`,
+which is not named `*_test.ts` so the runner does not collect it.
+
+Auth tests cannot use `test_support.ts`'s `registerUser` and `request`: registering and sending
+a session is the thing under test, so they go through the app by hand.
+
 ## Route files mirror the URL
 
 One route per file, and the directory structure follows the path. A file that groups

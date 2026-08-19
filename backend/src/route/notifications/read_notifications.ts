@@ -7,7 +7,7 @@ import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 const READ_NOTIFICATIONS_RESPONSE = z.object({ read: z.number().int() });
 

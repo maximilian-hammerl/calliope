@@ -1,6 +1,6 @@
 import type { SelectQueryBuilder } from "kysely";
-import { db } from "./database/client.ts";
-import type { DB } from "./database/schema.ts";
+import { db } from "@/src/database/client.ts";
+import type { DB } from "@/src/database/schema.ts";
 import type { SortOrder } from "./list_endpoint.ts";
 
 export type ListQuery = {

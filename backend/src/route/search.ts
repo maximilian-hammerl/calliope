@@ -3,21 +3,21 @@ import {
   FOUND_THREAD_RESPONSE,
   GROUP_RESPONSE,
   USER_RESPONSE,
-} from "@/src/response_schema.ts";
+} from "@/src/http/response_schema.ts";
 import { SEARCH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
-import { listResponseSchema } from "@/src/list_endpoint.ts";
+import { listResponseSchema } from "@/src/list/list_endpoint.ts";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 /**
  * Small on purpose: this fills a popover under the search field, not a page. Each section

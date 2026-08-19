@@ -5,13 +5,13 @@ import type {
 } from "@/src/database/schema.ts";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
-import { NOTIFICATION_RESPONSE } from "@/src/response_schema.ts";
+import { NOTIFICATION_RESPONSE } from "@/src/http/response_schema.ts";
 import type { UserInWritingGroupRole } from "@/src/database/schema.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
-} from "@/src/list_endpoint_query.ts";
+} from "@/src/list/list_endpoint_query.ts";
 
 /**
  * A notification is stored as the event that happened, never as the sentence describing it.

@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { CHAT_GROUP_RESPONSE } from "@/src/response_schema.ts";
+import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
@@ -10,7 +10,7 @@ import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 const CREATE_CHAT_BODY = z.object({
   title: z.string().min(1).max(TEXT_LIMIT.chatTitle),

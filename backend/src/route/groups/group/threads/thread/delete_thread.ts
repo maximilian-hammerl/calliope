@@ -11,7 +11,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 import {
   WRITING_GROUP_SCHEMA,
   WRITING_THREAD_SCHEMA,

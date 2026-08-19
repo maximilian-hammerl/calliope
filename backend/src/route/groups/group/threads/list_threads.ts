@@ -1,17 +1,20 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { THREAD_RESPONSE } from "@/src/response_schema.ts";
+import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
-import { listQuerySchema, listResponseSchema } from "@/src/list_endpoint.ts";
+import {
+  listQuerySchema,
+  listResponseSchema,
+} from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 import {
   WRITING_GROUP_SCHEMA,
   WRITING_THREAD_SCHEMA,

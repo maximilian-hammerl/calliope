@@ -2,7 +2,7 @@ import { assertEquals, assertExists, assertMatch } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
 import { API_TITLE, API_VERSION } from "@/src/open_api_specification.ts";
-import type { DatabaseHealth } from "@/src/database_health.ts";
+import type { DatabaseHealth } from "@/src/operations/database_health.ts";
 
 Deno.test("GET /api/health reports a healthy application without a session", async () => {
   const response = await app.request("/api/health");

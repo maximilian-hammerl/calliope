@@ -1,16 +1,19 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { NOTIFICATION_RESPONSE } from "@/src/response_schema.ts";
+import { NOTIFICATION_RESPONSE } from "@/src/http/response_schema.ts";
 import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
-import { listQuerySchema, listResponseSchema } from "@/src/list_endpoint.ts";
+import {
+  listQuerySchema,
+  listResponseSchema,
+} from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 import { NOTIFICATION_SCHEMA } from "@/src/database/schema.ts";
 
 // Public attribute names are mapped to qualified columns, so the API never exposes the

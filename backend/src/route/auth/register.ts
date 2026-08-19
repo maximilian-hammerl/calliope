@@ -11,7 +11,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 
 const REGISTER_BODY = USER_SCHEMA
   .pick({ username: true, emailAddress: true })

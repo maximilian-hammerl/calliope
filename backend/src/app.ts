@@ -10,7 +10,7 @@ import corsOptions from "./cors_options.ts";
 import openApiSpecification from "./open_api_specification.ts";
 import rateLimit from "./middleware/rate_limit.ts";
 import { REQUEST_BODY_LIMIT_BYTES } from "./text_limit.ts";
-import { type ErrorResponse } from "./response.ts";
+import { type ErrorResponse } from "@/src/http/response.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
 import health from "./route/health.ts";

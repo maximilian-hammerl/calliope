@@ -10,7 +10,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 import {
   USER_IN_WRITING_GROUP_SCHEMA,
   WRITING_GROUP_SCHEMA,

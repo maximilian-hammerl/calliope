@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { CHAT_MESSAGE_RESPONSE } from "@/src/response_schema.ts";
+import { CHAT_MESSAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
@@ -7,14 +7,14 @@ import { ChatMessageService } from "@/src/service/chat_message_service.ts";
 import {
   cursorQuerySchema,
   cursorResponseSchema,
-} from "@/src/list_endpoint.ts";
+} from "@/src/list/list_endpoint.ts";
 import { checkJoinedChatMember } from "@/src/route/chats/chat/chat_membership.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/response.ts";
+} from "@/src/http/response.ts";
 import { CHAT_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const CHAT_PARAMS = z.object({ chatId: CHAT_GROUP_SCHEMA.shape.id });

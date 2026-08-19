@@ -8,7 +8,7 @@ import {
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list_endpoint_query.ts";
+} from "@/src/list/list_endpoint_query.ts";
 
 /**
  * A thread found by a search, which can come from any group the member may see — so it says

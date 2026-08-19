@@ -10,7 +10,7 @@ import {
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list_endpoint_query.ts";
+} from "@/src/list/list_endpoint_query.ts";
 
 export type UserInWritingGroup =
   & Pick<
