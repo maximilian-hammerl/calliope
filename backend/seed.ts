@@ -127,16 +127,25 @@ async function seed(): Promise<void> {
     {
       id: GROUP.market,
       title: "Der Erinnerungsmarkt",
-      description:
+      subtitle: "Was du vergisst, gehört jemand anderem",
+      blurb:
         "Ein Markt, der nur nach Einbruch der Dunkelheit öffnet. Wer dort kauft, zahlt mit Erinnerungen.",
       visibility: "private",
+      // One group carries the full metadata so the rail has something real to show, and the
+      // other stays bare so the empty state is visible too.
+      storyStatus: "writing",
+      genres: ["Fantasy", "Mystery"],
+      subgenres: ["Urban Fantasy"],
+      tropes: ["Slow Burn", "Found Family"],
+      contentWarnings: ["Gedächtnisverlust"],
+      tense: "Vergangenheit",
+      perspective: "Dritte Person, begrenzt",
       createdBy: USER.mira,
     },
     {
       id: GROUP.workshop,
       title: "Offene Werkstatt",
-      description:
-        "Eine öffentliche Gruppe zum Ausprobieren. Alle dürfen mitlesen.",
+      blurb: "Eine öffentliche Gruppe zum Ausprobieren. Alle dürfen mitlesen.",
       visibility: "public",
       createdBy: USER.mira,
     },

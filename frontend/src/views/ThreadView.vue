@@ -212,7 +212,7 @@ async function submit() {
 
     <template #rail>
       <StepList />
-      <StoryStatus />
+      <StoryStatus v-if="group" :group="group" />
       <FileList />
       <MemberList :memberships="memberships" />
     </template>

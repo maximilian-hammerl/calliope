@@ -2,14 +2,46 @@
 
 CREATE TYPE public.writing_group_visibility AS ENUM ('public', 'private');
 
+-- §7.4 also lists 'archived', left out until there is something to distinguish it from
+-- 'finished': §22's archive is a *group* lifecycle — hidden, read-only, restorable — and none
+-- of that is built, so the value would carry no behaviour.
+CREATE TYPE public.writing_group_story_status AS ENUM ('planning', 'writing', 'finished');
+
+-- A group holds one story for now. §5.1 has a group *containing* optional stories, and §43
+-- puts that split in phase 2; until then the story's metadata lives on the group, and moving
+-- it later is a migration rather than a redesign.
 CREATE TABLE public.writing_group
 (
-    id          UUID PRIMARY KEY                         DEFAULT uuidv7(),
-    title       TEXT                            NOT NULL,
-    description TEXT                            NOT NULL,
-    visibility  public.writing_group_visibility NOT NULL DEFAULT 'private',
-    created_by  uuid                            references public.user (id) on update cascade on delete set null,
-    created_at  TIMESTAMPTZ                     NOT NULL DEFAULT now()
+    id               UUID PRIMARY KEY                         DEFAULT uuidv7(),
+    title            TEXT                            NOT NULL,
+    subtitle         TEXT,
+
+    -- What the back cover says. Called blurb rather than description because that is the word
+    -- for it once the thing being described is a story.
+    blurb            TEXT                            NOT NULL,
+
+    visibility       public.writing_group_visibility NOT NULL DEFAULT 'private',
+
+    -- Story metadata. Every field optional: members told us Yooco's mandatory profile section
+    -- got filled with nonsense purely to get past it, and a metadata block nobody means is
+    -- worse than an empty one. Arrays are NOT NULL DEFAULT '{}', so "nothing given" has a
+    -- single representation and reads never have to handle null.
+    -- Named story_status, not status: the reader's own membership status is already called
+    -- that everywhere a group is read. Not null, unlike the rest of the metadata — every
+    -- story is at some point in its life, and 'planning' is where a new one starts.
+    story_status     public.writing_group_story_status NOT NULL DEFAULT 'planning',
+    genres           TEXT[]                          NOT NULL DEFAULT '{}',
+    subgenres        TEXT[]                          NOT NULL DEFAULT '{}',
+    tropes           TEXT[]                          NOT NULL DEFAULT '{}',
+    content_warnings TEXT[]                          NOT NULL DEFAULT '{}',
+
+    -- Free text, not enums: collaborative fiction mixes tense and person across chapters and
+    -- characters more than any fixed list would survive.
+    tense            TEXT,
+    perspective      TEXT,
+
+    created_by       uuid                            references public.user (id) on update cascade on delete set null,
+    created_at       TIMESTAMPTZ                     NOT NULL DEFAULT now()
 );
 
 ---
@@ -116,3 +148,4 @@ DROP FUNCTION public.delete_writing_group_after_last_user_leaves();
 DROP TYPE public.user_in_writing_group_status;
 DROP TYPE public.user_in_writing_group_role;
 DROP TYPE public.writing_group_visibility;
+DROP TYPE public.writing_group_story_status;

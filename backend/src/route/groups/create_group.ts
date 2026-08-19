@@ -1,4 +1,4 @@
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
@@ -13,17 +13,35 @@ import {
   jsonContent,
 } from "@/src/http/response.ts";
 import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import { STORY_TAGS_SCHEMA } from "@/src/http/request_schema.ts";
 
 const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
-  .pick({ title: true, description: true, visibility: true })
+  .pick({
+    title: true,
+    subtitle: true,
+    blurb: true,
+    visibility: true,
+    storyStatus: true,
+    tense: true,
+    perspective: true,
+  })
   .extend({
-    description: WRITING_GROUP_SCHEMA.shape.description.max(
-      TEXT_LIMIT.groupDescription,
-    ),
     // The column only requires text; an empty title is not useful.
     title: WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
+    subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
+    blurb: WRITING_GROUP_SCHEMA.shape.blurb.max(TEXT_LIMIT.groupBlurb),
     // Private unless asked otherwise, per the "private by default" principle.
     visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
+    // The column's own default, restated so omitting the field is legal rather than a 400.
+    storyStatus: WRITING_GROUP_SCHEMA.shape.storyStatus.default("planning"),
+    // Free text rather than a list: collaborative fiction mixes tense and person across
+    // chapters and characters more than any fixed set would survive.
+    tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
+    perspective: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
+    genres: STORY_TAGS_SCHEMA,
+    subgenres: STORY_TAGS_SCHEMA,
+    tropes: STORY_TAGS_SCHEMA,
+    contentWarnings: STORY_TAGS_SCHEMA,
   });
 
 export default new OpenAPIHono().openapi(
@@ -54,13 +72,16 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { title, description, visibility } = c.req.valid("json");
+    const values = c.req.valid("json");
 
     const writingGroup = await WritingGroupService.insertWritingGroup(
       c.get("user"),
-      title,
-      description,
-      visibility,
+      {
+        ...values,
+        subtitle: values.subtitle ?? null,
+        tense: values.tense ?? null,
+        perspective: values.perspective ?? null,
+      },
     );
 
     return c.json(writingGroup, STATUS_CODE.Created);

@@ -2154,14 +2154,61 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
-                  "description": { "type": "string", "maxLength": 2000 },
+                  "subtitle": { "type": ["string", "null"], "maxLength": 120 },
+                  "blurb": { "type": "string", "maxLength": 2000 },
                   "visibility": {
                     "type": "string",
                     "enum": ["private", "public"],
                     "default": "private"
+                  },
+                  "storyStatus": {
+                    "type": "string",
+                    "enum": ["finished", "planning", "writing"],
+                    "default": "planning"
+                  },
+                  "tense": { "type": ["string", "null"], "maxLength": 60 },
+                  "perspective": {
+                    "type": ["string", "null"],
+                    "maxLength": 60
+                  },
+                  "genres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
+                  },
+                  "subgenres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
+                  },
+                  "tropes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
+                  },
+                  "contentWarnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
                   }
                 },
-                "required": ["title", "description"]
+                "required": ["title", "blurb"]
               }
             }
           }
@@ -2176,11 +2223,34 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
-                    "description": { "type": "string" },
+                    "subtitle": { "type": ["string", "null"] },
+                    "blurb": { "type": "string" },
                     "visibility": {
                       "type": "string",
                       "enum": ["private", "public"]
                     },
+                    "storyStatus": {
+                      "type": "string",
+                      "enum": ["finished", "planning", "writing"]
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "subgenres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tropes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "contentWarnings": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tense": { "type": ["string", "null"] },
+                    "perspective": { "type": ["string", "null"] },
                     "createdBy": {
                       "type": ["string", "null"],
                       "format": "uuid"
@@ -2203,8 +2273,16 @@
                   "required": [
                     "id",
                     "title",
-                    "description",
+                    "subtitle",
+                    "blurb",
                     "visibility",
+                    "storyStatus",
+                    "genres",
+                    "subgenres",
+                    "tropes",
+                    "contentWarnings",
+                    "tense",
+                    "perspective",
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
@@ -2429,11 +2507,34 @@
                         "properties": {
                           "id": { "type": "string", "format": "uuid" },
                           "title": { "type": "string" },
-                          "description": { "type": "string" },
+                          "subtitle": { "type": ["string", "null"] },
+                          "blurb": { "type": "string" },
                           "visibility": {
                             "type": "string",
                             "enum": ["private", "public"]
                           },
+                          "storyStatus": {
+                            "type": "string",
+                            "enum": ["finished", "planning", "writing"]
+                          },
+                          "genres": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "subgenres": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "tropes": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "contentWarnings": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "tense": { "type": ["string", "null"] },
+                          "perspective": { "type": ["string", "null"] },
                           "createdBy": {
                             "type": ["string", "null"],
                             "format": "uuid"
@@ -2459,8 +2560,16 @@
                         "required": [
                           "id",
                           "title",
-                          "description",
+                          "subtitle",
+                          "blurb",
                           "visibility",
+                          "storyStatus",
+                          "genres",
+                          "subgenres",
+                          "tropes",
+                          "contentWarnings",
+                          "tense",
+                          "perspective",
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
@@ -2653,11 +2762,34 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
-                    "description": { "type": "string" },
+                    "subtitle": { "type": ["string", "null"] },
+                    "blurb": { "type": "string" },
                     "visibility": {
                       "type": "string",
                       "enum": ["private", "public"]
                     },
+                    "storyStatus": {
+                      "type": "string",
+                      "enum": ["finished", "planning", "writing"]
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "subgenres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tropes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "contentWarnings": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tense": { "type": ["string", "null"] },
+                    "perspective": { "type": ["string", "null"] },
                     "createdBy": {
                       "type": ["string", "null"],
                       "format": "uuid"
@@ -2680,8 +2812,16 @@
                   "required": [
                     "id",
                     "title",
-                    "description",
+                    "subtitle",
+                    "blurb",
                     "visibility",
+                    "storyStatus",
+                    "genres",
+                    "subgenres",
+                    "tropes",
+                    "contentWarnings",
+                    "tense",
+                    "perspective",
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
@@ -2895,10 +3035,58 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
-                  "description": { "type": "string", "maxLength": 2000 },
+                  "subtitle": { "type": ["string", "null"], "maxLength": 120 },
+                  "blurb": { "type": "string", "maxLength": 2000 },
                   "visibility": {
                     "type": "string",
-                    "enum": ["private", "public"]
+                    "enum": ["private", "public"],
+                    "default": "private"
+                  },
+                  "storyStatus": {
+                    "type": "string",
+                    "enum": ["finished", "planning", "writing"],
+                    "default": "planning"
+                  },
+                  "tense": { "type": ["string", "null"], "maxLength": 60 },
+                  "perspective": {
+                    "type": ["string", "null"],
+                    "maxLength": 60
+                  },
+                  "genres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
+                  },
+                  "subgenres": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
+                  },
+                  "tropes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
+                  },
+                  "contentWarnings": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "maxItems": 12
                   }
                 }
               }
@@ -2915,11 +3103,34 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
-                    "description": { "type": "string" },
+                    "subtitle": { "type": ["string", "null"] },
+                    "blurb": { "type": "string" },
                     "visibility": {
                       "type": "string",
                       "enum": ["private", "public"]
                     },
+                    "storyStatus": {
+                      "type": "string",
+                      "enum": ["finished", "planning", "writing"]
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "subgenres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tropes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "contentWarnings": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tense": { "type": ["string", "null"] },
+                    "perspective": { "type": ["string", "null"] },
                     "createdBy": {
                       "type": ["string", "null"],
                       "format": "uuid"
@@ -2942,8 +3153,16 @@
                   "required": [
                     "id",
                     "title",
-                    "description",
+                    "subtitle",
+                    "blurb",
                     "visibility",
+                    "storyStatus",
+                    "genres",
+                    "subgenres",
+                    "tropes",
+                    "contentWarnings",
+                    "tense",
+                    "perspective",
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
@@ -10334,11 +10553,34 @@
                             "properties": {
                               "id": { "type": "string", "format": "uuid" },
                               "title": { "type": "string" },
-                              "description": { "type": "string" },
+                              "subtitle": { "type": ["string", "null"] },
+                              "blurb": { "type": "string" },
                               "visibility": {
                                 "type": "string",
                                 "enum": ["private", "public"]
                               },
+                              "storyStatus": {
+                                "type": "string",
+                                "enum": ["finished", "planning", "writing"]
+                              },
+                              "genres": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "subgenres": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "tropes": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "contentWarnings": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "tense": { "type": ["string", "null"] },
+                              "perspective": { "type": ["string", "null"] },
                               "createdBy": {
                                 "type": ["string", "null"],
                                 "format": "uuid"
@@ -10371,8 +10613,16 @@
                             "required": [
                               "id",
                               "title",
-                              "description",
+                              "subtitle",
+                              "blurb",
                               "visibility",
+                              "storyStatus",
+                              "genres",
+                              "subgenres",
+                              "tropes",
+                              "contentWarnings",
+                              "tense",
+                              "perspective",
                               "createdBy",
                               "createdAt",
                               "lastActivityAt",

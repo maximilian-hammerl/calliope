@@ -5,6 +5,7 @@ import type {
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
   WritingGroup as DatabaseWritingGroup,
+  WritingGroupStoryStatus,
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
 import type { User } from "./user_service.ts";
@@ -20,8 +21,16 @@ export type WritingGroup =
     Selectable<DatabaseWritingGroup>,
     | "id"
     | "title"
-    | "description"
+    | "subtitle"
+    | "blurb"
     | "visibility"
+    | "storyStatus"
+    | "genres"
+    | "subgenres"
+    | "tropes"
+    | "contentWarnings"
+    | "tense"
+    | "perspective"
     | "createdBy"
     | "createdAt"
     | "lastActivityAt"
@@ -46,12 +55,100 @@ export type MembershipFilter = "joined" | "invited" | "none" | "any";
 const SELECTED_COLUMNS = [
   "writingGroup.id",
   "writingGroup.title",
-  "writingGroup.description",
+  "writingGroup.subtitle",
+  "writingGroup.blurb",
   "writingGroup.visibility",
+  "writingGroup.storyStatus",
+  "writingGroup.genres",
+  "writingGroup.subgenres",
+  "writingGroup.tropes",
+  "writingGroup.contentWarnings",
+  "writingGroup.tense",
+  "writingGroup.perspective",
   "writingGroup.createdBy",
   "writingGroup.createdAt",
   "writingGroup.lastActivityAt",
 ] as const;
+
+/**
+ * What a member may set about the story. Every field optional except the two that were always
+ * required, so a group created before any of this existed is still describable.
+ */
+export type WritingGroupValues = {
+  title: string;
+  blurb: string;
+  subtitle?: string | null;
+  visibility?: WritingGroupVisibility;
+  storyStatus?: WritingGroupStoryStatus;
+  genres?: string[];
+  subgenres?: string[];
+  tropes?: string[];
+  contentWarnings?: string[];
+  tense?: string | null;
+  perspective?: string | null;
+};
+
+/**
+ * Trims, drops the empties and removes repeats, comparing case-insensitively so "Fantasy" and
+ * "fantasy" cannot both be stored. The first spelling wins, because that is the one the member
+ * chose to type. Done here rather than in the schema so the OpenAPI document describes the
+ * shape a client sends rather than a transform it cannot see.
+ */
+function normaliseTags(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const normalised: string[] = [];
+
+  for (const tag of tags) {
+    const trimmed = tag.trim();
+    const key = trimmed.toLocaleLowerCase("de");
+
+    if (trimmed.length > 0 && !seen.has(key)) {
+      seen.add(key);
+      normalised.push(trimmed);
+    }
+  }
+
+  return normalised;
+}
+
+/** Empty is how "not given" is stored, so a blank string never reaches a nullable column. */
+function emptyToNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed.length === 0 ? null : trimmed;
+}
+
+/** The one place values become a row: normalisation cannot be skipped by a caller. */
+function toRow(values: Partial<WritingGroupValues>) {
+  return {
+    ...(values.title === undefined ? {} : { title: values.title.trim() }),
+    ...(values.subtitle === undefined
+      ? {}
+      : { subtitle: emptyToNull(values.subtitle) }),
+    ...(values.blurb === undefined ? {} : { blurb: values.blurb.trim() }),
+    ...(values.visibility === undefined
+      ? {}
+      : { visibility: values.visibility }),
+    ...(values.storyStatus === undefined
+      ? {}
+      : { storyStatus: values.storyStatus }),
+    ...(values.genres === undefined
+      ? {}
+      : { genres: normaliseTags(values.genres) }),
+    ...(values.subgenres === undefined
+      ? {}
+      : { subgenres: normaliseTags(values.subgenres) }),
+    ...(values.tropes === undefined
+      ? {}
+      : { tropes: normaliseTags(values.tropes) }),
+    ...(values.contentWarnings === undefined
+      ? {}
+      : { contentWarnings: normaliseTags(values.contentWarnings) }),
+    ...(values.tense === undefined ? {} : { tense: emptyToNull(values.tense) }),
+    ...(values.perspective === undefined
+      ? {}
+      : { perspective: emptyToNull(values.perspective) }),
+  };
+}
 
 /**
  * The group and its first membership have to be written together — a group whose creator
@@ -59,14 +156,19 @@ const SELECTED_COLUMNS = [
  */
 async function insertWritingGroup(
   creator: User,
-  title: string,
-  description: string,
-  visibility: WritingGroupVisibility,
+  values: WritingGroupValues,
 ): Promise<WritingGroup> {
   return await db.transaction().execute(async (transaction) => {
     const writingGroup = await transaction
       .insertInto("writingGroup")
-      .values({ title, description, visibility, createdBy: creator.id })
+      // title and blurb restated so the type carries their presence; `toRow` describes a
+      // change, where every field may be absent.
+      .values({
+        ...toRow(values),
+        title: values.title.trim(),
+        blurb: values.blurb.trim(),
+        createdBy: creator.id,
+      })
       .returning(SELECTED_COLUMNS)
       .executeTakeFirstOrThrow();
 
@@ -176,7 +278,7 @@ function listVisibleWritingGroups(
               // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
               eb("writingGroup.title", "ilike", searchPattern(query.search!)),
               eb(
-                "writingGroup.description",
+                "writingGroup.blurb",
                 "ilike",
                 // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
                 searchPattern(query.search!),
@@ -210,11 +312,7 @@ async function selectRoleForUser(
 /** Returns nothing when the group does not exist. Authorisation is the caller's job. */
 async function updateWritingGroup(
   writingGroupId: string,
-  changes: {
-    title?: string;
-    description?: string;
-    visibility?: WritingGroupVisibility;
-  },
+  changes: Partial<WritingGroupValues>,
   changedBy: string,
 ): Promise<WritingGroup | undefined> {
   return await db.transaction().execute(async (transaction) => {

@@ -12,17 +12,38 @@ import {
   jsonContent,
 } from "@/src/http/response.ts";
 import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import { STORY_TAGS_SCHEMA } from "@/src/http/request_schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
 // At least one field is required, otherwise the update would have nothing to set.
 const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
-  .pick({ title: true, description: true, visibility: true })
+  .pick({
+    title: true,
+    subtitle: true,
+    blurb: true,
+    visibility: true,
+    storyStatus: true,
+    tense: true,
+    perspective: true,
+  })
   .extend({
-    description: WRITING_GROUP_SCHEMA.shape.description.max(
-      TEXT_LIMIT.groupDescription,
-    ),
+    // The column only requires text; an empty title is not useful.
     title: WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
+    subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
+    blurb: WRITING_GROUP_SCHEMA.shape.blurb.max(TEXT_LIMIT.groupBlurb),
+    // Private unless asked otherwise, per the "private by default" principle.
+    visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
+    // The column's own default, restated so omitting the field is legal rather than a 400.
+    storyStatus: WRITING_GROUP_SCHEMA.shape.storyStatus.default("planning"),
+    // Free text rather than a list: collaborative fiction mixes tense and person across
+    // chapters and characters more than any fixed set would survive.
+    tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
+    perspective: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
+    genres: STORY_TAGS_SCHEMA,
+    subgenres: STORY_TAGS_SCHEMA,
+    tropes: STORY_TAGS_SCHEMA,
+    contentWarnings: STORY_TAGS_SCHEMA,
   })
   .partial()
   .refine(

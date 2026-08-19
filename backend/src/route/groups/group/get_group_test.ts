@@ -17,7 +17,7 @@ Deno.test("GET /api/groups/{groupId} returns a public group to a non-member", as
   const ownerCookie = await registerUser(owner);
   const created = await (await request("POST", "/api/groups", ownerCookie, {
     title: "Öffentlich",
-    description: "d",
+    blurb: "d",
     visibility: "public",
   })).json();
 
@@ -36,7 +36,7 @@ Deno.test("GET /api/groups/{groupId} reports a private group as missing to a non
   const ownerCookie = await registerUser(owner);
   const created = await (await request("POST", "/api/groups", ownerCookie, {
     title: "Privat",
-    description: "d",
+    blurb: "d",
   })).json();
 
   const outsiderCookie = await registerUser(outsider);

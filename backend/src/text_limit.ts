@@ -25,8 +25,14 @@ export const TEXT_LIMIT = {
   chatTitle: 80,
   /** A message is a remark, not a chapter. Long enough for a paragraph, far short of a post. */
   messageText: 4_000,
-  /** A few paragraphs about the story, not the story itself. */
-  groupDescription: 2_000,
+  /** A second line under the title, as a book has one. */
+  groupSubtitle: 120,
+  /** A few paragraphs about the story, not the story itself. The back-cover text. */
+  groupBlurb: 2_000,
+  /** One genre, subgenre, trope or content warning. A label, never a sentence. */
+  storyTag: 60,
+  /** "Vergangenheit, dritte Person" and the like — free text, because stories mix them. */
+  narrativeStyle: 60,
   threadTitle: 120,
   /** Roughly a long chapter. Posts are long-form prose, so this is deliberately generous. */
   postText: 100_000,
@@ -38,6 +44,15 @@ export const TEXT_LIMIT = {
  * all. Comfortably above the largest legitimate request, which is a full-length post.
  */
 export const REQUEST_BODY_LIMIT_BYTES = 1_048_576;
+
+/**
+ * How many entries a list of labels may hold. Bounded for the same reason the text is: a
+ * request should not be able to store an unbounded array, and a rail full of tags stops
+ * being readable long before it stops being valid.
+ */
+export const LIST_LIMIT = {
+  storyTags: 12,
+} as const;
 
 /**
  * Lower bounds, where a value that is merely non-empty would be useless.

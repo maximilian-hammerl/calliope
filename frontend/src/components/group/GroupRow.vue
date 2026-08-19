@@ -27,8 +27,8 @@ defineSlots<{ actions?: () => unknown }>()
       </CalliopeBadge>
     </div>
 
-    <p v-if="group.description" class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
-      {{ group.description }}
+    <p v-if="group.blurb" class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
+      {{ group.blurb }}
     </p>
 
     <div class="mt-[6px] text-[12.5px] leading-[1.95] text-ink-5">

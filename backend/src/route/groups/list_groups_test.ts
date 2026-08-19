@@ -23,7 +23,7 @@ async function createGroup(
 ) {
   const response = await request("POST", "/api/groups", cookie, {
     title,
-    description: "d",
+    blurb: "d",
     visibility,
   });
   assertEquals(response.status, STATUS_CODE.Created);

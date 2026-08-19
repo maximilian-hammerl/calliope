@@ -31,6 +31,8 @@ export type UserTokenPurpose =
   | "email_address_verification"
   | "password_reset";
 
+export type WritingGroupStoryStatus = "finished" | "planning" | "writing";
+
 export type WritingGroupVisibility = "private" | "public";
 
 export interface ChatGroup {
@@ -115,12 +117,20 @@ export interface UserToken {
 }
 
 export interface WritingGroup {
+  blurb: string;
+  contentWarnings: Generated<string[]>;
   createdAt: Generated<string>;
   createdBy: string | null;
-  description: string;
+  genres: Generated<string[]>;
   id: Generated<string>;
   lastActivityAt: Generated<string>;
+  perspective: string | null;
+  storyStatus: Generated<WritingGroupStoryStatus>;
+  subgenres: Generated<string[]>;
+  subtitle: string | null;
+  tense: string | null;
   title: string;
+  tropes: Generated<string[]>;
   visibility: Generated<WritingGroupVisibility>;
 }
 
@@ -161,6 +171,15 @@ import * as z from "zod";
 export const WRITING_GROUP_VISIBILITIES = ["private", "public"] as const;
 export const WRITING_GROUP_VISIBILITY_SCHEMA = z.enum(
   WRITING_GROUP_VISIBILITIES,
+);
+
+export const WRITING_GROUP_STORY_STATUSES = [
+  "finished",
+  "planning",
+  "writing",
+] as const;
+export const WRITING_GROUP_STORY_STATUS_SCHEMA = z.enum(
+  WRITING_GROUP_STORY_STATUSES,
 );
 
 export const USER_IN_WRITING_GROUP_ROLES = [
@@ -284,8 +303,16 @@ export const USER_TOKEN_SCHEMA = z.object({
 export const WRITING_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
-  description: z.string(),
+  subtitle: z.string().nullable(),
+  blurb: z.string(),
   visibility: WRITING_GROUP_VISIBILITY_SCHEMA,
+  storyStatus: WRITING_GROUP_STORY_STATUS_SCHEMA,
+  genres: z.array(z.string()),
+  subgenres: z.array(z.string()),
+  tropes: z.array(z.string()),
+  contentWarnings: z.array(z.string()),
+  tense: z.string().nullable(),
+  perspective: z.string().nullable(),
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   lastActivityAt: z.iso.datetime({ offset: true }),

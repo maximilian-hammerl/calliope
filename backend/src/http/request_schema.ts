@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
 
 /**
  * The one definition of an acceptable email address. Every route that takes one uses this,
@@ -16,3 +16,18 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 export const EMAIL_ADDRESS_SCHEMA = z.email({ pattern: z.regexes.html5Email })
   .max(TEXT_LIMIT.emailAddress)
   .toLowerCase();
+
+/**
+ * A list of labels — genres, subgenres, tropes, content warnings. Bounds only; the trimming
+ * and de-duplication happen in the service, so the OpenAPI document describes the shape
+ * rather than a transform the client cannot see.
+ *
+ * Optional rather than defaulted to empty. A default materialises the field even when the
+ * client omitted it, which on a PATCH means every partial update silently clears the tags —
+ * a test caught exactly that. Absent has to mean "unchanged"; the column defaults to empty
+ * for a create.
+ */
+export const STORY_TAGS_SCHEMA = z
+  .array(z.string().min(1).max(TEXT_LIMIT.storyTag))
+  .max(LIST_LIMIT.storyTags)
+  .optional();

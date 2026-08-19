@@ -431,6 +431,28 @@ password of somebody else's choosing, which is exactly what changing it was mean
 The route reads the session id from the cookie rather than taking it from `c.get("user")`,
 because the cookie is the only thing that says *which* session is asking.
 
+## A group is a story, for now
+
+`writing_group` carries the story's metadata — `subtitle`, `blurb`, `story_status`, `genres`,
+`subgenres`, `tropes`, `content_warnings`, `tense`, `perspective`. §5.1 has a group *containing*
+optional stories and §43 puts that split in phase 2; until then the group is the story, and
+moving the columns later is a migration rather than a redesign.
+
+Three things about it:
+
+- **`story_status`, not `status`.** The reader's own membership status is already called that
+  wherever a group is read. It is the only non-null field of the set, defaulting to `planning`:
+  every story is somewhere in its life. §7.4's fourth value, `archived`, is left out until §22's
+  group archive exists to distinguish it from `finished`.
+- **The tag arrays are optional in the request, never defaulted.** `STORY_TAGS_SCHEMA` is
+  `.optional()`, not `.default([])`. A default materialises the field when the client omitted
+  it, so on a PATCH every partial update silently cleared the tags — a test caught exactly that.
+  Absent means unchanged; the column's own `DEFAULT '{}'` covers a create.
+- **Normalisation lives in the service**, in `toRow`, so a caller cannot skip it: entries are
+  trimmed, blanks dropped, and repeats removed case-insensitively with the first spelling
+  kept. Doing it in the schema would put a transform in `open-api.json` that the client cannot
+  see.
+
 ## Tokens in links
 
 `user_token` is one table for every link mailed to a member, keyed by a `purpose` enum —

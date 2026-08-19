@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from '@/api/groups/groups'
 import type { GetGroup200 } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
+import { fromTags, toTags } from '@/lib/format/storyTags'
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -30,6 +32,34 @@ const title = ref<string>('')
 const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 
+const emptyMetadata = (): StoryMetadata => ({
+  subtitle: '',
+  storyStatus: 'planning',
+  genres: '',
+  subgenres: '',
+  tropes: '',
+  contentWarnings: '',
+  tense: '',
+  perspective: '',
+})
+
+const metadata = ref<StoryMetadata>(emptyMetadata())
+
+/** The form holds comma-separated text; the API takes arrays and nulls. */
+function metadataForApi() {
+  const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
+  return {
+    subtitle: blank(metadata.value.subtitle),
+    storyStatus: metadata.value.storyStatus,
+    genres: toTags(metadata.value.genres),
+    subgenres: toTags(metadata.value.subgenres),
+    tropes: toTags(metadata.value.tropes),
+    contentWarnings: toTags(metadata.value.contentWarnings),
+    tense: blank(metadata.value.tense),
+    perspective: blank(metadata.value.perspective),
+  }
+}
+
 const LIMIT = TEXT_LIMIT.updateGroup
 
 const titleError = ref<string | undefined>(undefined)
@@ -49,8 +79,18 @@ watch(open, (isOpen) => {
     return
   }
   title.value = props.group.title
-  description.value = props.group.description
+  description.value = props.group.blurb
   visibility.value = props.group.visibility
+  metadata.value = {
+    subtitle: props.group.subtitle ?? '',
+    storyStatus: props.group.storyStatus,
+    genres: fromTags(props.group.genres),
+    subgenres: fromTags(props.group.subgenres),
+    tropes: fromTags(props.group.tropes),
+    contentWarnings: fromTags(props.group.contentWarnings),
+    tense: props.group.tense ?? '',
+    perspective: props.group.perspective ?? '',
+  }
 })
 
 async function submit() {
@@ -63,8 +103,8 @@ async function submit() {
     return
   }
 
-  if (description.value.trim().length > LIMIT.description.maxLength) {
-    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.description.maxLength)} Zeichen lang sein.`
+  if (description.value.trim().length > LIMIT.blurb.maxLength) {
+    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.blurb.maxLength)} Zeichen lang sein.`
     return
   }
 
@@ -73,7 +113,8 @@ async function submit() {
       groupId: props.group.id,
       data: {
         title: title.value.trim(),
-        description: description.value.trim(),
+        blurb: description.value.trim(),
+        ...metadataForApi(),
         visibility: visibility.value,
       },
     })
@@ -147,6 +188,8 @@ async function submit() {
               <option value="public">Öffentlich — alle können mitlesen</option>
             </select>
           </Field>
+
+          <StoryMetadataFields v-model="metadata" />
         </FieldGroup>
 
         <DialogFooter>

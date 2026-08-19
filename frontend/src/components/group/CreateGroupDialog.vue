@@ -4,6 +4,9 @@ import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListGroupsQueryKey, useCreateGroup } from '@/api/groups/groups'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
+import { fromTags, toTags } from '@/lib/format/storyTags'
+
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -31,7 +34,6 @@ const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 // Not columns on writing_group yet. Present because members asked that founding a group force
 // the standardising metadata, but nothing is sent or stored.
-const genre = ref<string>('')
 const perspective = ref<string>('')
 
 // Taken from the design system's own dialog rather than invented, so they already match what
@@ -42,6 +44,34 @@ const PERSPECTIVES = [
   '3. Person, Gegenwart',
   '3. Person, Vergangenheit',
 ] as const
+
+const emptyMetadata = (): StoryMetadata => ({
+  subtitle: '',
+  storyStatus: 'planning',
+  genres: '',
+  subgenres: '',
+  tropes: '',
+  contentWarnings: '',
+  tense: '',
+  perspective: '',
+})
+
+const metadata = ref<StoryMetadata>(emptyMetadata())
+
+/** The form holds comma-separated text; the API takes arrays and nulls. */
+function metadataForApi() {
+  const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
+  return {
+    subtitle: blank(metadata.value.subtitle),
+    storyStatus: metadata.value.storyStatus,
+    genres: toTags(metadata.value.genres),
+    subgenres: toTags(metadata.value.subgenres),
+    tropes: toTags(metadata.value.tropes),
+    contentWarnings: toTags(metadata.value.contentWarnings),
+    tense: blank(metadata.value.tense),
+    perspective: blank(metadata.value.perspective),
+  }
+}
 
 const LIMIT = TEXT_LIMIT.createGroup
 
@@ -58,7 +88,7 @@ watch(open, (isOpen) => {
   title.value = ''
   description.value = ''
   visibility.value = 'private'
-  genre.value = ''
+  metadata.value = emptyMetadata()
   perspective.value = ''
   titleError.value = undefined
   descriptionError.value = undefined
@@ -75,8 +105,8 @@ async function submit() {
     return
   }
 
-  if (description.value.trim().length > LIMIT.description.maxLength) {
-    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.description.maxLength)} Zeichen lang sein.`
+  if (description.value.trim().length > LIMIT.blurb.maxLength) {
+    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.blurb.maxLength)} Zeichen lang sein.`
     return
   }
 
@@ -85,8 +115,9 @@ async function submit() {
     created = await createGroup({
       data: {
         title: title.value.trim(),
-        description: description.value.trim(),
+        blurb: description.value.trim(),
         visibility: visibility.value,
+        ...metadataForApi(),
       },
     })
   } catch {
@@ -159,35 +190,7 @@ async function submit() {
             </select>
           </Field>
 
-          <Field>
-            <FieldLabel for="group-genre">Genre</FieldLabel>
-            <Input
-              id="group-genre"
-              v-model="genre"
-              class="h-11 md:h-9"
-              name="genre"
-              placeholder="z. B. Fantasy, Mystery"
-            />
-            <FieldDescription>Wird noch nicht gespeichert.</FieldDescription>
-          </Field>
-
-          <Field>
-            <FieldLabel for="group-perspective">Perspektive</FieldLabel>
-            <!-- A list rather than free text: "Perspektive" is the one field whose expected
-                 answer a newcomer cannot guess, and the design system already fixes the four. -->
-            <select
-              id="group-perspective"
-              v-model="perspective"
-              name="perspective"
-              class="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm md:h-9"
-            >
-              <option value="">Bitte wählen</option>
-              <option v-for="option in PERSPECTIVES" :key="option" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <FieldDescription>Wird noch nicht gespeichert.</FieldDescription>
-          </Field>
+          <StoryMetadataFields v-model="metadata" />
         </FieldGroup>
 
         <DialogFooter>
