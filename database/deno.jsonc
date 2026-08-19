@@ -27,7 +27,7 @@
     "@std/assert": "jsr:@std/assert@1.0.19",
     "@types/pg": "npm:@types/pg@8.23.1",
     "pg": "npm:pg@8.23.0",
-    "typescript": "npm:typescript@6.0.3"
+    "typescript": "npm:typescript@7.0.2"
   },
   // The full set, unlike backend/: no Kysely builders here and no German, so the five it
   // leaves out all pass.
