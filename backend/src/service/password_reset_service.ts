@@ -1,6 +1,10 @@
-import * as z from "zod";
 import { db } from "@/src/database/client.ts";
-import { generateToken, hashToken } from "@/src/util/token.ts";
+import {
+  formatToken,
+  generateToken,
+  hashToken,
+  parseToken,
+} from "@/src/util/token.ts";
 import { hashPassword } from "@/src/util/password.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { runInBackground } from "@/src/util/background.ts";
@@ -22,27 +26,10 @@ const RESEND_COOLDOWN = Temporal.Duration.from({ minutes: 2 });
 
 const HOST_URL = getRequiredEnvVariable("HOST_URL");
 
-/** Matches the column's `uuidv7()` default, so a version the table cannot hold is a miss. */
-const TOKEN_ID = z.uuidv7();
-
-/** Like the session cookie: the id finds the row, the secret is compared against it. */
 function resetLink(id: string, secret: string): string {
   const url = new URL("/reset-password", HOST_URL);
-  url.searchParams.set("token", `${id}.${secret}`);
+  url.searchParams.set("token", formatToken(id, secret));
   return url.toString();
-}
-
-function parseToken(
-  token: string,
-): { id: string; secret: string } | undefined {
-  const [id, secret] = token.split(".");
-
-  // The id reaches a uuid column, where anything else is a database error rather than a miss.
-  if (!TOKEN_ID.safeParse(id).success || !secret) {
-    return undefined;
-  }
-
-  return { id, secret };
 }
 
 /**

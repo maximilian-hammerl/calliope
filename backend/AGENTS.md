@@ -365,10 +365,18 @@ said. Three things about it are load-bearing:
 `password_reset` today, verifying and changing an address later. The purpose is stored rather
 than implied so a token issued for one thing cannot be spent on another.
 
-Tokens are hashed with `util/token.ts` and carried the way a session cookie carries one:
-`id.secret`, where the id finds the row by primary key and the secret is compared against
-`hashed_token`. Do not make `hashed_token` unique and look up by it — `user_session` started
-that way and moved off it.
+Tokens are hashed with `util/token.ts`, which also owns the transport format: `formatToken`
+and `parseToken` produce and read `id.secret`, where the id finds the row by primary key and
+the secret is compared against `hashed_token`. Session cookies use the same pair. Do not make
+`hashed_token` unique and look up by it — `user_session` started that way and moved off it.
+
+**Always parse, never destructure a `split`.** The id half reaches a `uuid` column, where a
+malformed value is a database error rather than a miss: the session cookie went straight from
+`split(".")` into a query and answered **500** on every request carrying a corrupted cookie,
+instead of treating it as not signed in. `parseToken` returns `undefined` unless both halves
+are present and the id is a v7 uuid. A dot is safe as the separator because neither half can
+contain one, and because it is the only candidate a URL leaves unescaped — `$` arrives as
+`%24`, which a reset link mailed as plain text should not have to survive.
 
 A partial unique index allows one outstanding token per member per purpose: issuing a link
 deletes the previous one, and the index makes that an invariant rather than a habit. Insert

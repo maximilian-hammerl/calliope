@@ -1,5 +1,10 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { generateToken, hashToken } from "@/src/util/token.ts";
+import {
+  formatToken,
+  generateToken,
+  hashToken,
+  parseToken,
+} from "@/src/util/token.ts";
 
 Deno.test("every token is different", async () => {
   const tokens = new Set(
@@ -33,4 +38,42 @@ Deno.test("different tokens hash differently", async () => {
     Buffer.from(await hashToken(generateToken())).toString("hex"),
     Buffer.from(await hashToken(generateToken())).toString("hex"),
   );
+});
+
+Deno.test("a formatted token parses back to its two halves", () => {
+  const id = "01a019ee-ab02-7a82-9796-3767b50ed584";
+  const secret = generateToken();
+
+  assertEquals(parseToken(formatToken(id, secret)), { id, secret });
+});
+
+Deno.test("a secret never contains the separator", () => {
+  // What makes splitting on a dot unambiguous: base64url has no dot in its alphabet.
+  const secrets = Array.from({ length: 200 }, () => generateToken());
+  assert(
+    secrets.every((secret) => !secret.includes(".")),
+    "a secret held a dot",
+  );
+});
+
+Deno.test("anything that is not both halves does not parse", () => {
+  for (
+    const token of [
+      "",
+      "abc",
+      "abc.def",
+      ".only-a-secret",
+      // A valid uuid, but nothing after the separator.
+      "01a019ee-ab02-7a82-9796-3767b50ed584",
+      "01a019ee-ab02-7a82-9796-3767b50ed584.",
+      // A v4 uuid: the columns default to uuidv7, so this can never name a row.
+      "f7a3b1c2-9d4e-4f6a-8b2c-1e3d5f7a9b1c.secret",
+    ]
+  ) {
+    assertEquals(
+      parseToken(token),
+      undefined,
+      `expected ${token} not to parse`,
+    );
+  }
 });

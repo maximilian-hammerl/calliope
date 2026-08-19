@@ -37,3 +37,25 @@ Deno.test("GET /api/auth/me rejects a request without a session", async () => {
   assertEquals(response.status, STATUS_CODE.Unauthorized);
   assertEquals(await response.json(), { error: "Unauthorized" });
 });
+
+Deno.test("GET /api/auth/me treats a malformed session cookie as no session", async () => {
+  // The id half reaches a uuid column. Passing it through unchecked made every request with
+  // a corrupted cookie answer 500 rather than simply being unauthenticated.
+  for (
+    const cookie of [
+      "session=abc",
+      "session=abc.def",
+      "session=.only-a-secret",
+      "session=01a019ee-ab02-7a82-9796-3767b50ed584",
+    ]
+  ) {
+    const response = await app.request("/api/auth/me", { headers: { cookie } });
+
+    assertEquals(
+      response.status,
+      STATUS_CODE.Unauthorized,
+      `expected ${cookie} to be unauthorised`,
+    );
+    await response.body?.cancel();
+  }
+});

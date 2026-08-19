@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { SESSION_LIFETIME, UserSession } from "./user_service.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
+import { formatToken, parseToken } from "@/src/util/token.ts";
 
 const SESSION_COOKIE_KEY = "session";
 
@@ -20,12 +21,17 @@ function getUserSession(c: Context): UserSession | undefined {
     return undefined;
   }
 
-  const [id, token] = sessionCookie.split(".");
-  return { id, token };
+  const parsed = parseToken(sessionCookie);
+
+  if (parsed === undefined) {
+    return undefined;
+  }
+
+  return { id: parsed.id, token: parsed.secret };
 }
 
 function setUserSession(c: Context, userSession: UserSession): void {
-  setCookie(c, "session", `${userSession.id}.${userSession.token}`, {
+  setCookie(c, "session", formatToken(userSession.id, userSession.token), {
     httpOnly: true,
     secure: USE_SECURE_COOKIE,
     sameSite: "Lax",
