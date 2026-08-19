@@ -1,7 +1,12 @@
-import type {Transaction} from "kysely";
-import {db} from "@/src/database/client.ts";
-import type {DB, UserTokenPurpose} from "@/src/database/schema.ts";
-import {formatToken, generateToken, hashToken, parseToken,} from "@/src/util/token.ts";
+import type { Transaction } from "kysely";
+import { db } from "@/src/database/client.ts";
+import type { DB, UserTokenPurpose } from "@/src/database/schema.ts";
+import {
+  formatToken,
+  generateToken,
+  hashToken,
+  parseToken,
+} from "@/src/util/token.ts";
 
 /**
  * One lifetime for every purpose. A verification link could reasonably live longer than a
@@ -115,15 +120,15 @@ async function consumeToken(
   const now = Temporal.Now.instant();
 
   return await transaction
-      .updateTable("userToken")
-      .set({consumedAt: now.toString()})
-      .where("id", "=", parsed.id)
-      .where("hashedToken", "=", await hashToken(parsed.secret))
-      .where("purpose", "=", purpose)
-      .where("consumedAt", "is", null)
-      .where("expiresAt", ">", now.toString())
-      .returning(["userId", "newEmailAddress"])
-      .executeTakeFirst();
+    .updateTable("userToken")
+    .set({ consumedAt: now.toString() })
+    .where("id", "=", parsed.id)
+    .where("hashedToken", "=", await hashToken(parsed.secret))
+    .where("purpose", "=", purpose)
+    .where("consumedAt", "is", null)
+    .where("expiresAt", ">", now.toString())
+    .returning(["userId", "newEmailAddress"])
+    .executeTakeFirst();
 }
 
 /**
