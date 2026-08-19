@@ -3,8 +3,42 @@
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
-    // Extra safety for array and object lookups, but may have false positives.
+    // Unreachable code is a leftover, not a statement.
+    "allowUnreachableCode": false,
+    // So is a label nothing jumps to.
+    "allowUnusedLabels": false,
+    // Print the whole type. Kysely and zod types are long, and the truncated middle is
+    // usually where the mismatch is.
+    "noErrorTruncation": true,
+    // A case that falls through must say so.
+    "noFallthroughCasesInSwitch": true,
+    // Free today — there are no classes — and it stops an override drifting from its base
+    // the day there are.
+    "noImplicitOverride": true,
+    // Every path through a function returns, or none does.
+    "noImplicitReturns": true,
+    // `array[0]` is `T | undefined`, because it is.
     "noUncheckedIndexedAccess": true,
+    // Catches the dead import or binding. oxlint cannot: in `<script setup>` every top-level
+    // binding is exposed to the template, which it does not read, so it would flag anything
+    // used only in markup. `vue-tsc` builds a render function and knows the difference.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    // `strict`, `verbatimModuleSyntax`, `isolatedModules`, `resolveJsonModule` and
+    // `forceConsistentCasingInFileNames` already come from `@vue/tsconfig`.
+
+    // Three were tried and rejected, so nobody has to try them again:
+    //
+    // "exactOptionalPropertyTypes" — 46 errors, none of them defects. Vue types an optional
+    //   prop as `activeId?: string`, and a template binding hands it `string | undefined`.
+    //   Satisfying it means writing `| undefined` on every optional prop in the codebase.
+    //
+    // "noPropertyAccessFromIndexSignature" — 12 errors, all Vue slots: `$slots.rail` would
+    //   have to become `$slots['rail']`. A mistyped slot name is equally wrong either way.
+    //
+    // "erasableSyntaxOnly" — flags the parameter properties in `ApiError`. The option exists
+    //   for runtimes that strip types without compiling; Vite compiles.
 
     // Path mapping for cleaner imports. Resolved relative to this file, since `baseUrl`
     // is deprecated in TypeScript 6.

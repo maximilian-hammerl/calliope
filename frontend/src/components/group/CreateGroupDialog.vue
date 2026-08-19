@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getListGroupsQueryKey, useCreateGroup } from '@/api/groups/groups'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
-import { fromTags, toTags } from '@/lib/format/storyTags'
+import { toTags } from '@/lib/format/storyTags'
 
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
@@ -38,13 +38,6 @@ const perspective = ref<string>('')
 
 // Taken from the design system's own dialog rather than invented, so they already match what
 // the column will hold once perspective is stored.
-const PERSPECTIVES = [
-  '1. Person, Gegenwart',
-  '1. Person, Vergangenheit',
-  '3. Person, Gegenwart',
-  '3. Person, Vergangenheit',
-] as const
-
 const emptyMetadata = (): StoryMetadata => ({
   subtitle: '',
   storyStatus: 'planning',

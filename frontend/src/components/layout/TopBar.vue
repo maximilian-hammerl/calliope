@@ -13,7 +13,6 @@ import NotificationsDialog from '@/components/notification/NotificationsDialog.v
 import MessagesDialog from '@/components/chat/MessagesDialog.vue'
 import SettingsDialog from '@/components/settings/SettingsDialog.vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
