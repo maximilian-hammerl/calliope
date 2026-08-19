@@ -8,6 +8,17 @@ import tailwindcss from '@tailwindcss/vite'
 /** Where `deno task dev` serves the backend; `deno serve` defaults to port 8000. */
 const BACKEND_URL = 'http://localhost:8000'
 
+/**
+ * Assigning back into `process.env` rather than only using the constant is deliberate: Vite
+ * exposes `VITE_`-prefixed variables to both `import.meta.env` and the `%VITE_APP_NAME%`
+ * placeholder in index.html, and an undefined one leaves that placeholder in the page as
+ * literal text. Setting it here means the substitution always happens, whether or not an
+ * operator supplied a name.
+ *
+ * A committed default cannot live in `frontend/.env` — the repository ignores `.env`.
+ */
+process.env.VITE_APP_NAME ||= 'Calliope'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss()],

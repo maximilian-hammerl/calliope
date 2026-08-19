@@ -34,6 +34,10 @@ services:
     # The API client is generated rather than committed, so it has to be produced here or
     # the type check fails on imports that do not exist yet in a fresh checkout.
     command: sh -c "npm ci && npm run open-api:generate-client && npm run build"
+    environment:
+      # Baked into the bundle at build time, so the tab title and the wordmark are right from
+      # the first paint. Renaming means rebuilding, which a deploy does anyway.
+      VITE_APP_NAME: ${APP_NAME:-Calliope}
     volumes:
       - ./frontend:/app
       # orval reads the specification at ../backend/open-api.json, which is outside the
@@ -49,6 +53,10 @@ services:
 
     environment:
       HOST_URL: ${HOST_URL:?set HOST_URL in .env}
+      APP_NAME: ${APP_NAME:-}
+      APP_DESCRIPTION: ${APP_DESCRIPTION:-}
+      APP_CONTACT_NAME: ${APP_CONTACT_NAME:-}
+      APP_CONTACT_EMAIL: ${APP_CONTACT_EMAIL:-}
       DATABASE_URL: postgres://calliope:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/calliope?sslmode=disable
       REDIS_URL: redis://redis:6379
 

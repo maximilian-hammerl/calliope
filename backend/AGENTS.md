@@ -152,6 +152,19 @@ asked what a group or a thread last changed, and a column that exists without a 
 into being trusted for things it never meant. Where a time genuinely matters it is named for
 what it means — `last_activity_at`, `edited_at`.
 
+## The deployment's own name
+
+Anything that names the product reads from `branding.ts`, never a literal: Calliope is meant to
+be run by other communities under their own name. Defaults rather than required variables,
+because `open-api.json` is generated with nothing set and committed — a required variable would
+make the document differ per developer and fail `open-api:check`.
+
+The contact block is **omitted** when no operator supplies one. A maintainer's address left as
+a default would sit in a public repository forever.
+
+Component names (`CalliopeBadge`, `CalliopeLogo`) are identifiers, not branding, and stay. So do
+the systemd units, the compose project and the database name.
+
 ## Never raw SQL without asking
 
 Kysely's builder is checked; a template string is not. `sql\`nov()\`` compiles, ships, and

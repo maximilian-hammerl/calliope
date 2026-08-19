@@ -1,7 +1,7 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 import { getRequiredEnvVariable } from "./util/env.ts";
+import { APP_CONTACT, APP_DESCRIPTION, APP_NAME } from "@/src/branding.ts";
 
-export const API_TITLE = "Calliope";
 export const API_VERSION = "0.1.0";
 
 export const OPERATIONS_TAG = "operations";
@@ -51,13 +51,11 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
 export default {
   openapi: "3.1.0",
   info: {
-    title: API_TITLE,
+    title: APP_NAME,
     version: API_VERSION,
-    description: "The API of Calliope, a community of private writing groups.",
-    contact: {
-      name: "Maximilian Hammerl",
-      email: "maximilian@hammerl.dev",
-    },
+    description: APP_DESCRIPTION,
+    // Omitted entirely when the deployment names nobody, rather than defaulted.
+    ...(APP_CONTACT === undefined ? {} : { contact: APP_CONTACT }),
   },
   servers: [{ url: getRequiredEnvVariable("HOST_URL") }],
   tags: Object.entries(TAGS_WITH_DESCRIPTIONS).map(([name, description]) => ({

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { APP_NAME } from '@/lib/branding'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LogOutIcon } from '@lucide/vue'
@@ -62,7 +63,7 @@ async function signOut() {
 <template>
   <header class="flex flex-col border-b border-line-3 bg-paper-0">
     <div class="flex h-[52px] items-center gap-5 px-[18px] md:h-[54px] md:gap-7 md:px-6">
-      <RouterLink :to="{ name: 'home' }" aria-label="Calliope, zur Startseite">
+      <RouterLink :to="{ name: 'home' }" :aria-label="`${APP_NAME}, zur Startseite`">
         <CalliopeLogo :size="22" wordmark />
       </RouterLink>
 

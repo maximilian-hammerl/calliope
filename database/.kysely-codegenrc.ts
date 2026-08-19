@@ -1,6 +1,12 @@
 import { type Config, TypeScriptSerializer } from "kysely-codegen";
 import { ZodSerializer } from "./kysely_zod_serializer.ts";
 
+const DATABASE_URL = Deno.env.get("DATABASE_URL");
+
+if (!DATABASE_URL) {
+  throw new Error("Missing DATABASE_URL, cannot generate types");
+}
+
 /**
  * Columns whose database type does not map to a schema on its own. Each entry gives the
  * TypeScript type and the zod schema for one column.

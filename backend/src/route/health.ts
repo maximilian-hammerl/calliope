@@ -1,10 +1,7 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { STATUS_CODE } from "@std/http/status";
-import {
-  API_TITLE,
-  API_VERSION,
-  OPERATIONS_TAG,
-} from "@/src/open_api_specification.ts";
+import { APP_NAME } from "@/src/branding.ts";
+import { API_VERSION, OPERATIONS_TAG } from "@/src/open_api_specification.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { databaseHealthCheck } from "@/src/database/client.ts";
 import { redisHealthCheck } from "@/src/redis/client.ts";
@@ -27,7 +24,7 @@ async function response() {
 
   return {
     application: {
-      name: API_TITLE,
+      name: APP_NAME,
       datetime: now.toString({ timeZoneName: "never" }),
       startup: startup.toString({ timeZoneName: "never" }),
       uptime: startup.until(now).toString(),

@@ -1,7 +1,8 @@
+import { APP_NAME } from "@/src/branding.ts";
 import { assertEquals, assertExists, assertMatch } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { API_TITLE, API_VERSION } from "@/src/open_api_specification.ts";
+import { API_VERSION } from "@/src/open_api_specification.ts";
 import type { DatabaseHealth } from "@/src/operations/database_health.ts";
 
 Deno.test("GET /api/health reports a healthy application without a session", async () => {
@@ -11,7 +12,7 @@ Deno.test("GET /api/health reports a healthy application without a session", asy
   const body = await response.json();
 
   assertEquals(body.health, { databases: true });
-  assertEquals(body.application.name, API_TITLE);
+  assertEquals(body.application.name, APP_NAME);
   assertEquals(body.application.version, API_VERSION);
   assertEquals(body.application.hostname, "localhost");
   // An ISO 8601 duration, so the value stays parseable by whatever polls this.

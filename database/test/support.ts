@@ -1,13 +1,13 @@
 import pg from "pg";
 
-/**
- * These tests exercise the database's own behaviour — triggers, cascades, constraints — so
- * they talk to it directly rather than through the backend's Kysely client. That keeps the
- * migrations verifiable without the backend, and means a test failure points at the SQL
- * rather than at a layer above it.
- */
+const DATABASE_URL = Deno.env.get("DATABASE_URL");
+
+if (!DATABASE_URL) {
+  throw new Error("Missing DATABASE_URL, cannot run tests");
+}
+
 export const client = new pg.Client({
-  connectionString: Deno.env.get("DATABASE_URL"),
+  connectionString: DATABASE_URL,
 });
 
 let connected = false;

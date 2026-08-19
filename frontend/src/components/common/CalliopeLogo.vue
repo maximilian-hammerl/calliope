@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { APP_NAME } from '@/lib/branding'
 import { computed } from 'vue'
 import markRegular from '@/assets/logo/calliope-c.svg'
 import markSmall from '@/assets/logo/calliope-c-small.svg'
@@ -48,7 +49,7 @@ const baselineOffset = computed<number>(() => props.size * ((64 - 57.14) / 64))
       class="font-serif leading-none font-semibold tracking-[0.01em] text-[#3a3229]"
       :style="{ fontSize: `${wordmarkSize}px` }"
     >
-      Calliope
+      {{ APP_NAME }}
     </span>
   </span>
 </template>

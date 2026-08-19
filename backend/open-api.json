@@ -3,11 +3,7 @@
   "info": {
     "title": "Calliope",
     "version": "0.1.0",
-    "description": "The API of Calliope, a community of private writing groups.",
-    "contact": {
-      "name": "Maximilian Hammerl",
-      "email": "maximilian@hammerl.dev"
-    }
+    "description": "The API of Calliope, a community of private writing groups."
   },
   "servers": [{ "url": "http://localhost:5173" }],
   "tags": [
