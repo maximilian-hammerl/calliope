@@ -27,7 +27,8 @@ Deno.test.afterEach(() => deleteUsers([username]));
 const listGroups = (cookie: string) =>
   sendJson("QUERY", "/api/groups", { page: 1, pageSize: 10 }, cookie);
 
-const verify = (token: string) => postJson("/api/auth/verify-email", { token });
+const verify = (token: string) =>
+  postJson("/api/auth/verify-email-address", { token });
 
 async function registerAndReadLink(): Promise<
   { cookie: string; token: string }
@@ -43,10 +44,10 @@ Deno.test("registering leaves the address unverified and sends a link", async ()
   assertExists(token);
   const user = await db
     .selectFrom("user")
-    .select(["emailVerifiedAt"])
+    .select(["emailAddressVerifiedAt"])
     .where("username", "=", username)
     .executeTakeFirstOrThrow();
-  assertEquals(user.emailVerifiedAt, null);
+  assertEquals(user.emailAddressVerifiedAt, null);
 });
 
 Deno.test("a gated route is refused until the address is verified", async () => {
@@ -63,7 +64,7 @@ Deno.test("a gated route is refused until the address is verified", async () => 
   assertEquals(after.status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/auth/verify-email spends the token exactly once", async () => {
+Deno.test("POST /api/auth/verify-email-address spends the token exactly once", async () => {
   const { token } = await registerAndReadLink();
 
   assertEquals((await verify(token)).status, STATUS_CODE.OK);
@@ -73,7 +74,7 @@ Deno.test("POST /api/auth/verify-email spends the token exactly once", async () 
   assertEquals(await second.json(), { error: "The link is no longer valid" });
 });
 
-Deno.test("POST /api/auth/verify-email rejects an expired token", async () => {
+Deno.test("POST /api/auth/verify-email-address rejects an expired token", async () => {
   const { cookie, token } = await registerAndReadLink();
 
   await db
@@ -81,7 +82,7 @@ Deno.test("POST /api/auth/verify-email rejects an expired token", async () => {
     .set({
       expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
     })
-    .where("purpose", "=", "email_verification")
+    .where("purpose", "=", "email_address_verification")
     .execute();
 
   assertEquals((await verify(token)).status, STATUS_CODE.Gone);
@@ -89,7 +90,7 @@ Deno.test("POST /api/auth/verify-email rejects an expired token", async () => {
   assertEquals((await listGroups(cookie)).status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/auth/verify-email rejects a reset token", async () => {
+Deno.test("POST /api/auth/verify-email-address rejects a reset token", async () => {
   const { cookie } = await registerAndReadLink();
   await deleteAllMail();
 
@@ -102,7 +103,7 @@ Deno.test("POST /api/auth/verify-email rejects a reset token", async () => {
   assertEquals((await listGroups(cookie)).status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/auth/resend-verification sends another link", async () => {
+Deno.test("POST /api/auth/resend-email-address-verification sends another link", async () => {
   const { cookie } = await registerAndReadLink();
   await deleteAllMail();
 
@@ -112,11 +113,11 @@ Deno.test("POST /api/auth/resend-verification sends another link", async () => {
     .set({
       createdAt: Temporal.Now.instant().subtract({ minutes: 5 }).toString(),
     })
-    .where("purpose", "=", "email_verification")
+    .where("purpose", "=", "email_address_verification")
     .execute();
 
   const response = await postJson(
-    "/api/auth/resend-verification",
+    "/api/auth/resend-email-address-verification",
     undefined,
     cookie,
   );

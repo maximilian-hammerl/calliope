@@ -2,7 +2,7 @@ import { APP_NAME } from "@/src/branding.ts";
 import type { Mail } from "@/src/mail/mailer.ts";
 
 /** Text only, for the same reason as the reset mail: one copy of the words to keep in step. */
-export function emailVerificationMail(
+export function emailAddressVerificationMail(
   { username, emailAddress, link, lifetime }: {
     username: string;
     emailAddress: string;

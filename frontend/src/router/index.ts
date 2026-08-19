@@ -73,32 +73,32 @@ const router = createRouter({
     // Same reasoning as the reset link: a verification link is often opened in a different
     // browser from the one that registered.
     {
-      path: '/verify-email',
-      name: 'verifyEmail',
-      component: () => import('../views/VerifyEmailView.vue'),
+      path: '/verify-email-address',
+      name: 'verifyEmailAddress',
+      component: () => import('../views/VerifyEmailAddressView.vue'),
       meta: { access: 'anyone' },
     },
     // Both reached from a mailed link, so neither may depend on a session: confirming is done
     // from the new address's mailbox, and cancelling by whoever still reads the old one — who,
     // in the case worth defending against, is not the person holding the session.
     {
-      path: '/confirm-email-change',
-      name: 'confirmEmailChange',
-      component: () => import('../views/ConfirmEmailChangeView.vue'),
+      path: '/confirm-email-address-change',
+      name: 'confirmEmailAddressChange',
+      component: () => import('../views/ConfirmEmailAddressChangeView.vue'),
       meta: { access: 'anyone' },
     },
     {
-      path: '/cancel-email-change',
-      name: 'cancelEmailChange',
-      component: () => import('../views/CancelEmailChangeView.vue'),
+      path: '/cancel-email-address-change',
+      name: 'cancelEmailAddressChange',
+      component: () => import('../views/CancelEmailAddressChangeView.vue'),
       meta: { access: 'anyone' },
     },
     // Where a signed-in member with an unconfirmed address is held. An ordinary member route
     // — it needs a session — and the guard below keeps everyone else off it.
     {
-      path: '/verify-email-required',
-      name: 'verifyEmailRequired',
-      component: () => import('../views/VerifyEmailRequiredView.vue'),
+      path: '/verify-email-address-required',
+      name: 'verifyEmailAddressRequired',
+      component: () => import('../views/VerifyEmailAddressRequiredView.vue'),
     },
   ],
 })
@@ -116,13 +116,13 @@ router.beforeEach(async (to) => {
   // what state that session's account is in. Only member routes are affected — a verification
   // link has to work signed out, and the wall itself would otherwise redirect to itself.
   if (user !== undefined && access === 'member') {
-    const addressIsUnconfirmed = user.emailVerifiedAt === null
+    const addressIsUnconfirmed = user.emailAddressVerifiedAt === null
 
-    if (addressIsUnconfirmed && to.name !== 'verifyEmailRequired') {
-      return { name: 'verifyEmailRequired' }
+    if (addressIsUnconfirmed && to.name !== 'verifyEmailAddressRequired') {
+      return { name: 'verifyEmailAddressRequired' }
     }
 
-    if (!addressIsUnconfirmed && to.name === 'verifyEmailRequired') {
+    if (!addressIsUnconfirmed && to.name === 'verifyEmailAddressRequired') {
       return { name: 'home' }
     }
   }

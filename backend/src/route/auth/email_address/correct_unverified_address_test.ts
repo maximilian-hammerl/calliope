@@ -45,7 +45,7 @@ async function storedAddress(): Promise<string> {
 async function markVerified(): Promise<void> {
   await db
     .updateTable("user")
-    .set({ emailVerifiedAt: Temporal.Now.instant().toString() })
+    .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
     .where("username", "=", username)
     .execute();
 }
@@ -75,7 +75,7 @@ Deno.test("PATCH /api/auth/email-address invalidates the link sent to the old ad
   await flushBackgroundWork();
 
   // Whoever received the mistyped mail must not be able to confirm somebody else's account.
-  const response = await postJson("/api/auth/verify-email", {
+  const response = await postJson("/api/auth/verify-email-address", {
     token: staleToken,
   });
 

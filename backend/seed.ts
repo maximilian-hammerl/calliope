@@ -110,7 +110,7 @@ async function seed(): Promise<void> {
       username: name,
       emailAddress: `${name}@example.test`,
       hashedPassword,
-      emailVerifiedAt: Temporal.Now.instant().toString(),
+      emailAddressVerifiedAt: Temporal.Now.instant().toString(),
     })),
   ).execute();
 

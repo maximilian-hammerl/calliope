@@ -531,7 +531,7 @@
                     "id": { "type": "string", "format": "uuid" },
                     "username": { "type": "string" },
                     "emailAddress": { "type": "string" },
-                    "emailVerifiedAt": {
+                    "emailAddressVerifiedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
@@ -541,7 +541,7 @@
                     "id",
                     "username",
                     "emailAddress",
-                    "emailVerifiedAt",
+                    "emailAddressVerifiedAt",
                     "unreadNotifications"
                   ]
                 }
@@ -957,12 +957,12 @@
         }
       }
     },
-    "/api/auth/verify-email": {
+    "/api/auth/verify-email-address": {
       "post": {
         "tags": ["auth"],
         "summary": "Confirm an email address with a verification token",
         "description": "Spends the token from a verification link. Deliberately needs no session: the link is often opened in a different browser from the one that registered. No session is started either, for the same reason.",
-        "operationId": "verifyEmail",
+        "operationId": "verifyEmailAddress",
         "requestBody": {
           "required": true,
           "content": {
@@ -1116,12 +1116,12 @@
         }
       }
     },
-    "/api/auth/resend-verification": {
+    "/api/auth/resend-email-address-verification": {
       "post": {
         "tags": ["auth"],
         "summary": "Send the verification link again",
         "description": "Reachable without a verified address, since it is how one is obtained. Answers the same way whether a message was sent or the resend cooldown swallowed it, and does nothing at all when the address is already verified.",
-        "operationId": "resendVerification",
+        "operationId": "resendEmailAddressVerification",
         "responses": {
           "200": {
             "description": "Request accepted, whether or not a message was sent",
@@ -1433,7 +1433,7 @@
         "tags": ["auth"],
         "summary": "Ask to move the account to another email address",
         "description": "Requires the current password. Changes nothing yet: a link goes to the new address, and the account keeps the old one until that link is opened. The old address is told at the same time and can cancel.",
-        "operationId": "requestEmailChange",
+        "operationId": "requestEmailAddressChange",
         "requestBody": {
           "required": true,
           "content": {
@@ -1628,7 +1628,7 @@
         "tags": ["auth"],
         "summary": "Apply a requested email address change",
         "description": "Spends the token from the link sent to the new address, which is what actually moves the account. Every session ends, including the one that asked. Needs no session of its own: the link is usually opened in the new address's mailbox, on whatever device that happens to be.",
-        "operationId": "confirmEmailChange",
+        "operationId": "confirmEmailAddressChange",
         "requestBody": {
           "required": true,
           "content": {
@@ -1812,7 +1812,7 @@
         "tags": ["auth"],
         "summary": "Call off a requested email address change",
         "description": "The link from the notice sent to the address being moved away from. Needs no session, deliberately: the person who should be able to stop this is whoever reads that mailbox, and in the case worth defending against they are not the one holding the session.",
-        "operationId": "cancelEmailChange",
+        "operationId": "cancelEmailAddressChange",
         "requestBody": {
           "required": true,
           "content": {

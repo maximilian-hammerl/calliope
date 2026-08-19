@@ -7,7 +7,7 @@ function validFor(lifetime: Temporal.Duration): string {
 }
 
 /** To the address being moved *to*: opening this link is what applies the change. */
-export function emailChangeConfirmationMail(
+export function emailAddressChangeConfirmationMail(
   { username, newEmailAddress, link, lifetime }: {
     username: string;
     newEmailAddress: string;
@@ -43,7 +43,7 @@ ${APP_NAME}
  * mail that matters if somebody else got hold of the password: it reaches the person who
  * still owns the account, and the link stops the change.
  */
-export function emailChangeRequestedMail(
+export function emailAddressChangeRequestedMail(
   { username, currentEmailAddress, newEmailAddress, link, lifetime }: {
     username: string;
     currentEmailAddress: string;
@@ -78,7 +78,7 @@ ${APP_NAME}
 }
 
 /** To the old address once the change has gone through. Nothing to click — it is a record. */
-export function emailChangeCompletedMail(
+export function emailAddressChangeCompletedMail(
   { username, previousEmailAddress, newEmailAddress }: {
     username: string;
     previousEmailAddress: string;

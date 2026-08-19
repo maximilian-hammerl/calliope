@@ -20,7 +20,7 @@ export default createMiddleware<{
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  if (user.emailVerifiedAt === null) {
+  if (user.emailAddressVerifiedAt === null) {
     return c.json({ error: "Email address not verified" }, 403);
   }
 

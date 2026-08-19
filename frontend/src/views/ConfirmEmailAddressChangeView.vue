@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useConfirmEmailChange } from '@/api/auth/auth'
+import { useConfirmEmailAddressChange } from '@/api/auth/auth'
 import { ApiError } from '@/lib/api/apiFetch'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
@@ -13,7 +13,7 @@ const status = ref<'confirming' | 'done' | 'in_use' | 'expired'>(
   token === undefined ? 'expired' : 'confirming',
 )
 
-const { mutateAsync: confirm } = useConfirmEmailChange()
+const { mutateAsync: confirm } = useConfirmEmailAddressChange()
 
 onMounted(async () => {
   if (token === undefined) {

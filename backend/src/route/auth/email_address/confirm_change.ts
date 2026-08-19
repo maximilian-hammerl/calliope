@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import { EmailChangeService } from "@/src/service/email_change_service.ts";
+import { EmailAddressChangeService } from "@/src/service/email_address_change_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -21,7 +21,7 @@ export default new OpenAPIHono().openapi(
     summary: "Apply a requested email address change",
     description:
       "Spends the token from the link sent to the new address, which is what actually moves the account. Every session ends, including the one that asked. Needs no session of its own: the link is usually opened in the new address's mailbox, on whatever device that happens to be.",
-    operationId: "confirmEmailChange",
+    operationId: "confirmEmailAddressChange",
     request: { body: { required: true, content: jsonContent(CONFIRM_BODY) } },
     responses: {
       [STATUS_CODE.OK]: {
@@ -44,7 +44,9 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { token } = c.req.valid("json");
 
-    const result = await EmailChangeService.confirmEmailChange(token);
+    const result = await EmailAddressChangeService.confirmEmailAddressChange(
+      token,
+    );
 
     switch (result) {
       case "changed":

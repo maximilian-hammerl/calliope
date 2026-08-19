@@ -5,11 +5,11 @@
 -- where a column on `user` would be left claiming a change nothing can complete.
 ALTER TABLE public.user_token
     ADD COLUMN new_email_address text,
-    ADD CONSTRAINT user_token_new_address_matches_purpose CHECK (
+    ADD CONSTRAINT user_token_new_email_address_matches_purpose CHECK (
         CASE purpose
-            WHEN 'email_change' THEN new_email_address IS NOT NULL
+            WHEN 'email_address_change' THEN new_email_address IS NOT NULL
             WHEN 'password_reset' THEN new_email_address IS NULL
-            WHEN 'email_verification' THEN new_email_address IS NULL
+            WHEN 'email_address_verification' THEN new_email_address IS NULL
             -- `ELSE false` rather than a catch-all: a purpose added later with no branch is
             -- rejected, so adding one forces the decision instead of slipping through.
             ELSE false
@@ -19,5 +19,5 @@ ALTER TABLE public.user_token
 -- migrate:down
 
 ALTER TABLE public.user_token
-    DROP CONSTRAINT user_token_new_address_matches_purpose,
+    DROP CONSTRAINT user_token_new_email_address_matches_purpose,
     DROP COLUMN new_email_address;

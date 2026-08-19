@@ -6,9 +6,9 @@ import logout from "./auth/logout.ts";
 import me from "./auth/me.ts";
 import password from "./auth/password.ts";
 import register from "./auth/register.ts";
-import resendVerification from "./auth/resend_verification.ts";
+import resendEmailAddressVerification from "./auth/resend_email_address_verification.ts";
 import resetPassword from "./auth/reset_password.ts";
-import verifyEmail from "./auth/verify_email.ts";
+import verifyEmailAddress from "./auth/verify_email_address.ts";
 
 export default new OpenAPIHono()
   .route("/", register)
@@ -17,7 +17,7 @@ export default new OpenAPIHono()
   .route("/", me)
   .route("/", forgotPassword)
   .route("/", resetPassword)
-  .route("/", verifyEmail)
-  .route("/", resendVerification)
+  .route("/", verifyEmailAddress)
+  .route("/", resendEmailAddressVerification)
   .route("/email-address", emailAddress)
   .route("/", password);

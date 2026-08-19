@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { db } from "@/src/database/client.ts";
 import { type User, UserService } from "@/src/service/user_service.ts";
 import requireSession from "./require_session.ts";
-import requireSessionAllowingUnverifiedEmail from "./require_session_allowing_unverified_email.ts";
+import requireSessionAllowingUnverifiedEmail from "./require_session_allowing_unverified_email_address.ts";
 
 const username = "require-session-test-user";
 const password = "a-complex-password";
@@ -28,7 +28,7 @@ async function createUserWithSession({ verified = true } = {}) {
   if (verified) {
     await db
       .updateTable("user")
-      .set({ emailVerifiedAt: Temporal.Now.instant().toString() })
+      .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
       .where("id", "=", user.id)
       .execute();
   }

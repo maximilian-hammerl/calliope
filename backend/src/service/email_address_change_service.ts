@@ -3,10 +3,10 @@ import { verifyPassword } from "@/src/util/password.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { Mailer } from "@/src/mail/mailer.ts";
 import {
-  emailChangeCompletedMail,
-  emailChangeConfirmationMail,
-  emailChangeRequestedMail,
-} from "@/src/mail/email_change_mail.ts";
+  emailAddressChangeCompletedMail,
+  emailAddressChangeConfirmationMail,
+  emailAddressChangeRequestedMail,
+} from "@/src/mail/email_address_change_mail.ts";
 import {
   TOKEN_LIFETIME,
   UserTokenService,
@@ -20,7 +20,7 @@ function link(path: string, token: string): string {
   return url.toString();
 }
 
-export type RequestEmailChangeResult =
+export type RequestEmailAddressChangeResult =
   | "requested"
   | "wrong_password"
   | "in_use"
@@ -38,11 +38,11 @@ export type RequestEmailChangeResult =
  * about their own account, so there is nobody to hide the answer from and a wrong password
  * has to be reported.
  */
-async function requestEmailChange(
+async function requestEmailAddressChange(
   userId: string,
   newEmailAddress: string,
   password: string,
-): Promise<RequestEmailChangeResult> {
+): Promise<RequestEmailAddressChangeResult> {
   const normalisedAddress = newEmailAddress.toLowerCase();
 
   const user = await db
@@ -51,7 +51,7 @@ async function requestEmailChange(
       "id",
       "username",
       "emailAddress",
-      "emailVerifiedAt",
+      "emailAddressVerifiedAt",
       "hashedPassword",
     ])
     .where("id", "=", userId)
@@ -63,7 +63,7 @@ async function requestEmailChange(
 
   // Correcting an address nobody has proven yet is the other endpoint's job, and it asks for
   // no password. Reaching this one without a verified address would be a way around that.
-  if (user.emailVerifiedAt === null) {
+  if (user.emailAddressVerifiedAt === null) {
     return "not_verified";
   }
 
@@ -80,7 +80,7 @@ async function requestEmailChange(
 
   const token = await UserTokenService.issueToken({
     userId,
-    purpose: "email_change",
+    purpose: "email_address_change",
     newEmailAddress: normalisedAddress,
   });
 
@@ -89,7 +89,7 @@ async function requestEmailChange(
     return "requested";
   }
 
-  Mailer.sendInBackground(emailChangeConfirmationMail({
+  Mailer.sendInBackground(emailAddressChangeConfirmationMail({
     username: user.username,
     newEmailAddress: normalisedAddress,
     link: link("/confirm-email-change", token),
@@ -98,7 +98,7 @@ async function requestEmailChange(
 
   // The same token cancels, which is safe because cancelling only restores what is already
   // true. It saves a second kind of token and a second thing to expire.
-  Mailer.sendInBackground(emailChangeRequestedMail({
+  Mailer.sendInBackground(emailAddressChangeRequestedMail({
     username: user.username,
     currentEmailAddress: user.emailAddress,
     newEmailAddress: normalisedAddress,
@@ -109,20 +109,23 @@ async function requestEmailChange(
   return "requested";
 }
 
-export type ConfirmEmailChangeResult = "changed" | "invalid_token" | "in_use";
+export type ConfirmEmailAddressChangeResult =
+  | "changed"
+  | "invalid_token"
+  | "in_use";
 
 /**
  * Applies the change. Consuming the token, moving the address and ending every other session
  * are one transaction, so the account cannot end up half-moved.
  */
-async function confirmEmailChange(
+async function confirmEmailAddressChange(
   token: string,
-): Promise<ConfirmEmailChangeResult> {
+): Promise<ConfirmEmailAddressChangeResult> {
   const outcome = await db.transaction().execute(async (transaction) => {
     const consumed = await UserTokenService.consumeToken(
       transaction,
       token,
-      "email_change",
+      "email_address_change",
     );
 
     if (consumed === null || consumed === undefined) {
@@ -160,7 +163,7 @@ async function confirmEmailChange(
       // wall the member behind the verification screen for an address they just confirmed.
       .set({
         emailAddress: newEmailAddress,
-        emailVerifiedAt: Temporal.Now.instant().toString(),
+        emailAddressVerifiedAt: Temporal.Now.instant().toString(),
       })
       .where("id", "=", userId)
       .execute();
@@ -183,17 +186,17 @@ async function confirmEmailChange(
     return outcome;
   }
 
-  Mailer.sendInBackground(emailChangeCompletedMail(outcome));
+  Mailer.sendInBackground(emailAddressChangeCompletedMail(outcome));
   return "changed";
 }
 
 /** The cancel link from the notice sent to the old address. */
-async function cancelEmailChange(token: string): Promise<boolean> {
-  return await UserTokenService.revokeToken(token, "email_change");
+async function cancelEmailAddressChange(token: string): Promise<boolean> {
+  return await UserTokenService.revokeToken(token, "email_address_change");
 }
 
-export const EmailChangeService = {
-  requestEmailChange,
-  confirmEmailChange,
-  cancelEmailChange,
+export const EmailAddressChangeService = {
+  requestEmailAddressChange,
+  confirmEmailAddressChange,
+  cancelEmailAddressChange,
 };

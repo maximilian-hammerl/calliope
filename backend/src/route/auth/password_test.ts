@@ -133,7 +133,7 @@ Deno.test("PATCH /api/auth/password is refused while the address is unverified",
 
   await db
     .updateTable("user")
-    .set({ emailVerifiedAt: null })
+    .set({ emailAddressVerifiedAt: null })
     .where("username", "=", username)
     .execute();
 

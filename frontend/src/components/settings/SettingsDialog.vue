@@ -9,7 +9,7 @@ import {
   getGetCurrentUserQueryKey,
   useChangePassword,
   useGetCurrentUser,
-  useRequestEmailChange,
+  useRequestEmailAddressChange,
 } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
@@ -42,7 +42,7 @@ const currentAddress = computed(() =>
   currentUser.value?.status === 200 ? currentUser.value.data.emailAddress : '',
 )
 
-const { mutateAsync: requestChange, isPending } = useRequestEmailChange()
+const { mutateAsync: requestChange, isPending } = useRequestEmailAddressChange()
 
 type FieldName = 'emailAddress' | 'password'
 
@@ -52,7 +52,7 @@ const fieldErrors = ref<Partial<Record<FieldName, string>>>({})
 const formError = ref<string | undefined>(undefined)
 const requestedFor = ref<string | undefined>(undefined)
 
-const LIMIT = TEXT_LIMIT.requestEmailChange
+const LIMIT = TEXT_LIMIT.requestEmailAddressChange
 const FIELD_NAMES = ['emailAddress', 'password'] as const
 
 const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {

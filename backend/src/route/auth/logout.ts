@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
-import requireSession from "@/src/middleware/require_session_allowing_unverified_email.ts";
+import requireSession from "@/src/middleware/require_session_allowing_unverified_email_address.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import {
   COMMON_RESPONSES,

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import { EmailChangeService } from "@/src/service/email_change_service.ts";
+import { EmailAddressChangeService } from "@/src/service/email_address_change_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -20,7 +20,7 @@ export default new OpenAPIHono().openapi(
     summary: "Call off a requested email address change",
     description:
       "The link from the notice sent to the address being moved away from. Needs no session, deliberately: the person who should be able to stop this is whoever reads that mailbox, and in the case worth defending against they are not the one holding the session.",
-    operationId: "cancelEmailChange",
+    operationId: "cancelEmailAddressChange",
     request: { body: { required: true, content: jsonContent(CANCEL_BODY) } },
     responses: {
       [STATUS_CODE.OK]: {
@@ -38,7 +38,9 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { token } = c.req.valid("json");
 
-    const cancelled = await EmailChangeService.cancelEmailChange(token);
+    const cancelled = await EmailAddressChangeService.cancelEmailAddressChange(
+      token,
+    );
 
     return cancelled
       ? c.json({ ok: true } as const, STATUS_CODE.OK)

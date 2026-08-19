@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useVerifyEmail } from '@/api/auth/auth'
+import { useVerifyEmailAddress } from '@/api/auth/auth'
 import { ApiError } from '@/lib/api/apiFetch'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
@@ -18,7 +18,7 @@ const token = new URLSearchParams(window.location.search).get('token') ?? undefi
  */
 const status = ref<'verifying' | 'done' | 'expired'>(token === undefined ? 'expired' : 'verifying')
 
-const { mutateAsync: verify } = useVerifyEmail()
+const { mutateAsync: verify } = useVerifyEmailAddress()
 
 onMounted(async () => {
   if (token === undefined) {

@@ -3,8 +3,9 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
-import { EmailChangeService } from "@/src/service/email_change_service.ts";
+import { EmailAddressChangeService } from "@/src/service/email_address_change_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -14,9 +15,7 @@ import {
 } from "@/src/http/response.ts";
 
 const REQUEST_CHANGE_BODY = z.object({
-  emailAddress: z.email({ pattern: z.regexes.html5Email })
-    .max(TEXT_LIMIT.emailAddress)
-    .toLowerCase(),
+  emailAddress: EMAIL_ADDRESS_SCHEMA,
   // The current one, not a new one: this is re-authentication, so that a stolen session on
   // its own cannot move the account to somebody else's inbox.
   password: z.string().min(1).max(TEXT_LIMIT.password),
@@ -30,7 +29,7 @@ export default new OpenAPIHono().openapi(
     summary: "Ask to move the account to another email address",
     description:
       "Requires the current password. Changes nothing yet: a link goes to the new address, and the account keeps the old one until that link is opened. The old address is told at the same time and can cancel.",
-    operationId: "requestEmailChange",
+    operationId: "requestEmailAddressChange",
     middleware: requireSession,
     request: {
       body: { required: true, content: jsonContent(REQUEST_CHANGE_BODY) },
@@ -55,7 +54,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { emailAddress, password } = c.req.valid("json");
 
-    const result = await EmailChangeService.requestEmailChange(
+    const result = await EmailAddressChangeService.requestEmailAddressChange(
       c.get("user").id,
       emailAddress,
       password,

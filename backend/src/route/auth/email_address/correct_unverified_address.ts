@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session_allowing_unverified_email.ts";
-import { EmailVerificationService } from "@/src/service/email_verification_service.ts";
+import requireSession from "@/src/middleware/require_session_allowing_unverified_email_address.ts";
+import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -14,10 +14,7 @@ import {
 } from "@/src/http/response.ts";
 
 const CHANGE_EMAIL_ADDRESS_BODY = z.object({
-  // The validation the register route applies, so an address accepted there is accepted here.
-  emailAddress: z.email({ pattern: z.regexes.html5Email })
-    .max(TEXT_LIMIT.emailAddress)
-    .toLowerCase(),
+  emailAddress: EMAIL_ADDRESS_SCHEMA,
 });
 
 export default new OpenAPIHono().openapi(
@@ -58,10 +55,11 @@ export default new OpenAPIHono().openapi(
     const { emailAddress } = c.req.valid("json");
     const user = c.get("user");
 
-    const result = await EmailVerificationService.changeUnverifiedEmailAddress(
-      user.id,
-      emailAddress,
-    );
+    const result = await EmailAddressVerificationService
+      .changeUnverifiedEmailAddress(
+        user.id,
+        emailAddress,
+      );
 
     switch (result) {
       case "changed":

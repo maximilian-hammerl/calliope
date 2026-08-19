@@ -25,8 +25,8 @@ export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 export type UserInWritingGroupStatus = "invited" | "joined";
 
 export type UserTokenPurpose =
-  | "email_change"
-  | "email_verification"
+  | "email_address_change"
+  | "email_address_verification"
   | "password_reset";
 
 export type WritingGroupVisibility = "private" | "public";
@@ -64,7 +64,7 @@ export interface Notification {
 export interface User {
   createdAt: Generated<string>;
   emailAddress: string;
-  emailVerifiedAt: string | null;
+  emailAddressVerifiedAt: string | null;
   hashedPassword: string;
   id: Generated<string>;
   updatedAt: Generated<string>;
@@ -192,8 +192,8 @@ export const NOTIFICATION_TYPES = [
 export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
 
 export const USER_TOKEN_PURPOSES = [
-  "email_change",
-  "email_verification",
+  "email_address_change",
+  "email_address_verification",
   "password_reset",
 ] as const;
 export const USER_TOKEN_PURPOSE_SCHEMA = z.enum(USER_TOKEN_PURPOSES);
@@ -235,7 +235,7 @@ export const USER_SCHEMA = z.object({
   emailAddress: z.string(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
-  emailVerifiedAt: z.iso.datetime({ offset: true }).nullable(),
+  emailAddressVerifiedAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
 export const USER_IN_CHAT_GROUP_SCHEMA = z.object({

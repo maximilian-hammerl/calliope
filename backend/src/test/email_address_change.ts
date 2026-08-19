@@ -50,7 +50,7 @@ export async function pendingAddress(): Promise<string | null | undefined> {
   const token = await db
     .selectFrom("userToken")
     .select(["newEmailAddress"])
-    .where("purpose", "=", "email_change")
+    .where("purpose", "=", "email_address_change")
     .where("consumedAt", "is", null)
     .executeTakeFirst();
   return token?.newEmailAddress;

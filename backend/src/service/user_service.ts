@@ -15,7 +15,7 @@ import type {
 
 export type User = Pick<
   Selectable<DatabaseUser>,
-  "id" | "username" | "emailAddress" | "emailVerifiedAt"
+  "id" | "username" | "emailAddress" | "emailAddressVerifiedAt"
 >;
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
@@ -57,7 +57,7 @@ async function insertUser(
       emailAddress,
     })
     .onConflict((oc) => oc.doNothing())
-    .returning(["id", "username", "emailAddress", "emailVerifiedAt"])
+    .returning(["id", "username", "emailAddress", "emailAddressVerifiedAt"])
     .executeTakeFirst();
 }
 
@@ -71,7 +71,7 @@ async function selectUser(
       "id",
       "username",
       "emailAddress",
-      "emailVerifiedAt",
+      "emailAddressVerifiedAt",
       "hashedPassword",
     ])
     // Addresses are stored lower-cased by the register route, so the comparison has to
@@ -99,7 +99,7 @@ async function selectUser(
     id: user.id,
     username: user.username,
     emailAddress: user.emailAddress,
-    emailVerifiedAt: user.emailVerifiedAt,
+    emailAddressVerifiedAt: user.emailAddressVerifiedAt,
   };
 }
 
@@ -160,7 +160,7 @@ async function selectUserForSession(
 
   return await db
     .selectFrom("user")
-    .select(["id", "username", "emailAddress", "emailVerifiedAt"])
+    .select(["id", "username", "emailAddress", "emailAddressVerifiedAt"])
     .where("id", "=", databaseUserSession.userId)
     .executeTakeFirst();
 }

@@ -32,7 +32,7 @@ export async function registerUser(username: string): Promise<string> {
 
   await db
     .updateTable("user")
-    .set({ emailVerifiedAt: Temporal.Now.instant().toString() })
+    .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
     .where("username", "=", username)
     .execute();
 

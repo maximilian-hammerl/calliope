@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useCancelEmailChange } from '@/api/auth/auth'
+import { useCancelEmailAddressChange } from '@/api/auth/auth'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -11,7 +11,7 @@ const status = ref<'cancelling' | 'done' | 'expired'>(
   token === undefined ? 'expired' : 'cancelling',
 )
 
-const { mutateAsync: cancel } = useCancelEmailChange()
+const { mutateAsync: cancel } = useCancelEmailAddressChange()
 
 onMounted(async () => {
   if (token === undefined) {

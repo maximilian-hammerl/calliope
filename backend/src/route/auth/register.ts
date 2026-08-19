@@ -5,7 +5,8 @@ import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
-import { EmailVerificationService } from "@/src/service/email_verification_service.ts";
+import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
+import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -20,16 +21,7 @@ const REGISTER_BODY = USER_SCHEMA
     username: USER_SCHEMA.shape.username
       .min(TEXT_MINIMUM.username)
       .max(TEXT_LIMIT.username),
-    // The column is only text; the address itself is validated here, and normalised so
-    // the UNIQUE constraint cannot be bypassed by changing the case.
-    //
-    // The HTML5 pattern is the one browsers apply to input[type=email], so the form and this
-    // schema agree exactly and no address can pass the client only to be refused here. It is
-    // deliberately more permissive than Zod's default — `a@b` and `alice@localhost` are
-    // accepted — which is the price of that agreement while nothing verifies the address.
-    emailAddress: z.email({ pattern: z.regexes.html5Email })
-      .max(TEXT_LIMIT.emailAddress)
-      .toLowerCase(),
+    emailAddress: EMAIL_ADDRESS_SCHEMA,
     // Never stored as given, so it has no column of its own.
     password: z.string().min(1).max(TEXT_LIMIT.password),
   });
@@ -76,7 +68,7 @@ export default new OpenAPIHono().openapi(
     const sessionToken = await UserService.insertSessionForUser(user);
     SessionCookieService.setUserSession(c, sessionToken);
 
-    EmailVerificationService.sendVerificationMail(user);
+    EmailAddressVerificationService.sendVerificationMail(user);
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

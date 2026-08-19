@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import { EmailVerificationService } from "@/src/service/email_verification_service.ts";
+import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -11,19 +11,19 @@ import {
   OK_RESPONSE,
 } from "@/src/http/response.ts";
 
-const VERIFY_EMAIL_BODY = z.object({ token: z.string().min(1) });
+const VERIFY_EMAIL_ADDRESS_BODY = z.object({ token: z.string().min(1) });
 
 export default new OpenAPIHono().openapi(
   createRoute({
     method: "post",
-    path: "/verify-email",
+    path: "/verify-email-address",
     tags: [AUTH_TAG],
     summary: "Confirm an email address with a verification token",
     description:
       "Spends the token from a verification link. Deliberately needs no session: the link is often opened in a different browser from the one that registered. No session is started either, for the same reason.",
-    operationId: "verifyEmail",
+    operationId: "verifyEmailAddress",
     request: {
-      body: { required: true, content: jsonContent(VERIFY_EMAIL_BODY) },
+      body: { required: true, content: jsonContent(VERIFY_EMAIL_ADDRESS_BODY) },
     },
     responses: {
       [STATUS_CODE.OK]: {
@@ -41,7 +41,9 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { token } = c.req.valid("json");
 
-    const result = await EmailVerificationService.verifyEmail(token);
+    const result = await EmailAddressVerificationService.verifyEmailAddress(
+      token,
+    );
 
     switch (result) {
       case "verified":

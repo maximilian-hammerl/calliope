@@ -15,7 +15,7 @@ import {
   requestChange,
   storedAddress,
   username,
-} from "@/src/test/email_change.ts";
+} from "@/src/test/email_address_change.ts";
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();

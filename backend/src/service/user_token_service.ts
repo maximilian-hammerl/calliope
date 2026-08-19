@@ -1,12 +1,7 @@
-import type { Transaction } from "kysely";
-import { db } from "@/src/database/client.ts";
-import type { DB, UserTokenPurpose } from "@/src/database/schema.ts";
-import {
-  formatToken,
-  generateToken,
-  hashToken,
-  parseToken,
-} from "@/src/util/token.ts";
+import type {Transaction} from "kysely";
+import {db} from "@/src/database/client.ts";
+import type {DB, UserTokenPurpose} from "@/src/database/schema.ts";
+import {formatToken, generateToken, hashToken, parseToken,} from "@/src/util/token.ts";
 
 /**
  * One lifetime for every purpose. A verification link could reasonably live longer than a
@@ -28,8 +23,12 @@ const RESEND_COOLDOWN = Temporal.Duration.from({ minutes: 2 });
  * call site rather than a constraint violation at run time.
  */
 export type TokenRequest =
-  | { userId: string; purpose: "password_reset" | "email_verification" }
-  | { userId: string; purpose: "email_change"; newEmailAddress: string };
+  | { userId: string; purpose: "password_reset" | "email_address_verification" }
+  | {
+    userId: string;
+    purpose: "email_address_change";
+    newEmailAddress: string;
+  };
 
 /**
  * Returns the token to put in the link, or undefined when the cooldown swallowed the request
@@ -38,7 +37,7 @@ export type TokenRequest =
  */
 async function issueToken(request: TokenRequest): Promise<string | undefined> {
   const { userId, purpose } = request;
-  const newEmailAddress = request.purpose === "email_change"
+  const newEmailAddress = request.purpose === "email_address_change"
     ? request.newEmailAddress
     : null;
   const secret = generateToken();
@@ -115,18 +114,16 @@ async function consumeToken(
 
   const now = Temporal.Now.instant();
 
-  const consumed = await transaction
-    .updateTable("userToken")
-    .set({ consumedAt: now.toString() })
-    .where("id", "=", parsed.id)
-    .where("hashedToken", "=", await hashToken(parsed.secret))
-    .where("purpose", "=", purpose)
-    .where("consumedAt", "is", null)
-    .where("expiresAt", ">", now.toString())
-    .returning(["userId", "newEmailAddress"])
-    .executeTakeFirst();
-
-  return consumed;
+  return await transaction
+      .updateTable("userToken")
+      .set({consumedAt: now.toString()})
+      .where("id", "=", parsed.id)
+      .where("hashedToken", "=", await hashToken(parsed.secret))
+      .where("purpose", "=", purpose)
+      .where("consumedAt", "is", null)
+      .where("expiresAt", ">", now.toString())
+      .returning(["userId", "newEmailAddress"])
+      .executeTakeFirst();
 }
 
 /**

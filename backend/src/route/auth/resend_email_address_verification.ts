@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session_allowing_unverified_email.ts";
-import { EmailVerificationService } from "@/src/service/email_verification_service.ts";
+import requireSession from "@/src/middleware/require_session_allowing_unverified_email_address.ts";
+import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -13,12 +13,12 @@ import {
 export default new OpenAPIHono().openapi(
   createRoute({
     method: "post",
-    path: "/resend-verification",
+    path: "/resend-email-address-verification",
     tags: [AUTH_TAG],
     summary: "Send the verification link again",
     description:
       "Reachable without a verified address, since it is how one is obtained. Answers the same way whether a message was sent or the resend cooldown swallowed it, and does nothing at all when the address is already verified.",
-    operationId: "resendVerification",
+    operationId: "resendEmailAddressVerification",
     middleware: requireSession,
     responses: {
       [STATUS_CODE.OK]: {
@@ -32,8 +32,8 @@ export default new OpenAPIHono().openapi(
   (c) => {
     const user = c.get("user");
 
-    if (user.emailVerifiedAt === null) {
-      EmailVerificationService.sendVerificationMail(user);
+    if (user.emailAddressVerifiedAt === null) {
+      EmailAddressVerificationService.sendVerificationMail(user);
     }
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);

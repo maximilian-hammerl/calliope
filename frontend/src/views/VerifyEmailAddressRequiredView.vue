@@ -6,7 +6,7 @@ import {
   useChangeEmailAddress,
   useGetCurrentUser,
   useLogoutUser,
-  useResendVerification,
+  useResendEmailAddressVerification,
 } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
@@ -28,7 +28,7 @@ const emailAddress = computed(() =>
   currentUser.value?.status === 200 ? currentUser.value.data.emailAddress : '',
 )
 
-const { mutateAsync: resend, isPending: isResending } = useResendVerification()
+const { mutateAsync: resend, isPending: isResending } = useResendEmailAddressVerification()
 const { mutateAsync: changeAddress, isPending: isChanging } = useChangeEmailAddress()
 const { mutateAsync: logOut } = useLogoutUser()
 

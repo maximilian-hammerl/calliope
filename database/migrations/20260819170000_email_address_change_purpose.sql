@@ -7,17 +7,17 @@
 -- records the version but still exits non-zero, which fails a deploy that actually worked;
 -- and `transaction:false` fails the same way as the first, because the statements still reach
 -- the driver as one implicit transaction.
-ALTER TYPE public.user_token_purpose ADD VALUE 'email_change';
+ALTER TYPE public.user_token_purpose ADD VALUE 'email_address_change';
 
 -- migrate:down
 
 DELETE
 FROM public.user_token
-WHERE purpose = 'email_change';
+WHERE purpose = 'email_address_change';
 
 ALTER TYPE public.user_token_purpose RENAME TO user_token_purpose_old;
 
-CREATE TYPE public.user_token_purpose AS ENUM ('password_reset', 'email_verification');
+CREATE TYPE public.user_token_purpose AS ENUM ('password_reset', 'email_address_verification');
 
 ALTER TABLE public.user_token
     ALTER COLUMN purpose TYPE public.user_token_purpose
