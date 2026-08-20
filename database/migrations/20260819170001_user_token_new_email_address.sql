@@ -10,6 +10,7 @@ ALTER TABLE public.user_token
             WHEN 'email_address_change' THEN new_email_address IS NOT NULL
             WHEN 'password_reset' THEN new_email_address IS NULL
             WHEN 'email_address_verification' THEN new_email_address IS NULL
+            WHEN 'account_deletion' THEN new_email_address IS NULL
             -- `ELSE false` rather than a catch-all: a purpose added later with no branch is
             -- rejected, so adding one forces the decision instead of slipping through.
             ELSE false

@@ -9,6 +9,7 @@ import {
   getGetCurrentUserQueryKey,
   useChangePassword,
   useGetCurrentUser,
+  useRequestAccountDeletion,
   useRequestEmailAddressChange,
 } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
@@ -214,6 +215,61 @@ async function submitPassword() {
   newPasswordConfirmation.value = ''
   passwordChanged.value = true
 }
+
+const { mutateAsync: requestDeletion, isPending: isRequestingDeletion } =
+  useRequestAccountDeletion()
+
+const deletionPassword = ref<string>('')
+const deletionError = ref<string | undefined>(undefined)
+const deletionFormError = ref<string | undefined>(undefined)
+const deletionRequested = ref<boolean>(false)
+
+const DELETION_LIMIT = TEXT_LIMIT.requestAccountDeletion
+
+const DELETION_FIELD_MESSAGES: FieldMessages = {
+  missing: 'Gib dein aktuelles Passwort ein.',
+  malformed: 'Gib dein aktuelles Passwort ein.',
+  tooLong: `Das Passwort darf höchstens ${formatCount(DELETION_LIMIT.password.maxLength)} Zeichen lang sein.`,
+}
+
+const deletionFormElement = ref<HTMLFormElement | null>(null)
+
+function validateDeletionForm(): boolean {
+  const form = deletionFormElement.value
+  if (form === null) {
+    return false
+  }
+
+  const input = form.elements.namedItem('deletionPassword')
+  const invalid = input instanceof HTMLInputElement && !input.validity.valid
+
+  deletionError.value = invalid ? fieldMessage(DELETION_FIELD_MESSAGES, input.validity) : undefined
+
+  return !invalid
+}
+
+async function submitDeletion() {
+  deletionFormError.value = undefined
+  deletionRequested.value = false
+
+  if (!validateDeletionForm()) {
+    return
+  }
+
+  try {
+    await requestDeletion({ data: { password: deletionPassword.value } })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      deletionError.value = 'Das Passwort ist nicht korrekt.'
+      return
+    }
+    deletionFormError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    return
+  }
+
+  deletionPassword.value = ''
+  deletionRequested.value = true
+}
 </script>
 
 <template>
@@ -224,8 +280,8 @@ async function submitPassword() {
         <DialogDescription>Dein Konto, und worüber du benachrichtigt wirst.</DialogDescription>
       </DialogHeader>
 
-      <!-- Both closed to begin with: opening this should not present a form asking for a
-           password, and it keeps the two sections visually equal. -->
+      <!-- All closed to begin with: opening this should not present a form asking for a
+           password, and deleting the account must never be the first thing on screen. -->
       <Accordion type="single" collapsible class="w-full">
         <AccordionItem value="email">
           <AccordionTrigger>E-Mail-Adresse</AccordionTrigger>
@@ -289,11 +345,6 @@ async function submitPassword() {
           </AccordionContent>
         </AccordionItem>
 
-        <!--
-          The fields are real so the layout can be judged, but nothing is wired up and the
-          button cannot be pressed. A door with nothing behind it, said plainly, beats one
-          that opens onto silence.
-        -->
         <AccordionItem value="password">
           <AccordionTrigger>Passwort</AccordionTrigger>
           <AccordionContent>
@@ -374,6 +425,75 @@ async function submitPassword() {
               <Button type="submit" class="h-11 md:h-9" :disabled="isChangingPassword">
                 <Spinner v-if="isChangingPassword" data-icon="inline-start" />
                 Passwort ändern
+              </Button>
+            </form>
+          </AccordionContent>
+        </AccordionItem>
+
+        <!-- Last, and the only destructive action in the product: the one place a red button
+             is the honest colour. -->
+        <AccordionItem value="deletion">
+          <AccordionTrigger>Konto löschen</AccordionTrigger>
+          <AccordionContent>
+            <p v-if="deletionRequested" class="mb-4 text-[13px] leading-[1.6] text-ink-5">
+              Wir haben einen Link an <span class="text-ink-8">{{ currentAddress }}</span>
+              geschickt. Erst wenn du ihn öffnest, wird dein Konto gelöscht. Bis dahin bleibt alles,
+              wie es ist.
+            </p>
+
+            <div class="mb-4 flex flex-col gap-3 text-[13px] leading-[1.6] text-ink-5">
+              <p>
+                Löschen ist <span class="text-ink-8">endgültig</span>. Wir können dein Konto danach
+                nicht zurückholen.
+              </p>
+              <p>
+                Es passiert nicht sofort: wir schicken dir erst einen Link an deine E-Mail-Adresse.
+                Solange du ihn nicht öffnest, bleibt dein Konto bestehen.
+              </p>
+              <p>
+                Weg sind dein Konto, deine Mitgliedschaften, deine Einladungen und deine
+                Benachrichtigungen. Was du in Gruppen geschrieben hast, bleibt dort stehen — es
+                gehört zu Geschichten, an denen andere weitergeschrieben haben — aber ohne deinen
+                Namen. Gruppen, in denen sonst niemand mehr ist, werden mit gelöscht.
+              </p>
+            </div>
+
+            <form
+              ref="deletionFormElement"
+              class="flex flex-col gap-4"
+              novalidate
+              @submit.prevent="submitDeletion"
+            >
+              <Alert v-if="deletionFormError" variant="destructive" role="alert">
+                <AlertDescription>{{ deletionFormError }}</AlertDescription>
+              </Alert>
+
+              <FieldGroup>
+                <Field :data-invalid="deletionError !== undefined ? true : undefined">
+                  <FieldLabel for="deletionPassword">Aktuelles Passwort</FieldLabel>
+                  <Input
+                    id="deletionPassword"
+                    v-model="deletionPassword"
+                    class="h-11 md:h-9"
+                    name="deletionPassword"
+                    type="password"
+                    :maxlength="DELETION_LIMIT.password.maxLength"
+                    autocomplete="current-password"
+                    required
+                    :aria-invalid="deletionError !== undefined ? true : undefined"
+                  />
+                  <FieldError :errors="[deletionError]" />
+                </Field>
+              </FieldGroup>
+
+              <Button
+                type="submit"
+                variant="destructive"
+                class="h-11 md:h-9"
+                :disabled="isRequestingDeletion"
+              >
+                <Spinner v-if="isRequestingDeletion" data-icon="inline-start" />
+                Löschen-Link anfordern
               </Button>
             </form>
           </AccordionContent>

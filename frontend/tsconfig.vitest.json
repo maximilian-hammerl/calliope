@@ -7,9 +7,9 @@
   "exclude": [],
 
   "compilerOptions": {
-    // Vitest runs in a different environment than the application code.
-    // Adjust lib and types accordingly.
-    "lib": [],
+    // `lib` is inherited, not cleared. Clearing it drops the ES built-ins as well as DOM, and
+    // the application code these tests import is the same code — `Array.at` stopped resolving
+    // the moment a spec reached a component. jsdom supplies the DOM at run time.
     "types": ["node", "jsdom"],
 
     // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.

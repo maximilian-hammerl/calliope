@@ -107,8 +107,9 @@ first is a day's work; items 5 to 7 are the bulk of the remaining MVP.
 ### 1. A group can lose its last administrator
 
 Nothing in the service or the database stops the last administrator being removed or leaving,
-which leaves a group nobody can administer. Small, understood, and it gets worse with every
-group created.
+which leaves a group nobody can administer. Deleting an account is now a third way in, since
+the membership cascades. Small, understood, and it gets worse with every group created — and a
+trigger beside the one that removes an empty group would close all three paths at once.
 
 ### 2. Mobile navigation
 
@@ -148,22 +149,29 @@ The complement to 4. Once strangers can reach each other through a public board,
 spam described above stops being theoretical. Small on its own, and cheap while the surfaces
 that can carry a message are still few.
 
-### 6. Account deletion and personal data export (§18, §42)
+### 6. Personal data export (§18, §42)
 
-Not urgent for the reason it usually is — the deployment is a testing environment and everyone
-on it knows it gets wiped — but urgent for a technical one: deletion has to reach every table
-holding a member's data, and each feature added first makes it a larger, riskier change. It is
-cheapest before files and the forum, and it is the point where the beta stops being a beta.
+**Deletion is built**; export is what is left of this item. A member deletes their account from
+the settings dialog: current password, then a mailed link, and only opening that link deletes
+anything. The question this item used to pose is answered and the answer was already in the
+schema — authorship goes null and the text survives, and the triggers that drop a group once
+its last member leaves fire on the cascade too, so a group nobody is left in goes with the
+account while one that still has members stays. There is nothing in the service about groups
+at all.
 
-Needs a decision first: what happens to a deleted member's writing. The schema already answers
-it for authorship — `created_by` goes null and the text survives — but not for whole groups and
-chats.
+What deletion does *not* do is fill the hole in 1: a member who was a group's only
+administrator can now leave by deleting their account, and the group is left with members and
+no administrator. It is the same hole leaving already opens, not a new one, and fixing it in
+the trigger fixes both paths at once.
+
+Export is still worth doing before files and the forum, for the reason deletion was: each
+feature added first makes it a larger surface to walk.
 
 ### 7. Files in writing groups
 
 The last item in §42's writing-group list, and the one the right rail already pretends to have.
-Needs storage, a size policy, and a decision about what leaves the server on deletion — which
-is why it comes after 6 rather than before.
+Needs storage, a size policy, and a decision about what leaves the server when an account is
+deleted — the one part of that flow a foreign key cannot answer on its own.
 
 ### 8. Public forum, with moderation (§9, §15, §16)
 

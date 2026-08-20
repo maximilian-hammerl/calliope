@@ -1,4 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import account from "./auth/account.ts";
 import emailAddress from "./auth/email_address.ts";
 import forgotPassword from "./auth/forgot_password.ts";
 import login from "./auth/login.ts";
@@ -20,4 +21,5 @@ export default new OpenAPIHono()
   .route("/", verifyEmailAddress)
   .route("/", resendEmailAddressVerification)
   .route("/email-address", emailAddress)
+  .route("/account", account)
   .route("/", password);

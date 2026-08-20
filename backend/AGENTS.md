@@ -431,6 +431,39 @@ password of somebody else's choosing, which is exactly what changing it was mean
 The route reads the session id from the cookie rather than taking it from `c.get("user")`,
 because the cookie is the only thing that says *which* session is asking.
 
+## Deleting an account
+
+Two routes under `/auth/account`, the same shape as moving an address: the password
+re-authenticates, and a mailed link is what actually does it. Neither a stolen session nor a
+leaked password is enough alone.
+
+- **No verified address is required**, unlike changing one. Somebody who mistyped their
+  address at registration must still be able to leave, and a link that reaches the wrong inbox
+  can only delete the account that was registered to it.
+- **One statement does nearly all of the work.** The foreign keys cascade sessions, tokens,
+  memberships and notifications; `created_by` goes null wherever text survives; and the
+  triggers on the membership tables drop a group left with nobody in it. The service says
+  nothing about groups, which is why `deleteMembership`'s rule lives in a trigger.
+- **The name and address are read before the delete**, because the final mail has nowhere to go
+  afterwards.
+- **The confirmation page asks rather than acting on mount.** The address-change page confirms
+  as soon as it loads; this one cannot, or a mail client that prefetches links would delete the
+  account before anybody read the page.
+- **A member who is a group's only administrator leaves it ungoverned.** That is the same hole
+  leaving already opens, deliberately not fixed here — see the roadmap.
+
+`requestAccountDeletion` answers **401** for a wrong password, so the frontend's
+`EXPECTED_401_MUTATIONS` lists it, as it must for every re-authenticating mutation.
+
+## Paths in mailed links must exist in the frontend
+
+The address-change mails pointed at `/confirm-email-change` for a day while the router only had
+`/confirm-email-address-change`, so every link opened a blank page — nothing errored, the
+feature simply did not work. Both sides now pin the paths: `request_change_test.ts` and
+`request_deletion_test.ts` assert on the mailed text, and the frontend's
+`router/__tests__/mailedPaths.spec.ts` asserts each one resolves to a route that opens without
+a session.
+
 ## A group is a story, for now
 
 `writing_group` carries the story's metadata — `subtitle`, `blurb`, `story_status`, `genres`,
@@ -456,7 +489,11 @@ Three things about it:
 ## Tokens in links
 
 `user_token` is one table for every link mailed to a member, keyed by a `purpose` enum —
-`password_reset`, `email_address_verification` and `email_address_change`.
+`password_reset`, `email_address_verification`, `email_address_change` and `account_deletion`.
+Every value is declared in the migration that creates the type, not added later: a value added
+to an enum cannot be *used* until its transaction commits, so the CHECK that pairs a purpose
+with its columns would need a migration of its own each time. That CHECK ends in `ELSE false`,
+so a purpose without a branch is rejected rather than defaulted.
 `user_token_service.ts` owns the mechanics both flows share, including the one lifetime and
 the one resend cooldown; the flows themselves only decide what a spent token authorises.
 Consuming takes the caller's transaction, so the token and what it unlocks commit together. The purpose is stored rather
@@ -496,7 +533,8 @@ route. They run against real Postgres and Redis, so start the compose stack and 
 migrations first.
 
 **Everything test-only lives in `src/test/`** — `support.ts` for the shared fixtures,
-`auth.ts`, `mailpit.ts`, `email_address_change.ts` for what a group of tests shares. A file ending in
+`auth.ts`, `mailpit.ts`, `email_address_change.ts`, `account_deletion.ts` for what a group of
+tests shares. A file ending in
 `_test.ts` announces itself; these do not, so the directory says it instead of the name and
 they cannot be mistaken for production code. `database/test/support.ts` does the same.
 

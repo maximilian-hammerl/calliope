@@ -92,7 +92,7 @@ async function requestEmailAddressChange(
   Mailer.sendInBackground(emailAddressChangeConfirmationMail({
     username: user.username,
     newEmailAddress: normalisedAddress,
-    link: link("/confirm-email-change", token),
+    link: link("/confirm-email-address-change", token),
     lifetime: TOKEN_LIFETIME,
   }));
 
@@ -102,7 +102,7 @@ async function requestEmailAddressChange(
     username: user.username,
     currentEmailAddress: user.emailAddress,
     newEmailAddress: normalisedAddress,
-    link: link("/cancel-email-change", token),
+    link: link("/cancel-email-address-change", token),
     lifetime: TOKEN_LIFETIME,
   }));
 

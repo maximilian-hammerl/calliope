@@ -1,8 +1,15 @@
 -- migrate:up
 
--- Verifying an address and changing one will be further values here. Storing the purpose
--- keeps the kinds apart: a token issued to reset a password cannot be spent on anything else.
-CREATE TYPE public.user_token_purpose AS ENUM ('password_reset');
+-- Storing the purpose keeps the kinds apart: a token issued to reset a password cannot be
+-- spent on anything else. Every value is named here rather than added later, because a value
+-- added to an enum cannot be *used* until its transaction commits — so the CHECK below would
+-- need a migration of its own for each one.
+CREATE TYPE public.user_token_purpose AS ENUM (
+    'password_reset',
+    'email_address_verification',
+    'email_address_change',
+    'account_deletion'
+    );
 
 CREATE TABLE public.user_token
 (

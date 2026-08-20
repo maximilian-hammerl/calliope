@@ -225,7 +225,8 @@ says recedes.
 `--accent-deep` `#4f4132` for solid actions. **No second hue.** Per-group colour coding was tried
 and rejected ("Gruppen benötigen keine unterschiedliche Farben"). Colour never signals status,
 quality or achievement. `--signal-error` / `--signal-ok` exist for form validation only and appear
-in none of the mockups.
+in none of the mockups. The single exception is `--destructive` as a button fill, for deleting an
+account — see Buttons.
 
 Surface hierarchy is inverted from the usual convention: rails are **recessed** (`--paper-2`), the
 canvas sits above them (`--paper-1`), and the raised surfaces (`--paper-0`) are the top bar, the
@@ -270,11 +271,18 @@ cards), `--radius-circle` for avatars only. **Reading surfaces are never rounded
 **Transparency and blur.** None. No glass, no scrims, no protection gradients. Sticky elements
 (the tab strip, the sticky Mitglieder block) sit on solid paper so text never overlaps text.
 
-**Buttons.** Three levels, no more. *Solid* — `--action-solid-bg` fill, `--text-on-solid`, 6px
-radius, for the one primary act of a screen ("Beitrag senden"). *Quiet* — `--surface-quiet` fill,
-1px `--border-strong`, `--accent-deep` text, 500 weight ("Mitglied einladen", "＋ Schritt",
-"＋ Gruppe gründen", "Vorschau"); this level was strengthened after feedback that the invite button
-was too easy to miss. *Plain* — text only in `--ink-5`, for per-post actions.
+**Buttons.** Three levels for everything the product asks of a member. *Solid* —
+`--action-solid-bg` fill, `--text-on-solid`, 6px radius, for the one primary act of a screen
+("Beitrag senden"). *Quiet* — `--surface-quiet` fill, 1px `--border-strong`, `--accent-deep`
+text, 500 weight ("Mitglied einladen", "＋ Schritt", "＋ Gruppe gründen", "Vorschau"); this level
+was strengthened after feedback that the invite button was too easy to miss. *Plain* — text only
+in `--ink-5`, for per-post actions.
+
+*Destructive* is a fourth level and the only place `--destructive` `#8a3f37` appears as a fill.
+It is for an act that destroys a member's own data and cannot be undone — today only "Konto
+endgültig löschen". Not for removing a member, withdrawing an invitation or deleting a post:
+those are ordinary administration, they are reversible by doing them again, and colouring them
+red would spend the one signal the product has. Reserve it, or it stops meaning anything.
 
 **States.** Hover darkens by one ink or paper step (solid → `--accent-deeper`; quiet →
 `--paper-4`; plain → `--ink-4`); never a colour change and never a lift. Press is a further step

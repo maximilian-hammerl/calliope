@@ -70,6 +70,7 @@ const EXPECTED_401_MUTATIONS = new Set([
   'logoutUser',
   'requestEmailAddressChange',
   'changePassword',
+  'requestAccountDeletion',
 ])
 
 /** Taken from the generated client rather than written out, so a path change follows. */

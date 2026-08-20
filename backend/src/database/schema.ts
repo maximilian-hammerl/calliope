@@ -27,6 +27,7 @@ export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
 export type UserInWritingGroupStatus = "invited" | "joined";
 
 export type UserTokenPurpose =
+  | "account_deletion"
   | "email_address_change"
   | "email_address_verification"
   | "password_reset";
@@ -213,6 +214,7 @@ export const NOTIFICATION_TYPES = [
 export const NOTIFICATION_TYPE_SCHEMA = z.enum(NOTIFICATION_TYPES);
 
 export const USER_TOKEN_PURPOSES = [
+  "account_deletion",
   "email_address_change",
   "email_address_verification",
   "password_reset",

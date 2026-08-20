@@ -28,7 +28,13 @@ const RESEND_COOLDOWN = Temporal.Duration.from({ minutes: 2 });
  * call site rather than a constraint violation at run time.
  */
 export type TokenRequest =
-  | { userId: string; purpose: "password_reset" | "email_address_verification" }
+  | {
+    userId: string;
+    purpose:
+      | "password_reset"
+      | "email_address_verification"
+      | "account_deletion";
+  }
   | {
     userId: string;
     purpose: "email_address_change";

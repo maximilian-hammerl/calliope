@@ -1,8 +1,8 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMail, deleteAllMail } from "@/src/test/mailpit.ts";
+import { countMail, deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
 import { postJson } from "@/src/test/auth.ts";
 import {
   currentAddress,
@@ -43,6 +43,25 @@ Deno.test("POST /api/auth/email-address/change writes to both addresses", async 
   const links = await linksFromMail();
   assertEquals(links.confirm, links.cancel);
   assertEquals(await countMail(), 2);
+});
+
+Deno.test("POST /api/auth/email-address/change mails paths the frontend has", async () => {
+  const cookie = await registerVerified();
+
+  await requestChange(cookie, newAddress);
+  await flushBackgroundWork();
+
+  // Both pointed at `/confirm-email-change` while the router only had
+  // `/confirm-email-address-change`, so every link opened a blank page and nothing failed.
+  // The frontend pins the same two paths in `router/__tests__/mailedPaths.spec.ts`.
+  assertStringIncludes(
+    (await waitForMail(newAddress)).text,
+    "/confirm-email-address-change?token=",
+  );
+  assertStringIncludes(
+    (await waitForMail(currentAddress)).text,
+    "/cancel-email-address-change?token=",
+  );
 });
 
 Deno.test("POST /api/auth/email-address/change refuses a wrong password", async () => {
