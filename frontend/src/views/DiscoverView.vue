@@ -4,8 +4,11 @@ import { watchDebounced } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { Plus } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
+import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -50,13 +53,28 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
  * there is no data to make it about.
  */
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
+const creating = ref<boolean>(false)
 </script>
 
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <h1 class="mt-3 mb-2 text-[25px] leading-[1.2] text-ink-1">Gruppen entdecken</h1>
+        <div class="mt-3 mb-2 flex flex-wrap items-baseline gap-3">
+          <h1 class="text-[25px] leading-[1.2] text-ink-1">Gruppen entdecken</h1>
+          <div class="ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Gruppe gründen"
+              @click="creating = true"
+            >
+              <Plus data-icon="inline-start" :stroke-width="1.5" />
+              Gruppe
+            </Button>
+          </div>
+        </div>
         <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
           Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
           sobald dich jemand einlädt.
@@ -108,5 +126,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
         </p>
       </div>
     </div>
+
+    <CreateGroupDialog v-model:open="creating" />
   </AppLayout>
 </template>

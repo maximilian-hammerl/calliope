@@ -36,6 +36,12 @@ export const TEXT_LIMIT = {
   /** "Vergangenheit, dritte Person" and the like — free text, because stories mix them. */
   narrativeStyle: 60,
   threadTitle: 120,
+  /** Same bounds as the group it may become; the idea itself is a pitch, not the story. */
+  storyIdeaTitle: 120,
+  storyIdeaSubtitle: 120,
+  storyIdeaText: 2_000,
+  /** One free-text line each: what is sought, how one writes, when one can. */
+  storyIdeaDetail: 500,
   /** Roughly a long chapter. Posts are long-form prose, so this is deliberately generous. */
   postText: 100_000,
 } as const;

@@ -24,6 +24,7 @@ const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
     storyStatus: true,
     tense: true,
     perspective: true,
+    language: true,
   })
   .extend({
     // The column only requires text; an empty title is not useful.
@@ -34,6 +35,7 @@ const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
     visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
     // The column's own default, restated so omitting the field is legal rather than a 400.
     storyStatus: WRITING_GROUP_SCHEMA.shape.storyStatus.default("planning"),
+    language: WRITING_GROUP_SCHEMA.shape.language.default("german"),
     // Free text rather than a list: collaborative fiction mixes tense and person across
     // chapters and characters more than any fixed set would survive.
     tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),

@@ -31,8 +31,8 @@ Der Link gilt ${
     }. Danach ist dein Konto weg, und wir können es nicht
 zurückholen.
 
-Was gelöscht wird: dein Konto, deine Mitgliedschaften, deine Einladungen und deine
-Benachrichtigungen. Was bleibt: was du in Gruppen geschrieben hast. Es gehört zu
+Was gelöscht wird: dein Konto, deine Mitgliedschaften, deine Einladungen, deine
+Benachrichtigungen und deine Storyideen. Was bleibt: was du in Gruppen geschrieben hast. Es gehört zu
 Geschichten, an denen andere weitergeschrieben haben, und steht künftig ohne deinen Namen
 da.
 

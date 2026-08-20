@@ -102,9 +102,10 @@ it opens and the button's `aria-label`, so a screen reader loses nothing. Everyw
 is written out. In a strip the action takes a transparent segment of the rule, which is what
 separates it from the items.
 
-**One action, one place per screen.** "Gruppe gründen" lives on the Meine-Gruppen page and
-nowhere else, at every width. It used to sit in the left rail as well, which is the duplication
-this rule replaced; when the rail stopped listing groups the page kept the only copy.
+**One action, one place per screen.** The rule is per screen, not per product: "＋ Gruppe" sits
+on the heading line of Meine Gruppen and of Gruppen entdecken — both places somebody realises
+they want a group — but never twice on either. What it replaced was the true duplication: the
+create button in the left rail *and* on the page it framed.
 
 **Every title takes a line under it saying what the surface is for.** One or two short
 sentences: what is here, then what you can do with it — "Wer hier schreibt. Öffne ein Profil, um
@@ -173,10 +174,13 @@ member should do about it. Never "wir schützen deine Daten".
 non-alphabetic glyphs allowed are the interface marks listed under Iconography.
 
 **The top bar is shared; the avatar menu is personal.** The bar carries what everyone has in
-common and what stays put — Gruppen, and the search the system reserves room for. The nav word
-is "Gruppen", not "Meine Gruppen": the page it opens is titled Meine Gruppen and carries
-"Öffentliche Gruppen entdecken" beside it, so the bar does not need to say whose they are. The
-bottom bar reads the same, so the label does not change with the width.
+common and what stays put. Both bars carry the same three destinations — Gruppen, Storyideen,
+Mitglieder — and the first two open a **menu of their pages** instead of navigating: Meine
+Gruppen / Gruppen entdecken, Meine Storyideen / Storyideen entdecken. Each menu item is the
+page's own title. The trigger word costs a click but surfaces discovery, which a heading-line
+button alone did not — testers missed it. Mitglieder has one page and stays a plain link. The
+menus exist on the phone too, rising above the bottom bar; that is an experiment, revisited if
+it reads badly in use.
 Anything belonging to one member lives behind their avatar: Mitteilungen, Nachrichten,
 Einstellungen, Abmelden. That split is also what keeps the bar from growing: two long German
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
@@ -310,10 +314,10 @@ cards), `--radius-circle` for avatars only. **Reading surfaces are never rounded
 `--action-solid-bg` fill, `--text-on-solid`, 6px radius, for the one primary act of a screen
 ("Beitrag senden"). *Quiet* — `--surface-quiet` fill, 1px `--border-strong`, `--accent-deep`
 text, 500 weight ("Mitglied einladen", "＋ Schritt", "＋ Gruppe", "Vorschau"); this level was
-strengthened after feedback that the invite button was too easy to miss, and the same finding
-moved "Gruppen entdecken" from a text link at the foot of Meine Gruppen up onto its heading
-line — testers missed it there, and a member with many groups never scrolled to it. *Plain* — text only
-in `--ink-5`, for per-post actions.
+strengthened after feedback that the invite button was too easy to miss. The same finding once
+moved "Gruppen entdecken" from the foot of Meine Gruppen onto its heading line; the nav menu
+now carries it on every page, and the heading-line copy went with the duplication. *Plain* —
+text only in `--ink-5`, for per-post actions.
 
 *Destructive* is a fourth level and the only place `--destructive` `#8a3f37` appears as a fill.
 It belongs to the account-deletion flow and nothing else: "Löschen-Link anfordern" where it is

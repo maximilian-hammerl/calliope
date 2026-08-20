@@ -15,6 +15,7 @@ export const USERS_TAG = "users";
 export const NOTIFICATIONS_TAG = "notifications";
 export const SEARCH_TAG = "search";
 export const CHATS_TAG = "chats";
+export const STORY_IDEAS_TAG = "story-ideas";
 
 type Tag =
   | typeof OPERATIONS_TAG
@@ -27,6 +28,7 @@ type Tag =
   | typeof USERS_TAG
   | typeof NOTIFICATIONS_TAG
   | typeof CHATS_TAG
+  | typeof STORY_IDEAS_TAG
   | typeof SEARCH_TAG;
 
 // Type safe tags to descriptions mapping, so there cannot be new tags without descriptions
@@ -37,6 +39,8 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
   [AUTH_TAG]: "Registration, sessions and sign-out",
 
   [GROUPS_TAG]: "Managing writing groups and their visibility",
+  [STORY_IDEAS_TAG]:
+    "The public board of story ideas seeking writers, and their lifecycle",
   [MEMBERSHIPS_TAG]:
     "Managing who belongs to a writing group, in which role, and their invitations",
 

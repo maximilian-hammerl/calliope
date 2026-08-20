@@ -1,27 +1,47 @@
-import { BookOpen, Users } from '@lucide/vue'
+import { BookOpen, Lightbulb, Users } from '@lucide/vue'
 import type { RouteRecordName } from 'vue-router'
+
+type Child = { name: string; label: string }
 
 /**
  * The primary destinations, shared by the top bar and the bottom bar so the two cannot
- * disagree about which one a page belongs to — they did, over `/groups/discover`.
+ * disagree about which one a page belongs to — they did once, over `/groups/discover`.
  *
- * `belongsTo` lists the route names that live under a destination. Matching by name rather
- * than by path prefix, because a route's name is what the guard and the views already use.
+ * A destination with `children` opens a menu naming its pages — each by the page's own title,
+ * because a destination is named the same everywhere. One without navigates directly.
  */
-export const DESTINATIONS = [
+export const DESTINATIONS: ReadonlyArray<{
+  label: string
+  icon: typeof BookOpen
+  belongsTo: readonly string[]
+  name?: string
+  children?: readonly Child[]
+}> = [
   {
-    name: 'groups',
     label: 'Gruppen',
     icon: BookOpen,
     belongsTo: ['groups', 'group', 'thread', 'discover'],
+    children: [
+      { name: 'groups', label: 'Meine Gruppen' },
+      { name: 'discover', label: 'Gruppen entdecken' },
+    ],
   },
   {
-    name: 'members',
+    label: 'Storyideen',
+    icon: Lightbulb,
+    belongsTo: ['storyIdeas', 'storyIdeasMine', 'storyIdea'],
+    children: [
+      { name: 'storyIdeasMine', label: 'Meine Storyideen' },
+      { name: 'storyIdeas', label: 'Storyideen entdecken' },
+    ],
+  },
+  {
     label: 'Mitglieder',
     icon: Users,
+    name: 'members',
     belongsTo: ['members', 'member'],
   },
-] as const
+]
 
 export function isCurrent(
   destination: (typeof DESTINATIONS)[number],

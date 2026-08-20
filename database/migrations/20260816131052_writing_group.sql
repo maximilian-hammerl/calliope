@@ -2,6 +2,11 @@
 
 CREATE TYPE public.writing_group_visibility AS ENUM ('public', 'private');
 
+-- Shared by writing_group and story_idea, so an idea's language survives becoming a group.
+-- An enum, not text: a filter over free text is no filter. Two values until somebody needs a
+-- third; members select rather than type, so nothing can be misspelt.
+CREATE TYPE public.story_language AS ENUM ('german', 'english');
+
 -- §7.4 also lists 'archived', left out until there is something to distinguish it from
 -- 'finished': §22's archive is a *group* lifecycle — hidden, read-only, restorable — and none
 -- of that is built, so the value would carry no behaviour.
@@ -39,6 +44,8 @@ CREATE TABLE public.writing_group
     -- characters more than any fixed list would survive.
     tense            TEXT,
     perspective      TEXT,
+
+    language         public.story_language           NOT NULL DEFAULT 'german',
 
     created_by       uuid                            references public.user (id) on update cascade on delete set null,
     created_at       TIMESTAMPTZ                     NOT NULL DEFAULT now()
@@ -146,6 +153,7 @@ DROP TABLE public.writing_group;
 DROP FUNCTION public.delete_writing_group_after_last_user_leaves();
 
 DROP TYPE public.user_in_writing_group_status;
+DROP TYPE public.story_language;
 DROP TYPE public.user_in_writing_group_role;
 DROP TYPE public.writing_group_visibility;
 DROP TYPE public.writing_group_story_status;

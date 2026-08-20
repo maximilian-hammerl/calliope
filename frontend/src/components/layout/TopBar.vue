@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu'
 import { APP_NAME } from '@/lib/branding'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -82,23 +90,49 @@ async function signOut() {
         <CalliopeLogo :size="22" wordmark />
       </RouterLink>
 
-      <!-- Below `md` the destinations live in the bottom bar, as the design system asks. The
-           active mark is the 2px underline at the foot of the bar, never a filled chip. -->
-      <nav class="hidden h-full gap-4 md:flex md:gap-5">
-        <RouterLink
-          v-for="destination in DESTINATIONS"
-          :key="destination.name"
-          :to="{ name: destination.name }"
-          class="flex h-full items-center border-b-2 text-[13.5px] leading-[1.2] whitespace-nowrap"
-          :class="
-            isCurrent(destination, route.name)
-              ? 'border-oak font-semibold text-ink-1'
-              : 'border-transparent text-ink-5'
-          "
-        >
-          {{ destination.label }}
-        </RouterLink>
-      </nav>
+      <!-- Below `md` the destinations live in the bottom bar. The active mark stays the 2px
+           underline at the foot of the bar, drawn here since the patched trigger carries none. -->
+      <NavigationMenu class="hidden h-full md:flex" :delay-duration="100">
+        <NavigationMenuList class="h-full gap-4 md:gap-5">
+          <NavigationMenuItem
+            v-for="destination in DESTINATIONS"
+            :key="destination.label"
+            class="flex h-full items-center border-b-2"
+            :class="
+              isCurrent(destination, route.name)
+                ? 'border-oak [&_a,&_button]:font-semibold [&_a,&_button]:text-ink-1'
+                : 'border-transparent'
+            "
+          >
+            <template v-if="destination.children">
+              <NavigationMenuTrigger>{{ destination.label }}</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul class="flex w-56 flex-col p-1">
+                  <li v-for="child in destination.children" :key="child.name">
+                    <NavigationMenuLink as-child>
+                      <RouterLink
+                        :to="{ name: child.name }"
+                        class="flex min-h-11 items-center rounded-sm px-3 text-[13px] text-ink-2 hover:bg-accent md:min-h-9"
+                      >
+                        {{ child.label }}
+                      </RouterLink>
+                    </NavigationMenuLink>
+                  </li>
+                </ul>
+              </NavigationMenuContent>
+            </template>
+
+            <NavigationMenuLink v-else as-child>
+              <RouterLink
+                :to="{ name: destination.name }"
+                class="flex h-full items-center px-1 text-[13.5px] leading-[1.2] whitespace-nowrap text-ink-5 hover:text-ink-1"
+              >
+                {{ destination.label }}
+              </RouterLink>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
 
       <!-- From md up the field sits in the bar, as the system specifies. Below that a field
            does not fit but a button does, and the row it used to need cost 63px of a 667px

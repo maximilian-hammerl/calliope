@@ -1,0 +1,85 @@
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
+import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
+import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
+import { STATUS_CODE } from "@std/http/status";
+import requireSession from "@/src/middleware/require_session.ts";
+import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
+import {
+  BAD_REQUEST_RESPONSE,
+  COMMON_RESPONSES,
+  ERROR_RESPONSE,
+  FORBIDDEN_RESPONSE,
+  jsonContent,
+} from "@/src/http/response.ts";
+import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
+
+const STORY_TAGS_SCHEMA = z
+  .array(z.string().max(TEXT_LIMIT.storyTag))
+  .max(LIST_LIMIT.storyTags)
+  .optional();
+
+const DETAIL_SCHEMA = z.string().max(TEXT_LIMIT.storyIdeaDetail).nullish();
+
+export const STORY_IDEA_BODY = STORY_IDEA_SCHEMA
+  .pick({
+    title: true,
+    subtitle: true,
+    idea: true,
+    tense: true,
+    perspective: true,
+    language: true,
+    lookingFor: true,
+    partySize: true,
+    status: true,
+  })
+  .extend({
+    // Title and the idea are all §8.1 requires; a mandatory field gets filled with nonsense.
+    title: STORY_IDEA_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.storyIdeaTitle),
+    subtitle: z.string().max(TEXT_LIMIT.storyIdeaSubtitle).nullish(),
+    idea: STORY_IDEA_SCHEMA.shape.idea.min(1).max(TEXT_LIMIT.storyIdeaText),
+    tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
+    perspective: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
+    language: STORY_IDEA_SCHEMA.shape.language.default("german"),
+    lookingFor: DETAIL_SCHEMA,
+    partySize: STORY_IDEA_SCHEMA.shape.partySize.optional(),
+    status: STORY_IDEA_SCHEMA.shape.status.default("open"),
+    genres: STORY_TAGS_SCHEMA,
+    subgenres: STORY_TAGS_SCHEMA,
+    tropes: STORY_TAGS_SCHEMA,
+    contentWarnings: STORY_TAGS_SCHEMA,
+  });
+
+export default new OpenAPIHono().openapi(
+  createRoute({
+    method: "post",
+    path: "/",
+    tags: [STORY_IDEAS_TAG],
+    summary: "Post a story idea seeking writers",
+    operationId: "createStoryIdea",
+    middleware: requireSession,
+    request: {
+      body: { required: true, content: jsonContent(STORY_IDEA_BODY) },
+    },
+    responses: {
+      [STATUS_CODE.Created]: {
+        description: "The idea is on the board",
+        content: jsonContent(STORY_IDEA_RESPONSE),
+      },
+      [STATUS_CODE.Unauthorized]: {
+        description: "No valid session",
+        content: jsonContent(ERROR_RESPONSE),
+      },
+      ...FORBIDDEN_RESPONSE,
+      ...BAD_REQUEST_RESPONSE,
+      ...COMMON_RESPONSES,
+    },
+  }),
+  async (c) => {
+    const idea = await StoryIdeaService.insertStoryIdea(
+      c.get("user").id,
+      c.req.valid("json"),
+    );
+    return c.json(idea, STATUS_CODE.Created);
+  },
+);

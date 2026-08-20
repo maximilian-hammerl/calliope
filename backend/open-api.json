@@ -17,6 +17,10 @@
       "description": "Managing writing groups and their visibility"
     },
     {
+      "name": "story-ideas",
+      "description": "The public board of story ideas seeking writers, and their lifecycle"
+    },
+    {
       "name": "memberships",
       "description": "Managing who belongs to a writing group, in which role, and their invitations"
     },
@@ -2499,6 +2503,11 @@
                     "type": ["string", "null"],
                     "maxLength": 60
                   },
+                  "language": {
+                    "type": "string",
+                    "enum": ["english", "german"],
+                    "default": "german"
+                  },
                   "genres": {
                     "type": "array",
                     "items": {
@@ -2579,6 +2588,10 @@
                     },
                     "tense": { "type": ["string", "null"] },
                     "perspective": { "type": ["string", "null"] },
+                    "language": {
+                      "type": "string",
+                      "enum": ["english", "german"]
+                    },
                     "createdBy": {
                       "type": ["string", "null"],
                       "format": "uuid"
@@ -2611,6 +2624,7 @@
                     "contentWarnings",
                     "tense",
                     "perspective",
+                    "language",
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
@@ -2863,6 +2877,10 @@
                           },
                           "tense": { "type": ["string", "null"] },
                           "perspective": { "type": ["string", "null"] },
+                          "language": {
+                            "type": "string",
+                            "enum": ["english", "german"]
+                          },
                           "createdBy": {
                             "type": ["string", "null"],
                             "format": "uuid"
@@ -2898,6 +2916,7 @@
                           "contentWarnings",
                           "tense",
                           "perspective",
+                          "language",
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
@@ -3118,6 +3137,10 @@
                     },
                     "tense": { "type": ["string", "null"] },
                     "perspective": { "type": ["string", "null"] },
+                    "language": {
+                      "type": "string",
+                      "enum": ["english", "german"]
+                    },
                     "createdBy": {
                       "type": ["string", "null"],
                       "format": "uuid"
@@ -3150,6 +3173,7 @@
                     "contentWarnings",
                     "tense",
                     "perspective",
+                    "language",
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
@@ -3375,6 +3399,10 @@
                     "enum": ["finished", "planning", "writing"],
                     "default": "planning"
                   },
+                  "language": {
+                    "type": "string",
+                    "enum": ["english", "german"]
+                  },
                   "tense": { "type": ["string", "null"], "maxLength": 60 },
                   "perspective": {
                     "type": ["string", "null"],
@@ -3459,6 +3487,10 @@
                     },
                     "tense": { "type": ["string", "null"] },
                     "perspective": { "type": ["string", "null"] },
+                    "language": {
+                      "type": "string",
+                      "enum": ["english", "german"]
+                    },
                     "createdBy": {
                       "type": ["string", "null"],
                       "format": "uuid"
@@ -3491,6 +3523,7 @@
                     "contentWarnings",
                     "tense",
                     "perspective",
+                    "language",
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
@@ -8898,6 +8931,1365 @@
         }
       }
     },
+    "/api/story-ideas": {
+      "query": {
+        "tags": ["story-ideas"],
+        "summary": "List story ideas seeking writers",
+        "description": "Newest first. Without a status filter only open ideas appear. The search looks at titles and the ideas themselves.",
+        "operationId": "listStoryIdeas",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "default": 20
+                  },
+                  "search": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 120
+                  },
+                  "offset": { "type": "integer", "minimum": 0, "default": 0 },
+                  "sortAttribute": {
+                    "type": "string",
+                    "enum": ["createdAt", "title"],
+                    "default": "createdAt"
+                  },
+                  "sortOrder": {
+                    "type": "string",
+                    "enum": ["asc", "desc"],
+                    "default": "desc"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["open", "closed", "any"],
+                    "default": "open"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": ["english", "german"]
+                  },
+                  "mine": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A page of story ideas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalResults": { "type": "integer", "minimum": 0 },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "title": { "type": "string" },
+                          "subtitle": { "type": ["string", "null"] },
+                          "idea": { "type": "string" },
+                          "genres": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "subgenres": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "tropes": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "contentWarnings": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "tense": { "type": ["string", "null"] },
+                          "perspective": { "type": ["string", "null"] },
+                          "language": {
+                            "type": "string",
+                            "enum": ["english", "german"]
+                          },
+                          "lookingFor": { "type": ["string", "null"] },
+                          "partySize": {
+                            "type": ["string", "null"],
+                            "enum": ["group", "one_on_one", null]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["closed", "open"]
+                          },
+                          "createdBy": { "type": "string", "format": "uuid" },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "createdByUsername": { "type": "string" }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "subtitle",
+                          "idea",
+                          "genres",
+                          "subgenres",
+                          "tropes",
+                          "contentWarnings",
+                          "tense",
+                          "perspective",
+                          "language",
+                          "lookingFor",
+                          "partySize",
+                          "status",
+                          "createdBy",
+                          "createdAt",
+                          "createdByUsername"
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["totalResults", "results"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["story-ideas"],
+        "summary": "Post a story idea seeking writers",
+        "operationId": "createStoryIdea",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "subtitle": { "type": ["string", "null"], "maxLength": 120 },
+                  "idea": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "tense": { "type": ["string", "null"], "maxLength": 60 },
+                  "perspective": {
+                    "type": ["string", "null"],
+                    "maxLength": 60
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": ["english", "german"],
+                    "default": "german"
+                  },
+                  "lookingFor": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "partySize": {
+                    "type": ["string", "null"],
+                    "enum": ["group", "one_on_one", null]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["closed", "open"],
+                    "default": "open"
+                  },
+                  "genres": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  },
+                  "subgenres": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  },
+                  "tropes": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  },
+                  "contentWarnings": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  }
+                },
+                "required": ["title", "idea"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The idea is on the board",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "title": { "type": "string" },
+                    "subtitle": { "type": ["string", "null"] },
+                    "idea": { "type": "string" },
+                    "genres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "subgenres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tropes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "contentWarnings": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tense": { "type": ["string", "null"] },
+                    "perspective": { "type": ["string", "null"] },
+                    "language": {
+                      "type": "string",
+                      "enum": ["english", "german"]
+                    },
+                    "lookingFor": { "type": ["string", "null"] },
+                    "partySize": {
+                      "type": ["string", "null"],
+                      "enum": ["group", "one_on_one", null]
+                    },
+                    "status": { "type": "string", "enum": ["closed", "open"] },
+                    "createdBy": { "type": "string", "format": "uuid" },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "createdByUsername": { "type": "string" }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "subtitle",
+                    "idea",
+                    "genres",
+                    "subgenres",
+                    "tropes",
+                    "contentWarnings",
+                    "tense",
+                    "perspective",
+                    "language",
+                    "lookingFor",
+                    "partySize",
+                    "status",
+                    "createdBy",
+                    "createdAt",
+                    "createdByUsername"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/story-ideas/{ideaId}": {
+      "get": {
+        "tags": ["story-ideas"],
+        "summary": "Read one story idea",
+        "operationId": "getStoryIdea",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "ideaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The story idea",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "title": { "type": "string" },
+                    "subtitle": { "type": ["string", "null"] },
+                    "idea": { "type": "string" },
+                    "genres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "subgenres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tropes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "contentWarnings": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tense": { "type": ["string", "null"] },
+                    "perspective": { "type": ["string", "null"] },
+                    "language": {
+                      "type": "string",
+                      "enum": ["english", "german"]
+                    },
+                    "lookingFor": { "type": ["string", "null"] },
+                    "partySize": {
+                      "type": ["string", "null"],
+                      "enum": ["group", "one_on_one", null]
+                    },
+                    "status": { "type": "string", "enum": ["closed", "open"] },
+                    "createdBy": { "type": "string", "format": "uuid" },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "createdByUsername": { "type": "string" }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "subtitle",
+                    "idea",
+                    "genres",
+                    "subgenres",
+                    "tropes",
+                    "contentWarnings",
+                    "tense",
+                    "perspective",
+                    "language",
+                    "lookingFor",
+                    "partySize",
+                    "status",
+                    "createdBy",
+                    "createdAt",
+                    "createdByUsername"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No idea has this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["story-ideas"],
+        "summary": "Update one's own story idea",
+        "description": "Only the idea's author may change it, its status included. Absent fields stay as they are.",
+        "operationId": "updateStoryIdea",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "ideaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "subtitle": { "type": ["string", "null"], "maxLength": 120 },
+                  "idea": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "tense": { "type": ["string", "null"], "maxLength": 60 },
+                  "perspective": {
+                    "type": ["string", "null"],
+                    "maxLength": 60
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": ["english", "german"],
+                    "default": "german"
+                  },
+                  "lookingFor": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "partySize": {
+                    "type": ["string", "null"],
+                    "enum": ["group", "one_on_one", null]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["closed", "open"],
+                    "default": "open"
+                  },
+                  "genres": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  },
+                  "subgenres": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  },
+                  "tropes": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  },
+                  "contentWarnings": {
+                    "type": "array",
+                    "items": { "type": "string", "maxLength": 60 },
+                    "maxItems": 12
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The idea as it now reads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "title": { "type": "string" },
+                    "subtitle": { "type": ["string", "null"] },
+                    "idea": { "type": "string" },
+                    "genres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "subgenres": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tropes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "contentWarnings": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "tense": { "type": ["string", "null"] },
+                    "perspective": { "type": ["string", "null"] },
+                    "language": {
+                      "type": "string",
+                      "enum": ["english", "german"]
+                    },
+                    "lookingFor": { "type": ["string", "null"] },
+                    "partySize": {
+                      "type": ["string", "null"],
+                      "enum": ["group", "one_on_one", null]
+                    },
+                    "status": { "type": "string", "enum": ["closed", "open"] },
+                    "createdBy": { "type": "string", "format": "uuid" },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "createdByUsername": { "type": "string" }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "subtitle",
+                    "idea",
+                    "genres",
+                    "subgenres",
+                    "tropes",
+                    "contentWarnings",
+                    "tense",
+                    "perspective",
+                    "language",
+                    "lookingFor",
+                    "partySize",
+                    "status",
+                    "createdBy",
+                    "createdAt",
+                    "createdByUsername"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The idea belongs to somebody else",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No idea has this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["story-ideas"],
+        "summary": "Take one's own story idea off the board",
+        "operationId": "deleteStoryIdea",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "ideaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The idea is gone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The idea belongs to somebody else",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No idea has this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users": {
       "query": {
         "tags": ["users"],
@@ -12073,6 +13465,10 @@
                               },
                               "tense": { "type": ["string", "null"] },
                               "perspective": { "type": ["string", "null"] },
+                              "language": {
+                                "type": "string",
+                                "enum": ["english", "german"]
+                              },
                               "createdBy": {
                                 "type": ["string", "null"],
                                 "format": "uuid"
@@ -12115,6 +13511,7 @@
                               "contentWarnings",
                               "tense",
                               "perspective",
+                              "language",
                               "createdBy",
                               "createdAt",
                               "lastActivityAt",

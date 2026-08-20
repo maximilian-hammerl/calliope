@@ -2,12 +2,14 @@ import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
+  StoryLanguage,
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
   WritingGroup as DatabaseWritingGroup,
   WritingGroupStoryStatus,
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
+import { emptyToNull, normaliseTags } from "@/src/util/story_tags.ts";
 import type { User } from "./user_service.ts";
 import {
   type ListQuery,
@@ -31,6 +33,7 @@ export type WritingGroup =
     | "contentWarnings"
     | "tense"
     | "perspective"
+    | "language"
     | "createdBy"
     | "createdAt"
     | "lastActivityAt"
@@ -65,6 +68,7 @@ const SELECTED_COLUMNS = [
   "writingGroup.contentWarnings",
   "writingGroup.tense",
   "writingGroup.perspective",
+  "writingGroup.language",
   "writingGroup.createdBy",
   "writingGroup.createdAt",
   "writingGroup.lastActivityAt",
@@ -86,36 +90,8 @@ export type WritingGroupValues = {
   contentWarnings?: string[];
   tense?: string | null;
   perspective?: string | null;
+  language?: StoryLanguage;
 };
-
-/**
- * Trims, drops the empties and removes repeats, comparing case-insensitively so "Fantasy" and
- * "fantasy" cannot both be stored. The first spelling wins, because that is the one the member
- * chose to type. Done here rather than in the schema so the OpenAPI document describes the
- * shape a client sends rather than a transform it cannot see.
- */
-function normaliseTags(tags: string[]): string[] {
-  const seen = new Set<string>();
-  const normalised: string[] = [];
-
-  for (const tag of tags) {
-    const trimmed = tag.trim();
-    const key = trimmed.toLocaleLowerCase("de");
-
-    if (trimmed.length > 0 && !seen.has(key)) {
-      seen.add(key);
-      normalised.push(trimmed);
-    }
-  }
-
-  return normalised;
-}
-
-/** Empty is how "not given" is stored, so a blank string never reaches a nullable column. */
-function emptyToNull(value: string | null | undefined): string | null {
-  const trimmed = value?.trim();
-  return trimmed === undefined || trimmed.length === 0 ? null : trimmed;
-}
 
 /** The one place values become a row: normalisation cannot be skipped by a caller. */
 function toRow(values: Partial<WritingGroupValues>) {
@@ -147,6 +123,7 @@ function toRow(values: Partial<WritingGroupValues>) {
     ...(values.perspective === undefined
       ? {}
       : { perspective: emptyToNull(values.perspective) }),
+    ...(values.language === undefined ? {} : { language: values.language }),
   };
 }
 

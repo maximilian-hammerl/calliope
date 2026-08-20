@@ -35,6 +35,23 @@ export const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/ThreadView.vue'),
   },
   {
+    path: '/story-ideas',
+    name: 'storyIdeas',
+    component: () => import('../views/StoryIdeasView.vue'),
+  },
+  // Literal before the parameter, or `mine` would be read as an idea's id.
+  {
+    path: '/story-ideas/mine',
+    name: 'storyIdeasMine',
+    component: () => import('../views/StoryIdeasView.vue'),
+    props: { mine: true },
+  },
+  {
+    path: '/story-ideas/:ideaId',
+    name: 'storyIdea',
+    component: () => import('../views/StoryIdeaView.vue'),
+  },
+  {
     path: '/members',
     name: 'members',
     component: () => import('../views/MembersView.vue'),

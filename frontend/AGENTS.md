@@ -5,7 +5,7 @@ client. Linted by `oxlint`, formatted by `oxfmt`. Tasks are `npm run …` — se
 [AGENTS.md](../AGENTS.md) for the conventions shared with the other projects.
 
 - **File names are `camelCase`**, except when the file is a class or a component, which are
-  `PascalCase`: `formatTime.ts`, `useGroupRole.ts`, `AppLayout.vue`.
+  `PascalCase`: `formatTime.ts`, `useDraft.ts`, `AppLayout.vue`.
 - **Imports use the `@/` alias**, which points at `src/`: `@/lib/formatTime`.
 - **Annotate every `ref` and `computed`**: `ref<string>('')`,
   `computed<GetGroup200 | undefined>(…)`.
@@ -23,7 +23,10 @@ before adding a surface.
 Where shadcn's defaults contradict it, the component is patched once rather than overridden at
 each call site — `shadow-xs` is stripped from Input and the outline Button, `AvatarFallback`
 carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour, and
-`DropdownMenuItem` and `DialogContent` carry the mobile rules below.
+`DropdownMenuItem` and `DialogContent` carry the mobile rules below, and `navigation-menu`'s
+trigger style drops shadcn's filled pills for the design system's underline-and-ink pattern.
+The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
+above is not hypothetical.
 
 **Keep it updated.** When the interface departs from what that document says — a new icon set,
 a changed rule, a pattern it does not cover — change the document in the same piece of work.
@@ -48,6 +51,7 @@ grep -c shadow-xs src/components/ui/button/index.ts src/components/ui/input/Inpu
 grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                          # expect 1
 grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue                  # expect 1
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
+grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).
@@ -195,8 +199,7 @@ the reader. Its query is `enabled` on the dialog being open — it lives in the 
 page, and a list nobody is looking at is not worth fetching.
 
 Personal features are dialogs opened from the avatar menu rather than routes, so they do not
-take a member off the page they are on. `PlaceholderDialog` stands in for the ones that do not
-exist yet and says so plainly.
+take a member off the page they are on.
 
 ## Length limits
 

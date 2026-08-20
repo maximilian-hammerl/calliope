@@ -115,6 +115,26 @@ Deno.test("POST /api/auth/account/deletion/confirm lets the trigger remove a gro
   assertEquals(gone, undefined);
 });
 
+Deno.test("POST /api/auth/account/deletion/confirm takes the member's story ideas with it", async () => {
+  const cookie = await registerDeletable();
+  const created = await request("POST", "/api/story-ideas", cookie, {
+    title: "Stirbt mit dem Konto",
+    idea: "Eine Idee ist ein Gesuch, nicht Teil einer fremden Geschichte.",
+  });
+  const { id } = await created.json();
+
+  await confirmDeletion(await requestAndReadToken(cookie));
+
+  // CASCADE, unlike a post's SET NULL: nobody else has written into an idea.
+  const gone = await db
+    .selectFrom("storyIdea")
+    .select("id")
+    .where("id", "=", id)
+    .executeTakeFirst();
+
+  assertEquals(gone, undefined);
+});
+
 Deno.test("POST /api/auth/account/deletion/confirm tells the address it is done", async () => {
   const cookie = await registerDeletable();
   const token = await requestAndReadToken(cookie);

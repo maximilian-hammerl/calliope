@@ -97,10 +97,7 @@ const creating = ref<boolean>(false)
         <div class="mb-2 flex flex-wrap items-baseline gap-3">
           <h1 class="text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
 
-          <div class="ml-auto flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" as-child>
-              <RouterLink :to="{ name: 'discover' }">Gruppen entdecken</RouterLink>
-            </Button>
+          <div class="ml-auto">
             <Button
               variant="outline"
               size="sm"

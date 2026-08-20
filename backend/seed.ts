@@ -32,6 +32,7 @@ const POST = {
 } as const;
 const STEP = { motive: id("91"), opening: id("92") } as const;
 const CHAT = { pair: id("e1") } as const;
+const STORY_IDEA = { letters: id("091"), settled: id("092") } as const;
 const MESSAGE = { one: id("f1"), two: id("f2"), three: id("f3") } as const;
 const NOTIFICATION = {
   invitation: id("0a1"),
@@ -273,6 +274,36 @@ async function seed(): Promise<void> {
       type: "invited_to_chat_group",
       actorId: USER.mira,
       chatGroupId: CHAT.pair,
+    },
+  ]).execute();
+
+  // One idea still seeking writers, one already settled — so the board's default filter and
+  // the status views both have something to show.
+  await db.insertInto("storyIdea").values([
+    {
+      id: STORY_IDEA.letters,
+      title: "Briefe aus dem Leuchtturm",
+      subtitle: "Zwei Wächter, eine See, die es nicht mehr gibt",
+      idea:
+        "Zwei Leuchtturmwächter an entgegengesetzten Enden einer ausgetrockneten See " +
+        "schreiben sich Briefe. Jeder Brief ist ein Beitrag; was die See verschwinden ließ, " +
+        "entscheiden wir gemeinsam unterwegs.",
+      genres: ["Fantasy"],
+      tropes: ["Epistolary", "Slow Burn"],
+      tense: "Vergangenheit",
+      language: "german",
+      lookingFor: "Eine Person, die den zweiten Wächter schreibt.",
+      partySize: "one_on_one",
+      createdBy: USER.annelie,
+    },
+    {
+      id: STORY_IDEA.settled,
+      title: "Der Erinnerungsmarkt",
+      idea:
+        "Ein Markt, der nur nach Einbruch der Dunkelheit öffnet — inzwischen eine Gruppe.",
+      genres: ["Fantasy", "Mystery"],
+      status: "closed",
+      createdBy: USER.mira,
     },
   ]).execute();
 }

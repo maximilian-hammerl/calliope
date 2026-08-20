@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --watch --permission-set=default --env-file=../.env main.ts",
-    "run": "deno run --permission-set=default --env-file=../.env main.ts",
+    "dev": "DENO_TRACE_PERMISSIONS=1 deno run --watch --permission-set=default --env-file=../.env main.ts",
+    "run": "DENO_TRACE_PERMISSIONS=1 deno run --permission-set=default --env-file=../.env main.ts",
     "compile": "deno compile --no-check --permission-set=default --output calliope main.ts",
     "test": "deno test --permission-set=default --env-file=../.env",
     "format:fix": "deno fmt",
@@ -60,8 +60,11 @@
   "permissions": {
     "default": {
       "env": true,
+      "net": true,
+      // ioredis
       "read": true,
-      "net": true
+      // nodemailer
+      "sys": ["networkInterfaces"]
     }
   },
   "imports": {

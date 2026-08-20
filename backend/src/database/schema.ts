@@ -20,6 +20,12 @@ export type NotificationType =
   | "role_changed_in_writing_group"
   | "visibility_changed_in_writing_group";
 
+export type StoryIdeaPartySize = "group" | "one_on_one";
+
+export type StoryIdeaStatus = "closed" | "open";
+
+export type StoryLanguage = "english" | "german";
+
 export type UserInChatGroupStatus = "invited" | "joined";
 
 export type UserInWritingGroupRole = "administrator" | "reader" | "writer";
@@ -64,6 +70,25 @@ export interface Notification {
   writingGroupId: string | null;
   writingPostId: string | null;
   writingThreadId: string | null;
+}
+
+export interface StoryIdea {
+  contentWarnings: Generated<string[]>;
+  createdAt: Generated<string>;
+  createdBy: string;
+  genres: Generated<string[]>;
+  id: Generated<string>;
+  idea: string;
+  language: Generated<StoryLanguage>;
+  lookingFor: string | null;
+  partySize: StoryIdeaPartySize | null;
+  perspective: string | null;
+  status: Generated<StoryIdeaStatus>;
+  subgenres: Generated<string[]>;
+  subtitle: string | null;
+  tense: string | null;
+  title: string;
+  tropes: Generated<string[]>;
 }
 
 export interface User {
@@ -124,6 +149,7 @@ export interface WritingGroup {
   createdBy: string | null;
   genres: Generated<string[]>;
   id: Generated<string>;
+  language: Generated<StoryLanguage>;
   lastActivityAt: Generated<string>;
   perspective: string | null;
   storyStatus: Generated<WritingGroupStoryStatus>;
@@ -168,6 +194,7 @@ export interface DB {
   chatGroup: ChatGroup;
   chatMessage: ChatMessage;
   notification: Notification;
+  storyIdea: StoryIdea;
   user: User;
   userInChatGroup: UserInChatGroup;
   userInWritingGroup: UserInWritingGroup;
@@ -184,6 +211,9 @@ export const WRITING_GROUP_VISIBILITIES = ["private", "public"] as const;
 export const WRITING_GROUP_VISIBILITY_SCHEMA = z.enum(
   WRITING_GROUP_VISIBILITIES,
 );
+
+export const STORY_LANGUAGES = ["english", "german"] as const;
+export const STORY_LANGUAGE_SCHEMA = z.enum(STORY_LANGUAGES);
 
 export const WRITING_GROUP_STORY_STATUSES = [
   "finished",
@@ -232,6 +262,12 @@ export const USER_TOKEN_PURPOSES = [
 ] as const;
 export const USER_TOKEN_PURPOSE_SCHEMA = z.enum(USER_TOKEN_PURPOSES);
 
+export const STORY_IDEA_STATUSES = ["closed", "open"] as const;
+export const STORY_IDEA_STATUS_SCHEMA = z.enum(STORY_IDEA_STATUSES);
+
+export const STORY_IDEA_PARTY_SIZES = ["group", "one_on_one"] as const;
+export const STORY_IDEA_PARTY_SIZE_SCHEMA = z.enum(STORY_IDEA_PARTY_SIZES);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -260,6 +296,25 @@ export const NOTIFICATION_SCHEMA = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   occurredAt: z.iso.datetime({ offset: true }),
   readAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+export const STORY_IDEA_SCHEMA = z.object({
+  id: z.uuidv7(),
+  title: z.string(),
+  subtitle: z.string().nullable(),
+  idea: z.string(),
+  genres: z.array(z.string()),
+  subgenres: z.array(z.string()),
+  tropes: z.array(z.string()),
+  contentWarnings: z.array(z.string()),
+  tense: z.string().nullable(),
+  perspective: z.string().nullable(),
+  language: STORY_LANGUAGE_SCHEMA,
+  lookingFor: z.string().nullable(),
+  partySize: STORY_IDEA_PARTY_SIZE_SCHEMA.nullable(),
+  status: STORY_IDEA_STATUS_SCHEMA,
+  createdBy: z.uuidv7(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_SCHEMA = z.object({
@@ -326,6 +381,7 @@ export const WRITING_GROUP_SCHEMA = z.object({
   contentWarnings: z.array(z.string()),
   tense: z.string().nullable(),
   perspective: z.string().nullable(),
+  language: STORY_LANGUAGE_SCHEMA,
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   lastActivityAt: z.iso.datetime({ offset: true }),

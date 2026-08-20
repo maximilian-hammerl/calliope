@@ -2,6 +2,11 @@
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "exclude": ["src/**/__tests__/*"],
+  "vueCompilerOptions": {
+    // A typo'd or unimported component renders as an unknown element: unstyled, contents
+    // stacked, no error anywhere. This makes it a compile error instead.
+    "checkUnknownComponents": true
+  },
   "compilerOptions": {
     // Unreachable code is a leftover, not a statement.
     "allowUnreachableCode": false,

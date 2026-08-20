@@ -31,10 +31,10 @@ const requested = ref<boolean>(false)
       ihn nicht öffnest, bleibt dein Konto bestehen.
     </p>
     <p>
-      Weg sind dein Konto, deine Mitgliedschaften, deine Einladungen und deine Benachrichtigungen.
-      Was du in Gruppen geschrieben hast, bleibt dort stehen — es gehört zu Geschichten, an denen
-      andere weitergeschrieben haben — aber ohne deinen Namen. Gruppen, in denen sonst niemand mehr
-      ist, werden mit gelöscht.
+      Weg sind dein Konto, deine Mitgliedschaften, deine Einladungen, deine Benachrichtigungen und
+      deine Storyideen. Was du in Gruppen geschrieben hast, bleibt dort stehen — es gehört zu
+      Geschichten, an denen andere weitergeschrieben haben — aber ohne deinen Namen. Gruppen, in
+      denen sonst niemand mehr ist, werden mit gelöscht.
     </p>
   </DeleteAccountForm>
 </template>

@@ -24,6 +24,7 @@ const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
     blurb: true,
     visibility: true,
     storyStatus: true,
+    language: true,
     tense: true,
     perspective: true,
   })

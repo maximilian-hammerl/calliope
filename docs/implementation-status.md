@@ -22,8 +22,11 @@ write posts in them — the promise in §45, *"Create a private writing group. W
 Since the last snapshot the account became a whole: a member can **delete it** (password, then
 a mailed link), and every member has a **profile page** with a **member overview** to find it
 from — thin ones, name and joined date, but search and member lists finally lead somewhere.
-And the product now **works on a phone**: a bottom bar navigates, the two rails merge into one
-sheet, the composer starts collapsed, and every target on every page is at least 44px.
+The product now **works on a phone**: a bottom bar navigates, the two rails merge into one
+sheet, the composer starts collapsed, and every target on every page is at least 44px. And
+**Nächste Schritte is real**: the group's shared checklist in the rail — Yooco had one so
+hidden that two of three interviewees never found it — where writers add steps inline and tick
+them off, recording who completed what.
 
 What is still missing is most of what makes a **community** rather than a set of groups: no
 public forum, no partner search, no administration, no files, no data export. The product is
@@ -35,7 +38,7 @@ find each other or be moderated.
 | Area             | State                                                                                                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
-| Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions. **No** files.                            |
+| Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Chats are titled and invite-based, so **no** "message this member".                              |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Not started.                                                                                                                                                              |
@@ -68,6 +71,9 @@ These are decisions, not omissions, and each is recorded where it was made:
   emphatic that the old platform's stats made members anxious, and a feed of everything you are
   missing is that same mechanic.
 - **Chat has no notifications of its own.** Its unread count is the mechanism.
+- **Steps tell nobody and move nothing.** Ticking a step produces no notification (it is not
+  addressed to a person) and does not touch `last_activity_at` — planning is not writing, and
+  the group list must not reorder because somebody ticked a box.
 - **You cannot message a member who has not agreed to hear from you.** Chats are titled and
   invite-based, and a group works the same way: an invitation has to be accepted before anyone
   can write to you. This is deliberate — it means one member cannot simply start sending
@@ -128,22 +134,25 @@ is currently writing, plus a visibility setting for that block. Two constraints 
 when the pages were built: **no statistics, ever** ("Profilaufrufe" etc. "führen nur zu Druck"),
 and **nothing mandatory** — Yooco's required fields got filled with nonsense.
 
-### 3. Find writing partners (§8)
+### 3. Story ideas — v1 built, two steps remain
 
-A public board of structured **requests** — title, idea, genres, style, what you are looking
-for, format, availability — with filters and a status (open, discussing, partners found,
-closed). §8 insists it is "a first-class feature, not just another forum category", so it does
-**not** wait for the general forum; it is its own model and its own board.
+§8's partner requests, reframed as **Storyideen**: an idea seeking writers, because that is
+what members valued about the original ("Gesuche mit schon einer konkreten Idee"). The board,
+the detail page, posting, editing, an open/closed status (§8.3's intermediate states were
+dropped — bookkeeping nobody would maintain), a language enum shared with groups, and a
+"Meine Storyideen" view all exist; the
+story metadata mirrors `writing_group` column for column so an idea can one day become a
+group by copying.
 
-It is placed this high because the interviews are unambiguous that it is why people were on
-Yooco at all: it is what one member joined for ("Speed-Date Funktion […] war die überzeugende
-Funktion"), and both named "neue Schreibpartner finden" as the reason the public area matters.
-Together with the profiles, it is the pair that brought members in.
+The two follow-ups, in order: **"Unterhaltung beginnen"** on an idea — creating a chat titled
+after it and inviting the author, which is §11's "public idea → private conversation" flow
+built from parts that already exist; then **"Gruppe aus Idee gründen"**, the metadata copy.
+And item 4 below stops being optional the moment testers get this board.
 
 ### 4. Block a member
 
-The complement to 3. Once strangers can reach each other through a public board, the invitation
-spam described above stops being theoretical. Small on its own, and cheap while the surfaces
+The complement to 3, which now exists. Once strangers reach each other through the board, the
+invitation spam described above stops being theoretical. Small on its own, and cheap while the surfaces
 that can carry a message are still few.
 
 ### 5. Personal data export (§18, §42)
