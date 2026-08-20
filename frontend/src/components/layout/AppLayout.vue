@@ -10,6 +10,7 @@ import GroupList from '@/components/group/GroupList.vue'
 import RailLabel from '@/components/layout/RailLabel.vue'
 import RailToggle from '@/components/layout/RailToggle.vue'
 import ContextSheet from '@/components/layout/ContextSheet.vue'
+import BottomBar from '@/components/layout/BottomBar.vue'
 
 const props = defineProps<{ activeGroupId?: string }>()
 defineEmits<{ createGroup: [] }>()
@@ -117,5 +118,7 @@ const sheetOpen = ref<boolean>(false)
         </ContextSheet>
       </template>
     </div>
+
+    <BottomBar />
   </div>
 </template>

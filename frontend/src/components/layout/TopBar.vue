@@ -64,7 +64,8 @@ async function signOut() {
         <CalliopeLogo :size="22" wordmark />
       </RouterLink>
 
-      <nav class="flex h-full gap-4 md:gap-5">
+      <!-- Below `md` the destinations live in the bottom bar, as the design system asks. -->
+      <nav class="hidden h-full gap-4 md:flex md:gap-5">
         <!-- Active on every page below /groups, since they all live under this destination.
            The active mark is the 2px underline at the foot of the bar, never a filled chip. -->
         <RouterLink
