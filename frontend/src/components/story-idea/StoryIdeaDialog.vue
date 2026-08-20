@@ -259,6 +259,17 @@ async function submit() {
           </Field>
 
           <Field>
+            <FieldLabel for="idea-subgenres">Subgenres</FieldLabel>
+            <Input
+              id="idea-subgenres"
+              v-model="subgenres"
+              class="h-11 md:h-9"
+              name="subgenres"
+              placeholder="z. B. Cyberpunk, Dark Romance"
+            />
+          </Field>
+
+          <Field>
             <FieldLabel for="idea-tropes">Tropes</FieldLabel>
             <Input
               id="idea-tropes"
