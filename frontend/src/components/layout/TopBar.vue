@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
 import { APP_NAME } from '@/lib/branding'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { LogOutIcon } from '@lucide/vue'
+import { LogOutIcon, Search } from '@lucide/vue'
 import { useLogoutUser } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/auth/session'
@@ -32,6 +32,19 @@ const unread = computed<number>(() => props.user.unreadNotifications)
 
 // Personal things open where you are. Reading a long post and wanting to answer something
 // should not cost you your place on the page.
+/** Below `md` the field is summoned rather than always present; see the button above. */
+const searchOpen = ref<boolean>(false)
+const searchRow = useTemplateRef<HTMLDivElement>('searchRow')
+
+/** The keyboard has to follow the row, or opening the field takes a second tap. */
+watch(searchOpen, async (isOpen) => {
+  if (!isOpen) {
+    return
+  }
+  await nextTick()
+  searchRow.value?.querySelector('input')?.focus()
+})
+
 const showingNotifications = ref<boolean>(false)
 const showingMessages = ref<boolean>(false)
 /** Set when a chat invitation was followed out of the notifications dialog. */
@@ -87,12 +100,21 @@ async function signOut() {
         </RouterLink>
       </nav>
 
-      <!-- From md up the field sits in the bar, as the system specifies. Below that it gets
-           its own row: measured, the bar had 29px to spare before search existed, and the
-           wordmark is what would have paid for it. -->
+      <!-- From md up the field sits in the bar, as the system specifies. Below that a field
+           does not fit but a button does, and the row it used to need cost 63px of a 667px
+           phone. -->
       <SearchField class="ml-auto hidden w-[260px] md:block" />
 
-      <div class="ml-auto md:ml-0">
+      <button
+        type="button"
+        class="ml-auto flex size-11 items-center justify-center rounded-md text-ink-5 md:hidden"
+        aria-label="Suche öffnen"
+        @click="searchOpen = true"
+      >
+        <Search :size="18" :stroke-width="1.5" />
+      </button>
+
+      <div class="md:ml-0">
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <button
@@ -145,9 +167,19 @@ async function signOut() {
       </div>
     </div>
 
-    <!-- Only below md, where it cannot share the row above. -->
-    <div class="border-t border-line-2 px-[18px] py-[9px] md:hidden">
-      <SearchField />
+    <div
+      v-if="searchOpen"
+      ref="searchRow"
+      class="flex items-center gap-2 border-t border-line-2 px-[18px] py-[9px] md:hidden"
+    >
+      <SearchField class="flex-1" />
+      <button
+        type="button"
+        class="flex size-11 shrink-0 items-center justify-center rounded-md text-[12.5px] text-ink-5"
+        @click="searchOpen = false"
+      >
+        Fertig
+      </button>
     </div>
   </header>
 

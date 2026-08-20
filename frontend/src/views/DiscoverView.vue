@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ChevronLeft } from '@lucide/vue'
 import { watchDebounced } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
@@ -57,14 +56,6 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <RouterLink
-          :to="{ name: 'groups' }"
-          class="inline-flex min-h-11 items-center gap-[3px] text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
-        >
-          <ChevronLeft :size="14" :stroke-width="1.5" />
-          Meine Gruppen
-        </RouterLink>
-
         <h1 class="mt-3 mb-2 text-[25px] leading-[1.2] text-ink-1">Gruppen entdecken</h1>
         <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
           Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,

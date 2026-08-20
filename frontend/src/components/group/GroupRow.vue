@@ -15,14 +15,14 @@ defineSlots<{ actions?: () => unknown }>()
 <template>
   <!-- Hairline rows, no cards: nothing in the reading surface is boxed or rounded. -->
   <div class="py-[26px]">
-    <div class="flex flex-wrap items-baseline gap-3">
+    <div class="text-[20px] leading-[1.3]">
       <RouterLink
         :to="{ name: 'group', params: { groupId: group.id } }"
-        class="inline-flex min-h-11 items-center text-[20px] leading-[1.3] text-ink-1 hover:underline hover:underline-offset-[6px] md:min-h-0"
+        class="text-ink-1 underline-offset-[6px] hover:underline"
       >
         {{ group.title }}
       </RouterLink>
-      <CalliopeBadge>
+      <CalliopeBadge class="ml-3">
         {{ group.visibility === 'private' ? 'Privat' : 'Öffentlich' }}
       </CalliopeBadge>
     </div>
