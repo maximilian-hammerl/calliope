@@ -7,8 +7,8 @@ Updated 20 August 2026. The first half says what is there; the roadmap at the en
 do next, and in what order.
 
 **<https://calliope.hammerl.dev> is a testing environment, not production.** It is wiped when a
-migration calls for it — most recently on 20 August 2026, when the `user_token` purpose enum
-was rebuilt for account deletion. Everyone with an account there is a beta tester who knows
+migration calls for it — twice on 20 August 2026 alone, last for the `story_language` enum
+that groups and story ideas share. Everyone with an account there is a beta tester who knows
 this. Nothing on it should be treated as durable, and nothing about it should be read as a
 production deployment.
 
@@ -28,10 +28,17 @@ sheet, the composer starts collapsed, and every target on every page is at least
 hidden that two of three interviewees never found it — where writers add steps inline and tick
 them off, recording who completed what.
 
+Newest of all, the first stranger-facing surface: **Storyideen** (§8's partner search,
+reframed as an idea seeking writers), with a board that hides what is settled and never shows
+the reader their own ideas, a detail page, and a Meine-Storyideen view. With three top-level
+destinations the navigation was rebuilt around **menus in both bars** — Gruppen and Storyideen
+each open their two pages, Mitglieder stays a link, and every destination carries its icon.
+
 What is still missing is most of what makes a **community** rather than a set of groups: no
-public forum, no partner search, no administration, no files, no data export. The product is
-usable by people who already know each other; it is not yet usable by strangers who have to
-find each other or be moderated.
+public forum, no administration, no files, no data export — and members can now find each
+other but not yet **block** each other, which is what stands between the board and announcing
+it to testers. The product is usable by people who already know each other; for strangers it
+opens a first door, still unmoderated.
 
 ## Against the MVP scope (§42)
 
@@ -41,7 +48,7 @@ find each other or be moderated.
 | Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Chats are titled and invite-based, so **no** "message this member".                              |
 | Public forum     | Not started.                                                                                                                                                              |
-| Writing partners | Not started.                                                                                                                                                              |
+| Writing partners | Built as **Storyideen**: board, detail page, open/closed status, language filter, own-ideas view. **No** contact path yet — "Unterhaltung beginnen" is the next step.     |
 | Administration   | Not started.                                                                                                                                                              |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. **No** data export, no GDPR configuration.                          |
 
@@ -89,9 +96,11 @@ These are decisions, not omissions, and each is recorded where it was made:
   lost session. The list being a denylist-by-omission is the real issue and is unresolved:
   every future re-authenticating endpoint has to remember to join it (`changePassword` once
   forgot, and the symptom hid well).
-- **The bottom bar holds Gruppen and Mitglieder, not the mockup's four items.** Forum and
-  Partner are roadmap items and a slot for something that does not exist is worse than a
-  shorter bar.
+- **Both bars hold three destinations, not the mockup's four items.** Gruppen and Storyideen
+  open menus of their two pages each (discovery surfaced this way because testers missed the
+  heading-line button); Mitglieder is a plain link. Forum remains a roadmap item, and a slot
+  for something that does not exist is worse than a shorter bar. Menus on the phone are an
+  experiment, revisited if they read badly in use.
 - **The rails are cut by purpose, not by side.** Left is reference (the story's facts, files,
   members), right is action (next steps, status with its switcher); navigation moved to the
   overview and the bottom bar, and on a phone both rails are one sheet. The design system
@@ -134,15 +143,17 @@ is currently writing, plus a visibility setting for that block. Two constraints 
 when the pages were built: **no statistics, ever** ("Profilaufrufe" etc. "führen nur zu Druck"),
 and **nothing mandatory** — Yooco's required fields got filled with nonsense.
 
-### 3. Story ideas — v1 built, two steps remain
+### 3. Story ideas — v1 built and deployed, two follow-ups remain
 
 §8's partner requests, reframed as **Storyideen**: an idea seeking writers, because that is
-what members valued about the original ("Gesuche mit schon einer konkreten Idee"). The board,
-the detail page, posting, editing, an open/closed status (§8.3's intermediate states were
-dropped — bookkeeping nobody would maintain), a language enum shared with groups, and a
-"Meine Storyideen" view all exist; the
-story metadata mirrors `writing_group` column for column so an idea can one day become a
-group by copying.
+what members valued about the original ("Gesuche mit schon einer konkreten Idee"). Live: the
+board (open ideas by default, the reader's own excluded — it is discovery, like public
+groups), the detail page, posting, editing, an open/closed status (§8.3's intermediate states
+were dropped — bookkeeping nobody would maintain), a language enum shared with groups, and a
+Meine-Storyideen view. The seeking metadata deliberately started small — Konstellation stayed;
+Umfang, Schreibrhythmus, Schreibstil and Verfügbarkeit were cut until someone misses them. The
+story block mirrors `writing_group` column for column so an idea can one day become a group by
+copying.
 
 The two follow-ups, in order: **"Unterhaltung beginnen"** on an idea — creating a chat titled
 after it and inviting the author, which is §11's "public idea → private conversation" flow
