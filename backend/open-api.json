@@ -1970,7 +1970,7 @@
       "post": {
         "tags": ["auth"],
         "summary": "Ask to delete the account",
-        "description": "Requires the current password. Deletes nothing yet: a link goes to the address on file, and the account lives until that link is opened.",
+        "description": "Requires the current password. Deletes nothing yet: a link goes to the address on file, and the account lives until that link is opened. Reachable with an unverified address: somebody who mistyped theirs must still be able to leave.",
         "operationId": "requestAccountDeletion",
         "requestBody": {
           "required": true,

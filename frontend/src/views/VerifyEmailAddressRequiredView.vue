@@ -6,6 +6,7 @@ import {
   useChangeEmailAddress,
   useGetCurrentUser,
   useLogoutUser,
+  useRequestAccountDeletion,
   useResendEmailAddressVerification,
 } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
@@ -32,8 +33,18 @@ const { mutateAsync: resend, isPending: isResending } = useResendEmailAddressVer
 const { mutateAsync: changeAddress, isPending: isChanging } = useChangeEmailAddress()
 const { mutateAsync: logOut } = useLogoutUser()
 
+const { mutateAsync: requestDeletion, isPending: isRequestingDeletion } =
+  useRequestAccountDeletion()
+
+const mode = ref<'choices' | 'correcting' | 'deleting'>('choices')
+
+const deletionPassword = ref<string>('')
+const deletionError = ref<string | undefined>(undefined)
+const deletionRequested = ref<boolean>(false)
+
+const DELETION_LIMIT = TEXT_LIMIT.requestAccountDeletion
+
 const resent = ref<boolean>(false)
-const correcting = ref<boolean>(false)
 const newAddress = ref<string>('')
 const fieldErrors = ref<{ emailAddress?: string }>({})
 const formError = ref<string | undefined>(undefined)
@@ -61,6 +72,30 @@ async function resendLink() {
   }
 
   resent.value = true
+}
+
+async function submitDeletion() {
+  deletionError.value = undefined
+  formError.value = undefined
+
+  if (deletionPassword.value.length === 0) {
+    deletionError.value = 'Gib dein aktuelles Passwort ein.'
+    return
+  }
+
+  try {
+    await requestDeletion({ data: { password: deletionPassword.value } })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      deletionError.value = 'Das Passwort ist nicht korrekt.'
+      return
+    }
+    formError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    return
+  }
+
+  deletionPassword.value = ''
+  deletionRequested.value = true
 }
 
 function validate(): boolean {
@@ -105,7 +140,7 @@ async function submitAddress() {
 
   // The heading shows the address, which the change just moved.
   await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
-  correcting.value = false
+  mode.value = 'choices'
   newAddress.value = ''
   resent.value = true
 }
@@ -137,14 +172,22 @@ async function signOut() {
         Ist unterwegs. Kommt nichts an, sieh auch im Spam-Ordner nach.
       </p>
 
-      <template v-if="!correcting">
+      <template v-if="mode === 'choices'">
         <div class="mt-7 flex flex-col gap-3">
           <Button class="h-11 md:h-9" :disabled="isResending" @click="resendLink">
             <Spinner v-if="isResending" data-icon="inline-start" />
             Link erneut senden
           </Button>
-          <Button variant="ghost" class="h-11 md:h-9" @click="correcting = true">
+          <Button variant="ghost" class="h-11 md:h-9" @click="mode = 'correcting'">
             E-Mail-Adresse ändern
+          </Button>
+          <!--
+            Leaving has to be possible from here. Every other route sends an unverified member
+            back to this page, so without it the only way out of a mistyped address is to
+            prove an address they may not want to give.
+          -->
+          <Button variant="ghost" class="h-11 md:h-9" @click="mode = 'deleting'">
+            Konto löschen
           </Button>
         </div>
 
@@ -160,7 +203,7 @@ async function signOut() {
         because the link went somewhere its owner cannot read.
       -->
       <form
-        v-else
+        v-else-if="mode === 'correcting'"
         ref="formElement"
         class="mt-7 flex flex-col gap-5"
         novalidate
@@ -191,11 +234,70 @@ async function signOut() {
             <Spinner v-if="isChanging" data-icon="inline-start" />
             Adresse ändern und Link senden
           </Button>
-          <Button type="button" variant="ghost" class="h-11 md:h-9" @click="correcting = false">
+          <Button type="button" variant="ghost" class="h-11 md:h-9" @click="mode = 'choices'">
             Abbrechen
           </Button>
         </div>
       </form>
+
+      <div v-else class="mt-7">
+        <template v-if="deletionRequested">
+          <p class="text-[13.5px] leading-[1.6] text-ink-5">
+            Wir haben einen Link an <span class="text-ink-8">{{ emailAddress }}</span> geschickt.
+            Erst wenn du ihn öffnest, wird dein Konto gelöscht. Kommst du an diese Adresse nicht
+            heran, ändere sie zuerst.
+          </p>
+
+          <Button variant="ghost" class="mt-5 h-11 w-full md:h-9" @click="mode = 'choices'">
+            Zurück
+          </Button>
+        </template>
+
+        <form v-else class="flex flex-col gap-5" novalidate @submit.prevent="submitDeletion">
+          <div class="flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+            <p>
+              Löschen ist <span class="text-ink-8">endgültig</span>. Es passiert nicht sofort: wir
+              schicken dir erst einen Link an deine E-Mail-Adresse.
+            </p>
+            <p>
+              Du bist noch in keiner Gruppe, also geht nichts verloren, was jemand anderes liest.
+            </p>
+          </div>
+
+          <FieldGroup>
+            <Field :data-invalid="deletionError !== undefined ? true : undefined">
+              <FieldLabel for="deletionPassword">Aktuelles Passwort</FieldLabel>
+              <Input
+                id="deletionPassword"
+                v-model="deletionPassword"
+                class="h-11 md:h-9"
+                name="deletionPassword"
+                type="password"
+                :maxlength="DELETION_LIMIT.password.maxLength"
+                autocomplete="current-password"
+                required
+                :aria-invalid="deletionError !== undefined ? true : undefined"
+              />
+              <FieldError :errors="[deletionError]" />
+            </Field>
+          </FieldGroup>
+
+          <div class="flex flex-col gap-3">
+            <Button
+              type="submit"
+              variant="destructive"
+              class="h-11 md:h-9"
+              :disabled="isRequestingDeletion"
+            >
+              <Spinner v-if="isRequestingDeletion" data-icon="inline-start" />
+              Löschen-Link anfordern
+            </Button>
+            <Button type="button" variant="ghost" class="h-11 md:h-9" @click="mode = 'choices'">
+              Abbrechen
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   </main>
 </template>

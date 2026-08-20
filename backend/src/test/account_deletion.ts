@@ -20,6 +20,19 @@ export async function registerDeletable(): Promise<string> {
   return cookie;
 }
 
+/** Leaves the address unverified, which `registerUser` otherwise confirms for convenience. */
+export async function registerUnverified(): Promise<string> {
+  const cookie = await registerUser(username);
+  await db
+    .updateTable("user")
+    .set({ emailAddressVerifiedAt: null })
+    .where("username", "=", username)
+    .execute();
+  await flushBackgroundWork();
+  await deleteAllMail();
+  return cookie;
+}
+
 export const requestDeletion = (
   cookie: string,
   withPassword: string = password,

@@ -9,6 +9,7 @@ import {
   emailAddress,
   outstandingTokens,
   registerDeletable,
+  registerUnverified,
   requestDeletion,
   username,
 } from "@/src/test/account_deletion.ts";
@@ -54,6 +55,18 @@ Deno.test("POST /api/auth/account/deletion refuses a wrong password", async () =
 
   await flushBackgroundWork();
   assertEquals(await countMail(), 0);
+});
+
+Deno.test("POST /api/auth/account/deletion works with an unverified address", async () => {
+  const cookie = await registerUnverified();
+
+  // The one route a member needs in order to leave without ever verifying. Behind the strict
+  // middleware this answered 403, which left somebody who mistyped their address at
+  // registration unable either to verify or to go.
+  const response = await requestDeletion(cookie);
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  assertEquals(await outstandingTokens(), 1);
 });
 
 Deno.test("POST /api/auth/account/deletion needs a session", async () => {

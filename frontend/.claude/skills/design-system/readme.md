@@ -279,8 +279,9 @@ was strengthened after feedback that the invite button was too easy to miss. *Pl
 in `--ink-5`, for per-post actions.
 
 *Destructive* is a fourth level and the only place `--destructive` `#8a3f37` appears as a fill.
-It is for an act that destroys a member's own data and cannot be undone — today only "Konto
-endgültig löschen". Not for removing a member, withdrawing an invitation or deleting a post:
+It belongs to the account-deletion flow and nothing else: "Löschen-Link anfordern" where it is
+asked for, "Konto endgültig löschen" where it happens. Not for removing a member, withdrawing
+an invitation or deleting a post:
 those are ordinary administration, they are reversible by doing them again, and colouring them
 red would spend the one signal the product has. Reserve it, or it stops meaning anything.
 

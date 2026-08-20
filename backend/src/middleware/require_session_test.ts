@@ -86,8 +86,7 @@ Deno.test("requireSession refuses a session whose address is unverified", async 
 Deno.test("the permissive middleware lets an unverified session through", async () => {
   const { session } = await createUserWithSession({ verified: false });
 
-  // The four routes needed *in order to* verify use this one; without it there is no way to
-  // correct a mistyped address, and a typo orphans the account.
+  // Without it there is no way to correct a mistyped address, and a typo orphans the account.
   const response = await permissiveApp.request("/probe", {
     headers: { cookie: `session=${session.id}.${session.token}` },
   });

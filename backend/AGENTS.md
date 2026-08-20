@@ -376,10 +376,11 @@ slip at registration would orphan the account for good.
 
 **Gating is the default, not an opt-in.** `require_session.ts` refuses an unverified member
 with **403** — the session is fine, so 401 would send them back to the sign-in page they came
-from. The four routes somebody needs *in order to* verify use
-`require_session_allowing_unverified_email.ts` instead: reading who they are, signing out,
-resending, and correcting the address. Choosing nothing gets the strict one, so a forgotten
-route fails closed. Both share `session_user.ts`, so how a session is read cannot drift
+from. Five routes use `require_session_allowing_unverified_email_address.ts` instead: the four
+somebody needs *in order to* verify — reading who they are, signing out, resending, correcting
+the address — and asking for deletion, which is how somebody leaves without ever verifying.
+Choosing nothing gets the strict one, so a forgotten route fails closed, and
+`require_session_test.ts` pins the set so widening it cannot happen quietly. Both share `session_user.ts`, so how a session is read cannot drift
 between them.
 
 Every gated route therefore declares 403. Where the route has no reason of its own it spreads
@@ -437,9 +438,11 @@ Two routes under `/auth/account`, the same shape as moving an address: the passw
 re-authenticates, and a mailed link is what actually does it. Neither a stolen session nor a
 leaked password is enough alone.
 
-- **No verified address is required**, unlike changing one. Somebody who mistyped their
-  address at registration must still be able to leave, and a link that reaches the wrong inbox
-  can only delete the account that was registered to it.
+- **No verified address is required**, unlike changing one, so the request route is the fifth
+  member of the permissive set. Somebody who mistyped their address at registration must still
+  be able to leave; behind the strict middleware this answered 403, which left them able
+  neither to verify nor to go. A link that reaches the wrong inbox can only delete the account
+  registered to it.
 - **One statement does nearly all of the work.** The foreign keys cascade sessions, tokens,
   memberships and notifications; `created_by` goes null wherever text survives; and the
   triggers on the membership tables drop a group left with nobody in it. The service says

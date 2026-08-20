@@ -25,9 +25,10 @@ export type RequestAccountDeletionResult = "requested" | "wrong_password";
  * Asks; does not delete. The password re-authenticates and the mailed link confirms, so
  * neither a stolen session nor a leaked password is enough on its own.
  *
- * No verified address is required, unlike changing one. Somebody who mistyped their address
- * at registration must still be able to leave, and a link that reaches the wrong inbox can
- * only delete the account that was registered to it.
+ * No verified address is required, unlike changing one — which is why the route uses the
+ * permissive middleware. Somebody who mistyped their address at registration must still be
+ * able to leave, and a link that reaches the wrong inbox can only delete the account that was
+ * registered to it.
  */
 async function requestAccountDeletion(
   userId: string,
