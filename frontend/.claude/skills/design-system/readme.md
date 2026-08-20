@@ -178,7 +178,9 @@ common and what stays put. Both bars carry the same three destinations — Grupp
 Mitglieder — and the first two open a **menu of their pages** instead of navigating: Meine
 Gruppen / Gruppen entdecken, Meine Storyideen / Storyideen entdecken. Each menu item is the
 page's own title. The trigger word costs a click but surfaces discovery, which a heading-line
-button alone did not — testers missed it. Mitglieder has one page and stays a plain link. The
+button alone did not — testers missed it. Mitglieder has one page and stays a plain link. Every
+destination shows its icon beside the label in both bars (16px inline on the top bar, 18px
+above the label on the bottom), so the two bars read as the same three places. The
 menus exist on the phone too, rising above the bottom bar; that is an experiment, revisited if
 it reads badly in use.
 Anything belonging to one member lives behind their avatar: Mitteilungen, Nachrichten,
