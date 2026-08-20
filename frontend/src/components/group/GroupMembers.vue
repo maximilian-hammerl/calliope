@@ -6,11 +6,10 @@ import { getListMembershipsQueryKey, useRemoveMember } from '@/api/memberships/m
 import { useGetCurrentUser } from '@/api/auth/auth'
 import type { ListMemberships200ResultsItem } from '@/api/models'
 import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
-import { userInitial } from '@/lib/format/formatUser'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
@@ -127,11 +126,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
         :key="membership.userId"
         class="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-1 border-b border-line-3 py-2"
       >
-        <Avatar class="size-7 shrink-0">
-          <AvatarFallback class="bg-paper-4 text-[11.5px] font-semibold text-[#5c4a2d]">
-            {{ userInitial(membership.username) }}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar :username="membership.username" />
 
         <div class="flex min-w-0 flex-col">
           <div class="flex flex-wrap items-baseline gap-x-3">

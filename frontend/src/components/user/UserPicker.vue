@@ -197,7 +197,7 @@ defineExpose({ reset })
             @mousemove="activeIndex = index"
           >
             <Avatar class="size-7 shrink-0">
-              <AvatarFallback class="bg-paper-4 text-[11.5px] font-semibold text-[#5c4a2d]">
+              <AvatarFallback class="text-[11.5px]">
                 {{ userInitial(user.username) }}
               </AvatarFallback>
             </Avatar>

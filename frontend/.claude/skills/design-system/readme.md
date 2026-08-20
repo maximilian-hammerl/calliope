@@ -380,7 +380,7 @@ read "Gruppe gründen" and "Thread", with the mark in front. Nothing becomes an 
 control.
 
 Unchanged: file types stay mono text (`PNG` `MD` `JPG`), never a file icon. Avatars are
-initials on `--surface-avatar`, never generated images. **No emoji** — the round-1 emoji
+initials in `--text-avatar` on `--surface-avatar`, never generated images. **No emoji** — the round-1 emoji
 reactions were removed on explicit feedback.
 
 The prototype components under `components/` and `ui_kits/` still render the unicode marks;

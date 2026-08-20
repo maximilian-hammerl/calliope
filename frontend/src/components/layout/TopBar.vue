@@ -6,13 +6,12 @@ import { LogOutIcon } from '@lucide/vue'
 import { useLogoutUser } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/auth/session'
-import { userInitial } from '@/lib/format/formatUser'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import SearchField from '@/components/search/SearchField.vue'
 import NotificationsDialog from '@/components/notification/NotificationsDialog.vue'
 import MessagesDialog from '@/components/chat/MessagesDialog.vue'
 import SettingsDialog from '@/components/settings/SettingsDialog.vue'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import UserAvatar from '@/components/user/UserAvatar.vue'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +26,6 @@ const props = defineProps<{ user: GetCurrentUser200 }>()
 
 const route = useRoute()
 const router = useRouter()
-
-const initial = computed<string>(() => userInitial(props.user.username))
 
 const unread = computed<number>(() => props.user.unreadNotifications)
 
@@ -81,6 +78,20 @@ async function signOut() {
         >
           Meine Gruppen
         </RouterLink>
+
+        <!-- Provisional: the design system says two nav words plus the lockup already fill a
+             375px phone, so this waits on the bottom bar. -->
+        <RouterLink
+          :to="{ name: 'members' }"
+          class="flex h-full items-center border-b-2 text-[13.5px] leading-[1.2] whitespace-nowrap"
+          :class="
+            String(route.name).startsWith('member')
+              ? 'border-oak font-semibold text-ink-1'
+              : 'border-transparent text-ink-5'
+          "
+        >
+          Mitglieder
+        </RouterLink>
       </nav>
 
       <!-- From md up the field sits in the bar, as the system specifies. Below that it gets
@@ -101,11 +112,7 @@ async function signOut() {
               "
             >
               <span class="relative">
-                <Avatar class="size-7">
-                  <AvatarFallback class="bg-paper-4 text-[11.5px] font-semibold text-[#5c4a2d]">
-                    {{ initial }}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar :username="props.user.username" />
                 <!-- A mark, not a number. "7 neu" sitting in the bar tells you how far behind
                    you are, which is the pressure the research warned about; this only says
                    that something happened. The count is named on the menu item. -->

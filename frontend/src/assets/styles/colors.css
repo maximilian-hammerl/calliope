@@ -21,6 +21,8 @@
   --accent: #eee5d3; /* hover/active surface, not a hue */
   --accent-foreground: #4f4132;
   --destructive: #8a3f37; /* --signal-error, use sparingly */
+  --avatar: #e5d9c2; /* --paper-4, --surface-avatar */
+  --avatar-foreground: #4f4132; /* --accent-deep */
 
   --border: #e6dfd2; /* --line-3, hairlines */
   --input: #ddd2bd; /* --line-4 */
@@ -61,6 +63,8 @@
   --accent: #322b22;
   --accent-foreground: #efe9de;
   --destructive: #b4655c;
+  --avatar: #322b22;
+  --avatar-foreground: #e5d9c2;
   --border: #fffdf91a;
   --input: #fffdf926;
   --ring: #b08b52;

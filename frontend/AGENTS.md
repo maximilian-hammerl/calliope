@@ -21,7 +21,8 @@ case, informal *Du*, and every number gets a noun ("3 neu", never a bare badge).
 before adding a surface.
 
 Where shadcn's defaults contradict it, the component is patched once rather than overridden at
-each call site — `shadow-xs` is already stripped from Input and the outline Button.
+each call site — `shadow-xs` is stripped from Input and the outline Button, and `AvatarFallback`
+carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour.
 
 **Keep it updated.** When the interface departs from what that document says — a new icon set,
 a changed rule, a pattern it does not cover — change the document in the same piece of work.
@@ -43,6 +44,7 @@ After any `add`:
 ```bash
 git diff src/assets/main.css   # expect no change; restore the font import if there is one
 grep -c shadow-xs src/components/ui/button/index.ts src/components/ui/input/Input.vue  # expect 0
+grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                          # expect 1
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).

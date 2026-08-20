@@ -6,9 +6,8 @@ import { useGetUser } from '@/api/users/users'
 import type { GetUser200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
-import { userInitial } from '@/lib/format/formatUser'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Spinner } from '@/components/ui/spinner'
 
 const route = useRoute()
@@ -40,11 +39,7 @@ const notFound = computed<boolean>(
 
         <template v-else-if="member">
           <div class="flex items-center gap-4">
-            <Avatar class="size-12 shrink-0">
-              <AvatarFallback class="bg-paper-4 text-[17px] font-semibold text-[#5c4a2d]">
-                {{ userInitial(member.username) }}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar :username="member.username" size="lg" />
 
             <div class="flex min-w-0 flex-col gap-1">
               <h1 class="truncate text-[25px] leading-[1.2]">{{ member.username }}</h1>

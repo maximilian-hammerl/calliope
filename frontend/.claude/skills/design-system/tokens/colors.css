@@ -41,6 +41,7 @@
   --surface-quiet: var(--paper-3);
   --surface-edge: var(--paper-edge);
   --surface-avatar: var(--paper-4);
+  --text-avatar: var(--accent-deep);
 
   --text-title: var(--ink-1);
   --text-prose: var(--ink-2);
