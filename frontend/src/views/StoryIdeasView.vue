@@ -35,7 +35,7 @@ watchDebounced(
 
 const { data, isPending, isError } = useListStoryIdeas(() => ({
   limit: 100,
-  mine: props.mine === true,
+  author: props.mine ? ('mine' as const) : ('others' as const),
   search: settled.value === '' ? undefined : settled.value,
 }))
 

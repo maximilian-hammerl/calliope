@@ -121,6 +121,8 @@ function listStoryIdeas(
     language?: StoryLanguage;
     /** Only the reader's own ideas — the view that manages, not the one that browses. */
     createdBy?: string;
+    /** The browsing view's inverse: discovery never shows the reader their own ideas. */
+    excludeCreatedBy?: string;
   },
 ): Promise<ListResults<StoryIdea>> {
   return listResultsWithCount(
@@ -128,6 +130,13 @@ function listStoryIdeas(
       .$if(query.createdBy !== undefined, (queryBuilder) =>
         // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
+      .$if(query.excludeCreatedBy !== undefined, (queryBuilder) =>
+        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        queryBuilder.where(
+          "storyIdea.createdBy",
+          "!=",
+          query.excludeCreatedBy!,
+        ))
       .$if(
         query.status !== "any",
         (queryBuilder) =>

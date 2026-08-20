@@ -32,8 +32,9 @@ const LIST_STORY_IDEAS_BODY = listQuerySchema(
   {
     status: STATUS_FILTER,
     language: STORY_IDEA_SCHEMA.shape.language.optional(),
-    // One's own ideas regardless of status: closing an idea must not hide it from its author.
-    mine: z.boolean().default(false),
+    // The board is discovery, so `others` is the default: like a public group the reader is
+    // already in, their own idea is not something to find.
+    author: z.enum(["others", "mine"]).default("others"),
   },
   "desc",
 );
@@ -46,7 +47,7 @@ export default new OpenAPIHono().openapi(
     tags: [STORY_IDEAS_TAG],
     summary: "List story ideas seeking writers",
     description:
-      "Newest first. Without a status filter only open ideas appear. The search looks at titles and the ideas themselves.",
+      "Newest first. The reader's own ideas are excluded unless asked for with author `mine`; without a status filter only open ideas appear. The search looks at titles and the ideas themselves.",
     operationId: "listStoryIdeas",
     middleware: requireSession,
     request: {
@@ -67,12 +68,14 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { mine, ...query } = c.req.valid("json");
+    const { author, ...query } = c.req.valid("json");
     const page = await StoryIdeaService.listStoryIdeas({
       ...query,
       // `mine` also widens the status filter: an author manages all their ideas, closed ones
       // included, and hiding those here would make closing one irreversible in the interface.
-      ...(mine ? { createdBy: c.get("user").id, status: "any" as const } : {}),
+      ...(author === "mine"
+        ? { createdBy: c.get("user").id, status: "any" as const }
+        : { excludeCreatedBy: c.get("user").id }),
     });
     return c.json(page, STATUS_CODE.OK);
   },

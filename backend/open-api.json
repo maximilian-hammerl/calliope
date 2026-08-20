@@ -8935,7 +8935,7 @@
       "query": {
         "tags": ["story-ideas"],
         "summary": "List story ideas seeking writers",
-        "description": "Newest first. Without a status filter only open ideas appear. The search looks at titles and the ideas themselves.",
+        "description": "Newest first. The reader's own ideas are excluded unless asked for with author `mine`; without a status filter only open ideas appear. The search looks at titles and the ideas themselves.",
         "operationId": "listStoryIdeas",
         "requestBody": {
           "required": true,
@@ -8975,7 +8975,11 @@
                     "type": "string",
                     "enum": ["english", "german"]
                   },
-                  "mine": { "type": "boolean", "default": false }
+                  "author": {
+                    "type": "string",
+                    "enum": ["others", "mine"],
+                    "default": "others"
+                  }
                 }
               }
             }

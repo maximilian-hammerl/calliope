@@ -16,14 +16,15 @@ import {
 Deno.test.beforeEach(() => clearRateLimits());
 Deno.test.afterEach(() => deleteUsers([author, bystander]));
 
-Deno.test("QUERY /api/story-ideas hides found and closed ideas by default", async () => {
+Deno.test("QUERY /api/story-ideas hides closed ideas by default", async () => {
   const cookie = await registerUser(author);
+  const reader = await registerUser(bystander);
 
   const open = await (await createIdea(cookie, { title: "Offen" })).json();
   const closed = await (await createIdea(cookie, { title: "Zu" })).json();
   await patchIdea(cookie, closed.id, { status: "closed" });
 
-  const page = await (await listIdeas(cookie, {})).json();
+  const page = await (await listIdeas(reader, {})).json();
   const titles = page.results.map((idea: { title: string }) => idea.title);
 
   // §8.3's point: what is settled stops cluttering the board, but stays reachable by asking.
@@ -31,7 +32,7 @@ Deno.test("QUERY /api/story-ideas hides found and closed ideas by default", asyn
   assertEquals(titles.includes("Zu"), false);
   assertEquals(open.status, "open");
 
-  const closedPage = await (await listIdeas(cookie, { status: "closed" }))
+  const closedPage = await (await listIdeas(reader, { status: "closed" }))
     .json();
   const closedTitles = closedPage.results.map((idea: { title: string }) =>
     idea.title
@@ -39,8 +40,25 @@ Deno.test("QUERY /api/story-ideas hides found and closed ideas by default", asyn
   assertEquals(closedTitles.includes("Zu"), true);
 });
 
+Deno.test("QUERY /api/story-ideas never shows the reader their own ideas", async () => {
+  const cookie = await registerUser(author);
+  const reader = await registerUser(bystander);
+
+  await createIdea(cookie, { title: "Fremde Idee" });
+  await createIdea(reader, { title: "Eigene Idee" });
+
+  const page = await (await listIdeas(reader, {})).json();
+  const titles = page.results.map((idea: { title: string }) => idea.title);
+
+  // The board is discovery: like a public group the reader is already in, their own idea is
+  // not something to find. It lives on Meine Storyideen instead.
+  assertEquals(titles.includes("Fremde Idee"), true);
+  assertEquals(titles.includes("Eigene Idee"), false);
+});
+
 Deno.test("QUERY /api/story-ideas filters by language and searches the idea text", async () => {
   const cookie = await registerUser(author);
+  const reader = await registerUser(bystander);
 
   await createIdea(cookie, { title: "Deutsch", idea: "Ein Turm aus Glas." });
   await createIdea(cookie, {
@@ -49,18 +67,18 @@ Deno.test("QUERY /api/story-ideas filters by language and searches the idea text
     language: "english",
   });
 
-  const english = await (await listIdeas(cookie, { language: "english" }))
+  const english = await (await listIdeas(reader, { language: "english" }))
     .json();
   assertEquals(english.results.length, 1);
   assertEquals(english.results[0].title, "English");
 
-  const search = await (await listIdeas(cookie, { search: "Turm aus Glas" }))
+  const search = await (await listIdeas(reader, { search: "Turm aus Glas" }))
     .json();
   assertEquals(search.results.length, 1);
   assertEquals(search.results[0].title, "Deutsch");
 });
 
-Deno.test("QUERY /api/story-ideas with mine shows only one's own, closed included", async () => {
+Deno.test("QUERY /api/story-ideas with author mine shows only one's own, closed included", async () => {
   const cookie = await registerUser(author);
   const other = await registerUser(bystander);
 
@@ -69,7 +87,7 @@ Deno.test("QUERY /api/story-ideas with mine shows only one's own, closed include
   await patchIdea(cookie, closed.id, { status: "closed" });
   await createIdea(other, { title: "Fremde" });
 
-  const mine = await (await listIdeas(cookie, { mine: true })).json();
+  const mine = await (await listIdeas(cookie, { author: "mine" })).json();
   const titles = mine.results.map((idea: { title: string }) => idea.title);
 
   // The author manages every idea they posted; hiding a closed one here would make closing
