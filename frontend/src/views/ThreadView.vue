@@ -142,6 +142,7 @@ async function submit() {
         v-if="group"
         :title="group.title"
         :visibility="group.visibility"
+        :subtitle="group.subtitle"
         :group-id="groupId"
       />
 

@@ -29,11 +29,11 @@ const open = defineModel<boolean>('open', { required: true })
 const queryClient = useQueryClient()
 
 const title = ref<string>('')
+const subtitle = ref<string>('')
 const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 
 const emptyMetadata = (): StoryMetadata => ({
-  subtitle: '',
   storyStatus: 'planning',
   genres: '',
   subgenres: '',
@@ -49,7 +49,7 @@ const metadata = ref<StoryMetadata>(emptyMetadata())
 function metadataForApi() {
   const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
   return {
-    subtitle: blank(metadata.value.subtitle),
+    subtitle: blank(subtitle.value),
     storyStatus: metadata.value.storyStatus,
     genres: toTags(metadata.value.genres),
     subgenres: toTags(metadata.value.subgenres),
@@ -81,8 +81,8 @@ watch(open, (isOpen) => {
   title.value = props.group.title
   description.value = props.group.blurb
   visibility.value = props.group.visibility
+  subtitle.value = props.group.subtitle ?? ''
   metadata.value = {
-    subtitle: props.group.subtitle ?? '',
     storyStatus: props.group.storyStatus,
     genres: fromTags(props.group.genres),
     subgenres: fromTags(props.group.subgenres),
@@ -161,6 +161,18 @@ async function submit() {
               :aria-invalid="titleError !== undefined ? true : undefined"
             />
             <FieldError :errors="[titleError]" />
+          </Field>
+
+          <Field>
+            <FieldLabel for="edit-group-subtitle">Untertitel</FieldLabel>
+            <Input
+              id="edit-group-subtitle"
+              v-model="subtitle"
+              class="h-11 md:h-9"
+              name="subtitle"
+              :maxlength="LIMIT.subtitle.maxLength"
+              placeholder="z. B. Was du vergisst, gehört jemand anderem"
+            />
           </Field>
 
           <Field :data-invalid="descriptionError !== undefined ? true : undefined">

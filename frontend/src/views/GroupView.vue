@@ -43,10 +43,6 @@ const { data: threadsData } = useListThreads(groupId, {
 const threads = computed<ListThreads200ResultsItem[]>(() =>
   threadsData.value?.status === 200 ? threadsData.value.data.results : [],
 )
-const threadCount = computed<number | undefined>(() =>
-  threadsData.value?.status === 200 ? threadsData.value.data.totalResults : undefined,
-)
-
 const { data: membershipsData } = useListMemberships(groupId, { limit: 100 })
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
@@ -77,11 +73,7 @@ const editingGroup = ref<boolean>(false)
 <template>
   <AppLayout :active-group-id="groupId">
     <template v-if="group">
-      <GroupHeader
-        :title="group.title"
-        :visibility="group.visibility"
-        :thread-count="threadCount"
-      />
+      <GroupHeader :title="group.title" :visibility="group.visibility" :subtitle="group.subtitle" />
 
       <!-- No thread is open here, so no tab is active; the strip is how one is chosen. -->
       <ThreadTabs

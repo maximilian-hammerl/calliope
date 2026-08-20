@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
 import { APP_NAME } from '@/lib/branding'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -68,34 +69,21 @@ async function signOut() {
         <CalliopeLogo :size="22" wordmark />
       </RouterLink>
 
-      <!-- Below `md` the destinations live in the bottom bar, as the design system asks. -->
+      <!-- Below `md` the destinations live in the bottom bar, as the design system asks. The
+           active mark is the 2px underline at the foot of the bar, never a filled chip. -->
       <nav class="hidden h-full gap-4 md:flex md:gap-5">
-        <!-- Active on every page below /groups, since they all live under this destination.
-           The active mark is the 2px underline at the foot of the bar, never a filled chip. -->
         <RouterLink
-          :to="{ name: 'groups' }"
+          v-for="destination in DESTINATIONS"
+          :key="destination.name"
+          :to="{ name: destination.name }"
           class="flex h-full items-center border-b-2 text-[13.5px] leading-[1.2] whitespace-nowrap"
           :class="
-            String(route.name).startsWith('group') || route.name === 'thread'
+            isCurrent(destination, route.name)
               ? 'border-oak font-semibold text-ink-1'
               : 'border-transparent text-ink-5'
           "
         >
-          Meine Gruppen
-        </RouterLink>
-
-        <!-- Provisional: the design system says two nav words plus the lockup already fill a
-             375px phone, so this waits on the bottom bar. -->
-        <RouterLink
-          :to="{ name: 'members' }"
-          class="flex h-full items-center border-b-2 text-[13.5px] leading-[1.2] whitespace-nowrap"
-          :class="
-            String(route.name).startsWith('member')
-              ? 'border-oak font-semibold text-ink-1'
-              : 'border-transparent text-ink-5'
-          "
-        >
-          Mitglieder
+          {{ destination.label }}
         </RouterLink>
       </nav>
 

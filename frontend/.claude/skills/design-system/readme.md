@@ -3,8 +3,8 @@
 Calliope is a working name for a modern replacement of **Yooco**, a German-language platform for
 collaborative fiction writing. Members form small **writing groups**, each group holds **threads**
 (chapters, planning, characters, worldbuilding), and members write **posts** into those threads —
-long-form prose, often several paragraphs, over months. Roles are `administrator`, `member`
-(writes) and `reader` (reads, may comment). Groups are `private` or `public`; most real use is
+long-form prose, often several paragraphs, over months. Roles are `administrator`, `writer`
+and `reader`. Groups are `private` or `public`; most real use is
 private.
 
 This system was derived from the **group thread page** — by the project's own research the surface
@@ -61,8 +61,8 @@ These are not style preferences; they are findings the design must honour:
    the old platform's stats made members anxious. Word counters were rejected for the same reason:
    *"Wörterzähler uninteressant und führt zu einem Druckgefühl."* If a counter ever ships, it must
    be off by default and easy to disable.
-2. **Nothing duplicated.** Threads live in tabs, so they must not also appear in the left rail.
-   The group's privacy is stated once, next to its title, never repeated in a rail.
+2. **Nothing duplicated.** The group's privacy is stated once, next to its title, never
+   repeated in a rail.
    *One deliberate exception:* members appear both in the rail and on the group page. The two
    are not the same thing — the rail answers "who is here" while reading, the page is where an
    administrator invites and removes. The rail carries no actions at all, so nothing is offered
@@ -94,17 +94,17 @@ and in UI copy alike.
 
 **Sentence case, always.** Labels are sentence case ("Mitglied einladen", "Beitrag senden"), never
 Title Case and never ALL CAPS — with the single exception of the mono rail labels
-("MEINE GRUPPEN", "GRUPPEN-KONTEXT"), where the caps are a typographic device.
+("ÜBER DIE GRUPPE", "GRUPPEN-KONTEXT"), where the caps are a typographic device.
 
-**In a strip, the create action is the bare noun.** "+ Thread" in the tab strip, "+ Gruppe" in
-the left rail — the `Plus` carries the verb, and the full phrase ("Thread anlegen", "Gruppe
-gründen") is the title of the dialog it opens and its `aria-label`, so nothing is lost to a
-screen reader. Everywhere else the verb is written out. The action sits in the strip with a
-transparent segment of the rule, which is what separates it from the items.
+**A "＋" action is the bare noun.** "＋ Thread", "＋ Gruppe", "＋ Schritt", "＋ Unterhaltung" —
+never "＋ Gruppe gründen". The plus carries the verb; the full phrase is the title of the dialog
+it opens and the button's `aria-label`, so a screen reader loses nothing. Everywhere else the verb
+is written out. In a strip the action takes a transparent segment of the rule, which is what
+separates it from the items.
 
-**One action, one place per screen.** The rail's create button is the only one from `md` up; the
-Meine-Gruppen page carries its own below that breakpoint, because there is no rail on a phone.
-Two buttons for one action on one screen is what this replaced.
+**One action, one place per screen.** "Gruppe gründen" lives on the Meine-Gruppen page and
+nowhere else, at every width. It used to sit in the left rail as well, which is the duplication
+this rule replaced; when the rail stopped listing groups the page kept the only copy.
 
 **Every title takes a line under it saying what the surface is for.** One or two short
 sentences, informal, no exclamation: what is here, then what you can do with it. "Wer hier
@@ -124,6 +124,20 @@ typographic device, not a title — but a sheet still needs the sentence as an `
 description: the dialog primitive points `aria-describedby` at one whether it exists or not,
 and a dangling reference promises a screen reader something it never finds. And where the subject has a description of its own — a group's blurb — that *is*
 the line, and no second one is written.
+
+**A "＋" action names the thing, not the act.** "＋ Gruppe", "＋ Thread", "＋ Schritt",
+"＋ Unterhaltung" — never "＋ Gruppe gründen". The plus already says *add*, so repeating the verb
+makes the button longer without saying more, and the verb is waiting in the dialog it opens
+("Gruppe gründen" is that dialog's title and its submit). The full phrase stays as the
+`aria-label`, because a screen reader gets no plus sign.
+
+**A destination is named the same everywhere.** The button that leads to Gruppen entdecken says
+"Gruppen entdecken", and the link back to Meine Gruppen says "Meine Gruppen" — the page's own
+heading, not a paraphrase of it. Two names for one place reads as two places.
+
+**Title left, actions right.** A heading and the actions on its subject share one line, actions
+pushed right with `ml-auto`, wrapping onto their own line when the width runs out. "Mitglieder ·
+3 Mitglieder · [＋ Mitglied einladen]" is the pattern; Meine Gruppen follows it.
 
 **Verbs are what the member does, not what the system does.** "Weiterschreiben", not "Neuer
 Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gruppe erstellen" —
@@ -165,7 +179,10 @@ member should do about it. Never "wir schützen deine Daten".
 non-alphabetic glyphs allowed are the interface marks listed under Iconography.
 
 **The top bar is shared; the avatar menu is personal.** The bar carries what everyone has in
-common and what stays put — Meine Gruppen, and the search the system reserves room for.
+common and what stays put — Gruppen, and the search the system reserves room for. The nav word
+is "Gruppen", not "Meine Gruppen": the page it opens is titled Meine Gruppen and carries
+"Öffentliche Gruppen entdecken" beside it, so the bar does not need to say whose they are. The
+bottom bar reads the same, so the label does not change with the width.
 Anything belonging to one member lives behind their avatar: Mitteilungen, Nachrichten,
 Einstellungen, Abmelden. That split is also what keeps the bar from growing: two long German
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
@@ -220,13 +237,18 @@ section above the heading on Meine Gruppen. Three lists, one question each.
 section and on the group's own page, because deciding about three invitations should not be three
 visits, and because the notification leads to the group rather than to the list. Declining is the
 same act as leaving — both end with no membership — and returns the member to Meine Gruppen, since
-a declined private group stops being readable. Invitations stay out of the left rail: the rail is
-what you are in.
+a declined private group stops being readable. 
 
 **Discovery states what it does not offer.** A public group can be read by anyone but joined only
-by invitation, so its row offers "Gruppe ansehen" and the page says so in words — "Mitlesen kannst
-du sofort; mitschreiben, sobald dich jemand einlädt." A "Beitreten" button that would fail is
-worse than no button.
+by invitation, so the page says so in words — "Mitlesen kannst du sofort; mitschreiben, sobald
+dich jemand einlädt." A "Beitreten" button that would fail is worse than no button. The row
+itself carries no button at all: its title is the link, and "Gruppe ansehen" only repeated what
+the title already did while making the two group lists look different from each other.
+
+**A group row is the title and what it is.** Title, subtitle, blurb, last activity — and no
+action button: the title is the link. `GroupRow` renders the same on Meine Gruppen and on
+Gruppen entdecken, and an invitation adds its answer buttons because there the row *is* a
+question.
 
 **A pending invitation is a state, not a member.** It reads "· eingeladen" after the role, and
 a member count counts only those who have joined — an invitation is not yet a person in the
@@ -268,8 +290,8 @@ have no asset yet.
 **Borders and dividers.** 1px hairlines carry all structure. Posts are separated by a full-width
 `--border-divider` rule with `--post-gap` (26px) above and below — boxed posts were rejected in
 round 1, but round 2 showed posts need *some* separation. 2px marks a current position — the
-active tab underline, the active group's rule in the left rail — and the vertical rule of a
-notes/quote block.
+active tab underline, the active item in the bottom bar — and the vertical rule of a notes/quote
+block.
 
 **Inactive tabs are underlined too**, at 1.5px in `--line-5`. A transparent underline left them
 looking like plain words beside the active tab; the lighter rule says they are the same kind of
@@ -293,8 +315,10 @@ cards), `--radius-circle` for avatars only. **Reading surfaces are never rounded
 **Buttons.** Three levels for everything the product asks of a member. *Solid* —
 `--action-solid-bg` fill, `--text-on-solid`, 6px radius, for the one primary act of a screen
 ("Beitrag senden"). *Quiet* — `--surface-quiet` fill, 1px `--border-strong`, `--accent-deep`
-text, 500 weight ("Mitglied einladen", "＋ Schritt", "＋ Gruppe gründen", "Vorschau"); this level
-was strengthened after feedback that the invite button was too easy to miss. *Plain* — text only
+text, 500 weight ("Mitglied einladen", "＋ Schritt", "＋ Gruppe", "Vorschau"); this level was
+strengthened after feedback that the invite button was too easy to miss, and the same finding
+moved "Gruppen entdecken" from a text link at the foot of Meine Gruppen up onto its heading
+line — testers missed it there, and a member with many groups never scrolled to it. *Plain* — text only
 in `--ink-5`, for per-post actions.
 
 *Destructive* is a fourth level and the only place `--destructive` `#8a3f37` appears as a fill.
@@ -452,7 +476,6 @@ needs it. Each is marked so nobody mistakes it for tested ground:
   gets a noun and an imprecise search should say so rather than look complete.
   **A result that can come from anywhere says where it came from**: a thread carries its
   group's title beneath it, for the same reason a notification about a post names both.
-  A member has nowhere to go until profiles exist, so those rows are text rather than links.
   From `md` up the field sits in the top bar; below that it takes its own full-width row under
   it, because the bar had 29px to spare and the wordmark would have paid for it.
 - `--signal-error` / `--signal-ok` for form validation.

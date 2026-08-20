@@ -9,7 +9,6 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
 export type StoryMetadata = {
-  subtitle: string
   storyStatus: 'planning' | 'writing' | 'finished'
   genres: string
   subgenres: string
@@ -44,18 +43,6 @@ const TAG_FIELDS = [
 </script>
 
 <template>
-  <Field>
-    <FieldLabel for="group-subtitle">Untertitel</FieldLabel>
-    <Input
-      id="group-subtitle"
-      v-model="metadata.subtitle"
-      class="h-11 md:h-9"
-      name="subtitle"
-      :maxlength="LIMIT.subtitle.maxLength"
-      placeholder="z. B. Was du vergisst, gehört jemand anderem"
-    />
-  </Field>
-
   <Field>
     <FieldLabel for="group-story-status">Status</FieldLabel>
     <select

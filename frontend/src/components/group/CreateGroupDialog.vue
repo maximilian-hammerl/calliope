@@ -30,6 +30,7 @@ const router = useRouter()
 const queryClient = useQueryClient()
 
 const title = ref<string>('')
+const subtitle = ref<string>('')
 const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 // Not columns on writing_group yet. Present because members asked that founding a group force
@@ -39,7 +40,6 @@ const perspective = ref<string>('')
 // Taken from the design system's own dialog rather than invented, so they already match what
 // the column will hold once perspective is stored.
 const emptyMetadata = (): StoryMetadata => ({
-  subtitle: '',
   storyStatus: 'planning',
   genres: '',
   subgenres: '',
@@ -55,7 +55,7 @@ const metadata = ref<StoryMetadata>(emptyMetadata())
 function metadataForApi() {
   const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
   return {
-    subtitle: blank(metadata.value.subtitle),
+    subtitle: blank(subtitle.value),
     storyStatus: metadata.value.storyStatus,
     genres: toTags(metadata.value.genres),
     subgenres: toTags(metadata.value.subgenres),
@@ -155,6 +155,18 @@ async function submit() {
               :aria-invalid="titleError !== undefined ? true : undefined"
             />
             <FieldError :errors="[titleError]" />
+          </Field>
+
+          <Field>
+            <FieldLabel for="group-subtitle">Untertitel</FieldLabel>
+            <Input
+              id="group-subtitle"
+              v-model="subtitle"
+              class="h-11 md:h-9"
+              name="subtitle"
+              :maxlength="LIMIT.subtitle.maxLength"
+              placeholder="z. B. Was du vergisst, gehört jemand anderem"
+            />
           </Field>
 
           <Field :data-invalid="descriptionError !== undefined ? true : undefined">

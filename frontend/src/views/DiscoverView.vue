@@ -6,9 +6,7 @@ import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
-import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -53,8 +51,6 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
  * there is no data to make it about.
  */
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
-
-const creating = ref<boolean>(false)
 </script>
 
 <template>
@@ -111,19 +107,7 @@ const creating = ref<boolean>(false)
             :key="group.id"
             :group="group"
             :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-          >
-            <template #actions>
-              <!-- Reading is all a non-member can do: there is no joining a public group
-                   uninvited, and saying so is better than a button that would fail. -->
-              <Button
-                variant="outline"
-                size="sm"
-                @click="$router.push({ name: 'group', params: { groupId: group.id } })"
-              >
-                Gruppe ansehen
-              </Button>
-            </template>
-          </GroupRow>
+          />
         </div>
 
         <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
@@ -134,6 +118,4 @@ const creating = ref<boolean>(false)
       </div>
     </div>
   </AppLayout>
-
-  <CreateGroupDialog v-model:open="creating" />
 </template>

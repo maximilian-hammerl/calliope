@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight, Plus } from '@lucide/vue'
+import { Plus } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
@@ -7,16 +7,37 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import GroupInvitationRow from '@/components/group/GroupInvitationRow.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
+import { watchDebounced } from '@vueuse/core'
+import { TEXT_LIMIT } from '@/api/textLimit'
 import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { countLabel } from '@/lib/format/formatTime'
+
+const LIMIT = TEXT_LIMIT.listGroups.search
+
+const term = ref<string>('')
+
+/** What the request asks for, which only follows the field once typing pauses. */
+const settled = ref<string>('')
+const trimmed = computed<string>(() => term.value.trim())
+
+watchDebounced(
+  trimmed,
+  (value) => {
+    settled.value = value.length >= LIMIT.minLength ? value : ''
+  },
+  { debounce: 300 },
+)
 
 // The default is the groups this member has joined; being allowed to read a public group is
 // not the same as belonging to it, and this page is called Meine Gruppen.
-const { data, isPending, isError } = useListGroups({
+const { data, isPending, isError } = useListGroups(() => ({
   limit: 100,
-  sortAttribute: 'title',
-  sortOrder: 'asc',
-})
+  search: settled.value === '' ? undefined : settled.value,
+  sortAttribute: 'title' as const,
+  sortOrder: 'asc' as const,
+}))
 
 const groups = computed<ListGroups200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
@@ -32,7 +53,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
 /**
  * Invitations are a separate ask, so they are a separate query rather than a filter over one
- * list. They are not in the rail either: the rail is the groups you are in.
+ * list — and the search below filters only the groups, never an invitation waiting on an answer.
  */
 const { data: invitationsData } = useListGroups({
   limit: 100,
@@ -71,44 +92,70 @@ const creating = ref<boolean>(false)
           </div>
         </section>
 
-        <h1 class="mb-2 text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
+        <!-- Both actions sit on the heading line. Discovery used to be a text link below the
+             list, where testers missed it and a member with many groups never reached it. -->
+        <div class="mb-2 flex flex-wrap items-baseline gap-3">
+          <h1 class="text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
+
+          <div class="ml-auto flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" as-child>
+              <RouterLink :to="{ name: 'discover' }">Gruppen entdecken</RouterLink>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Gruppe gründen"
+              @click="creating = true"
+            >
+              <Plus data-icon="inline-start" :stroke-width="1.5" />
+              Gruppe
+            </Button>
+          </div>
+        </div>
+
         <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
           Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
         </p>
 
+        <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
+          <FieldLabel for="groups-search">Suche</FieldLabel>
+          <Input
+            id="groups-search"
+            v-model="term"
+            class="h-11 md:h-9"
+            name="search"
+            type="search"
+            placeholder="z. B. Erinnerungsmarkt"
+            :maxlength="LIMIT.maxLength"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <FieldDescription>
+            Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
+          </FieldDescription>
+        </Field>
+
         <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
           <p class="text-[13.5px] leading-[1.7] text-ink-4">
-            Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
-            bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
+            <template v-if="settled !== ''">
+              Keine deiner Gruppen passt zu „{{ settled }}“.
+            </template>
+            <template v-else>
+              Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
+              bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
+            </template>
           </p>
-          <Button class="mt-5" @click="creating = true">
-            <Plus data-icon="inline-start" :stroke-width="1.5" />
-            Gruppe gründen
-          </Button>
         </div>
 
         <div v-else-if="hasLoaded">
-          <Button class="mb-6" @click="creating = true">
-            <Plus data-icon="inline-start" :stroke-width="1.5" />
-            Gruppe gründen
-          </Button>
-
+          <!-- No action button: the title is the link, and nothing else in the product says
+               "x öffnen". -->
           <GroupRow
             v-for="(group, index) in groups"
             :key="group.id"
             :group="group"
             :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-          >
-            <template #actions>
-              <Button
-                variant="outline"
-                size="sm"
-                @click="$router.push({ name: 'group', params: { groupId: group.id } })"
-              >
-                Gruppe öffnen
-              </Button>
-            </template>
-          </GroupRow>
+          />
         </div>
 
         <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
@@ -119,13 +166,6 @@ const creating = ref<boolean>(false)
 
         <!-- The way out of this page: without it, listing only your own groups would leave
              no way to find a public one. -->
-        <RouterLink
-          :to="{ name: 'discover' }"
-          class="mt-8 inline-flex items-center gap-[4px] border-t border-line-2 pt-6 text-[13px] text-ink-5 hover:text-oak-deep"
-        >
-          Öffentliche Gruppen entdecken
-          <ChevronRight :size="14" :stroke-width="1.5" />
-        </RouterLink>
       </div>
     </div>
   </AppLayout>

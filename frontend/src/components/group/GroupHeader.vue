@@ -2,12 +2,11 @@
 import { ChevronLeft } from '@lucide/vue'
 import { computed } from 'vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import { countLabel } from '@/lib/format/formatTime'
 
 const props = defineProps<{
   title: string
   visibility: 'private' | 'public'
-  threadCount?: number
+  subtitle?: string | null
   // Given only where the header is not already the group's own page: the way back from a
   // thread. On the group page the title is the page's own heading and links nowhere.
   groupId?: string
@@ -45,9 +44,10 @@ const visibilityLabel = computed<string>(() =>
         <template v-else>{{ title }}</template>
       </h1>
       <CalliopeBadge>{{ visibilityLabel }}</CalliopeBadge>
-      <span v-if="threadCount !== undefined" class="text-[11.5px] whitespace-nowrap text-ink-5">
-        {{ countLabel(threadCount, 'Thread', 'Threads') }}
-      </span>
     </div>
+
+    <p v-if="subtitle" class="reading-column mt-[4px] text-[13.5px] leading-[1.5] text-ink-3">
+      {{ subtitle }}
+    </p>
   </div>
 </template>

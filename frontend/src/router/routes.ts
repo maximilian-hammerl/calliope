@@ -6,6 +6,7 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const routes: Array<RouteRecordRaw> = [
   // Where signing in and registering land.
+  // Where signing in and registering land. What it will hold is still open.
   {
     path: '/',
     name: 'home',

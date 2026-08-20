@@ -27,6 +27,12 @@ defineSlots<{ actions?: () => unknown }>()
       </CalliopeBadge>
     </div>
 
+    <!-- The story's own line, between its name and what it is about. Darker and a step larger
+         than the blurb, so the order reads title → subtitle → description. -->
+    <p v-if="group.subtitle" class="mt-[4px] max-w-[60ch] text-[13.5px] leading-[1.5] text-ink-3">
+      {{ group.subtitle }}
+    </p>
+
     <p v-if="group.blurb" class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
       {{ group.blurb }}
     </p>
@@ -35,7 +41,7 @@ defineSlots<{ actions?: () => unknown }>()
       zuletzt {{ formatActivityTime(group.lastActivityAt) }}
     </div>
 
-    <div class="mt-[10px] flex flex-wrap items-center gap-2">
+    <div v-if="$slots.actions" class="mt-[10px] flex flex-wrap items-center gap-2">
       <slot name="actions" />
     </div>
   </div>

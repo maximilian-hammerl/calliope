@@ -1,22 +1,12 @@
 <script setup lang="ts">
 /**
- * Primary navigation on a phone, where the design system moves it off the top bar. Two
- * destinations for now; Forum and Partner join them when they exist.
+ * Primary navigation on a phone, where the design system moves it off the top bar. Forum and
+ * Partner join the two destinations when those exist.
  */
 import { useRoute } from 'vue-router'
-import { BookOpen, Users } from '@lucide/vue'
+import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
 
 const route = useRoute()
-
-const DESTINATIONS = [
-  { name: 'groups', label: 'Gruppen', icon: BookOpen, matches: ['group', 'thread', 'discover'] },
-  { name: 'members', label: 'Mitglieder', icon: Users, matches: ['member'] },
-] as const
-
-function isActive(destination: (typeof DESTINATIONS)[number]): boolean {
-  const current = String(route.name)
-  return current === destination.name || destination.matches.some((m) => current === m)
-}
 </script>
 
 <template>
@@ -30,7 +20,7 @@ function isActive(destination: (typeof DESTINATIONS)[number]): boolean {
       :to="{ name: destination.name }"
       class="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-[3px] border-t-2 text-[11.5px] leading-[1.2]"
       :class="
-        isActive(destination)
+        isCurrent(destination, route.name)
           ? 'border-oak font-semibold text-ink-1'
           : 'border-transparent text-ink-5'
       "
