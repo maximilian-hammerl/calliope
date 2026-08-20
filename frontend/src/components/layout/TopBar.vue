@@ -105,7 +105,10 @@ async function signOut() {
             "
           >
             <template v-if="destination.children">
-              <NavigationMenuTrigger>{{ destination.label }}</NavigationMenuTrigger>
+              <NavigationMenuTrigger class="gap-1.5">
+                <component :is="destination.icon" :size="16" :stroke-width="1.5" />
+                {{ destination.label }}
+              </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul class="flex w-56 flex-col p-1">
                   <li v-for="child in destination.children" :key="child.name">
@@ -122,11 +125,14 @@ async function signOut() {
               </NavigationMenuContent>
             </template>
 
-            <NavigationMenuLink v-else as-child>
+            <!-- flex-row on the wrapper: its generated flex-col wins over the link's own
+                 classes by stylesheet order, but loses in the wrapper's tailwind-merge. -->
+            <NavigationMenuLink v-else as-child class="flex-row">
               <RouterLink
                 :to="{ name: destination.name }"
-                class="flex h-full items-center px-1 text-[13.5px] leading-[1.2] whitespace-nowrap text-ink-5 hover:text-ink-1"
+                class="flex h-full items-center gap-1.5 px-1 text-[13.5px] leading-[1.2] whitespace-nowrap text-ink-5 hover:text-ink-1"
               >
+                <component :is="destination.icon" :size="16" :stroke-width="1.5" />
                 {{ destination.label }}
               </RouterLink>
             </NavigationMenuLink>

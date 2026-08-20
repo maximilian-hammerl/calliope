@@ -32,7 +32,7 @@ const route = useRoute()
       >
         <template v-if="destination.children">
           <NavigationMenuTrigger
-            class="flex min-h-[56px] w-full flex-col items-center justify-center gap-[3px] border-t-2 text-[11.5px] leading-[1.2] [&>svg]:hidden"
+            class="flex min-h-[56px] w-full flex-col items-center justify-center gap-[3px] border-t-2 text-[11.5px] leading-[1.2] [&>svg:last-child]:hidden"
             :class="
               isCurrent(destination, route.name)
                 ? 'border-oak font-semibold text-ink-1'
