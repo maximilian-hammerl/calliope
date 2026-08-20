@@ -13,7 +13,8 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 
 `deno task db:seed` fills a local database with a fixed fixture: five accounts sharing the
 password `calliope`, a private and a public group, every membership state, threads with posts
-and one unpublished draft, a chat with messages, and the notifications the invitations imply. A fifth account, `unverified`, has no confirmed
+and one unpublished draft, two next steps (one open, one completed, so the Erledigt
+disclosure shows), a chat with messages, and the notifications the invitations imply. A fifth account, `unverified`, has no confirmed
 address and so reaches nothing but the verification wall — that screen is otherwise only
 reachable by registering by hand and digging the link out of Mailpit.
 It prints the accounts and the URLs when it finishes.

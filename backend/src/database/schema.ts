@@ -135,6 +135,16 @@ export interface WritingGroup {
   visibility: Generated<WritingGroupVisibility>;
 }
 
+export interface WritingGroupNextStep {
+  completedAt: string | null;
+  completedBy: string | null;
+  createdAt: Generated<string>;
+  createdBy: string | null;
+  id: Generated<string>;
+  text: string;
+  writingGroupId: string;
+}
+
 export interface WritingPost {
   createdAt: Generated<string>;
   createdBy: string | null;
@@ -164,6 +174,7 @@ export interface DB {
   userSession: UserSession;
   userToken: UserToken;
   writingGroup: WritingGroup;
+  writingGroupNextStep: WritingGroupNextStep;
   writingPost: WritingPost;
   writingThread: WritingThread;
 }
@@ -318,6 +329,16 @@ export const WRITING_GROUP_SCHEMA = z.object({
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   lastActivityAt: z.iso.datetime({ offset: true }),
+});
+
+export const WRITING_GROUP_NEXT_STEP_SCHEMA = z.object({
+  id: z.uuidv7(),
+  writingGroupId: z.uuidv7(),
+  text: z.string(),
+  createdBy: z.uuidv7().nullable(),
+  completedAt: z.iso.datetime({ offset: true }).nullable(),
+  completedBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const WRITING_POST_SCHEMA = z.object({

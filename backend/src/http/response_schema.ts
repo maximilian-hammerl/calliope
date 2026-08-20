@@ -6,6 +6,7 @@ import {
   USER_IN_CHAT_GROUP_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
   USER_SCHEMA,
+  WRITING_GROUP_NEXT_STEP_SCHEMA,
   WRITING_GROUP_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
@@ -62,6 +63,21 @@ export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
  * A username is public within the platform — it is what members type to invite one another.
  * An email address never is.
  */
+export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA
+  .pick({
+    id: true,
+    writingGroupId: true,
+    text: true,
+    createdBy: true,
+    completedAt: true,
+    completedBy: true,
+    createdAt: true,
+  })
+  .extend({
+    createdByUsername: z.string().nullable(),
+    completedByUsername: z.string().nullable(),
+  });
+
 export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
 
 /** Separate from `USER_RESPONSE` so the picker and search keep sending two fields. */

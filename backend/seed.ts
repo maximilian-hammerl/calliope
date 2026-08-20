@@ -30,6 +30,7 @@ const POST = {
   third: id("d3"),
   draft: id("d4"),
 } as const;
+const STEP = { motive: id("91"), opening: id("92") } as const;
 const CHAT = { pair: id("e1") } as const;
 const MESSAGE = { one: id("f1"), two: id("f2"), three: id("f3") } as const;
 const NOTIFICATION = {
@@ -170,6 +171,23 @@ async function seed(): Promise<void> {
       writingGroupId: GROUP.market,
       title: "Steckbriefe",
       createdBy: USER.annelie,
+    },
+  ]).execute();
+
+  await db.insertInto("writingGroupNextStep").values([
+    {
+      id: STEP.motive,
+      writingGroupId: GROUP.market,
+      text: "Keshs Motiv festlegen",
+      createdBy: USER.annelie,
+    },
+    {
+      id: STEP.opening,
+      writingGroupId: GROUP.market,
+      text: "Kapitel 1 eröffnen",
+      createdBy: USER.mira,
+      completedAt: Temporal.Now.instant().toString(),
+      completedBy: USER.mira,
     },
   ]).execute();
 

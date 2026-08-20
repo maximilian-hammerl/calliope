@@ -144,7 +144,7 @@ const editingGroup = ref<boolean>(false)
 
     <!-- What the member does. -->
     <template #rail>
-      <StepList />
+      <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
       <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
     </template>
 

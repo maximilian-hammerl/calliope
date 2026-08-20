@@ -96,8 +96,9 @@ These are decisions, not omissions, and each is recorded where it was made:
 
 ## Specified but unbuilt in the interface
 
-- **Nächste Schritte** and **Dateien & Bilder** in the rails are static mockups with invented
-  content. Story-Status is real, with an inline switcher.
+- **Dateien & Bilder** in the rail is a static mockup with invented content. Story-Status and
+  Nächste Schritte are real — steps are added inline, ticked off recording who completed them,
+  and completed ones keep forever under an „Erledigt (N)“ disclosure unless deleted by hand.
 - Post actions **Antworten**, **Zitieren** and **Merken** are inert; **Anmerkung schreiben**,
   which the design system lists as core copy, does not appear at all.
 

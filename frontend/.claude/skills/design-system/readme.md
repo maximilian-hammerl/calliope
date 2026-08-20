@@ -144,6 +144,12 @@ again, and the same pressure. Limits read as German numerals: 100.000, not 10000
 **Numbers get a noun.** A bare badge number was tested and misread — nobody could tell what "3"
 meant. Always "3 neu", "6 von 12 Threads", "2 Anmerkungen", "Erledigt (5)".
 
+**A step shows one person, the one its state is about**: „von annelie" while it is open,
+„erledigt von mira" once it is done — the same one-fact-per-state rule as memberships. Readers
+see the list with the controls **disabled rather than hidden** („Nur wer schreibt, kann
+Schritte anlegen"): a deliberate exception to hiding what one cannot do, so a reader knows the
+group plans here. Completed steps stay under „Erledigt (N)" until someone deletes them.
+
 **A membership shows one date, the one its state is about**: "eingeladen vor 3 Tagen" while an
 invitation is pending, "beigetreten vor 2 Tagen" once it has been accepted. Both are participles
 and both take the usual relative-then-absolute time. When somebody is in the group, when they
@@ -413,6 +419,7 @@ never matched the hairline weight and changed shape from platform to platform.
 | `▸` `▾` | `ChevronRight` `ChevronDown` | closed / open disclosure ("Erledigt (5)") |
 | `▾` | `ChevronDown` | menu affordance ("Alle Beiträge") |
 | `☐` `☑` | `Square` `SquareCheck` | open / done step in Nächste Schritte |
+| `×` | `X` | delete a step (plain, never red — a step is re-creatable in seconds) |
 | `⌕` | `Search` | search |
 | `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
 | — | `Pencil` | edit an existing thing ("Gruppe bearbeiten") |

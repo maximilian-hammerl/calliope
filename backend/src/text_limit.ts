@@ -23,6 +23,8 @@ export const TEXT_LIMIT = {
   search: 120,
   /** A chat's name sits on one line in a narrow list beside the unread count. */
   chatTitle: 80,
+  /** A step is one line in the rail — a reminder, not a plan. */
+  stepText: 200,
   /** A message is a remark, not a chapter. Long enough for a paragraph, far short of a post. */
   messageText: 4_000,
   /** A second line under the title, as a book has one. */
