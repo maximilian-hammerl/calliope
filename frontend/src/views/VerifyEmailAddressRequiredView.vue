@@ -6,7 +6,6 @@ import {
   useChangeEmailAddress,
   useGetCurrentUser,
   useLogoutUser,
-  useRequestAccountDeletion,
   useResendEmailAddressVerification,
 } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
@@ -16,6 +15,7 @@ import { ApiError } from '@/lib/api/apiFetch'
 import { type FieldMessages, fieldMessage } from '@/lib/validation/fieldMessage'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
+import DeleteAccountForm from '@/components/settings/DeleteAccountForm.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -33,17 +33,13 @@ const { mutateAsync: resend, isPending: isResending } = useResendEmailAddressVer
 const { mutateAsync: changeAddress, isPending: isChanging } = useChangeEmailAddress()
 const { mutateAsync: logOut } = useLogoutUser()
 
-const { mutateAsync: requestDeletion, isPending: isRequestingDeletion } =
-  useRequestAccountDeletion()
-
+/**
+ * One value rather than a boolean per branch: two flags could both be set, which would mean
+ * nothing and which nothing would catch.
+ */
 const mode = ref<'choices' | 'correcting' | 'deleting'>('choices')
 
-const deletionPassword = ref<string>('')
-const deletionError = ref<string | undefined>(undefined)
 const deletionRequested = ref<boolean>(false)
-
-const DELETION_LIMIT = TEXT_LIMIT.requestAccountDeletion
-
 const resent = ref<boolean>(false)
 const newAddress = ref<string>('')
 const fieldErrors = ref<{ emailAddress?: string }>({})
@@ -72,30 +68,6 @@ async function resendLink() {
   }
 
   resent.value = true
-}
-
-async function submitDeletion() {
-  deletionError.value = undefined
-  formError.value = undefined
-
-  if (deletionPassword.value.length === 0) {
-    deletionError.value = 'Gib dein aktuelles Passwort ein.'
-    return
-  }
-
-  try {
-    await requestDeletion({ data: { password: deletionPassword.value } })
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
-      deletionError.value = 'Das Passwort ist nicht korrekt.'
-      return
-    }
-    formError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
-  }
-
-  deletionPassword.value = ''
-  deletionRequested.value = true
 }
 
 function validate(): boolean {
@@ -253,50 +225,19 @@ async function signOut() {
           </Button>
         </template>
 
-        <form v-else class="flex flex-col gap-5" novalidate @submit.prevent="submitDeletion">
-          <div class="flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
-            <p>
-              Löschen ist <span class="text-ink-8">endgültig</span>. Es passiert nicht sofort: wir
-              schicken dir erst einen Link an deine E-Mail-Adresse.
-            </p>
-            <p>
-              Du bist noch in keiner Gruppe, also geht nichts verloren, was jemand anderes liest.
-            </p>
-          </div>
+        <DeleteAccountForm v-else @requested="deletionRequested = true">
+          <p>
+            Löschen ist <span class="text-ink-8">endgültig</span>. Es passiert nicht sofort: wir
+            schicken dir erst einen Link an deine E-Mail-Adresse.
+          </p>
+          <p>Du bist noch in keiner Gruppe, also geht nichts verloren, was jemand anderes liest.</p>
 
-          <FieldGroup>
-            <Field :data-invalid="deletionError !== undefined ? true : undefined">
-              <FieldLabel for="deletionPassword">Aktuelles Passwort</FieldLabel>
-              <Input
-                id="deletionPassword"
-                v-model="deletionPassword"
-                class="h-11 md:h-9"
-                name="deletionPassword"
-                type="password"
-                :maxlength="DELETION_LIMIT.password.maxLength"
-                autocomplete="current-password"
-                required
-                :aria-invalid="deletionError !== undefined ? true : undefined"
-              />
-              <FieldError :errors="[deletionError]" />
-            </Field>
-          </FieldGroup>
-
-          <div class="flex flex-col gap-3">
-            <Button
-              type="submit"
-              variant="destructive"
-              class="h-11 md:h-9"
-              :disabled="isRequestingDeletion"
-            >
-              <Spinner v-if="isRequestingDeletion" data-icon="inline-start" />
-              Löschen-Link anfordern
-            </Button>
+          <template #cancel>
             <Button type="button" variant="ghost" class="h-11 md:h-9" @click="mode = 'choices'">
               Abbrechen
             </Button>
-          </div>
-        </form>
+          </template>
+        </DeleteAccountForm>
       </div>
     </div>
   </main>

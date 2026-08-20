@@ -10,9 +10,6 @@ import { resolveSessionUser } from "@/src/middleware/session_user.ts";
  * in order to leave without ever verifying: asking for deletion. Every other route uses
  * `require_session.ts`, which is the strict default, so a route that forgets to choose gets
  * the safe one.
- *
- * `require_session_test.ts` pins the set of files importing this, so widening it is
- * deliberate rather than quiet.
  */
 export default createMiddleware<{
   Variables: { user: User };

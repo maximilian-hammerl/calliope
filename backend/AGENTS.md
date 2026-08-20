@@ -379,8 +379,7 @@ with **403** — the session is fine, so 401 would send them back to the sign-in
 from. Five routes use `require_session_allowing_unverified_email_address.ts` instead: the four
 somebody needs *in order to* verify — reading who they are, signing out, resending, correcting
 the address — and asking for deletion, which is how somebody leaves without ever verifying.
-Choosing nothing gets the strict one, so a forgotten route fails closed, and
-`require_session_test.ts` pins the set so widening it cannot happen quietly. Both share `session_user.ts`, so how a session is read cannot drift
+Choosing nothing gets the strict one, so a forgotten route fails closed. Both share `session_user.ts`, so how a session is read cannot drift
 between them.
 
 Every gated route therefore declares 403. Where the route has no reason of its own it spreads
