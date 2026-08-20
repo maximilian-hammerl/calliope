@@ -41,6 +41,7 @@ const emptyMetadata = (): StoryMetadata => ({
   contentWarnings: '',
   tense: '',
   perspective: '',
+  language: 'german',
 })
 
 const metadata = ref<StoryMetadata>(emptyMetadata())
@@ -57,6 +58,7 @@ function metadataForApi() {
     contentWarnings: toTags(metadata.value.contentWarnings),
     tense: blank(metadata.value.tense),
     perspective: blank(metadata.value.perspective),
+    language: metadata.value.language,
   }
 }
 
@@ -90,6 +92,7 @@ watch(open, (isOpen) => {
     contentWarnings: fromTags(props.group.contentWarnings),
     tense: props.group.tense ?? '',
     perspective: props.group.perspective ?? '',
+    language: props.group.language,
   }
 })
 

@@ -188,6 +188,12 @@ Einstellungen, Abmelden. That split is also what keeps the bar from growing: two
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
 have pushed harder.
 
+**A story idea becomes a group by copy, not by wizard.** "Gruppe gründen" on one's own idea
+opens the ordinary create-group dialog with every field filled from the idea — the author
+still chooses visibility and can change anything before confirming. Both group dialogs carry
+the same story fields as the idea dialog, Sprache included, so the copy has nowhere to lose
+information. The idea stays open afterwards; closing it is the author's own act.
+
 **„Unterhaltung beginnen" is one action with one name.** On a story idea it invites the
 author; on a public group's page it invites the administrators. Both are the same gesture — a
 person asking people, through a chat invitation the other side must accept — so the label never

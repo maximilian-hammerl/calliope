@@ -18,6 +18,7 @@ import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import CreateGroupDialog, { type GroupPrefill } from '@/components/group/CreateGroupDialog.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,26 @@ async function askAboutIdea() {
     conversationError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
   }
 }
+
+const foundingGroup = ref<boolean>(false)
+
+/** Field for field, because the idea's story block mirrors writing_group by design. */
+const groupPrefill = computed<GroupPrefill | undefined>(() =>
+  idea.value === undefined
+    ? undefined
+    : {
+        title: idea.value.title,
+        subtitle: idea.value.subtitle ?? null,
+        blurb: idea.value.idea,
+        genres: idea.value.genres,
+        subgenres: idea.value.subgenres,
+        tropes: idea.value.tropes,
+        contentWarnings: idea.value.contentWarnings,
+        tense: idea.value.tense ?? null,
+        perspective: idea.value.perspective ?? null,
+        language: idea.value.language,
+      },
+)
 
 const notFound = computed<boolean>(
   () => error.value instanceof ApiError && error.value.status === 404,
@@ -131,6 +152,9 @@ async function remove() {
             </h1>
 
             <div v-if="isOwn" class="ml-auto flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" @click="foundingGroup = true">
+                Gruppe gründen
+              </Button>
               <Button variant="outline" size="sm" @click="editing = true">Bearbeiten</Button>
               <Button variant="ghost" size="sm" :disabled="removing" @click="remove">
                 Entfernen
@@ -220,4 +244,5 @@ async function remove() {
   </AppLayout>
 
   <StoryIdeaDialog v-if="idea" v-model:open="editing" :idea="idea" />
+  <CreateGroupDialog v-if="idea" v-model:open="foundingGroup" :prefill="groupPrefill" />
 </template>

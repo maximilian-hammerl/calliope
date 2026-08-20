@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getListGroupsQueryKey, useCreateGroup } from '@/api/groups/groups'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
-import { toTags } from '@/lib/format/storyTags'
+import { fromTags, toTags } from '@/lib/format/storyTags'
 
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
@@ -26,6 +26,22 @@ import { Textarea } from '@/components/ui/textarea'
 
 const open = defineModel<boolean>('open', { required: true })
 
+/** Founding a group from a story idea: the fields arrive filled and stay editable. */
+export type GroupPrefill = {
+  title: string
+  subtitle: string | null
+  blurb: string
+  genres: string[]
+  subgenres: string[]
+  tropes: string[]
+  contentWarnings: string[]
+  tense: string | null
+  perspective: string | null
+  language: 'german' | 'english'
+}
+
+const props = defineProps<{ prefill?: GroupPrefill }>()
+
 const router = useRouter()
 const queryClient = useQueryClient()
 
@@ -33,9 +49,6 @@ const title = ref<string>('')
 const subtitle = ref<string>('')
 const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
-// Not columns on writing_group yet. Present because members asked that founding a group force
-// the standardising metadata, but nothing is sent or stored.
-const perspective = ref<string>('')
 
 // Taken from the design system's own dialog rather than invented, so they already match what
 // the column will hold once perspective is stored.
@@ -47,6 +60,7 @@ const emptyMetadata = (): StoryMetadata => ({
   contentWarnings: '',
   tense: '',
   perspective: '',
+  language: 'german',
 })
 
 const metadata = ref<StoryMetadata>(emptyMetadata())
@@ -63,6 +77,7 @@ function metadataForApi() {
     contentWarnings: toTags(metadata.value.contentWarnings),
     tense: blank(metadata.value.tense),
     perspective: blank(metadata.value.perspective),
+    language: metadata.value.language,
   }
 }
 
@@ -76,13 +91,29 @@ const { mutateAsync: createGroup, isPending } = useCreateGroup()
 
 watch(open, (isOpen) => {
   if (isOpen) {
+    // Opening from a story idea: the copy the columns were kept in step for.
+    if (props.prefill !== undefined) {
+      title.value = props.prefill.title
+      subtitle.value = props.prefill.subtitle ?? ''
+      description.value = props.prefill.blurb
+      metadata.value = {
+        storyStatus: 'planning',
+        genres: fromTags(props.prefill.genres),
+        subgenres: fromTags(props.prefill.subgenres),
+        tropes: fromTags(props.prefill.tropes),
+        contentWarnings: fromTags(props.prefill.contentWarnings),
+        tense: props.prefill.tense ?? '',
+        perspective: props.prefill.perspective ?? '',
+        language: props.prefill.language,
+      }
+    }
     return
   }
   title.value = ''
+  subtitle.value = ''
   description.value = ''
   visibility.value = 'private'
   metadata.value = emptyMetadata()
-  perspective.value = ''
   titleError.value = undefined
   descriptionError.value = undefined
   formError.value = undefined

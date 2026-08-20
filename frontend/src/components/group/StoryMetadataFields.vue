@@ -5,6 +5,7 @@
  * the edit dialog did not, and neither actually stored anything.
  */
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -16,6 +17,7 @@ export type StoryMetadata = {
   contentWarnings: string
   tense: string
   perspective: string
+  language: 'german' | 'english'
 }
 
 const metadata = defineModel<StoryMetadata>({ required: true })
@@ -93,6 +95,20 @@ const TAG_FIELDS = [
         :maxlength="LIMIT.perspective.maxLength"
         placeholder="z. B. Dritte Person, begrenzt"
       />
+    </Field>
+
+    <Field>
+      <FieldLabel for="group-language">Sprache</FieldLabel>
+      <select
+        id="group-language"
+        v-model="metadata.language"
+        name="language"
+        class="h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9"
+      >
+        <option v-for="(label, value) in LANGUAGE_LABELS" :key="value" :value="value">
+          {{ label }}
+        </option>
+      </select>
     </Field>
   </div>
 </template>

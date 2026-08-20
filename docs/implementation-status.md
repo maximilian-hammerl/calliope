@@ -48,7 +48,7 @@ opens a first door, still unmoderated.
 | Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Chats are titled and invite-based, so **no** "message this member".                              |
 | Public forum     | Not started.                                                                                                                                                              |
-| Writing partners | Built as **Storyideen**: board, detail page, open/closed status, language filter, own-ideas view, and "Unterhaltung beginnen" — a chat inviting the author.               |
+| Writing partners | Built as **Storyideen**: board, detail page, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea.                    |
 | Administration   | Not started.                                                                                                                                                              |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. **No** data export, no GDPR configuration.                          |
 
@@ -143,7 +143,7 @@ is currently writing, plus a visibility setting for that block. Two constraints 
 when the pages were built: **no statistics, ever** ("Profilaufrufe" etc. "führen nur zu Druck"),
 and **nothing mandatory** — Yooco's required fields got filled with nonsense.
 
-### 3. Story ideas — v1 built and deployed, two follow-ups remain
+### 3. Story ideas — built, follow-ups included
 
 §8's partner requests, reframed as **Storyideen**: an idea seeking writers, because that is
 what members valued about the original ("Gesuche mit schon einer konkreten Idee"). Live: the
@@ -159,8 +159,11 @@ copying.
 titled after it and invites the author — §11's "public idea → private conversation", assembled
 from parts that already existed — and on a public group's page it invites every joined
 administrator, which is how a stranger asks into a group without any join-request machinery.
-One follow-up remains: **"Gruppe aus Idee gründen"**, the metadata copy. And item 4 below
-stops being optional the moment testers get this board.
+**"Gruppe gründen" on one's own idea is built too** — the create-group dialog opens prefilled
+field for field (the idea's text becomes the blurb), which is what the matching columns were
+kept in step for. The author still chooses visibility and confirms; the idea stays open until
+they close it, deliberately — a fresh group of two might still want a third writer. With that,
+§8 is done. Item 4 below stops being optional the moment testers get this board.
 
 ### 4. Block a member
 
