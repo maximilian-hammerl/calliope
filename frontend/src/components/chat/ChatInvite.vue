@@ -54,7 +54,7 @@ async function invite(user: ListUsers200ResultsItem) {
   <div>
     <button
       type="button"
-      class="flex items-center gap-[4px] text-[12.5px] text-ink-5 hover:text-oak-deep"
+      class="flex min-h-11 items-center gap-[4px] text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
       :aria-expanded="open"
       @click="open = !open"
     >

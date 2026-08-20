@@ -172,7 +172,7 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
           <button
             v-if="selectedId !== undefined"
             type="button"
-            class="mb-2 self-start text-[12.5px] text-ink-5 md:hidden"
+            class="mb-2 flex min-h-11 items-center self-start text-[12.5px] text-ink-5 md:hidden"
             @click="selectedId = undefined"
           >
             ← Alle Unterhaltungen

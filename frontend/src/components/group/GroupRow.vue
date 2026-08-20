@@ -18,7 +18,7 @@ defineSlots<{ actions?: () => unknown }>()
     <div class="flex flex-wrap items-baseline gap-3">
       <RouterLink
         :to="{ name: 'group', params: { groupId: group.id } }"
-        class="text-[20px] leading-[1.3] text-ink-1 hover:underline hover:underline-offset-[6px]"
+        class="inline-flex min-h-11 items-center text-[20px] leading-[1.3] text-ink-1 hover:underline hover:underline-offset-[6px] md:min-h-0"
       >
         {{ group.title }}
       </RouterLink>

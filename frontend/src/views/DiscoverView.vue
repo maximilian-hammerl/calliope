@@ -63,7 +63,7 @@ const creating = ref<boolean>(false)
       <div class="max-w-[760px]">
         <RouterLink
           :to="{ name: 'groups' }"
-          class="inline-flex items-center gap-[3px] text-[12.5px] text-ink-5 hover:text-oak-deep"
+          class="inline-flex min-h-11 items-center gap-[3px] text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
         >
           <ChevronLeft :size="14" :stroke-width="1.5" />
           Meine Gruppen

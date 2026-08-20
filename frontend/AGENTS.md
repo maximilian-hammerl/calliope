@@ -129,6 +129,17 @@ reading size never shrinks below 17px, and the composer starts collapsed. Check 
 calling a surface done, and 375×667 for anything in a dialog — that is where content outgrows
 the screen first.
 
+Reach for the component before a raw `<button>`: `sm` and `default` both carry
+`min-h-11 md:min-h-0`, so anything hand-rolled has to repeat that rule and will be missed when
+the next component-wide fix lands. A raw button is still right for things that are not
+button-shaped — rail strips, list rows, tabs that share a baseline — and those carry the rule
+themselves. A blanket `button { min-height }` in the base layer is *not* the answer, unlike the
+`cursor: pointer` rule there: a cursor changes no layout and a min-height changes plenty.
+
+**Navigation is a bottom bar below `md`.** `BottomBar.vue` is a flex row of `AppLayout`, not a
+fixed overlay — the layout is already a full-height flex column, so there is no content padding
+to keep in step and nothing can cover the composer. `TopBar`'s nav is `hidden md:flex`.
+
 **The right rail is a sheet below `lg`.** `AppLayout` moves `$slots.rail` between the `aside`
 and `ContextSheet` on a media query rather than a CSS breakpoint, so the rail's contents mount
 once; `hidden` would keep a second copy alive. Without the sheet the story status, the next

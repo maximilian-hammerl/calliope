@@ -111,11 +111,24 @@ which leaves a group nobody can administer. Deleting an account is now a third w
 the membership cascades. Small, understood, and it gets worse with every group created — and a
 trigger beside the one that removes an empty group would close all three paths at once.
 
-### 2. Mobile navigation
+### 2. Mobile navigation — built
 
-The bottom bar and rails-as-sheets the design system specifies. This has been deferred three
-times and the top bar has absorbed the pressure each time. Everything below adds surfaces, so
-every one of them makes this worse rather than easier.
+The bottom bar and the right rail as a sheet both exist. Below `md` the destinations move out
+of the top bar, which keeps the wordmark, the search field and the avatar; below `lg` the rail
+becomes a bottom sheet opened from a strip above the content. Before that sheet, the story
+status, the next steps and the files had no route at all on a phone *or* a tablet.
+
+Two departures from the specification, both deliberate. The bar holds **Gruppen and
+Mitglieder** rather than the mockup's four items, because Forum and Partner are items 8 and 4
+and do not exist yet. And the **left rail did not become a sheet**: its content is the group
+list, which the bar's own Gruppen destination already reaches, where the right rail's content
+had nowhere else to be.
+
+Every interactive target on every surface is now at least 44px on a phone, checked at 375×667
+as well as 375×812. Most of it came from three generated components — the button's `sm` and
+`default` sizes, the dropdown menu item, and both dialog content components — because a
+component-level fix covers every call site at once. The ones that had to be fixed by hand were
+the text links and hand-rolled buttons, which is the category no component covers.
 
 ### 3. Member overview and member profile
 

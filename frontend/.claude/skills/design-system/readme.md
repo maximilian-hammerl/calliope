@@ -343,8 +343,15 @@ of the right rail.
 rail sections, 7px between rows inside a section. Comfortable, not airy; the tested "too dense"
 direction packed three columns of tooling and lost.
 
-**Mobile.** Single column, `--thread-gutter-mobile` 18px. The top bar keeps the wordmark and
-search; primary navigation moves to a bottom bar. Threads stay tabs — a horizontally scrolling
+**Mobile.** Single column, `--thread-gutter-mobile` 18px. The top bar keeps the wordmark,
+search and the avatar; primary navigation moves to a bottom bar. That bar carries **Gruppen and
+Mitglieder** today — the mockup's Forum and Partner are unbuilt features, and a slot for
+something that does not exist is worse than a shorter bar. The active item takes the 2px
+`--accent` rule on its top edge, mirroring the top bar's underline.
+
+The **left rail stays hidden rather than becoming a sheet**: it lists the member's groups, which
+the bar's Gruppen destination already reaches. The right rail became a sheet because its
+contents — story status, next steps, files — exist nowhere else. Threads stay tabs — a horizontally scrolling
 strip under the group title. Both rails become sheets reachable from the group header ("Gruppen-Kontext")
 rather than drawers that cover the text. The composer is a fixed single-line bar that expands to
 full height when focused. Prose stays 17px — never shrink the reading size. Every target is at
