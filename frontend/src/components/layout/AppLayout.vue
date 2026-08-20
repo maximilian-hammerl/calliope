@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight } from '@lucide/vue'
+import { ChevronLeft, ChevronRight, PanelRight } from '@lucide/vue'
 import { computed, ref } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import type { GetCurrentUser200, ListGroups200ResultsItem } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
@@ -8,6 +9,7 @@ import TopBar from '@/components/layout/TopBar.vue'
 import GroupList from '@/components/group/GroupList.vue'
 import RailLabel from '@/components/layout/RailLabel.vue'
 import RailToggle from '@/components/layout/RailToggle.vue'
+import ContextSheet from '@/components/layout/ContextSheet.vue'
 
 const props = defineProps<{ activeGroupId?: string }>()
 defineEmits<{ createGroup: [] }>()
@@ -29,6 +31,14 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
 const leftOpen = ref<boolean>(true)
 const rightOpen = ref<boolean>(true)
 const hasRail = computed<boolean>(() => props.activeGroupId !== undefined)
+
+/**
+ * Matches the `lg` breakpoint the rail is shown at. A media query rather than CSS, because the
+ * rail content has to render in exactly one place — hiding a second copy with `hidden` would
+ * still mount it.
+ */
+const railFits = useMediaQuery('(min-width: 1024px)')
+const sheetOpen = ref<boolean>(false)
 </script>
 
 <template>
@@ -62,13 +72,25 @@ const hasRail = computed<boolean>(() => props.activeGroupId !== undefined)
       />
 
       <main class="flex min-w-0 flex-1 flex-col">
+        <!-- Below `lg` the rail is a sheet, and this is the only way to it. Without it the
+             story status, the next steps and the files have no route on a phone or tablet. -->
+        <button
+          v-if="hasRail && $slots.rail && !railFits"
+          type="button"
+          class="flex min-h-11 flex-none items-center gap-2 border-b border-line-3 bg-paper-2 px-[18px] text-left font-mono text-[10.5px] font-semibold tracking-[0.14em] text-ink-label uppercase"
+          @click="sheetOpen = true"
+        >
+          <PanelRight :size="14" :stroke-width="1.5" />
+          Gruppen-Kontext
+        </button>
+
         <slot />
       </main>
 
       <template v-if="hasRail && $slots.rail">
         <aside
-          v-if="rightOpen"
-          class="hidden w-[262px] flex-none flex-col gap-5 overflow-y-auto border-l border-line-3 bg-paper-2 px-[14px] py-4 lg:flex"
+          v-if="railFits && rightOpen"
+          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-l border-line-3 bg-paper-2 px-[14px] py-4 lg:flex"
         >
           <div class="flex items-center">
             <RailLabel>Gruppen-Kontext</RailLabel>
@@ -84,12 +106,15 @@ const hasRail = computed<boolean>(() => props.activeGroupId !== undefined)
           <slot name="rail" />
         </aside>
         <RailToggle
-          v-else
+          v-else-if="railFits"
           side="right"
           label="Gruppen-Kontext"
-          class="hidden lg:flex"
           @click="rightOpen = true"
         />
+
+        <ContextSheet v-else v-model:open="sheetOpen">
+          <slot name="rail" />
+        </ContextSheet>
       </template>
     </div>
   </div>

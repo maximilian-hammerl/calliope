@@ -21,8 +21,9 @@ case, informal *Du*, and every number gets a noun ("3 neu", never a bare badge).
 before adding a surface.
 
 Where shadcn's defaults contradict it, the component is patched once rather than overridden at
-each call site — `shadow-xs` is stripped from Input and the outline Button, and `AvatarFallback`
-carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour.
+each call site — `shadow-xs` is stripped from Input and the outline Button, `AvatarFallback`
+carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour, and
+`DropdownMenuItem` and `DialogContent` carry the mobile rules below.
 
 **Keep it updated.** When the interface departs from what that document says — a new icon set,
 a changed rule, a pattern it does not cover — change the document in the same piece of work.
@@ -45,6 +46,8 @@ After any `add`:
 git diff src/assets/main.css   # expect no change; restore the font import if there is one
 grep -c shadow-xs src/components/ui/button/index.ts src/components/ui/input/Input.vue  # expect 0
 grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                          # expect 1
+grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue                  # expect 1
+grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).
@@ -121,8 +124,15 @@ npx vitest run
 ## Mobile is not optional
 
 The old platform had none, and that was a top complaint. Every target is at least 44px on a
-phone (`h-11 md:h-9` on controls), the reading size never shrinks below 17px, and both rails
-are hidden rather than shrunk. Check 375px before calling a surface done.
+phone (`h-11 md:h-9` on controls, `min-h-11 md:min-h-0` where the height is intrinsic), the
+reading size never shrinks below 17px, and the composer starts collapsed. Check 375px before
+calling a surface done, and 375×667 for anything in a dialog — that is where content outgrows
+the screen first.
+
+**The right rail is a sheet below `lg`.** `AppLayout` moves `$slots.rail` between the `aside`
+and `ContextSheet` on a media query rather than a CSS breakpoint, so the rail's contents mount
+once; `hidden` would keep a second copy alive. Without the sheet the story status, the next
+steps and the files had no route at all on a phone *or* a tablet.
 
 ## Where things live
 

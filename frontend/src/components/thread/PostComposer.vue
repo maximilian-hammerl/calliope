@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronUp } from '@lucide/vue'
-import { ref } from 'vue'
+import { nextTick, ref, useTemplateRef } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import type { DraftStatus } from '@/composables/useDraft'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -9,18 +10,32 @@ defineProps<{ sending: boolean; draftStatus: DraftStatus }>()
 const text = defineModel<string>({ required: true })
 const emit = defineEmits<{ submit: [] }>()
 
-// Collapsing the composer is half of the reading mode; there is no separate mode.
-const collapsed = ref<boolean>(false)
+/**
+ * Collapsing the composer is half of the reading mode; there is no separate mode. On a phone it
+ * starts collapsed, where expanded it took a third of the screen before a word was read. Read
+ * once rather than watched, so resizing never opens or closes an editor somebody is using.
+ */
+const collapsed = ref<boolean>(useMediaQuery('(max-width: 767px)').value)
+
+const textarea = useTemplateRef<HTMLTextAreaElement>('textarea')
+
+/** Focus follows the expansion, so opening the bar and typing is one gesture, not two. */
+async function expand() {
+  collapsed.value = false
+  await nextTick()
+  textarea.value?.focus()
+}
 
 // A rich text editor comes later. The formatting row is inert until then.
 const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
 </script>
 
 <template>
-  <div
+  <button
     v-if="collapsed"
-    class="flex-none cursor-pointer border-t border-line-3 bg-paper-0 px-[18px] py-[13px] md:px-10"
-    @click="collapsed = false"
+    type="button"
+    class="min-h-11 flex-none border-t border-line-3 bg-paper-0 px-[18px] py-[13px] text-left md:px-10"
+    @click="expand"
   >
     <div class="reading-column flex items-center gap-3 text-[12.5px] text-ink-5">
       <span class="font-semibold text-ink-4">Weiterschreiben</span>
@@ -31,7 +46,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
         <ChevronUp :size="14" :stroke-width="1.5" />
       </span>
     </div>
-  </div>
+  </button>
 
   <div v-else class="flex-none border-t border-line-3 bg-paper-0 px-[18px] pt-[13px] pb-4 md:px-10">
     <div class="reading-column">
@@ -58,15 +73,17 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
 
         <button
           type="button"
-          class="ml-auto flex items-center gap-[4px] rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"
+          class="ml-auto flex min-h-11 items-center gap-[4px] rounded-lg border border-line-4 px-[9px] text-oak-deep md:min-h-0 md:py-[4px]"
+          aria-label="Editor einklappen"
           @click="collapsed = true"
         >
-          Editor einklappen
+          <span class="hidden sm:inline">Editor einklappen</span>
           <ChevronDown :size="14" :stroke-width="1.5" />
         </button>
       </div>
 
       <textarea
+        ref="textarea"
         v-model="text"
         rows="3"
         aria-label="Beitrag schreiben"
