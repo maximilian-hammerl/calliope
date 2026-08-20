@@ -71,15 +71,16 @@ const creating = ref<boolean>(false)
           </div>
         </section>
 
-        <h1 class="mb-5 text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
+        <h1 class="mb-2 text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
+        <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+          Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
+        </p>
 
         <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
           <p class="text-[13.5px] leading-[1.7] text-ink-4">
             Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
             bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
           </p>
-          <!-- Only below md: from there up the left rail carries this, and two buttons for
-               one action on one screen is what this replaced. -->
           <Button class="mt-5" @click="creating = true">
             <Plus data-icon="inline-start" :stroke-width="1.5" />
             Gruppe gründen

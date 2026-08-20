@@ -106,6 +106,25 @@ transparent segment of the rule, which is what separates it from the items.
 Meine-Gruppen page carries its own below that breakpoint, because there is no rail on a phone.
 Two buttons for one action on one screen is what this replaced.
 
+**Every title takes a line under it saying what the surface is for.** One or two short
+sentences, informal, no exclamation: what is here, then what you can do with it. "Wer hier
+schreibt. Öffne ein Profil, um zu sehen, ob jemand zu dir passen könnte." · "Öffentliche
+Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben, sobald dich
+jemand einlädt." · "Dein Konto, und worüber du benachrichtigt wirst."
+
+It earns its place because these surfaces are reached cold — from a bottom-bar tap, an avatar
+menu, a mailed link — and a bare heading leaves the member to infer the purpose from the
+contents. Never describe the control ("Hier kannst du …"); say what the thing is. Promise only
+what the surface actually does: a line about what is new is a lie until unread marks exist.
+
+Three exceptions. A **status page** whose heading changes with the outcome carries the
+explanation as its body instead — a fixed subtitle would contradict the heading above it. A
+**rail or sheet** carries its mono label and nothing more on screen — the label is a
+typographic device, not a title — but a sheet still needs the sentence as an `sr-only`
+description: the dialog primitive points `aria-describedby` at one whether it exists or not,
+and a dangling reference promises a screen reader something it never finds. And where the subject has a description of its own — a group's blurb — that *is*
+the line, and no second one is written.
+
 **Verbs are what the member does, not what the system does.** "Weiterschreiben", not "Neuer
 Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gruppe erstellen" —
 founding a group is a social act.

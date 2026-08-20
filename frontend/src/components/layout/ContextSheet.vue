@@ -8,6 +8,7 @@ import { X } from '@lucide/vue'
 import {
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogOverlay,
   DialogPortal,
   DialogRoot,
@@ -32,6 +33,13 @@ const open = defineModel<boolean>('open', { required: true })
           >
             Gruppen-Kontext
           </DialogTitle>
+
+          <!-- Not shown: a rail carries its label and nothing more. It exists because reka
+               points `aria-describedby` at it regardless, and without it that reference
+               dangles — a screen reader is promised a description and finds none. -->
+          <DialogDescription class="sr-only">
+            Was in dieser Gruppe zu tun ist, und was in ihr nachzusehen ist.
+          </DialogDescription>
           <DialogClose
             class="ml-auto flex size-11 items-center justify-center rounded-md text-ink-label"
             aria-label="Schließen"
