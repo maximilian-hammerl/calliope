@@ -1,43 +1,77 @@
 <script setup lang="ts">
 /**
- * Was a placeholder with invented values until the group carried its own metadata. Only the
- * fields that were actually filled in appear: an empty story should read as empty rather than
- * as a column of "Noch nicht gesetzt".
+ * Where the story is, and the one place to move it. A select rather than a dialog: this is the
+ * field that changes most often, and opening a form to change one enum was the friction.
  */
-import { computed } from 'vue'
-import type { GetGroup200 } from '@/api/models'
+import { computed, ref } from 'vue'
+import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from '@/api/groups/groups'
+import type { GetGroup200, GetGroup200StoryStatus } from '@/api/models'
+import { queryClient } from '@/lib/api/queryClient'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { STORY_STATUS } from '@/lib/format/storyStatus'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-const props = defineProps<{ group: GetGroup200 }>()
+const props = defineProps<{ group: GetGroup200; mayEdit: boolean }>()
 
-const STATUS_LABELS = {
-  planning: 'In Planung',
-  writing: 'Wird geschrieben',
-  finished: 'Abgeschlossen',
-} as const
+const { mutateAsync: updateGroup, isPending } = useUpdateGroup()
 
-const fields = computed(() => {
-  const list = (tags: readonly string[]) => (tags.length === 0 ? undefined : tags.join(', '))
+const failed = ref<boolean>(false)
 
-  return [
-    { label: 'Status', value: STATUS_LABELS[props.group.storyStatus], strong: true },
-    { label: 'Genre', value: list(props.group.genres) },
-    { label: 'Subgenre', value: list(props.group.subgenres) },
-    { label: 'Tropes', value: list(props.group.tropes) },
-    { label: 'Zeitform', value: props.group.tense ?? undefined },
-    { label: 'Perspektive', value: props.group.perspective ?? undefined },
-    { label: 'Inhaltswarnungen', value: list(props.group.contentWarnings) },
-  ].filter((field) => field.value !== undefined)
-})
+const status = computed<GetGroup200StoryStatus>(() => props.group.storyStatus)
+
+async function change(next: GetGroup200StoryStatus) {
+  if (next === props.group.storyStatus) {
+    return
+  }
+
+  failed.value = false
+
+  try {
+    await updateGroup({ groupId: props.group.id, data: { storyStatus: next } })
+  } catch {
+    failed.value = true
+    return
+  }
+
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) }),
+    queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) }),
+  ])
+}
 </script>
 
 <template>
   <div>
     <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">Story-Status</div>
-    <div class="text-[12.5px] leading-[1.95] text-ink-4">
-      <div v-for="field in fields" :key="field.label">
-        <span class="text-ink-6">{{ field.label }}:&nbsp;</span>
-        <span :class="field.strong ? 'font-medium' : ''">{{ field.value }}</span>
-      </div>
-    </div>
+
+    <Select
+      v-if="mayEdit"
+      :model-value="status"
+      :disabled="isPending"
+      @update:model-value="(value) => change(value as GetGroup200StoryStatus)"
+    >
+      <SelectTrigger class="h-11 w-full text-[12.5px] md:h-9">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="entry in STORY_STATUS" :key="entry.value" :value="entry.value">
+          {{ entry.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+
+    <p v-else class="text-[12.5px] leading-[1.95] font-medium text-ink-4">
+      {{ STORY_STATUS.find((entry) => entry.value === status)?.label }}
+    </p>
+
+    <p v-if="failed" class="mt-2 text-[11.5px] leading-[1.5] text-destructive" role="alert">
+      Der Status ließ sich nicht ändern. Versuche es später noch einmal.
+    </p>
   </div>
 </template>

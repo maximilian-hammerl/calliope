@@ -349,9 +349,21 @@ Mitglieder** today — the mockup's Forum and Partner are unbuilt features, and 
 something that does not exist is worse than a shorter bar. The active item takes the 2px
 `--accent` rule on its top edge, mirroring the top bar's underline.
 
-The **left rail stays hidden rather than becoming a sheet**: it lists the member's groups, which
-the bar's Gruppen destination already reaches. The right rail became a sheet because its
-contents — story status, next steps, files — exist nowhere else. Threads stay tabs — a horizontally scrolling
+**Both rails hold group context, split by what a member does with it.** The left rail is
+reference — the story's own facts (genre, tropes, tense, perspective, content warnings), its
+files, who is in it — the things checked while writing a post. The right rail is action: the
+next steps, and the story's status with the control that changes it. Neither appears on the
+groups overview, which has no group to be about.
+
+The rails no longer navigate. The group list left them for the overview page, which is where
+the daily loop starts anyway: members described scanning every group for new replies before
+answering any, and a rail of bare titles cannot answer "which one changed" — the overview,
+sorted by last activity, can. Every group page carries "‹ Meine Gruppen" back to it.
+
+On a phone both rails become **one** sheet, action first and reference below, so there is a
+single button rather than two competing strips. The order therefore differs by width: reference
+sits left of the text on a desktop and below the actions on a phone. That is the price of one
+button, paid deliberately. Threads stay tabs — a horizontally scrolling
 strip under the group title. Both rails become sheets reachable from the group header ("Gruppen-Kontext")
 rather than drawers that cover the text. The composer is a fixed single-line bar that expands to
 full height when focused. Prose stays 17px — never shrink the reading size. Every target is at

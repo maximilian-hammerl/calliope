@@ -58,7 +58,7 @@ const creating = ref<boolean>(false)
 </script>
 
 <template>
-  <AppLayout @create-group="creating = true">
+  <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <RouterLink

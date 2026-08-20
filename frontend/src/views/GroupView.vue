@@ -12,7 +12,6 @@ import type {
 } from '@/api/models'
 import { PencilIcon } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
 import EditGroupDialog from '@/components/group/EditGroupDialog.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
@@ -20,6 +19,7 @@ import GroupMembers from '@/components/group/GroupMembers.vue'
 import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
+import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Button } from '@/components/ui/button'
@@ -70,13 +70,12 @@ const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => 
   return memberships.value.find((membership) => membership.userId === userId)
 })
 
-const creatingGroup = ref<boolean>(false)
 const creatingThread = ref<boolean>(false)
 const editingGroup = ref<boolean>(false)
 </script>
 
 <template>
-  <AppLayout :active-group-id="groupId" @create-group="creatingGroup = true">
+  <AppLayout :active-group-id="groupId">
     <template v-if="group">
       <GroupHeader
         :title="group.title"
@@ -151,15 +150,20 @@ const editingGroup = ref<boolean>(false)
       </Button>
     </div>
 
+    <!-- What the member does. -->
     <template #rail>
       <StepList />
-      <StoryStatus v-if="group" :group="group" />
+      <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
+    </template>
+
+    <!-- What the member looks up while writing. -->
+    <template #infoRail>
+      <StoryDetails v-if="group" :group="group" />
       <FileList />
       <MemberList :memberships="memberships" />
     </template>
   </AppLayout>
 
-  <CreateGroupDialog v-model:open="creatingGroup" />
   <CreateThreadDialog v-model:open="creatingThread" :group-id="groupId" />
   <EditGroupDialog v-if="group" v-model:open="editingGroup" :group="group" />
 </template>

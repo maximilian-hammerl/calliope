@@ -2,30 +2,26 @@
 import { ChevronLeft, ChevronRight, PanelRight } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
-import { useListGroups } from '@/api/groups/groups'
-import type { GetCurrentUser200, ListGroups200ResultsItem } from '@/api/models'
+import type { GetCurrentUser200 } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import TopBar from '@/components/layout/TopBar.vue'
-import GroupList from '@/components/group/GroupList.vue'
 import RailLabel from '@/components/layout/RailLabel.vue'
 import RailToggle from '@/components/layout/RailToggle.vue'
 import ContextSheet from '@/components/layout/ContextSheet.vue'
 import BottomBar from '@/components/layout/BottomBar.vue'
 
 const props = defineProps<{ activeGroupId?: string }>()
-defineEmits<{ createGroup: [] }>()
-defineSlots<{ default: () => unknown; rail?: () => unknown }>()
+defineSlots<{
+  default: () => unknown
+  /** What the member does: next steps, the story's status. */
+  rail?: () => unknown
+  /** What the member looks up while writing: the story's own facts, who is here. */
+  infoRail?: () => unknown
+}>()
 
 const { data: userData } = useGetCurrentUser()
 const user = computed<GetCurrentUser200 | undefined>(() =>
   userData.value?.status === 200 ? userData.value.data : undefined,
-)
-
-// The rail lists every group the member belongs to, so it is the same query on every page and
-// vue-query serves it from cache after the first load.
-const { data: groupsData } = useListGroups({ limit: 100, sortAttribute: 'title', sortOrder: 'asc' })
-const groups = computed<ListGroups200ResultsItem[]>(() =>
-  groupsData.value?.status === 200 ? groupsData.value.data.results : [],
 )
 
 // Collapsing both rails plus the composer is the reading mode; there is no separate mode.
@@ -47,30 +43,26 @@ const sheetOpen = ref<boolean>(false)
     <TopBar v-if="user" :user="user" />
 
     <div class="flex min-h-0 flex-1 items-stretch">
-      <aside
-        v-if="leftOpen"
-        class="hidden w-[216px] flex-none flex-col gap-[6px] border-r border-line-3 bg-paper-2 px-[11px] py-4 md:flex"
-      >
-        <div class="flex items-center px-[5px] pb-[9px]">
-          <RailLabel>Meine Gruppen</RailLabel>
-          <button
-            type="button"
-            class="ml-auto rounded-md border border-line-4 px-[6px] text-[13px] leading-[1.1] text-ink-label"
-            aria-label="Gruppen einklappen"
-            @click="leftOpen = false"
-          >
-            <ChevronLeft :size="14" :stroke-width="1.5" />
-          </button>
-        </div>
-        <GroupList :groups="groups" :active-id="activeGroupId" @create="$emit('createGroup')" />
-      </aside>
-      <RailToggle
-        v-else
-        side="left"
-        label="Gruppen"
-        class="hidden md:flex"
-        @click="leftOpen = true"
-      />
+      <template v-if="hasRail && $slots.infoRail && railFits">
+        <aside
+          v-if="leftOpen"
+          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-r border-line-3 bg-paper-2 px-[14px] py-4 lg:flex"
+        >
+          <div class="flex items-center">
+            <RailLabel>Über die Gruppe</RailLabel>
+            <button
+              type="button"
+              class="ml-auto flex size-6 items-center justify-center rounded-md border border-line-4 text-ink-label"
+              aria-label="Über die Gruppe einklappen"
+              @click="leftOpen = false"
+            >
+              <ChevronLeft :size="14" :stroke-width="1.5" />
+            </button>
+          </div>
+          <slot name="infoRail" />
+        </aside>
+        <RailToggle v-else side="left" label="Über die Gruppe" @click="leftOpen = true" />
+      </template>
 
       <main class="flex min-w-0 flex-1 flex-col">
         <!-- Below `lg` the rail is a sheet, and this is the only way to it. Without it the
@@ -115,6 +107,7 @@ const sheetOpen = ref<boolean>(false)
 
         <ContextSheet v-else v-model:open="sheetOpen">
           <slot name="rail" />
+          <slot name="infoRail" />
         </ContextSheet>
       </template>
     </div>

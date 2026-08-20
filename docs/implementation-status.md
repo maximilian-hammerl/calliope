@@ -120,9 +120,16 @@ status, the next steps and the files had no route at all on a phone *or* a table
 
 Two departures from the specification, both deliberate. The bar holds **Gruppen and
 Mitglieder** rather than the mockup's four items, because Forum and Partner are items 8 and 4
-and do not exist yet. And the **left rail did not become a sheet**: its content is the group
-list, which the bar's own Gruppen destination already reaches, where the right rail's content
-had nowhere else to be.
+and do not exist yet.
+
+And the rails were **re-cut by purpose rather than by side**. The left rail stopped listing
+groups: the interviews describe a daily sweep — scan every group for new replies, then answer
+several — and a rail of bare titles cannot say which group changed, where the overview sorted
+by last activity can. So navigation went to the overview and the bottom bar, and the left rail
+became the story's reference card: genre, tropes, tense, perspective, content warnings, files,
+members. The right rail keeps what a member *does* — next steps, and the story status, now
+with a switcher instead of a trip through the edit dialog. On a phone the two merge into one
+sheet, action first.
 
 Every interactive target on every surface is now at least 44px on a phone, checked at 375×667
 as well as 375×812. Most of it came from three generated components — the button's `sm` and

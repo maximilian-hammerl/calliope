@@ -14,7 +14,6 @@ import type {
   ListThreads200ResultsItem,
 } from '@/api/models'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
@@ -26,6 +25,7 @@ import { useDraft } from '@/composables/useDraft'
 import PostComposer from '@/components/thread/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
+import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -79,9 +79,12 @@ const mayWrite = computed<boolean>(
     (group.value.role === 'writer' || group.value.role === 'administrator'),
 )
 
+const mayAdminister = computed<boolean>(
+  () => group.value?.status === 'joined' && group.value.role === 'administrator',
+)
+
 const draft = ref<string>('')
 const sendError = ref<string | undefined>(undefined)
-const creatingGroup = ref<boolean>(false)
 const creatingThread = ref<boolean>(false)
 
 const { mutateAsync: createPost, isPending: sending } = useCreatePost()
@@ -133,7 +136,7 @@ async function submit() {
 </script>
 
 <template>
-  <AppLayout :active-group-id="groupId" @create-group="creatingGroup = true">
+  <AppLayout :active-group-id="groupId">
     <template v-if="thread">
       <GroupHeader
         v-if="group"
@@ -210,14 +213,19 @@ async function submit() {
       </Button>
     </div>
 
+    <!-- What the member does. -->
     <template #rail>
       <StepList />
-      <StoryStatus v-if="group" :group="group" />
+      <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
+    </template>
+
+    <!-- What the member looks up while writing. -->
+    <template #infoRail>
+      <StoryDetails v-if="group" :group="group" />
       <FileList />
       <MemberList :memberships="memberships" />
     </template>
   </AppLayout>
 
-  <CreateGroupDialog v-model:open="creatingGroup" />
   <CreateThreadDialog v-model:open="creatingThread" :group-id="groupId" />
 </template>

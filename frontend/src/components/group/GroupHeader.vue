@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronLeft } from '@lucide/vue'
 import { computed } from 'vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import { countLabel } from '@/lib/format/formatTime'
@@ -19,6 +20,18 @@ const visibilityLabel = computed<string>(() =>
 
 <template>
   <div class="px-[18px] pt-5 md:px-10">
+    <!-- The way back. The rail used to list every group; now the overview is where one
+         switches, so every group page needs a door to it. -->
+    <div class="reading-column">
+      <RouterLink
+        :to="{ name: 'groups' }"
+        class="inline-flex min-h-11 items-center gap-[3px] text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+      >
+        <ChevronLeft :size="14" :stroke-width="1.5" />
+        Meine Gruppen
+      </RouterLink>
+    </div>
+
     <div class="reading-column flex flex-wrap items-baseline gap-3">
       <!-- A group title is 25px Newsreader regular, never bold. -->
       <h1 class="text-[25px] leading-[1.2] text-ink-1">

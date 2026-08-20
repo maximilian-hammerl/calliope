@@ -49,7 +49,7 @@ const creating = ref<boolean>(false)
 </script>
 
 <template>
-  <AppLayout @create-group="creating = true">
+  <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <!-- Above the heading, because an invitation is waiting on an answer and the groups
@@ -80,14 +80,14 @@ const creating = ref<boolean>(false)
           </p>
           <!-- Only below md: from there up the left rail carries this, and two buttons for
                one action on one screen is what this replaced. -->
-          <Button class="mt-5 md:hidden" @click="creating = true">
+          <Button class="mt-5" @click="creating = true">
             <Plus data-icon="inline-start" :stroke-width="1.5" />
             Gruppe gründen
           </Button>
         </div>
 
         <div v-else-if="hasLoaded">
-          <Button class="mb-6 md:hidden" @click="creating = true">
+          <Button class="mb-6" @click="creating = true">
             <Plus data-icon="inline-start" :stroke-width="1.5" />
             Gruppe gründen
           </Button>
