@@ -107,29 +107,17 @@ nowhere else, at every width. It used to sit in the left rail as well, which is 
 this rule replaced; when the rail stopped listing groups the page kept the only copy.
 
 **Every title takes a line under it saying what the surface is for.** One or two short
-sentences, informal, no exclamation: what is here, then what you can do with it. "Wer hier
-schreibt. Öffne ein Profil, um zu sehen, ob jemand zu dir passen könnte." · "Öffentliche
-Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben, sobald dich
-jemand einlädt." · "Dein Konto, und worüber du benachrichtigt wirst."
+sentences: what is here, then what you can do with it — "Wer hier schreibt. Öffne ein Profil, um
+zu sehen, ob jemand zu dir passen könnte." These surfaces are reached cold, from a bottom-bar tap
+or a mailed link, and a bare heading leaves the purpose to be guessed from the contents. Never
+describe the control ("Hier kannst du …"), and promise only what the surface does: a line about
+what is new is a lie until unread marks exist.
 
-It earns its place because these surfaces are reached cold — from a bottom-bar tap, an avatar
-menu, a mailed link — and a bare heading leaves the member to infer the purpose from the
-contents. Never describe the control ("Hier kannst du …"); say what the thing is. Promise only
-what the surface actually does: a line about what is new is a lie until unread marks exist.
-
-Three exceptions. A **status page** whose heading changes with the outcome carries the
-explanation as its body instead — a fixed subtitle would contradict the heading above it. A
-**rail or sheet** carries its mono label and nothing more on screen — the label is a
-typographic device, not a title — but a sheet still needs the sentence as an `sr-only`
-description: the dialog primitive points `aria-describedby` at one whether it exists or not,
-and a dangling reference promises a screen reader something it never finds. And where the subject has a description of its own — a group's blurb — that *is*
-the line, and no second one is written.
-
-**A "＋" action names the thing, not the act.** "＋ Gruppe", "＋ Thread", "＋ Schritt",
-"＋ Unterhaltung" — never "＋ Gruppe gründen". The plus already says *add*, so repeating the verb
-makes the button longer without saying more, and the verb is waiting in the dialog it opens
-("Gruppe gründen" is that dialog's title and its submit). The full phrase stays as the
-`aria-label`, because a screen reader gets no plus sign.
+Three exceptions. A **status page** whose heading changes with the outcome explains itself in its
+body instead. A **rail or sheet** shows its mono label alone — but a sheet still needs the
+sentence as an `sr-only` description, because the dialog primitive points `aria-describedby` at
+one whether or not it exists. And where the subject has its own description — a group's blurb —
+that *is* the line.
 
 **A destination is named the same everywhere.** The button that leads to Gruppen entdecken says
 "Gruppen entdecken", and the link back to Meine Gruppen says "Meine Gruppen" — the page's own
@@ -229,9 +217,9 @@ Editor einklappen · Editor ausklappen · Gruppen-Kontext · Gruppe bearbeiten �
 
 **„Meine Gruppen" means the ones you belong to.** Being allowed to read a public group is not
 belonging to it, and a list that mixes the two answers neither question — a member seeing three
-entries could not tell which were theirs. So the page and the rail both show joined groups only,
-public ones the member is not in live under **Gruppen entdecken**, and pending invitations are a
-section above the heading on Meine Gruppen. Three lists, one question each.
+entries could not tell which were theirs. So Meine Gruppen shows joined groups only, public ones
+the member is not in live under **Gruppen entdecken**, and pending invitations are a section above
+the heading. Three lists, one question each.
 
 **An invitation is answered where it is found.** It carries Beitreten and Ablehnen both in that
 section and on the group's own page, because deciding about three invitations should not be three
@@ -357,13 +345,11 @@ else this product does with a disabled control.
 the only looping animation in the product. No bounces, no attention-seeking motion; everything
 honours `prefers-reduced-motion`.
 
-**Selection is a rule, never a box.** The left rail lists groups the way the thread strip lists
-threads, turned on its side: a continuous 2px rule down the left of the column, the active
-segment in `--oak`, the rest in `--line-4`. Rows sit flush so the rule is unbroken, which is what
-says they are one set. The earlier treatment — the active row as raised paper with a hairline and
-a radius — was dropped: it read as a card rather than a position, and it left the other rows with
-no affordance at all. Hover matches the tabs exactly (text to `--ink-1`, rule one shade darker);
-no fill, or a hovered row would look more selected than the selected one.
+**Selection is a rule, never a box.** A 2px rule in `--oak` marks the current tab and the
+current bottom-bar item; the inactive ones keep a lighter rule so they read as the same kind of
+thing. Raised paper with a hairline and a radius was tried and dropped: it read as a card rather
+than a position, and left the other items with no affordance at all. Hover darkens the text and
+the rule, never fills — a hovered item would otherwise look more selected than the selected one.
 
 **The group title is the way back.** Above a thread it is a link to the group page, underlined on
 hover at 6px offset. On the group page itself it is the heading and links nowhere — the same
@@ -392,25 +378,23 @@ Mitglieder** today — the mockup's Forum and Partner are unbuilt features, and 
 something that does not exist is worse than a shorter bar. The active item takes the 2px
 `--accent` rule on its top edge, mirroring the top bar's underline.
 
+Threads stay tabs — a horizontally scrolling strip under the group title, never a dropdown. The
+composer is a one-line bar that expands on focus, collapsed by default. Prose stays 17px — never
+shrink the reading size. Every target is at least 44px (`--tap-min`).
+
 **Both rails hold group context, split by what a member does with it.** The left rail is
-reference — the story's own facts (genre, tropes, tense, perspective, content warnings), its
-files, who is in it — the things checked while writing a post. The right rail is action: the
-next steps, and the story's status with the control that changes it. Neither appears on the
-groups overview, which has no group to be about.
+reference: the story's own facts, its files, who is in it — what a member checks while writing.
+The right rail is action: the next steps, and the story's status with the control that changes
+it. Neither appears on the groups overview, which has no group to be about.
 
-The rails no longer navigate. The group list left them for the overview page, which is where
-the daily loop starts anyway: members described scanning every group for new replies before
-answering any, and a rail of bare titles cannot answer "which one changed" — the overview,
-sorted by last activity, can. Every group page carries "‹ Meine Gruppen" back to it.
+Neither rail navigates. The group list moved to the overview page, because the daily loop starts
+there — members described scanning every group for new replies before answering any, and a rail
+of bare titles cannot say which one changed where the overview, sorted by last activity, can.
+Every group page carries "‹ Meine Gruppen" back to it.
 
-On a phone both rails become **one** sheet, action first and reference below, so there is a
-single button rather than two competing strips. The order therefore differs by width: reference
-sits left of the text on a desktop and below the actions on a phone. That is the price of one
-button, paid deliberately. Threads stay tabs — a horizontally scrolling
-strip under the group title. Both rails become sheets reachable from the group header ("Gruppen-Kontext")
-rather than drawers that cover the text. The composer is a fixed single-line bar that expands to
-full height when focused. Prose stays 17px — never shrink the reading size. Every target is at
-least 44px (`--tap-min`).
+On a phone the two become **one** sheet, opened from a strip above the content, action first and
+reference below: one button rather than two competing strips. The cost is that the order differs
+by width — reference sits left of the text on a desktop and below the actions on a phone.
 
 ## Iconography
 
