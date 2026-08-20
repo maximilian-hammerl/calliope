@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useGetGroup } from '@/api/groups/groups'
+import { useGetGroup, useStartGroupConversation } from '@/api/groups/groups'
+import { getListChatsQueryKey } from '@/api/chats/chats'
+import { queryClient } from '@/lib/api/queryClient'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { ApiError } from '@/lib/api/apiFetch'
+import { openChatDialog } from '@/lib/chat/openChatDialog'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { useListThreads } from '@/api/threads/threads'
 import { useListMemberships } from '@/api/memberships/memberships'
@@ -10,7 +15,7 @@ import type {
   ListMemberships200ResultsItem,
   ListThreads200ResultsItem,
 } from '@/api/models'
-import { PencilIcon } from '@lucide/vue'
+import { MessageCircle, PencilIcon } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
 import EditGroupDialog from '@/components/group/EditGroupDialog.vue'
@@ -68,6 +73,32 @@ const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => 
 
 const creatingThread = ref<boolean>(false)
 const editingGroup = ref<boolean>(false)
+
+/** A visitor: somebody reading a public group they are in no relation to. */
+const isVisitor = computed<boolean>(() => group.value !== undefined && group.value.status === null)
+
+const { mutateAsync: startConversation, isPending: startingConversation } =
+  useStartGroupConversation()
+const conversationError = ref<string | undefined>(undefined)
+
+/** Creates the chat with every administrator invited, then opens the messages dialog on it. */
+async function askIntoGroup() {
+  conversationError.value = undefined
+  try {
+    const created = await startConversation({ groupId: groupId.value })
+    if (created.status !== 201) {
+      return
+    }
+    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+    openChatDialog(created.data.id)
+  } catch (error) {
+    // The ungoverned-group hole seen from outside: there is nobody to ask.
+    conversationError.value =
+      error instanceof ApiError && error.status === 409
+        ? 'In dieser Gruppe kann gerade niemand einladen.'
+        : 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+  }
+}
 </script>
 
 <template>
@@ -119,6 +150,24 @@ const editingGroup = ref<boolean>(false)
             <PencilIcon :stroke-width="1.5" />
             Gruppe bearbeiten
           </Button>
+
+          <!-- The visitor's one action, in the administrator's slot — the two never meet.
+               It asks the people, not the system: a chat with the administrators, no
+               join-request machinery. -->
+          <Button
+            v-else-if="isVisitor"
+            size="sm"
+            class="mt-7"
+            :disabled="startingConversation"
+            @click="askIntoGroup"
+          >
+            <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
+            Unterhaltung beginnen
+          </Button>
+
+          <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+            {{ conversationError }}
+          </p>
 
           <GroupMembers
             :group-id="groupId"

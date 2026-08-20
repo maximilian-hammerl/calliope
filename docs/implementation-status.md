@@ -48,7 +48,7 @@ opens a first door, still unmoderated.
 | Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Chats are titled and invite-based, so **no** "message this member".                              |
 | Public forum     | Not started.                                                                                                                                                              |
-| Writing partners | Built as **Storyideen**: board, detail page, open/closed status, language filter, own-ideas view. **No** contact path yet — "Unterhaltung beginnen" is the next step.     |
+| Writing partners | Built as **Storyideen**: board, detail page, open/closed status, language filter, own-ideas view, and "Unterhaltung beginnen" — a chat inviting the author.               |
 | Administration   | Not started.                                                                                                                                                              |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. **No** data export, no GDPR configuration.                          |
 
@@ -155,10 +155,12 @@ Umfang, Schreibrhythmus, Schreibstil and Verfügbarkeit were cut until someone m
 story block mirrors `writing_group` column for column so an idea can one day become a group by
 copying.
 
-The two follow-ups, in order: **"Unterhaltung beginnen"** on an idea — creating a chat titled
-after it and inviting the author, which is §11's "public idea → private conversation" flow
-built from parts that already exist; then **"Gruppe aus Idee gründen"**, the metadata copy.
-And item 4 below stops being optional the moment testers get this board.
+**"Unterhaltung beginnen" is built**, on ideas and beyond them: on an idea it creates a chat
+titled after it and invites the author — §11's "public idea → private conversation", assembled
+from parts that already existed — and on a public group's page it invites every joined
+administrator, which is how a stranger asks into a group without any join-request machinery.
+One follow-up remains: **"Gruppe aus Idee gründen"**, the metadata copy. And item 4 below
+stops being optional the moment testers get this board.
 
 ### 4. Block a member
 

@@ -1,4 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import createConversation from "./group/create_conversation.ts";
 import getGroup from "./group/get_group.ts";
 import updateGroup from "./group/update_group.ts";
 import memberships from "./group/memberships.ts";
@@ -9,6 +10,7 @@ import threads from "./group/threads.ts";
 export default new OpenAPIHono()
   .route("/", getGroup)
   .route("/", updateGroup)
+  .route("/", createConversation)
   .route("/memberships", memberships)
   .route("/steps", steps)
   .route("/threads", threads);

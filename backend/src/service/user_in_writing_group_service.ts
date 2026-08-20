@@ -126,6 +126,21 @@ async function insertInvitation(
   });
 }
 
+/** Who can act on a request to get in: every administrator who has actually accepted. */
+async function selectJoinedAdministratorIds(
+  writingGroupId: string,
+): Promise<Array<string>> {
+  const administrators = await db
+    .selectFrom("userInWritingGroup")
+    .select("userId")
+    .where("writingGroupId", "=", writingGroupId)
+    .where("role", "=", "administrator")
+    .where("status", "=", "joined")
+    .execute();
+
+  return administrators.map(({ userId }) => userId);
+}
+
 async function selectMembership(
   writingGroupId: string,
   userId: string,
@@ -235,6 +250,7 @@ async function deleteMembership(
 }
 
 export const UserInWritingGroupService = {
+  selectJoinedAdministratorIds,
   insertInvitation,
   selectMembership,
   listMemberships,

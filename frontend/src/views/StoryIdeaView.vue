@@ -5,8 +5,12 @@ import {
   getListStoryIdeasQueryKey,
   useDeleteStoryIdea,
   useGetStoryIdea,
+  useStartStoryIdeaConversation,
 } from '@/api/story-ideas/story-ideas'
+import { getListChatsQueryKey } from '@/api/chats/chats'
 import { useGetCurrentUser } from '@/api/auth/auth'
+import { MessageCircle } from '@lucide/vue'
+import { openChatDialog } from '@/lib/chat/openChatDialog'
 import type { GetStoryIdea200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { queryClient } from '@/lib/api/queryClient'
@@ -27,6 +31,25 @@ const { data, isPending, error } = useGetStoryIdea(ideaId)
 const idea = computed<GetStoryIdea200 | undefined>(() =>
   data.value?.status === 200 ? data.value.data : undefined,
 )
+
+const { mutateAsync: startConversation, isPending: startingConversation } =
+  useStartStoryIdeaConversation()
+const conversationError = ref<string | undefined>(undefined)
+
+/** Creates the chat with the author invited, then opens the messages dialog on it. */
+async function askAboutIdea() {
+  conversationError.value = undefined
+  try {
+    const created = await startConversation({ ideaId: ideaId.value })
+    if (created.status !== 201) {
+      return
+    }
+    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+    openChatDialog(created.data.id)
+  } catch {
+    conversationError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+  }
+}
 
 const notFound = computed<boolean>(
   () => error.value instanceof ApiError && error.value.status === 404,
@@ -113,6 +136,15 @@ async function remove() {
                 Entfernen
               </Button>
             </div>
+
+            <!-- The visitor's one action, solid for that reason. Only while the idea is open:
+                 closed means the author asked not to be asked, and the API enforces it too. -->
+            <div v-else-if="idea.status === 'open'" class="ml-auto">
+              <Button size="sm" :disabled="startingConversation" @click="askAboutIdea">
+                <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
+                Unterhaltung beginnen
+              </Button>
+            </div>
           </div>
 
           <p
@@ -124,6 +156,10 @@ async function remove() {
 
           <p v-if="removalError" class="mt-3 text-[12.5px] text-destructive" role="alert">
             {{ removalError }}
+          </p>
+
+          <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+            {{ conversationError }}
           </p>
 
           <div class="mt-2 text-[12.5px] text-ink-5">

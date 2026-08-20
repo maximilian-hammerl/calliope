@@ -188,6 +188,12 @@ Einstellungen, Abmelden. That split is also what keeps the bar from growing: two
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
 have pushed harder.
 
+**„Unterhaltung beginnen" is one action with one name.** On a story idea it invites the
+author; on a public group's page it invites the administrators. Both are the same gesture — a
+person asking people, through a chat invitation the other side must accept — so the label never
+varies. It renders as the visitor's one solid button, in the same slot the owner's own controls
+occupy: the two never meet.
+
 **„Mitteilungen", not „Benachrichtigungen".** The shorter word is the one German interfaces use
 for this (it is Apple's), and it leaves „Nachrichten" free for private messages later.
 

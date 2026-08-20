@@ -5,6 +5,7 @@ import type {
   UserInChatGroupStatus,
 } from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
+import { NotificationService } from "@/src/service/notification_service.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -111,10 +112,14 @@ async function selectChatGroup(
     .executeTakeFirst();
 }
 
-/** The founder joins outright; everybody else is invited and has to accept. */
+/**
+ * The founder joins outright; everybody else is invited and has to accept. Invitations ride
+ * the same transaction as the chat, so a conversation cannot exist half-announced.
+ */
 async function insertChatGroup(
   creator: User,
   title: string,
+  inviteeIds: ReadonlyArray<string> = [],
 ): Promise<ChatGroup> {
   const id = await db.transaction().execute(async (transaction) => {
     const chatGroup = await transaction
@@ -132,6 +137,23 @@ async function insertChatGroup(
         status: "joined",
       })
       .execute();
+
+    for (const inviteeId of inviteeIds) {
+      await transaction
+        .insertInto("userInChatGroup")
+        .values({
+          userId: inviteeId,
+          chatGroupId: chatGroup.id,
+          status: "invited",
+        })
+        .execute();
+
+      await NotificationService.insertChatInvitationNotification(transaction, {
+        recipientId: inviteeId,
+        chatGroupId: chatGroup.id,
+        actorId: creator.id,
+      });
+    }
 
     return chatGroup.id;
   });

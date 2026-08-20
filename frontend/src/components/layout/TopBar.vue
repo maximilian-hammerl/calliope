@@ -17,6 +17,7 @@ import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import SearchField from '@/components/search/SearchField.vue'
+import { requestedChatId } from '@/lib/chat/openChatDialog'
 import NotificationsDialog from '@/components/notification/NotificationsDialog.vue'
 import MessagesDialog from '@/components/chat/MessagesDialog.vue'
 import SettingsDialog from '@/components/settings/SettingsDialog.vue'
@@ -66,6 +67,15 @@ function openChat(chatGroupId: string) {
   startChatAt.value = chatGroupId
   showingMessages.value = true
 }
+
+// Pages request a chat through this ref when they start a conversation; see openChatDialog.ts.
+watch(requestedChatId, (chatGroupId) => {
+  if (chatGroupId === undefined) {
+    return
+  }
+  openChat(chatGroupId)
+  requestedChatId.value = undefined
+})
 const showingSettings = ref<boolean>(false)
 
 const { mutateAsync: logout, isPending } = useLogoutUser()
