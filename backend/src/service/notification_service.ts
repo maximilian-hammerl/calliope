@@ -403,13 +403,22 @@ async function insertVisibilityChangeNotifications(
 }
 
 /** The one chat notification: messages are counted by the chat list, not announced here. */
-async function insertChatInvitationNotification(
+async function insertChatInvitationNotifications(
   transaction: Transaction,
-  invitation: { recipientId: string; chatGroupId: string; actorId: string },
+  invitation: {
+    recipientIds: ReadonlyArray<string>;
+    chatGroupId: string;
+    actorId: string;
+  },
 ): Promise<void> {
   await transaction
     .insertInto("notification")
-    .values({ ...invitation, type: "invited_to_chat_group" })
+    .values(invitation.recipientIds.map((recipientId) => ({
+      recipientId,
+      chatGroupId: invitation.chatGroupId,
+      actorId: invitation.actorId,
+      type: "invited_to_chat_group" as const,
+    })))
     .execute();
 }
 
@@ -418,7 +427,7 @@ export const NotificationService = {
   countUnread,
   markAllRead,
   insertInvitationNotification,
-  insertChatInvitationNotification,
+  insertChatInvitationNotifications,
   insertRoleChangeNotification,
   insertGroupActivityNotifications,
   insertInvitationAcceptedNotification,

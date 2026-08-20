@@ -138,18 +138,18 @@ async function insertChatGroup(
       })
       .execute();
 
-    for (const inviteeId of inviteeIds) {
+    if (inviteeIds.length > 0) {
       await transaction
         .insertInto("userInChatGroup")
-        .values({
-          userId: inviteeId,
+        .values(inviteeIds.map((userId) => ({
+          userId,
           chatGroupId: chatGroup.id,
-          status: "invited",
-        })
+          status: "invited" as const,
+        })))
         .execute();
 
-      await NotificationService.insertChatInvitationNotification(transaction, {
-        recipientId: inviteeId,
+      await NotificationService.insertChatInvitationNotifications(transaction, {
+        recipientIds: inviteeIds,
         chatGroupId: chatGroup.id,
         actorId: creator.id,
       });

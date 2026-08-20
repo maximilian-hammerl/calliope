@@ -130,13 +130,16 @@ function listStoryIdeas(
       .$if(query.createdBy !== undefined, (queryBuilder) =>
         // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
-      .$if(query.excludeCreatedBy !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-        queryBuilder.where(
-          "storyIdea.createdBy",
-          "!=",
-          query.excludeCreatedBy!,
-        ))
+      .$if(
+        query.excludeCreatedBy !== undefined,
+        (queryBuilder) =>
+          queryBuilder.where(
+            "storyIdea.createdBy",
+            "!=",
+            // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+            query.excludeCreatedBy!,
+          ),
+      )
       .$if(
         query.status !== "any",
         (queryBuilder) =>

@@ -80,8 +80,8 @@ async function insertInvitation(
       return undefined;
     }
 
-    await NotificationService.insertChatInvitationNotification(transaction, {
-      recipientId: userId,
+    await NotificationService.insertChatInvitationNotifications(transaction, {
+      recipientIds: [userId],
       chatGroupId,
       actorId: invitedBy,
     });
