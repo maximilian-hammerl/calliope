@@ -69,27 +69,30 @@ const TAG_FIELDS = [
     <FieldDescription>Mit Komma trennen.</FieldDescription>
   </Field>
 
-  <Field>
-    <FieldLabel for="group-tense">Zeitform</FieldLabel>
-    <Input
-      id="group-tense"
-      v-model="metadata.tense"
-      class="h-11 md:h-9"
-      name="tense"
-      :maxlength="LIMIT.tense.maxLength"
-      placeholder="z. B. Vergangenheit"
-    />
-  </Field>
+  <!-- Typically a word or two each, so they share a line — same as the story-idea dialog. -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <Field>
+      <FieldLabel for="group-tense">Zeitform</FieldLabel>
+      <Input
+        id="group-tense"
+        v-model="metadata.tense"
+        class="h-11 md:h-9"
+        name="tense"
+        :maxlength="LIMIT.tense.maxLength"
+        placeholder="z. B. Vergangenheit"
+      />
+    </Field>
 
-  <Field>
-    <FieldLabel for="group-perspective">Perspektive</FieldLabel>
-    <Input
-      id="group-perspective"
-      v-model="metadata.perspective"
-      class="h-11 md:h-9"
-      name="perspective"
-      :maxlength="LIMIT.perspective.maxLength"
-      placeholder="z. B. Dritte Person, begrenzt"
-    />
-  </Field>
+    <Field>
+      <FieldLabel for="group-perspective">Perspektive</FieldLabel>
+      <Input
+        id="group-perspective"
+        v-model="metadata.perspective"
+        class="h-11 md:h-9"
+        name="perspective"
+        :maxlength="LIMIT.perspective.maxLength"
+        placeholder="z. B. Dritte Person, begrenzt"
+      />
+    </Field>
+  </div>
 </template>
