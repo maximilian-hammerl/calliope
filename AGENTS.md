@@ -19,8 +19,12 @@ Each project carries its own conventions; read the one you are working in:
 - **Pin exact dependency versions.** No `^` or `~` ranges, in either `deno.jsonc` or
   `package.json`. `deno add` writes a caret; rewrite it.
 - **Comment the non-obvious, and only that.** Explain why a thing is the way it is when it
-  would otherwise read as arbitrary. Keep it to a couple of lines; change history belongs in
-  git.
+  would otherwise read as arbitrary.
+- **Keep comments short: one or two lines.** A long comment is overwhelming, and most people
+  skip it entirely, so a rule buried in six lines is a rule nobody reads. State the reason and
+  stop. What was tried, what broke, and what it measured belong in the commit message, which
+  can be as long as it needs to be. Self-explanatory names get no comment at all, and a
+  convention written down here is not repeated at each use site.
 - **`type`, never `interface`.**
 - **Imports use each project's `@/` alias** rather than climbing out of deep directories.
   The two differ: in the backend it points at the project root, in the frontend at `src/`.

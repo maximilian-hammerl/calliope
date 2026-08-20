@@ -75,11 +75,10 @@ services:
       migrate:
         condition: service_completed_successfully
 
-    # /api/health reports 503 when a database is unreachable, which restarts the container
-    # rather than leaving it serving errors. Addressed by IP: `localhost` resolves to ::1
-    # first, and the server listens on 0.0.0.0.
+    # /api/health reports 503 when a database is unreachable, so the container restarts rather
+    # than serving errors. The binary asks itself: distroless has no shell for CMD-SHELL.
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8000/api/health"]
+      test: ["CMD", "/calliope", "--health-check"]
       interval: 10s
       timeout: 5s
       retries: 5

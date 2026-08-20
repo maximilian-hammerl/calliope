@@ -1,22 +1,7 @@
 /**
- * Fixed development data, so nobody has to build a group, a thread and four members by hand
- * every time they want to look at something.
+ * Fixed development data, so nobody builds a group, a thread and five members by hand.
  *
- * Rows carry hard-coded ids, which is the point: a URL you bookmarked keeps working after a
- * re-seed. Passwords go through the real `hashPassword`, because scrypt lives in the
- * application and pgcrypto was deliberately removed — a hard-coded hash would rot silently
- * the day its parameters changed, and the seeded accounts would stop being able to sign in
- * with nothing to say why.
- *
- * Inserted through Kysely rather than the services: the services generate their own ids, and
- * fixed ids are worth more here than reusing them. Everything the *database* does still
- * happens — `invited_at`, `joined_at` and `last_activity_at` are triggers, so they fire
- * either way. What is restated rather than invoked is service-level behaviour: the
- * notification an invitation produces is written out below, so if that rule changes this file
- * has to change with it. Kysely keeps it honest about the schema — a renamed column fails
- * `deno check` rather than at run time.
- *
- *     deno task seed
+ *     deno task db:seed
  */
 import { db } from "@/src/database/client.ts";
 import { hashPassword } from "@/src/util/password.ts";
@@ -25,10 +10,7 @@ import { getRequiredEnvVariable } from "@/src/util/env.ts";
 /** The one password every seeded account shares. Local only — see the guard below. */
 const PASSWORD = "calliope";
 
-/**
- * Obviously synthetic, so a seeded row is recognisable in a query, and stable, so links to
- * one keep working. The shape is a valid uuidv7; only the default generates a real timestamp.
- */
+// Obviously synthetic and stable: recognisable in a query, and links keep working.
 const id = (suffix: string) =>
   `01a00000-0000-7000-8000-${suffix.padStart(12, "0")}`;
 
@@ -55,15 +37,11 @@ const NOTIFICATION = {
   chatInvitation: id("0a2"),
 } as const;
 
-/**
- * This deletes rows. A seed pointed at the deployed database would be a bad afternoon, so it
- * refuses anything that is not obviously local unless it is told twice.
- */
 function assertLocalDatabase(): void {
   const url = new URL(getRequiredEnvVariable("DATABASE_URL"));
-  const isLocal = ["localhost", "127.0.0.1", "::1", "db"].includes(
-    url.hostname,
-  );
+  // Not "db": that is the compose service name in production as much as in development, so
+  // accepting it would let the containerised seed wipe production without --force.
+  const isLocal = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
 
   if (!isLocal && !Deno.args.includes("--force")) {
     console.error(
@@ -74,20 +52,15 @@ function assertLocalDatabase(): void {
   }
 }
 
-/**
- * Only what this file created, found by its own ids, so a half-built group somebody is in the
- * middle of testing survives a re-seed. Users cascade to everything they own, which covers
- * most of it; the two groups are removed explicitly because their creator is not their only
- * member.
- */
+// Only its own rows, so half-built state survives a re-seed. Users cascade; the groups need
+// removing explicitly because their creator is not their only member.
 async function removePreviousSeed(): Promise<void> {
   await db.deleteFrom("writingGroup").where("id", "in", Object.values(GROUP))
     .execute();
   await db.deleteFrom("chatGroup").where("id", "in", Object.values(CHAT))
     .execute();
-  // By name as well as by id: the seed owns these four usernames. Matching only on id would
-  // leave an account somebody made by hand as `mira` in the way, and no re-run could clear it
-  // — the same trap if the ids here are ever renumbered.
+  // By name as well as by id: on id alone, an account made by hand as `mira` would block
+  // every re-run.
   await db
     .deleteFrom("user")
     .where((eb) =>
@@ -286,11 +259,12 @@ async function seed(): Promise<void> {
   ]).execute();
 }
 
-assertLocalDatabase();
-await removePreviousSeed();
-await seed();
+export async function seedDatabase() {
+  assertLocalDatabase();
+  await removePreviousSeed();
+  await seed();
 
-console.log(`Seeded. Every account's password is "${PASSWORD}".
+  console.log(`Seeded. Every account's password is "${PASSWORD}".
 
   mira         administrator of both groups, has an unpublished draft
   annelie      writer in Der Erinnerungsmarkt, in the chat
@@ -302,4 +276,9 @@ console.log(`Seeded. Every account's password is "${PASSWORD}".
   /groups/${GROUP.market}/threads/${THREAD.plot}
   /groups/${GROUP.workshop}`);
 
-await db.destroy();
+  Deno.exit(0);
+}
+
+if (import.meta.main) {
+  await seedDatabase();
+}

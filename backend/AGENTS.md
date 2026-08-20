@@ -26,7 +26,7 @@ Three things about it are deliberate:
 - **Real password hashing.** It calls `hashPassword`, because scrypt lives in the application
   and pgcrypto was removed on purpose. A hard-coded hash would rot the day its parameters
   changed and the accounts would silently stop being able to sign in.
-- **It owns its four usernames.** Cleanup matches id *or* username, so an account somebody made
+- **It owns its five usernames.** Cleanup matches id *or* username, so an account somebody made
   by hand as `mira` cannot block a re-run — and neither can renumbering the ids later.
 
 It refuses any `DATABASE_URL` host that is not obviously local unless passed `--force`, because
