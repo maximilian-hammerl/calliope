@@ -126,25 +126,31 @@ async function remove(membership: ListMemberships200ResultsItem) {
         :key="membership.userId"
         class="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-1 border-b border-line-3 py-2"
       >
-        <UserAvatar :username="membership.username" />
+        <!-- The avatar and both lines are inside the link: the row already reads as one
+             tappable block, and a 20px name inside it did not. -->
+        <RouterLink
+          :to="{ name: 'member', params: { userId: membership.userId } }"
+          class="group flex min-h-11 min-w-0 items-center gap-3"
+        >
+          <UserAvatar :username="membership.username" />
 
-        <div class="flex min-w-0 flex-col">
-          <div class="flex flex-wrap items-baseline gap-x-3">
-            <RouterLink
-              :to="{ name: 'member', params: { userId: membership.userId } }"
-              class="min-w-0 truncate text-[13.5px] text-ink-2 underline-offset-[6px] hover:underline"
-            >
-              {{ membership.username }}
-            </RouterLink>
-            <span class="text-[12px] whitespace-nowrap text-ink-5">
-              {{ ROLE_LABELS[membership.role] ?? membership.role }}
-              <template v-if="membership.status === 'invited'">· eingeladen</template>
+          <span class="flex min-w-0 flex-col">
+            <span class="flex flex-wrap items-baseline gap-x-3">
+              <span
+                class="min-w-0 truncate text-[13.5px] text-ink-2 underline-offset-[6px] group-hover:underline"
+              >
+                {{ membership.username }}
+              </span>
+              <span class="text-[12px] whitespace-nowrap text-ink-5">
+                {{ ROLE_LABELS[membership.role] ?? membership.role }}
+                <template v-if="membership.status === 'invited'">· eingeladen</template>
+              </span>
             </span>
-          </div>
-          <span v-if="membershipDate(membership)" class="text-[11.5px] text-ink-6">
-            {{ membershipDate(membership) }}
+            <span v-if="membershipDate(membership)" class="text-[11.5px] text-ink-6">
+              {{ membershipDate(membership) }}
+            </span>
           </span>
-        </div>
+        </RouterLink>
 
         <!-- Leaving is the member's own act and lives elsewhere, so the viewer's own row
              carries no remove control even for an administrator. -->
