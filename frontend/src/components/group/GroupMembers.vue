@@ -135,7 +135,12 @@ async function remove(membership: ListMemberships200ResultsItem) {
 
         <div class="flex min-w-0 flex-col">
           <div class="flex flex-wrap items-baseline gap-x-3">
-            <span class="min-w-0 truncate text-[13.5px] text-ink-2">{{ membership.username }}</span>
+            <RouterLink
+              :to="{ name: 'member', params: { userId: membership.userId } }"
+              class="min-w-0 truncate text-[13.5px] text-ink-2 underline-offset-[6px] hover:underline"
+            >
+              {{ membership.username }}
+            </RouterLink>
             <span class="text-[12px] whitespace-nowrap text-ink-5">
               {{ ROLE_LABELS[membership.role] ?? membership.role }}
               <template v-if="membership.status === 'invited'">· eingeladen</template>

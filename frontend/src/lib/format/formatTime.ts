@@ -25,6 +25,8 @@ const DAY_MONTH_AND_YEAR = new Intl.DateTimeFormat(LOCALE, {
   year: 'numeric',
 })
 
+const MONTH_AND_YEAR = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' })
+
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
@@ -52,6 +54,11 @@ export function formatActivityTime(isoTimestamp: string, now: Date = new Date())
   return at.getFullYear() === now.getFullYear()
     ? DAY_AND_MONTH.format(at)
     : DAY_MONTH_AND_YEAR.format(at)
+}
+
+/** Absolute, and only to the month: `formatActivityTime` would say "gerade eben" here. */
+export function formatJoinedDate(isoTimestamp: string): string {
+  return MONTH_AND_YEAR.format(new Date(isoTimestamp))
 }
 
 /** "14 Beiträge", "1 Beitrag" — the design system requires a noun beside every number. */

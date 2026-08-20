@@ -68,7 +68,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
           {{ entry.heading }}
         </div>
 
-        <!-- Groups and threads lead somewhere; a member does not yet, so it is not a link. -->
+        <!-- Every kind of result leads somewhere; a member to their profile. -->
         <template v-if="entry.key === 'groups'">
           <RouterLink
             v-for="group in results?.groups.results"
@@ -97,13 +97,14 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
         </template>
 
         <template v-else>
-          <div
+          <RouterLink
             v-for="user in results?.users.results"
             :key="user.id"
-            class="flex min-h-[38px] items-center px-[14px] py-[7px] text-[13px] text-ink-2"
+            :to="{ name: 'member', params: { userId: user.id } }"
+            class="flex min-h-[38px] items-center px-[14px] py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
             {{ user.username }}
-          </div>
+          </RouterLink>
         </template>
 
         <p

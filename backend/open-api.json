@@ -8158,6 +8158,215 @@
         }
       }
     },
+    "/api/users/{userId}": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Read a member's profile",
+        "description": "The name and the date they joined. Nothing here is gated: a username is public within the platform, and a member list already shows both.",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The member's profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "username": { "type": "string" },
+                    "createdAt": { "type": "string", "format": "date-time" }
+                  },
+                  "required": ["id", "username", "createdAt"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No member has this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "query": {
         "tags": ["notifications"],

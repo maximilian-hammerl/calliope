@@ -33,6 +33,12 @@ export const routes: Array<RouteRecordRaw> = [
     name: 'thread',
     component: () => import('../views/ThreadView.vue'),
   },
+  // No top-bar entry: a third nav word does not fit a 375px phone.
+  {
+    path: '/members/:userId',
+    name: 'member',
+    component: () => import('../views/MemberView.vue'),
+  },
   {
     path: '/login',
     name: 'login',

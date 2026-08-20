@@ -64,6 +64,13 @@ export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
  */
 export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
 
+/** Separate from `USER_RESPONSE` so the picker and search keep sending two fields. */
+export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
+  id: true,
+  username: true,
+  createdAt: true,
+});
+
 /**
  * A notification as the interface needs it, discriminated on `type` so each kind carries the
  * subjects it is about and nothing else — the CHECK constraint on the table, expressed in the

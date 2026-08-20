@@ -21,6 +21,11 @@ export type User = Pick<
 /** What one member may see of another. Deliberately narrower than {@link User}. */
 export type PublicUser = Pick<Selectable<DatabaseUser>, "id" | "username">;
 
+export type UserProfile = Pick<
+  Selectable<DatabaseUser>,
+  "id" | "username" | "createdAt"
+>;
+
 export type UserSession =
   & Pick<
     Selectable<DatabaseUserSession>,
@@ -212,9 +217,20 @@ function listUsers(query: ListQuery): Promise<ListResults<PublicUser>> {
   );
 }
 
+async function selectUserProfile(
+  userId: string,
+): Promise<UserProfile | undefined> {
+  return await db
+    .selectFrom("user")
+    .select(["id", "username", "createdAt"])
+    .where("id", "=", userId)
+    .executeTakeFirst();
+}
+
 export const UserService = {
   insertUser,
   listUsers,
+  selectUserProfile,
   selectUser,
   insertSessionForUser,
   selectUserForSession,
