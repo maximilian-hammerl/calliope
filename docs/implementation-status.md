@@ -51,7 +51,7 @@ the inside, but still no caretaker.
 | Area             | State                                                                                                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
-| Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
+| Writing groups   | Member-created, private/public, invitations with acceptance, roles, group discussions, next steps. **No** files, **no** way for a member to leave (#26) and **no** way to change a role once given (#27). |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. "Unterhaltung beginnen" opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea. |
@@ -184,7 +184,7 @@ of their own. `writing_group.blurb` became `synopsis` in the same change, so an 
 it becomes name their long text the same way.
 
 **A carousel view** (issue #20) reads the board one idea at a time, with the depth of the detail
-page and arrow keys, swipe and buttons to move. Its set is fixed rather than inherited — open,
+page and two buttons to move between them. Its set is fixed rather than inherited — open,
 unread, not your own, newest first — which is why the route carries only the idea and no filters.
 It walks by **id, not by position**: `QUERY /story-ideas/carousel` answers with an idea and the two
 either side of it, so somebody posting an idea while you read cannot shift you sideways, the way an
