@@ -52,6 +52,10 @@ async function askAboutIdea() {
   }
 }
 
+function openGroup(groupId: string) {
+  void router.push({ name: 'group', params: { groupId } })
+}
+
 const foundingGroup = ref<boolean>(false)
 
 /** Field for field, because the idea's story block mirrors writing_group by design. */
@@ -248,6 +252,6 @@ async function remove() {
     v-if="idea"
     v-model:open="foundingGroup"
     :initial="groupInitialValues"
-    @saved="$router.push({ name: 'group', params: { groupId: $event } })"
+    @saved="openGroup"
   />
 </template>

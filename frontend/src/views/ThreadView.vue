@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetThread, useListThreads } from '@/api/threads/threads'
@@ -36,6 +36,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
+const router = useRouter()
 const queryClient = useQueryClient()
 
 const groupId = computed<string>(() => String(route.params.groupId))
@@ -123,6 +124,10 @@ const mayAdminister = computed<boolean>(
 
 const draft = ref<string>('')
 const sendError = ref<string | undefined>(undefined)
+function goToGroup() {
+  void router.push({ name: 'group', params: { groupId: groupId.value } })
+}
+
 const creatingThread = ref<boolean>(false)
 
 const { mutateAsync: createPost, isPending: sending } = useCreatePost()
@@ -267,14 +272,7 @@ async function submit() {
       <p class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
         Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
       </p>
-      <Button
-        variant="outline"
-        size="sm"
-        class="mt-5"
-        @click="$router.push({ name: 'group', params: { groupId } })"
-      >
-        Zur Gruppe
-      </Button>
+      <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>
     </div>
 
     <!-- What the member does. -->

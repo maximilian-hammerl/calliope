@@ -5,6 +5,7 @@
  * its author.
  */
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { watchDebounced } from '@vueuse/core'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { Plus } from '@lucide/vue'
@@ -65,6 +66,12 @@ const ideas = computed<ListStoryIdeas200ResultsItem[]>(() =>
 )
 
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
+const router = useRouter()
+
+function openIdea(ideaId: string) {
+  void router.push({ name: 'storyIdea', params: { ideaId } })
+}
 
 const creating = ref<boolean>(false)
 </script>
@@ -151,8 +158,5 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <StoryIdeaDialog
-    v-model:open="creating"
-    @saved="(id) => $router.push({ name: 'storyIdea', params: { ideaId: id } })"
-  />
+  <StoryIdeaDialog v-model:open="creating" @saved="openIdea" />
 </template>

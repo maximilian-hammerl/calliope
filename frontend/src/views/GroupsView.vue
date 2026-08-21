@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { keepPreviousData } from '@tanstack/vue-query'
@@ -91,6 +92,12 @@ const { data: invitationsData } = useListGroups({
 const invitations = computed<ListGroups200ResultsItem[]>(() =>
   invitationsData.value?.status === 200 ? invitationsData.value.data.results : [],
 )
+
+const router = useRouter()
+
+function openGroup(groupId: string) {
+  void router.push({ name: 'group', params: { groupId } })
+}
 
 const creating = ref<boolean>(false)
 </script>
@@ -197,8 +204,5 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <GroupDialog
-    v-model:open="creating"
-    @saved="$router.push({ name: 'group', params: { groupId: $event } })"
-  />
+  <GroupDialog v-model:open="creating" @saved="openGroup" />
 </template>

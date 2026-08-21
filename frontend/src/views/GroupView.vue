@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
 import { useGetGroup, useStartGroupConversation } from '@/api/groups/groups'
 import { getListChatsQueryKey } from '@/api/chats/chats'
@@ -67,6 +68,12 @@ const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => 
   const userId = currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined
   return memberships.value.find((membership) => membership.userId === userId)
 })
+
+const router = useRouter()
+
+function goToGroups() {
+  void router.push({ name: 'groups' })
+}
 
 const creatingThread = ref<boolean>(false)
 const editingGroup = ref<boolean>(false)
@@ -183,7 +190,7 @@ async function askIntoGroup() {
       <p class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
         Diese Gruppe gibt es nicht, oder sie ist privat und du gehörst nicht dazu.
       </p>
-      <Button variant="outline" size="sm" class="mt-5" @click="$router.push({ name: 'groups' })">
+      <Button variant="outline" size="sm" class="mt-5" @click="goToGroups">
         Zu meinen Gruppen
       </Button>
     </div>

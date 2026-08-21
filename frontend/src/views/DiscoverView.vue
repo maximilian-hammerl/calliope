@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { watchDebounced } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
@@ -74,6 +75,12 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
  * there is no data to make it about.
  */
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+
+const router = useRouter()
+
+function openGroup(groupId: string) {
+  void router.push({ name: 'group', params: { groupId } })
+}
 
 const creating = ref<boolean>(false)
 </script>
@@ -152,9 +159,6 @@ const creating = ref<boolean>(false)
       </div>
     </div>
 
-    <GroupDialog
-      v-model:open="creating"
-      @saved="$router.push({ name: 'group', params: { groupId: $event } })"
-    />
+    <GroupDialog v-model:open="creating" @saved="openGroup" />
   </AppLayout>
 </template>

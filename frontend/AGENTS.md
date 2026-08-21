@@ -11,6 +11,10 @@ client. Linted by `oxlint`, formatted by `oxfmt`. Tasks are `npm run …` — se
   `computed<GetGroup200 | undefined>(…)`.
 - **Route paths are English, everything a member reads is German**: `/groups/:groupId`
   renders "Meine Gruppen".
+- **Navigate through `useRouter()`, never `$router`.** The global property works in a template,
+  but it is the pre-Composition-API idiom and it hides the dependency from the script. A named
+  handler beside it also lets the returned promise be `void`ed, which a template expression
+  cannot do. One file had both at once, which is how this drifted.
 
 ## The design system is the source of truth
 
