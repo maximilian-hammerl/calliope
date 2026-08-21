@@ -64,6 +64,13 @@ button's tap target was fixed in one and missed in the other, and so was the wid
 a desktop width any more: each dialog picks one of the four named widths, so a `max-w-lg` back in
 either file means the generator overwrote a patch.
 
+**One dialog per subject, not one per verb.** `GroupDialog` and `StoryIdeaDialog` each found
+*and* edit: an absent subject prop means creating. Two components for the two verbs shared about
+three hundred and fifty lines and differed in six small ways — which is how `language` and the
+optional markers each had to be added twice, once per file. A dialog that saves also **emits**
+rather than navigates, because where to go afterwards belongs to the caller: the groups list
+opens the new group, the group's own page stays put.
+
 ## The generated API client
 
 `src/api/` is generated from `../backend/open-api.json` and **git-ignored**, so a fresh
@@ -219,7 +226,7 @@ steps and the files had no route at all on a phone *or* a tablet.
 `components/` is grouped by **domain**, not by kind: `group/`, `thread/`, `chat/`,
 `notification/`, `search/`, plus `layout/` for the frame around a page, `common/` for pieces
 with no subject of their own, and `context/` for the right rail. A dialog goes with its
-subject — `CreateGroupDialog` is in `group/`, `MessagesDialog` in `chat/` — because it changes
+subject — `GroupDialog` is in `group/`, `MessagesDialog` in `chat/` — because it changes
 when groups or chats change, not when dialogs do. A `dialogs/` directory would only move the
 problem down a level and put unrelated things side by side again. A directory holding one file
 is better than a file in the wrong directory.

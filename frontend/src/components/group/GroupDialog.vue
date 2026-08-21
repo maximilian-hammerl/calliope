@@ -1,12 +1,25 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+/**
+ * One dialog for founding and for editing, the same shape the story-idea dialog uses. The two
+ * it replaced shared about three hundred and fifty lines and differed in six small ways — the
+ * mutation, the words, where the initial values come from, and what happens afterwards — which
+ * is how `language` and the optional markers each had to be added twice.
+ *
+ * `group` present means editing that group. Otherwise it founds one, from `initial` when a
+ * story idea supplied the values. The two props are alternatives; `group` wins if both arrive.
+ */
+import { computed, ref, watch } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
-import { getListGroupsQueryKey, useCreateGroup } from '@/api/groups/groups'
+import {
+  getGetGroupQueryKey,
+  getListGroupsQueryKey,
+  useCreateGroup,
+  useUpdateGroup,
+} from '@/api/groups/groups'
+import type { GetGroup200 } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
 import { fromTags, toTags } from '@/lib/format/storyTags'
-
 import { formatCount } from '@/lib/format/formatNumber'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -24,10 +37,8 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 
-const open = defineModel<boolean>('open', { required: true })
-
-/** Founding a group from a story idea: the fields arrive filled and stay editable. */
-export type GroupPrefill = {
+/** What a story idea hands over when a group is founded from it. */
+export type GroupInitialValues = {
   title: string
   subtitle: string | null
   blurb: string
@@ -40,18 +51,24 @@ export type GroupPrefill = {
   language: 'german' | 'english'
 }
 
-const props = defineProps<{ prefill?: GroupPrefill }>()
+const open = defineModel<boolean>('open', { required: true })
+const props = defineProps<{ group?: GetGroup200; initial?: GroupInitialValues }>()
 
-const router = useRouter()
+/**
+ * The id of the group that was saved. Emitted rather than navigated to: where to go afterwards
+ * is the caller's business — the groups list opens the new group, the group's own page stays.
+ */
+const emit = defineEmits<{ saved: [groupId: string] }>()
+
 const queryClient = useQueryClient()
+
+const editing = computed<boolean>(() => props.group !== undefined)
 
 const title = ref<string>('')
 const subtitle = ref<string>('')
 const description = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 
-// Taken from the design system's own dialog rather than invented, so they already match what
-// the column will hold once perspective is stored.
 const emptyMetadata = (): StoryMetadata => ({
   storyStatus: 'planning',
   genres: '',
@@ -81,42 +98,56 @@ function metadataForApi() {
   }
 }
 
+// The two operations carry the same bounds, and a form cannot enforce two sets at once.
 const LIMIT = TEXT_LIMIT.createGroup
 
 const titleError = ref<string | undefined>(undefined)
 const descriptionError = ref<string | undefined>(undefined)
 const formError = ref<string | undefined>(undefined)
 
-const { mutateAsync: createGroup, isPending } = useCreateGroup()
+const { mutateAsync: createGroup, isPending: isCreating } = useCreateGroup()
+const { mutateAsync: updateGroup, isPending: isUpdating } = useUpdateGroup()
+const isPending = computed<boolean>(() => isCreating.value || isUpdating.value)
 
+/**
+ * Filled on opening rather than at setup, so a second visit shows what the group says now
+ * instead of what it said when the page was first rendered.
+ */
 watch(open, (isOpen) => {
-  if (isOpen) {
-    // Opening from a story idea: the copy the columns were kept in step for.
-    if (props.prefill !== undefined) {
-      title.value = props.prefill.title
-      subtitle.value = props.prefill.subtitle ?? ''
-      description.value = props.prefill.blurb
-      metadata.value = {
-        storyStatus: 'planning',
-        genres: fromTags(props.prefill.genres),
-        subgenres: fromTags(props.prefill.subgenres),
-        tropes: fromTags(props.prefill.tropes),
-        contentWarnings: fromTags(props.prefill.contentWarnings),
-        tense: props.prefill.tense ?? '',
-        perspective: props.prefill.perspective ?? '',
-        language: props.prefill.language,
-      }
-    }
-    return
-  }
-  title.value = ''
-  subtitle.value = ''
-  description.value = ''
-  visibility.value = 'private'
-  metadata.value = emptyMetadata()
   titleError.value = undefined
   descriptionError.value = undefined
   formError.value = undefined
+
+  if (!isOpen) {
+    return
+  }
+
+  const source = props.group ?? props.initial
+  if (source === undefined) {
+    title.value = ''
+    subtitle.value = ''
+    description.value = ''
+    visibility.value = 'private'
+    metadata.value = emptyMetadata()
+    return
+  }
+
+  title.value = source.title
+  subtitle.value = source.subtitle ?? ''
+  description.value = source.blurb
+  // An idea has no visibility or status of its own: founding from one starts where a new group
+  // starts, and the author decides both before confirming.
+  visibility.value = props.group?.visibility ?? 'private'
+  metadata.value = {
+    storyStatus: props.group?.storyStatus ?? 'planning',
+    genres: fromTags(source.genres),
+    subgenres: fromTags(source.subgenres),
+    tropes: fromTags(source.tropes),
+    contentWarnings: fromTags(source.contentWarnings),
+    tense: source.tense ?? '',
+    perspective: source.perspective ?? '',
+    language: source.language,
+  }
 })
 
 async function submit() {
@@ -134,27 +165,42 @@ async function submit() {
     return
   }
 
-  let created
+  const values = {
+    title: title.value.trim(),
+    blurb: description.value.trim(),
+    visibility: visibility.value,
+    ...metadataForApi(),
+  }
+
+  let savedId: string
   try {
-    created = await createGroup({
-      data: {
-        title: title.value.trim(),
-        blurb: description.value.trim(),
-        visibility: visibility.value,
-        ...metadataForApi(),
-      },
-    })
+    if (props.group !== undefined) {
+      await updateGroup({ groupId: props.group.id, data: values })
+      savedId = props.group.id
+    } else {
+      const created = await createGroup({ data: values })
+      if (created.status !== 201) {
+        return
+      }
+      savedId = created.data.id
+    }
   } catch {
-    formError.value = 'Die Gruppe konnte nicht gegründet werden. Versuche es noch einmal.'
+    formError.value = editing.value
+      ? 'Die Änderungen konnten nicht gespeichert werden. Versuche es noch einmal.'
+      : 'Die Gruppe konnte nicht gegründet werden. Versuche es noch einmal.'
     return
   }
 
-  await queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey()))
-  open.value = false
+  // The list shows the title and the privacy badge, so it goes stale with either operation.
+  await Promise.all([
+    queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
+    ...(props.group === undefined
+      ? []
+      : [queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) })]),
+  ])
 
-  if (created.status === 201) {
-    await router.push({ name: 'group', params: { groupId: created.data.id } })
-  }
+  open.value = false
+  emit('saved', savedId)
 }
 </script>
 
@@ -163,9 +209,14 @@ async function submit() {
     <DialogContent class="sm:max-w-dialog-wide">
       <DialogHeader>
         <!-- Founding a group is a social act, so the verb is not "erstellen". -->
-        <DialogTitle>Gruppe gründen</DialogTitle>
+        <DialogTitle>{{ editing ? 'Gruppe bearbeiten' : 'Gruppe gründen' }}</DialogTitle>
         <DialogDescription>
-          Nur der Titel ist nötig. Eine private Gruppe sehen nur ihre Mitglieder.
+          Nur der Titel ist nötig.
+          {{
+            editing
+              ? 'Titel, Beschreibung und Sichtbarkeit gelten für alle Mitglieder.'
+              : 'Eine private Gruppe sehen nur ihre Mitglieder.'
+          }}
         </DialogDescription>
       </DialogHeader>
 
@@ -237,7 +288,7 @@ async function submit() {
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" data-icon="inline-start" />
-            Gruppe gründen
+            {{ editing ? 'Änderungen speichern' : 'Gruppe gründen' }}
           </Button>
         </DialogFooter>
       </form>

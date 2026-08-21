@@ -18,7 +18,7 @@ import { listKeyPrefix, listOnlyFilter } from '@/lib/api/queryKeys'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import CreateGroupDialog, { type GroupPrefill } from '@/components/group/CreateGroupDialog.vue'
+import GroupDialog, { type GroupInitialValues } from '@/components/group/GroupDialog.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import { Button } from '@/components/ui/button'
@@ -55,7 +55,7 @@ async function askAboutIdea() {
 const foundingGroup = ref<boolean>(false)
 
 /** Field for field, because the idea's story block mirrors writing_group by design. */
-const groupPrefill = computed<GroupPrefill | undefined>(() =>
+const groupInitialValues = computed<GroupInitialValues | undefined>(() =>
   idea.value === undefined
     ? undefined
     : {
@@ -244,5 +244,10 @@ async function remove() {
   </AppLayout>
 
   <StoryIdeaDialog v-if="idea" v-model:open="editing" :idea="idea" />
-  <CreateGroupDialog v-if="idea" v-model:open="foundingGroup" :prefill="groupPrefill" />
+  <GroupDialog
+    v-if="idea"
+    v-model:open="foundingGroup"
+    :initial="groupInitialValues"
+    @saved="$router.push({ name: 'group', params: { groupId: $event } })"
+  />
 </template>

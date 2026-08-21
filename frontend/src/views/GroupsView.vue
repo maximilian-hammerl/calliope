@@ -7,7 +7,7 @@ import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
 import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
+import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupInvitationRow from '@/components/group/GroupInvitationRow.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
 import { watchDebounced } from '@vueuse/core'
@@ -197,5 +197,8 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <CreateGroupDialog v-model:open="creating" />
+  <GroupDialog
+    v-model:open="creating"
+    @saved="$router.push({ name: 'group', params: { groupId: $event } })"
+  />
 </template>

@@ -18,7 +18,7 @@ import type {
 import { MessageCircle, PencilIcon } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
-import EditGroupDialog from '@/components/group/EditGroupDialog.vue'
+import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import GroupMembers from '@/components/group/GroupMembers.vue'
 import ThreadTabs from '@/components/thread/ThreadTabs.vue'
@@ -203,5 +203,5 @@ async function askIntoGroup() {
   </AppLayout>
 
   <CreateThreadDialog v-model:open="creatingThread" :group-id="groupId" />
-  <EditGroupDialog v-if="group" v-model:open="editingGroup" :group="group" />
+  <GroupDialog v-if="group" v-model:open="editingGroup" :group="group" />
 </template>

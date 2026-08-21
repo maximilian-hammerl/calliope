@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * One dialog for posting and editing: unlike a group's two dialogs, nothing differs between
- * the flows but the words and the mutation, and every field is the member's own.
+ * One dialog for posting and editing — the same shape `GroupDialog` uses, which was two files
+ * until the duplication had cost the same field twice. Nothing differs between the flows but
+ * the words and the mutation, and every field is the member's own.
  */
 import { computed, ref, watch } from 'vue'
 import {
