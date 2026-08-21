@@ -20,10 +20,15 @@ export type Transaction = KyselyTransaction<DB>;
 const driver = postgres(getRequiredEnvVariable("DATABASE_URL"), {
   ssl: false,
   connection: {
-    // Statements will time out after 5 minutes
-    statement_timeout: 5 * 60 * 1000, // PostgreSQL expects milliseconds
+    // Every query here is milliseconds' work; this only stops a runaway holding a pool slot.
+    statement_timeout: 30 * 1000, // PostgreSQL expects milliseconds
   },
+  // Around (cores × 2) for the six-core host, which shares them with the app, Caddy and Redis.
   max: 10,
+  // Lets the pool shrink back when traffic stops, instead of holding connections open for ever.
+  idle_timeout: 30,
+  // Recycles connections, so none lives long enough to go stale on the network beneath it.
+  max_lifetime: 60 * 30,
   types: postgresTypes,
 });
 
