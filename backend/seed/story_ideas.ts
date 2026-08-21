@@ -25,11 +25,11 @@ export type StoryIdeaFixture = {
 };
 
 /**
- * Six ideas from six people. Only `open` and `closed` exist, so the variety that matters is
- * who wrote them, how many writers they want, and in which language — which is what the
- * board's filters are for.
+ * Six written-out ideas from six people, plus the run below. Only `open` and `closed` exist,
+ * so the variety that matters is who wrote them, how many writers they want, and in which
+ * language — which is what the board's filters are for.
  */
-export const STORY_IDEAS: StoryIdeaFixture[] = [
+const WRITTEN_IDEAS: StoryIdeaFixture[] = [
   {
     id: storyIdeaId(1),
     title: "Briefe aus dem Leuchtturm",
@@ -107,4 +107,118 @@ export const STORY_IDEAS: StoryIdeaFixture[] = [
     partySize: "group",
     by: USER.kommafehler,
   },
+];
+
+/**
+ * Enough further ideas that both destinations page for `tintenfleck`: ten of their own, so
+ * "Meine Storyideen" holds eleven with the closed one above, and seven from other members, so
+ * the board they discover holds eleven that are not theirs. Discovery lists only `open` ideas
+ * and hides your own, which is why both numbers have to be built rather than assumed.
+ */
+const FURTHER_IDEAS: ReadonlyArray<
+  { title: string; idea: string; by: string; language?: StoryLanguage }
+> = [
+  {
+    title: "Der Kartograf der Nebentäler",
+    idea: "Er zeichnet Täler, die es erst gibt, wenn sie auf der Karte stehen.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Sieben Briefe an den Süden",
+    idea:
+      "Sieben Absender, ein Empfänger, der nie antwortet. Jeder Brief ein Beitrag.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Das Haus, das sich erinnert",
+    idea:
+      "Wer einzieht, findet die Möbel dort, wo er sie als Kind gelassen hätte.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Nachtschicht im Leuchtturmcafé",
+    idea:
+      "Zwischen zwei und vier kommen nur Leute herein, die es nicht mehr gibt.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Die Sammlerin verlorener Wörter",
+    idea:
+      "Sie kauft Wörter auf, die niemand mehr benutzt, und verkauft sie teuer weiter.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Was der Fluss zurückbringt",
+    idea:
+      "Jedes Frühjahr legt der Fluss etwas ans Ufer, das jemandem gehört hat.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Zwei Uhren, eine Stadt",
+    idea: "Die Stadt hat zwei Uhren, und sie gehen seit dem Krieg verschieden.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "The Quiet Cartographer",
+    idea: "A mapmaker who leaves one street off every map, and why.",
+    by: USER.tintenfleck,
+    language: "english",
+  },
+  {
+    title: "Der Winter, der nicht kam",
+    idea:
+      "Ein Dorf wartet auf den Schnee, der ausbleibt, und beginnt sich zu streiten.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Anleitung zum Verschwinden",
+    idea: "In zwölf Kapiteln, von denen elf gelogen sind.",
+    by: USER.tintenfleck,
+  },
+  {
+    title: "Die Bibliothek der ungelesenen Bücher",
+    idea:
+      "Jedes Buch darin wartet auf genau eine Leserin. Wir schreiben, wie es sie findet.",
+    by: USER.lesezeichen,
+  },
+  {
+    title: "Zwischen zwei Seiten",
+    idea:
+      "Was in einem geliehenen Buch liegen bleibt, erzählt die Geschichte davor.",
+    by: USER.lesezeichen,
+  },
+  {
+    title: "Um drei Uhr schreibt niemand",
+    idea: "Vier Leute, vier Städte, dieselbe schlaflose Stunde.",
+    by: USER.nachtschreiber,
+  },
+  {
+    title: "Die Stadt bei Nacht, dreistimmig",
+    idea: "Dieselbe Nacht aus drei Blickwinkeln, die sich nur einmal berühren.",
+    by: USER.nachtschreiber,
+  },
+  {
+    title: "Gezeitenrechnung",
+    idea:
+      "Eine Insel, die alle sechs Stunden zur Halbinsel wird, und wer das ausnutzt.",
+    by: USER.silbenmeer,
+  },
+  {
+    title: "Ein Absatz zu weit",
+    idea: "Eine Lektorin streicht eine Figur, und die Figur merkt es.",
+    by: USER.zeilensprung,
+  },
+  {
+    title: "Am Rand notiert",
+    idea: "Zwei Studierende schreiben sich über Jahre nur in Buchrändern.",
+    by: USER.randnotiz,
+  },
+];
+
+export const STORY_IDEAS: StoryIdeaFixture[] = [
+  ...WRITTEN_IDEAS,
+  ...FURTHER_IDEAS.map((idea, index) => ({
+    id: storyIdeaId(20 + index),
+    ...idea,
+  })),
 ];

@@ -12,7 +12,7 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 ## Seed data
 
 `deno task db:seed` fills a local database with a fixed fixture: nine accounts sharing the
-password `calliope`, seventeen writing groups, six story ideas and three chats. Between them
+password `calliope`, seventeen writing groups, twenty-three story ideas and three chats. Between them
 the groups cover both visibilities, every membership size from one to five, every role,
 two-administrator groups in each visibility, and one group with nothing in it at all. There
 are threads with posts, two unpublished drafts, next steps both open and completed, a post
@@ -26,6 +26,12 @@ URLs when it finishes.
 "Gruppen entdecken" always has more than one page. Thirteen rather than eleven because discovery
 hides the groups you are in: the busiest accounts belong to two public groups, and eleven would
 have left them nine — one page. `silbenmeer` is the exception by construction, seeing four.
+
+**`tintenfleck` is the account both story-idea views page for**: eleven ideas of their own and
+twelve others' still open, so "Meine Storyideen" and "Storyideen entdecken" each hold two pages
+at ten to a page. Both numbers had to be built rather than assumed, because discovery lists only
+`open` ideas and hides your own — one of `tintenfleck`'s eleven is closed, which is also what
+shows that the own-ideas view ignores status.
 
 One thread, "Der lange Aufstieg" in the public Zauberzwerg, holds **105 generated posts** so
 numbered pages, the order toggle and a truthful post count are always testable; the section
