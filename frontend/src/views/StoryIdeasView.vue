@@ -4,12 +4,15 @@
  * `mine` is the member's own ideas regardless of status — closing one must not hide it from
  * its author.
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
+import { keepPreviousData } from '@tanstack/vue-query'
 import { Plus } from '@lucide/vue'
 import { useListStoryIdeas } from '@/api/story-ideas/story-ideas'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { usePagedList } from '@/composables/usePagedList'
+import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
 import StoryIdeaRow from '@/components/story-idea/StoryIdeaRow.vue'
@@ -20,6 +23,9 @@ import { Input } from '@/components/ui/input'
 const props = defineProps<{ mine?: boolean }>()
 
 const LIMIT = TEXT_LIMIT.listStoryIdeas.search
+
+/** Ten to a page, as everywhere a list is hunted through rather than read. */
+const IDEAS_PER_PAGE = 10
 
 const term = ref<string>('')
 const settled = ref<string>('')
@@ -33,11 +39,26 @@ watchDebounced(
   { debounce: 300 },
 )
 
-const { data, isPending, isError } = useListStoryIdeas(() => ({
-  limit: 100,
-  author: props.mine ? ('mine' as const) : ('others' as const),
-  search: settled.value === '' ? undefined : settled.value,
-}))
+// Before the query: the request needs `offset` while its key is built, and the total it pages
+// over comes back from that same query, so the composable reads the total lazily.
+const { page, offset, pageCount, goToPage } = usePagedList(IDEAS_PER_PAGE, () => totalResults.value)
+
+// A search narrows the board, so whatever page was open is about a different set of ideas.
+watch(settled, () => goToPage(1))
+
+const { data, isPending, isError } = useListStoryIdeas(
+  () => ({
+    limit: IDEAS_PER_PAGE,
+    offset: offset.value,
+    author: props.mine ? ('mine' as const) : ('others' as const),
+    search: settled.value === '' ? undefined : settled.value,
+  }),
+  { query: { placeholderData: keepPreviousData } },
+)
+
+const totalResults = computed<number | undefined>(() =>
+  data.value?.status === 200 ? data.value.data.totalResults : undefined,
+)
 
 const ideas = computed<ListStoryIdeas200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
@@ -115,6 +136,10 @@ const creating = ref<boolean>(false)
             :idea="idea"
             :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
           />
+        </div>
+
+        <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
         </div>
 
         <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Ideen werden geladen …</p>

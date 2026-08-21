@@ -105,7 +105,8 @@ separates it from the items.
 **A list somebody hunts through pages by number; one that is read through loads more.** The two
 look like the same problem and are not. Writers read earlier posts *for reference while
 composing*, and somebody with fifteen groups is looking for one of them — both want to jump to a
-known place, so both get numbered pages: twenty posts to a page, ten groups. In a thread the
+known place, so both get numbered pages: twenty posts to a page, ten of anything else — groups
+and story ideas alike. In a thread the
 strip sits above and below the list, below because that is where the composer already has them.
 A conversation is read through, so it grows upward instead. Which end a thread starts at is the reader's choice, not a default: "Älteste
 zuerst / Neueste zuerst", marked like every other position with the 2px oak underline.
