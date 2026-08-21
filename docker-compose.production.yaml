@@ -29,7 +29,7 @@ services:
 
   # Built on the server, because the output is not committed. Runs to completion and exits.
   frontend-build:
-    image: node:24-alpine
+    image: node:26-alpine
     working_dir: /app
     # The API client is generated rather than committed, so it has to be produced here or
     # the type check fails on imports that do not exist yet in a fresh checkout.
