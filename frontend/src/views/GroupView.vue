@@ -8,6 +8,7 @@ import { queryClient } from '@/lib/api/queryClient'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { ApiError } from '@/lib/api/apiFetch'
 import { openChatDialog } from '@/lib/chat/openChatDialog'
+import { paragraphs } from '@/lib/format/paragraphs'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { useListThreads } from '@/api/threads/threads'
 import { useListMemberships } from '@/api/memberships/memberships'
@@ -41,6 +42,9 @@ const { data: groupData, isPending, isError } = useGetGroup(groupId)
 const group = computed<GetGroup200 | undefined>(() =>
   groupData.value?.status === 200 ? groupData.value.data : undefined,
 )
+
+/** As the paragraphs its author typed, the same as a post and a story idea's synopsis. */
+const synopsis = computed<string[]>(() => paragraphs(group.value?.synopsis ?? ''))
 
 // Every thread, newest activity first — the order is the endpoint's now, not a parameter.
 const { data: threadsData } = useListThreads(groupId)
@@ -131,9 +135,15 @@ async function askIntoGroup() {
             :own="ownMembership"
           />
 
-          <p v-if="group.synopsis" class="max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
-            {{ group.synopsis }}
-          </p>
+          <div v-if="group.synopsis" class="flex max-w-[60ch] flex-col gap-[0.9em]">
+            <p
+              v-for="(paragraph, index) in synopsis"
+              :key="index"
+              class="text-[13.5px] leading-[1.7] text-ink-4"
+            >
+              {{ paragraph }}
+            </p>
+          </div>
 
           <p v-if="threads.length === 0" class="mt-7 text-[13.5px] leading-[1.7] text-ink-4">
             Noch keine Threads in dieser Gruppe.

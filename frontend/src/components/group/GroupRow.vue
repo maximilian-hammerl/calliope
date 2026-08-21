@@ -28,12 +28,17 @@ defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
     </div>
 
     <!-- The story's own line, between its name and what it is about. Darker and a step larger
-         than the synopsis, so the order reads title → subtitle → description. -->
+         than the synopsis, so the order reads title → subtitle → synopsis. -->
     <p v-if="group.subtitle" class="mt-[4px] max-w-[60ch] text-[13.5px] leading-[1.5] text-ink-3">
       {{ group.subtitle }}
     </p>
 
-    <p v-if="group.synopsis" class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
+    <!-- Clamped, like a story idea's teaser: a synopsis may run to eight thousand characters,
+         and one long one would otherwise push every row after it off the page. -->
+    <p
+      v-if="group.synopsis"
+      class="mt-[6px] line-clamp-3 max-w-[60ch] text-[13px] leading-[1.6] text-ink-4"
+    >
       {{ group.synopsis }}
     </p>
 
