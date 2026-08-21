@@ -11,6 +11,7 @@ import {
 import type { ListSteps200ResultsItem } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { formatActivityTime } from '@/lib/format/formatTime'
 import { queryClient } from '@/lib/api/queryClient'
 import PanelCard from '@/components/common/PanelCard.vue'
 import { Input } from '@/components/ui/input'
@@ -38,6 +39,16 @@ const currentUserId = computed<string | undefined>(() =>
 
 function mayDelete(step: ListSteps200ResultsItem): boolean {
   return props.mayAdminister || (step.createdBy !== null && step.createdBy === currentUserId.value)
+}
+
+/** One fact per state, as memberships do: who created it and when, or who completed it and when. */
+function metaLine(step: ListSteps200ResultsItem): string {
+  if (step.completedAt === null) {
+    const by = step.createdByUsername ?? 'Gelöschtes Konto'
+    return `angelegt ${formatActivityTime(step.createdAt)} von ${by}`
+  }
+  const by = step.completedByUsername ?? 'Gelöschtes Konto'
+  return `erledigt ${formatActivityTime(step.completedAt)} von ${by}`
 }
 
 const failed = ref<boolean>(false)
@@ -131,7 +142,7 @@ const showingCompleted = ref<boolean>(false)
               {{ step.text }}
               <br />
               <span class="text-[11.5px] text-ink-6">
-                von {{ step.createdByUsername ?? 'Gelöschtes Konto' }}
+                {{ metaLine(step) }}
               </span>
             </span>
           </button>
@@ -141,7 +152,7 @@ const showingCompleted = ref<boolean>(false)
               {{ step.text }}
               <br />
               <span class="text-[11.5px] text-ink-6">
-                von {{ step.createdByUsername ?? 'Gelöschtes Konto' }}
+                {{ metaLine(step) }}
               </span>
             </span>
           </span>
@@ -224,7 +235,7 @@ const showingCompleted = ref<boolean>(false)
                 {{ step.text }}
                 <br />
                 <span class="text-[11.5px] text-ink-6">
-                  erledigt von {{ step.completedByUsername ?? 'Gelöschtes Konto' }}
+                  {{ metaLine(step) }}
                 </span>
               </span>
             </button>
@@ -234,7 +245,7 @@ const showingCompleted = ref<boolean>(false)
                 {{ step.text }}
                 <br />
                 <span class="text-[11.5px] text-ink-6">
-                  erledigt von {{ step.completedByUsername ?? 'Gelöschtes Konto' }}
+                  {{ metaLine(step) }}
                 </span>
               </span>
             </span>

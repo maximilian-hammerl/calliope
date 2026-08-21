@@ -211,8 +211,9 @@ again, and the same pressure. Limits read as German numerals: 100.000, not 10000
 **Numbers get a noun.** A bare badge number was tested and misread — nobody could tell what "3"
 meant. Always "3 neu", "6 von 12 Threads", "2 Anmerkungen", "Erledigt (5)".
 
-**A step shows one person, the one its state is about**: „von annelie" while it is open,
-„erledigt von mira" once it is done — the same one-fact-per-state rule as memberships. Readers
+**A step shows one person and one time, the ones its state is about**: „angelegt vor 3 Tagen
+von annelie" while it is open, „erledigt vor 2 Stunden von mira" once it is done — participle,
+time, then who, exactly as a membership reads. Readers
 see the list with the controls **disabled rather than hidden** („Nur wer schreibt, kann
 Schritte anlegen"): a deliberate exception to hiding what one cannot do, so a reader knows the
 group plans here. Completed steps stay under „Erledigt (N)" until someone deletes them.
@@ -264,7 +265,7 @@ are.
 
 **A story idea becomes a group by copy, not by wizard.** "Gruppe gründen" on one's own idea
 opens the ordinary create-group dialog with every field filled from the idea — the author
-still chooses visibility and can change anything before confirming. Both group dialogs carry
+still chooses visibility and can change anything before confirming. The group dialog carries
 the same story fields as the idea dialog, Sprache included, so the copy has nowhere to lose
 information. The idea stays open afterwards; closing it is the author's own act.
 
