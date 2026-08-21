@@ -54,7 +54,7 @@ the inside, but still no caretaker.
 | Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. "Unterhaltung beginnen" opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
-| Writing partners | Built as **Storyideen**: board, detail page, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea.                    |
+| Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea. |
 | Administration   | Not started. Blocking is built, but moderation, reports and a queue are not — see the roadmap.                                                                            |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. Blocking refuses contact. **No** data export, no GDPR configuration.  |
 
@@ -175,6 +175,15 @@ field for field (the idea's text becomes the blurb), which is what the matching 
 kept in step for. The author still chooses visibility and confirms; the idea stays open until
 they close it, deliberately — a fresh group of two might still want a third writer. With that,
 §8 is done. Item 4 below stops being optional the moment testers get this board.
+
+**A carousel view** (issue #20) reads the board one idea at a time, with the depth of the detail
+page and arrow keys, swipe and buttons to move. Its set is fixed rather than inherited — open,
+unread, not your own, newest first — which is why the route carries only the idea and no filters.
+It walks by **id, not by position**: `QUERY /story-ideas/carousel` answers with an idea and the two
+either side of it, so somebody posting an idea while you read cannot shift you sideways, the way an
+offset would. A step replaces the URL rather than pushing it, so the back button leaves the
+carousel instead of retracing every idea seen. It sits in the Storyideen menu beside the two
+board views, and it is the one place in the product where something slides.
 
 ### 4. Block a member — built
 

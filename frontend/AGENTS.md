@@ -58,9 +58,18 @@ grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue        
 grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
 grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
+grep -c size-11 src/components/ui/carousel/CarouselNext.vue src/components/ui/carousel/CarouselPrevious.vue  # expect 1 each
+grep -c touch-pan-y src/components/ui/carousel/CarouselContent.vue                     # expect 1
+grep -c setViewport src/components/ui/carousel/CarouselContent.vue                     # expect 2
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).
+
+**A string template ref does not compile here.** `CarouselContent` came with
+`ref="carouselRef"`, which `noUnusedLocals` reads as the binding never being used — and binding
+it instead does not work either, because a template unwraps a ref. It takes a function ref, which
+is what `setViewport` is. Any generated component that attaches a ref by name needs the same
+treatment.
 
 **There are two dialog content components.** `DialogContent` centres and zooms; `DialogScrollContent`
 scrolls the page behind a taller panel. Anything done to one belongs in the other — the close
@@ -143,6 +152,56 @@ watcher that corrects an out-of-range page must wait for the count to be *known*
 momentary "0 results" as "page 1 is the last page" and sends the reader back on every click. That
 bug shipped for about ten minutes and looked exactly like a dead button.
 
+**The carousel walks by idea, never by position.** `useStoryIdeaCarousel` holds the loaded
+ideas itself and asks `QUERY /story-ideas/carousel` about *an idea*, which answers with the two
+either side of it. A page number in the URL would have been wrong within hours: the newest
+idea comes first, so anything anybody posts shifts every position behind it, and a link would
+have opened silently beside the idea it named rather than failing.
+
+Three things about it, and the middle one is the whole design:
+
+- **Two conditional queries, one endpoint.** The forward one asks about the *last* idea loaded
+  whenever the reader is within a slide of it; the backward one only fires at the first slide.
+  Without that lookahead the forward arrow goes dead for a round trip on every single step,
+  because a ±1 answer cannot know the slide after next.
+- **The track only grows, and appending is the safe direction.** Embla keeps its selected index
+  by number, so appending leaves the reader where they are and *prepending* moves them. Every
+  change bumps `revision`, and the view answers it with one `reInit({ startIndex: index })` —
+  Embla re-reads its slides only when told, and a bare `reInit()` would reuse the options it was
+  given, whose `startIndex` is wherever the carousel opened. It waits for embla's `settle` event
+  if a slide is moving: the lookahead for the idea just arrived at returns in a few milliseconds,
+  and re-measuring then cuts short the movement that caused it.
+
+**Never hand embla an option set to `undefined`.** Its option merge copies every key it finds,
+`undefined` included, so `duration: reduced ? 0 : undefined` overwrote embla's own default with
+nothing — and a falsy duration is the branch that renders the last frame at once rather than
+animating. The carousel had no animation at all, in every browser, and it read like a CSS or
+layout problem. `carouselOptions` therefore includes `duration` only when it must be zero. The
+test that settles it needs no animation frames: click, then read the transform *synchronously* —
+unchanged means an animation was scheduled, already at the target means it jumped.
+- **A step replaces, a page pushes.** The URL always names the idea on screen, so a reload
+  resumes; but twenty steps must not mean twenty presses of the back button to leave, so the
+  carousel uses `router.replace` while `usePagedList` keeps `push`. A page change is coarse and
+  deliberate; a carousel step is continuous.
+
+It is reached from the **Storyideen menu** in both bars rather than from a button on the board:
+it is a way of reading the board, not an action on it, and `DESTINATIONS` is the one place either
+bar learns about it. Its own page therefore carries no link back — the menu is already the way
+between the three.
+
+Marking an idea read there updates the one slide **and the count**, and invalidates only the
+*board*. Invalidating the carousel's own query would rebuild the set around the reader and take
+the idea they are looking at out of it — the same rule `NotificationsDialog` follows. The count
+has to be carried by hand for a reason worth knowing: every key the walk has visited answers from
+cache, so nothing refetches a fresh total and "noch 20 ungelesene" sat frozen for a whole session
+of marking ideas read. Note that *both* states take an idea out of the set, since unread is the
+absence of a row.
+
+An anchor that is no longer part of the set — closed since, its author blocked, deleted —
+answers 404, and the composable clears the anchor and starts at the newest rather than showing an error:
+the link is out of date, not wrong. Clearing it is what lets the same query recover; a captured
+constant would keep asking about the dead id forever.
+
 **Cursor-paged endpoints are hand-written composables.** Orval's `useInfinite` substitutes a
 query *parameter*, and these endpoints carry paging in a JSON body, so
 `composables/useChatMessages.ts` calls the generated `listMessages` function from a
@@ -190,6 +249,10 @@ npx vitest run
 The browser these tools drive is not a fair witness for anything that moves. Three behaviours
 were mistaken for bugs in it, and each was fine in a real browser:
 
+- **`requestAnimationFrame` never fires** while the pane is hidden, and it is hidden except
+  during a screenshot. Anything animated in JavaScript rather than CSS — embla's whole engine —
+  therefore moves in bursts or not at all, and cannot be measured there. Sampling a transform
+  over rAF simply hangs.
 - **Scroll events never fire** — not for a programmatic scroll, not for a listener you attach
   yourself. Anything driven by `@scroll` looks dead there.
 - **Smooth scrolling is a no-op**, whether asked for as `behavior: 'smooth'` or as CSS

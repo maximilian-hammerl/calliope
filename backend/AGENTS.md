@@ -33,6 +33,14 @@ at ten to a page. Both numbers had to be built rather than assumed, because disc
 `open` ideas and hides your own — one of `tintenfleck`'s eleven is closed, which is also what
 shows that the own-ideas view ignores status.
 
+**Story-idea timestamps are stamped from fixture position**, five hours apart and ascending with
+the ids, so ordering by either agrees — the carousel walks by id and the board sorts by
+`created_at`. They were all one `now()` until the carousel needed an order: twenty-three ties have
+no defined sort, which is the same trap the posts fell into. Note that the fixture's ids decode to
+a moment slightly in the past, so an idea created by hand sorts *above* every seeded one and can
+be newest to the carousel while the board still puts a seeded idea first. Nothing in production
+diverges that way, since both the id and the timestamp come from the insert.
+
 **Pride and Punctuation holds ten threads**, titles of uneven length, so the tab strip's
 horizontal scrolling is always testable — it scrolls with its scrollbar hidden, which only shows
 with more tabs than fit.
@@ -185,6 +193,28 @@ format, a minimum length, a default — belong in `.extend()`.
 add the author's name to what the table stores, because a client should never have to resolve
 a user id itself to show who wrote something. The name is joined, never stored, so it follows
 a rename; it is null wherever the author's account has been deleted.
+
+## The carousel walks by id, not by offset
+
+`QUERY /story-ideas/carousel` answers with one idea and the two either side of it, whole rather
+than as ids, plus how many the set holds. It takes no filters: the set is the view's own — open
+ideas the member has not read and did not write, no blocked authors — so there is nothing to pass.
+
+- **Neighbours are found by id.** Ids are uuidv7, so comparing them is creation order, they are
+  unique so no tiebreak is needed, and it is the primary key so each neighbour is one index scan.
+  An offset would have been wrong the moment anybody posted an idea: every position behind the new
+  row shifts, and a link would open beside the idea it named rather than failing.
+- **One filter chain, shared.** `filtered()` in `story_idea_service.ts` is what both
+  `listStoryIdeas` and the carousel build on. A neighbour the carousel offers but the board would
+  hide is an idea nobody can reach twice, so the two cannot be allowed to drift apart.
+- **The anchor ignores read state, and only that.** Marking the idea on screen as read must not
+  invalidate the URL the member is sitting on. Everything else still holds, so their own idea, a
+  closed one, or one whose author they have blocked answers 404.
+- **An empty set is not an error.** Nulls and a total of zero, which is a member who has read
+  everything.
+
+`total` counts the set, not the member's position in it. The position would mean counting every
+preceding row on each step, and for a list of unread things what is left is the more useful number.
 
 ## Two lists are deliberately not list endpoints
 

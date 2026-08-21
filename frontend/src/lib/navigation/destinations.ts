@@ -29,10 +29,11 @@ export const DESTINATIONS: ReadonlyArray<{
   {
     label: 'Storyideen',
     icon: Lightbulb,
-    belongsTo: ['storyIdeas', 'storyIdeasMine', 'storyIdea'],
+    belongsTo: ['storyIdeas', 'storyIdeasMine', 'storyIdea', 'storyIdeasCarousel'],
     children: [
       { name: 'storyIdeasMine', label: 'Meine Storyideen' },
       { name: 'storyIdeas', label: 'Storyideen entdecken' },
+      { name: 'storyIdeasCarousel', label: 'Story-Karussell' },
     ],
   },
   {

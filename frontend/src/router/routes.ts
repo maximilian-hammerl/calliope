@@ -46,6 +46,13 @@ export const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/StoryIdeasView.vue'),
     props: { mine: true },
   },
+  // Also before the parameter, and the id is optional: opening the carousel without one starts
+  // at the newest unread idea.
+  {
+    path: '/story-ideas/carousel/:ideaId?',
+    name: 'storyIdeasCarousel',
+    component: () => import('../views/StoryIdeaCarouselView.vue'),
+  },
   {
     path: '/story-ideas/:ideaId',
     name: 'storyIdea',

@@ -224,6 +224,13 @@ members read your idea" is the statistic the research rejected. Saving something
 **"Merken"** everywhere — never "Favorit", which names a feeling rather than an intention and
 promises a permanence the author can end by closing the idea.
 
+**A state toggle is labelled with the state, not the act.** "Gelesen" and "Gemerkt", and
+"Nicht gelesen" and "Nicht gemerkt" once set — never "Als gelesen markieren" and its undo,
+which were wider than most story ideas' own titles on a phone and pushed the one solid action
+onto a second row. The long phrasing survives as the button's `title`, which is also where
+the fact that clicking it again undoes it belongs. `readerStateToggles()` in
+`lib/format/storyIdea.ts` is the one place either wording lives.
+
 **A thing its owner has ended stays readable, and says so.** A closed story idea keeps its
 page and its badge, and the action it can no longer take is **disabled rather than hidden** —
 hiding it leaves a member wondering where it went, where a disabled control with a reason
@@ -454,6 +461,12 @@ else this product does with a disabled control.
 (`cubic-bezier(.2,0,.2,1)`) — a size change, no slide-in, no fade-through. The autosave spinner is
 the only looping animation in the product. No bounces, no attention-seeking motion; everything
 honours `prefers-reduced-motion`.
+
+**The story-idea carousel is the one exception**, and a deliberate one: moving between ideas
+slides horizontally, because the movement is what tells the reader they have gone somewhere and
+in which direction. It is the only slide in the product. Under `prefers-reduced-motion` it jumps
+instead — embla with `duration: 0` — so the exception does not cost anybody who has asked for
+less. A second sliding surface needs a reason of its own, not this precedent.
 
 **Selection is a rule, never a box.** A 2px rule in `--oak` marks the current tab, the current
 bottom-bar item and the chosen option in a filter strip (`FilterStrip`); the inactive ones keep

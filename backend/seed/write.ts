@@ -261,8 +261,15 @@ async function writeChats(): Promise<void> {
   ).execute();
 }
 
+/**
+ * Ideas five hours apart, stamped from fixture position: one insert statement shares a single
+ * `now()`, and the board cannot page over a column of ties. Ascending with the ids, so ordering
+ * by either agrees — which the carousel relies on, since it walks by id.
+ */
+const STEPS_BETWEEN_IDEAS = 60;
+
 async function writeStoryIdeas(): Promise<void> {
-  await db.insertInto("storyIdea").values(STORY_IDEAS.map((idea) => ({
+  await db.insertInto("storyIdea").values(STORY_IDEAS.map((idea, index) => ({
     id: idea.id,
     title: idea.title,
     subtitle: idea.subtitle,
@@ -278,6 +285,7 @@ async function writeStoryIdeas(): Promise<void> {
     lookingFor: idea.lookingFor,
     partySize: idea.partySize,
     createdBy: idea.by,
+    createdAt: postedAt((STORY_IDEAS.length - index) * STEPS_BETWEEN_IDEAS),
   }))).execute();
 }
 

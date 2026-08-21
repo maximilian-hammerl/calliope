@@ -137,88 +137,109 @@ function withAuthor(readerId: string) {
     ]);
 }
 
-function listStoryIdeas(
-  query: ListQuery & {
-    /** Whose state to report, and to filter by. Always the requesting member. */
-    readerId: string;
-    readerState: ReaderStateFilter;
-    status: StatusFilter;
-    language?: StoryLanguage;
-    /** Only the reader's own ideas — the view that manages, not the one that browses. */
-    createdBy?: string;
-    /** The browsing view's inverse: discovery never shows the reader their own ideas. */
-    excludeCreatedBy?: string;
-    /** Blocked in either direction: their ideas are not offered to this reader. */
-    hiddenAuthorIds?: ReadonlyArray<string>;
-  },
-): Promise<ListResults<StoryIdea>> {
-  return listResultsWithCount(
-    withAuthor(query.readerId)
-      .$if(query.createdBy !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-        queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
-      .$if(
-        (query.hiddenAuthorIds ?? []).length > 0,
-        (queryBuilder) =>
-          queryBuilder.where(
-            "storyIdea.createdBy",
-            "not in",
-            query.hiddenAuthorIds ?? [],
-          ),
-      )
-      .$if(
-        query.excludeCreatedBy !== undefined,
-        (queryBuilder) =>
-          queryBuilder.where(
-            "storyIdea.createdBy",
-            "!=",
-            // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-            query.excludeCreatedBy!,
-          ),
-      )
-      .$if(
-        query.status !== "any",
-        (queryBuilder) =>
-          queryBuilder.where(
-            "storyIdea.status",
-            "=",
-            query.status as StoryIdeaStatus,
-          ),
-      )
-      .$if(query.language !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-        queryBuilder.where("storyIdea.language", "=", query.language!))
-      // Unread is the missing row, so it filters on the join rather than on a value.
-      .$if(
-        query.readerState === "unread",
-        (queryBuilder) =>
-          queryBuilder.where("storyIdeaReader.state", "is", null),
-      )
-      .$if(
-        query.readerState === "read" || query.readerState === "marked",
-        (queryBuilder) =>
-          queryBuilder.where(
-            "storyIdeaReader.state",
-            "=",
-            query.readerState as StoryIdeaReaderState,
-          ),
-      )
-      .$if(
-        query.search !== undefined,
-        (queryBuilder) =>
-          queryBuilder.where((eb) =>
-            eb.or([
-              // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
-              eb("storyIdea.title", "ilike", searchPattern(query.search!)),
-              // deno-lint-ignore no-non-null-assertion -- as above
-              eb("storyIdea.idea", "ilike", searchPattern(query.search!)),
-            ])
-          ),
-      ),
-    query,
-  );
+export type StoryIdeaFilters = {
+  /** Whose state to report, and to filter by. Always the requesting member. */
+  readerId: string;
+  readerState: ReaderStateFilter;
+  status: StatusFilter;
+  language?: StoryLanguage;
+  /** Only the reader's own ideas — the view that manages, not the one that browses. */
+  createdBy?: string;
+  /** The browsing view's inverse: discovery never shows the reader their own ideas. */
+  excludeCreatedBy?: string;
+  /** Blocked in either direction: their ideas are not offered to this reader. */
+  hiddenAuthorIds?: ReadonlyArray<string>;
+  search?: string;
+  /** One idea, still through every filter: how the carousel checks its anchor belongs. */
+  id?: string;
+  /** The carousel's bounds. Ids are uuidv7, so comparing them is creation order. */
+  olderThanId?: string;
+  newerThanId?: string;
+};
+
+/**
+ * Every filter in one place, because the board and the carousel have to agree on what the set
+ * is. A neighbour the carousel offers but the board would hide is an idea nobody can reach
+ * twice.
+ */
+function filtered(query: StoryIdeaFilters) {
+  return withAuthor(query.readerId)
+    .$if(query.createdBy !== undefined, (queryBuilder) =>
+      // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+      queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
+    .$if(
+      (query.hiddenAuthorIds ?? []).length > 0,
+      (queryBuilder) =>
+        queryBuilder.where(
+          "storyIdea.createdBy",
+          "not in",
+          query.hiddenAuthorIds ?? [],
+        ),
+    )
+    .$if(
+      query.excludeCreatedBy !== undefined,
+      (queryBuilder) =>
+        queryBuilder.where(
+          "storyIdea.createdBy",
+          "!=",
+          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+          query.excludeCreatedBy!,
+        ),
+    )
+    .$if(
+      query.status !== "any",
+      (queryBuilder) =>
+        queryBuilder.where(
+          "storyIdea.status",
+          "=",
+          query.status as StoryIdeaStatus,
+        ),
+    )
+    .$if(query.language !== undefined, (queryBuilder) =>
+      // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+      queryBuilder.where("storyIdea.language", "=", query.language!))
+    // Unread is the missing row, so it filters on the join rather than on a value.
+    .$if(
+      query.readerState === "unread",
+      (queryBuilder) => queryBuilder.where("storyIdeaReader.state", "is", null),
+    )
+    .$if(
+      query.readerState === "read" || query.readerState === "marked",
+      (queryBuilder) =>
+        queryBuilder.where(
+          "storyIdeaReader.state",
+          "=",
+          query.readerState as StoryIdeaReaderState,
+        ),
+    )
+    .$if(
+      query.search !== undefined,
+      (queryBuilder) =>
+        queryBuilder.where((eb) =>
+          eb.or([
+            // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+            eb("storyIdea.title", "ilike", searchPattern(query.search!)),
+            // deno-lint-ignore no-non-null-assertion -- as above
+            eb("storyIdea.idea", "ilike", searchPattern(query.search!)),
+          ])
+        ),
+    )
+    .$if(query.id !== undefined, (queryBuilder) =>
+      // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+      queryBuilder.where("storyIdea.id", "=", query.id!))
+    .$if(query.olderThanId !== undefined, (queryBuilder) =>
+      // deno-lint-ignore no-non-null-assertion -- as above
+      queryBuilder.where("storyIdea.id", "<", query.olderThanId!))
+    .$if(query.newerThanId !== undefined, (queryBuilder) =>
+      // deno-lint-ignore no-non-null-assertion -- as above
+      queryBuilder.where("storyIdea.id", ">", query.newerThanId!));
 }
 
+function listStoryIdeas(
+  query: ListQuery & StoryIdeaFilters,
+): Promise<ListResults<StoryIdea>> {
+  return listResultsWithCount(filtered(query), query);
+}
 async function selectStoryIdea(
   ideaId: string,
   readerId: string,
@@ -318,8 +339,90 @@ async function clearReaderState(
     .execute();
 }
 
+export type StoryIdeaCarousel = {
+  previous: StoryIdea | null;
+  storyIdea: StoryIdea | null;
+  next: StoryIdea | null;
+  total: number;
+};
+
+/**
+ * One step of the carousel: the idea to show and the two either side of it, whole rather than
+ * as ids so the movement always has something to move to. `null` on a side is the end of the
+ * set, which is where the carousel stops rather than wrapping.
+ *
+ * Neighbours are found by id, never by position. Ids are uuidv7, so comparing them is creation
+ * order, and somebody posting an idea meanwhile cannot move anybody else's place — which an
+ * offset would.
+ *
+ * `undefined` means the anchor is not part of the set. An empty set is not that: it answers
+ * with nulls and a total of zero, a member who has read everything rather than an error.
+ */
+async function selectCarousel(
+  readerId: string,
+  hiddenAuthorIds: ReadonlyArray<string>,
+  anchorId?: string,
+): Promise<StoryIdeaCarousel | undefined> {
+  // Fixed rather than passed in: the carousel is one set, so it takes no filters.
+  const set = {
+    readerId,
+    hiddenAuthorIds,
+    excludeCreatedBy: readerId,
+    status: "open" as const,
+    readerState: "unread" as const,
+  };
+
+  // Counts the whole set, and its single row is where a carousel opened without an anchor
+  // starts.
+  const newest = await listStoryIdeas({
+    ...set,
+    limit: 1,
+    offset: 0,
+    sortAttribute: "storyIdea.id",
+    sortOrder: "desc",
+  });
+
+  // Read state is ignored for the anchor alone: marking the idea on screen as read must not
+  // invalidate the URL the member is sitting on. Every other part of the set still holds.
+  const anchor = anchorId === undefined ? undefined : await filtered({
+    ...set,
+    readerState: "any",
+    id: anchorId,
+  }).executeTakeFirst();
+
+  if (anchorId !== undefined && anchor === undefined) {
+    return undefined;
+  }
+
+  const storyIdea = anchor ?? newest.results[0];
+
+  if (storyIdea === undefined) {
+    return { previous: null, storyIdea: null, next: null, total: 0 };
+  }
+
+  const [previous, next] = await Promise.all([
+    // Newest first, so the previous idea is the nearest one *above* this id.
+    filtered({ ...set, newerThanId: storyIdea.id })
+      .orderBy("storyIdea.id", "asc")
+      .limit(1)
+      .executeTakeFirst(),
+    filtered({ ...set, olderThanId: storyIdea.id })
+      .orderBy("storyIdea.id", "desc")
+      .limit(1)
+      .executeTakeFirst(),
+  ]);
+
+  return {
+    previous: previous ?? null,
+    storyIdea,
+    next: next ?? null,
+    total: newest.totalResults,
+  };
+}
+
 export const StoryIdeaService = {
   listStoryIdeas,
+  selectCarousel,
   selectStoryIdea,
   setReaderState,
   clearReaderState,

@@ -92,6 +92,18 @@ export const STORY_IDEA_RESPONSE = STORY_IDEA_SCHEMA.extend({
   readerState: STORY_IDEA_READER_SCHEMA.shape.state.nullable(),
 });
 
+/**
+ * One step of the story-idea carousel. The neighbours are whole ideas rather than ids, because
+ * a movement needs something to move to; `null` on a side is the end of the set. `storyIdea`
+ * is null only when the set is empty, which is a member who has read everything.
+ */
+export const STORY_IDEA_CAROUSEL_RESPONSE = z.object({
+  previous: STORY_IDEA_RESPONSE.nullable(),
+  storyIdea: STORY_IDEA_RESPONSE.nullable(),
+  next: STORY_IDEA_RESPONSE.nullable(),
+  total: z.number().int().nonnegative(),
+});
+
 /** Separate from `USER_RESPONSE` so the picker and search keep sending two fields. */
 export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   id: true,
