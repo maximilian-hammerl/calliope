@@ -3,6 +3,7 @@ import {
   CHAT_GROUP_SCHEMA,
   CHAT_MESSAGE_SCHEMA,
   NOTIFICATION_SCHEMA,
+  STORY_IDEA_READER_SCHEMA,
   STORY_IDEA_SCHEMA,
   USER_IN_CHAT_GROUP_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
@@ -86,6 +87,9 @@ export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
 /** The author's name joined on, never null: an idea cannot outlive its author (CASCADE). */
 export const STORY_IDEA_RESPONSE = STORY_IDEA_SCHEMA.extend({
   createdByUsername: z.string(),
+  // The requesting member's own state, null while unread. Never another member's: a count of
+  // readers is exactly the statistic the research rejected.
+  readerState: STORY_IDEA_READER_SCHEMA.shape.state.nullable(),
 });
 
 /** Separate from `USER_RESPONSE` so the picker and search keep sending two fields. */

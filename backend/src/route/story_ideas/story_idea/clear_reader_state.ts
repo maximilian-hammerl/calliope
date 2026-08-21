@@ -17,27 +17,25 @@ const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
 export default new OpenAPIHono().openapi(
   createRoute({
     method: "delete",
-    path: "/",
+    path: "/reader-state",
     tags: [STORY_IDEAS_TAG],
-    summary: "Take one's own story idea off the board",
-    operationId: "deleteStoryIdea",
+    summary: "Set an idea back to unread",
+    description:
+      "Removes the member's own state. Answers the same way whether a state was there or not, because unread is the absence of one.",
+    operationId: "clearReaderState",
     middleware: requireSession,
     request: { params: IDEA_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
-        description: "The idea is gone",
+        description: "The idea is unread again",
         content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
         content: jsonContent(ERROR_RESPONSE),
       },
-      [STATUS_CODE.Forbidden]: {
-        description: "The idea belongs to somebody else",
-        content: jsonContent(ERROR_RESPONSE),
-      },
       [STATUS_CODE.NotFound]: {
-        description: "No idea has this id",
+        description: "No such idea",
         content: jsonContent(ERROR_RESPONSE),
       },
       ...BAD_REQUEST_RESPONSE,
@@ -45,23 +43,15 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
+    const user = c.get("user");
     const { ideaId } = c.req.valid("param");
 
-    const deleted = await StoryIdeaService.deleteStoryIdea(
-      ideaId,
-      c.get("user").id,
-    );
-
-    if (deleted) {
-      return c.json({ ok: true } as const, STATUS_CODE.OK);
+    const idea = await StoryIdeaService.selectStoryIdea(ideaId, user.id);
+    if (idea === undefined) {
+      return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    const exists = await StoryIdeaService.selectStoryIdea(
-      ideaId,
-      c.get("user").id,
-    );
-    return exists === undefined
-      ? c.json({ error: "Not found" }, STATUS_CODE.NotFound)
-      : c.json({ error: "Not yours to remove" }, STATUS_CODE.Forbidden);
+    await StoryIdeaService.clearReaderState(ideaId, user.id);
+    return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

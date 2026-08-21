@@ -9187,6 +9187,11 @@
                     "enum": ["open", "closed", "any"],
                     "default": "open"
                   },
+                  "readerState": {
+                    "type": "string",
+                    "enum": ["read", "marked", "unread", "any"],
+                    "default": "any"
+                  },
                   "language": {
                     "type": "string",
                     "enum": ["english", "german"]
@@ -9255,7 +9260,11 @@
                             "type": "string",
                             "format": "date-time"
                           },
-                          "createdByUsername": { "type": "string" }
+                          "createdByUsername": { "type": "string" },
+                          "readerState": {
+                            "type": ["string", "null"],
+                            "enum": ["marked", "read", null]
+                          }
                         },
                         "required": [
                           "id",
@@ -9274,7 +9283,8 @@
                           "status",
                           "createdBy",
                           "createdAt",
-                          "createdByUsername"
+                          "createdByUsername",
+                          "readerState"
                         ]
                       }
                     }
@@ -9549,7 +9559,11 @@
                     "status": { "type": "string", "enum": ["closed", "open"] },
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "createdByUsername": { "type": "string" }
+                    "createdByUsername": { "type": "string" },
+                    "readerState": {
+                      "type": ["string", "null"],
+                      "enum": ["marked", "read", null]
+                    }
                   },
                   "required": [
                     "id",
@@ -9568,7 +9582,8 @@
                     "status",
                     "createdBy",
                     "createdAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "readerState"
                   ]
                 }
               }
@@ -9782,7 +9797,11 @@
                     "status": { "type": "string", "enum": ["closed", "open"] },
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "createdByUsername": { "type": "string" }
+                    "createdByUsername": { "type": "string" },
+                    "readerState": {
+                      "type": ["string", "null"],
+                      "enum": ["marked", "read", null]
+                    }
                   },
                   "required": [
                     "id",
@@ -9801,7 +9820,8 @@
                     "status",
                     "createdBy",
                     "createdAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "readerState"
                   ]
                 }
               }
@@ -10105,7 +10125,11 @@
                     "status": { "type": "string", "enum": ["closed", "open"] },
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "createdByUsername": { "type": "string" }
+                    "createdByUsername": { "type": "string" },
+                    "readerState": {
+                      "type": ["string", "null"],
+                      "enum": ["marked", "read", null]
+                    }
                   },
                   "required": [
                     "id",
@@ -10124,7 +10148,8 @@
                     "status",
                     "createdBy",
                     "createdAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "readerState"
                   ]
                 }
               }
@@ -10641,6 +10666,403 @@
           },
           "404": {
             "description": "No idea has this id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/story-ideas/{ideaId}/reader-state": {
+      "put": {
+        "tags": ["story-ideas"],
+        "summary": "Mark an idea as read, or worth coming back to",
+        "description": "The member's own state on somebody else's idea. Idempotent: setting it again overwrites what was there. Unread is the absence of a state, so clearing it is a DELETE.",
+        "operationId": "setReaderState",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "ideaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "state": { "type": "string", "enum": ["marked", "read"] }
+                },
+                "required": ["state"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The state was set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The reader's own idea",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such idea",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["story-ideas"],
+        "summary": "Set an idea back to unread",
+        "description": "Removes the member's own state. Answers the same way whether a state was there or not, because unread is the absence of one.",
+        "operationId": "clearReaderState",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "ideaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The idea is unread again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such idea",
             "content": {
               "application/json": {
                 "schema": {

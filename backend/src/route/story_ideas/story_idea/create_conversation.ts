@@ -53,6 +53,7 @@ export default new OpenAPIHono().openapi(
     const user = c.get("user");
     const idea = await StoryIdeaService.selectStoryIdea(
       c.req.valid("param").ideaId,
+      user.id,
     );
 
     if (idea === undefined) {

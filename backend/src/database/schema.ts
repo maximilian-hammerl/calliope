@@ -22,6 +22,8 @@ export type NotificationType =
 
 export type StoryIdeaPartySize = "group" | "one_on_one";
 
+export type StoryIdeaReaderState = "marked" | "read";
+
 export type StoryIdeaStatus = "closed" | "open";
 
 export type StoryLanguage = "english" | "german";
@@ -89,6 +91,13 @@ export interface StoryIdea {
   tense: string | null;
   title: string;
   tropes: Generated<string[]>;
+}
+
+export interface StoryIdeaReader {
+  createdAt: Generated<string>;
+  state: StoryIdeaReaderState;
+  storyIdeaId: string;
+  userId: string;
 }
 
 export interface User {
@@ -201,6 +210,7 @@ export interface DB {
   chatMessage: ChatMessage;
   notification: Notification;
   storyIdea: StoryIdea;
+  storyIdeaReader: StoryIdeaReader;
   user: User;
   userBlock: UserBlock;
   userInChatGroup: UserInChatGroup;
@@ -275,6 +285,9 @@ export const STORY_IDEA_STATUS_SCHEMA = z.enum(STORY_IDEA_STATUSES);
 export const STORY_IDEA_PARTY_SIZES = ["group", "one_on_one"] as const;
 export const STORY_IDEA_PARTY_SIZE_SCHEMA = z.enum(STORY_IDEA_PARTY_SIZES);
 
+export const STORY_IDEA_READER_STATES = ["marked", "read"] as const;
+export const STORY_IDEA_READER_STATE_SCHEMA = z.enum(STORY_IDEA_READER_STATES);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -321,6 +334,13 @@ export const STORY_IDEA_SCHEMA = z.object({
   partySize: STORY_IDEA_PARTY_SIZE_SCHEMA.nullable(),
   status: STORY_IDEA_STATUS_SCHEMA,
   createdBy: z.uuidv7(),
+  createdAt: z.iso.datetime({ offset: true }),
+});
+
+export const STORY_IDEA_READER_SCHEMA = z.object({
+  storyIdeaId: z.uuidv7(),
+  userId: z.uuidv7(),
+  state: STORY_IDEA_READER_STATE_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
 });
 

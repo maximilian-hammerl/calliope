@@ -28,10 +28,19 @@ const SORT_ATTRIBUTE = STORY_IDEA_SCHEMA
 // Open by default: closed ideas stop cluttering the board but stay reachable by asking.
 const STATUS_FILTER = z.enum(["open", "closed", "any"]).default("open");
 
+/**
+ * `any` rather than `unread` by default: the board's own default filter is a frontend
+ * decision, and an endpoint that hid read ideas unless asked would surprise every other caller.
+ */
+const READER_STATE_FILTER = z
+  .enum(["read", "marked", "unread", "any"])
+  .default("any");
+
 const LIST_STORY_IDEAS_BODY = listQuerySchema(
   SORT_ATTRIBUTE,
   {
     status: STATUS_FILTER,
+    readerState: READER_STATE_FILTER,
     language: STORY_IDEA_SCHEMA.shape.language.optional(),
     // The board is discovery, so `others` is the default: like a public group the reader is
     // already in, their own idea is not something to find.
@@ -72,6 +81,7 @@ export default new OpenAPIHono().openapi(
     const { author, ...query } = c.req.valid("json");
     const page = await StoryIdeaService.listStoryIdeas({
       ...query,
+      readerId: c.get("user").id,
       hiddenAuthorIds: await BlockService.selectBlockedIds(c.get("user").id),
       // `mine` also widens the status filter: an author manages all their ideas, closed ones
       // included, and hiding those here would make closing one irreversible in the interface.

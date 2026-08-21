@@ -218,6 +218,17 @@ see the list with the controls **disabled rather than hidden** („Nur wer schre
 Schritte anlegen"): a deliberate exception to hiding what one cannot do, so a reader knows the
 group plans here. Completed steps stay under „Erledigt (N)" until someone deletes them.
 
+**A member's own state on somebody else's thing is never shown to its owner.** A story idea
+carries "Gelesen" or "Gemerkt" for the member reading it and nothing for its author: "four
+members read your idea" is the statistic the research rejected. Saving something for later is
+**"Merken"** everywhere — never "Favorit", which names a feeling rather than an intention and
+promises a permanence the author can end by closing the idea.
+
+**A thing its owner has ended stays readable, and says so.** A closed story idea keeps its
+page and its badge, and the action it can no longer take is **disabled rather than hidden** —
+hiding it leaves a member wondering where it went, where a disabled control with a reason
+tells them the owner has finished with it.
+
 **A membership shows one date, the one its state is about**: "eingeladen vor 3 Tagen" while an
 invitation is pending, "beigetreten vor 2 Tagen" once it has been accepted. Both are participles
 and both take the usual relative-then-absolute time. When somebody is in the group, when they
@@ -444,9 +455,12 @@ else this product does with a disabled control.
 the only looping animation in the product. No bounces, no attention-seeking motion; everything
 honours `prefers-reduced-motion`.
 
-**Selection is a rule, never a box.** A 2px rule in `--oak` marks the current tab and the
-current bottom-bar item; the inactive ones keep a lighter rule so they read as the same kind of
-thing. Raised paper with a hairline and a radius was tried and dropped: it read as a card rather
+**Selection is a rule, never a box.** A 2px rule in `--oak` marks the current tab, the current
+bottom-bar item and the chosen option in a filter strip (`FilterStrip`); the inactive ones keep
+a lighter rule so they read as the same kind of thing. A filter is never the solid button
+level — that is the one primary act of a screen, and filled chips both out-shout it and read as
+separate things rather than one control. The rule ends with the last option rather than running
+to the column edge, which was tried and dropped. Raised paper with a hairline and a radius was tried and dropped: it read as a card rather
 than a position, and left the other items with no affordance at all. Hover darkens the text and
 the rule, never fills — a hovered item would otherwise look more selected than the selected one.
 

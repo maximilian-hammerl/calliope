@@ -1,4 +1,5 @@
 import { request } from "@/src/test/support.ts";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import type { StoryIdeaStatus } from "@/src/database/schema.ts";
 
 /**
@@ -6,6 +7,14 @@ import type { StoryIdeaStatus } from "@/src/database/schema.ts";
  * file's `afterEach` deleting the accounts another was still using.
  */
 export function storyIdeaUsers(scope: string) {
+  // A long scope pushes the name past TEXT_LIMIT.username, and registration then fails in
+  // whichever test happens to run first rather than saying what is wrong.
+  if (`story-idea-${scope}-bystander`.length > TEXT_LIMIT.username) {
+    throw new Error(
+      `Scope "${scope}" makes a username longer than ${TEXT_LIMIT.username}`,
+    );
+  }
+
   return {
     author: `story-idea-${scope}-author`,
     bystander: `story-idea-${scope}-bystander`,

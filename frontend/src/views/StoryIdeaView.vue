@@ -2,9 +2,12 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  getGetStoryIdeaQueryKey,
   getListStoryIdeasQueryKey,
+  useClearReaderState,
   useDeleteStoryIdea,
   useGetStoryIdea,
+  useSetReaderState,
   useStartStoryIdeaConversation,
 } from '@/api/story-ideas/story-ideas'
 import { getListChatsQueryKey } from '@/api/chats/chats'
@@ -49,6 +52,29 @@ async function askAboutIdea() {
     openChatDialog(created.data.id)
   } catch {
     conversationError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+  }
+}
+
+const { mutateAsync: setReaderState } = useSetReaderState()
+const { mutateAsync: clearReaderState } = useClearReaderState()
+const savingReaderState = ref<boolean>(false)
+
+/**
+ * Null puts the idea back to unread, which is the absence of a row rather than a third value.
+ * Choosing the state an idea already has clears it, so one control both sets and undoes.
+ */
+async function changeReaderState(state: 'read' | 'marked' | null) {
+  savingReaderState.value = true
+  try {
+    if (state === null) {
+      await clearReaderState({ ideaId: ideaId.value })
+    } else {
+      await setReaderState({ ideaId: ideaId.value, data: { state } })
+    }
+    await queryClient.invalidateQueries({ queryKey: getGetStoryIdeaQueryKey(ideaId.value) })
+    await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+  } finally {
+    savingReaderState.value = false
   }
 }
 
@@ -167,13 +193,54 @@ async function remove() {
 
             <!-- The visitor's one action, solid for that reason. Only while the idea is open:
                  closed means the author asked not to be asked, and the API enforces it too. -->
-            <div v-else-if="idea.status === 'open'" class="ml-auto">
-              <Button size="sm" :disabled="startingConversation" @click="askAboutIdea">
+            <div v-else class="ml-auto flex flex-wrap items-center gap-2">
+              <!-- Choosing the current state again clears it, so one pair of buttons covers
+                   setting and undoing without a third control. -->
+              <Button
+                variant="secondary"
+                size="sm"
+                :disabled="savingReaderState"
+                @click="changeReaderState(idea.readerState === 'read' ? null : 'read')"
+              >
+                {{
+                  idea.readerState === 'read' ? 'Als ungelesen markieren' : 'Als gelesen markieren'
+                }}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                :disabled="savingReaderState"
+                @click="changeReaderState(idea.readerState === 'marked' ? null : 'marked')"
+              >
+                {{ idea.readerState === 'marked' ? 'Nicht mehr merken' : 'Merken' }}
+              </Button>
+              <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and
+                   a member who kept the idea should see why they cannot write. -->
+              <Button
+                size="sm"
+                :disabled="startingConversation || idea.status === 'closed'"
+                :title="
+                  idea.status === 'closed'
+                    ? 'Diese Storyidee ist geschlossen und kann nicht mehr beantwortet werden'
+                    : undefined
+                "
+                @click="askAboutIdea"
+              >
                 <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
                 Unterhaltung beginnen
               </Button>
             </div>
           </div>
+
+          <p
+            v-if="idea.status === 'closed'"
+            class="mt-3 max-w-[60ch] text-[13px] leading-[1.6] text-ink-5"
+          >
+            Diese Storyidee ist geschlossen. Sie bleibt lesbar, aber
+            {{
+              isOwn ? 'niemand kann sie mehr beantworten' : 'du kannst sie nicht mehr beantworten'
+            }}.
+          </p>
 
           <p
             v-if="idea.subtitle"

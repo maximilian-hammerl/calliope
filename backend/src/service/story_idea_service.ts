@@ -3,6 +3,7 @@ import { db } from "@/src/database/client.ts";
 import type {
   StoryIdea as DatabaseStoryIdea,
   StoryIdeaPartySize,
+  StoryIdeaReaderState,
   StoryIdeaStatus,
   StoryLanguage,
 } from "@/src/database/schema.ts";
@@ -34,10 +35,16 @@ export type StoryIdea =
     | "createdAt"
   >
   // Never null: created_by is NOT NULL and CASCADE, so an idea cannot outlive its author.
-  & { createdByUsername: string };
+  & { createdByUsername: string }
+  // The reading member's own state, null while unread. Never anybody else's: what a member
+  // has read is theirs, and a count of readers is the statistic the research rejected.
+  & { readerState: StoryIdeaReaderState | null };
 
 /** The board's default is `open`: what is still worth answering. */
 export type StatusFilter = StoryIdeaStatus | "any";
+
+/** `unread` is the absence of a row, which is why it is not a value of the enum itself. */
+export type ReaderStateFilter = StoryIdeaReaderState | "unread" | "any";
 
 const SELECTED_COLUMNS = [
   "storyIdea.id",
@@ -108,15 +115,33 @@ function toRow(values: Partial<StoryIdeaValues>) {
   };
 }
 
-function withAuthor() {
+/**
+ * Left join on the reader, so an unread idea still comes back — with `readerState` null. The
+ * join is bound to one member's id: no query here can see another member's state.
+ */
+function withAuthor(readerId: string) {
   return db
     .selectFrom("storyIdea")
     .innerJoin("user", "user.id", "storyIdea.createdBy")
-    .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
+    .leftJoin(
+      "storyIdeaReader",
+      (join) =>
+        join
+          .onRef("storyIdeaReader.storyIdeaId", "=", "storyIdea.id")
+          .on("storyIdeaReader.userId", "=", readerId),
+    )
+    .select([
+      ...SELECTED_COLUMNS,
+      "user.username as createdByUsername",
+      "storyIdeaReader.state as readerState",
+    ]);
 }
 
 function listStoryIdeas(
   query: ListQuery & {
+    /** Whose state to report, and to filter by. Always the requesting member. */
+    readerId: string;
+    readerState: ReaderStateFilter;
     status: StatusFilter;
     language?: StoryLanguage;
     /** Only the reader's own ideas — the view that manages, not the one that browses. */
@@ -128,7 +153,7 @@ function listStoryIdeas(
   },
 ): Promise<ListResults<StoryIdea>> {
   return listResultsWithCount(
-    withAuthor()
+    withAuthor(query.readerId)
       .$if(query.createdBy !== undefined, (queryBuilder) =>
         // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
@@ -163,6 +188,21 @@ function listStoryIdeas(
       .$if(query.language !== undefined, (queryBuilder) =>
         // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.language", "=", query.language!))
+      // Unread is the missing row, so it filters on the join rather than on a value.
+      .$if(
+        query.readerState === "unread",
+        (queryBuilder) =>
+          queryBuilder.where("storyIdeaReader.state", "is", null),
+      )
+      .$if(
+        query.readerState === "read" || query.readerState === "marked",
+        (queryBuilder) =>
+          queryBuilder.where(
+            "storyIdeaReader.state",
+            "=",
+            query.readerState as StoryIdeaReaderState,
+          ),
+      )
       .$if(
         query.search !== undefined,
         (queryBuilder) =>
@@ -179,8 +219,11 @@ function listStoryIdeas(
   );
 }
 
-async function selectStoryIdea(ideaId: string): Promise<StoryIdea | undefined> {
-  return await withAuthor()
+async function selectStoryIdea(
+  ideaId: string,
+  readerId: string,
+): Promise<StoryIdea | undefined> {
+  return await withAuthor(readerId)
     .where("storyIdea.id", "=", ideaId)
     .executeTakeFirst();
 }
@@ -202,7 +245,8 @@ async function insertStoryIdea(
     .returning("id")
     .executeTakeFirstOrThrow();
 
-  return await withAuthor()
+  // The author is the reader here, so a freshly created idea reports its own state: null.
+  return await withAuthor(createdBy)
     .where("storyIdea.id", "=", id)
     .executeTakeFirstOrThrow();
 }
@@ -225,7 +269,8 @@ async function updateStoryIdea(
     return undefined;
   }
 
-  return await selectStoryIdea(updated.id);
+  // Only the author can reach this, so they are the reader whose state comes back.
+  return await selectStoryIdea(updated.id, createdBy);
 }
 
 async function deleteStoryIdea(
@@ -241,9 +286,43 @@ async function deleteStoryIdea(
   return deletion.numDeletedRows > 0n;
 }
 
+/**
+ * Upsert, because a member setting a state twice is not an error: the second one wins and the
+ * first row is simply overwritten.
+ */
+async function setReaderState(
+  ideaId: string,
+  userId: string,
+  state: StoryIdeaReaderState,
+): Promise<void> {
+  await db
+    .insertInto("storyIdeaReader")
+    .values({ storyIdeaId: ideaId, userId, state })
+    .onConflict((conflict) =>
+      conflict
+        .columns(["storyIdeaId", "userId"])
+        .doUpdateSet({ state })
+    )
+    .execute();
+}
+
+/** Back to unread, which is the absence of a row rather than a third value. */
+async function clearReaderState(
+  ideaId: string,
+  userId: string,
+): Promise<void> {
+  await db
+    .deleteFrom("storyIdeaReader")
+    .where("storyIdeaId", "=", ideaId)
+    .where("userId", "=", userId)
+    .execute();
+}
+
 export const StoryIdeaService = {
   listStoryIdeas,
   selectStoryIdea,
+  setReaderState,
+  clearReaderState,
   insertStoryIdea,
   updateStoryIdea,
   deleteStoryIdea,
