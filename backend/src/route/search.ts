@@ -10,6 +10,7 @@ import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import { listResponseSchema } from "@/src/list/list_endpoint.ts";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import {
@@ -74,6 +75,9 @@ export default new OpenAPIHono().openapi(
 
     // Each service applies its own visibility rule, so authorisation is not restated here.
     // In parallel: three independent reads, and the slowest decides how long this takes.
+    // Read before the searches, so the member filter has it and the others are unaffected.
+    const blockedIds = await BlockService.selectBlockedIds(user.id);
+
     const [groups, threads, users] = await Promise.all([
       WritingGroupService.listVisibleWritingGroups(user, {
         search,
@@ -98,6 +102,7 @@ export default new OpenAPIHono().openapi(
         offset: 0,
         sortAttribute: "user.username",
         sortOrder: "asc",
+        hiddenUserIds: blockedIds,
       }),
     ]);
 

@@ -188,6 +188,14 @@ Einstellungen, Abmelden. That split is also what keeps the bar from growing: two
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
 have pushed harder.
 
+**„Blockieren" says what it does, and what it does not.** Our block stops contact — no
+invitations either way, and the unanswered ones are withdrawn — and deliberately leaves shared
+groups, shared conversations and everything written in place. Because the word promises more
+than that to most readers, the confirmation spells all three out before the button, and the
+profile keeps saying it afterwards ("Du hast X blockiert. Ihr könnt euch nicht einladen."). The
+trigger is Plain; the destructive weight belongs on the confirmation, where the consequences
+are.
+
 **A story idea becomes a group by copy, not by wizard.** "Gruppe gründen" on one's own idea
 opens the ordinary create-group dialog with every field filled from the idea — the author
 still chooses visibility and can change anything before confirming. Both group dialogs carry

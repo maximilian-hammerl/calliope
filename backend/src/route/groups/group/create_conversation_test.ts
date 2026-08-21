@@ -72,6 +72,53 @@ Deno.test("POST /api/groups/{id}/conversations does not invite writers", async (
   assertEquals(invited.username, founder);
 });
 
+Deno.test("POST /api/groups/{id}/conversations skips a blocked administrator", async () => {
+  const cookie = await registerUser(founder);
+  const group = await createGroup(cookie, "Zwei Verwaltende", "public");
+  const secondCookie = await addMember(
+    cookie,
+    group.id,
+    second,
+    "administrator",
+  );
+
+  const other = await registerUser(stranger);
+  // One of the two wants nothing to do with the asker; the other still can be reached.
+  await request("POST", "/api/blocks", secondCookie, {
+    userId: await getUserId(stranger),
+  });
+
+  const chat = await (await startConversation(other, group.id)).json();
+  const members = await (await request(
+    "QUERY",
+    `/api/chats/${chat.id}/memberships`,
+    other,
+    {},
+  )).json();
+  const invited = members.results.filter(
+    (member: { status: string }) => member.status === "invited",
+  );
+
+  // A group must not become unreachable because one administrator blocked one person.
+  assertEquals(invited.length, 1);
+  assertEquals(invited[0].username, founder);
+});
+
+Deno.test("POST /api/groups/{id}/conversations is refused when every administrator has blocked them", async () => {
+  const cookie = await registerUser(founder);
+  const group = await createGroup(cookie, "Alle blockiert", "public");
+
+  const other = await registerUser(stranger);
+  await request("POST", "/api/blocks", cookie, {
+    userId: await getUserId(stranger),
+  });
+
+  const response = await startConversation(other, group.id);
+
+  // Nobody left to ask, which is the same answer as a group with no administrator at all.
+  assertEquals(response.status, STATUS_CODE.Conflict);
+});
+
 Deno.test("POST /api/groups/{id}/conversations hides a private group", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Versteckt", "private");

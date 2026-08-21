@@ -9,7 +9,7 @@ import {
 } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import {
-  deleteAllMail,
+  deleteMailFor,
   tokenFromMail,
   waitForMail,
 } from "@/src/test/mailpit.ts";
@@ -20,16 +20,19 @@ const emailAddress = `${username}@example.com`;
 const currentPassword = "a-complex-password";
 const newPassword = "an-entirely-different-password";
 
+/** Only this file's mail, so it cannot empty a mailbox another file is waiting on. */
+const clearMail = () => deleteMailFor([emailAddress]);
+
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
 async function signedIn(): Promise<string> {
   const cookie = await registerUser(username);
   await flushBackgroundWork();
-  await deleteAllMail();
+  await clearMail();
   return cookie;
 }
 
@@ -98,7 +101,7 @@ Deno.test("PATCH /api/auth/password kills an outstanding reset link", async () =
   await postJson("/api/auth/forgot-password", { login: username });
   await flushBackgroundWork();
   const resetToken = tokenFromMail(await waitForMail(emailAddress));
-  await deleteAllMail();
+  await clearMail();
 
   await changePassword(cookie);
 

@@ -6,6 +6,7 @@ import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import { conversationTitle } from "@/src/util/conversation_title.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -74,8 +75,12 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const administratorIds = await UserInWritingGroupService
-      .selectJoinedAdministratorIds(group.id);
+    // Blocked administrators are skipped rather than refused: one administrator's block must
+    // not make a whole group unreachable. Only when none is left does this fail.
+    const administratorIds = await BlockService.withoutBlocked(
+      user.id,
+      await UserInWritingGroupService.selectJoinedAdministratorIds(group.id),
+    );
 
     // The ungoverned-group hole (roadmap item 1) seen from outside: nobody left to ask.
     if (administratorIds.length === 0) {

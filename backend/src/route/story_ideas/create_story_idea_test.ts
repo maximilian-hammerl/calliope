@@ -5,7 +5,10 @@ import {
   deleteUsers,
   registerUser,
 } from "@/src/test/support.ts";
-import { author, createIdea } from "@/src/test/story_ideas.ts";
+import { createIdea, storyIdeaUsers } from "@/src/test/story_ideas.ts";
+
+// Its own two accounts, so another file's cleanup cannot delete them.
+const { author } = storyIdeaUsers("create");
 
 Deno.test.beforeEach(() => clearRateLimits());
 Deno.test.afterEach(() => deleteUsers([author]));

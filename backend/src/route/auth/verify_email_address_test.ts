@@ -3,23 +3,25 @@ import { STATUS_CODE } from "@std/http/status";
 import { db } from "@/src/database/client.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
+import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import {
-  deleteAllMail,
-  tokenFromMail,
-  waitForMail,
-} from "@/src/test/mailpit.ts";
-import {
-  emailAddress,
+  authFixture,
   postJson,
-  register,
   sendJson,
   sessionCookie,
-  username,
 } from "@/src/test/auth.ts";
+
+// Its own account, so a file running beside this one cannot register or delete it.
+const {
+  clearMail,
+  emailAddress,
+  register,
+  username,
+} = authFixture("verify");
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
@@ -92,7 +94,7 @@ Deno.test("POST /api/auth/verify-email-address rejects an expired token", async 
 
 Deno.test("POST /api/auth/verify-email-address rejects a reset token", async () => {
   const { cookie } = await registerAndReadLink();
-  await deleteAllMail();
+  await clearMail();
 
   await postJson("/api/auth/forgot-password", { login: username });
   await flushBackgroundWork();
@@ -105,7 +107,7 @@ Deno.test("POST /api/auth/verify-email-address rejects a reset token", async () 
 
 Deno.test("POST /api/auth/resend-email-address-verification sends another link", async () => {
   const { cookie } = await registerAndReadLink();
-  await deleteAllMail();
+  await clearMail();
 
   // Past the resend cooldown, which the issuing service enforces on the outstanding token.
   await db

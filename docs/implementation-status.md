@@ -49,7 +49,7 @@ opens a first door, still unmoderated.
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Chats are titled and invite-based, so **no** "message this member".                              |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Built as **Storyideen**: board, detail page, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea.                    |
-| Administration   | Not started.                                                                                                                                                              |
+| Administration   | Not started. Blocking is built, but moderation, reports and a queue are not — see the roadmap.                                                                            |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. **No** data export, no GDPR configuration.                          |
 
 Two Phase 2 items (§43) arrived early because they were cheap alongside the group work: group
@@ -85,7 +85,8 @@ These are decisions, not omissions, and each is recorded where it was made:
   invite-based, and a group works the same way: an invitation has to be accepted before anyone
   can write to you. This is deliberate — it means one member cannot simply start sending
   another messages. The residual is invitation spam, which is the smallest version of the
-  problem and the one a *block a member* feature closes; that feature is on the roadmap below.
+  problem, and **blocking now closes it**: neither side can invite the other, and the
+  invitations already outstanding are withdrawn.
 - **Search covers groups, threads and members, not posts.** Post search needs snippet
   extraction and an index before it is honest.
 - **Rich text is not merged.** A Tiptap editor sits on the `text-editor` branch because a
@@ -165,11 +166,19 @@ kept in step for. The author still chooses visibility and confirms; the idea sta
 they close it, deliberately — a fresh group of two might still want a third writer. With that,
 §8 is done. Item 4 below stops being optional the moment testers get this board.
 
-### 4. Block a member
+### 4. Block a member — built
 
-The complement to 3, which now exists. Once strangers reach each other through the board, the
-invitation spam described above stops being theoretical. Small on its own, and cheap while the surfaces
-that can carry a message are still few.
+Blocking refuses contact in both directions across all four surfaces that can carry an approach
+(both invitation routes, both conversation routes), withdraws the invitations still unanswered,
+and hides the other member from lists, search, the ideas board and notifications. Nothing shared
+is removed: a group or conversation you are both in stays until one of you leaves, and writing
+stays regardless.
+
+Note what this is *not*: **reporting**, §11's other half, needs somewhere to land and so waits
+for item 8. And nothing stops a member already in a shared chat from writing in it — leaving is
+the answer there, which is the one place this feature deliberately stops short. Section 16 of the
+interviews, the whole of *Sicherheit und Moderation*, was never answered, so this was kept
+mechanical rather than inventing policy nobody asked for.
 
 ### 5. Personal data export (§18, §42)
 

@@ -4,6 +4,7 @@ import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import {
   listQuerySchema,
   listResponseSchema,
@@ -58,10 +59,11 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await NotificationService.listNotifications(
-      c.get("user").id,
-      c.req.valid("json"),
-    );
+    const user = c.get("user");
+    const page = await NotificationService.listNotifications(user.id, {
+      ...c.req.valid("json"),
+      hiddenActorIds: await BlockService.selectBlockedIds(user.id),
+    });
 
     return c.json(page, STATUS_CODE.OK);
   },

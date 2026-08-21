@@ -91,6 +91,10 @@ export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   id: true,
   username: true,
   createdAt: true,
+}).extend({
+  // Whether the *reader* has blocked them, which is the reader's own information. Never
+  // whether they have blocked the reader: that would be the disclosure a neutral 403 avoids.
+  isBlocked: z.boolean(),
 });
 
 /**

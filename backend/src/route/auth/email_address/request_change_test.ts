@@ -2,22 +2,27 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMail, deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
+import { waitForMail } from "@/src/test/mailpit.ts";
 import { postJson } from "@/src/test/auth.ts";
-import {
+import { emailChangeFixture } from "@/src/test/email_address_change.ts";
+
+// Its own account and addresses, so the file next door cannot occupy them.
+const {
+  clearMail,
   currentAddress,
   linksFromMail,
+  mailCount,
   newAddress,
   pendingAddress,
   registerVerified,
   requestChange,
   storedAddress,
   username,
-} from "@/src/test/email_address_change.ts";
+} = emailChangeFixture("request");
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
@@ -42,7 +47,7 @@ Deno.test("POST /api/auth/email-address/change writes to both addresses", async 
   // absence would be silent and serious.
   const links = await linksFromMail();
   assertEquals(links.confirm, links.cancel);
-  assertEquals(await countMail(), 2);
+  assertEquals(await mailCount(), 2);
 });
 
 Deno.test("POST /api/auth/email-address/change mails paths the frontend has", async () => {
@@ -74,7 +79,7 @@ Deno.test("POST /api/auth/email-address/change refuses a wrong password", async 
   assertEquals(await pendingAddress(), undefined);
 
   await flushBackgroundWork();
-  assertEquals(await countMail(), 0);
+  assertEquals(await mailCount(), 0);
 });
 
 Deno.test("POST /api/auth/email-address/change refuses an address in use", async () => {

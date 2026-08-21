@@ -5,6 +5,7 @@ import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import { conversationTitle } from "@/src/util/conversation_title.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -63,6 +64,13 @@ export default new OpenAPIHono().openapi(
     // A closed idea is the author saying "don't ask" — honoured here, not only in the list.
     if (idea.status === "closed") {
       return c.json({ error: "This idea is closed" }, STATUS_CODE.Forbidden);
+    }
+    // Neutral on purpose: it does not say who blocked whom, only that this cannot happen.
+    if (await BlockService.isBlockedBetween(user.id, idea.createdBy)) {
+      return c.json(
+        { error: "Contact is not possible" },
+        STATUS_CODE.Forbidden,
+      );
     }
 
     const chat = await ChatGroupService.insertChatGroup(

@@ -2,6 +2,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { Hono } from "hono";
 import { redis } from "@/src/redis/client.ts";
+import { RATE_LIMIT_TEST_CLIENTS } from "@/src/test/support.ts";
 import rateLimit, {
   RATE_LIMIT_KEY_PREFIX,
   REQUESTS_PER_WINDOW,
@@ -13,8 +14,12 @@ const app = new Hono().use(rateLimit).get(
   (c) => c.json({ ok: true }),
 );
 
-/** Each test uses its own client address, so the tests cannot exhaust each other's budget. */
+/**
+ * Each test uses its own client address, so the tests cannot exhaust each other's budget, and
+ * all of them sit in the block `clearRateLimits` is documented to spare.
+ */
 function request(clientAddress: string) {
+  assertEquals(clientAddress.startsWith(RATE_LIMIT_TEST_CLIENTS), true);
   return app.request("/probe", {
     headers: { "x-forwarded-for": clientAddress },
   });

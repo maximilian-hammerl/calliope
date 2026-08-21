@@ -3,15 +3,18 @@ import { STATUS_CODE } from "@std/http/status";
 import {
   clearRateLimits,
   deleteUsers,
+  getUserId,
   registerUser,
   request,
 } from "@/src/test/support.ts";
 import {
-  author,
-  bystander,
   createIdea,
   patchIdea,
+  storyIdeaUsers,
 } from "@/src/test/story_ideas.ts";
+
+// Its own two accounts, so another file's cleanup cannot delete them.
+const { author, bystander } = storyIdeaUsers("convo");
 
 Deno.test.beforeEach(() => clearRateLimits());
 Deno.test.afterEach(() => deleteUsers([author, bystander]));
@@ -74,6 +77,28 @@ Deno.test("POST /api/story-ideas/{id}/conversations refuses a closed idea", asyn
   // Closing an idea is the author saying "don't ask", so the button's absence is not the
   // only thing enforcing it.
   assertEquals(response.status, STATUS_CODE.Forbidden);
+});
+
+Deno.test("POST /api/story-ideas/{id}/conversations is refused when either has blocked the other", async () => {
+  const cookie = await registerUser(author);
+  const other = await registerUser(bystander);
+  const idea = await (await createIdea(cookie)).json();
+
+  // Blocked by the *author*, so this is the direction the asker cannot see coming.
+  const block = await request("POST", "/api/blocks", cookie, {
+    userId: await getUserId(bystander),
+  });
+  assertEquals(block.status, STATUS_CODE.OK);
+
+  const response = await startConversation(other, idea.id);
+  assertEquals(response.status, STATUS_CODE.Forbidden);
+
+  // And the idea is not offered to them in the first place. Asserted by id, not by an empty
+  // board: other tests and the seed fixture share this database.
+  const board = await (await request("QUERY", "/api/story-ideas", other, {}))
+    .json();
+  const ids = board.results.map((entry: { id: string }) => entry.id);
+  assertEquals(ids.includes(idea.id), false);
 });
 
 Deno.test("POST /api/story-ideas/{id}/conversations answers 404 for an unknown idea", async () => {

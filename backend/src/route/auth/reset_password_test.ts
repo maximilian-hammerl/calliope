@@ -4,23 +4,25 @@ import app from "@/src/app.ts";
 import { db } from "@/src/database/client.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
+import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import {
-  deleteAllMail,
-  tokenFromMail,
-  waitForMail,
-} from "@/src/test/mailpit.ts";
-import {
-  emailAddress,
+  authFixture,
   password,
   postJson,
-  registerAndDiscardVerificationMail,
   sessionCookie,
-  username,
 } from "@/src/test/auth.ts";
+
+// Its own account, so a file running beside this one cannot register or delete it.
+const {
+  clearMail,
+  emailAddress,
+  registerAndDiscardVerificationMail,
+  username,
+} = authFixture("reset");
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 

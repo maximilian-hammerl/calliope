@@ -2,17 +2,21 @@ import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMail, deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
-import {
+import { waitForMail } from "@/src/test/mailpit.ts";
+import { authFixture, postJson } from "@/src/test/auth.ts";
+
+// Its own account, so a file running beside this one cannot register or delete it.
+const {
+  clearMail,
   emailAddress,
-  postJson,
+  mailCount,
   registerAndDiscardVerificationMail,
   username,
-} from "@/src/test/auth.ts";
+} = authFixture("forgot");
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
@@ -46,7 +50,7 @@ Deno.test("POST /api/auth/forgot-password answers the same way for an unknown ad
   assertEquals(await response.json(), { ok: true });
 
   await flushBackgroundWork();
-  assertEquals(await countMail(), 0);
+  assertEquals(await mailCount(), 0);
 });
 
 Deno.test("POST /api/auth/forgot-password matches the address in any case", async () => {
@@ -83,5 +87,5 @@ Deno.test("POST /api/auth/forgot-password sends only one link within the cooldow
 
   await flushBackgroundWork();
   // Without the cooldown, repeating this request is a way to fill somebody else's inbox.
-  assertEquals(await countMail(), 1);
+  assertEquals(await mailCount(), 1);
 });

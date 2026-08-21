@@ -201,7 +201,11 @@ async function deleteExpiredSessions(): Promise<number> {
  * Finds members by a substring of their name, so someone can be invited by the part of a
  * name that is actually remembered.
  */
-function listUsers(query: ListQuery): Promise<ListResults<PublicUser>> {
+function listUsers(
+  query: ListQuery & { hiddenUserIds?: ReadonlyArray<string> },
+): Promise<ListResults<PublicUser>> {
+  const hidden = query.hiddenUserIds ?? [];
+
   return listResultsWithCount(
     db
       .selectFrom("user")
@@ -212,7 +216,12 @@ function listUsers(query: ListQuery): Promise<ListResults<PublicUser>> {
           "ilike",
           // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
           searchPattern(query.search!),
-        )),
+        ))
+      // Blocked in either direction: neither side is shown the other in a list they browse.
+      .$if(
+        hidden.length > 0,
+        (queryBuilder) => queryBuilder.where("user.id", "not in", hidden),
+      ),
     query,
   );
 }

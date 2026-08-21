@@ -1,13 +1,10 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import {
-  emailAddress,
-  password,
-  postJson,
-  register,
-  username,
-} from "@/src/test/auth.ts";
+import { authFixture, password, postJson } from "@/src/test/auth.ts";
+
+// Its own account, so a file running beside this one cannot register or delete it.
+const { emailAddress, register, username } = authFixture("login");
 
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([username]));

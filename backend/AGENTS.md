@@ -11,24 +11,41 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 
 ## Seed data
 
-`deno task db:seed` fills a local database with a fixed fixture: five accounts sharing the
-password `calliope`, a private and a public group, every membership state, threads with posts
-and one unpublished draft, two next steps (one open, one completed, so the Erledigt
-disclosure shows), a chat with messages, two story ideas (one open, one settled), and the
-notifications the invitations imply. A fifth account, `unverified`, has no confirmed
-address and so reaches nothing but the verification wall — that screen is otherwise only
-reachable by registering by hand and digging the link out of Mailpit.
-It prints the accounts and the URLs when it finishes.
+`deno task db:seed` fills a local database with a fixed fixture: nine accounts sharing the
+password `calliope`, eight writing groups, six story ideas and three chats. Between them the
+groups cover both visibilities, every membership size from one to five, every role,
+two-administrator groups in each visibility, and one group with nothing in it at all. There
+are threads with posts, two unpublished drafts, next steps both open and completed, a post
+whose author is null so "Gelöschtes Konto" is visible without deleting an account, and the
+notifications the invitations imply. `unverified` has no confirmed address and so reaches
+nothing but the verification wall — that screen is otherwise only reachable by registering by
+hand and digging the link out of Mailpit. It prints a compact account table and a few entry
+URLs when it finishes.
+
+**The fixtures live in `seed/`, one file per kind**, with `seed.ts` keeping the guard, the
+cleanup and the order: `accounts.ts`, `writing_groups.ts`, `story_ideas.ts`, `chats.ts`,
+`ids.ts` and `write.ts`. A group's members, threads, posts and steps are nested in its own
+block rather than spread across parallel inserts, so adding one is a single block; `write.ts`
+turns the fixtures into inserts in dependency order.
+
+Usernames are handles (`tintenfleck`, `zeilensprung`, …) rather than first names, because
+members of a writing community pick a pen name far more often than they sign with their own.
+Group titles are real books knocked slightly off course — "Die unendliche Gliederung",
+"Pride and Punctuation" — so nobody mistakes a fixture for production data.
 
 Three things about it are deliberate:
 
 - **Hard-coded ids.** A URL you bookmarked still works after a re-seed. `uuidv7()` is only a
   column default, so explicit ids are fine; they are obviously synthetic
-  (`01a00000-0000-7000-8000-…`) so a seeded row is recognisable in a query.
+  (`01a00000-0000-7000-8000-…`) so a seeded row is recognisable in a query. One letter per
+  kind and **never a leading zero**: `padStart` reads `"0a1"` and `"a1"` as the same id, which
+  is how a user once shared one with a notification. `write.ts` asserts every id is distinct,
+  and that each group's founder is a joined administrator of it — both checked by breaking
+  them on purpose.
 - **Real password hashing.** It calls `hashPassword`, because scrypt lives in the application
   and pgcrypto was removed on purpose. A hard-coded hash would rot the day its parameters
   changed and the accounts would silently stop being able to sign in.
-- **It owns its five usernames.** Cleanup matches id *or* username, so an account somebody made
+- **It owns its nine usernames.** Cleanup matches id *or* username, so an account somebody made
   by hand as `mira` cannot block a re-run — and neither can renumbering the ids later.
 
 It refuses any `DATABASE_URL` host that is not obviously local unless passed `--force`, because
@@ -37,8 +54,9 @@ survives.
 
 Inserted through Kysely rather than the services, since those generate their own ids. Database
 triggers still apply — `invited_at`, `joined_at`, `last_activity_at`. What it restates rather
-than invokes is service-level behaviour, notably the notification an invitation produces; if
-that rule changes, this file changes with it.
+than invokes is service-level behaviour: the notification an invitation produces, now derived
+from the fixtures rather than listed, and `invited_by` on a pending membership. If either rule
+changes, `write.ts` changes with it.
 
 ## Where things live
 
@@ -459,6 +477,29 @@ leaked password is enough alone.
 `requestAccountDeletion` answers **401** for a wrong password, so the frontend's
 `EXPECTED_401_MUTATIONS` lists it, as it must for every re-authenticating mutation.
 
+## Blocking
+
+`user_block` is one row per (blocker, blocked) pair, and it means **contact**, not visibility of
+everything. Four routes ask `BlockService.isBlockedBetween` before letting one member reach
+another: both invitation routes and both `/conversations` routes. Five things about it:
+
+- **Symmetric.** A row in either direction refuses contact. An asymmetric block would leave the
+  blocked member able to invite the blocker, which is the one thing blocking is for.
+- **Neutral 403.** "Contact is not possible" never says who blocked whom. Which direction it was
+  is only ever useful to somebody working out whether they were blocked.
+- **Pending invitations go with the block**, in both directions and for groups and chats alike:
+  an unanswered invitation is an outstanding contact attempt. Joined memberships are untouched —
+  shared writing is joint work, and leaving is the member's own act. That residual is deliberate.
+- **Several invitees are filtered, not refused.** `withoutBlocked` is why one administrator's
+  block cannot make a whole group unreachable; only an empty result refuses, reusing the 409
+  that already means "nobody to ask".
+- **Lists filter on read**, never on write: `listUsers`, `listStoryIdeas`, `listNotifications`
+  and `/search` take the hidden ids, so unblocking restores what was hidden. A notification with
+  no actor stays readable — that is a deleted account, not a blocked one.
+
+`GET /users/{userId}` carries `isBlocked`, which is only ever *the reader's own* block. Whether
+somebody blocked the reader is exactly the disclosure the neutral 403 avoids.
+
 ## Paths in mailed links must exist in the frontend
 
 The address-change mails pointed at `/confirm-email-change` for a day while the router only had
@@ -535,6 +576,29 @@ useful to somebody guessing.
 Co-located as `<module>_test.ts` beside the code, one positive and one negative case per
 route. They run against real Postgres and Redis, so start the compose stack and apply the
 migrations first.
+
+**`deno task test` runs `--parallel`**, which is five times faster (50s to 10s) and keeps the
+suite honest: every file must own its identities, because a file that shares a username, an
+address or a mailbox with another now fails immediately instead of waiting to collide with a
+second test process one day.
+
+So a fixture shared by more than one file is a **factory taking a scope**, not module-level
+constants: `authFixture("login")`, `emailChangeFixture("confirm")`, `storyIdeaFixture`'s
+`storyIdeaUsers("list")`, `accountDeletionFixture("request")`. Each derives its username and
+address from the scope, so no two files can collide. Three rules follow:
+
+- **Never empty shared state.** `deleteMailFor([address])`, not `deleteAllMail()`;
+  `countMailFor([address])`, not `countMail()`. Emptying the mailbox deletes a message another
+  file is waiting for, and counting it measures everyone's mail.
+- **Never assert a global count.** `titles.includes(…)`, or a baseline delta as `search_test.ts`
+  does — never "the board holds exactly one". Any other row, seeded or from a neighbouring
+  test, makes that wrong.
+- **Scope every query in a fixture to its own account.** `pendingAddress()` read whichever
+  token came first until it joined `user` and filtered by username.
+
+`clearRateLimits()` spares the block in `RATE_LIMIT_TEST_CLIENTS` (`198.51.100.`), because the
+middleware's own test fills a window request by request and a `beforeEach` elsewhere used to
+empty it mid-loop — which read as the limiter simply not working.
 
 **Everything test-only lives in `src/test/`** — `support.ts` for the shared fixtures,
 `auth.ts`, `mailpit.ts`, `email_address_change.ts`, `account_deletion.ts` for what a group of

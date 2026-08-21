@@ -4,6 +4,7 @@ import { USERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { UserService } from "@/src/service/user_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import {
   listQuerySchema,
   listResponseSchema,
@@ -58,7 +59,10 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await UserService.listUsers(c.req.valid("json"));
+    const page = await UserService.listUsers({
+      ...c.req.valid("json"),
+      hiddenUserIds: await BlockService.selectBlockedIds(c.get("user").id),
+    });
 
     return c.json(page, STATUS_CODE.OK);
   },

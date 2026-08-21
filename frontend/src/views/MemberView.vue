@@ -1,13 +1,18 @@
 <script setup lang="ts">
 /** Thin on purpose: the fields that answer "would this person suit me" come next. */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useGetUser } from '@/api/users/users'
+import { getGetUserQueryKey, useGetUser } from '@/api/users/users'
+import { useGetCurrentUser } from '@/api/auth/auth'
+import { useUnblockMember } from '@/api/blocks/blocks'
+import { queryClient } from '@/lib/api/queryClient'
 import type { GetUser200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
+import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 
 const route = useRoute()
@@ -23,6 +28,28 @@ const member = computed<GetUser200 | undefined>(() =>
 const notFound = computed<boolean>(
   () => error.value instanceof ApiError && error.value.status === 404,
 )
+
+/** Nobody blocks themselves, so their own profile shows no such button. */
+const { data: currentUserData } = useGetCurrentUser()
+const isOwnProfile = computed<boolean>(
+  () => currentUserData.value?.status === 200 && currentUserData.value.data.id === userId.value,
+)
+
+const blocking = ref<boolean>(false)
+const blockError = ref<string | undefined>(undefined)
+
+const { mutateAsync: unblock, isPending: unblocking } = useUnblockMember()
+
+async function allowContactAgain() {
+  blockError.value = undefined
+  try {
+    await unblock({ userId: userId.value })
+  } catch {
+    blockError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    return
+  }
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
+}
 </script>
 
 <template>
@@ -47,7 +74,35 @@ const notFound = computed<boolean>(
                 Dabei seit {{ formatJoinedDate(member.createdAt) }}
               </p>
             </div>
+
+            <div v-if="!isOwnProfile" class="ml-auto">
+              <Button
+                v-if="member.isBlocked"
+                variant="outline"
+                size="sm"
+                :disabled="unblocking"
+                @click="allowContactAgain"
+              >
+                Blockierung aufheben
+              </Button>
+              <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
+                   where the consequences are spelled out. -->
+              <Button v-else variant="ghost" size="sm" @click="blocking = true">
+                Blockieren
+              </Button>
+            </div>
           </div>
+
+          <p v-if="blockError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+            {{ blockError }}
+          </p>
+
+          <p
+            v-if="member.isBlocked"
+            class="mt-4 border-l-2 border-line-4 pl-3 text-[13px] leading-[1.6] text-ink-5"
+          >
+            Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
+          </p>
 
           <!-- Said outright rather than left as blank space: an empty page reads as an error. -->
           <p class="mt-8 border-t border-line-3 pt-6 text-[13.5px] leading-[1.6] text-ink-5">
@@ -71,5 +126,12 @@ const notFound = computed<boolean>(
         </template>
       </div>
     </div>
+
+    <BlockMemberDialog
+      v-if="member"
+      v-model:open="blocking"
+      :user-id="member.id"
+      :username="member.username"
+    />
   </AppLayout>
 </template>

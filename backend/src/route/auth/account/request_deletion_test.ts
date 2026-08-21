@@ -2,21 +2,26 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMail, deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
+import { waitForMail } from "@/src/test/mailpit.ts";
 import { postJson } from "@/src/test/auth.ts";
-import {
+import { accountDeletionFixture } from "@/src/test/account_deletion.ts";
+
+// Its own account and mailbox, so the file next door cannot clear them.
+const {
   accountExists,
+  clearMail,
   emailAddress,
+  mailCount,
   outstandingTokens,
   registerDeletable,
   registerUnverified,
   requestDeletion,
   username,
-} from "@/src/test/account_deletion.ts";
+} = accountDeletionFixture("request");
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
@@ -38,7 +43,7 @@ Deno.test("POST /api/auth/account/deletion mails a link to the address on file",
   await flushBackgroundWork();
 
   const mail = await waitForMail(emailAddress);
-  assertEquals(await countMail(), 1);
+  assertEquals(await mailCount(), 1);
   // The path has to be one the frontend router actually has, or the link opens a blank page.
   assertStringIncludes(mail.text, "/confirm-account-deletion?token=");
 });
@@ -54,7 +59,7 @@ Deno.test("POST /api/auth/account/deletion refuses a wrong password", async () =
   assertEquals(await accountExists(), true);
 
   await flushBackgroundWork();
-  assertEquals(await countMail(), 0);
+  assertEquals(await mailCount(), 0);
 });
 
 Deno.test("POST /api/auth/account/deletion works with an unverified address", async () => {
@@ -89,6 +94,6 @@ Deno.test("POST /api/auth/account/deletion sends nothing on a repeat within the 
   // Answered the same way, so the response cannot report on somebody else's inbox.
   assertEquals(second.status, STATUS_CODE.OK);
   await flushBackgroundWork();
-  assertEquals(await countMail(), 1);
+  assertEquals(await mailCount(), 1);
   assertEquals(await outstandingTokens(), 1);
 });

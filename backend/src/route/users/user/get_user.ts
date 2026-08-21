@@ -3,6 +3,7 @@ import { USERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { UserService } from "@/src/service/user_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import { USER_PROFILE_RESPONSE } from "@/src/http/response_schema.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import {
@@ -44,14 +45,18 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const profile = await UserService.selectUserProfile(
-      c.req.valid("param").userId,
-    );
+    const { userId } = c.req.valid("param");
+    const profile = await UserService.selectUserProfile(userId);
 
     if (profile === undefined) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    return c.json(profile, STATUS_CODE.OK);
+    const isBlocked = await BlockService.isBlockedByUser(
+      c.get("user").id,
+      userId,
+    );
+
+    return c.json({ ...profile, isBlocked }, STATUS_CODE.OK);
   },
 );

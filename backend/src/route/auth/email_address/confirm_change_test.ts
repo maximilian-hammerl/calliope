@@ -3,10 +3,14 @@ import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
+import { waitForMail } from "@/src/test/mailpit.ts";
 import { postJson } from "@/src/test/auth.ts";
-import {
+import { emailChangeFixture } from "@/src/test/email_address_change.ts";
+
+// Its own account and addresses, so the file next door cannot occupy them.
+const {
   cancelChange,
+  clearMail,
   confirmChange,
   currentAddress,
   linksFromMail,
@@ -15,11 +19,11 @@ import {
   requestChange,
   storedAddress,
   username,
-} from "@/src/test/email_address_change.ts";
+} = emailChangeFixture("confirm");
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
@@ -61,7 +65,7 @@ Deno.test("POST /api/auth/email-address/confirm ends every session", async () =>
 
 Deno.test("POST /api/auth/email-address/confirm tells the old address afterwards", async () => {
   const { token } = await stageChange();
-  await deleteAllMail();
+  await clearMail();
 
   await confirmChange(token);
   await flushBackgroundWork();

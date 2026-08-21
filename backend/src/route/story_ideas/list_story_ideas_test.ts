@@ -6,12 +6,14 @@ import {
   registerUser,
 } from "@/src/test/support.ts";
 import {
-  author,
-  bystander,
   createIdea,
   listIdeas,
   patchIdea,
+  storyIdeaUsers,
 } from "@/src/test/story_ideas.ts";
+
+// Its own two accounts, so another file's cleanup cannot delete them.
+const { author, bystander } = storyIdeaUsers("list");
 
 Deno.test.beforeEach(() => clearRateLimits());
 Deno.test.afterEach(() => deleteUsers([author, bystander]));
@@ -67,15 +69,23 @@ Deno.test("QUERY /api/story-ideas filters by language and searches the idea text
     language: "english",
   });
 
+  // Included and excluded, never counted: a count asserts on the whole board, which any
+  // other idea — seeded, or from a test running beside this one — makes wrong.
   const english = await (await listIdeas(reader, { language: "english" }))
     .json();
-  assertEquals(english.results.length, 1);
-  assertEquals(english.results[0].title, "English");
+  const englishTitles = english.results.map((idea: { title: string }) =>
+    idea.title
+  );
+  assertEquals(englishTitles.includes("English"), true);
+  assertEquals(englishTitles.includes("Deutsch"), false);
 
   const search = await (await listIdeas(reader, { search: "Turm aus Glas" }))
     .json();
-  assertEquals(search.results.length, 1);
-  assertEquals(search.results[0].title, "Deutsch");
+  const searchTitles = search.results.map((idea: { title: string }) =>
+    idea.title
+  );
+  assertEquals(searchTitles.includes("Deutsch"), true);
+  assertEquals(searchTitles.includes("English"), false);
 });
 
 Deno.test("QUERY /api/story-ideas with author mine shows only one's own, closed included", async () => {

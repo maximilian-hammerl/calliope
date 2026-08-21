@@ -1,8 +1,16 @@
 import { request } from "@/src/test/support.ts";
 import type { StoryIdeaStatus } from "@/src/database/schema.ts";
 
-export const author = "story-idea-test-author";
-export const bystander = "story-idea-test-bystander";
+/**
+ * Two names per test file, named by `scope`. Six files use these, and shared names had each
+ * file's `afterEach` deleting the accounts another was still using.
+ */
+export function storyIdeaUsers(scope: string) {
+  return {
+    author: `story-idea-${scope}-author`,
+    bystander: `story-idea-${scope}-bystander`,
+  };
+}
 
 export const createIdea = (
   cookie: string,

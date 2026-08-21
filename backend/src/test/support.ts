@@ -121,8 +121,16 @@ export async function deleteUsers(usernames: Array<string>): Promise<void> {
 }
 
 /** Counters outlive the process, so the suite would eventually rate-limit itself. */
+/**
+ * The limiter keys on the client address, so this leaves the middleware's own test alone: it
+ * deliberately fills a window request by request, and a `beforeEach` here used to empty it
+ * mid-loop, which read as the limiter simply not working.
+ */
+export const RATE_LIMIT_TEST_CLIENTS = "198.51.100.";
+
 export async function clearRateLimits(): Promise<void> {
-  const keys = await redis.keys(`${RATE_LIMIT_KEY_PREFIX}*`);
+  const keys = (await redis.keys(`${RATE_LIMIT_KEY_PREFIX}*`))
+    .filter((key) => !key.includes(RATE_LIMIT_TEST_CLIENTS));
   if (keys.length > 0) {
     await redis.del(...keys);
   }

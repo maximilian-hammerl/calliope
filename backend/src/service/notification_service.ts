@@ -193,12 +193,27 @@ function notificationsFor(recipientId: string) {
 
 async function listNotifications(
   recipientId: string,
-  query: ListQuery & { unreadOnly: boolean },
+  query: ListQuery & {
+    unreadOnly: boolean;
+    hiddenActorIds?: ReadonlyArray<string>;
+  },
 ): Promise<ListResults<Notification>> {
   let notifications = notificationsFor(recipientId);
 
   if (query.unreadOnly) {
     notifications = notifications.where("notification.readAt", "is", null);
+  }
+
+  // Filtered on read rather than never written, so unblocking restores what was missed.
+  const hiddenActorIds = query.hiddenActorIds ?? [];
+  if (hiddenActorIds.length > 0) {
+    notifications = notifications.where((eb) =>
+      eb.or([
+        // A deleted account leaves its notifications with no actor; those stay readable.
+        eb("notification.actorId", "is", null),
+        eb("notification.actorId", "not in", hiddenActorIds),
+      ])
+    );
   }
 
   const page = await listResultsWithCount(notifications, query);

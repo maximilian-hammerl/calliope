@@ -8,6 +8,7 @@ import {
   userExists,
   UserInWritingGroupService,
 } from "@/src/service/user_in_writing_group_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -92,6 +93,14 @@ export default new OpenAPIHono().openapi(
 
     if (!await userExists(userId)) {
       return c.json({ error: "User not found" }, STATUS_CODE.NotFound);
+    }
+
+    // Neutral on purpose: it does not say who blocked whom, only that this cannot happen.
+    if (await BlockService.isBlockedBetween(user.id, userId)) {
+      return c.json(
+        { error: "Contact is not possible" },
+        STATUS_CODE.Forbidden,
+      );
     }
 
     const invitation = await UserInWritingGroupService.insertInvitation(

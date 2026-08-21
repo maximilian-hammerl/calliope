@@ -4,6 +4,7 @@ import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
+import { BlockService } from "@/src/service/block_service.ts";
 import {
   listQuerySchema,
   listResponseSchema,
@@ -71,6 +72,7 @@ export default new OpenAPIHono().openapi(
     const { author, ...query } = c.req.valid("json");
     const page = await StoryIdeaService.listStoryIdeas({
       ...query,
+      hiddenAuthorIds: await BlockService.selectBlockedIds(c.get("user").id),
       // `mine` also widens the status filter: an author manages all their ideas, closed ones
       // included, and hiding those here would make closing one irreversible in the interface.
       ...(author === "mine"

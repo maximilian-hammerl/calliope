@@ -9,23 +9,28 @@ import {
   request,
 } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMail, deleteAllMail, waitForMail } from "@/src/test/mailpit.ts";
-import {
+import { waitForMail } from "@/src/test/mailpit.ts";
+import { accountDeletionFixture } from "@/src/test/account_deletion.ts";
+
+// Its own account and mailbox, so the file next door cannot clear them.
+const {
   accountExists,
+  clearMail,
   confirmDeletion,
   deletionToken,
   emailAddress,
+  mailCount,
   registerDeletable,
   requestDeletion,
   sessionCount,
   username,
-} from "@/src/test/account_deletion.ts";
+} = accountDeletionFixture("confirm");
 
 const other = "account-deletion-test-witness";
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username, other]));
 
@@ -34,7 +39,7 @@ async function requestAndReadToken(cookie: string): Promise<string> {
   const response = await requestDeletion(cookie);
   assertEquals(response.status, STATUS_CODE.OK);
   const token = await deletionToken();
-  await deleteAllMail();
+  await clearMail();
   return token;
 }
 
@@ -144,7 +149,7 @@ Deno.test("POST /api/auth/account/deletion/confirm tells the address it is done"
 
   // Sent after the row is gone, so the address has to be read before the delete.
   const mail = await waitForMail(emailAddress);
-  assertEquals(await countMail(), 1);
+  assertEquals(await mailCount(), 1);
   assertEquals(mail.to, emailAddress);
 });
 

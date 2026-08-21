@@ -101,6 +101,12 @@ export interface User {
   username: string;
 }
 
+export interface UserBlock {
+  blockedId: string;
+  blockerId: string;
+  createdAt: Generated<string>;
+}
+
 export interface UserInChatGroup {
   chatGroupId: string;
   createdAt: Generated<string>;
@@ -196,6 +202,7 @@ export interface DB {
   notification: Notification;
   storyIdea: StoryIdea;
   user: User;
+  userBlock: UserBlock;
   userInChatGroup: UserInChatGroup;
   userInWritingGroup: UserInWritingGroup;
   userSession: UserSession;
@@ -325,6 +332,12 @@ export const USER_SCHEMA = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   emailAddressVerifiedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+export const USER_BLOCK_SCHEMA = z.object({
+  blockerId: z.uuidv7(),
+  blockedId: z.uuidv7(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_IN_CHAT_GROUP_SCHEMA = z.object({

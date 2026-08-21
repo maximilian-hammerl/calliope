@@ -123,6 +123,8 @@ function listStoryIdeas(
     createdBy?: string;
     /** The browsing view's inverse: discovery never shows the reader their own ideas. */
     excludeCreatedBy?: string;
+    /** Blocked in either direction: their ideas are not offered to this reader. */
+    hiddenAuthorIds?: ReadonlyArray<string>;
   },
 ): Promise<ListResults<StoryIdea>> {
   return listResultsWithCount(
@@ -130,6 +132,15 @@ function listStoryIdeas(
       .$if(query.createdBy !== undefined, (queryBuilder) =>
         // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
+      .$if(
+        (query.hiddenAuthorIds ?? []).length > 0,
+        (queryBuilder) =>
+          queryBuilder.where(
+            "storyIdea.createdBy",
+            "not in",
+            query.hiddenAuthorIds ?? [],
+          ),
+      )
       .$if(
         query.excludeCreatedBy !== undefined,
         (queryBuilder) =>

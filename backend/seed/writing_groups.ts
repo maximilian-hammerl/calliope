@@ -1,0 +1,427 @@
+import type {
+  StoryLanguage,
+  UserInWritingGroupRole,
+  UserInWritingGroupStatus,
+  WritingGroupStoryStatus,
+  WritingGroupVisibility,
+} from "@/src/database/schema.ts";
+import { USER } from "@/seed/accounts.ts";
+import { groupId, postId, stepId, threadId } from "@/seed/ids.ts";
+
+type Member = {
+  user: string;
+  role: UserInWritingGroupRole;
+  /** Defaults to `joined`, so only a pending invitation says so. */
+  status?: UserInWritingGroupStatus;
+};
+
+type Post = {
+  id: string;
+  /** Null where the author's account is gone, which the interface shows as Gelöschtes Konto. */
+  by: string | null;
+  text: string;
+  isDraft?: boolean;
+};
+
+type Step = {
+  id: string;
+  text: string;
+  by: string;
+  completedBy?: string;
+};
+
+export type GroupFixture = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  blurb: string;
+  visibility: WritingGroupVisibility;
+  language?: StoryLanguage;
+  storyStatus?: WritingGroupStoryStatus;
+  genres?: string[];
+  subgenres?: string[];
+  tropes?: string[];
+  contentWarnings?: string[];
+  tense?: string;
+  perspective?: string;
+  /** Founder. Also has to appear in `members` as a joined administrator; `write.ts` checks. */
+  by: string;
+  members: Member[];
+  threads?: Array<{ id: string; title: string; by: string; posts: Post[] }>;
+  steps?: Step[];
+};
+
+/**
+ * Titles are real books, knocked slightly off course. They read as a community's inside joke
+ * rather than as placeholder text, and nobody mistakes one for production data.
+ *
+ * Between them the eight cover every membership size from one to five, both visibilities,
+ * every role, two-administrator groups in each visibility, and one group with nothing in it.
+ */
+export const GROUPS: GroupFixture[] = [
+  {
+    id: groupId(1),
+    title: "Die unendliche Gliederung",
+    subtitle: "Ein Entwurf, der nie aufhört",
+    blurb:
+      "Öffentlich, und bisher schreibt hier nur eine Person. Genau dafür ist die Gruppe da: " +
+      "anfangen, ohne auf jemanden zu warten.",
+    visibility: "public",
+    storyStatus: "writing",
+    by: USER.tintenfleck,
+    members: [{ user: USER.tintenfleck, role: "administrator" }],
+    threads: [
+      {
+        id: threadId(1),
+        title: "Erster Entwurf",
+        by: USER.tintenfleck,
+        posts: [
+          {
+            id: postId(1),
+            by: USER.tintenfleck,
+            text:
+              "Kapitel eins beginnt mit einer Tür, die niemand geschlossen hat.",
+          },
+          {
+            id: postId(2),
+            by: USER.tintenfleck,
+            text:
+              "Dahinter ein Flur, und am Ende des Flurs noch eine Gliederung.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: groupId(2),
+    title: "Pride and Punctuation",
+    subtitle:
+      "It is a truth universally acknowledged that a comma changes everything",
+    blurb:
+      "A public group writing in English. Two of us so far, and we argue about semicolons " +
+      "more than about the plot.",
+    visibility: "public",
+    language: "english",
+    storyStatus: "writing",
+    genres: ["Romance"],
+    tropes: ["Slow Burn", "Enemies to Lovers"],
+    tense: "Vergangenheit",
+    by: USER.randnotiz,
+    members: [
+      { user: USER.randnotiz, role: "administrator" },
+      { user: USER.kommafehler, role: "writer" },
+    ],
+    threads: [
+      {
+        id: threadId(2),
+        title: "Chapter One",
+        by: USER.randnotiz,
+        posts: [
+          {
+            id: postId(3),
+            by: USER.randnotiz,
+            text:
+              "She had read the letter twice, and disliked it more the second time.",
+          },
+          {
+            id: postId(4),
+            by: USER.kommafehler,
+            text:
+              "He had written it once, and disliked it immediately; that was the difference between them.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: groupId(3),
+    title: "Der Zauberzwerg",
+    subtitle: "Sieben Jahre auf einem sehr kleinen Berg",
+    blurb:
+      "Die größte offene Gruppe hier. Zwei Leute verwalten sie, damit nicht alles an einer " +
+      "Person hängt, und wer mitlesen will, darf das sofort.",
+    visibility: "public",
+    storyStatus: "writing",
+    genres: ["Fantasy", "Satire"],
+    subgenres: ["Portal Fantasy"],
+    tropes: ["Found Family", "Kammerspiel"],
+    contentWarnings: ["Krankheit"],
+    tense: "Vergangenheit",
+    perspective: "Dritte Person, begrenzt",
+    by: USER.federkiel,
+    members: [
+      { user: USER.federkiel, role: "administrator" },
+      { user: USER.nachtschreiber, role: "administrator" },
+      { user: USER.tintenfleck, role: "writer" },
+      { user: USER.lesezeichen, role: "reader" },
+      { user: USER.silbenmeer, role: "writer", status: "invited" },
+    ],
+    threads: [
+      {
+        id: threadId(3),
+        title: "Ankunft",
+        by: USER.federkiel,
+        posts: [
+          {
+            id: postId(5),
+            by: USER.federkiel,
+            text:
+              "Der Zug hielt an einem Bahnsteig, der kürzer war als der Zug selbst.",
+          },
+          {
+            id: postId(6),
+            by: USER.tintenfleck,
+            text:
+              "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
+          },
+          // No author: the account was deleted, and the writing stayed. Without this the
+          // "Gelöschtes Konto" state is only reachable by deleting an account mid-test.
+          {
+            id: postId(7),
+            by: null,
+            text:
+              "Sieben Jahre, sagte der Zwerg, seien hier oben eine Woche. Niemand widersprach.",
+          },
+        ],
+      },
+      {
+        id: threadId(4),
+        title: "Figuren",
+        by: USER.nachtschreiber,
+        posts: [
+          {
+            id: postId(8),
+            by: USER.nachtschreiber,
+            text: "Der Zwerg: verwaltet den Berg, hat ihn nie verlassen.",
+          },
+        ],
+      },
+    ],
+    steps: [
+      {
+        id: stepId(1),
+        text: "Zeitrechnung auf dem Berg festlegen",
+        by: USER.nachtschreiber,
+      },
+      { id: stepId(2), text: "Kapitel 2 anlegen", by: USER.federkiel },
+      {
+        id: stepId(3),
+        text: "Personenliste anlegen",
+        by: USER.federkiel,
+        completedBy: USER.nachtschreiber,
+      },
+    ],
+  },
+  {
+    id: groupId(4),
+    title: "Wuthering Depths",
+    blurb:
+      "Öffentlich, und die meisten hier lesen mit statt zu schreiben. Gut zu sehen, was eine " +
+      "Leserin darf und was nicht.",
+    visibility: "public",
+    storyStatus: "planning",
+    genres: ["Gothic"],
+    by: USER.lesezeichen,
+    members: [
+      { user: USER.lesezeichen, role: "administrator" },
+      { user: USER.zeilensprung, role: "reader" },
+      { user: USER.randnotiz, role: "reader" },
+    ],
+    threads: [
+      {
+        id: threadId(5),
+        title: "Das Moor",
+        by: USER.lesezeichen,
+        posts: [
+          {
+            id: postId(9),
+            by: USER.lesezeichen,
+            text:
+              "Das Haus stand tiefer als der Weg, und im Herbst stand es im Wasser.",
+          },
+          {
+            id: postId(10),
+            by: USER.lesezeichen,
+            text: "Wer dort wohnte, sprach vom Moor wie von einem Nachbarn.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: groupId(5),
+    title: "Die Leiden des jungen Lektors",
+    subtitle: "Was du streichst, gehört jemand anderem",
+    blurb:
+      "Eine private Gruppe mit allem, was eine Gruppe haben kann: jede Rolle, eine offene " +
+      "Einladung, Threads, ein Entwurf und die vollständigen Angaben zur Geschichte.",
+    visibility: "private",
+    storyStatus: "writing",
+    genres: ["Fantasy", "Mystery"],
+    subgenres: ["Urban Fantasy"],
+    tropes: ["Slow Burn", "Found Family"],
+    contentWarnings: ["Gedächtnisverlust"],
+    tense: "Vergangenheit",
+    perspective: "Dritte Person, begrenzt",
+    by: USER.tintenfleck,
+    members: [
+      { user: USER.tintenfleck, role: "administrator" },
+      { user: USER.zeilensprung, role: "writer" },
+      { user: USER.randnotiz, role: "reader" },
+      { user: USER.silbenmeer, role: "writer", status: "invited" },
+    ],
+    threads: [
+      {
+        id: threadId(6),
+        title: "Plot",
+        by: USER.tintenfleck,
+        posts: [
+          {
+            id: postId(11),
+            by: USER.tintenfleck,
+            text: "Die Laternen gingen aus, und das Lektorat öffnete.",
+          },
+          {
+            id: postId(12),
+            by: USER.zeilensprung,
+            text:
+              "Sie hatte sich vorgenommen, nichts zu streichen. Das nahmen sich alle vor, sagte der Lektor.",
+          },
+          // Unpublished, so the composer has something to restore and the draft rules show.
+          {
+            id: postId(13),
+            by: USER.tintenfleck,
+            text:
+              "Noch nicht fertig — was, wenn das Manuskript sie schon kennt?",
+            isDraft: true,
+          },
+        ],
+      },
+      {
+        id: threadId(7),
+        title: "Steckbriefe",
+        by: USER.zeilensprung,
+        posts: [
+          {
+            id: postId(14),
+            by: USER.zeilensprung,
+            text: "Der Lektor: keine Erinnerung an seinen eigenen ersten Satz.",
+          },
+        ],
+      },
+    ],
+    steps: [
+      {
+        id: stepId(4),
+        text: "Motiv des Lektors festlegen",
+        by: USER.zeilensprung,
+      },
+      {
+        id: stepId(5),
+        text: "Kapitel 1 eröffnen",
+        by: USER.tintenfleck,
+        completedBy: USER.tintenfleck,
+      },
+    ],
+  },
+  {
+    id: groupId(6),
+    title: "Effi Briefe",
+    subtitle: "Zwei Adressen, ein Streit",
+    blurb: "Privat, zu zweit, und alles läuft über Briefe.",
+    visibility: "private",
+    storyStatus: "writing",
+    genres: ["Historisch"],
+    tropes: ["Epistolary"],
+    by: USER.zeilensprung,
+    members: [
+      { user: USER.zeilensprung, role: "administrator" },
+      { user: USER.tintenfleck, role: "writer" },
+    ],
+    threads: [
+      {
+        id: threadId(8),
+        title: "Erster Brief",
+        by: USER.zeilensprung,
+        posts: [
+          {
+            id: postId(15),
+            by: USER.zeilensprung,
+            text:
+              "Liebe A., der Garten ist größer als das Haus, und das Haus ist zu groß.",
+          },
+          {
+            id: postId(16),
+            by: USER.tintenfleck,
+            text:
+              "Liebe E., schreib mir, wenn der Garten anfängt, zurückzuschreiben.",
+          },
+          {
+            id: postId(17),
+            by: USER.zeilensprung,
+            text: "Er hat. Mehr dazu, wenn ich weiß, wie ich es sagen soll.",
+            isDraft: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: groupId(7),
+    title: "Der Vorletzte",
+    blurb:
+      "Privat, eine Person, nichts darin. Der leere Zustand jeder Ansicht ist hier zu sehen, " +
+      "ohne erst eine Gruppe anzulegen.",
+    visibility: "private",
+    by: USER.silbenmeer,
+    members: [{ user: USER.silbenmeer, role: "administrator" }],
+  },
+  {
+    id: groupId(8),
+    title: "Die Verwandtschaft",
+    subtitle: "Eines Morgens war die Familie da",
+    blurb:
+      "Privat, zwei Verwalterinnen, und die nächsten Schritte sind größtenteils abgehakt.",
+    visibility: "private",
+    storyStatus: "finished",
+    genres: ["Absurd"],
+    tropes: ["Kammerspiel"],
+    tense: "Vergangenheit",
+    by: USER.nachtschreiber,
+    members: [
+      { user: USER.nachtschreiber, role: "administrator" },
+      { user: USER.kommafehler, role: "administrator" },
+      { user: USER.federkiel, role: "writer" },
+    ],
+    threads: [
+      {
+        id: threadId(9),
+        title: "Der Käfer",
+        by: USER.nachtschreiber,
+        posts: [
+          {
+            id: postId(18),
+            by: USER.kommafehler,
+            text:
+              "Als er erwachte, saß die ganze Verwandtschaft am Fußende des Bettes und wartete.",
+          },
+        ],
+      },
+    ],
+    steps: [
+      {
+        id: stepId(6),
+        text: "Letztes Kapitel abschließen",
+        by: USER.nachtschreiber,
+        completedBy: USER.kommafehler,
+      },
+      {
+        id: stepId(7),
+        text: "Titel entscheiden",
+        by: USER.kommafehler,
+        completedBy: USER.nachtschreiber,
+      },
+      { id: stepId(8), text: "Epilog überlegen", by: USER.federkiel },
+    ],
+  },
+];

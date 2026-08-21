@@ -3,23 +3,23 @@ import { STATUS_CODE } from "@std/http/status";
 import { db } from "@/src/database/client.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
+import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import {
-  deleteAllMail,
-  tokenFromMail,
-  waitForMail,
-} from "@/src/test/mailpit.ts";
-import {
-  emailAddress,
+  authFixture,
   postJson,
-  register,
   sendJson,
   sessionCookie,
-  username,
 } from "@/src/test/auth.ts";
+
+// Its own account, so a file running beside this one cannot register or delete it.
+const { clearMail, emailAddress, register, username } = authFixture(
+  "correct-unverified",
+  "corrected-address@example.com",
+);
 
 Deno.test.beforeEach(async () => {
   await clearRateLimits();
-  await deleteAllMail();
+  await clearMail();
 });
 Deno.test.afterEach(() => deleteUsers([username]));
 
@@ -53,7 +53,7 @@ async function markVerified(): Promise<void> {
 Deno.test("PATCH /api/auth/email-address corrects an address that is not verified", async () => {
   const cookie = sessionCookie(await register());
   await flushBackgroundWork();
-  await deleteAllMail();
+  await clearMail();
 
   const response = await changeAddress(cookie, corrected);
 
@@ -69,7 +69,7 @@ Deno.test("PATCH /api/auth/email-address invalidates the link sent to the old ad
   const cookie = sessionCookie(await register());
   await flushBackgroundWork();
   const staleToken = tokenFromMail(await waitForMail(emailAddress));
-  await deleteAllMail();
+  await clearMail();
 
   await changeAddress(cookie, corrected);
   await flushBackgroundWork();
@@ -86,7 +86,7 @@ Deno.test("PATCH /api/auth/email-address refuses once the address is verified", 
   const cookie = sessionCookie(await register());
   await markVerified();
   await flushBackgroundWork();
-  await deleteAllMail();
+  await clearMail();
 
   const response = await changeAddress(cookie, corrected);
 
@@ -108,7 +108,7 @@ Deno.test("PATCH /api/auth/email-address refuses an address another account uses
   try {
     const cookie = sessionCookie(await register());
     await flushBackgroundWork();
-    await deleteAllMail();
+    await clearMail();
 
     const response = await changeAddress(cookie, corrected);
 
