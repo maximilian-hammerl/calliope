@@ -497,6 +497,10 @@ another: both invitation routes and both `/conversations` routes. Five things ab
   and `/search` take the hidden ids, so unblocking restores what was hidden. A notification with
   no actor stays readable — that is a deleted account, not a blocked one.
 
+The fixture carries two blocks (`seed/blocks.ts`), and `write.ts` asserts no blocked pair also
+has a pending invitation between them — that pair of states is one the application cannot
+produce, and the assertion was checked by introducing it on purpose.
+
 `GET /users/{userId}` carries `isBlocked`, which is only ever *the reader's own* block. Whether
 somebody blocked the reader is exactly the disclosure the neutral 403 avoids.
 

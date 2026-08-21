@@ -65,7 +65,9 @@ async function allowContactAgain() {
         </div>
 
         <template v-else-if="member">
-          <div class="flex items-center gap-4">
+          <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
+               squeezed the name into an ellipsis, which is the one thing this page must show. -->
+          <div class="flex flex-wrap items-center gap-4">
             <UserAvatar :username="member.username" size="lg" />
 
             <div class="flex min-w-0 flex-col gap-1">
@@ -75,7 +77,7 @@ async function allowContactAgain() {
               </p>
             </div>
 
-            <div v-if="!isOwnProfile" class="ml-auto">
+            <div v-if="!isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
               <Button
                 v-if="member.isBlocked"
                 variant="outline"

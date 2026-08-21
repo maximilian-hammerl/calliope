@@ -3,12 +3,13 @@
 How the built product compares with `product-requirements-feature-specification.md`,
 `yooco-research-report.md`, `interviews.md` and the design system.
 
-Updated 20 August 2026. The first half says what is there; the roadmap at the end says what to
+Updated 21 August 2026. The first half says what is there; the roadmap at the end says what to
 do next, and in what order.
 
 **<https://calliope.hammerl.dev> is a testing environment, not production.** It is wiped when a
 migration calls for it — twice on 20 August 2026 alone, last for the `story_language` enum
-that groups and story ideas share. Everyone with an account there is a beta tester who knows
+that groups and story ideas share. Blocking added a table rather than changing one, so it
+needs no wipe. Everyone with an account there is a beta tester who knows
 this. Nothing on it should be treated as durable, and nothing about it should be read as a
 production deployment.
 
@@ -34,11 +35,16 @@ the reader their own ideas, a detail page, and a Meine-Storyideen view. With thr
 destinations the navigation was rebuilt around **menus in both bars** — Gruppen and Storyideen
 each open their two pages, Mitglieder stays a link, and every destination carries its icon.
 
+Strangers can also now be refused: **blocking** stops contact in both directions, withdraws the
+invitations still open between the two, and takes the other member out of lists, search, the
+ideas board and notifications — while leaving shared groups, shared conversations and
+everything written alone. That was the gap between the board and announcing it to testers.
+
 What is still missing is most of what makes a **community** rather than a set of groups: no
-public forum, no administration, no files, no data export — and members can now find each
-other but not yet **block** each other, which is what stands between the board and announcing
-it to testers. The product is usable by people who already know each other; for strangers it
-opens a first door, still unmoderated.
+public forum, no administration, no files, no data export, and **no reporting** — a blocked
+member is handled privately, but nothing yet reaches a moderator. The product is usable by
+people who already know each other; for strangers it now opens a first door with a lock on
+the inside, but still no caretaker.
 
 ## Against the MVP scope (§42)
 
@@ -46,11 +52,11 @@ opens a first door, still unmoderated.
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
 | Writing groups   | Complete: member-created, private/public, invitations with acceptance, roles, membership management, leaving, group discussions, next steps. **No** files.                |
-| Communication    | Group chat with live updates, in-app notifications, transactional email. Chats are titled and invite-based, so **no** "message this member".                              |
+| Communication    | Group chat with live updates, in-app notifications, transactional email. "Unterhaltung beginnen" opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Built as **Storyideen**: board, detail page, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea.                    |
 | Administration   | Not started. Blocking is built, but moderation, reports and a queue are not — see the roadmap.                                                                            |
-| Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. **No** data export, no GDPR configuration.                          |
+| Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. Blocking refuses contact. **No** data export, no GDPR configuration.  |
 
 Two Phase 2 items (§43) arrived early because they were cheap alongside the group work: group
 chat, and read-only group roles.
