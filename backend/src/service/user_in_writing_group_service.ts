@@ -5,12 +5,6 @@ import type {
   UserInWritingGroup as DatabaseUserInWritingGroup,
   UserInWritingGroupRole,
 } from "@/src/database/schema.ts";
-import {
-  type ListQuery,
-  type ListResults,
-  listResultsWithCount,
-  searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
 
 export type UserInWritingGroup =
   & Pick<
@@ -149,22 +143,21 @@ async function selectMembership(
     .executeTakeFirst();
 }
 
-function listMemberships(
+/**
+ * Everyone in the group, invitations included, and deliberately not a page.
+ *
+ * A member missing from the list of who is in a group is worse than a long list: the interface
+ * groups joined above invited and sorts by name, which it can only do correctly if it holds all
+ * of them. Groups are a handful of people, so there is nothing to page — and if that ever stops
+ * being true, this is the place to revisit.
+ */
+function selectMemberships(
   writingGroupId: string,
-  query: ListQuery,
-): Promise<ListResults<UserInWritingGroup>> {
-  return listResultsWithCount(
-    membershipsWithUsername()
-      .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
-      .$if(query.search !== undefined, (queryBuilder) =>
-        queryBuilder.where(
-          "user.username",
-          "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
-          searchPattern(query.search!),
-        )),
-    query,
-  );
+): Promise<Array<UserInWritingGroup>> {
+  return membershipsWithUsername()
+    .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
+    .orderBy("user.username", "asc")
+    .execute();
 }
 
 /** Returns nothing when there is no such membership. Authorisation is the caller's job. */
@@ -253,7 +246,7 @@ export const UserInWritingGroupService = {
   selectJoinedAdministratorIds,
   insertInvitation,
   selectMembership,
-  listMemberships,
+  selectMemberships,
   updateRole,
   acceptInvitation,
   deleteMembership,

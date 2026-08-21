@@ -23,7 +23,6 @@ export default defineConfig({
           listGroups: { query: { useQuery: true } },
           listThreads: { query: { useQuery: true } },
           listPosts: { query: { useQuery: true } },
-          listMemberships: { query: { useQuery: true } },
           listUsers: { query: { useQuery: true } },
           listNotifications: { query: { useQuery: true } },
           search: { query: { useQuery: true } },

@@ -182,6 +182,16 @@ add the author's name to what the table stores, because a client should never ha
 a user id itself to show who wrote something. The name is joined, never stored, so it follows
 a rename; it is null wherever the author's account has been deleted.
 
+## One list is deliberately not a list endpoint
+
+`GET /groups/{groupId}/memberships` returns **everyone in the group in one answer** — no limit,
+no offset, no sort, no search, and therefore no body, which is why it is a GET while every other
+collection here is a QUERY. Somebody missing from the list of who is in a group is a worse
+failure than a long list, and the interface groups joined above invited and sorts by name, which
+it can only get right holding all of them. Groups are a handful of people; if that ever stops
+being true this is the endpoint to revisit, and the shape (`{ results }`) leaves room to add
+paging back without moving anything else.
+
 ## List endpoints
 
 Use `listQuerySchema()` and `listResponseSchema()` from `list_endpoint.ts`, and

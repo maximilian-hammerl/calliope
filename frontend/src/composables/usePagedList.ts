@@ -1,4 +1,4 @@
-import { computed, type MaybeRefOrGetter, onMounted, toValue, watch } from 'vue'
+import { computed, type MaybeRefOrGetter, onMounted, ref, toValue, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 /**
@@ -16,12 +16,22 @@ import { useRoute, useRouter } from 'vue-router'
 export function usePagedList(
   pageSize: number,
   totalResults: MaybeRefOrGetter<number | undefined>,
-  parameter = 'page',
+  /**
+   * The query key to keep the page under, or `false` to keep it in memory. A dialog takes
+   * `false`: its page is not what the address describes, it would collide with the page of the
+   * list behind it, and it should start at one again the next time the dialog is opened.
+   */
+  parameter: string | false = 'page',
 ) {
   const route = useRoute()
   const router = useRouter()
 
+  const pageInMemory = ref<number>(1)
+
   const page = computed<number>(() => {
+    if (parameter === false) {
+      return pageInMemory.value
+    }
     const asked = Number(route.query[parameter])
     return Number.isInteger(asked) && asked >= 1 ? asked : 1
   })
@@ -42,6 +52,10 @@ export function usePagedList(
   }
 
   function goToPage(next: number): void {
+    if (parameter === false) {
+      pageInMemory.value = next
+      return
+    }
     navigate({ [parameter]: next === 1 ? undefined : String(next) })
   }
 

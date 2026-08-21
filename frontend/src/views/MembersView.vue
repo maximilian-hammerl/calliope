@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useListUsers } from '@/api/users/users'
 import type { ListUsers200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { countLabel } from '@/lib/format/formatTime'
+import { keepPreviousData } from '@tanstack/vue-query'
+import { usePagedList } from '@/composables/usePagedList'
+import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
 const LIMIT = TEXT_LIMIT.listUsers.search
-const PAGE_SIZE = 100
+
+/** A name per row, so a screenful is about twenty rather than the ten a paragraph row gets. */
+const PAGE_SIZE = 20
 
 const term = ref<string>('')
 
@@ -27,31 +32,36 @@ watchDebounced(
   { debounce: 300 },
 )
 
+const { page, offset, pageCount, goToPage } = usePagedList(PAGE_SIZE, () => totalResults.value)
+
+// A search narrows the directory, so whatever page was open is about different people.
+watch(settled, () => goToPage(1))
+
 /**
- * Newest first, because that is what the interviews describe people doing here — looking
- * "ob jemand interessantes neues dazu gekommen ist". Finding a particular name is what the
- * search field is for.
+ * Alphabetical, because the rows show a name and nothing else: any other order would be
+ * invisible on screen, and this page is for finding somebody. Seeing who is new was the other
+ * candidate and belongs in a section of its own rather than as an unexplained ordering.
  */
-const { data, isPending, isError } = useListUsers(() => ({
-  limit: PAGE_SIZE,
-  search: settled.value === '' ? undefined : settled.value,
-  // Alphabetical, because the rows show a name and nothing else: any other order would be
-  // invisible on screen, and this page is for finding somebody rather than seeing who is new.
-  sortAttribute: 'username' as const,
-  sortOrder: 'asc' as const,
-}))
+const { data, isPending, isError } = useListUsers(
+  () => ({
+    limit: PAGE_SIZE,
+    offset: offset.value,
+    search: settled.value === '' ? undefined : settled.value,
+    sortAttribute: 'username' as const,
+    sortOrder: 'asc' as const,
+  }),
+  { query: { placeholderData: keepPreviousData } },
+)
 
 const members = computed<ListUsers200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
 )
 
-const totalResults = computed<number>(() =>
-  data.value?.status === 200 ? data.value.data.totalResults : 0,
+const totalResults = computed<number | undefined>(() =>
+  data.value?.status === 200 ? data.value.data.totalResults : undefined,
 )
 
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
-
-const notShown = computed<number>(() => totalResults.value - members.value.length)
 </script>
 
 <template>
@@ -89,7 +99,7 @@ const notShown = computed<number>(() => totalResults.value - members.value.lengt
 
         <template v-else-if="hasLoaded">
           <p class="mb-1 text-[11.5px] text-ink-5">
-            {{ countLabel(totalResults, 'Mitglied', 'Mitglieder') }}
+            {{ countLabel(totalResults ?? 0, 'Mitglied', 'Mitglieder') }}
           </p>
 
           <ul>
@@ -110,10 +120,12 @@ const notShown = computed<number>(() => totalResults.value - members.value.lengt
             </li>
           </ul>
 
-          <p v-if="notShown > 0" class="mt-3 text-[11.5px] text-ink-6">
-            {{ countLabel(notShown, 'weiteres Mitglied', 'weitere Mitglieder') }} — such nach einem
-            Namen, um es zu finden.
-          </p>
+          <!-- Replaces the "N weitere Mitglieder — such nach einem Namen" line: the rest is
+               reachable now, so pointing at the search field instead of offering it would be
+               an apology for a list that no longer stops. -->
+          <div v-if="pageCount > 1" class="mt-5 border-t border-line-2 pt-3">
+            <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+          </div>
         </template>
 
         <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Mitglieder werden geladen …</p>

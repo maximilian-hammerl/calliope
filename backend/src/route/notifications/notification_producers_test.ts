@@ -330,10 +330,9 @@ Deno.test("the member list says who did the inviting, while it is still an invit
   });
 
   const page = await (await request(
-    "QUERY",
+    "GET",
     `/api/groups/${created.id}/memberships`,
     adminCookie,
-    {},
   )).json();
 
   const invited = page.results.find((m: { username: string }) =>

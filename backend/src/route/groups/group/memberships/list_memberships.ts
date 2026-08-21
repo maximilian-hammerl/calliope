@@ -6,49 +6,42 @@ import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
-import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  USER_IN_WRITING_GROUP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
-const SORT_ATTRIBUTE = USER_IN_WRITING_GROUP_SCHEMA
-  .keyof()
-  .extract(["createdAt", "role", "status"])
-  .default("createdAt")
-  .transform((attribute) => `userInWritingGroup.${attribute}` as const);
-
-const LIST_MEMBERSHIPS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "asc");
+/**
+ * Not a page, unlike every other list here: a group is a handful of people, and somebody
+ * missing from the list of who is in it is a worse failure than a long list. The interface
+ * groups joined above invited and sorts by name, which it can only get right holding all of
+ * them. There is nothing to sort or search server-side either, so this takes no body at all —
+ * which is what makes it a GET.
+ */
+const MEMBERSHIPS_RESPONSE = z.object({
+  results: z.array(MEMBERSHIP_RESPONSE),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
-    method: "query",
+    method: "get",
     path: "/",
     tags: [MEMBERSHIPS_TAG],
     summary: "List the memberships and invitations of a group",
     description:
-      "Returns a page of the group's memberships, including invitations that have not been accepted yet.",
+      "Every membership of the group, invitations included, in one answer. Not paged: a member missing from the list of who is in a group is worse than a long list.",
     operationId: "listMemberships",
     middleware: requireSession,
-    request: {
-      params: GROUP_PARAMS,
-      body: { required: true, content: jsonContent(LIST_MEMBERSHIPS_BODY) },
-    },
+    request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
-        description: "A page of memberships",
-        content: jsonContent(listResponseSchema(MEMBERSHIP_RESPONSE)),
+        description: "Everyone in the group",
+        content: jsonContent(MEMBERSHIPS_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
@@ -74,11 +67,8 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const page = await UserInWritingGroupService.listMemberships(
-      groupId,
-      c.req.valid("json"),
-    );
+    const results = await UserInWritingGroupService.selectMemberships(groupId);
 
-    return c.json(page, STATUS_CODE.OK);
+    return c.json({ results }, STATUS_CODE.OK);
   },
 );

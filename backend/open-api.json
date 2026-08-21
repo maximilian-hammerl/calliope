@@ -4284,10 +4284,10 @@
           }
         }
       },
-      "query": {
+      "get": {
         "tags": ["memberships"],
         "summary": "List the memberships and invitations of a group",
-        "description": "Returns a page of the group's memberships, including invitations that have not been accepted yet.",
+        "description": "Every membership of the group, invitations included, in one answer. Not paged: a member missing from the list of who is in a group is worse than a long list.",
         "operationId": "listMemberships",
         "parameters": [
           {
@@ -4297,49 +4297,14 @@
             "in": "path"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "limit": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 100,
-                    "default": 20
-                  },
-                  "search": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 120
-                  },
-                  "offset": { "type": "integer", "minimum": 0, "default": 0 },
-                  "sortAttribute": {
-                    "type": "string",
-                    "enum": ["createdAt", "role", "status"],
-                    "default": "createdAt"
-                  },
-                  "sortOrder": {
-                    "type": "string",
-                    "enum": ["asc", "desc"],
-                    "default": "asc"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "A page of memberships",
+            "description": "Everyone in the group",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "totalResults": { "type": "integer", "minimum": 0 },
                     "results": {
                       "type": "array",
                       "items": {
@@ -4392,7 +4357,7 @@
                       }
                     }
                   },
-                  "required": ["totalResults", "results"]
+                  "required": ["results"]
                 }
               }
             }

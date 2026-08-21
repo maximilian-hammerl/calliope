@@ -102,7 +102,7 @@ const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
 const posts = computed<ListPosts200ResultsItem[]>(() =>
   postsData.value?.status === 200 ? postsData.value.data.results : [],
 )
-const { data: membershipsData } = useListMemberships(groupId, { limit: 100 })
+const { data: membershipsData } = useListMemberships(groupId)
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
 )

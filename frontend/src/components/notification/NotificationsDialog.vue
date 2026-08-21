@@ -2,9 +2,11 @@
 import { computed, watch } from 'vue'
 import { ChevronRight } from '@lucide/vue'
 import { useRouter } from 'vue-router'
-import { useQueryClient } from '@tanstack/vue-query'
+import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
 import { useListNotifications, useReadNotifications } from '@/api/notifications/notifications'
+import { usePagedList } from '@/composables/usePagedList'
+import ListPagination from '@/components/common/ListPagination.vue'
 import type { ListNotifications200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { notificationAction, notificationText } from '@/lib/notification/notificationText'
@@ -42,14 +44,36 @@ const queryClient = useQueryClient()
 
 // Only asked for while the dialog is open: this sits in the top bar on every page, and a list
 // nobody is looking at is not worth fetching.
+/** A sentence per row, so a screenful is about twenty. */
+const PER_PAGE = 20
+
+// Kept in memory rather than the address: a dialog is not what a URL describes, and the page
+// of the list behind it uses the same key.
+const { page, offset, pageCount, goToPage } = usePagedList(
+  PER_PAGE,
+  () => totalResults.value,
+  false,
+)
+
 const { data, isPending, isError } = useListNotifications(
-  { limit: 50 },
-  { query: { enabled: open } },
+  () => ({ limit: PER_PAGE, offset: offset.value }),
+  { query: { enabled: open, placeholderData: keepPreviousData } },
+)
+
+const totalResults = computed<number | undefined>(() =>
+  data.value?.status === 200 ? data.value.data.totalResults : undefined,
 )
 
 const notifications = computed<ListNotifications200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
 )
+
+// Opening it again starts at the top, where what is new actually is.
+watch(open, (isOpen) => {
+  if (isOpen) {
+    goToPage(1)
+  }
+})
 
 /**
  * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
@@ -138,6 +162,10 @@ watch(notifications, async (loaded) => {
           </button>
         </li>
       </ul>
+
+      <div v-if="hasLoaded && pageCount > 1" class="mt-3 border-t border-line-2 pt-2">
+        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+      </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Wird geladen …</p>
 
