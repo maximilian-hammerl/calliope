@@ -52,6 +52,7 @@ grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                   
 grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue                  # expect 1
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
 grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
+grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 ```
 

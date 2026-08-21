@@ -167,7 +167,7 @@ async function submit() {
           </Field>
 
           <Field>
-            <FieldLabel for="idea-subtitle">Untertitel</FieldLabel>
+            <FieldLabel optional for="idea-subtitle">Untertitel</FieldLabel>
             <Input
               id="idea-subtitle"
               v-model="subtitle"
@@ -193,7 +193,7 @@ async function submit() {
           </Field>
 
           <Field>
-            <FieldLabel for="idea-looking-for">Wen oder was suchst du?</FieldLabel>
+            <FieldLabel optional for="idea-looking-for">Wen oder was suchst du?</FieldLabel>
             <Input
               id="idea-looking-for"
               v-model="lookingFor"
@@ -206,7 +206,7 @@ async function submit() {
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel for="idea-party-size">Konstellation</FieldLabel>
+              <FieldLabel optional for="idea-party-size">Konstellation</FieldLabel>
               <select
                 id="idea-party-size"
                 v-model="partySize"
@@ -250,7 +250,7 @@ async function submit() {
                dialog inside the viewport instead of scrolling it. -->
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel for="idea-genres">Genres</FieldLabel>
+              <FieldLabel optional for="idea-genres">Genres</FieldLabel>
               <Input
                 id="idea-genres"
                 v-model="genres"
@@ -262,7 +262,7 @@ async function submit() {
             </Field>
 
             <Field>
-              <FieldLabel for="idea-subgenres">Subgenres</FieldLabel>
+              <FieldLabel optional for="idea-subgenres">Subgenres</FieldLabel>
               <Input
                 id="idea-subgenres"
                 v-model="subgenres"
@@ -273,7 +273,7 @@ async function submit() {
             </Field>
 
             <Field>
-              <FieldLabel for="idea-tropes">Tropes</FieldLabel>
+              <FieldLabel optional for="idea-tropes">Tropes</FieldLabel>
               <Input
                 id="idea-tropes"
                 v-model="tropes"
@@ -284,7 +284,7 @@ async function submit() {
             </Field>
 
             <Field>
-              <FieldLabel for="idea-content-warnings">Inhaltswarnungen</FieldLabel>
+              <FieldLabel optional for="idea-content-warnings">Inhaltswarnungen</FieldLabel>
               <Input
                 id="idea-content-warnings"
                 v-model="contentWarnings"
@@ -297,7 +297,7 @@ async function submit() {
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel for="idea-tense">Zeitform</FieldLabel>
+              <FieldLabel optional for="idea-tense">Zeitform</FieldLabel>
               <Input
                 id="idea-tense"
                 v-model="tense"
@@ -308,7 +308,7 @@ async function submit() {
               />
             </Field>
             <Field>
-              <FieldLabel for="idea-perspective">Perspektive</FieldLabel>
+              <FieldLabel optional for="idea-perspective">Perspektive</FieldLabel>
               <Input
                 id="idea-perspective"
                 v-model="perspective"

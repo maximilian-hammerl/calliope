@@ -5,6 +5,13 @@ import { Label } from '@/components/ui/label'
 
 const props = defineProps<{
   class?: HTMLAttributes['class']
+  /**
+   * Says the field may be left blank. Patched in rather than written at each call site so the
+   * word is the same everywhere — and marked on the *optional* fields, never the required ones,
+   * because the problem it solves is members typing filler into fields they believe they must
+   * answer. Silence therefore means required, which works because that is the rare case.
+   */
+  optional?: boolean
 }>()
 </script>
 
@@ -21,5 +28,8 @@ const props = defineProps<{
     "
   >
     <slot />
+    <!-- Quieter than the label it follows: this appears many times in a long form, and it is
+         reassurance rather than instruction. -->
+    <span v-if="optional" class="text-[11.5px] font-normal text-ink-6">optional</span>
   </Label>
 </template>

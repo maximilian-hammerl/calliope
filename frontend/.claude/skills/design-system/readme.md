@@ -118,6 +118,27 @@ reload, the back button and a second tab opened on the passage being quoted all 
 place — which is most of what makes jumping feel quick. Defaults stay absent from the address,
 so a plain link is still plain.
 
+**Optional fields say so; required fields say nothing.** Marked this way round because the
+problem is the opposite of the usual one: members filled Yooco's mandatory fields with nonsense
+to get past them, so what a form has to communicate is permission to skip, not obligation to
+answer. Silence therefore means required, which reads cleanly because required is the rare case —
+one field of fourteen in the story-idea dialog. The word is `optional`, once per field, rendered
+by `<FieldLabel optional>` rather than typed at each call site, and quieter than the label it
+follows: it appears many times in a long form and it is reassurance, not instruction. No
+asterisks — they are a convention people misread, and a glyph carrying meaning is exactly what
+the iconography rule excludes.
+
+**A select is marked only when one of its options is "Keine Angabe".** Then blank is a real
+choice and the rule above applies. A select whose default is an answer — Sichtbarkeit is Privat,
+Sprache is Deutsch — is answered rather than skipped, and marking it optional would invite
+somebody to look for a blank that is not there. The distinction matters because silence means
+required: an unmarked Konstellation would have claimed a field is compulsory when its first
+option is "Keine Angabe".
+
+**And each dialog names what it needs, in its own description.** "Nur der Titel ist nötig",
+"Nur Titel und die Idee selbst sind nötig" — one sentence where the reader looks first, so the
+per-field marks confirm something already said rather than carrying the whole message.
+
 **A dialog is as wide as its purpose, and there are four.** The widths are named once in
 `theme.css` — `max-w-dialog-confirm` (440px), `-form` (560), `-wide` (760), `-workspace` (960) —
 because `sm:max-w-[440px]` copied into ten files is how every form ended up the width of a

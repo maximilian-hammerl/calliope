@@ -164,7 +164,9 @@ async function submit() {
       <DialogHeader>
         <!-- Founding a group is a social act, so the verb is not "erstellen". -->
         <DialogTitle>Gruppe gründen</DialogTitle>
-        <DialogDescription> Eine private Gruppe sehen nur ihre Mitglieder. </DialogDescription>
+        <DialogDescription>
+          Nur der Titel ist nötig. Eine private Gruppe sehen nur ihre Mitglieder.
+        </DialogDescription>
       </DialogHeader>
 
       <form class="flex flex-col gap-5" novalidate @submit.prevent="submit">
@@ -189,7 +191,7 @@ async function submit() {
           </Field>
 
           <Field>
-            <FieldLabel for="group-subtitle">Untertitel</FieldLabel>
+            <FieldLabel optional for="group-subtitle">Untertitel</FieldLabel>
             <Input
               id="group-subtitle"
               v-model="subtitle"
@@ -201,7 +203,7 @@ async function submit() {
           </Field>
 
           <Field :data-invalid="descriptionError !== undefined ? true : undefined">
-            <FieldLabel for="group-description">Worum geht es?</FieldLabel>
+            <FieldLabel optional for="group-description">Worum geht es?</FieldLabel>
             <Textarea
               id="group-description"
               v-model="description"

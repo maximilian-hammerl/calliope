@@ -63,7 +63,7 @@ const TAG_FIELDS = [
        what the wider dialog buys: the same fields without a column tall enough to scroll. -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <Field v-for="field in TAG_FIELDS" :key="field.key">
-      <FieldLabel :for="`group-${field.key}`">{{ field.label }}</FieldLabel>
+      <FieldLabel optional :for="`group-${field.key}`">{{ field.label }}</FieldLabel>
       <Input
         :id="`group-${field.key}`"
         v-model="metadata[field.key]"
@@ -78,7 +78,7 @@ const TAG_FIELDS = [
   <!-- Typically a word or two each, so they share a line — same as the story-idea dialog. -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <Field>
-      <FieldLabel for="group-tense">Zeitform</FieldLabel>
+      <FieldLabel optional for="group-tense">Zeitform</FieldLabel>
       <Input
         id="group-tense"
         v-model="metadata.tense"
@@ -90,7 +90,7 @@ const TAG_FIELDS = [
     </Field>
 
     <Field>
-      <FieldLabel for="group-perspective">Perspektive</FieldLabel>
+      <FieldLabel optional for="group-perspective">Perspektive</FieldLabel>
       <Input
         id="group-perspective"
         v-model="metadata.perspective"

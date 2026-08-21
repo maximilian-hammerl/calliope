@@ -141,7 +141,7 @@ async function submit() {
       <DialogHeader>
         <DialogTitle>Gruppe bearbeiten</DialogTitle>
         <DialogDescription>
-          Titel, Beschreibung und Sichtbarkeit gelten für alle Mitglieder.
+          Nur der Titel ist nötig. Titel, Beschreibung und Sichtbarkeit gelten für alle Mitglieder.
         </DialogDescription>
       </DialogHeader>
 
@@ -167,7 +167,7 @@ async function submit() {
           </Field>
 
           <Field>
-            <FieldLabel for="edit-group-subtitle">Untertitel</FieldLabel>
+            <FieldLabel optional for="edit-group-subtitle">Untertitel</FieldLabel>
             <Input
               id="edit-group-subtitle"
               v-model="subtitle"
@@ -179,7 +179,7 @@ async function submit() {
           </Field>
 
           <Field :data-invalid="descriptionError !== undefined ? true : undefined">
-            <FieldLabel for="edit-group-description">Worum geht es?</FieldLabel>
+            <FieldLabel optional for="edit-group-description">Worum geht es?</FieldLabel>
             <Textarea
               id="edit-group-description"
               v-model="description"
