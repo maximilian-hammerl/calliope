@@ -351,7 +351,9 @@ itself carries no button at all: its title is the link, and "Gruppe ansehen" onl
 the title already did while making the two group lists look different from each other.
 
 **A group row is the title and what it is.** Title, subtitle, synopsis, last activity — and no
-action button: the title is the link. `GroupRow` renders the same on Meine Gruppen and on
+action button: the title is the link. The synopsis is **clamped to three lines**, as a story
+idea's teaser is: it may run to eight thousand characters, and one long one would push every row
+after it off the page. Its own page shows the whole thing. `GroupRow` renders the same on Meine Gruppen and on
 Gruppen entdecken, and an invitation adds its answer buttons because there the row *is* a
 question.
 
