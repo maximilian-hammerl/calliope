@@ -22,6 +22,13 @@ nothing but the verification wall — that screen is otherwise only reachable by
 hand and digging the link out of Mailpit. It prints a compact account table and a few entry
 URLs when it finishes.
 
+One thread, "Der lange Aufstieg" in the public Zauberzwerg, holds **105 generated posts** so
+numbered pages, the order toggle and a truthful post count are always testable; the section
+number is in each text, which makes a wrong or repeated page visible instead of countable. Post
+timestamps are **stamped from fixture position**, five minutes apart, because one insert
+statement shares a single `now()` — a column full of ties has no defined sort order, and paging
+over it repeats rows across pages.
+
 **The fixtures live in `seed/`, one file per kind**, with `seed.ts` keeping the guard, the
 cleanup and the order: `accounts.ts`, `writing_groups.ts`, `story_ideas.ts`, `chats.ts`,
 `ids.ts` and `write.ts`. A group's members, threads, posts and steps are nested in its own
@@ -339,6 +346,14 @@ can already see the thing.
 
 `WritingGroupService.selectRoleForUser` only returns a role for a *joined* membership;
 someone invited as an administrator cannot administer until they accept.
+
+**Reading and writing are guarded differently.** A read of a group's contents asks
+`selectVisibleWritingGroup` — which is what makes a public group public: §23's community-visible
+state is a promise about the writing, and the discovery page says so ("Mitlesen kannst du
+sofort"). Writing asks `selectRoleForUser`. Threads, one thread and its posts checked membership
+instead until they were corrected; steps and memberships had always used visibility, so a
+non-member could read a public group's member list but not a word of its story. Drafts do not
+depend on either check — `readableBy` keeps them with their author whoever is asking.
 
 ## After changing a route
 

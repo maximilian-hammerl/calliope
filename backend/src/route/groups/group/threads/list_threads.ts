@@ -66,12 +66,14 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { groupId } = c.req.valid("param");
 
-    // Any role may read, but only members.
-    const role = await WritingGroupService.selectRoleForUser(
+    // Whatever the reader may *see* — a public group's writing is readable by the community,
+    // which is what makes it public rather than merely listed. Drafts stay with their author
+    // through `readableBy`, and writing still needs a role.
+    const group = await WritingGroupService.selectVisibleWritingGroup(
       c.get("user"),
       groupId,
     );
-    if (role === undefined) {
+    if (group === undefined) {
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 

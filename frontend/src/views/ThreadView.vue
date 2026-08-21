@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { useQueryClient } from '@tanstack/vue-query'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetThread, useListThreads } from '@/api/threads/threads'
 import { getListPostsQueryKey, useCreatePost, useListPosts, useUpdatePost } from '@/api/posts/posts'
@@ -19,8 +19,11 @@ import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
 import PostItem from '@/components/thread/PostItem.vue'
+import PostPagination from '@/components/thread/PostPagination.vue'
+import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
+import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { useDraft } from '@/composables/useDraft'
 import PostComposer from '@/components/thread/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
@@ -32,6 +35,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
+const router = useRouter()
 const queryClient = useQueryClient()
 
 const groupId = computed<string>(() => String(route.params.groupId))
@@ -53,15 +57,72 @@ const threads = computed<ListThreads200ResultsItem[]>(() =>
   threadsData.value?.status === 200 ? threadsData.value.data.results : [],
 )
 
-// Oldest first: a thread is read in the order it was written.
-const postsQuery = { limit: 100, sortAttribute: 'createdAt', sortOrder: 'asc' } as const
-const { data: postsData } = useListPosts(groupId, threadId, postsQuery)
+/**
+ * Twenty is the endpoint's own default, and a page of prose that size stays scannable — the
+ * number of pages is what makes a known post quick to reach.
+ */
+const POSTS_PER_PAGE = 20
+
+/**
+ * Page and order live in the URL, which is what makes jumping durable: a reload, the back
+ * button and a second tab opened on the passage being referenced all keep their place.
+ * Route keys are English like every other path; only what the member reads is German.
+ */
+const page = computed<number>(() => {
+  const asked = Number(route.query.page)
+  return Number.isInteger(asked) && asked >= 1 ? asked : 1
+})
+
+const order = computed<'oldest' | 'newest'>(() =>
+  route.query.order === 'newest' ? 'newest' : 'oldest',
+)
+
+function show(next: { page?: number; order?: 'oldest' | 'newest' }) {
+  const wanted = { page: next.page ?? page.value, order: next.order ?? order.value }
+  void router.push({
+    query: {
+      ...route.query,
+      // Absent rather than spelled out where it is the default, so the plain URL stays plain.
+      page: wanted.page === 1 ? undefined : String(wanted.page),
+      order: wanted.order === 'oldest' ? undefined : wanted.order,
+    },
+  })
+}
+
+const postsQuery = computed(() => ({
+  limit: POSTS_PER_PAGE,
+  offset: (page.value - 1) * POSTS_PER_PAGE,
+  sortAttribute: 'createdAt' as const,
+  sortOrder: order.value === 'newest' ? ('desc' as const) : ('asc' as const),
+}))
+
+const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
+  // Without this the strip vanishes between pages: a new page is a new query key, so the count
+  // it is built from is briefly unknown.
+  query: { placeholderData: keepPreviousData },
+})
 const posts = computed<ListPosts200ResultsItem[]>(() =>
   postsData.value?.status === 200 ? postsData.value.data.results : [],
 )
 const postCount = computed<number | undefined>(() =>
   postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
 )
+
+const pageCount = computed<number>(() =>
+  Math.max(1, Math.ceil((postCount.value ?? 0) / POSTS_PER_PAGE)),
+)
+
+/**
+ * A page that no longer exists — the last post on it was deleted, or a link is stale — would
+ * otherwise render as an empty thread. Sent back to the last page there is.
+ */
+watch([postCount, pageCount, page], ([count, pages, current]) => {
+  // Only once the count is known. Acting while it is unknown is how this fought every page
+  // change: a new page starts with no data, so the count collapsed and sent the reader back.
+  if (count !== undefined && current > pages) {
+    show({ page: pages })
+  }
+})
 
 const { data: membershipsData } = useListMemberships(groupId, { limit: 100 })
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
@@ -129,8 +190,17 @@ async function submit() {
 
   // Only cleared once the post is really stored, so nothing a member wrote is lost.
   draft.value = ''
+
+  // Every page, not the one being shown: the new post changes the count, and with it which
+  // page anything sits on. The exact key would also miss, since it carries this page's body.
   await queryClient.invalidateQueries({
-    queryKey: getListPostsQueryKey(groupId.value, threadId.value, postsQuery),
+    queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
+  })
+
+  // Land where the new post is. Reading page two for reference is worth interrupting to show
+  // somebody their own writing; not showing it at all would be worse.
+  show({
+    page: order.value === 'newest' ? 1 : Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE),
   })
 }
 </script>
@@ -167,6 +237,21 @@ async function submit() {
             <template v-if="mayWrite">Schreib den ersten.</template>
           </p>
 
+          <!-- The order sits above the posts it orders. Only worth offering once there is
+               more than one page to start at either end of. -->
+          <div
+            v-if="pageCount > 1"
+            class="mb-5 flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-line-2 pb-2"
+          >
+            <PostSortToggle
+              :model-value="order"
+              @update:model-value="show({ order: $event, page: 1 })"
+            />
+            <span class="ml-auto text-[12.5px] text-ink-6"
+              >Seite {{ page }} von {{ pageCount }}</span
+            >
+          </div>
+
           <PostItem
             v-for="(post, index) in posts"
             :key="post.id"
@@ -174,6 +259,12 @@ async function submit() {
             :first="index === 0"
             :divider="index < posts.length - 1"
           />
+
+          <!-- Below the posts as well as in the strip above: this is where somebody is when
+               they finish a page, and where the composer already has them. -->
+          <div v-if="pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+            <PostPagination :page="page" :page-count="pageCount" @go="show({ page: $event })" />
+          </div>
         </div>
       </div>
 

@@ -52,6 +52,27 @@ export type GroupFixture = {
 };
 
 /**
+ * A thread with more posts than one page holds, so numbered pages are always testable against
+ * the fixture. Five writers take turns, which also puts more than one name on the page.
+ */
+const LONG_THREAD_WRITERS = [
+  USER.federkiel,
+  USER.nachtschreiber,
+  USER.tintenfleck,
+  USER.lesezeichen,
+  USER.silbenmeer,
+] as const;
+
+const LONG_THREAD_POSTS: Post[] = Array.from({ length: 105 }, (_, index) => ({
+  id: postId(200 + index),
+  // deno-lint-ignore no-non-null-assertion -- a modulo of the length is always in range
+  by: LONG_THREAD_WRITERS[index % LONG_THREAD_WRITERS.length]!,
+  text: `Aufstieg, Abschnitt ${
+    index + 1
+  }. Der Pfad wurde schmaler, und niemand sagte etwas.`,
+}));
+
+/**
  * Titles are real books, knocked slightly off course. They read as a community's inside joke
  * rather than as placeholder text, and nobody mistakes one for production data.
  *
@@ -195,6 +216,16 @@ export const GROUPS: GroupFixture[] = [
             text: "Der Zwerg: verwaltet den Berg, hat ihn nie verlassen.",
           },
         ],
+      },
+      {
+        id: threadId(10),
+        title: "Der lange Aufstieg",
+        by: USER.federkiel,
+        // Long on purpose: paging, the order toggle and a truthful post count need a thread
+        // that outgrows one page. The number is in the text so a wrong page or a repeated row
+        // is visible at a glance rather than something to count. Ids run from 200 to keep out
+        // of the way of the hand-written ones above.
+        posts: LONG_THREAD_POSTS,
       },
     ],
     steps: [

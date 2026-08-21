@@ -122,7 +122,11 @@ These are decisions, not omissions, and each is recorded where it was made:
   Nächste Schritte are real — steps are added inline, ticked off recording who completed them,
   and completed ones keep forever under an „Erledigt (N)“ disclosure unless deleted by hand.
 - Post actions **Antworten**, **Zitieren** and **Merken** are inert; **Anmerkung schreiben**,
-  which the design system lists as core copy, does not appear at all.
+  which the design system lists as core copy, does not appear at all. The thread's **post
+  filter** ("Alle Beiträge ▾") is gone from the interface for the same reason: its two real
+  options are Gemerkt and Mit Anmerkungen, so it cannot filter anything until those exist. The
+  design-system prototype keeps the specification, including the finding that it is one menu
+  rather than a row of chips.
 
 ## Correctly absent
 

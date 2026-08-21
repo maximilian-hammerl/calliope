@@ -85,6 +85,11 @@ function assertBlocksHaveNoPendingInvitation(): void {
   }
 }
 
+/** `stepsBack` posts before now, five minutes apart, so a thread reads in fixture order. */
+function postedAt(stepsBack: number): string {
+  return Temporal.Now.instant().subtract({ minutes: stepsBack * 5 }).toString();
+}
+
 async function writeAccounts(): Promise<void> {
   // Hashed once and shared: scrypt is deliberately slow, and these are local accounts.
   const hashedPassword = await hashPassword("calliope");
@@ -165,12 +170,17 @@ async function writeGroups(): Promise<void> {
 
   await db.insertInto("writingPost").values(
     threads.flatMap(({ thread }) =>
-      thread.posts.map((post) => ({
+      thread.posts.map((post, index) => ({
         id: post.id,
         writingThreadId: thread.id,
         text: post.text,
         isDraft: post.isDraft ?? false,
         createdBy: post.by,
+        // Stamped from the position in the fixture rather than left to the column default:
+        // one insert statement shares a single `now()`, so every post in a thread would carry
+        // the same timestamp. Sorting by a column full of ties has no defined order, which is
+        // exactly what paging cannot survive — page two would repeat rows from page one.
+        createdAt: postedAt(thread.posts.length - index),
       }))
     ),
   ).execute();

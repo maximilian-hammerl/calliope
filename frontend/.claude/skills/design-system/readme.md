@@ -102,6 +102,18 @@ it opens and the button's `aria-label`, so a screen reader loses nothing. Everyw
 is written out. In a strip the action takes a transparent segment of the rule, which is what
 separates it from the items.
 
+**A thread pages by number; a conversation loads more.** The two look like the same problem and
+are not. Writers read earlier posts *for reference while composing*, so what a thread needs is
+jumping to a known place: numbered pages, twenty posts each, above and below the list — below
+because that is where the composer already has them. A conversation is read through, so it grows
+upward instead. Which end a thread starts at is the reader's choice, not a default: "Älteste
+zuerst / Neueste zuerst", marked like every other position with the 2px oak underline.
+
+**A choice the reader made belongs in the URL.** Page and order are query parameters, so a
+reload, the back button and a second tab opened on the passage being quoted all keep their
+place — which is most of what makes jumping feel quick. Defaults stay absent from the address,
+so a plain link is still plain.
+
 **A conversation pane is a fixed viewport, and loading history never moves the reader.** The
 message list has a set height and scrolls inside it — given only a minimum, the dialog grew with
 the conversation until it ran off the screen and took the composer with it. Older messages arrive

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ChevronDown } from '@lucide/vue'
 import { computed } from 'vue'
 import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
 
@@ -23,20 +22,12 @@ const meta = computed<string>(() =>
 </script>
 
 <template>
-  <div class="mb-7 flex items-end gap-4">
-    <div>
-      <h2 class="mb-[5px] text-[20px] leading-[1.3] text-ink-1">{{ title }}</h2>
-      <div v-if="meta" class="text-[12.5px] leading-[1.3] text-ink-5">{{ meta }}</div>
-    </div>
-    <!-- Placeholder: there is no post filter behind this yet. -->
-    <button
-      type="button"
-      disabled
-      class="ml-auto hidden items-center gap-[6px] sm:flex rounded-lg border border-line-4 bg-paper-1 px-[11px] py-[6px] text-[12.5px] text-oak-deep disabled:opacity-50"
-      title="Noch nicht verfügbar"
-    >
-      Alle Beiträge
-      <ChevronDown :size="14" :stroke-width="1.5" class="text-ink-5" />
-    </button>
+  <!-- The post filter the design system specifies belongs here ("Alle Beiträge ▾"), and is
+       absent rather than disabled: both of its real options, Gemerkt and Mit Anmerkungen,
+       depend on post actions that do not exist yet, and a dead control now sits beside the
+       working order toggle and page strip below. The prototype keeps the specification. -->
+  <div class="mb-7">
+    <h2 class="mb-[5px] text-[20px] leading-[1.3] text-ink-1">{{ title }}</h2>
+    <div v-if="meta" class="text-[12.5px] leading-[1.3] text-ink-5">{{ meta }}</div>
   </div>
 </template>

@@ -98,6 +98,13 @@ length check that separates a list from its children. The same shape exists for 
 (threads, memberships, steps, posts sit under the groups key); those call sites still use the
 prefix, where the cost is a stray refetch rather than a growing one.
 
+**A paged list keeps the previous page while the next loads.** `placeholderData: keepPreviousData`,
+because a new page is a new query key and therefore briefly has no data: the page strip and the
+count it is built from would blink out between every page. It also matters for correctness — a
+watcher that corrects an out-of-range page must wait for the count to be *known*, or it reads the
+momentary "0 results" as "page 1 is the last page" and sends the reader back on every click. That
+bug shipped for about ten minutes and looked exactly like a dead button.
+
 **Cursor-paged endpoints are hand-written composables.** Orval's `useInfinite` substitutes a
 query *parameter*, and these endpoints carry paging in a JSON body, so
 `composables/useChatMessages.ts` calls the generated `listMessages` function from a

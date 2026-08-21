@@ -11,9 +11,10 @@ import {
 
 const administrator = "list-posts-admin";
 const writer = "list-posts-writer";
+const outsider = "list-posts-outsider";
 
 Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer]));
+Deno.test.afterEach(() => deleteUsers([administrator, writer, outsider]));
 
 async function threadWithDraft() {
   const adminCookie = await registerUser(administrator);
@@ -37,6 +38,39 @@ async function threadWithDraft() {
 
   return { adminCookie, writerCookie, posts };
 }
+
+Deno.test("QUERY …/posts lets a non-member read a public group's posts, but no drafts", async () => {
+  const adminCookie = await registerUser(administrator);
+  const group = await createGroup(adminCookie, "Offen zu lesen", "public");
+  const thread = await (await request(
+    "POST",
+    `/api/groups/${group.id}/threads`,
+    adminCookie,
+    { title: "Kapitel 1" },
+  )).json();
+  const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
+  await request("POST", posts, adminCookie, { text: "Veröffentlicht" });
+  await request("POST", posts, adminCookie, { text: "Entwurf", isDraft: true });
+
+  const outsiderCookie = await registerUser(outsider);
+  const response = await request("QUERY", posts, outsiderCookie, {
+    limit: 100,
+  });
+
+  // Reading a public group is the point of it being public; the draft is still its author's
+  // alone, which `readableBy` enforces regardless of who is asking.
+  assertEquals(response.status, STATUS_CODE.OK);
+  const page = await response.json();
+  assertEquals(page.results.map((one: { text: string }) => one.text), [
+    "Veröffentlicht",
+  ]);
+
+  const asked = await (await request("QUERY", posts, outsiderCookie, {
+    limit: 100,
+    isDraft: true,
+  })).json();
+  assertEquals(asked.results.length, 0);
+});
 
 Deno.test("QUERY …/posts leaves the author's own draft out of the thread", async () => {
   const { writerCookie, posts } = await threadWithDraft();

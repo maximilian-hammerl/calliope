@@ -38,16 +38,39 @@ Deno.test("QUERY /api/groups/{groupId}/threads lists threads for any member", as
   assertEquals(page.results[0].title, "Kapitel 1");
 });
 
-Deno.test("QUERY /api/groups/{groupId}/threads hides a public group's threads from a non-member", async () => {
+Deno.test("QUERY /api/groups/{groupId}/threads shows a public group's threads to a non-member", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Fäden", "public");
-
-  // The group itself is public, but its contents are for members only.
-  assertEquals(
-    (await request("GET", `/api/groups/${group.id}`, outsiderCookie)).status,
-    STATUS_CODE.OK,
+  const thread = await request(
+    "POST",
+    `/api/groups/${group.id}/threads`,
+    adminCookie,
+    { title: "Kapitel 1" },
   );
+  assertEquals(thread.status, STATUS_CODE.Created);
+
+  // §23's "community-visible" is a promise about the writing, not only about the title, and
+  // the discovery page states it outright: "Mitlesen kannst du sofort". This once answered
+  // 404 while the same group's members and next steps were already readable.
+  const response = await request(
+    "QUERY",
+    `/api/groups/${group.id}/threads`,
+    outsiderCookie,
+    {},
+  );
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  const page = await response.json();
+  assertEquals(page.results.map((one: { title: string }) => one.title), [
+    "Kapitel 1",
+  ]);
+});
+
+Deno.test("QUERY /api/groups/{groupId}/threads still hides a private group's threads", async () => {
+  const adminCookie = await registerUser(administrator);
+  const outsiderCookie = await registerUser(outsider);
+  const group = await createGroup(adminCookie, "Verschlossen", "private");
 
   const response = await request(
     "QUERY",
@@ -56,5 +79,6 @@ Deno.test("QUERY /api/groups/{groupId}/threads hides a public group's threads fr
     {},
   );
 
+  // 404 rather than 403: a private group's existence is nobody else's business.
   assertEquals(response.status, STATUS_CODE.NotFound);
 });
