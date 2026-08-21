@@ -2613,6 +2613,10 @@
                     "role": {
                       "type": ["string", "null"],
                       "enum": ["administrator", "reader", "writer", null]
+                    },
+                    "invitedAt": {
+                      "type": ["string", "null"],
+                      "format": "date-time"
                     }
                   },
                   "required": [
@@ -2634,7 +2638,8 @@
                     "lastActivityAt",
                     "createdByUsername",
                     "status",
-                    "role"
+                    "role",
+                    "invitedAt"
                   ]
                 }
               }
@@ -2818,7 +2823,12 @@
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
                     "type": "string",
-                    "enum": ["createdAt", "lastActivityAt", "title"],
+                    "enum": [
+                      "createdAt",
+                      "lastActivityAt",
+                      "title",
+                      "invitedAt"
+                    ],
                     "default": "createdAt"
                   },
                   "sortOrder": {
@@ -2905,6 +2915,10 @@
                           "role": {
                             "type": ["string", "null"],
                             "enum": ["administrator", "reader", "writer", null]
+                          },
+                          "invitedAt": {
+                            "type": ["string", "null"],
+                            "format": "date-time"
                           }
                         },
                         "required": [
@@ -2926,7 +2940,8 @@
                           "lastActivityAt",
                           "createdByUsername",
                           "status",
-                          "role"
+                          "role",
+                          "invitedAt"
                         ]
                       }
                     }
@@ -3162,6 +3177,10 @@
                     "role": {
                       "type": ["string", "null"],
                       "enum": ["administrator", "reader", "writer", null]
+                    },
+                    "invitedAt": {
+                      "type": ["string", "null"],
+                      "format": "date-time"
                     }
                   },
                   "required": [
@@ -3183,7 +3202,8 @@
                     "lastActivityAt",
                     "createdByUsername",
                     "status",
-                    "role"
+                    "role",
+                    "invitedAt"
                   ]
                 }
               }
@@ -3512,6 +3532,10 @@
                     "role": {
                       "type": ["string", "null"],
                       "enum": ["administrator", "reader", "writer", null]
+                    },
+                    "invitedAt": {
+                      "type": ["string", "null"],
+                      "format": "date-time"
                     }
                   },
                   "required": [
@@ -3533,7 +3557,8 @@
                     "lastActivityAt",
                     "createdByUsername",
                     "status",
-                    "role"
+                    "role",
+                    "invitedAt"
                   ]
                 }
               }
@@ -14628,6 +14653,10 @@
                                   "writer",
                                   null
                                 ]
+                              },
+                              "invitedAt": {
+                                "type": ["string", "null"],
+                                "format": "date-time"
                               }
                             },
                             "required": [
@@ -14649,7 +14678,8 @@
                               "lastActivityAt",
                               "createdByUsername",
                               "status",
-                              "role"
+                              "role",
+                              "invitedAt"
                             ]
                           }
                         }

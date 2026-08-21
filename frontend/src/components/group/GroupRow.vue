@@ -9,7 +9,7 @@ import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
  */
 defineProps<{ group: ListGroups200ResultsItem }>()
 
-defineSlots<{ actions?: () => unknown }>()
+defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
 </script>
 
 <template>
@@ -37,8 +37,10 @@ defineSlots<{ actions?: () => unknown }>()
       {{ group.blurb }}
     </p>
 
+    <!-- Every date this row shows sits on one line, so an invitation's own date joins the
+         group's activity rather than starting a second meta line. -->
     <div class="mt-[6px] text-[12.5px] leading-[1.95] text-ink-5">
-      zuletzt {{ formatActivityTime(group.lastActivityAt) }}
+      zuletzt {{ formatActivityTime(group.lastActivityAt) }}<slot name="meta" />
     </div>
 
     <div v-if="$slots.actions" class="mt-[10px] flex flex-wrap items-center gap-2">

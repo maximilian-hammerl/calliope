@@ -44,6 +44,8 @@ export type WritingGroup =
   & {
     status: UserInWritingGroupStatus | null;
     role: UserInWritingGroupRole | null;
+    /** Null unless the reader was invited to this group; the invitations list dates rows by it. */
+    invitedAt: string | null;
   };
 
 /**
@@ -167,6 +169,8 @@ async function insertWritingGroup(
       createdByUsername: creator.username,
       status: "joined",
       role: "administrator",
+      // Nobody invited the founder, so there is no date to state.
+      invitedAt: null,
     };
   });
 }
@@ -205,6 +209,7 @@ const AUTHOR_COLUMN = "user.username as createdByUsername" as const;
 const OWN_MEMBERSHIP_COLUMNS = [
   "userInWritingGroup.status",
   "userInWritingGroup.role",
+  "userInWritingGroup.invitedAt",
 ] as const;
 
 /** Returns nothing when the group does not exist or is private and not the user's. */

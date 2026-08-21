@@ -35,8 +35,10 @@ watchDebounced(
 const { data, isPending, isError } = useListUsers(() => ({
   limit: PAGE_SIZE,
   search: settled.value === '' ? undefined : settled.value,
-  sortAttribute: 'createdAt' as const,
-  sortOrder: 'desc' as const,
+  // Alphabetical, because the rows show a name and nothing else: any other order would be
+  // invisible on screen, and this page is for finding somebody rather than seeing who is new.
+  sortAttribute: 'username' as const,
+  sortOrder: 'asc' as const,
 }))
 
 const members = computed<ListUsers200ResultsItem[]>(() =>

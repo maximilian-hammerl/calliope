@@ -35,8 +35,10 @@ watchDebounced(
 const { data, isPending, isError } = useListGroups(() => ({
   limit: 100,
   search: settled.value === '' ? undefined : settled.value,
-  sortAttribute: 'title' as const,
-  sortOrder: 'asc' as const,
+  // Most recently written in first: people come back to continue a story, not to look one up
+  // alphabetically — and the row already dates itself by this column.
+  sortAttribute: 'lastActivityAt' as const,
+  sortOrder: 'desc' as const,
 }))
 
 const groups = computed<ListGroups200ResultsItem[]>(() =>
@@ -58,8 +60,10 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 const { data: invitationsData } = useListGroups({
   limit: 100,
   membership: 'invited',
-  sortAttribute: 'title',
-  sortOrder: 'asc',
+  // The membership's own column, not the group's: what orders an unanswered ask is when it
+  // was made. Newest first, because that is the one still fresh in mind.
+  sortAttribute: 'invitedAt',
+  sortOrder: 'desc',
 })
 
 const invitations = computed<ListGroups200ResultsItem[]>(() =>

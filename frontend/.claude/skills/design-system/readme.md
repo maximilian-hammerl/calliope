@@ -102,6 +102,14 @@ it opens and the button's `aria-label`, so a screen reader loses nothing. Everyw
 is written out. In a strip the action takes a transparent segment of the rule, which is what
 separates it from the items.
 
+**A list's order is explained by what its rows show.** Sort by a column the row displays, or
+the sequence reads as random. Meine Gruppen is ordered by last activity and each row says
+"zuletzt vor …"; Einladungen by when the invitation arrived and each row says "eingeladen vor
+…"; Mitglieder alphabetically, because a row there is a name and nothing else, so any other
+order would be invisible. The corollary bites hardest where a list is capped: the sort then
+decides *which* rows a member sees at all, not merely their sequence — Meine Gruppen was once
+capped at ten and sorted by title, which could hide the group somebody writes in daily.
+
 **One action, one place per screen.** The rule is per screen, not per product: "＋ Gruppe" sits
 on the heading line of Meine Gruppen and of Gruppen entdecken — both places somebody realises
 they want a group — but never twice on either. What it replaced was the true duplication: the

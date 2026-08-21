@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { useInvitationResponse } from '@/composables/useInvitationResponse'
+import { formatActivityTime } from '@/lib/format/formatTime'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -32,6 +33,11 @@ const offer = computed<string | undefined>(() =>
 
 <template>
   <GroupRow :group="group">
+    <!-- The date the list is now ordered by, so the order is visible rather than merely true. -->
+    <template v-if="group.invitedAt" #meta>
+      · eingeladen {{ formatActivityTime(group.invitedAt) }}
+    </template>
+
     <template #actions>
       <Button size="sm" :disabled="isBusy" @click="accept">
         <Spinner v-if="isAccepting" data-icon="inline-start" />

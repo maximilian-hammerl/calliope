@@ -36,6 +36,7 @@ type Page = {
     title: string;
     status: string | null;
     role: string | null;
+    invitedAt: string | null;
   }>;
   totalResults: number;
 };
@@ -210,6 +211,45 @@ Deno.test("QUERY /api/groups separates an invitation from a membership", async (
   assertExists(invitation);
   assertEquals(invitation.status, "invited");
   assertEquals(invitation.role, "writer");
+  // Dated by when the reader was asked, which is what the Einladungen list shows and sorts by.
+  assertExists(invitation.invitedAt);
+});
+
+Deno.test("QUERY /api/groups sorts invitations by when they arrived", async () => {
+  const ownerCookie = await registerUser(owner);
+  const first = await createGroup(ownerCookie, FIRST_TITLE, "private");
+  const second = await createGroup(ownerCookie, SECOND_TITLE, "private");
+
+  const outsiderCookie = await registerUser(outsider);
+  const outsiderId = await currentUserId(outsiderCookie);
+
+  // Aaa is invited first, Zzz second, so newest-first and by-title disagree — which is the
+  // whole point of sorting by the membership's own column rather than the group's title.
+  const invite = (groupId: string) =>
+    request("POST", `/api/groups/${groupId}/memberships`, ownerCookie, {
+      userId: outsiderId,
+      role: "writer",
+    });
+
+  // Sequential, not concurrent: that is what gives the two memberships distinct timestamps.
+  assertEquals((await invite(first.id)).status, STATUS_CODE.Created);
+  assertEquals((await invite(second.id)).status, STATUS_CODE.Created);
+
+  const newestFirst = await list(outsiderCookie, {
+    limit: 100,
+    membership: "invited",
+    sortAttribute: "invitedAt",
+    sortOrder: "desc",
+  });
+  assertEquals(ownTitles(newestFirst), [SECOND_TITLE, FIRST_TITLE]);
+
+  const oldestFirst = await list(outsiderCookie, {
+    limit: 100,
+    membership: "invited",
+    sortAttribute: "invitedAt",
+    sortOrder: "asc",
+  });
+  assertEquals(ownTitles(oldestFirst), [FIRST_TITLE, SECOND_TITLE]);
 });
 
 Deno.test("QUERY /api/groups discovers public groups the caller is not in", async () => {

@@ -15,15 +15,43 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import type {
+  UserInWritingGroup as UserInWritingGroupTable,
+  WritingGroup as WritingGroupTable,
+} from "@/src/database/schema.ts";
 
-// Public attribute names are mapped to qualified columns, so the API never exposes the
-// schema, and only these values can ever reach `dynamic.ref`.
-const SORT_ATTRIBUTE = WRITING_GROUP_SCHEMA
-  .keyof()
-  .extract(["createdAt", "lastActivityAt", "title"])
+const SORT_ATTRIBUTES = [
+  "createdAt",
+  "lastActivityAt",
+  "title",
+  "invitedAt",
+] as const;
+
+/**
+ * Public attribute names mapped to qualified columns, so the API never exposes the schema and
+ * only these values can ever reach `dynamic.ref`. `invitedAt` is the *membership's* column:
+ * for the invitations list the date that matters is when the reader was asked, which the group
+ * itself does not know. It is null on every other row, and `listResultsWithCount` orders nulls
+ * last, so asking for it elsewhere degrades rather than misleads.
+ *
+ * The `satisfies` is the rename guard the `.keyof().extract()` pattern gives elsewhere: a value
+ * that is not a column on one of the two tables fails to compile.
+ */
+const SORT_COLUMN = {
+  createdAt: "writingGroup.createdAt",
+  lastActivityAt: "writingGroup.lastActivityAt",
+  title: "writingGroup.title",
+  invitedAt: "userInWritingGroup.invitedAt",
+} as const satisfies Record<
+  (typeof SORT_ATTRIBUTES)[number],
+  | `writingGroup.${keyof WritingGroupTable & string}`
+  | `userInWritingGroup.${keyof UserInWritingGroupTable & string}`
+>;
+
+const SORT_ATTRIBUTE = z
+  .enum(SORT_ATTRIBUTES)
   .default("createdAt")
-  .transform((attribute) => `writingGroup.${attribute}` as const);
+  .transform((attribute) => SORT_COLUMN[attribute]);
 
 /**
  * Which groups, relative to the caller. The default is `joined`, because the list this backs

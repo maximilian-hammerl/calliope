@@ -38,6 +38,8 @@ const CREATED_BY_USERNAME = {
 const OWN_MEMBERSHIP = {
   status: USER_IN_WRITING_GROUP_SCHEMA.shape.status.nullable(),
   role: USER_IN_WRITING_GROUP_SCHEMA.shape.role.nullable(),
+  /** When the reader was asked, which is what an invitations list is sorted and dated by. */
+  invitedAt: USER_IN_WRITING_GROUP_SCHEMA.shape.invitedAt.nullable(),
 };
 
 export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA

@@ -177,6 +177,13 @@ validation entirely and the schema's defaults never apply.
 `sortAttribute` must be an enum derived from the table's own columns, because its value
 reaches `dynamic.ref`. An unchecked value there is an injection.
 
+Where an endpoint sorts by a *joined* table's column — `QUERY /groups` takes `invitedAt`, which
+belongs to `user_in_writing_group` and not to the group — the `.keyof().extract()` form cannot
+express it. `list_groups.ts` uses a literal map instead, with
+`satisfies Record<Attribute, "table.column">` carrying the same guarantee: an attribute
+without a mapping, or a column that has been renamed, fails to compile. Such a column is null on
+rows outside that membership, which is why `listResultsWithCount` orders nulls last.
+
 `text_limit.ts` is the origin of every bound, and they do not stop at the API: they travel
 through the Zod request schemas into `open-api.json`, and the frontend generates
 `src/api/textLimit.ts` from that document so its inputs enforce the same numbers. Changing a
