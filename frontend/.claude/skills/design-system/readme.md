@@ -102,6 +102,13 @@ it opens and the button's `aria-label`, so a screen reader loses nothing. Everyw
 is written out. In a strip the action takes a transparent segment of the rule, which is what
 separates it from the items.
 
+**A conversation pane is a fixed viewport, and loading history never moves the reader.** The
+message list has a set height and scrolls inside it — given only a minimum, the dialog grew with
+the conversation until it ran off the screen and took the composer with it. Older messages arrive
+behind an explicit "Ältere Nachrichten" rather than on scroll, because this list also moves when
+a message arrives, and prepending compensates the scroll offset by exactly the height added, so
+the line somebody was reading stays under their eyes.
+
 **A list's order is explained by what its rows show.** Sort by a column the row displays, or
 the sequence reads as random. Meine Gruppen is ordered by last activity and each row says
 "zuletzt vor …"; Einladungen by when the invitation arrived and each row says "eingeladen vor
