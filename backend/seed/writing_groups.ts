@@ -79,7 +79,7 @@ const LONG_THREAD_POSTS: Post[] = Array.from({ length: 105 }, (_, index) => ({
  * Between them the eight cover every membership size from one to five, both visibilities,
  * every role, two-administrator groups in each visibility, and one group with nothing in it.
  */
-export const GROUPS: GroupFixture[] = [
+const WRITTEN_GROUPS: GroupFixture[] = [
   {
     id: groupId(1),
     title: "Die unendliche Gliederung",
@@ -455,4 +455,43 @@ export const GROUPS: GroupFixture[] = [
       { id: stepId(8), text: "Epilog überlegen", by: USER.federkiel },
     ],
   },
+];
+
+/**
+ * Nine more public groups, so "Gruppen entdecken" always has more than one page.
+ *
+ * Nine rather than the seven that would make eleven: discovery hides the groups you are in, so
+ * the busiest account sees eleven of thirteen rather than all of them — and eleven public
+ * groups would have left it with nine, one page, and nothing to page through. Founded by
+ * silbenmeer alone for the same reason: spreading them over the demo accounts would shrink
+ * what each of those accounts can discover.
+ */
+const DISCOVERABLE_TITLES = [
+  "Der Prozess der Überarbeitung",
+  "Faust, zweiter Entwurf",
+  "Die Blechtrommel-AG",
+  "Momo und die Abgabefrist",
+  "Die Wahlverwandtschaften der Nebenfiguren",
+  "Emil und die Detektive der Zeitform",
+  "Die Räuber der verlorenen Pointe",
+  "Krieg und Frieden am Freitagabend",
+  "Der Steppenwolf lernt Absätze",
+] as const;
+
+const DISCOVERABLE_GROUPS: GroupFixture[] = DISCOVERABLE_TITLES.map((
+  title,
+  index,
+) => ({
+  id: groupId(20 + index),
+  title,
+  blurb:
+    "Öffentlich und noch klein. Steht hier, damit die Entdecken-Seite mehr als eine Seite hat.",
+  visibility: "public",
+  by: USER.silbenmeer,
+  members: [{ user: USER.silbenmeer, role: "administrator" }],
+}));
+
+export const GROUPS: GroupFixture[] = [
+  ...WRITTEN_GROUPS,
+  ...DISCOVERABLE_GROUPS,
 ];

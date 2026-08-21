@@ -12,8 +12,8 @@ the root [AGENTS.md](../AGENTS.md) for the conventions shared with the other pro
 ## Seed data
 
 `deno task db:seed` fills a local database with a fixed fixture: nine accounts sharing the
-password `calliope`, eight writing groups, six story ideas and three chats. Between them the
-groups cover both visibilities, every membership size from one to five, every role,
+password `calliope`, seventeen writing groups, six story ideas and three chats. Between them
+the groups cover both visibilities, every membership size from one to five, every role,
 two-administrator groups in each visibility, and one group with nothing in it at all. There
 are threads with posts, two unpublished drafts, next steps both open and completed, a post
 whose author is null so "Gelöschtes Konto" is visible without deleting an account, and the
@@ -21,6 +21,11 @@ notifications the invitations imply. `unverified` has no confirmed address and s
 nothing but the verification wall — that screen is otherwise only reachable by registering by
 hand and digging the link out of Mailpit. It prints a compact account table and a few entry
 URLs when it finishes.
+
+**Thirteen of the groups are public**, nine of them small ones founded by `silbenmeer`, so
+"Gruppen entdecken" always has more than one page. Thirteen rather than eleven because discovery
+hides the groups you are in: the busiest accounts belong to two public groups, and eleven would
+have left them nine — one page. `silbenmeer` is the exception by construction, seeing four.
 
 One thread, "Der lange Aufstieg" in the public Zauberzwerg, holds **105 generated posts** so
 numbered pages, the order toggle and a truthful post count are always testable; the section

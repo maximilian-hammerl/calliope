@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
+import { keepPreviousData } from '@tanstack/vue-query'
+import { usePagedList } from '@/composables/usePagedList'
+import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import GroupInvitationRow from '@/components/group/GroupInvitationRow.vue'
@@ -15,6 +18,9 @@ import { Input } from '@/components/ui/input'
 import { countLabel } from '@/lib/format/formatTime'
 
 const LIMIT = TEXT_LIMIT.listGroups.search
+
+/** Ten to a page: enough to scan at once, few enough that a page number means something. */
+const GROUPS_PER_PAGE = 10
 
 const term = ref<string>('')
 
@@ -32,14 +38,30 @@ watchDebounced(
 
 // The default is the groups this member has joined; being allowed to read a public group is
 // not the same as belonging to it, and this page is called Meine Gruppen.
-const { data, isPending, isError } = useListGroups(() => ({
-  limit: 100,
-  search: settled.value === '' ? undefined : settled.value,
-  // Most recently written in first: people come back to continue a story, not to look one up
-  // alphabetically — and the row already dates itself by this column.
-  sortAttribute: 'lastActivityAt' as const,
-  sortOrder: 'desc' as const,
-}))
+const { page, offset, pageCount, goToPage } = usePagedList(
+  GROUPS_PER_PAGE,
+  () => totalResults.value,
+)
+// A search narrows the list, so whatever page was open is about a different set of groups.
+watch(settled, () => goToPage(1))
+
+const { data, isPending, isError } = useListGroups(
+  () => ({
+    limit: GROUPS_PER_PAGE,
+    offset: offset.value,
+    search: settled.value === '' ? undefined : settled.value,
+    // Most recently written in first: people come back to continue a story, not to look one up
+    // alphabetically — and the row already dates itself by this column.
+    sortAttribute: 'lastActivityAt' as const,
+    sortOrder: 'desc' as const,
+  }),
+  // Keeps the page strip and the count on screen while the next page loads.
+  { query: { placeholderData: keepPreviousData } },
+)
+
+const totalResults = computed<number | undefined>(() =>
+  data.value?.status === 200 ? data.value.data.totalResults : undefined,
+)
 
 const groups = computed<ListGroups200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
@@ -157,6 +179,10 @@ const creating = ref<boolean>(false)
             :group="group"
             :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
           />
+        </div>
+
+        <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
         </div>
 
         <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>

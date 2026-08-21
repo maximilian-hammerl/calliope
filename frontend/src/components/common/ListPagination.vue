@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * Numbered pages for a thread. Chosen over endless loading because writers read earlier posts
- * for reference *while* composing: the job is jumping to a known place, not reading through.
+ * Numbered pages for any list. Chosen over endless loading where the job is jumping to a known
+ * place rather than reading through — which is what writers do with earlier posts while they
+ * compose, and what somebody with many groups does looking for one of them.
  */
 import { computed } from 'vue'
 

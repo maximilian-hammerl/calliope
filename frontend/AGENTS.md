@@ -98,6 +98,19 @@ length check that separates a list from its children. The same shape exists for 
 (threads, memberships, steps, posts sit under the groups key); those call sites still use the
 prefix, where the cost is a stray refetch rather than a growing one.
 
+**Numbered paging is `usePagedList` plus `ListPagination`**, not written again per view. The
+composable owns the page number in the URL, the offset, the page count and the correction of an
+out-of-range page; the component draws the strip. A view supplies the page size, the total, and
+whatever else it keeps in the query — the thread's order toggle calls `navigate` so switching
+order and returning to page one are *one* push rather than two history entries.
+
+**Call it before the query it pages.** A request body needs `offset` while vue-query is building
+the key, and the total it needs comes back from that same query, so one of the two consts is
+always declared second. The composable therefore reads the total through a getter and registers
+its correction watcher in `onMounted`, and views pass `() => total.value`. Getting this wrong
+throws `Cannot access 'offset' before initialization` during setup, which renders an empty list
+and no strip — it looks like a data problem, not an ordering one.
+
 **A paged list keeps the previous page while the next loads.** `placeholderData: keepPreviousData`,
 because a new page is a new query key and therefore briefly has no data: the page strip and the
 count it is built from would blink out between every page. It also matters for correctness — a

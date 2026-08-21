@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetThread, useListThreads } from '@/api/threads/threads'
@@ -19,12 +19,13 @@ import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
 import PostItem from '@/components/thread/PostItem.vue'
-import PostPagination from '@/components/thread/PostPagination.vue'
+import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { useDraft } from '@/composables/useDraft'
+import { usePagedList } from '@/composables/usePagedList'
 import PostComposer from '@/components/thread/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
@@ -35,7 +36,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
-const router = useRouter()
 const queryClient = useQueryClient()
 
 const groupId = computed<string>(() => String(route.params.groupId))
@@ -68,30 +68,28 @@ const POSTS_PER_PAGE = 20
  * button and a second tab opened on the passage being referenced all keep their place.
  * Route keys are English like every other path; only what the member reads is German.
  */
-const page = computed<number>(() => {
-  const asked = Number(route.query.page)
-  return Number.isInteger(asked) && asked >= 1 ? asked : 1
-})
-
+/** Which end of the thread to start at. The pages themselves are the composable's business. */
 const order = computed<'oldest' | 'newest'>(() =>
   route.query.order === 'newest' ? 'newest' : 'oldest',
 )
 
-function show(next: { page?: number; order?: 'oldest' | 'newest' }) {
-  const wanted = { page: next.page ?? page.value, order: next.order ?? order.value }
-  void router.push({
-    query: {
-      ...route.query,
-      // Absent rather than spelled out where it is the default, so the plain URL stays plain.
-      page: wanted.page === 1 ? undefined : String(wanted.page),
-      order: wanted.order === 'oldest' ? undefined : wanted.order,
-    },
-  })
+const postCount = computed<number | undefined>(() =>
+  postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
+)
+
+const { page, offset, pageCount, goToPage, navigate } = usePagedList(
+  POSTS_PER_PAGE,
+  () => postCount.value,
+)
+
+/** One push, not two: switching the order also returns to the first page. */
+function showOrder(next: 'oldest' | 'newest') {
+  navigate({ order: next === 'oldest' ? undefined : next, page: undefined })
 }
 
 const postsQuery = computed(() => ({
   limit: POSTS_PER_PAGE,
-  offset: (page.value - 1) * POSTS_PER_PAGE,
+  offset: offset.value,
   sortAttribute: 'createdAt' as const,
   sortOrder: order.value === 'newest' ? ('desc' as const) : ('asc' as const),
 }))
@@ -104,26 +102,6 @@ const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
 const posts = computed<ListPosts200ResultsItem[]>(() =>
   postsData.value?.status === 200 ? postsData.value.data.results : [],
 )
-const postCount = computed<number | undefined>(() =>
-  postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
-)
-
-const pageCount = computed<number>(() =>
-  Math.max(1, Math.ceil((postCount.value ?? 0) / POSTS_PER_PAGE)),
-)
-
-/**
- * A page that no longer exists — the last post on it was deleted, or a link is stale — would
- * otherwise render as an empty thread. Sent back to the last page there is.
- */
-watch([postCount, pageCount, page], ([count, pages, current]) => {
-  // Only once the count is known. Acting while it is unknown is how this fought every page
-  // change: a new page starts with no data, so the count collapsed and sent the reader back.
-  if (count !== undefined && current > pages) {
-    show({ page: pages })
-  }
-})
-
 const { data: membershipsData } = useListMemberships(groupId, { limit: 100 })
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
@@ -199,9 +177,7 @@ async function submit() {
 
   // Land where the new post is. Reading page two for reference is worth interrupting to show
   // somebody their own writing; not showing it at all would be worse.
-  show({
-    page: order.value === 'newest' ? 1 : Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE),
-  })
+  goToPage(order.value === 'newest' ? 1 : Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE))
 }
 </script>
 
@@ -243,10 +219,7 @@ async function submit() {
             v-if="pageCount > 1"
             class="mb-5 flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-line-2 pb-2"
           >
-            <PostSortToggle
-              :model-value="order"
-              @update:model-value="show({ order: $event, page: 1 })"
-            />
+            <PostSortToggle :model-value="order" @update:model-value="showOrder($event)" />
             <span class="ml-auto text-[12.5px] text-ink-6"
               >Seite {{ page }} von {{ pageCount }}</span
             >
@@ -263,7 +236,7 @@ async function submit() {
           <!-- Below the posts as well as in the strip above: this is where somebody is when
                they finish a page, and where the composer already has them. -->
           <div v-if="pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-            <PostPagination :page="page" :page-count="pageCount" @go="show({ page: $event })" />
+            <ListPagination :page="page" :page-count="pageCount" @go="goToPage($event)" />
           </div>
         </div>
       </div>

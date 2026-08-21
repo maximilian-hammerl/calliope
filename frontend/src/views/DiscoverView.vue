@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { Plus } from '@lucide/vue'
+import { keepPreviousData } from '@tanstack/vue-query'
+import { usePagedList } from '@/composables/usePagedList'
+import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import CreateGroupDialog from '@/components/group/CreateGroupDialog.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
@@ -13,6 +16,9 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
 const LIMIT = TEXT_LIMIT.listGroups.search
+
+/** Ten to a page: enough to scan at once, few enough that a page number means something. */
+const GROUPS_PER_PAGE = 10
 
 const term = ref<string>('')
 
@@ -34,13 +40,28 @@ watchDebounced(
  * Public groups this member is not in. `none` is what makes it discovery rather than a second
  * copy of Meine Gruppen — a group they already belong to is not something to find.
  */
-const { data, isPending, isError } = useListGroups(() => ({
-  limit: 100,
-  membership: 'none' as const,
-  search: settled.value === '' ? undefined : settled.value,
-  sortAttribute: 'lastActivityAt' as const,
-  sortOrder: 'desc' as const,
-}))
+const { page, offset, pageCount, goToPage } = usePagedList(
+  GROUPS_PER_PAGE,
+  () => totalResults.value,
+)
+// A search narrows the list, so whatever page was open is about a different set of groups.
+watch(settled, () => goToPage(1))
+
+const { data, isPending, isError } = useListGroups(
+  () => ({
+    limit: GROUPS_PER_PAGE,
+    offset: offset.value,
+    membership: 'none' as const,
+    search: settled.value === '' ? undefined : settled.value,
+    sortAttribute: 'lastActivityAt' as const,
+    sortOrder: 'desc' as const,
+  }),
+  { query: { placeholderData: keepPreviousData } },
+)
+
+const totalResults = computed<number | undefined>(() =>
+  data.value?.status === 200 ? data.value.data.totalResults : undefined,
+)
 
 const groups = computed<ListGroups200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
@@ -117,6 +138,10 @@ const creating = ref<boolean>(false)
             :group="group"
             :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
           />
+        </div>
+
+        <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
         </div>
 
         <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
