@@ -66,7 +66,7 @@ const editing = computed<boolean>(() => props.group !== undefined)
 
 const title = ref<string>('')
 const subtitle = ref<string>('')
-const description = ref<string>('')
+const synopsis = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 
 const emptyMetadata = (): StoryMetadata => ({
@@ -102,7 +102,7 @@ function metadataForApi() {
 const LIMIT = TEXT_LIMIT.createGroup
 
 const titleError = ref<string | undefined>(undefined)
-const descriptionError = ref<string | undefined>(undefined)
+const synopsisError = ref<string | undefined>(undefined)
 const formError = ref<string | undefined>(undefined)
 
 const { mutateAsync: createGroup, isPending: isCreating } = useCreateGroup()
@@ -115,7 +115,7 @@ const isPending = computed<boolean>(() => isCreating.value || isUpdating.value)
  */
 watch(open, (isOpen) => {
   titleError.value = undefined
-  descriptionError.value = undefined
+  synopsisError.value = undefined
   formError.value = undefined
 
   if (!isOpen) {
@@ -126,7 +126,7 @@ watch(open, (isOpen) => {
   if (source === undefined) {
     title.value = ''
     subtitle.value = ''
-    description.value = ''
+    synopsis.value = ''
     visibility.value = 'private'
     metadata.value = emptyMetadata()
     return
@@ -134,7 +134,7 @@ watch(open, (isOpen) => {
 
   title.value = source.title
   subtitle.value = source.subtitle ?? ''
-  description.value = source.synopsis
+  synopsis.value = source.synopsis
   // An idea has no visibility or status of its own: founding from one starts where a new group
   // starts, and the author decides both before confirming.
   visibility.value = props.group?.visibility ?? 'private'
@@ -152,7 +152,7 @@ watch(open, (isOpen) => {
 
 async function submit() {
   titleError.value = undefined
-  descriptionError.value = undefined
+  synopsisError.value = undefined
   formError.value = undefined
 
   if (title.value.trim().length === 0) {
@@ -160,14 +160,14 @@ async function submit() {
     return
   }
 
-  if (description.value.trim().length > LIMIT.synopsis.maxLength) {
-    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`
+  if (synopsis.value.trim().length > LIMIT.synopsis.maxLength) {
+    synopsisError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`
     return
   }
 
   const values = {
     title: title.value.trim(),
-    synopsis: description.value.trim(),
+    synopsis: synopsis.value.trim(),
     visibility: visibility.value,
     ...metadataForApi(),
   }
@@ -253,17 +253,17 @@ async function submit() {
             />
           </Field>
 
-          <Field :data-invalid="descriptionError !== undefined ? true : undefined">
-            <FieldLabel optional for="group-description">Worum geht es?</FieldLabel>
+          <Field :data-invalid="synopsisError !== undefined ? true : undefined">
+            <FieldLabel optional for="group-synopsis">Worum geht es?</FieldLabel>
             <Textarea
-              id="group-description"
-              v-model="description"
-              name="description"
+              id="group-synopsis"
+              v-model="synopsis"
+              name="synopsis"
               rows="3"
               placeholder="z. B. Ein Markt, der nur nach Einbruch der Dunkelheit öffnet."
-              :aria-invalid="descriptionError !== undefined ? true : undefined"
+              :aria-invalid="synopsisError !== undefined ? true : undefined"
             />
-            <FieldError :errors="[descriptionError]" />
+            <FieldError :errors="[synopsisError]" />
           </Field>
 
           <Field>
