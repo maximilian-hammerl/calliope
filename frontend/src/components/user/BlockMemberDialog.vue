@@ -47,7 +47,7 @@ async function confirm() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[440px]">
+    <DialogContent class="sm:max-w-dialog-confirm">
       <DialogHeader>
         <DialogTitle>{{ props.username }} blockieren?</DialogTitle>
         <DialogDescription>

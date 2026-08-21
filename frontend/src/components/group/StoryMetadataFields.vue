@@ -59,17 +59,21 @@ const TAG_FIELDS = [
     </select>
   </Field>
 
-  <Field v-for="field in TAG_FIELDS" :key="field.key">
-    <FieldLabel :for="`group-${field.key}`">{{ field.label }}</FieldLabel>
-    <Input
-      :id="`group-${field.key}`"
-      v-model="metadata[field.key]"
-      class="h-11 md:h-9"
-      :name="field.key"
-      :placeholder="field.placeholder"
-    />
-    <FieldDescription>Mit Komma trennen.</FieldDescription>
-  </Field>
+  <!-- Paired from `sm` up. A tag input holds a short comma list, so two fit a row — which is
+       what the wider dialog buys: the same fields without a column tall enough to scroll. -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <Field v-for="field in TAG_FIELDS" :key="field.key">
+      <FieldLabel :for="`group-${field.key}`">{{ field.label }}</FieldLabel>
+      <Input
+        :id="`group-${field.key}`"
+        v-model="metadata[field.key]"
+        class="h-11 md:h-9"
+        :name="field.key"
+        :placeholder="field.placeholder"
+      />
+      <FieldDescription>Mit Komma trennen.</FieldDescription>
+    </Field>
+  </div>
 
   <!-- Typically a word or two each, so they share a line — same as the story-idea dialog. -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

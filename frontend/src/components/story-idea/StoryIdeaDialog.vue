@@ -135,7 +135,7 @@ async function submit() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[520px]">
+    <DialogContent class="sm:max-w-dialog-wide">
       <DialogHeader>
         <DialogTitle>{{
           props.idea ? 'Storyidee bearbeiten' : 'Storyidee vorstellen'
@@ -246,50 +246,54 @@ async function submit() {
             </select>
           </Field>
 
-          <Field>
-            <FieldLabel for="idea-genres">Genres</FieldLabel>
-            <Input
-              id="idea-genres"
-              v-model="genres"
-              class="h-11 md:h-9"
-              name="genres"
-              placeholder="z. B. Fantasy, Mystery"
-            />
-            <FieldDescription>Mehrere durch Kommas trennen.</FieldDescription>
-          </Field>
+          <!-- Paired from `sm` up: a comma list is short, and two rows of two keep the
+               dialog inside the viewport instead of scrolling it. -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel for="idea-genres">Genres</FieldLabel>
+              <Input
+                id="idea-genres"
+                v-model="genres"
+                class="h-11 md:h-9"
+                name="genres"
+                placeholder="z. B. Fantasy, Mystery"
+              />
+              <FieldDescription>Mehrere durch Kommas trennen.</FieldDescription>
+            </Field>
 
-          <Field>
-            <FieldLabel for="idea-subgenres">Subgenres</FieldLabel>
-            <Input
-              id="idea-subgenres"
-              v-model="subgenres"
-              class="h-11 md:h-9"
-              name="subgenres"
-              placeholder="z. B. Cyberpunk, Dark Romance"
-            />
-          </Field>
+            <Field>
+              <FieldLabel for="idea-subgenres">Subgenres</FieldLabel>
+              <Input
+                id="idea-subgenres"
+                v-model="subgenres"
+                class="h-11 md:h-9"
+                name="subgenres"
+                placeholder="z. B. Cyberpunk, Dark Romance"
+              />
+            </Field>
 
-          <Field>
-            <FieldLabel for="idea-tropes">Tropes</FieldLabel>
-            <Input
-              id="idea-tropes"
-              v-model="tropes"
-              class="h-11 md:h-9"
-              name="tropes"
-              placeholder="z. B. Epistolary, Slow Burn"
-            />
-          </Field>
+            <Field>
+              <FieldLabel for="idea-tropes">Tropes</FieldLabel>
+              <Input
+                id="idea-tropes"
+                v-model="tropes"
+                class="h-11 md:h-9"
+                name="tropes"
+                placeholder="z. B. Epistolary, Slow Burn"
+              />
+            </Field>
 
-          <Field>
-            <FieldLabel for="idea-content-warnings">Inhaltswarnungen</FieldLabel>
-            <Input
-              id="idea-content-warnings"
-              v-model="contentWarnings"
-              class="h-11 md:h-9"
-              name="contentWarnings"
-              placeholder="z. B. Verlust"
-            />
-          </Field>
+            <Field>
+              <FieldLabel for="idea-content-warnings">Inhaltswarnungen</FieldLabel>
+              <Input
+                id="idea-content-warnings"
+                v-model="contentWarnings"
+                class="h-11 md:h-9"
+                name="contentWarnings"
+                placeholder="z. B. Verlust"
+              />
+            </Field>
+          </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field>

@@ -74,7 +74,7 @@ async function submit() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[440px]">
+    <DialogContent class="sm:max-w-dialog-form">
       <DialogHeader>
         <DialogTitle>Thread anlegen</DialogTitle>
         <DialogDescription>

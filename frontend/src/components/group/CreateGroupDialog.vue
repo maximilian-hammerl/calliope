@@ -160,7 +160,7 @@ async function submit() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[440px]">
+    <DialogContent class="sm:max-w-dialog-wide">
       <DialogHeader>
         <!-- Founding a group is a social act, so the verb is not "erstellen". -->
         <DialogTitle>Gruppe gründen</DialogTitle>

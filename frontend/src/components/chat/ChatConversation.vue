@@ -187,7 +187,11 @@ async function submit() {
         Noch nichts geschrieben. Fang an.
       </p>
 
-      <ul v-else-if="messages.length > 0" class="flex flex-col gap-[14px]">
+      <!-- The pane is as wide as the dialog now; the messages are not. At 960px the lines ran
+           to about ninety-five characters, half again the comfortable measure. In px rather
+           than `ch`: this list inherits 16px while the messages are 13.5px, so a ch cap here
+           measures the wrong text and comes out a third too wide. -->
+      <ul v-else-if="messages.length > 0" class="flex max-w-[520px] flex-col gap-[14px]">
         <li v-for="message in messages" :key="message.id">
           <div class="flex items-baseline gap-2">
             <span class="text-[12.5px] font-semibold text-ink-3">

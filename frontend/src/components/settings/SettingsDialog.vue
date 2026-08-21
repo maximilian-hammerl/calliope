@@ -30,7 +30,7 @@ const open = defineModel<boolean>('open', { required: true })
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[440px]">
+    <DialogContent class="sm:max-w-dialog-form">
       <DialogHeader>
         <DialogTitle>Einstellungen</DialogTitle>
         <DialogDescription>Dein Konto, und worüber du benachrichtigt wirst.</DialogDescription>

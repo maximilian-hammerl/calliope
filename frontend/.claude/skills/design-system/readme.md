@@ -118,6 +118,20 @@ reload, the back button and a second tab opened on the passage being quoted all 
 place — which is most of what makes jumping feel quick. Defaults stay absent from the address,
 so a plain link is still plain.
 
+**A dialog is as wide as its purpose, and there are four.** The widths are named once in
+`theme.css` — `max-w-dialog-confirm` (440px), `-form` (560), `-wide` (760), `-workspace` (960) —
+because `sm:max-w-[440px]` copied into ten files is how every form ended up the width of a
+confirmation. A confirmation stays narrow: its constraint is the measure of its prose, and
+widening it reads worse. A field-heavy form takes 760 so its fields pair two to a row, which is
+what actually fixes "awkward to work in" — width without pairing just makes a tall dialog wide.
+Only Nachrichten is a workspace, because it is two panes rather than a form.
+
+**Width for the frame, measure for the prose.** They are not the same number. The messages in a
+960px dialog ran to ninety-five characters until the list was capped at 520px: the pane and the
+composer want the width, the sentences do not. Cap prose in px where the element's own font size
+differs from the text's — a `ch` cap measures whatever the element inherits, which here was 16px
+against 13.5px text and came out a third too wide.
+
 **A conversation pane is a fixed viewport, and loading history never moves the reader.** The
 message list has a set height and scrolls inside it — given only a minimum, the dialog grew with
 the conversation until it ran off the screen and took the composer with it. Older messages arrive

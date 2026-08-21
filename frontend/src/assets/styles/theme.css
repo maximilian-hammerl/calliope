@@ -10,6 +10,15 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Dialog widths, by what the dialog is for rather than by which dialog it is. Named here so
+     the number lives in one place: `sm:max-w-[440px]` copied into ten files is how every form
+     ended up the width of a confirmation. Below `sm` none of them apply — the dialog is
+     `calc(100% - 2rem)` there, and these are all wider than a phone. */
+  --container-dialog-confirm: 440px;
+  --container-dialog-form: 560px;
+  --container-dialog-wide: 760px;
+  --container-dialog-workspace: 960px;
+
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;

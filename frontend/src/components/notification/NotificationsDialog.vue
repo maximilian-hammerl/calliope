@@ -104,7 +104,7 @@ watch(notifications, async (loaded) => {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogScrollContent class="sm:max-w-[520px]">
+    <DialogScrollContent class="sm:max-w-dialog-form">
       <DialogHeader>
         <DialogTitle>Mitteilungen</DialogTitle>
         <DialogDescription>Was in deinen Gruppen passiert ist.</DialogDescription>

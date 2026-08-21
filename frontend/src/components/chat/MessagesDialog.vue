@@ -103,7 +103,7 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
 
 <template>
   <Dialog v-model:open="open">
-    <DialogScrollContent class="sm:max-w-[720px]">
+    <DialogScrollContent class="sm:max-w-dialog-workspace">
       <DialogHeader>
         <DialogTitle>Nachrichten</DialogTitle>
         <DialogDescription>

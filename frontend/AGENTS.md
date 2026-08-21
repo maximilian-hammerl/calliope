@@ -51,10 +51,17 @@ grep -c shadow-xs src/components/ui/button/index.ts src/components/ui/input/Inpu
 grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                          # expect 1
 grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue                  # expect 1
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
+grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).
+
+**There are two dialog content components.** `DialogContent` centres and zooms; `DialogScrollContent`
+scrolls the page behind a taller panel. Anything done to one belongs in the other — the close
+button's tap target was fixed in one and missed in the other, and so was the width. Neither sets
+a desktop width any more: each dialog picks one of the four named widths, so a `max-w-lg` back in
+either file means the generator overwrote a patch.
 
 ## The generated API client
 
