@@ -20,7 +20,7 @@
     "npm:@types/nodemailer@8.0.1": "8.0.1",
     "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.2_unstorage@1.17.5__ioredis@5.11.1_ioredis@5.11.1",
     "npm:hono@4.13.2": "4.13.2",
-    "npm:ioredis@5.11.1": "5.11.1",
+    "npm:ioredis@6.0.0": "6.0.0",
     "npm:kysely-postgres-js@3.0.0": "3.0.0_kysely@0.29.5_postgres@3.4.9",
     "npm:kysely@0.29.5": "0.29.5",
     "npm:nodemailer@9.0.5": "9.0.5",
@@ -120,6 +120,9 @@
     "@ioredis/commands@1.10.0": {
       "integrity": "sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q=="
     },
+    "@ioredis/commands@2.0.0": {
+      "integrity": "sha512-vrx0AE/T0h7cRZwfo1M39Cr+ZhZrkf0V8mQN75wucKCxCLD9l/VX6no3gFvrLqD1IlG/1LtzWovqEw3t0Vr9zg=="
+    },
     "@types/node@26.2.0": {
       "integrity": "sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg==",
       "dependencies": [
@@ -202,12 +205,23 @@
     "ioredis@5.11.1": {
       "integrity": "sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A==",
       "dependencies": [
-        "@ioredis/commands",
+        "@ioredis/commands@1.10.0",
         "cluster-key-slot",
         "debug",
         "denque",
         "redis-errors",
         "redis-parser",
+        "standard-as-callback"
+      ]
+    },
+    "ioredis@6.0.0": {
+      "integrity": "sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==",
+      "dependencies": [
+        "@ioredis/commands@2.0.0",
+        "cluster-key-slot",
+        "debug",
+        "denque",
+        "redis-errors",
         "standard-as-callback"
       ]
     },
@@ -299,14 +313,14 @@
         "chokidar",
         "destr",
         "h3",
-        "ioredis",
+        "ioredis@5.11.1",
         "lru-cache",
         "node-fetch-native",
         "ofetch",
         "ufo"
       ],
       "optionalPeers": [
-        "ioredis"
+        "ioredis@5.11.1"
       ]
     },
     "yaml@2.9.0": {
@@ -326,7 +340,7 @@
       "npm:@types/nodemailer@8.0.1",
       "npm:hono-rate-limiter@0.5.3",
       "npm:hono@4.13.2",
-      "npm:ioredis@5.11.1",
+      "npm:ioredis@6.0.0",
       "npm:kysely-postgres-js@3.0.0",
       "npm:kysely@0.29.5",
       "npm:nodemailer@9.0.5",

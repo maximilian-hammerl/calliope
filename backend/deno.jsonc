@@ -76,7 +76,7 @@
     "@types/nodemailer": "npm:@types/nodemailer@8.0.1",
     "hono": "npm:hono@4.13.2",
     "hono-rate-limiter": "npm:hono-rate-limiter@0.5.3",
-    "ioredis": "npm:ioredis@5.11.1",
+    "ioredis": "npm:ioredis@6.0.0",
     "kysely": "npm:kysely@0.29.5",
     "kysely-postgres-js": "npm:kysely-postgres-js@3.0.0",
     "nodemailer": "npm:nodemailer@9.0.5",
