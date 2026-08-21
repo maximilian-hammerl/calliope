@@ -6,49 +6,37 @@ import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
-import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
-const SORT_ATTRIBUTE = WRITING_THREAD_SCHEMA
-  .keyof()
-  .extract(["createdAt", "lastActivityAt", "title"])
-  .default("createdAt")
-  .transform((attribute) => `writingThread.${attribute}` as const);
-
-const LIST_THREADS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "desc");
+/**
+ * Not a page: the strip these fill is the only way between threads, so one missing is one
+ * nobody can reach, and the open thread has to be among them or its own tab disappears.
+ */
+const THREADS_RESPONSE = z.object({ results: z.array(THREAD_RESPONSE) });
 
 export default new OpenAPIHono().openapi(
   createRoute({
-    method: "query",
+    method: "get",
     path: "/",
     tags: [THREADS_TAG],
     summary: "List the threads of a group the current user belongs to",
     description:
-      "Returns a page of the group's threads. Readable by any joined member, whatever their role, and by nobody else.",
+      "Every thread of the group, most recently written in first. Not paged: the tab strip these fill is the only way between threads.",
     operationId: "listThreads",
     middleware: requireSession,
-    request: {
-      params: GROUP_PARAMS,
-      body: { required: true, content: jsonContent(LIST_THREADS_BODY) },
-    },
+    request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
-        description: "A page of threads",
-        content: jsonContent(listResponseSchema(THREAD_RESPONSE)),
+        description: "Every thread of the group",
+        content: jsonContent(THREADS_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
@@ -77,11 +65,8 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const page = await WritingThreadService.listThreads(
-      groupId,
-      c.req.valid("json"),
-    );
+    const results = await WritingThreadService.selectThreads(groupId);
 
-    return c.json(page, STATUS_CODE.OK);
+    return c.json({ results }, STATUS_CODE.OK);
   },
 );

@@ -87,25 +87,23 @@ async function selectThread(
     .executeTakeFirst();
 }
 
-function listThreads(
+/**
+ * Every thread of the group, most recently written in first, and deliberately not a page.
+ *
+ * The interface shows them as one tab strip, which is the only way between threads: a thread
+ * missing from it is a thread nobody can reach, and the open one has to be in it or its own tab
+ * is gone. Threads do accumulate, unlike members — when a strip gets unwieldy the answer is a
+ * list of its own rather than a page of tabs, and this is where to start.
+ */
+function selectThreads(
   writingGroupId: string,
-  query: ListQuery,
-): Promise<ListResults<Thread>> {
-  return listResultsWithCount(
-    threadsWithAuthor()
-      .where("writingThread.writingGroupId", "=", writingGroupId)
-      .$if(query.search !== undefined, (queryBuilder) =>
-        queryBuilder.where(
-          "writingThread.title",
-          "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
-          searchPattern(query.search!),
-        )),
-    query,
-  );
+): Promise<Array<Thread>> {
+  return threadsWithAuthor()
+    .where("writingThread.writingGroupId", "=", writingGroupId)
+    .orderBy("writingThread.lastActivityAt", "desc")
+    .execute();
 }
 
-/** Returns nothing when there is no such thread. Authorisation is the caller's job. */
 /**
  * Threads across every group the member may see: their own, and public ones they have not
  * joined — the same rule the group list uses, applied one level down. Inner joins, because a
@@ -186,7 +184,7 @@ async function deleteThread(threadId: string): Promise<boolean> {
 export const WritingThreadService = {
   insertThread,
   selectThread,
-  listThreads,
+  selectThreads,
   listVisibleThreads,
   updateThread,
   deleteThread,

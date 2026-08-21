@@ -21,7 +21,6 @@ export default defineConfig({
         // on mount. They are reads, so they are generated as queries.
         operations: {
           listGroups: { query: { useQuery: true } },
-          listThreads: { query: { useQuery: true } },
           listPosts: { query: { useQuery: true } },
           listUsers: { query: { useQuery: true } },
           listNotifications: { query: { useQuery: true } },

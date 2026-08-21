@@ -33,6 +33,10 @@ at ten to a page. Both numbers had to be built rather than assumed, because disc
 `open` ideas and hides your own — one of `tintenfleck`'s eleven is closed, which is also what
 shows that the own-ideas view ignores status.
 
+**Pride and Punctuation holds ten threads**, titles of uneven length, so the tab strip's
+horizontal scrolling is always testable — it scrolls with its scrollbar hidden, which only shows
+with more tabs than fit.
+
 One thread, "Der lange Aufstieg" in the public Zauberzwerg, holds **105 generated posts** so
 numbered pages, the order toggle and a truthful post count are always testable; the section
 number is in each text, which makes a wrong or repeated page visible instead of countable. Post
@@ -182,7 +186,13 @@ add the author's name to what the table stores, because a client should never ha
 a user id itself to show who wrote something. The name is joined, never stored, so it follows
 a rename; it is null wherever the author's account has been deleted.
 
-## One list is deliberately not a list endpoint
+## Two lists are deliberately not list endpoints
+
+`GET /groups/{groupId}/threads` returns **every thread, most recently written in first**, for
+the same class of reason: the interface shows them as one tab strip, which is the only way
+between threads, so a thread missing from it is a thread nobody can reach — and the open one has
+to be among them or its own tab disappears. Unlike members, threads do accumulate; when a strip
+gets unwieldy the answer is a list of its own rather than a page of tabs.
 
 `GET /groups/{groupId}/memberships` returns **everyone in the group in one answer** — no limit,
 no offset, no sort, no search, and therefore no body, which is why it is a GET while every other

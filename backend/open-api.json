@@ -6685,10 +6685,10 @@
           }
         }
       },
-      "query": {
+      "get": {
         "tags": ["threads"],
         "summary": "List the threads of a group the current user belongs to",
-        "description": "Returns a page of the group's threads. Readable by any joined member, whatever their role, and by nobody else.",
+        "description": "Every thread of the group, most recently written in first. Not paged: the tab strip these fill is the only way between threads.",
         "operationId": "listThreads",
         "parameters": [
           {
@@ -6698,49 +6698,14 @@
             "in": "path"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "limit": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 100,
-                    "default": 20
-                  },
-                  "search": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 120
-                  },
-                  "offset": { "type": "integer", "minimum": 0, "default": 0 },
-                  "sortAttribute": {
-                    "type": "string",
-                    "enum": ["createdAt", "lastActivityAt", "title"],
-                    "default": "createdAt"
-                  },
-                  "sortOrder": {
-                    "type": "string",
-                    "enum": ["asc", "desc"],
-                    "default": "desc"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "A page of threads",
+            "description": "Every thread of the group",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "totalResults": { "type": "integer", "minimum": 0 },
                     "results": {
                       "type": "array",
                       "items": {
@@ -6778,7 +6743,7 @@
                       }
                     }
                   },
-                  "required": ["totalResults", "results"]
+                  "required": ["results"]
                 }
               }
             }

@@ -79,6 +79,36 @@ const LONG_THREAD_POSTS: Post[] = Array.from({ length: 105 }, (_, index) => ({
  * Between them the eight cover every membership size from one to five, both visibilities,
  * every role, two-administrator groups in each visibility, and one group with nothing in it.
  */
+/**
+ * Nine more chapters for Pride and Punctuation, so its tab strip always holds ten threads: the
+ * strip scrolls horizontally with its scrollbar hidden, and whether that is reachable is only
+ * answerable with more tabs than fit. Titles of uneven length on purpose — a strip of equally
+ * short labels would not show where it starts to overflow.
+ */
+const FURTHER_CHAPTERS: NonNullable<GroupFixture["threads"]> = [
+  "Chapter Two — The Semicolon Incident",
+  "Chapter Three",
+  "Chapter Four — In Which a Dash Is Overused",
+  "Chapter Five",
+  "Chapter Six — Correspondence, Mostly Unsent",
+  "Chapter Seven",
+  "Chapter Eight — A Comma Changes Everything",
+  "Chapter Nine",
+  "Chapter Ten — Rewritten Twice",
+].map((title, index) => ({
+  id: threadId(30 + index),
+  title,
+  by: index % 2 === 0 ? USER.randnotiz : USER.kommafehler,
+  posts: [
+    {
+      id: postId(400 + index),
+      by: index % 2 === 0 ? USER.kommafehler : USER.randnotiz,
+      text:
+        "They agreed on the punctuation and on nothing else, which was progress of a kind.",
+    },
+  ],
+}));
+
 const WRITTEN_GROUPS: GroupFixture[] = [
   {
     id: groupId(1),
@@ -152,6 +182,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           },
         ],
       },
+      ...FURTHER_CHAPTERS,
     ],
   },
   {

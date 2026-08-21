@@ -85,9 +85,30 @@ function assertBlocksHaveNoPendingInvitation(): void {
   }
 }
 
-/** `stepsBack` posts before now, five minutes apart, so a thread reads in fixture order. */
+/** `stepsBack` five-minute steps before now, so fixture order and chronology agree. */
 function postedAt(stepsBack: number): string {
   return Temporal.Now.instant().subtract({ minutes: stepsBack * 5 }).toString();
+}
+
+/**
+ * Steps between one thread's newest post and the next thread's, so no two posts in the fixture
+ * share a moment and every thread reads as written over hours rather than at once.
+ *
+ * It does **not** spread `last_activity_at`. That column belongs to the database: a BEFORE
+ * UPDATE trigger sets it to `now()` on any change, and the post insert cascades into it, so
+ * every thread and group written in one run carries the seeding moment whatever the fixture
+ * says. Ordering by it therefore shows nothing here — which is honest, since nothing has
+ * happened in these groups since they were seeded a second ago.
+ */
+const STEPS_BETWEEN_THREADS = 24;
+
+/**
+ * The newest post of the `index`th of `total` threads, which is also that thread's last
+ * activity. Counted from the end so later in the fixture means more recent: chapters are
+ * written in order, and a fixture whose Chapter One is the freshest thing reads as a mistake.
+ */
+function newestPostOfThread(index: number, total: number): number {
+  return (total - index) * STEPS_BETWEEN_THREADS + 1;
 }
 
 async function writeAccounts(): Promise<void> {
@@ -169,7 +190,7 @@ async function writeGroups(): Promise<void> {
   ).execute();
 
   await db.insertInto("writingPost").values(
-    threads.flatMap(({ thread }) =>
+    threads.flatMap(({ thread }, threadIndex) =>
       thread.posts.map((post, index) => ({
         id: post.id,
         writingThreadId: thread.id,
@@ -177,10 +198,14 @@ async function writeGroups(): Promise<void> {
         isDraft: post.isDraft ?? false,
         createdBy: post.by,
         // Stamped from the position in the fixture rather than left to the column default:
-        // one insert statement shares a single `now()`, so every post in a thread would carry
-        // the same timestamp. Sorting by a column full of ties has no defined order, which is
-        // exactly what paging cannot survive — page two would repeat rows from page one.
-        createdAt: postedAt(thread.posts.length - index),
+        // one insert statement shares a single `now()`, so every post would carry the same
+        // timestamp. Sorting by a column full of ties has no defined order, which is exactly
+        // what paging cannot survive — page two would repeat rows from page one. The thread's
+        // own offset is what keeps two threads from ending at the same moment.
+        createdAt: postedAt(
+          newestPostOfThread(threadIndex, threads.length) +
+            (thread.posts.length - 1 - index),
+        ),
       }))
     ),
   ).execute();
@@ -219,12 +244,18 @@ async function writeChats(): Promise<void> {
   ).execute();
 
   await db.insertInto("chatMessage").values(
-    CHATS.flatMap((chat) =>
-      chat.messages.map((message) => ({
+    CHATS.flatMap((chat, chatIndex) =>
+      chat.messages.map((message, index) => ({
         id: message.id,
         chatGroupId: chat.id,
         text: message.text,
         createdBy: message.by,
+        // Same reason as a thread's posts: the chat list is ordered by last activity, and one
+        // insert statement would give every chat the same one.
+        createdAt: postedAt(
+          newestPostOfThread(chatIndex, CHATS.length) +
+            (chat.messages.length - 1 - index),
+        ),
       }))
     ),
   ).execute();

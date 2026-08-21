@@ -160,6 +160,22 @@ Vitest, in `__tests__/` beside the code as `<module>.spec.ts` — this is what
 npx vitest run
 ```
 
+## What the automated browser cannot tell you
+
+The browser these tools drive is not a fair witness for anything that moves. Three behaviours
+were mistaken for bugs in it, and each was fine in a real browser:
+
+- **Scroll events never fire** — not for a programmatic scroll, not for a listener you attach
+  yourself. Anything driven by `@scroll` looks dead there.
+- **Smooth scrolling is a no-op**, whether asked for as `behavior: 'smooth'` or as CSS
+  `scroll-behavior`, and the latter swallows a plain `scrollLeft` assignment with it.
+- **CSS animations freeze at their first keyframe** while the pane is hidden, so a measured
+  rect can be mid-animation: read computed styles instead, or measure at rest.
+
+So verify structure and position there — is the element in the DOM, did `scrollLeft` change, is
+the target 44px — and treat "the animation did not play" or "the event did not fire" as unproven
+rather than broken. Ask for a real browser when the behaviour *is* the movement.
+
 ## Mobile is not optional
 
 The old platform had none, and that was a top complaint. Every target is at least 44px on a

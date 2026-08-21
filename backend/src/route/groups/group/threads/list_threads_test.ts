@@ -16,7 +16,7 @@ const outsider = "list-threads-outsider";
 Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([administrator, reader, outsider]));
 
-Deno.test("QUERY /api/groups/{groupId}/threads lists threads for any member", async () => {
+Deno.test("GET /api/groups/{groupId}/threads lists threads for any member", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Fäden");
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
@@ -26,19 +26,17 @@ Deno.test("QUERY /api/groups/{groupId}/threads lists threads for any member", as
 
   // A reader may not write, but may read.
   const response = await request(
-    "QUERY",
+    "GET",
     `/api/groups/${group.id}/threads`,
     readerCookie,
-    { limit: 10 },
   );
 
   assertEquals(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assertEquals(page.totalResults, 1);
   assertEquals(page.results[0].title, "Kapitel 1");
 });
 
-Deno.test("QUERY /api/groups/{groupId}/threads shows a public group's threads to a non-member", async () => {
+Deno.test("GET /api/groups/{groupId}/threads shows a public group's threads to a non-member", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Fäden", "public");
@@ -54,10 +52,9 @@ Deno.test("QUERY /api/groups/{groupId}/threads shows a public group's threads to
   // the discovery page states it outright: "Mitlesen kannst du sofort". This once answered
   // 404 while the same group's members and next steps were already readable.
   const response = await request(
-    "QUERY",
+    "GET",
     `/api/groups/${group.id}/threads`,
     outsiderCookie,
-    {},
   );
 
   assertEquals(response.status, STATUS_CODE.OK);
@@ -67,16 +64,15 @@ Deno.test("QUERY /api/groups/{groupId}/threads shows a public group's threads to
   ]);
 });
 
-Deno.test("QUERY /api/groups/{groupId}/threads still hides a private group's threads", async () => {
+Deno.test("GET /api/groups/{groupId}/threads still hides a private group's threads", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Verschlossen", "private");
 
   const response = await request(
-    "QUERY",
+    "GET",
     `/api/groups/${group.id}/threads`,
     outsiderCookie,
-    {},
   );
 
   // 404 rather than 403: a private group's existence is nobody else's business.

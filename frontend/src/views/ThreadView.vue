@@ -51,8 +51,7 @@ const thread = computed<GetThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
 )
 
-const threadsQuery = { limit: 100, sortAttribute: 'lastActivityAt', sortOrder: 'desc' } as const
-const { data: threadsData } = useListThreads(groupId, threadsQuery)
+const { data: threadsData } = useListThreads(groupId)
 const threads = computed<ListThreads200ResultsItem[]>(() =>
   threadsData.value?.status === 200 ? threadsData.value.data.results : [],
 )

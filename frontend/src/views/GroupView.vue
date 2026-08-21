@@ -40,11 +40,8 @@ const group = computed<GetGroup200 | undefined>(() =>
   groupData.value?.status === 200 ? groupData.value.data : undefined,
 )
 
-const { data: threadsData } = useListThreads(groupId, {
-  limit: 100,
-  sortAttribute: 'lastActivityAt',
-  sortOrder: 'desc',
-})
+// Every thread, newest activity first — the order is the endpoint's now, not a parameter.
+const { data: threadsData } = useListThreads(groupId)
 const threads = computed<ListThreads200ResultsItem[]>(() =>
   threadsData.value?.status === 200 ? threadsData.value.data.results : [],
 )
