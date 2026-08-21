@@ -15,8 +15,11 @@ defineSlots<{
   default: () => unknown
   /** What the member does: next steps, the story's status. */
   rail?: () => unknown
-  /** What the member looks up while writing: the story's own facts, who is here. */
-  infoRail?: () => unknown
+  /**
+   * What the member looks up while writing: the story's own facts, who is here.
+   * `collapsible` is true only where the rail is a rail — in the sheet the blocks are stacked.
+   */
+  infoRail?: (props: { collapsible: boolean }) => unknown
 }>()
 
 const { data: userData } = useGetCurrentUser()
@@ -59,7 +62,7 @@ const sheetOpen = ref<boolean>(false)
               <ChevronLeft :size="14" :stroke-width="1.5" />
             </button>
           </div>
-          <slot name="infoRail" />
+          <slot name="infoRail" :collapsible="true" />
         </aside>
         <RailToggle v-else side="left" label="Über die Gruppe" @click="leftOpen = true" />
       </template>
@@ -107,7 +110,7 @@ const sheetOpen = ref<boolean>(false)
 
         <ContextSheet v-else v-model:open="sheetOpen">
           <slot name="rail" />
-          <slot name="infoRail" />
+          <slot name="infoRail" :collapsible="false" />
         </ContextSheet>
       </template>
     </div>

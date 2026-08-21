@@ -27,8 +27,10 @@ before adding a surface.
 Where shadcn's defaults contradict it, the component is patched once rather than overridden at
 each call site — `shadow-xs` is stripped from Input and the outline Button, `AvatarFallback`
 carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour, and
-`DropdownMenuItem` and `DialogContent` carry the mobile rules below, and `navigation-menu`'s
-trigger style drops shadcn's filled pills for the design system's underline-and-ink pattern.
+`DropdownMenuItem` and `DialogContent` carry the mobile rules below, `navigation-menu`'s
+trigger style drops shadcn's filled pills for the design system's underline-and-ink pattern,
+and `AccordionTrigger` shows `ChevronRight` shut and `ChevronDown` open instead of rotating a
+single chevron, which is what the icon table asks for.
 The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
 above is not hypothetical.
 
@@ -58,6 +60,7 @@ grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue        
 grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
 grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
+grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).

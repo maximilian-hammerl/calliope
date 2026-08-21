@@ -29,6 +29,7 @@ import { usePagedList } from '@/composables/usePagedList'
 import PostComposer from '@/components/thread/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
+import RailBlock from '@/components/context/RailBlock.vue'
 import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
@@ -282,10 +283,16 @@ async function submit() {
     </template>
 
     <!-- What the member looks up while writing. -->
-    <template #infoRail>
-      <StoryDetails v-if="group" :group="group" />
-      <FileList />
-      <MemberList :memberships="memberships" />
+    <template #infoRail="{ collapsible }">
+      <RailBlock label="Die Geschichte" :collapsible="collapsible">
+        <StoryDetails v-if="group" :group="group" />
+      </RailBlock>
+      <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
+        <FileList />
+      </RailBlock>
+      <RailBlock label="Mitglieder" :collapsible="collapsible">
+        <MemberList :memberships="memberships" />
+      </RailBlock>
     </template>
   </AppLayout>
 

@@ -24,7 +24,6 @@ const fields = computed<Array<{ label: string; value: string }>>(() => {
 
 <template>
   <div v-if="fields.length > 0">
-    <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">Die Geschichte</div>
     <div class="text-[12.5px] leading-[1.95] text-ink-4">
       <div v-for="field in fields" :key="field.label">
         <span class="text-ink-6">{{ field.label }}:&nbsp;</span>
