@@ -24,13 +24,14 @@ import {
 const {
   track,
   index,
-  revision,
+  prepends,
   total,
   startReached,
   endReached,
   isPending,
   isError,
-  goTo,
+  selectedOn,
+  settledOn,
   setReaderStateLocally,
 } = useStoryIdeaCarousel()
 
@@ -61,55 +62,23 @@ const carouselOptions = computed(() => ({
 
 const api = ref<CarouselApi | undefined>(undefined)
 
-/** Whether a slide is on its way, so a re-measure can wait instead of cutting it short. */
-const moving = ref<boolean>(false)
-let reInitWhenSettled = false
-
-/**
- * Embla reads its slides once, so an idea appended to the track does not exist for it until it
- * re-reads them. `reInit` with the current position is the whole correction: it re-measures,
- * and it is also what puts a *prepended* idea right, since that shifts every index including
- * the reader's own. Passing the index matters — a bare `reInit()` reuses the options it was
- * given, whose `startIndex` is wherever the carousel opened.
- */
-function reMeasure() {
-  reInitWhenSettled = false
-  api.value?.reInit({ startIndex: index.value })
-}
-
 function onInitApi(carouselApi: CarouselApi) {
   api.value = carouselApi
-
-  // Embla is the only thing that moves the carousel; every other control asks it to, so the
-  // URL and the index are written in exactly one place.
-  carouselApi?.on('select', () => {
-    moving.value = true
-    goTo(carouselApi.selectedScrollSnap())
-  })
-
-  carouselApi?.on('settle', () => {
-    moving.value = false
-
-    if (reInitWhenSettled) {
-      reMeasure()
-    }
-  })
+  carouselApi?.on('select', () => selectedOn(carouselApi.selectedScrollSnap()))
+  // Loading follows where the reader came to rest, so slides are only ever added between
+  // movements: embla re-measures when they are, and a re-measure cuts a movement short.
+  carouselApi?.on('settle', () => settledOn(carouselApi.selectedScrollSnap()))
 }
 
 /**
- * Deferred while a slide is moving. The lookahead for the idea just arrived at comes back in a
- * few milliseconds, and re-measuring then aborted the movement it was a consequence of — which
- * read as the carousel having no animation at all.
+ * An idea added to the *front* shifts every slide behind it. Embla re-measures on its own —
+ * `watchSlides` is on by default — but a re-measure keeps the selected index, and the index now
+ * points at the idea before the one the reader was reading. This is the correction, and it only
+ * happens after a reload part-way through the set.
  */
-watch(revision, async () => {
+watch(prepends, async () => {
   await nextTick()
-
-  if (moving.value) {
-    reInitWhenSettled = true
-    return
-  }
-
-  reMeasure()
+  api.value?.scrollTo(index.value, true)
 })
 
 useEventListener(window, 'keydown', (event: KeyboardEvent) => {

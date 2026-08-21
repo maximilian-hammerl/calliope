@@ -164,13 +164,16 @@ Three things about it, and the middle one is the whole design:
   whenever the reader is within a slide of it; the backward one only fires at the first slide.
   Without that lookahead the forward arrow goes dead for a round trip on every single step,
   because a ±1 answer cannot know the slide after next.
-- **The track only grows, and appending is the safe direction.** Embla keeps its selected index
-  by number, so appending leaves the reader where they are and *prepending* moves them. Every
-  change bumps `revision`, and the view answers it with one `reInit({ startIndex: index })` —
-  Embla re-reads its slides only when told, and a bare `reInit()` would reuse the options it was
-  given, whose `startIndex` is wherever the carousel opened. It waits for embla's `settle` event
-  if a slide is moving: the lookahead for the idea just arrived at returns in a few milliseconds,
-  and re-measuring then cuts short the movement that caused it.
+- **Embla measures added slides itself.** `watchSlides` is on by default: a MutationObserver on
+  the container calls `reInit`, and `reInit` keeps the reader's position — it re-reads the
+  options with `selectedScrollSnap()` as the new start. So appending needs no code at all. What
+  it does need is *timing*: a re-measure destroys the animation it interrupts, and the
+  lookahead lands a few milliseconds after a step begins. Hence two numbers — `index` from
+  embla's `select`, which the URL follows, and `settled` from `settle`, which *loading* follows,
+  so slides are only ever added between movements.
+- **Prepending is the one thing to correct.** A re-measure keeps the index, and after a prepend
+  that index points at the idea before the one being read. One `scrollTo(index, true)`, and only
+  after a reload part-way through the set.
 
 **Never hand embla an option set to `undefined`.** Its option merge copies every key it finds,
 `undefined` included, so `duration: reduced ? 0 : undefined` overwrote embla's own default with
@@ -179,6 +182,11 @@ animating. The carousel had no animation at all, in every browser, and it read l
 layout problem. `carouselOptions` therefore includes `duration` only when it must be zero. The
 test that settles it needs no animation frames: click, then read the transform *synchronously* —
 unchanged means an animation was scheduled, already at the target means it jumped.
+
+**A `reInit` swallows the `settle` it interrupts.** It destroys the running animation, so nothing
+reaches the frame that would have emitted the event. That is why `index` does not come from
+`settle`: a resize, a font or an image landing mid-slide would otherwise leave the URL naming the
+wrong idea. Loading pauses until the next resting point instead, which the following step fixes.
 - **A step replaces, a page pushes.** The URL always names the idea on screen, so a reload
   resumes; but twenty steps must not mean twenty presses of the back button to leave, so the
   carousel uses `router.replace` while `usePagedList` keeps `push`. A page change is coarse and
