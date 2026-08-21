@@ -8,7 +8,7 @@ import StoryMetadataFields, { type StoryMetadata } from '@/components/group/Stor
 import { fromTags, toTags } from '@/lib/format/storyTags'
 
 import { formatCount } from '@/lib/format/formatNumber'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -149,7 +149,7 @@ async function submit() {
     return
   }
 
-  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) })
+  await queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey()))
   open.value = false
 
   if (created.status === 201) {

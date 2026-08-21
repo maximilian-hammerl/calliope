@@ -7,7 +7,7 @@ import { computed, ref } from 'vue'
 import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from '@/api/groups/groups'
 import type { GetGroup200, GetGroup200StoryStatus } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { STORY_STATUS } from '@/lib/format/storyStatus'
 import {
   Select,
@@ -41,7 +41,7 @@ async function change(next: GetGroup200StoryStatus) {
 
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) }),
-    queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) }),
+    queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
   ])
 }
 </script>

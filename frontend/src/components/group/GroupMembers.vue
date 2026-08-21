@@ -6,7 +6,6 @@ import { getListMembershipsQueryKey, useRemoveMember } from '@/api/memberships/m
 import { useGetCurrentUser } from '@/api/auth/auth'
 import type { ListMemberships200ResultsItem } from '@/api/models'
 import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
 import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import UserAvatar from '@/components/user/UserAvatar.vue'
@@ -87,7 +86,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
   try {
     await removeMember({ groupId: props.groupId, userId: membership.userId })
     await queryClient.invalidateQueries({
-      queryKey: listKeyPrefix(getListMembershipsQueryKey(props.groupId)),
+      queryKey: getListMembershipsQueryKey(props.groupId),
     })
   } catch {
     removalError.value = `${membership.username} konnte nicht entfernt werden. Versuche es noch einmal.`

@@ -92,11 +92,17 @@ const group = computed<GetGroup200 | undefined>(() =>
 **A list's key is a prefix of everything nested under it.** Orval builds keys from the URL's
 segments, so `['QUERY','api','chats']` — what `listKeyPrefix` produces for the chat list — also
 matches `['QUERY','api','chats',id,'messages',body]`. Invalidating the list therefore refetched
-whichever conversation was open, which was one wasted request while messages fetched a single
-page and one *per page* once they paged. `listOnlyFilter` in `lib/api/queryKeys.ts` adds the
-length check that separates a list from its children. The same shape exists for groups
-(threads, memberships, steps, posts sit under the groups key); those call sites still use the
-prefix, where the cost is a stray refetch rather than a growing one.
+whichever conversation was open, one request per loaded page. `listOnlyFilter` adds the length
+check that separates a list from its children, and every groups-list and chats-list
+invalidation now uses it. Note it returns a whole **filter**, so it is passed as the argument —
+`invalidateQueries(listOnlyFilter(key))`, never as a `queryKey`.
+
+**Which helper depends on the method.** A QUERY key ends in the request body, so `listKeyPrefix`
+drops that slot to match every page. A **GET** key has no body slot — `['api','groups',id,
+'threads']` is the whole identity — so dropping its last segment leaves `['api','groups',id]`,
+which matches that group's steps, memberships and thread details too. Invalidate a GET list with
+its key as it is. `lib/api/__tests__/queryKeys.spec.ts` pins both behaviours, including that
+trap.
 
 **Numbered paging is `usePagedList` plus `ListPagination`**, not written again per view. The
 composable owns the page number in the URL, the offset, the page count and the correction of an

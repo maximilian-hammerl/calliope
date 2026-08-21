@@ -7,7 +7,7 @@ import { TEXT_LIMIT } from '@/api/textLimit'
 import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
 import { fromTags, toTags } from '@/lib/format/storyTags'
 import { formatCount } from '@/lib/format/formatNumber'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -129,7 +129,7 @@ async function submit() {
   // The group list shows the title and the privacy badge, so it goes stale with this too.
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) }),
-    queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) }),
+    queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
   ])
   open.value = false
 }

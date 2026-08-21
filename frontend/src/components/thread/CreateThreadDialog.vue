@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListThreadsQueryKey, useCreateThread } from '@/api/threads/threads'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -60,7 +59,7 @@ async function submit() {
   }
 
   await queryClient.invalidateQueries({
-    queryKey: listKeyPrefix(getListThreadsQueryKey(props.groupId)),
+    queryKey: getListThreadsQueryKey(props.groupId),
   })
   open.value = false
 

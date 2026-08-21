@@ -6,7 +6,7 @@ import {
   useLeaveGroup,
 } from '@/api/memberships/memberships'
 import { getGetGroupQueryKey, getListGroupsQueryKey } from '@/api/groups/groups'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 
 /**
  * Answering an invitation to a writing group. Two places offer this — the banner on the group
@@ -36,9 +36,9 @@ export function useInvitationResponse(groupId: Ref<string> | (() => string)): {
   async function refresh(forGroupId: string) {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(forGroupId) }),
-      queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListGroupsQueryKey()) }),
+      queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
       queryClient.invalidateQueries({
-        queryKey: listKeyPrefix(getListMembershipsQueryKey(forGroupId)),
+        queryKey: getListMembershipsQueryKey(forGroupId),
       }),
     ])
   }

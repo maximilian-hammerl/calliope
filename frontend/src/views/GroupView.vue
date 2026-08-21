@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useGetGroup, useStartGroupConversation } from '@/api/groups/groups'
 import { getListChatsQueryKey } from '@/api/chats/chats'
 import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { ApiError } from '@/lib/api/apiFetch'
 import { openChatDialog } from '@/lib/chat/openChatDialog'
 import { useGetCurrentUser } from '@/api/auth/auth'
@@ -86,7 +86,7 @@ async function askIntoGroup() {
     if (created.status !== 201) {
       return
     }
-    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
     openChatDialog(created.data.id)
   } catch (error) {
     // The ungoverned-group hole seen from outside: there is nobody to ask.

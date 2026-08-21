@@ -14,7 +14,7 @@ import { openChatDialog } from '@/lib/chat/openChatDialog'
 import type { GetStoryIdea200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listKeyPrefix, listOnlyFilter } from '@/lib/api/queryKeys'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -45,7 +45,7 @@ async function askAboutIdea() {
     if (created.status !== 201) {
       return
     }
-    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
     openChatDialog(created.data.id)
   } catch {
     conversationError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'

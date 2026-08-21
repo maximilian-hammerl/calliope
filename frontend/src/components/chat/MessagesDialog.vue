@@ -11,7 +11,7 @@ import {
 import type { ListChats200ResultsItem, ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { useChatStream } from '@/composables/useChatStream'
 import ChatConversation from '@/components/chat/ChatConversation.vue'
 import { Button } from '@/components/ui/button'
@@ -50,7 +50,7 @@ const { connected } = useChatStream((event) => {
     [event.chatGroupId]: [...existing, event.message as ListMessages200ResultsItem],
   }
   // The list carries unread counts and the ordering, both of which just changed.
-  void queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+  void queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
 })
 
 // The stream cannot say what arrived while it was away, so coming back is a refetch rather
@@ -85,7 +85,7 @@ async function create() {
   const created = await createChat({ data: { title } }).catch(() => undefined)
   newTitle.value = ''
   creating.value = false
-  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+  await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
 
   if (created?.status === 201) {
     selectedId.value = created.data.id
@@ -94,7 +94,7 @@ async function create() {
 
 async function accept(chatGroupId: string) {
   await acceptInvitation({ chatId: chatGroupId }).catch(() => undefined)
-  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+  await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
 }
 
 /** An invitation is visible but not yet a conversation, so it cannot be opened. */

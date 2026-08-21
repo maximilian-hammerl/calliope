@@ -4,7 +4,6 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getListMembershipsQueryKey, useInviteMember } from '@/api/memberships/memberships'
 import type { InviteMemberBodyRole, ListUsers200ResultsItem } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -66,7 +65,7 @@ async function submit() {
   }
 
   await queryClient.invalidateQueries({
-    queryKey: listKeyPrefix(getListMembershipsQueryKey(props.groupId)),
+    queryKey: getListMembershipsQueryKey(props.groupId),
   })
   open.value = false
 }
