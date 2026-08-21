@@ -183,7 +183,8 @@ It walks by **id, not by position**: `QUERY /story-ideas/carousel` answers with 
 either side of it, so somebody posting an idea while you read cannot shift you sideways, the way an
 offset would. A step replaces the URL rather than pushing it, so the back button leaves the
 carousel instead of retracing every idea seen. It sits in the Storyideen menu beside the two
-board views, and it is the one place in the product where something slides.
+board views, and it is the one place in the product where something slides — two buttons and a
+transform, no carousel library: swipe and keyboard can follow if anybody asks for them.
 
 ### 4. Block a member — built
 

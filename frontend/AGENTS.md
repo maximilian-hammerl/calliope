@@ -58,9 +58,6 @@ grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue        
 grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
 grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
-grep -c size-11 src/components/ui/carousel/CarouselNext.vue src/components/ui/carousel/CarouselPrevious.vue  # expect 1 each
-grep -c touch-pan-y src/components/ui/carousel/CarouselContent.vue                     # expect 1
-grep -c setViewport src/components/ui/carousel/CarouselContent.vue                     # expect 2
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).
@@ -164,30 +161,29 @@ Three things about it, and the middle one is the whole design:
   whenever the reader is within a slide of it; the backward one only fires at the first slide.
   Without that lookahead the forward arrow goes dead for a round trip on every single step,
   because a ±1 answer cannot know the slide after next.
-- **Embla measures added slides itself.** `watchSlides` is on by default: a MutationObserver on
-  the container calls `reInit`, and `reInit` keeps the reader's position — it re-reads the
-  options with `selectedScrollSnap()` as the new start. So appending needs no code at all. What
-  it does need is *timing*: a re-measure destroys the animation it interrupts, and the
-  lookahead lands a few milliseconds after a step begins. Hence two numbers — `index` from
-  embla's `select`, which the URL follows, and `settled` from `settle`, which *loading* follows,
-  so slides are only ever added between movements.
-- **Prepending is the one thing to correct.** A re-measure keeps the index, and after a prepend
-  that index points at the idea before the one being read. One `scrollTo(index, true)`, and only
-  after a reload part-way through the set.
+- **The track only grows, and one slide of it shows at a time.** `transform: translateX(-index
+  * 100%)` on a flex row, with a 220ms transition. Appending leaves every index meaning what it
+  did, so a loaded idea can join the track at any moment — including mid-transition, which
+  cannot disturb it.
+- **Prepending is the one thing to take account of.** It shifts every index, so the reader's
+  moves by one while what is on screen must not: that change re-anchors rather than slides, and
+  the transition is switched off for it in a `pre` watcher. Only happens after a reload
+  part-way through the set.
 
-**Never hand embla an option set to `undefined`.** Its option merge copies every key it finds,
-`undefined` included, so `duration: reduced ? 0 : undefined` overwrote embla's own default with
-nothing — and a falsy duration is the branch that renders the last frame at once rather than
-animating. The carousel had no animation at all, in every browser, and it read like a CSS or
-layout problem. `carouselOptions` therefore includes `duration` only when it must be zero. The
-test that settles it needs no animation frames: click, then read the transform *synchronously* —
-unchanged means an animation was scheduled, already at the target means it jumped.
+**It is deliberately not a carousel component.** Embla was tried and removed. It measures the
+DOM, and every hard bug here came from that: a re-measure destroys the animation it interrupts
+and swallows the `settle` that would have followed, and `duration: undefined` — its option merge
+copies every key it finds, `undefined` included — overwrote its own default and silently took the
+branch that renders the last frame at once, so there was no animation at all in any browser. A
+transform driven by an index measures nothing, and none of those failures are reachable. What the
+component was actually providing was drag-following-the-finger, which is wrong for a page of
+prose that scrolls vertically and can be selected — swipe and keyboard are deliberately not in
+this version.
 
-**A `reInit` swallows the `settle` it interrupts.** It destroys the running animation, so nothing
-reaches the frame that would have emitted the event. That is why `index` does not come from
-`settle`: a resize, a font or an image landing mid-slide would otherwise leave the URL naming the
-wrong idea. Loading pauses until the next resting point instead, which the following step fixes.
-- **A step replaces, a page pushes.** The URL always names the idea on screen, so a reload
+A CSS transition is also the only version of this that can be *verified* in the preview pane:
+read the inline transform and the computed one in the same expression. The inline value is
+already at the target while the computed one is still at the start, which is an animation in
+flight. Embla's rAF loop could never show that, because the pane never fires rAF.
   resumes; but twenty steps must not mean twenty presses of the back button to leave, so the
   carousel uses `router.replace` while `usePagedList` keeps `push`. A page change is coarse and
   deliberate; a carousel step is continuous.

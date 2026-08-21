@@ -464,9 +464,9 @@ honours `prefers-reduced-motion`.
 
 **The story-idea carousel is the one exception**, and a deliberate one: moving between ideas
 slides horizontally, because the movement is what tells the reader they have gone somewhere and
-in which direction. It is the only slide in the product. Under `prefers-reduced-motion` it jumps
-instead — embla with `duration: 0` — so the exception does not cost anybody who has asked for
-less. A second sliding surface needs a reason of its own, not this precedent.
+in which direction. It is the only slide in the product, and it is the house 220ms and `--ease`
+like everything else — a transform on a track, behind `motion-safe:`, so somebody who asked for
+less motion gets none. A second sliding surface needs a reason of its own, not this precedent.
 
 **Selection is a rule, never a box.** A 2px rule in `--oak` marks the current tab, the current
 bottom-bar item and the chosen option in a filter strip (`FilterStrip`); the inactive ones keep

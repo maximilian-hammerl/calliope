@@ -18,15 +18,9 @@ type Step = {
  * every idea anybody posts shifts every position behind it. Two conditional queries keep the
  * track fed: one about the last idea loaded, one about the first.
  *
- * It keeps two numbers. `index` is the slide the reader is looking at, from embla's `select`.
- * `settled` is where they last came to rest, and **loading follows that one**: adding a slide
- * makes embla re-measure — `watchSlides` is on by default and calls `reInit` itself, keeping
- * the reader's position — and a re-measure mid-animation destroys the movement it interrupts.
- * Adding slides between movements instead is what makes this smooth.
- *
- * Splitting the two also means a swallowed `settle` — a re-measure eats the one it interrupts —
- * pauses loading rather than leaving the URL wrong, and the next slide the reader comes to rest
- * on picks it up again.
+ * The track only grows, and the view shows one slide of it at a time. Appending leaves every
+ * index meaning what it did; prepending shifts them, which is the one thing the view has to
+ * take account of — it re-anchors without animating rather than sliding.
  */
 export function useStoryIdeaCarousel() {
   const route = useRoute()
@@ -38,18 +32,11 @@ export function useStoryIdeaCarousel() {
   /** Which of them the reader is looking at. */
   const index = ref<number>(0)
 
-  /** Which of them they last came to rest on, which is what loading looks from. */
-  const settled = ref<number>(0)
-
   const total = ref<number>(0)
   const startReached = ref<boolean>(false)
   const endReached = ref<boolean>(false)
 
-  /**
-   * Counts ideas added to the *front*. Appending leaves the reader's index meaning what it did;
-   * prepending does not, and embla's own re-measure keeps the index rather than the slide — so
-   * this is the one thing the view has to correct.
-   */
+  /** Counts ideas added to the *front*, which is when the view must not animate the change. */
   const prepends = ref<number>(0)
 
   /** The idea the URL named on arrival, dropped once stale so the walk can start over. */
@@ -62,7 +49,7 @@ export function useStoryIdeaCarousel() {
     () => ({ storyIdeaId: track.value.at(-1)?.id ?? anchor.value }),
     {
       query: {
-        enabled: computed(() => !endReached.value && settled.value >= track.value.length - 2),
+        enabled: computed(() => !endReached.value && index.value >= track.value.length - 2),
       },
     },
   )
@@ -70,7 +57,7 @@ export function useStoryIdeaCarousel() {
   // Only at the very front, since a walk that started at the newest has everything behind it.
   const backward = useGetStoryIdeaCarousel(() => ({ storyIdeaId: track.value.at(0)?.id }), {
     query: {
-      enabled: computed(() => !startReached.value && track.value.length > 0 && settled.value === 0),
+      enabled: computed(() => !startReached.value && track.value.length > 0 && index.value === 0),
     },
   })
 
@@ -88,7 +75,6 @@ export function useStoryIdeaCarousel() {
         (idea): idea is GetStoryIdea200 => idea !== null,
       )
       index.value = step.previous === null ? 0 : 1
-      settled.value = index.value
       startReached.value = step.previous === null
       endReached.value = step.next === null
       return
@@ -113,7 +99,6 @@ export function useStoryIdeaCarousel() {
       } else {
         track.value = [step.previous, ...track.value]
         index.value += 1
-        settled.value += 1
         prepends.value += 1
       }
     }
@@ -193,11 +178,8 @@ export function useStoryIdeaCarousel() {
     endReached,
     isPending: computed<boolean>(() => forward.isPending.value && track.value.length === 0),
     isError: computed<boolean>(() => forward.isError.value && track.value.length === 0),
-    selectedOn: (slide: number) => {
+    goTo: (slide: number) => {
       index.value = clamp(slide)
-    },
-    settledOn: (slide: number) => {
-      settled.value = clamp(slide)
     },
     setReaderStateLocally,
   }

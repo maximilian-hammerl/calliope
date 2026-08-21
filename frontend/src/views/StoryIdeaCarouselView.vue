@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { useEventListener, useMediaQuery } from '@vueuse/core'
-import { MessageCircle } from '@lucide/vue'
+import { ref, watch } from 'vue'
+import { ArrowLeft, ArrowRight, MessageCircle } from '@lucide/vue'
 import { getListStoryIdeasQueryKey } from '@/api/story-ideas/story-ideas'
 import type { GetStoryIdea200 } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
@@ -12,14 +11,6 @@ import { useStoryIdeaCarousel } from '@/composables/useStoryIdeaCarousel'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
 import { Button } from '@/components/ui/button'
-import {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel'
 
 const {
   track,
@@ -30,8 +21,7 @@ const {
   endReached,
   isPending,
   isError,
-  selectedOn,
-  settledOn,
+  goTo,
   setReaderStateLocally,
 } = useStoryIdeaCarousel()
 
@@ -43,59 +33,23 @@ const {
   askAboutIdea,
 } = useStoryIdeaActions()
 
-/** The one exception to "almost no motion" — and none of it for anyone who asked for less. */
-const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
-
 /**
- * `duration` is present only when it has to be nothing. Embla merges options by copying every
- * key it finds, `undefined` included, so a `duration: undefined` overwrites its own default with
- * nothing — and a falsy duration is the branch that renders the last frame at once. That is not
- * a slower animation, it is no animation, and it looked like one of ours until the option merge
- * was read.
+ * Whether the next change of `index` is a step the reader took, and so worth animating.
  *
- * Read once, when the carousel is created, which is also why `startIndex` can come from a ref.
+ * An idea loaded at the *front* shifts every slide behind it: the index moves by one while what
+ * is on screen must not, so that one change is re-anchoring rather than movement. Switching the
+ * transition off in a `pre` watcher gets it out of the way before the render that re-anchors,
+ * and the reader's next step turns it back on — no waiting on a frame to be sure of the order.
  */
-const carouselOptions = computed(() => ({
-  startIndex: index.value,
-  ...(reducedMotion.value ? { duration: 0 } : {}),
-}))
+const animating = ref<boolean>(true)
+watch(prepends, () => {
+  animating.value = false
+})
 
-const api = ref<CarouselApi | undefined>(undefined)
-
-function onInitApi(carouselApi: CarouselApi) {
-  api.value = carouselApi
-  carouselApi?.on('select', () => selectedOn(carouselApi.selectedScrollSnap()))
-  // Loading follows where the reader came to rest, so slides are only ever added between
-  // movements: embla re-measures when they are, and a re-measure cuts a movement short.
-  carouselApi?.on('settle', () => settledOn(carouselApi.selectedScrollSnap()))
+function step(by: number) {
+  animating.value = true
+  goTo(index.value + by)
 }
-
-/**
- * An idea added to the *front* shifts every slide behind it. Embla re-measures on its own —
- * `watchSlides` is on by default — but a re-measure keeps the selected index, and the index now
- * points at the idea before the one the reader was reading. This is the correction, and it only
- * happens after a reload part-way through the set.
- */
-watch(prepends, async () => {
-  await nextTick()
-  api.value?.scrollTo(index.value, true)
-})
-
-useEventListener(window, 'keydown', (event: KeyboardEvent) => {
-  const target = event.target as HTMLElement | null
-  // Not while somebody is typing, and not over a control that has its own arrow behaviour.
-  if (target?.closest('input, textarea, select, [contenteditable="true"]') !== null) {
-    return
-  }
-
-  if (event.key === 'ArrowLeft') {
-    event.preventDefault()
-    api.value?.scrollPrev()
-  } else if (event.key === 'ArrowRight') {
-    event.preventDefault()
-    api.value?.scrollNext()
-  }
-})
 
 /**
  * The slide keeps its own new state rather than the query refetching: a refetch would rebuild
@@ -115,8 +69,7 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
       <div class="max-w-[760px]">
         <h1 class="mt-3 mb-2 text-[25px] leading-[1.2] text-ink-1">Story-Karussell</h1>
         <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
-          Offene Ideen, die du noch nicht gelesen hast — eine nach der anderen. Mit den Pfeiltasten
-          oder per Wischen weiter.
+          Offene Ideen, die du noch nicht gelesen hast — eine nach der anderen.
         </p>
 
         <p v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</p>
@@ -133,13 +86,21 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
           werden.
         </p>
 
-        <!-- Room either side for the controls, which sit beside the idea from `md` up and share
-             the line above it on a phone, where there is no room outside. -->
-        <Carousel v-else class="md:mx-14" :opts="carouselOptions" @init-api="onInitApi">
+        <!-- Room either side for the two buttons, which sit beside the idea from `md` up and
+             share the line above it on a phone, where there is no room outside. -->
+        <div v-else class="relative md:mx-14">
           <div class="mb-5 flex items-center gap-4">
-            <CarouselPrevious
-              class="static translate-y-0 md:absolute md:top-1/2 md:-left-12 md:-translate-y-1/2"
-            />
+            <Button
+              variant="outline"
+              size="icon"
+              class="size-11 rounded-full md:absolute md:top-1/2 md:-left-12 md:size-8 md:-translate-y-1/2"
+              :disabled="index === 0"
+              aria-label="Vorherige Storyidee"
+              @click="step(-1)"
+            >
+              <ArrowLeft :stroke-width="1.5" />
+            </Button>
+
             <div class="text-[12.5px] leading-[1.6] text-ink-5">
               <template v-if="endReached && index === track.length - 1">
                 Das war die letzte ungelesene Storyidee.
@@ -152,46 +113,68 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
                 Noch {{ total }} ungelesene {{ total === 1 ? 'Storyidee' : 'Storyideen' }}
               </template>
             </div>
-            <CarouselNext
-              class="static ml-auto translate-y-0 md:absolute md:top-1/2 md:-right-12 md:ml-0 md:-translate-y-1/2"
-            />
+
+            <Button
+              variant="outline"
+              size="icon"
+              class="ml-auto size-11 rounded-full md:absolute md:top-1/2 md:-right-12 md:size-8 md:-translate-y-1/2"
+              :disabled="index === track.length - 1"
+              aria-label="Nächste Storyidee"
+              @click="step(1)"
+            >
+              <ArrowRight :stroke-width="1.5" />
+            </Button>
           </div>
 
-          <CarouselContent>
-            <CarouselItem v-for="idea in track" :key="idea.id">
-              <StoryIdeaDetail :idea="idea" heading="h2">
-                <template #actions>
-                  <!-- Choosing the state an idea already has clears it, which is why the label
-                       names the state rather than the act. -->
-                  <Button
-                    v-for="toggle in readerStateToggles(idea.readerState)"
-                    :key="toggle.title"
-                    variant="secondary"
-                    size="sm"
-                    :title="toggle.title"
-                    :disabled="savingReaderState"
-                    @click="markIdea(idea.id, toggle.next)"
-                  >
-                    {{ toggle.label }}
-                  </Button>
-                  <Button size="sm" :disabled="startingConversation" @click="askAboutIdea(idea.id)">
-                    <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
-                    Unterhaltung beginnen
-                  </Button>
-                </template>
-                <template #notices>
-                  <p
-                    v-if="conversationError"
-                    class="mt-3 text-[12.5px] text-destructive"
-                    role="alert"
-                  >
-                    {{ conversationError }}
-                  </p>
-                </template>
-              </StoryIdeaDetail>
-            </CarouselItem>
-          </CarouselContent>
-        </Carousel>
+          <div class="overflow-hidden">
+            <div
+              class="flex"
+              :class="
+                animating
+                  ? 'motion-safe:transition-transform motion-safe:duration-[220ms] motion-safe:ease-[cubic-bezier(.2,0,.2,1)]'
+                  : ''
+              "
+              :style="{ transform: `translateX(-${index * 100}%)` }"
+            >
+              <div v-for="idea in track" :key="idea.id" class="w-full shrink-0 grow-0">
+                <StoryIdeaDetail :idea="idea" heading="h2">
+                  <template #actions>
+                    <!-- Choosing the state an idea already has clears it, which is why the label
+                         names the state rather than the act. -->
+                    <Button
+                      v-for="toggle in readerStateToggles(idea.readerState)"
+                      :key="toggle.title"
+                      variant="secondary"
+                      size="sm"
+                      :title="toggle.title"
+                      :disabled="savingReaderState"
+                      @click="markIdea(idea.id, toggle.next)"
+                    >
+                      {{ toggle.label }}
+                    </Button>
+                    <Button
+                      size="sm"
+                      :disabled="startingConversation"
+                      @click="askAboutIdea(idea.id)"
+                    >
+                      <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
+                      Unterhaltung beginnen
+                    </Button>
+                  </template>
+                  <template #notices>
+                    <p
+                      v-if="conversationError"
+                      class="mt-3 text-[12.5px] text-destructive"
+                      role="alert"
+                    >
+                      {{ conversationError }}
+                    </p>
+                  </template>
+                </StoryIdeaDetail>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </AppLayout>
