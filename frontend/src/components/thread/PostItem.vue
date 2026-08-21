@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
+import { paragraphs } from '@/lib/format/paragraphs'
 import type { ListPosts200ResultsItem } from '@/api/models'
 
 const props = defineProps<{ post: ListPosts200ResultsItem; divider: boolean; first: boolean }>()
@@ -14,13 +15,7 @@ const meta = computed<string>(() => {
     .join(' · ')
 })
 
-// Members write paragraphs, and a plain textarea carries them as blank lines.
-const paragraphs = computed<string[]>(() =>
-  props.post.text
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter((paragraph) => paragraph.length > 0),
-)
+const blocks = computed<string[]>(() => paragraphs(props.post.text))
 </script>
 
 <template>
@@ -33,7 +28,7 @@ const paragraphs = computed<string[]>(() =>
     </div>
 
     <div class="flex flex-col gap-[0.9em]">
-      <p v-for="(paragraph, index) in paragraphs" :key="index" class="prose-post">
+      <p v-for="(paragraph, index) in blocks" :key="index" class="prose-post">
         {{ paragraph }}
       </p>
     </div>

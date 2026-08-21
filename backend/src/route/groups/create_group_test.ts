@@ -18,7 +18,7 @@ Deno.test("POST /api/groups creates a group and makes the creator its administra
 
   const response = await request("POST", "/api/groups", cookie, {
     title: "Fantasy-Projekt",
-    blurb: "Ein gemeinsames Projekt",
+    synopsis: "Ein gemeinsames Projekt",
   });
 
   assertEquals(response.status, STATUS_CODE.Created);
@@ -49,7 +49,7 @@ Deno.test("POST /api/groups rejects a body without a title", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
-    blurb: "Kein Titel",
+    synopsis: "Kein Titel",
   });
 
   assertEquals(response.status, STATUS_CODE.BadRequest);
@@ -66,7 +66,7 @@ Deno.test("POST /api/groups stores the story metadata", async () => {
   const response = await request("POST", "/api/groups", cookie, {
     title: "Der Erinnerungsmarkt",
     subtitle: "Was du vergisst",
-    blurb: "d",
+    synopsis: "d",
     storyStatus: "writing",
     genres: ["Fantasy", "Mystery"],
     subgenres: ["Urban Fantasy"],
@@ -90,7 +90,7 @@ Deno.test("POST /api/groups defaults the metadata a member did not give", async 
 
   const response = await request("POST", "/api/groups", cookie, {
     title: "Ohne alles",
-    blurb: "d",
+    synopsis: "d",
   });
 
   assertEquals(response.status, STATUS_CODE.Created);
@@ -108,7 +108,7 @@ Deno.test("POST /api/groups tidies the tags it is given", async () => {
 
   const response = await request("POST", "/api/groups", cookie, {
     title: "Unordentlich",
-    blurb: "d",
+    synopsis: "d",
     // Spacing, a repeat in another case, and an entry that is only whitespace.
     genres: ["  Fantasy  ", "fantasy", "   ", "Mystery"],
   });
@@ -123,7 +123,7 @@ Deno.test("POST /api/groups refuses more tags than a rail can show", async () =>
 
   const response = await request("POST", "/api/groups", cookie, {
     title: "Zu viele",
-    blurb: "d",
+    synopsis: "d",
     genres: Array.from({ length: 13 }, (_, index) => `Genre ${index}`),
   });
 

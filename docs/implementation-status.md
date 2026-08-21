@@ -171,10 +171,17 @@ titled after it and invites the author — §11's "public idea → private conve
 from parts that already existed — and on a public group's page it invites every joined
 administrator, which is how a stranger asks into a group without any join-request machinery.
 **"Gruppe gründen" on one's own idea is built too** — the create-group dialog opens prefilled
-field for field (the idea's text becomes the blurb), which is what the matching columns were
-kept in step for. The author still chooses visibility and confirms; the idea stays open until
+field for field (the idea's synopsis becomes the group's, under the same name), which is what the
+matching columns were kept in step for. The author still chooses visibility and confirms; the idea stays open until
 they close it, deliberately — a fresh group of two might still want a third writer. With that,
 §8 is done. Item 4 below stops being optional the moment testers get this board.
+
+**An idea is written twice** (issue #9): a required short version, which is what the two boards
+show, and a required long one on the idea's own page underneath it — a card that borrowed the
+first lines of one long text cut them mid-sentence, and nobody got to write a summary they meant.
+The rows now also carry the story metadata the dialog collects, with content warnings on a line
+of their own. `writing_group.blurb` became `synopsis` in the same change, so an idea and the group
+it becomes name their long text the same way.
 
 **A carousel view** (issue #20) reads the board one idea at a time, with the depth of the detail
 page and arrow keys, swipe and buttons to move. Its set is fixed rather than inherited — open,

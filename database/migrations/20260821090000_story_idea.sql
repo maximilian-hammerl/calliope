@@ -16,8 +16,12 @@ CREATE TABLE public.story_idea
 
     title            TEXT                      NOT NULL,
     subtitle         TEXT,
-    -- The idea itself; becomes the group's blurb.
-    idea             TEXT                      NOT NULL,
+    -- The idea, twice: the short version a board can show, and the long one its own page shows
+    -- under it. Both required, unlike most of an idea — a card that borrows the first lines of
+    -- the long text cuts them mid-sentence, and two texts is the asking price for being read.
+    -- The synopsis becomes the group's, under the same name.
+    teaser           TEXT                      NOT NULL,
+    synopsis         TEXT                      NOT NULL,
 
     genres           TEXT[]                    NOT NULL DEFAULT '{}',
     subgenres        TEXT[]                    NOT NULL DEFAULT '{}',

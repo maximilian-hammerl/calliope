@@ -1,11 +1,30 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS } from '@/lib/format/storyIdea'
 import { READER_STATE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
-defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
+const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
+
+/**
+ * What the story is, in one line. Genres before subgenres before tropes, because that is
+ * narrowing order, and the narrative style last — a reader scanning a board is choosing a
+ * kind of story before they care what tense it is in. Empty fields are left out rather than
+ * labelled, so a sparse idea reads as short instead of unfinished.
+ */
+const story = computed<string>(() =>
+  [
+    ...props.idea.genres,
+    ...props.idea.subgenres,
+    ...props.idea.tropes,
+    props.idea.tense ?? undefined,
+    props.idea.perspective ?? undefined,
+  ]
+    .filter((entry): entry is string => entry !== undefined)
+    .join(' · '),
+)
 </script>
 
 <template>
@@ -34,8 +53,21 @@ defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
     </p>
 
     <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
-      {{ idea.idea }}
+      {{ idea.teaser }}
     </p>
+
+    <div v-if="story !== ''" class="mt-[8px] max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5">
+      {{ story }}
+    </div>
+
+    <!-- Its own line, and named: a content warning is something a reader looks for before
+         deciding to read, not one tag among the others. -->
+    <div
+      v-if="idea.contentWarnings.length > 0"
+      class="mt-[2px] max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5"
+    >
+      <span class="text-ink-6">Inhaltswarnungen:&nbsp;</span>{{ idea.contentWarnings.join(', ') }}
+    </div>
 
     <div class="mt-[6px] text-[12.5px] leading-[1.95] text-ink-5">
       von

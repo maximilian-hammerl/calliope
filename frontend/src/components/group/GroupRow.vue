@@ -28,13 +28,13 @@ defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
     </div>
 
     <!-- The story's own line, between its name and what it is about. Darker and a step larger
-         than the blurb, so the order reads title → subtitle → description. -->
+         than the synopsis, so the order reads title → subtitle → description. -->
     <p v-if="group.subtitle" class="mt-[4px] max-w-[60ch] text-[13.5px] leading-[1.5] text-ink-3">
       {{ group.subtitle }}
     </p>
 
-    <p v-if="group.blurb" class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
-      {{ group.blurb }}
+    <p v-if="group.synopsis" class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
+      {{ group.synopsis }}
     </p>
 
     <!-- Every date this row shows sits on one line, so an invitation's own date joins the

@@ -16,7 +16,7 @@ Deno.test.afterEach(() => deleteUsers([owner, outsider]));
 function createGroup(cookie: string, visibility: "public" | "private") {
   return request("POST", "/api/groups", cookie, {
     title: "Vorher",
-    blurb: "d",
+    synopsis: "d",
     visibility,
   }).then((response) => response.json());
 }
@@ -35,7 +35,7 @@ Deno.test("PATCH /api/groups/{groupId} updates a group the user administers", as
   assertEquals(updated.title, "Nachher");
   assertEquals(updated.visibility, "public");
   // Untouched fields keep their values.
-  assertEquals(updated.blurb, created.blurb);
+  assertEquals(updated.synopsis, created.synopsis);
 });
 
 Deno.test("PATCH /api/groups/{groupId} refuses a non-administrator of a public group", async () => {

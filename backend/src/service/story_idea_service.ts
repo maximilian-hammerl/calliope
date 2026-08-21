@@ -20,7 +20,8 @@ export type StoryIdea =
     | "id"
     | "title"
     | "subtitle"
-    | "idea"
+    | "teaser"
+    | "synopsis"
     | "genres"
     | "subgenres"
     | "tropes"
@@ -50,7 +51,8 @@ const SELECTED_COLUMNS = [
   "storyIdea.id",
   "storyIdea.title",
   "storyIdea.subtitle",
-  "storyIdea.idea",
+  "storyIdea.teaser",
+  "storyIdea.synopsis",
   "storyIdea.genres",
   "storyIdea.subgenres",
   "storyIdea.tropes",
@@ -65,10 +67,11 @@ const SELECTED_COLUMNS = [
   "storyIdea.createdAt",
 ] as const;
 
-/** What a member may set. Title and the idea itself are the only requirements, per §8.1. */
+/** What a member may set. Only the title and the two texts are required; see the request body. */
 export type StoryIdeaValues = {
   title: string;
-  idea: string;
+  teaser: string;
+  synopsis: string;
   subtitle?: string | null;
   genres?: string[];
   subgenres?: string[];
@@ -86,7 +89,10 @@ export type StoryIdeaValues = {
 function toRow(values: Partial<StoryIdeaValues>) {
   return {
     ...(values.title === undefined ? {} : { title: values.title.trim() }),
-    ...(values.idea === undefined ? {} : { idea: values.idea.trim() }),
+    ...(values.teaser === undefined ? {} : { teaser: values.teaser.trim() }),
+    ...(values.synopsis === undefined
+      ? {}
+      : { synopsis: values.synopsis.trim() }),
     ...(values.subtitle === undefined
       ? {}
       : { subtitle: emptyToNull(values.subtitle) }),
@@ -220,7 +226,9 @@ function filtered(query: StoryIdeaFilters) {
             // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
             eb("storyIdea.title", "ilike", searchPattern(query.search!)),
             // deno-lint-ignore no-non-null-assertion -- as above
-            eb("storyIdea.idea", "ilike", searchPattern(query.search!)),
+            eb("storyIdea.teaser", "ilike", searchPattern(query.search!)),
+            // deno-lint-ignore no-non-null-assertion -- as above
+            eb("storyIdea.synopsis", "ilike", searchPattern(query.search!)),
           ])
         ),
     )
@@ -255,12 +263,13 @@ async function insertStoryIdea(
 ): Promise<StoryIdea> {
   const { id } = await db
     .insertInto("storyIdea")
-    // title and idea restated so the type carries their presence; `toRow` describes a
+    // title and both texts restated so the type carries their presence; `toRow` describes a
     // change, where every field may be absent.
     .values({
       ...toRow(values),
       title: values.title.trim(),
-      idea: values.idea.trim(),
+      teaser: values.teaser.trim(),
+      synopsis: values.synopsis.trim(),
       createdBy,
     })
     .returning("id")

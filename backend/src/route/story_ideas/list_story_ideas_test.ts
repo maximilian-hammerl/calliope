@@ -62,10 +62,13 @@ Deno.test("QUERY /api/story-ideas filters by language and searches the idea text
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
 
-  await createIdea(cookie, { title: "Deutsch", idea: "Ein Turm aus Glas." });
+  await createIdea(cookie, {
+    title: "Deutsch",
+    synopsis: "Ein Turm aus Glas.",
+  });
   await createIdea(cookie, {
     title: "English",
-    idea: "A lighthouse letters story.",
+    synopsis: "A lighthouse letters story.",
     language: "english",
   });
 

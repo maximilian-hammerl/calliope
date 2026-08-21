@@ -72,7 +72,7 @@ export async function insertUser(name: string): Promise<string> {
 
 export async function insertGroup(title: string): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
-    `INSERT INTO public.writing_group (title, blurb, visibility)
+    `INSERT INTO public.writing_group (title, synopsis, visibility)
      VALUES ($1, 'Beschreibung', 'private') RETURNING id`,
     [`${TEST_PREFIX}${title}`],
   );

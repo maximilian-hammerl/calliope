@@ -25,7 +25,8 @@ export const STORY_IDEA_BODY = STORY_IDEA_SCHEMA
   .pick({
     title: true,
     subtitle: true,
-    idea: true,
+    teaser: true,
+    synopsis: true,
     tense: true,
     perspective: true,
     language: true,
@@ -34,10 +35,17 @@ export const STORY_IDEA_BODY = STORY_IDEA_SCHEMA
     status: true,
   })
   .extend({
-    // Title and the idea are all §8.1 requires; a mandatory field gets filled with nonsense.
+    // The title and both texts are required, and nothing else is: the metadata block is where
+    // a mandatory field gets filled with nonsense. The two texts are the exception on purpose —
+    // somebody unwilling to write a short version is not really asking to be answered.
     title: STORY_IDEA_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.storyIdeaTitle),
     subtitle: z.string().max(TEXT_LIMIT.storyIdeaSubtitle).nullish(),
-    idea: STORY_IDEA_SCHEMA.shape.idea.min(1).max(TEXT_LIMIT.storyIdeaText),
+    teaser: STORY_IDEA_SCHEMA.shape.teaser.min(1).max(
+      TEXT_LIMIT.storyIdeaTeaser,
+    ),
+    synopsis: STORY_IDEA_SCHEMA.shape.synopsis.min(1).max(
+      TEXT_LIMIT.storyIdeaSynopsis,
+    ),
     tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
     perspective: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
     language: STORY_IDEA_SCHEMA.shape.language.default("german"),

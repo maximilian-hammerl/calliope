@@ -215,6 +215,11 @@ query *parameter*, and these endpoints carry paging in a JSON body, so
 `useInfiniteQuery` of its own. It still keys off `getListMessagesQueryKey`, so invalidation
 written against the generated key reaches it.
 
+**Long prose is rendered as the paragraphs it was typed as.** `lib/format/paragraphs.ts` splits
+on blank lines, and a post and a story idea's synopsis both use it — a single `<p>` renders eight
+thousand characters as one wall, and a textarea is the only thing members have to mark a break
+with.
+
 ## Sessions and routing
 
 The session cookie is `httpOnly`, so `GET /api/auth/me` is the only way to know whether this

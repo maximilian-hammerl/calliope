@@ -24,7 +24,7 @@ export type WritingGroup =
     | "id"
     | "title"
     | "subtitle"
-    | "blurb"
+    | "synopsis"
     | "visibility"
     | "storyStatus"
     | "genres"
@@ -61,7 +61,7 @@ const SELECTED_COLUMNS = [
   "writingGroup.id",
   "writingGroup.title",
   "writingGroup.subtitle",
-  "writingGroup.blurb",
+  "writingGroup.synopsis",
   "writingGroup.visibility",
   "writingGroup.storyStatus",
   "writingGroup.genres",
@@ -82,7 +82,7 @@ const SELECTED_COLUMNS = [
  */
 export type WritingGroupValues = {
   title: string;
-  blurb: string;
+  synopsis: string;
   subtitle?: string | null;
   visibility?: WritingGroupVisibility;
   storyStatus?: WritingGroupStoryStatus;
@@ -102,7 +102,9 @@ function toRow(values: Partial<WritingGroupValues>) {
     ...(values.subtitle === undefined
       ? {}
       : { subtitle: emptyToNull(values.subtitle) }),
-    ...(values.blurb === undefined ? {} : { blurb: values.blurb.trim() }),
+    ...(values.synopsis === undefined
+      ? {}
+      : { synopsis: values.synopsis.trim() }),
     ...(values.visibility === undefined
       ? {}
       : { visibility: values.visibility }),
@@ -140,12 +142,12 @@ async function insertWritingGroup(
   return await db.transaction().execute(async (transaction) => {
     const writingGroup = await transaction
       .insertInto("writingGroup")
-      // title and blurb restated so the type carries their presence; `toRow` describes a
+      // title and synopsis restated so the type carries their presence; `toRow` describes a
       // change, where every field may be absent.
       .values({
         ...toRow(values),
         title: values.title.trim(),
-        blurb: values.blurb.trim(),
+        synopsis: values.synopsis.trim(),
         createdBy: creator.id,
       })
       .returning(SELECTED_COLUMNS)
@@ -260,7 +262,7 @@ function listVisibleWritingGroups(
               // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
               eb("writingGroup.title", "ilike", searchPattern(query.search!)),
               eb(
-                "writingGroup.blurb",
+                "writingGroup.synopsis",
                 "ilike",
                 // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
                 searchPattern(query.search!),

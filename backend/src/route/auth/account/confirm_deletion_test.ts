@@ -124,7 +124,8 @@ Deno.test("POST /api/auth/account/deletion/confirm takes the member's story idea
   const cookie = await registerDeletable();
   const created = await request("POST", "/api/story-ideas", cookie, {
     title: "Stirbt mit dem Konto",
-    idea: "Eine Idee ist ein Gesuch, nicht Teil einer fremden Geschichte.",
+    teaser: "Ein Gesuch, nicht Teil einer fremden Geschichte.",
+    synopsis: "Eine Idee ist ein Gesuch, nicht Teil einer fremden Geschichte.",
   });
   const { id } = await created.json();
 

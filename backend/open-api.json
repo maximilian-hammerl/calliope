@@ -2491,7 +2491,7 @@
                     "maxLength": 120
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
-                  "blurb": { "type": "string", "maxLength": 2000 },
+                  "synopsis": { "type": "string", "maxLength": 8000 },
                   "visibility": {
                     "type": "string",
                     "enum": ["private", "public"],
@@ -2549,7 +2549,7 @@
                     "maxItems": 12
                   }
                 },
-                "required": ["title", "blurb"]
+                "required": ["title", "synopsis"]
               }
             }
           }
@@ -2565,7 +2565,7 @@
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
                     "subtitle": { "type": ["string", "null"] },
-                    "blurb": { "type": "string" },
+                    "synopsis": { "type": "string" },
                     "visibility": {
                       "type": "string",
                       "enum": ["private", "public"]
@@ -2623,7 +2623,7 @@
                     "id",
                     "title",
                     "subtitle",
-                    "blurb",
+                    "synopsis",
                     "visibility",
                     "storyStatus",
                     "genres",
@@ -2864,7 +2864,7 @@
                           "id": { "type": "string", "format": "uuid" },
                           "title": { "type": "string" },
                           "subtitle": { "type": ["string", "null"] },
-                          "blurb": { "type": "string" },
+                          "synopsis": { "type": "string" },
                           "visibility": {
                             "type": "string",
                             "enum": ["private", "public"]
@@ -2925,7 +2925,7 @@
                           "id",
                           "title",
                           "subtitle",
-                          "blurb",
+                          "synopsis",
                           "visibility",
                           "storyStatus",
                           "genres",
@@ -3129,7 +3129,7 @@
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
                     "subtitle": { "type": ["string", "null"] },
-                    "blurb": { "type": "string" },
+                    "synopsis": { "type": "string" },
                     "visibility": {
                       "type": "string",
                       "enum": ["private", "public"]
@@ -3187,7 +3187,7 @@
                     "id",
                     "title",
                     "subtitle",
-                    "blurb",
+                    "synopsis",
                     "visibility",
                     "storyStatus",
                     "genres",
@@ -3412,7 +3412,7 @@
                     "maxLength": 120
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
-                  "blurb": { "type": "string", "maxLength": 2000 },
+                  "synopsis": { "type": "string", "maxLength": 8000 },
                   "visibility": {
                     "type": "string",
                     "enum": ["private", "public"],
@@ -3484,7 +3484,7 @@
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
                     "subtitle": { "type": ["string", "null"] },
-                    "blurb": { "type": "string" },
+                    "synopsis": { "type": "string" },
                     "visibility": {
                       "type": "string",
                       "enum": ["private", "public"]
@@ -3542,7 +3542,7 @@
                     "id",
                     "title",
                     "subtitle",
-                    "blurb",
+                    "synopsis",
                     "visibility",
                     "storyStatus",
                     "genres",
@@ -9223,7 +9223,8 @@
                           "id": { "type": "string", "format": "uuid" },
                           "title": { "type": "string" },
                           "subtitle": { "type": ["string", "null"] },
-                          "idea": { "type": "string" },
+                          "teaser": { "type": "string" },
+                          "synopsis": { "type": "string" },
                           "genres": {
                             "type": "array",
                             "items": { "type": "string" }
@@ -9270,7 +9271,8 @@
                           "id",
                           "title",
                           "subtitle",
-                          "idea",
+                          "teaser",
+                          "synopsis",
                           "genres",
                           "subgenres",
                           "tropes",
@@ -9463,10 +9465,15 @@
                     "maxLength": 120
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
-                  "idea": {
+                  "teaser": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 2000
+                  },
+                  "synopsis": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8000
                   },
                   "tense": { "type": ["string", "null"], "maxLength": 60 },
                   "perspective": {
@@ -9512,7 +9519,7 @@
                     "maxItems": 12
                   }
                 },
-                "required": ["title", "idea"]
+                "required": ["title", "teaser", "synopsis"]
               }
             }
           }
@@ -9528,7 +9535,8 @@
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
                     "subtitle": { "type": ["string", "null"] },
-                    "idea": { "type": "string" },
+                    "teaser": { "type": "string" },
+                    "synopsis": { "type": "string" },
                     "genres": {
                       "type": "array",
                       "items": { "type": "string" }
@@ -9569,7 +9577,8 @@
                     "id",
                     "title",
                     "subtitle",
-                    "idea",
+                    "teaser",
+                    "synopsis",
                     "genres",
                     "subgenres",
                     "tropes",
@@ -9775,7 +9784,8 @@
                         "id": { "type": "string", "format": "uuid" },
                         "title": { "type": "string" },
                         "subtitle": { "type": ["string", "null"] },
-                        "idea": { "type": "string" },
+                        "teaser": { "type": "string" },
+                        "synopsis": { "type": "string" },
                         "genres": {
                           "type": "array",
                           "items": { "type": "string" }
@@ -9822,7 +9832,8 @@
                         "id",
                         "title",
                         "subtitle",
-                        "idea",
+                        "teaser",
+                        "synopsis",
                         "genres",
                         "subgenres",
                         "tropes",
@@ -9845,7 +9856,8 @@
                         "id": { "type": "string", "format": "uuid" },
                         "title": { "type": "string" },
                         "subtitle": { "type": ["string", "null"] },
-                        "idea": { "type": "string" },
+                        "teaser": { "type": "string" },
+                        "synopsis": { "type": "string" },
                         "genres": {
                           "type": "array",
                           "items": { "type": "string" }
@@ -9892,7 +9904,8 @@
                         "id",
                         "title",
                         "subtitle",
-                        "idea",
+                        "teaser",
+                        "synopsis",
                         "genres",
                         "subgenres",
                         "tropes",
@@ -9915,7 +9928,8 @@
                         "id": { "type": "string", "format": "uuid" },
                         "title": { "type": "string" },
                         "subtitle": { "type": ["string", "null"] },
-                        "idea": { "type": "string" },
+                        "teaser": { "type": "string" },
+                        "synopsis": { "type": "string" },
                         "genres": {
                           "type": "array",
                           "items": { "type": "string" }
@@ -9962,7 +9976,8 @@
                         "id",
                         "title",
                         "subtitle",
-                        "idea",
+                        "teaser",
+                        "synopsis",
                         "genres",
                         "subgenres",
                         "tropes",
@@ -10188,7 +10203,8 @@
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
                     "subtitle": { "type": ["string", "null"] },
-                    "idea": { "type": "string" },
+                    "teaser": { "type": "string" },
+                    "synopsis": { "type": "string" },
                     "genres": {
                       "type": "array",
                       "items": { "type": "string" }
@@ -10229,7 +10245,8 @@
                     "id",
                     "title",
                     "subtitle",
-                    "idea",
+                    "teaser",
+                    "synopsis",
                     "genres",
                     "subgenres",
                     "tropes",
@@ -10452,10 +10469,15 @@
                     "maxLength": 120
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
-                  "idea": {
+                  "teaser": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 2000
+                  },
+                  "synopsis": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8000
                   },
                   "tense": { "type": ["string", "null"], "maxLength": 60 },
                   "perspective": {
@@ -10516,7 +10538,8 @@
                     "id": { "type": "string", "format": "uuid" },
                     "title": { "type": "string" },
                     "subtitle": { "type": ["string", "null"] },
-                    "idea": { "type": "string" },
+                    "teaser": { "type": "string" },
+                    "synopsis": { "type": "string" },
                     "genres": {
                       "type": "array",
                       "items": { "type": "string" }
@@ -10557,7 +10580,8 @@
                     "id",
                     "title",
                     "subtitle",
-                    "idea",
+                    "teaser",
+                    "synopsis",
                     "genres",
                     "subgenres",
                     "tropes",
@@ -15369,7 +15393,7 @@
                               "id": { "type": "string", "format": "uuid" },
                               "title": { "type": "string" },
                               "subtitle": { "type": ["string", "null"] },
-                              "blurb": { "type": "string" },
+                              "synopsis": { "type": "string" },
                               "visibility": {
                                 "type": "string",
                                 "enum": ["private", "public"]
@@ -15437,7 +15461,7 @@
                               "id",
                               "title",
                               "subtitle",
-                              "blurb",
+                              "synopsis",
                               "visibility",
                               "storyStatus",
                               "genres",

@@ -13,6 +13,7 @@ import {
 } from '@/api/story-ideas/story-ideas'
 import type { GetStoryIdea200 } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { formatCount } from '@/lib/format/formatNumber'
 import { queryClient } from '@/lib/api/queryClient'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { fromTags, toTags } from '@/lib/format/storyTags'
@@ -43,7 +44,8 @@ const isPending = computed<boolean>(() => isCreating.value || isUpdating.value)
 
 const title = ref<string>('')
 const subtitle = ref<string>('')
-const ideaText = ref<string>('')
+const teaser = ref<string>('')
+const synopsis = ref<string>('')
 const genres = ref<string>('')
 const subgenres = ref<string>('')
 const tropes = ref<string>('')
@@ -56,7 +58,8 @@ const partySize = ref<string>('')
 const status = ref<GetStoryIdea200['status']>('open')
 
 const titleError = ref<string | undefined>(undefined)
-const ideaError = ref<string | undefined>(undefined)
+const teaserError = ref<string | undefined>(undefined)
+const synopsisError = ref<string | undefined>(undefined)
 const formError = ref<string | undefined>(undefined)
 
 watch(open, (isOpen) => {
@@ -64,11 +67,13 @@ watch(open, (isOpen) => {
     return
   }
   titleError.value = undefined
-  ideaError.value = undefined
+  teaserError.value = undefined
+  synopsisError.value = undefined
   formError.value = undefined
   title.value = props.idea?.title ?? ''
   subtitle.value = props.idea?.subtitle ?? ''
-  ideaText.value = props.idea?.idea ?? ''
+  teaser.value = props.idea?.teaser ?? ''
+  synopsis.value = props.idea?.synopsis ?? ''
   genres.value = fromTags(props.idea?.genres ?? [])
   subgenres.value = fromTags(props.idea?.subgenres ?? [])
   tropes.value = fromTags(props.idea?.tropes ?? [])
@@ -85,17 +90,37 @@ const blank = (value: string) => (value.trim().length === 0 ? null : value.trim(
 
 async function submit() {
   titleError.value = title.value.trim().length === 0 ? 'Gib deiner Idee einen Titel.' : undefined
-  ideaError.value = ideaText.value.trim().length === 0 ? 'Beschreib deine Idee.' : undefined
+  teaserError.value =
+    teaser.value.trim().length === 0 ? 'Fass deine Idee in ein paar Sätzen zusammen.' : undefined
+  synopsisError.value =
+    synopsis.value.trim().length === 0 ? 'Erzähl deine Idee ausführlich.' : undefined
   formError.value = undefined
 
-  if (titleError.value !== undefined || ideaError.value !== undefined) {
+  // Neither text carries a `maxlength`, so the bound is said here rather than by typing that
+  // stops dead — and only at the moment it matters.
+  if (teaserError.value === undefined && teaser.value.trim().length > LIMIT.teaser.maxLength) {
+    teaserError.value = `Die kurze Fassung darf höchstens ${formatCount(LIMIT.teaser.maxLength)} Zeichen lang sein.`
+  }
+  if (
+    synopsisError.value === undefined &&
+    synopsis.value.trim().length > LIMIT.synopsis.maxLength
+  ) {
+    synopsisError.value = `Die ausführliche Fassung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`
+  }
+
+  if (
+    titleError.value !== undefined ||
+    teaserError.value !== undefined ||
+    synopsisError.value !== undefined
+  ) {
     return
   }
 
   const values = {
     title: title.value.trim(),
     subtitle: blank(subtitle.value),
-    idea: ideaText.value.trim(),
+    teaser: teaser.value.trim(),
+    synopsis: synopsis.value.trim(),
     genres: toTags(genres.value),
     subgenres: toTags(subgenres.value),
     tropes: toTags(tropes.value),
@@ -142,7 +167,8 @@ async function submit() {
           props.idea ? 'Storyidee bearbeiten' : 'Storyidee vorstellen'
         }}</DialogTitle>
         <DialogDescription>
-          Eine Idee, die Mitschreibende sucht. Nur Titel und die Idee selbst sind nötig.
+          Eine Idee, die Mitschreibende sucht. Nötig sind der Titel und beide Fassungen der Idee —
+          die kurze steht auf der Übersicht, die ausführliche auf der Seite dazu.
         </DialogDescription>
       </DialogHeader>
 
@@ -179,18 +205,34 @@ async function submit() {
             />
           </Field>
 
-          <Field :data-invalid="ideaError !== undefined ? true : undefined">
-            <FieldLabel for="idea-text">Die Idee</FieldLabel>
+          <!-- Both required, and the short one first: it is what a board shows, and it reads
+               as the opening of the long one rather than a summary of it. -->
+          <Field :data-invalid="teaserError !== undefined ? true : undefined">
+            <FieldLabel for="idea-teaser">Die Idee, kurz</FieldLabel>
             <Textarea
-              id="idea-text"
-              v-model="ideaText"
-              name="idea"
-              rows="4"
+              id="idea-teaser"
+              v-model="teaser"
+              name="teaser"
+              rows="3"
+              placeholder="Ein paar Sätze, die für sich stehen — das sieht man auf der Übersicht."
+              required
+              :aria-invalid="teaserError !== undefined ? true : undefined"
+            />
+            <FieldError :errors="[teaserError]" />
+          </Field>
+
+          <Field :data-invalid="synopsisError !== undefined ? true : undefined">
+            <FieldLabel for="idea-synopsis">Die Idee, ausführlich</FieldLabel>
+            <Textarea
+              id="idea-synopsis"
+              v-model="synopsis"
+              name="synopsis"
+              rows="8"
               placeholder="Worum geht es, und wie soll gemeinsam daran geschrieben werden?"
               required
-              :aria-invalid="ideaError !== undefined ? true : undefined"
+              :aria-invalid="synopsisError !== undefined ? true : undefined"
             />
-            <FieldError :errors="[ideaError]" />
+            <FieldError :errors="[synopsisError]" />
           </Field>
 
           <Field>

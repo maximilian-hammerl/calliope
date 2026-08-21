@@ -4,16 +4,28 @@ Postgres 18, migrated with [dbmate](https://github.com/amacneil/dbmate), typed w
 `kysely-codegen`. Tasks are `deno task …` — see the root [AGENTS.md](../AGENTS.md) for the
 conventions shared with the other projects.
 
-## Migrations are deployed
+## Before release, migrations are edited in place
 
-Add a new migration; **never edit an applied one**. dbmate records a migration by version, so
-editing a file that has already run changes nothing on any database that has it — the old
-definition stays live while the file says otherwise. If you have to correct one that only
-exists locally, roll it back and re-apply:
+Calliope has no members yet and every database it has is disposable, so a schema change is made
+**by editing the migration that created the table** rather than by stacking an `ALTER` on top.
+The files stay readable as one definition per table, which is worth more right now than a
+history nobody will ever replay.
+
+dbmate records a migration by version and will not re-run an edited one, so the database has to
+be rebuilt — that is the cost, and it is the whole cost:
 
 ```bash
-deno task migrations:rollback && deno task migrations:migrate
+cd database && dbmate --env-file ../.env drop && dbmate --env-file ../.env up
+deno task types:generate && cd ../backend && deno task db:seed
 ```
+
+It drops **everything**, hand-made test accounts and rows included, so say so before doing it to
+somebody else's database. Production is dropped the same way; see
+[deployment/README.md](../deployment/README.md), and stop the backend first or open connections
+block the drop.
+
+**This changes the day the first real member signs up.** From then on a schema change is a new
+migration, `migrate:down` matters, and an applied file is never touched again.
 
 Every `migrate:down` must actually reverse its `migrate:up`, including dropping enum types
 and trigger functions. Test the round trip against a throwaway database rather than the one
@@ -70,7 +82,7 @@ Date: its string form compares lexicographically and orders "Tue" before "Wed".
 
 `@types/pg` is in the import map and `test/support.ts` pulls it in with `// @ts-types`. Without
 it every `client.query(...)` returned `any`, so a column that did not exist type-checked
-happily and failed at run time -- which is exactly how renaming `description` to `blurb` broke
+happily and failed at run time -- which is exactly how a column rename broke
 this suite while all three projects reported clean.
 
 Two things follow. Give every query its row type -- `client.query<{ id: string }>(...)` -- or

@@ -183,7 +183,7 @@ what is new is a lie until unread marks exist.
 Three exceptions. A **status page** whose heading changes with the outcome explains itself in its
 body instead. A **rail or sheet** shows its mono label alone — but a sheet still needs the
 sentence as an `sr-only` description, because the dialog primitive points `aria-describedby` at
-one whether or not it exists. And where the subject has its own description — a group's blurb —
+one whether or not it exists. And where the subject has its own description — a group's synopsis —
 that *is* the line.
 
 **A destination is named the same everywhere.** The button that leads to Gruppen entdecken says
@@ -350,10 +350,26 @@ dich jemand einlädt." A "Beitreten" button that would fail is worse than no but
 itself carries no button at all: its title is the link, and "Gruppe ansehen" only repeated what
 the title already did while making the two group lists look different from each other.
 
-**A group row is the title and what it is.** Title, subtitle, blurb, last activity — and no
+**A group row is the title and what it is.** Title, subtitle, synopsis, last activity — and no
 action button: the title is the link. `GroupRow` renders the same on Meine Gruppen and on
 Gruppen entdecken, and an invitation adds its answer buttons because there the row *is* a
 question.
+
+**A story-idea row is what the group row is, plus what the story is.** Title, the short version
+of the idea, then the metadata on one line — genres, subgenres, tropes, then the narrative style,
+which is narrowing order, because somebody scanning a board is choosing a kind of story before
+they care what tense it is in. Fields nobody filled in are left out rather than labelled, so a
+sparse idea reads as short rather than unfinished.
+
+**Content warnings get their own line, and the word.** "Inhaltswarnungen: …" under the rest,
+never mixed into the tag line: a reader looks for them before deciding to read, which is not what
+a genre is for.
+
+**An idea is written twice, and both are required.** The short version stands alone on a board;
+the long one is on the idea's own page, *under* the short one, because members write the short one
+as the opening of the long one rather than a summary of it — so the page reads as one text. That
+is the only place in the product where two prose fields are both mandatory, and the reason is that
+a card which borrows the first three lines of a long text cuts them mid-sentence.
 
 **A pending invitation is a state, not a member.** It reads "· eingeladen" after the role, and
 a member count counts only those who have joined — an invitation is not yet a person in the

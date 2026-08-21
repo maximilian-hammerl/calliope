@@ -70,7 +70,7 @@ export async function createGroup(
 ): Promise<{ id: string }> {
   const response = await request("POST", "/api/groups", cookie, {
     title,
-    blurb: "d",
+    synopsis: "d",
     visibility,
   });
 

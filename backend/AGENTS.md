@@ -276,6 +276,17 @@ included: the five endpoints behave alike. That endpoint's response is `USER_RES
 and username only. A username is public within the platform; an email address never is, and
 the schema *picks* rather than omits so a column added later cannot leak by being forgotten.
 
+## An idea is written twice
+
+`story_idea` carries a `teaser` and a `synopsis`, both `NOT NULL`, and they are the only pair of
+mandatory prose fields anywhere here — everything else about an idea is optional on purpose. A
+board shows the teaser, the idea's own page shows both, and the synopsis becomes the group's under
+the same name, which is why `writing_group.blurb` was renamed to `synopsis`: one text, one word,
+no mapping to remember.
+
+`search` matches either, so a term in the long version still finds the idea whose teaser does not
+mention it.
+
 ## Timestamps
 
 Only `user` and `user_session` carry `updated_at`, where it is a debugging convenience. No
@@ -598,7 +609,7 @@ a session.
 
 ## A group is a story, for now
 
-`writing_group` carries the story's metadata — `subtitle`, `blurb`, `story_status`, `genres`,
+`writing_group` carries the story's metadata — `subtitle`, `synopsis`, `story_status`, `genres`,
 `subgenres`, `tropes`, `content_warnings`, `tense`, `perspective`. §5.1 has a group *containing*
 optional stories and §43 puts that split in phase 2; until then the group is the story, and
 moving the columns later is a migration rather than a redesign.

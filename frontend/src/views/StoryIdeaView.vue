@@ -59,7 +59,7 @@ const groupInitialValues = computed<GroupInitialValues | undefined>(() =>
     : {
         title: idea.value.title,
         subtitle: idea.value.subtitle ?? null,
-        blurb: idea.value.idea,
+        synopsis: idea.value.synopsis,
         genres: idea.value.genres,
         subgenres: idea.value.subgenres,
         tropes: idea.value.tropes,

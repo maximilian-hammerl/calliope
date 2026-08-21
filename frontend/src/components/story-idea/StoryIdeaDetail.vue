@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { GetStoryIdea200 } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
+import { paragraphs } from '@/lib/format/paragraphs'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
@@ -15,6 +16,9 @@ const props = withDefaults(
   }>(),
   { heading: 'h1', own: false },
 )
+
+/** The long version, as the paragraphs its author typed. */
+const synopsis = computed<string[]>(() => paragraphs(props.idea.synopsis))
 
 /** The seeking block, only the lines that were filled in. */
 const seeking = computed<Array<{ label: string; value: string }>>(() =>
@@ -76,9 +80,15 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
     · {{ formatActivityTime(idea.createdAt) }}
   </div>
 
-  <p class="prose-post mt-6 max-w-[60ch]" style="text-wrap: pretty">
-    {{ idea.idea }}
-  </p>
+  <!-- The short version leads, because members write it as the opening of the long one rather
+       than a summary of it — so the two read as one text. -->
+  <p class="prose-post mt-6 max-w-[60ch] font-medium">{{ idea.teaser }}</p>
+
+  <div class="mt-[0.9em] flex max-w-[60ch] flex-col gap-[0.9em]">
+    <p v-for="(paragraph, index) in synopsis" :key="index" class="prose-post">
+      {{ paragraph }}
+    </p>
+  </div>
 
   <div class="mt-8 grid max-w-[60ch] grid-cols-1 gap-8 border-t border-line-3 pt-6 sm:grid-cols-2">
     <div v-if="seeking.length > 0">

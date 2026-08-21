@@ -21,7 +21,7 @@ const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
   .pick({
     title: true,
     subtitle: true,
-    blurb: true,
+    synopsis: true,
     visibility: true,
     storyStatus: true,
     language: true,
@@ -32,7 +32,7 @@ const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
     // The column only requires text; an empty title is not useful.
     title: WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
     subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
-    blurb: WRITING_GROUP_SCHEMA.shape.blurb.max(TEXT_LIMIT.groupBlurb),
+    synopsis: WRITING_GROUP_SCHEMA.shape.synopsis.max(TEXT_LIMIT.groupSynopsis),
     // Private unless asked otherwise, per the "private by default" principle.
     visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
     // The column's own default, restated so omitting the field is legal rather than a 400.

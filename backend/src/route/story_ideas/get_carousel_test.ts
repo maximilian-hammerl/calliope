@@ -101,8 +101,12 @@ Deno.test("QUERY /api/story-ideas/carousel carries whole ideas, not ids", async 
 
   // The movement has to have something to move to, so a neighbour is everything the detail
   // view renders — the author's name included, which is joined rather than stored.
-  assertEquals(step.next.createdByUsername, author);
-  assertEquals(typeof step.next.idea, "string");
+  // The anchor is ours; the neighbour may be anybody's, because another file running beside
+  // this one can insert an idea between two of ours. Only the shape is asserted of it.
+  assertEquals(step.storyIdea.createdByUsername, author);
+  assertEquals(typeof step.next.teaser, "string");
+  assertEquals(typeof step.next.synopsis, "string");
+  assertEquals(typeof step.next.createdByUsername, "string");
   assertEquals(step.next.readerState, null);
 });
 

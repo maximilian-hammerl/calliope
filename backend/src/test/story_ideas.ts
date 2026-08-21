@@ -27,7 +27,8 @@ export const createIdea = (
 ) =>
   request("POST", "/api/story-ideas", cookie, {
     title: "Der Leuchtturm am Ende der Zeit",
-    idea:
+    teaser: "Zwei Wächter, eine See, die es nicht mehr gibt.",
+    synopsis:
       "Zwei Wächter schreiben sich Briefe über eine See, die es nicht mehr gibt.",
     ...values,
   });

@@ -21,9 +21,9 @@ CREATE TABLE public.writing_group
     title            TEXT                            NOT NULL,
     subtitle         TEXT,
 
-    -- What the back cover says. Called blurb rather than description because that is the word
-    -- for it once the thing being described is a story.
-    blurb            TEXT                            NOT NULL,
+    -- What the back cover says, at length. One word for it here and on story_idea, because an
+    -- idea and the group it becomes carry the same text and two names would need a mapping.
+    synopsis         TEXT                            NOT NULL,
 
     visibility       public.writing_group_visibility NOT NULL DEFAULT 'private',
 

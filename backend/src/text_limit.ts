@@ -29,17 +29,20 @@ export const TEXT_LIMIT = {
   messageText: 4_000,
   /** A second line under the title, as a book has one. */
   groupSubtitle: 120,
-  /** A few paragraphs about the story, not the story itself. The back-cover text. */
-  groupBlurb: 2_000,
+  /** The story at length, not the story itself: a treatment, far short of a chapter. */
+  groupSynopsis: 8_000,
   /** One genre, subgenre, trope or content warning. A label, never a sentence. */
   storyTag: 60,
   /** "Vergangenheit, dritte Person" and the like — free text, because stories mix them. */
   narrativeStyle: 60,
   threadTitle: 120,
-  /** Same bounds as the group it may become; the idea itself is a pitch, not the story. */
+  /** Same bounds as the group it may become; an idea is a pitch, not the story. */
   storyIdeaTitle: 120,
   storyIdeaSubtitle: 120,
-  storyIdeaText: 2_000,
+  /** What a board shows: a few sentences that have to stand on their own. */
+  storyIdeaTeaser: 2_000,
+  /** The long version, on the idea's own page. Same bound as the group's, which it becomes. */
+  storyIdeaSynopsis: 8_000,
   /** One free-text line each: what is sought, how one writes, when one can. */
   storyIdeaDetail: 500,
   /** Roughly a long chapter. Posts are long-form prose, so this is deliberately generous. */

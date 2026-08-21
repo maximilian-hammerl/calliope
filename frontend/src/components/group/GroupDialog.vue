@@ -41,7 +41,7 @@ import { Textarea } from '@/components/ui/textarea'
 export type GroupInitialValues = {
   title: string
   subtitle: string | null
-  blurb: string
+  synopsis: string
   genres: string[]
   subgenres: string[]
   tropes: string[]
@@ -134,7 +134,7 @@ watch(open, (isOpen) => {
 
   title.value = source.title
   subtitle.value = source.subtitle ?? ''
-  description.value = source.blurb
+  description.value = source.synopsis
   // An idea has no visibility or status of its own: founding from one starts where a new group
   // starts, and the author decides both before confirming.
   visibility.value = props.group?.visibility ?? 'private'
@@ -160,14 +160,14 @@ async function submit() {
     return
   }
 
-  if (description.value.trim().length > LIMIT.blurb.maxLength) {
-    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.blurb.maxLength)} Zeichen lang sein.`
+  if (description.value.trim().length > LIMIT.synopsis.maxLength) {
+    descriptionError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`
     return
   }
 
   const values = {
     title: title.value.trim(),
-    blurb: description.value.trim(),
+    synopsis: description.value.trim(),
     visibility: visibility.value,
     ...metadataForApi(),
   }

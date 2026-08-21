@@ -131,8 +131,8 @@ async function askIntoGroup() {
             :own="ownMembership"
           />
 
-          <p v-if="group.blurb" class="max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
-            {{ group.blurb }}
+          <p v-if="group.synopsis" class="max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+            {{ group.synopsis }}
           </p>
 
           <p v-if="threads.length === 0" class="mt-7 text-[13.5px] leading-[1.7] text-ink-4">

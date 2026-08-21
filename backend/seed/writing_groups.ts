@@ -34,7 +34,7 @@ export type GroupFixture = {
   id: string;
   title: string;
   subtitle?: string;
-  blurb: string;
+  synopsis: string;
   visibility: WritingGroupVisibility;
   language?: StoryLanguage;
   storyStatus?: WritingGroupStoryStatus;
@@ -114,7 +114,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     id: groupId(1),
     title: "Die unendliche Gliederung",
     subtitle: "Ein Entwurf, der nie aufhört",
-    blurb:
+    synopsis:
       "Öffentlich, und bisher schreibt hier nur eine Person. Genau dafür ist die Gruppe da: " +
       "anfangen, ohne auf jemanden zu warten.",
     visibility: "public",
@@ -148,7 +148,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     title: "Pride and Punctuation",
     subtitle:
       "It is a truth universally acknowledged that a comma changes everything",
-    blurb:
+    synopsis:
       "A public group writing in English. Two of us so far, and we argue about semicolons " +
       "more than about the plot.",
     visibility: "public",
@@ -189,7 +189,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     id: groupId(3),
     title: "Der Zauberzwerg",
     subtitle: "Sieben Jahre auf einem sehr kleinen Berg",
-    blurb:
+    synopsis:
       "Die größte offene Gruppe hier. Zwei Leute verwalten sie, damit nicht alles an einer " +
       "Person hängt, und wer mitlesen will, darf das sofort.",
     visibility: "public",
@@ -277,7 +277,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
   {
     id: groupId(4),
     title: "Wuthering Depths",
-    blurb:
+    synopsis:
       "Öffentlich, und die meisten hier lesen mit statt zu schreiben. Gut zu sehen, was eine " +
       "Leserin darf und was nicht.",
     visibility: "public",
@@ -314,7 +314,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     id: groupId(5),
     title: "Die Leiden des jungen Lektors",
     subtitle: "Was du streichst, gehört jemand anderem",
-    blurb:
+    synopsis:
       "Eine private Gruppe mit allem, was eine Gruppe haben kann: jede Rolle, eine offene " +
       "Einladung, Threads, ein Entwurf und die vollständigen Angaben zur Geschichte.",
     visibility: "private",
@@ -390,7 +390,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     id: groupId(6),
     title: "Effi Briefe",
     subtitle: "Zwei Adressen, ein Streit",
-    blurb: "Privat, zu zweit, und alles läuft über Briefe.",
+    synopsis: "Privat, zu zweit, und alles läuft über Briefe.",
     visibility: "private",
     storyStatus: "writing",
     genres: ["Historisch"],
@@ -431,7 +431,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
   {
     id: groupId(7),
     title: "Der Vorletzte",
-    blurb:
+    synopsis:
       "Privat, eine Person, nichts darin. Der leere Zustand jeder Ansicht ist hier zu sehen, " +
       "ohne erst eine Gruppe anzulegen.",
     visibility: "private",
@@ -442,7 +442,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     id: groupId(8),
     title: "Die Verwandtschaft",
     subtitle: "Eines Morgens war die Familie da",
-    blurb:
+    synopsis:
       "Privat, zwei Verwalterinnen, und die nächsten Schritte sind größtenteils abgehakt.",
     visibility: "private",
     storyStatus: "finished",
@@ -515,7 +515,7 @@ const DISCOVERABLE_GROUPS: GroupFixture[] = DISCOVERABLE_TITLES.map((
 ) => ({
   id: groupId(20 + index),
   title,
-  blurb:
+  synopsis:
     "Öffentlich und noch klein. Steht hier, damit die Entdecken-Seite mehr als eine Seite hat.",
   visibility: "public",
   by: USER.silbenmeer,

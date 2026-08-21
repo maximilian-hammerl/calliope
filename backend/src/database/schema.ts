@@ -80,7 +80,6 @@ export interface StoryIdea {
   createdBy: string;
   genres: Generated<string[]>;
   id: Generated<string>;
-  idea: string;
   language: Generated<StoryLanguage>;
   lookingFor: string | null;
   partySize: StoryIdeaPartySize | null;
@@ -88,6 +87,8 @@ export interface StoryIdea {
   status: Generated<StoryIdeaStatus>;
   subgenres: Generated<string[]>;
   subtitle: string | null;
+  synopsis: string;
+  teaser: string;
   tense: string | null;
   title: string;
   tropes: Generated<string[]>;
@@ -158,7 +159,6 @@ export interface UserToken {
 }
 
 export interface WritingGroup {
-  blurb: string;
   contentWarnings: Generated<string[]>;
   createdAt: Generated<string>;
   createdBy: string | null;
@@ -170,6 +170,7 @@ export interface WritingGroup {
   storyStatus: Generated<WritingGroupStoryStatus>;
   subgenres: Generated<string[]>;
   subtitle: string | null;
+  synopsis: string;
   tense: string | null;
   title: string;
   tropes: Generated<string[]>;
@@ -322,7 +323,8 @@ export const STORY_IDEA_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
   subtitle: z.string().nullable(),
-  idea: z.string(),
+  teaser: z.string(),
+  synopsis: z.string(),
   genres: z.array(z.string()),
   subgenres: z.array(z.string()),
   tropes: z.array(z.string()),
@@ -405,7 +407,7 @@ export const WRITING_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
   subtitle: z.string().nullable(),
-  blurb: z.string(),
+  synopsis: z.string(),
   visibility: WRITING_GROUP_VISIBILITY_SCHEMA,
   storyStatus: WRITING_GROUP_STORY_STATUS_SCHEMA,
   genres: z.array(z.string()),
