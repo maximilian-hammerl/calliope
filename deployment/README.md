@@ -92,6 +92,27 @@ docker compose -f docker-compose.production.yaml up -d --build
 
 Migrations run automatically as part of `up`.
 
+### After a migration was edited rather than added
+
+Pre-release, a schema change edits the migration that created the table (see
+[database/AGENTS.md](../database/AGENTS.md)), and dbmate will not re-run a version it has already
+recorded — so the database has to be rebuilt. **This deletes every row, every account included.**
+
+```bash
+cd /opt/calliope && git pull
+docker compose -f docker-compose.production.yaml stop backend
+docker compose -f docker-compose.production.yaml run --rm migrate drop
+docker compose -f docker-compose.production.yaml run --rm migrate up
+docker compose -f docker-compose.production.yaml up -d --build
+docker compose -f docker-compose.production.yaml run --rm --no-deps backend --seed --force
+```
+
+Two of those steps are not obvious. **Stop the backend first**, or its open connections make
+`drop` fail with "database is being accessed by other users". And **`up`, not `migrate`**: the
+compose service's own command is `migrate`, which does not create a database, and Postgres only
+creates one when its volume is initialised — so after a drop, `up -d` fails with `database
+"calliope" does not exist` and the backend never starts. `dbmate up` creates it and then migrates.
+
 ### After changing only the Caddyfile
 
 `Caddyfile` is bind-mounted and Caddy reads it once, at startup. `up -d` compares the
