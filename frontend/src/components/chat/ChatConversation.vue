@@ -5,13 +5,13 @@ import {
   getListChatsQueryKey,
   useCreateMessage,
   useListChatMemberships,
-  useListMessages,
   useReadChat,
 } from '@/api/chats/chats'
+import { useChatMessages } from '@/composables/useChatMessages'
 import type { ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { listOnlyFilter } from '@/lib/api/queryKeys'
 import ChatInvite from '@/components/chat/ChatInvite.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -22,27 +22,29 @@ const props = defineProps<{ chatGroupId: string; live: ListMessages200ResultsIte
 
 const queryClient = useQueryClient()
 
-const { data, isPending, isError, refetch } = useListMessages(() => props.chatGroupId, {
-  limit: 50,
-})
+const { fetched, hasLoaded, isPending, isError, hasOlder, isLoadingOlder, loadOlder, refetch } =
+  useChatMessages(() => props.chatGroupId)
 
 /**
- * Oldest at the bottom. The API returns newest first — that is what a cursor pages back
- * through — so the list is reversed for reading, and anything the stream delivered since the
- * fetch is appended after it.
+ * Messages the reader sent themselves. The send response carries the message and the stream
+ * deliberately leaves the sender out, so this is where their own line comes from — and it is
+ * why sending does not refetch: with pages loaded, a refetch would refire every one of them.
+ */
+const justSent = ref<ListMessages200ResultsItem[]>([])
+
+/**
+ * Oldest at the bottom, from three sources: the pages fetched, what the stream delivered, and
+ * what this reader sent. Ids are uuidv7 and therefore time-ordered, so one sort puts them in
+ * reading order without trusting the order they arrived in; the map is what de-duplicates a
+ * message that reached the list twice.
  */
 const messages = computed<ListMessages200ResultsItem[]>(() => {
-  const fetched = data.value?.status === 200 ? [...data.value.data.results].reverse() : []
-  const known = new Set(fetched.map((message) => message.id))
-  return [...fetched, ...props.live.filter((message) => !known.has(message.id))]
+  const byId = new Map<string, ListMessages200ResultsItem>()
+  for (const message of [...fetched.value, ...props.live, ...justSent.value]) {
+    byId.set(message.id, message)
+  }
+  return [...byId.values()].sort((one, other) => one.id.localeCompare(other.id))
 })
-
-/**
- * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
- * an outage leaves the conversation on screen rather than replacing it with an error, and
- * "nothing written yet" is only said when a load actually came back empty.
- */
-const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
 const { data: membersData } = useListChatMemberships(() => props.chatGroupId, { limit: 50 })
 
@@ -80,6 +82,24 @@ async function scrollToLatest() {
 }
 
 /**
+ * Prepending older messages would otherwise leave `scrollTop` where it was, which is a
+ * different place in a taller list: the conversation appears to jump. Growing the offset by
+ * exactly how much taller it became keeps the line somebody was reading under their eyes.
+ */
+async function loadOlderKeepingPlace() {
+  const element = scroller.value
+  const heightBefore = element?.scrollHeight ?? 0
+  const offsetBefore = element?.scrollTop ?? 0
+
+  await loadOlder()
+  await nextTick()
+
+  if (element !== null) {
+    element.scrollTop = offsetBefore + (element.scrollHeight - heightBefore)
+  }
+}
+
+/**
  * The id of the newest message, which is what "something arrived" actually means here.
  *
  * Watching `messages` instead looks equivalent and is not: it is a computed array, and the
@@ -96,7 +116,8 @@ watch(
   async () => {
     await scrollToLatest()
     await markRead({ chatId: props.chatGroupId }).catch(() => undefined)
-    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListChatsQueryKey()) })
+    // The list only: its prefix also matches this conversation's own pages.
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
   },
   { immediate: true },
 )
@@ -108,6 +129,8 @@ watch(
   () => {
     text.value = ''
     sendError.value = undefined
+    // Another conversation's sends are not this one's; the query key changes with the id.
+    justSent.value = []
     void refetch()
   },
 )
@@ -120,7 +143,10 @@ async function submit() {
 
   sendError.value = undefined
   try {
-    await sendMessage({ chatId: props.chatGroupId, data: { text: written } })
+    const sent = await sendMessage({ chatId: props.chatGroupId, data: { text: written } })
+    if (sent.status === 201) {
+      justSent.value = [...justSent.value, sent.data]
+    }
   } catch {
     sendError.value = 'Die Nachricht wurde nicht gesendet. Versuche es noch einmal.'
     return
@@ -128,7 +154,6 @@ async function submit() {
 
   // Cleared only once it is really sent, so nothing anybody wrote is lost.
   text.value = ''
-  await refetch()
   await scrollToLatest()
 }
 </script>
@@ -145,6 +170,16 @@ async function submit() {
     </div>
 
     <div ref="scroller" class="min-h-0 flex-1 overflow-y-auto pr-1">
+      <!-- A button rather than a scroll trigger: this list also moves when a message arrives
+           and when one is sent, and a load fired by scrolling into those movements is how the
+           earlier watcher loop happened. -->
+      <div v-if="hasOlder" class="mb-[14px] flex justify-center">
+        <Button variant="ghost" size="sm" :disabled="isLoadingOlder" @click="loadOlderKeepingPlace">
+          <Spinner v-if="isLoadingOlder" data-icon="inline-start" />
+          Ältere Nachrichten
+        </Button>
+      </div>
+
       <p
         v-if="hasLoaded && messages.length === 0"
         class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"

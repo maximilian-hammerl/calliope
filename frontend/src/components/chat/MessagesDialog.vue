@@ -111,7 +111,11 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex min-h-[420px] gap-4">
+      <!-- A fixed height, not a minimum: the message list scrolls inside this row, and with a
+           minimum the row grew with the conversation instead — the dialog ran off the bottom of
+           the screen and took the composer with it, which only showed once a page held 50
+           messages. Capped by viewport too, so a short screen still gets a usable pane. -->
+      <div class="flex h-[min(70svh,560px)] gap-4">
         <!-- One pane at a time below md, both side by side above it. -->
         <div
           class="flex w-full flex-none flex-col gap-1 md:w-[220px] md:border-r md:border-line-3 md:pr-3"

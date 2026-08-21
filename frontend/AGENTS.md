@@ -89,6 +89,21 @@ const group = computed<GetGroup200 | undefined>(() =>
 )
 ```
 
+**A list's key is a prefix of everything nested under it.** Orval builds keys from the URL's
+segments, so `['QUERY','api','chats']` — what `listKeyPrefix` produces for the chat list — also
+matches `['QUERY','api','chats',id,'messages',body]`. Invalidating the list therefore refetched
+whichever conversation was open, which was one wasted request while messages fetched a single
+page and one *per page* once they paged. `listOnlyFilter` in `lib/api/queryKeys.ts` adds the
+length check that separates a list from its children. The same shape exists for groups
+(threads, memberships, steps, posts sit under the groups key); those call sites still use the
+prefix, where the cost is a stray refetch rather than a growing one.
+
+**Cursor-paged endpoints are hand-written composables.** Orval's `useInfinite` substitutes a
+query *parameter*, and these endpoints carry paging in a JSON body, so
+`composables/useChatMessages.ts` calls the generated `listMessages` function from a
+`useInfiniteQuery` of its own. It still keys off `getListMessagesQueryKey`, so invalidation
+written against the generated key reaches it.
+
 ## Sessions and routing
 
 The session cookie is `httpOnly`, so `GET /api/auth/me` is the only way to know whether this
