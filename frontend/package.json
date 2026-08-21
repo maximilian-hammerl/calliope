@@ -34,7 +34,7 @@
   "devDependencies": {
     "@tsconfig/node24": "24.0.5",
     "@types/jsdom": "30.0.0",
-    "@types/node": "24.13.3",
+    "@types/node": "26.2.0",
     "@vitejs/plugin-vue": "6.0.8",
     "@vue/test-utils": "2.4.11",
     "@vue/tsconfig": "0.9.1",
