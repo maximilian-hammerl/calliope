@@ -6,10 +6,12 @@ defineEmits<{ click: [] }>()
 
 <template>
   <!-- Both rails collapse to the identical 34px strip, and the strip is the affordance to
-       reopen. The chevron points where the rail will go. -->
+       reopen. The chevron points where the rail will go, and sits above the label at the top
+       of the strip: a button centres its own content, which put the two side by side in a
+       34px column. -->
   <button
     type="button"
-    class="w-[34px] flex-none flex-col items-center gap-[14px] bg-paper-edge pt-4 text-ink-label"
+    class="flex w-[34px] flex-none flex-col items-center gap-[14px] bg-paper-edge pt-4 text-ink-label"
     :class="side === 'left' ? 'border-r border-line-3' : 'border-l border-line-3'"
     :title="`${label} einblenden`"
     @click="$emit('click')"
