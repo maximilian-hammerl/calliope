@@ -64,7 +64,8 @@ const isInvited = computed<boolean>(() => group.value?.status === 'invited')
 const role = computed<GetGroup200['role']>(() =>
   group.value?.status === 'joined' ? group.value.role : null,
 )
-// Readers may read and comment; writing is for writers and administrators.
+// Writing is for writers and administrators. A reader may only read: giving them a way to
+// say something is #38.
 const mayWrite = computed<boolean>(() => role.value === 'writer' || role.value === 'administrator')
 const mayAdminister = computed<boolean>(() => role.value === 'administrator')
 

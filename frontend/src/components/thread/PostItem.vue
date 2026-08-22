@@ -32,19 +32,5 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
         {{ paragraph }}
       </p>
     </div>
-
-    <!-- Placeholders: replying, quoting, bookmarking and annotations have no backend yet. -->
-    <div class="mt-[14px] flex items-center gap-4 text-[12px] text-ink-5">
-      <button
-        v-for="action in ['Antworten', 'Zitieren', 'Merken']"
-        :key="action"
-        type="button"
-        disabled
-        class="disabled:opacity-50"
-        title="Noch nicht verfügbar"
-      >
-        {{ action }}
-      </button>
-    </div>
   </article>
 </template>

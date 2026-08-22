@@ -122,13 +122,13 @@ These are decisions, not omissions, and each is recorded where it was made:
   content. The story status and the next-steps checklist are real — steps are added inline, ticked off recording who completed them,
   and completed ones keep forever under a done-items disclosure ("Erledigt (N)") unless
   deleted by hand.
-- Replying, quoting and bookmarking a post ("Antworten", "Zitieren", "Merken") are inert
-  (#35, #36, #37); writing an annotation ("Anmerkung schreiben"),
-  which the design system lists as core copy, does not appear at all. The thread's **post
-  filter** ("Alle Beiträge ▾") is gone from the interface for the same reason: its two real
-  options are bookmarked and annotated posts, so it cannot filter anything until those exist (#38). The
-  design-system prototype keeps the specification, including the finding that it is one menu
-  rather than a row of chips.
+- A post carries **no actions at all**. Quoting (#36), bookmarking (#37) and annotations (#38)
+  are specified in the design system's copy and not built, and the disabled buttons that stood
+  in for them are gone: a control that has never worked teaches a reader to stop looking. The
+  thread's **post filter** ("Alle Beiträge ▾") went earlier for the same reason — its only real
+  options are bookmarked and annotated posts. The design-system prototype keeps the
+  specification for all of them, including the finding that the filter is one menu rather than
+  a row of chips.
 
 ## Correctly absent
 
