@@ -95,8 +95,8 @@ These are decisions, not omissions, and each is recorded where it was made:
   invitations already outstanding are withdrawn.
 - **Search covers groups, threads and members, not posts.** Post search needs snippet
   extraction and an index before it is honest.
-- **Rich text is not merged.** A Tiptap editor sits on the `text-editor` branch because a
-  requirement for a raw-HTML toggle arrived after it was built and has not been resolved.
+- **The composer is plain text.** Blank lines become paragraphs and nothing else is marked up.
+  Formatting is #44, where whether a member ever works in markup directly is still open.
 - **A 401 means "no session" unless a mutation is on a list.** `EXPECTED_401_MUTATIONS` in
   `lib/api/queryClient.ts` names the operations whose 401 is an *answer* — signing in, and the
   three that re-authenticate with the current password. Anything not on it is treated as a
