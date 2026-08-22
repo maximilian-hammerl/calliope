@@ -15,7 +15,8 @@ import {
 } from '@/api/auth/auth'
 import type { ListSessions200ResultsItem } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
-import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
+import { formatActivityTime } from '@/lib/format/formatTime'
+import { pluralize } from '@/lib/format/formatText'
 import { sessionDevice } from '@/lib/format/sessionDevice'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -81,7 +82,7 @@ async function endEverywhereElse() {
       <p class="text-[13px] leading-[1.6] text-ink-5">
         <template v-if="others === 0">Du bist nur hier angemeldet.</template>
         <template v-else>
-          Neben dieser gibt es {{ countLabel(others, 'weitere Anmeldung', 'weitere Anmeldungen') }}.
+          Neben dieser gibt es {{ pluralize(others, 'weitere Anmeldung', 'weitere Anmeldungen') }}.
         </template>
       </p>
 

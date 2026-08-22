@@ -60,8 +60,3 @@ export function formatActivityTime(isoTimestamp: string, now: Date = new Date())
 export function formatJoinedDate(isoTimestamp: string): string {
   return MONTH_AND_YEAR.format(new Date(isoTimestamp))
 }
-
-/** "14 Beiträge", "1 Beitrag" — the design system requires a noun beside every number. */
-export function countLabel(count: number, singular: string, plural: string): string {
-  return `${count} ${count === 1 ? singular : plural}`
-}

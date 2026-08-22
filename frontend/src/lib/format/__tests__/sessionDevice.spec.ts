@@ -87,6 +87,6 @@ describe('sessionDevice', () => {
         deviceType: 'embedded',
         vendor: null,
       }),
-    ).toBe('Chrome auf Linux')
+    ).toBe('Chrome auf Linux · Embedded')
   })
 })

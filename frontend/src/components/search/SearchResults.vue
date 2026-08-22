@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import type { Search200 } from '@/api/models'
-import { countLabel } from '@/lib/format/formatTime'
+import { pluralize } from '@/lib/format/formatText'
 import { cn } from '@/lib/utils'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
@@ -114,7 +114,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
           class="px-[14px] pt-[2px] pb-[9px] text-[11.5px] text-ink-6"
         >
           {{
-            countLabel(
+            pluralize(
               remaining(entry.section.results.length, entry.section.totalResults),
               'weiterer Treffer',
               'weitere Treffer',

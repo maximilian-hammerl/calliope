@@ -1,5 +1,6 @@
 /** Names a session's device out of the parts the API sends, since the German belongs here. */
 import type { ListSessions200ResultsItem } from '@/api/models'
+import { capitalize } from '@/lib/format/formatText.ts'
 
 /** A kind with no word here is left off rather than guessed at. */
 const DEVICE_TYPE_WORD: Record<string, string | undefined> = {
@@ -31,7 +32,7 @@ function sessionDeviceKind(session: SessionDevice): string | null {
   if (!session.deviceType) {
     return null
   }
-  return DEVICE_TYPE_WORD[session.deviceType] ?? session.deviceType
+  return DEVICE_TYPE_WORD[session.deviceType] ?? capitalize(session.deviceType)
 }
 
 export function sessionDevice(session: SessionDevice): string {
@@ -39,7 +40,7 @@ export function sessionDevice(session: SessionDevice): string {
 
   // The brand carries the recognition: "iOS" says nothing to a member who knows Apple. It is
   // the one part the parser never fills with a placeholder, so it can be shown as it comes.
-  const device = [session.vendor, sessionDeviceKind(session)].filter(Boolean).join('')
+  const device = [session.vendor, sessionDeviceKind(session)].filter(Boolean).join(' ')
 
   if (platform) {
     if (device) {

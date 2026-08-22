@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countLabel, formatActivityTime } from '../formatTime'
+import { formatActivityTime } from '../formatTime'
 
 const now = new Date('2026-08-17T12:00:00Z')
 const ago = (milliseconds: number) => new Date(now.getTime() - milliseconds).toISOString()
@@ -31,13 +31,5 @@ describe('formatActivityTime', () => {
     expect(formatActivityTime(new Date(now.getTime() + 3000).toISOString(), now)).toBe(
       'gerade eben',
     )
-  })
-})
-
-describe('countLabel', () => {
-  it('gives every number a noun', () => {
-    expect(countLabel(14, 'Beitrag', 'Beiträge')).toBe('14 Beiträge')
-    expect(countLabel(1, 'Beitrag', 'Beiträge')).toBe('1 Beitrag')
-    expect(countLabel(0, 'Beitrag', 'Beiträge')).toBe('0 Beiträge')
   })
 })

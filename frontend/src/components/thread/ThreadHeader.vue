@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
+import { formatActivityTime } from '@/lib/format/formatTime'
+import { pluralize } from '@/lib/format/formatText'
 
 const props = defineProps<{
   title: string
@@ -11,7 +12,7 @@ const props = defineProps<{
 // Numbers always carry a noun: a bare badge number was tested and misread.
 const meta = computed<string>(() =>
   [
-    props.postCount === undefined ? undefined : countLabel(props.postCount, 'Beitrag', 'Beiträge'),
+    props.postCount === undefined ? undefined : pluralize(props.postCount, 'Beitrag', 'Beiträge'),
     props.lastActivityAt === undefined
       ? undefined
       : `zuletzt ${formatActivityTime(props.lastActivityAt)}`,

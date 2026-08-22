@@ -16,7 +16,7 @@ import { TEXT_LIMIT } from '@/api/textLimit'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { countLabel } from '@/lib/format/formatTime'
+import { pluralize } from '@/lib/format/formatText'
 
 const LIMIT = TEXT_LIMIT.listGroups.search
 
@@ -112,7 +112,7 @@ const creating = ref<boolean>(false)
           <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-[10px]">
             <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
             <span class="text-[11.5px] text-ink-5">
-              {{ countLabel(invitations.length, 'Einladung', 'Einladungen') }}
+              {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}
             </span>
           </div>
 

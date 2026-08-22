@@ -4,7 +4,7 @@ import { watchDebounced } from '@vueuse/core'
 import { useListUsers } from '@/api/users/users'
 import type { ListUsers200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { countLabel } from '@/lib/format/formatTime'
+import { pluralize } from '@/lib/format/formatText'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
 import ListPagination from '@/components/common/ListPagination.vue'
@@ -99,7 +99,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
         <template v-else-if="hasLoaded">
           <p class="mb-1 text-[11.5px] text-ink-5">
-            {{ countLabel(totalResults ?? 0, 'Mitglied', 'Mitglieder') }}
+            {{ pluralize(totalResults ?? 0, 'Mitglied', 'Mitglieder') }}
           </p>
 
           <ul>

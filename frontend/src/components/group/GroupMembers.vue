@@ -5,7 +5,8 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getListMembershipsQueryKey, useRemoveMember } from '@/api/memberships/memberships'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import type { ListMemberships200ResultsItem } from '@/api/models'
-import { countLabel, formatActivityTime } from '@/lib/format/formatTime'
+import { formatActivityTime } from '@/lib/format/formatTime'
+import { pluralize } from '@/lib/format/formatText'
 import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import UserAvatar from '@/components/user/UserAvatar.vue'
@@ -101,7 +102,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
     <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-[10px]">
       <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Mitglieder</h2>
       <span class="text-[11.5px] text-ink-5">
-        {{ countLabel(joinedCount, 'Mitglied', 'Mitglieder') }}
+        {{ pluralize(joinedCount, 'Mitglied', 'Mitglieder') }}
       </span>
       <Button
         v-if="mayAdminister"

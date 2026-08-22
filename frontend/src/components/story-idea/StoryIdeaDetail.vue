@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { GetStoryIdea200 } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { paragraphs } from '@/lib/format/paragraphs'
+import { paragraphs } from '@/lib/format/formatText'
 import { tagLine } from '@/lib/format/storyTags'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
