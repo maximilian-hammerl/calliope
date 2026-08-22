@@ -145,3 +145,12 @@ volumes:
   caddy-data:
   caddy-config:
   frontend-node-modules:
+
+# Declared only to carry IPv6. Without it an IPv6 client has no DNAT path to an IPv4-only
+# container, so `docker-proxy` bridges the connection and every request arrives from the bridge
+# gateway — which the rate limiter then treats as one member, and a session records instead of
+# the real address. Measured: over IPv4 the backend saw the true client, over IPv6 it saw
+# 172.18.0.1.
+networks:
+  default:
+    enable_ipv6: true

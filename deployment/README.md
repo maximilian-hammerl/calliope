@@ -113,6 +113,25 @@ compose service's own command is `migrate`, which does not create a database, an
 creates one when its volume is initialised — so after a drop, `up -d` fails with `database
 "calliope" does not exist` and the backend never starts. `dbmate up` creates it and then migrates.
 
+### After changing a network option
+
+Compose has to delete and recreate the network, which stops every container attached to it —
+but it *starts* them again rather than recreating them, and a container that outlived its
+network keeps stale DNS: `migrate` failed with `lookup db on 127.0.0.11:53: no such host`, so
+the backend never started and the site was down until the containers were replaced.
+
+```bash
+docker compose -f docker-compose.production.yaml up -d --force-recreate
+```
+
+### The client's address only survives over IPv4 by default
+
+`docker-proxy` bridges an IPv6 connection to an IPv4-only container, which necessarily rewrites
+the source — so the backend saw the bridge gateway (`172.18.0.1`) for every IPv6 request, and
+the rate limiter bucketed the whole platform together. Measured both ways: over IPv4 the
+backend saw the true client, over IPv6 it did not. `enable_ipv6: true` on the default network
+gives IPv6 a DNAT path of its own and both families now arrive intact.
+
 ### After changing only the Caddyfile
 
 `Caddyfile` is bind-mounted and Caddy reads it once, at startup. `up -d` compares the
