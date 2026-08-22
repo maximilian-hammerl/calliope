@@ -166,7 +166,7 @@ Deno.test("POST /api/groups/{id}/conversations answers 409 when nobody administe
   // The founder leaves; the writer keeps the group alive but cannot invite anyone.
   const leaving = await request(
     "DELETE",
-    `/api/groups/${group.id}/memberships/me/leave`,
+    `/api/groups/${group.id}/memberships/${await getUserId(founder)}`,
     cookie,
   );
   assertEquals(leaving.status, STATUS_CODE.OK);

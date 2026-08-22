@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
-import { useInvitationResponse } from '@/composables/useInvitationResponse'
+import { useOwnMembership } from '@/composables/useOwnMembership'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,7 @@ import GroupRow from '@/components/group/GroupRow.vue'
  */
 const props = defineProps<{ group: ListGroups200ResultsItem }>()
 
-const { accept, decline, isAccepting, isDeclining, isBusy, error } = useInvitationResponse(
+const { accept, decline, isAccepting, isDeclining, isBusy, error } = useOwnMembership(
   () => props.group.id,
 )
 

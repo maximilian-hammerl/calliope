@@ -2,7 +2,7 @@
 import { computed, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ListMemberships200ResultsItem } from '@/api/models'
-import { useInvitationResponse } from '@/composables/useInvitationResponse'
+import { useOwnMembership } from '@/composables/useOwnMembership'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -41,7 +41,7 @@ const sentence = computed<string>(() => {
   return `${opening}${time}. ${ROLE_CLAUSE[props.role]}`
 })
 
-const { accept, decline, isAccepting, isDeclining, isBusy, error } = useInvitationResponse(
+const { accept, decline, isAccepting, isDeclining, isBusy, error } = useOwnMembership(
   toRef(props, 'groupId'),
 )
 

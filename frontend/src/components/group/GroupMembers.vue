@@ -10,10 +10,12 @@ import {
 import { getGetGroupQueryKey } from '@/api/groups/groups'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import type { ListMemberships200ResultsItem, UpdateMembershipBodyRole } from '@/api/models'
+import { useOwnMembership } from '@/composables/useOwnMembership'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { pluralize } from '@/lib/format/formatText'
 import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
 import LastAdministratorDialog from '@/components/group/LastAdministratorDialog.vue'
+import LeaveGroupDialog from '@/components/group/LeaveGroupDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Button } from '@/components/ui/button'
@@ -156,6 +158,34 @@ async function applyRole(
   }
 }
 
+const { leave, isBusy, error: leaveError } = useOwnMembership(() => props.groupId)
+const emit = defineEmits<{ left: [] }>()
+
+/** What leaving costs, which is only irreversible for the last member. */
+const leavingDeletesTheGroup = computed<boolean>(() => props.memberships.length === 1)
+const leavingLeavesNobodyAdministering = computed<boolean>(() => {
+  const own = props.memberships.find((membership) => membership.userId === currentUserId.value)
+  return (
+    own?.status === 'joined' &&
+    own.role === 'administrator' &&
+    joinedAdministrators.value === 1 &&
+    props.memberships.length > 1
+  )
+})
+
+const askingToLeave = ref<boolean>(false)
+
+function askToLeave() {
+  askingToLeave.value = true
+}
+
+async function confirmLeave() {
+  if (await leave()) {
+    askingToLeave.value = false
+    emit('left')
+  }
+}
+
 function changeRole(membership: ListMemberships200ResultsItem, role: UpdateMembershipBodyRole) {
   if (role === membership.role) {
     return
@@ -203,8 +233,13 @@ async function remove(membership: ListMemberships200ResultsItem) {
       </Button>
     </div>
 
-    <Alert v-if="removalError ?? roleError" variant="destructive" role="alert" class="mt-4">
-      <AlertDescription>{{ removalError ?? roleError }}</AlertDescription>
+    <Alert
+      v-if="removalError ?? roleError ?? leaveError"
+      variant="destructive"
+      role="alert"
+      class="mt-4"
+    >
+      <AlertDescription>{{ removalError ?? roleError ?? leaveError }}</AlertDescription>
     </Alert>
 
     <ul>
@@ -243,6 +278,19 @@ async function remove(membership: ListMemberships200ResultsItem) {
           </span>
         </RouterLink>
 
+        <!-- Whoever cannot administer still leaves from their own row: it is the one row on
+             this page that is about the reader. -->
+        <Button
+          v-if="!mayAdminister && membership.userId === currentUserId"
+          variant="ghost"
+          size="sm"
+          class="ml-auto shrink-0 text-ink-5"
+          :disabled="isBusy"
+          @click="askToLeave"
+        >
+          Gruppe verlassen
+        </Button>
+
         <!-- One trailing block, so the selects line up in a column: the action beside them runs
              from "Entfernen" to "Einladung zurückziehen", and left to itself that dragged every
              select to a different place. -->
@@ -269,11 +317,21 @@ async function remove(membership: ListMemberships200ResultsItem) {
             </SelectContent>
           </Select>
 
-          <!-- Empty on the viewer's own row: leaving is the member's own act and lives
-               elsewhere. The width is the longest action's, so the column holds either way. -->
+          <!-- The width is the longest action's, so the column holds whichever action a row
+               carries. -->
           <div class="flex w-[178px] justify-end">
             <Button
-              v-if="membership.userId !== currentUserId"
+              v-if="membership.userId === currentUserId"
+              variant="ghost"
+              size="sm"
+              class="text-ink-5"
+              :disabled="isBusy"
+              @click="askToLeave"
+            >
+              Gruppe verlassen
+            </Button>
+            <Button
+              v-else
               variant="ghost"
               size="sm"
               class="text-ink-5"
@@ -289,6 +347,14 @@ async function remove(membership: ListMemberships200ResultsItem) {
   </section>
 
   <InviteMemberDialog v-model:open="inviting" :group-id="groupId" :member-ids="memberIds" />
+
+  <LeaveGroupDialog
+    v-model:open="askingToLeave"
+    :pending="isBusy"
+    :deletes-the-group="leavingDeletesTheGroup"
+    :leaves-nobody-administering="leavingLeavesNobodyAdministering"
+    @confirmed="confirmLeave"
+  />
 
   <LastAdministratorDialog
     :open="pendingRoleChange !== undefined"

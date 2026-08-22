@@ -81,6 +81,11 @@ function goToGroups() {
 }
 
 const creatingThread = ref<boolean>(false)
+/** A private group answers 404 to a non-member, so staying here would show an error. */
+function leaveGroupPage() {
+  void router.push({ name: 'groups' })
+}
+
 const editingGroup = ref<boolean>(false)
 
 /** A visitor: somebody reading a public group they are in no relation to. */
@@ -185,6 +190,7 @@ async function askIntoGroup() {
             :group-id="groupId"
             :memberships="memberships"
             :may-administer="mayAdminister"
+            @left="leaveGroupPage"
           />
         </div>
       </div>

@@ -250,6 +250,15 @@ page and its badge, and the action it can no longer take is **disabled rather th
 hiding it leaves a member wondering where it went, where a disabled control with a reason
 tells them the owner has finished with it.
 
+**A member leaves from their own row.** The members list is the one place on a group's page
+that is about the reader, and the row that already carries „Entfernen" for everybody else
+carries „Gruppe verlassen" for them. The confirmation says what leaving actually costs, which
+is not the same sentence every time: ordinarily what you wrote stays and only a fresh
+invitation brings you back; as the sole administrator it says nobody will be able to invite,
+change a role or edit afterwards; and as the **last member** it is the one irreversible case —
+the group and everything written in it go with you, so that variant alone takes the destructive
+button.
+
 **A role is edited where it is read.** Each row of the members list carries a select showing
 that member's role, saving on change rather than behind a save button — the same shape as the
 story status in the rail. The trailing controls sit in one block with the longest action's width

@@ -26,9 +26,9 @@ export default new OpenAPIHono().openapi(
     method: "delete",
     path: "/",
     tags: [MEMBERSHIPS_TAG],
-    summary: "Remove a member from a group the current user administers",
+    summary: "Leave a group, or remove a member the current user administers",
     description:
-      "Removes a member or a pending invitation. Removing the last remaining member deletes the group along with it.",
+      "Removes a membership or a pending invitation: one's own, which also declines an invitation, or anybody's for an administrator of the group. Removing the last remaining member deletes the group along with it.",
     operationId: "removeMember",
     middleware: requireSession,
     request: { params: MEMBERSHIP_PARAMS },
@@ -42,7 +42,8 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.Forbidden]: {
-        description: "The user is not an administrator of the group",
+        description:
+          "Not the current user's own membership, and not an administrator",
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.NotFound]: {
@@ -65,12 +66,17 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
+    // The shape `mayModify` gives posts, threads and steps: an administrator of the group, or
+    // whoever the thing belongs to. Here that is the member whose own membership it is, which
+    // is how leaving and declining an invitation are reached.
+    const isOwnMembership = userId === user.id;
     if (
+      !isOwnMembership &&
       await WritingGroupService.selectRoleForUser(user, groupId) !==
         "administrator"
     ) {
       return c.json(
-        { error: "Only administrators can remove a member" },
+        { error: "Only administrators can remove another member" },
         STATUS_CODE.Forbidden,
       );
     }

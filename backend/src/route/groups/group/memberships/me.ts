@@ -1,8 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import acceptInvitation from "./me/accept_invitation.ts";
-import leaveGroup from "./me/leave_group.ts";
 
-// Mounted by memberships.ts at /me.
-export default new OpenAPIHono()
-  .route("/accept", acceptInvitation)
-  .route("/leave", leaveGroup);
+// Mounted by memberships.ts at /me. Accepting stays addressed as `me` because nobody can accept
+// an invitation on another member's behalf; leaving moved to DELETE …/memberships/{userId},
+// which already had to answer for an administrator removing somebody.
+export default new OpenAPIHono().route("/accept", acceptInvitation);
