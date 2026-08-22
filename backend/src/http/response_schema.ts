@@ -8,6 +8,7 @@ import {
   USER_IN_CHAT_GROUP_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
   USER_SCHEMA,
+  USER_SESSION_SCHEMA,
   WRITING_GROUP_NEXT_STEP_SCHEMA,
   WRITING_GROUP_SCHEMA,
   WRITING_POST_SCHEMA,
@@ -83,6 +84,28 @@ export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA
   });
 
 export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
+
+/**
+ * One of a member's own sessions. `lastUsedAt` is derived rather than stored: every request
+ * within the refresh interval pushes `expires_at` to now plus the lifetime, so subtracting the
+ * lifetime gives the last use to within that interval.
+ *
+ * `device` is a coarse label and `ipAddress` the address the session was opened from. Both are
+ * only ever shown to the member they belong to.
+ */
+export const SESSION_RESPONSE = z.object({
+  id: USER_SESSION_SCHEMA.shape.id,
+  // The stored user agent, parsed. Any part is null for a client the parser cannot read.
+  browser: z.string().nullable(),
+  operatingSystem: z.string().nullable(),
+  deviceType: z.string().nullable(),
+  vendor: z.string().nullable(),
+  ipAddress: USER_SESSION_SCHEMA.shape.ipAddress,
+  createdAt: USER_SESSION_SCHEMA.shape.createdAt,
+  lastUsedAt: z.string(),
+  /** The one asking. It is the only session a member can be sure about. */
+  current: z.boolean(),
+});
 
 /** The author's name joined on, never null: an idea cannot outlive its author (CASCADE). */
 export const STORY_IDEA_RESPONSE = STORY_IDEA_SCHEMA.extend({

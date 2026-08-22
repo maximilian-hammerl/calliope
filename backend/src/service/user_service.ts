@@ -2,6 +2,7 @@ import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import { hashPassword, verifyPassword } from "@/src/util/password.ts";
 import { generateToken, hashToken } from "@/src/util/token.ts";
+import type { SessionProvenance } from "@/src/util/session_provenance.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -110,6 +111,7 @@ async function selectUser(
 
 async function insertSessionForUser(
   user: User,
+  provenance: SessionProvenance,
 ): Promise<UserSession> {
   const sessionToken = generateToken();
 
@@ -119,6 +121,8 @@ async function insertSessionForUser(
       userId: user.id,
       hashedToken: await hashToken(sessionToken),
       expiresAt: Temporal.Now.instant().add(SESSION_LIFETIME).toString(),
+      userAgent: provenance.userAgent,
+      ipAddress: provenance.ipAddress,
     })
     .returning(["id"])
     .executeTakeFirstOrThrow();
@@ -185,6 +189,57 @@ async function deleteSession(userSession: UserSession): Promise<boolean> {
 }
 
 /**
+ * Every session of one member that is still alive, newest first.
+ *
+ * `expiresAt` is filtered here rather than trusted: expiry is checked in application code when
+ * a session is read, and the rows themselves linger until the hourly sweep — so a list built
+ * without this would report sessions that are already dead.
+ *
+ * Last use is not stored. It is `expiresAt` minus the lifetime, because every request within
+ * the refresh interval pushes expiry back to now plus the lifetime.
+ */
+async function selectSessionsForUser(userId: string) {
+  return await db
+    .selectFrom("userSession")
+    .select(["id", "userAgent", "ipAddress", "createdAt", "expiresAt"])
+    .where("userId", "=", userId)
+    .where("expiresAt", ">", Temporal.Now.instant().toString())
+    .orderBy("createdAt", "desc")
+    .execute();
+}
+
+/** The panic button: everything but the session asking. */
+async function deleteOtherSessions(
+  userId: string,
+  currentSessionId: string,
+): Promise<number> {
+  const result = await db
+    .deleteFrom("userSession")
+    .where("userId", "=", userId)
+    .where("id", "!=", currentSessionId)
+    .executeTakeFirst();
+
+  return Number(result.numDeletedRows);
+}
+
+/**
+ * One session, by id. Scoped to the member so an id alone is not enough to end somebody
+ * else's — the same reason `deleteSession` also matches on the token.
+ */
+async function deleteSessionForUser(
+  userId: string,
+  sessionId: string,
+): Promise<boolean> {
+  const result = await db
+    .deleteFrom("userSession")
+    .where("userId", "=", userId)
+    .where("id", "=", sessionId)
+    .executeTakeFirst();
+
+  return result.numDeletedRows > 0n;
+}
+
+/**
  * Expired sessions are only filtered out when they are read, so nothing ever removes
  * them from the table on its own.
  */
@@ -242,6 +297,9 @@ export const UserService = {
   selectUserProfile,
   selectUser,
   insertSessionForUser,
+  selectSessionsForUser,
+  deleteOtherSessions,
+  deleteSessionForUser,
   selectUserForSession,
   deleteSession,
   deleteExpiredSessions,

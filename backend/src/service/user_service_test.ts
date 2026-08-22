@@ -48,6 +48,7 @@ Deno.test("Verify token for user", async () => {
 
   const sessionToken = await UserService.insertSessionForUser(
     registeredUser,
+    { userAgent: undefined, ipAddress: undefined },
   );
   assertExists(sessionToken);
 
@@ -65,7 +66,10 @@ Deno.test("Delete session with the matching token", async () => {
   );
   assertExists(registeredUser);
 
-  const userSession = await UserService.insertSessionForUser(registeredUser);
+  const userSession = await UserService.insertSessionForUser(registeredUser, {
+    userAgent: undefined,
+    ipAddress: undefined,
+  });
 
   assertEquals(await UserService.deleteSession(userSession), true);
   assertEquals(await UserService.selectUserForSession(userSession), undefined);
@@ -79,7 +83,10 @@ Deno.test("Keep session when the token does not match", async () => {
   );
   assertExists(registeredUser);
 
-  const userSession = await UserService.insertSessionForUser(registeredUser);
+  const userSession = await UserService.insertSessionForUser(registeredUser, {
+    userAgent: undefined,
+    ipAddress: undefined,
+  });
 
   // Knowing the session id must not be enough to end somebody else's session.
   const forged = { id: userSession.id, token: crypto.randomUUID() };

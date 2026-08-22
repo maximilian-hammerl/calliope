@@ -3,6 +3,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
+import { sessionProvenance } from "@/src/util/session_provenance.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -54,7 +55,10 @@ export default new OpenAPIHono().openapi(
       return c.json(INVALID_CREDENTIALS_BODY, STATUS_CODE.Unauthorized);
     }
 
-    const sessionToken = await UserService.insertSessionForUser(user);
+    const sessionToken = await UserService.insertSessionForUser(
+      user,
+      sessionProvenance(c),
+    );
     SessionCookieService.setUserSession(c, sessionToken);
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);

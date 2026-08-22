@@ -24,6 +24,7 @@ import DeleteAccountSection from '@/components/settings/DeleteAccountSection.vue
 import EmailAddressSection from '@/components/settings/EmailAddressSection.vue'
 import PasswordSection from '@/components/settings/PasswordSection.vue'
 import BlockedMembersSection from '@/components/settings/BlockedMembersSection.vue'
+import SessionsSection from '@/components/settings/SessionsSection.vue'
 
 const open = defineModel<boolean>('open', { required: true })
 </script>
@@ -50,6 +51,13 @@ const open = defineModel<boolean>('open', { required: true })
           <AccordionTrigger>Passwort</AccordionTrigger>
           <AccordionContent>
             <PasswordSection />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="sessions">
+          <AccordionTrigger>Anmeldungen</AccordionTrigger>
+          <AccordionContent>
+            <SessionsSection />
           </AccordionContent>
         </AccordionItem>
 

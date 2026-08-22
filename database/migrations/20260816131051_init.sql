@@ -40,6 +40,12 @@ CREATE TABLE public.user_session
     user_id      UUID        NOT NULL REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE CASCADE,
     hashed_token bytea       NOT NULL,
     expires_at   TIMESTAMPTZ NOT NULL,
+
+    -- Where the session came from, so a member can tell their own apart from somebody else's.
+    -- The user agent is stored as it arrived; the route that lists sessions parses it.
+    user_agent   TEXT,
+    ip_address   TEXT,
+
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );

@@ -591,6 +591,40 @@ The four routes that answer it (`login`, `password`, `email_address/request_chan
 `account/request_deletion`) each assert the code in their wrong-password test. Nothing in the
 type system requires it, since the field is optional; those tests are the guarantee.
 
+## A session says where it came from
+
+`user_session` carries a `user_agent` and an `ip_address`, written from the request that created
+it, so a member can tell their own sessions apart from somebody else's in the settings dialog.
+Four things about it:
+
+- **The user agent is stored raw and parsed on read.** `util/user_agent_parts.ts` runs over
+  `@std/http`'s parser in `list_sessions.ts` and the response carries `browser`,
+  `operatingSystem`, `deviceType` and `vendor` — parts, never a sentence. "Safari auf iOS" and
+  "Safari on iOS" are one fact in two languages, and a label written into the column could only
+  ever be in one of them; §53 is the general form of that rule. Every part is null for a client
+  the parser cannot read, which is a session somebody must still be able to see and end.
+- **`device.model` is deliberately not carried.** Measured over twenty-six agents it is a
+  placeholder (`K` on current Chrome for Android), a restatement (`iPhone`, `Macintosh`) or a
+  part number (`SM-S918B`). `vendor` is the opposite — always a real brand or absent — which is
+  why it is the part a member actually recognises.
+- **One address resolver, `util/client_address.ts`.** The rate limiter buckets by it and a
+  session records it. A second implementation that appended to `X-Forwarded-For` rather than
+  reading the first entry would let a client choose its own rate-limit bucket.
+- **Last use is derived, never stored.** Every request within the refresh interval pushes
+  `expires_at` to now plus `SESSION_LIFETIME`, so subtracting the lifetime gives last use to
+  within that interval. Nothing had to be added for it.
+- **Neither column needs a retention rule**: both die with the session, 24 hours after its last
+  use. That is also the answer to §18 for them — they are collected for one purpose and expire
+  on their own.
+
+Listing sessions filters `expires_at` itself. Expiry is checked in application code when a
+session is read and the rows linger until the hourly sweep, so a list that trusted the table
+would report sessions that are already dead.
+
+Ending other sessions asks for **no password**, unlike the three routes that re-authenticate:
+it is the defensive act, and a password blocks the case it exists for. It also spares the
+session asking — signing somebody out of the tab they are working in punishes good hygiene.
+
 ## Blocking
 
 `user_block` is one row per (blocker, blocked) pair, and it means **contact**, not visibility of

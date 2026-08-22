@@ -33,7 +33,11 @@ async function createUserWithSession({ verified = true } = {}) {
       .execute();
   }
 
-  const session = await UserService.insertSessionForUser(user);
+  // No request to read provenance from: this drives the service directly.
+  const session = await UserService.insertSessionForUser(user, {
+    userAgent: undefined,
+    ipAddress: undefined,
+  });
   return { user, session };
 }
 

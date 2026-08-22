@@ -3,6 +3,7 @@ import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { UserService } from "@/src/service/user_service.ts";
+import { sessionProvenance } from "@/src/util/session_provenance.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
@@ -65,7 +66,10 @@ export default new OpenAPIHono().openapi(
 
     // A session is started even though the address is unverified: without one there is no
     // way back in to correct a typo, and the account would be orphaned by a single slip.
-    const sessionToken = await UserService.insertSessionForUser(user);
+    const sessionToken = await UserService.insertSessionForUser(
+      user,
+      sessionProvenance(c),
+    );
     SessionCookieService.setUserSession(c, sessionToken);
 
     EmailAddressVerificationService.sendVerificationMail(user);

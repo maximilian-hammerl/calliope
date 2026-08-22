@@ -265,6 +265,16 @@ via vue-query so navigating between guarded routes costs no extra request. After
 out or up, call `forgetCurrentUser()` before navigating or the guard will act on the stale
 answer.
 
+`SessionsSection` lists the member's own sessions, and **the API sends the parts of a user
+agent, never a label**: `lib/format/sessionDevice.ts` writes "Safari auf iOS · Apple Handy" out
+of `browser`, `operatingSystem`, `deviceType` and `vendor`. Same rule as `notificationText.ts`
+below — a sentence stored or composed in the backend can only be in one language, and every
+part of it may be null for a client the parser cannot read.
+
+The brand is there because **"iOS" identifies nothing to a member who knows Apple**, which is
+also why `deviceType` is translated ("Handy", "Tablet") while the brand is printed as it comes.
+A kind with no German word is left off rather than guessed at.
+
 Routes need a session unless marked `meta: { guestOnly: true }`, which also bounces a
 signed-in visitor away. A page that should be readable by everyone would need a flag of its
 own.

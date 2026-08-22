@@ -143,7 +143,9 @@ export interface UserSession {
   expiresAt: string;
   hashedToken: Buffer;
   id: Generated<string>;
+  ipAddress: string | null;
   updatedAt: Generated<string>;
+  userAgent: string | null;
   userId: string;
 }
 
@@ -388,6 +390,8 @@ export const USER_SESSION_SCHEMA = z.object({
   userId: z.uuidv7(),
   hashedToken: z.instanceof(Uint8Array),
   expiresAt: z.iso.datetime({ offset: true }),
+  userAgent: z.string().nullable(),
+  ipAddress: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
