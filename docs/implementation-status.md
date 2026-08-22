@@ -25,7 +25,7 @@ a mailed link), and every member has a **profile page** with a **member overview
 from — thin ones, name and joined date, but search and member lists finally lead somewhere.
 The product now **works on a phone**: a bottom bar navigates, the two rails merge into one
 sheet, the composer starts collapsed, and every target on every page is at least 44px. And
-**Nächste Schritte is real**: the group's shared checklist in the rail — Yooco had one so
+**The group's shared checklist is real** ("Nächste Schritte"), in the rail — Yooco had one so
 hidden that two of three interviewees never found it — where writers add steps inline and tick
 them off, recording who completed what.
 
@@ -52,9 +52,9 @@ the inside, but still no caretaker.
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
 | Writing groups   | Member-created, private/public, invitations with acceptance, roles, group discussions, next steps. **No** files, **no** way for a member to leave (#26) and **no** way to change a role once given (#27). |
-| Communication    | Group chat with live updates, in-app notifications, transactional email. "Unterhaltung beginnen" opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
+| Communication    | Group chat with live updates, in-app notifications, transactional email. Starting a conversation ("Unterhaltung beginnen") opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
-| Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, "Unterhaltung beginnen" (a chat inviting the author), and "Gruppe gründen" from one's own idea. |
+| Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, starting a conversation with the author ("Unterhaltung beginnen"), and founding a group from one's own idea ("Gruppe gründen"). |
 | Administration   | Not started. Blocking is built, but moderation, reports and a queue are not — see the roadmap.                                                                            |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. Blocking refuses contact. **No** data export, no GDPR configuration.  |
 
@@ -118,13 +118,15 @@ These are decisions, not omissions, and each is recorded where it was made:
 
 ## Specified but unbuilt in the interface
 
-- **Dateien & Bilder** in the rail is a static mockup with invented content. Story-Status and
-  Nächste Schritte are real — steps are added inline, ticked off recording who completed them,
-  and completed ones keep forever under an „Erledigt (N)“ disclosure unless deleted by hand.
-- Post actions **Antworten**, **Zitieren** and **Merken** are inert; **Anmerkung schreiben**,
+- **The files block** in the rail ("Dateien & Bilder") is a static mockup with invented
+  content. The story status and the next-steps checklist are real — steps are added inline, ticked off recording who completed them,
+  and completed ones keep forever under a done-items disclosure ("Erledigt (N)") unless
+  deleted by hand.
+- Replying, quoting and bookmarking a post ("Antworten", "Zitieren", "Merken") are inert
+  (#35, #36, #37); writing an annotation ("Anmerkung schreiben"),
   which the design system lists as core copy, does not appear at all. The thread's **post
   filter** ("Alle Beiträge ▾") is gone from the interface for the same reason: its two real
-  options are Gemerkt and Mit Anmerkungen, so it cannot filter anything until those exist. The
+  options are bookmarked and annotated posts, so it cannot filter anything until those exist (#38). The
   design-system prototype keeps the specification, including the finding that it is one menu
   rather than a row of chips.
 
@@ -149,9 +151,10 @@ created — a trigger beside the one that removes an empty group closes all thre
 ### 2. Profile fields
 
 The overview and profile pages exist but answer only "who" — the interviews want them to answer
-"ob die Person zu mir passen würde", which needs bio, genres, writing interests and what someone
+whether a person would suit you to write with, which needs bio, genres, writing interests and what someone
 is currently writing, plus a visibility setting for that block. Two constraints were decided
-when the pages were built: **no statistics, ever** ("Profilaufrufe" etc. "führen nur zu Druck"),
+when the pages were built: **no statistics, ever** — profile-view counts and the like only
+create pressure —
 and **nothing mandatory** — Yooco's required fields got filled with nonsense.
 
 ### 3. Story ideas — built, follow-ups included
@@ -161,16 +164,16 @@ what members valued about the original ("Gesuche mit schon einer konkreten Idee"
 board (open ideas by default, the reader's own excluded — it is discovery, like public
 groups), the detail page, posting, editing, an open/closed status (§8.3's intermediate states
 were dropped — bookkeeping nobody would maintain), a language enum shared with groups, and a
-Meine-Storyideen view. The seeking metadata deliberately started small — Konstellation stayed;
-Umfang, Schreibrhythmus, Schreibstil and Verfügbarkeit were cut until someone misses them. The
+Meine-Storyideen view. The seeking metadata deliberately started small — the party size ("Konstellation") stayed;
+length, writing rhythm, writing style and availability were cut until someone misses them. The
 story block mirrors `writing_group` column for column so an idea can one day become a group by
 copying.
 
-**"Unterhaltung beginnen" is built**, on ideas and beyond them: on an idea it creates a chat
+**Starting a conversation is built** ("Unterhaltung beginnen"), on ideas and beyond them: on an idea it creates a chat
 titled after it and invites the author — §11's "public idea → private conversation", assembled
 from parts that already existed — and on a public group's page it invites every joined
 administrator, which is how a stranger asks into a group without any join-request machinery.
-**"Gruppe gründen" on one's own idea is built too** — the create-group dialog opens prefilled
+**Founding a group from one's own idea is built too** ("Gruppe gründen") — the create-group dialog opens prefilled
 field for field (the idea's synopsis becomes the group's, under the same name), which is what the
 matching columns were kept in step for. The author still chooses visibility and confirms; the idea stays open until
 they close it, deliberately — a fresh group of two might still want a third writer. With that,

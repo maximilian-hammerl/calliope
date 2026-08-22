@@ -1,3 +1,14 @@
+# Member interviews
+
+Three interviews with members of the Yooco community, conducted in German and **kept verbatim
+in German below**. This is source material rather than prose about the product: translating the
+answers would put a paraphrase where the evidence should be, and every conclusion drawn from
+them elsewhere is quoted back to these lines. Where a finding from here is used in an issue or
+in `implementation-status.md`, it is stated in English there.
+
+`yooco-research-report.md` covers the platform they were talking about;
+`product-requirements-feature-specification.md` is what was specified from both.
+
 ## Interviewleitfaden für Yooco-Mitglieder
 
 ## 1. Einstieg und persönlicher Hintergrund
