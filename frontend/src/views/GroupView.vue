@@ -149,9 +149,6 @@ async function askIntoGroup() {
             Noch keine Threads in dieser Gruppe.
             <template v-if="mayWrite">Leg den ersten an.</template>
           </p>
-          <p v-else class="mt-7 text-[13.5px] leading-[1.7] text-ink-4">
-            Wähle oben einen Thread, um weiterzulesen.
-          </p>
 
           <!-- Only here, not in GroupHeader: that header also renders on the thread page,
                where editing the group would sit beside the writing and pull attention. -->
