@@ -1,6 +1,6 @@
 /** Names a session's device out of the parts the API sends, since the German belongs here. */
 import type { ListSessions200ResultsItem } from '@/api/models'
-import { capitalize } from '@/lib/format/formatText.ts'
+import { capitalize } from '@/lib/format/formatText'
 
 /** A kind with no word here is left off rather than guessed at. */
 const DEVICE_TYPE_WORD: Record<string, string | undefined> = {

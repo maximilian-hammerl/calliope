@@ -19,6 +19,10 @@
     "module": "preserve",
     "moduleResolution": "bundler",
 
+    // Vite's native config loader resolves no extensions, so `vitest.config.ts` has to name
+    // `./vite.config.ts` in full. Allowed here because nothing in this project is emitted.
+    "allowImportingTsExtensions": true,
+
     // Include Node.js types and avoid accidentally including other `@types/*` packages.
     "types": ["node"],
 

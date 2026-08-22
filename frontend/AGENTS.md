@@ -242,7 +242,7 @@ query *parameter*, and these endpoints carry paging in a JSON body, so
 `useInfiniteQuery` of its own. It still keys off `getListMessagesQueryKey`, so invalidation
 written against the generated key reaches it.
 
-**Long prose is rendered as the paragraphs it was typed as.** `lib/format/paragraphs.ts` splits
+**Long prose is rendered as the paragraphs it was typed as.** `lib/format/formatText.ts` splits
 on blank lines, and a post and a story idea's synopsis both use it — a single `<p>` renders eight
 thousand characters as one wall, and a textarea is the only thing members have to mark a break
 with.
@@ -359,6 +359,11 @@ is better than a file in the wrong directory.
 
 `composables/` holds every `use*`, which is also what `components.json` already declares.
 `lib/` is grouped the same way: `api/`, `auth/`, `format/`, `validation/`, `notification/`.
+
+**`format/` is split by what the value is**, not by which component needed it: a time, a number,
+prose, a name, a device. `pluralize` sat in `formatTime.ts` for months because its first two
+callers already imported that file for "zuletzt aktiv" on the same line — which is how a module
+ends up holding something that has nothing to do with its name.
 
 Two things stay put at `lib/`'s root: `utils.ts`, because `components.json` pins
 `"utils": "@/lib/utils"` and forty-odd generated components import it — moving it breaks them
