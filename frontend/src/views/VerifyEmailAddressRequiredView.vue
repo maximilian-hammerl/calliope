@@ -16,6 +16,7 @@ import type { FieldMessages } from '@/lib/validation/fieldMessage'
 import { fieldMessage } from '@/lib/validation/fieldMessage'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
+import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
 import DeleteAccountForm from '@/components/settings/DeleteAccountForm.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -135,15 +136,18 @@ async function signOut() {
           Wir haben dir einen Link an <span class="text-ink-8">{{ emailAddress }}</span> geschickt.
           Öffne ihn, dann geht es los.
         </p>
+        <!-- One note for the whole page: every state here is about the same mailed link, and
+             each branch carrying its own would show the sentence twice. -->
+        <MailedLinkNote />
       </div>
 
       <Alert v-if="formError" variant="destructive" role="alert" class="mt-5">
         <AlertDescription>{{ formError }}</AlertDescription>
       </Alert>
 
-      <p v-else-if="resent" class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
-        Ist unterwegs. Kommt nichts an, sieh auch im Spam-Ordner nach.
-      </p>
+      <!-- No note here: the one under the heading is a standing statement about mailed links
+           and already covers this. -->
+      <p v-else-if="resent" class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">Ist unterwegs.</p>
 
       <template v-if="mode === 'choices'">
         <div class="mt-7 flex flex-col gap-3">

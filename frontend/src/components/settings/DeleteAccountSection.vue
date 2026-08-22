@@ -3,6 +3,7 @@
  * The settings dialog's account-deletion section. Only the copy lives here: a member with
  * groups has to be told what happens to what they wrote, which the verification wall does not.
  */
+import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
 import { computed, ref } from 'vue'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import DeleteAccountForm from '@/components/settings/DeleteAccountForm.vue'
@@ -16,10 +17,13 @@ const requested = ref<boolean>(false)
 </script>
 
 <template>
-  <p v-if="requested" class="mb-4 text-[13px] leading-[1.6] text-ink-5">
-    Wir haben einen Link an <span class="text-ink-8">{{ currentAddress }}</span> geschickt. Erst
-    wenn du ihn öffnest, wird dein Konto gelöscht. Bis dahin bleibt alles, wie es ist.
-  </p>
+  <template v-if="requested">
+    <p class="text-[13px] leading-[1.6] text-ink-5">
+      Wir haben einen Link an <span class="text-ink-8">{{ currentAddress }}</span> geschickt. Erst
+      wenn du ihn öffnest, wird dein Konto gelöscht. Bis dahin bleibt alles, wie es ist.
+    </p>
+    <MailedLinkNote class="mb-4 text-[13px]" />
+  </template>
 
   <DeleteAccountForm @requested="requested = true">
     <p>

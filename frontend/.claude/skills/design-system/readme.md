@@ -198,6 +198,14 @@ pushed right with `ml-auto`, wrapping onto their own line when the width runs ou
 Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gruppe erstellen" —
 founding a group is a social act.
 
+**When we mail a link, say what to expect of it.** One sentence, the same everywhere
+(`MailedLinkNote`): the E-Mail can take a few minutes, look in the spam folder, links only last
+a short while. It names the E-Mail rather than „das", which under the deletion notice read as
+the deletion taking minutes — and not „Nachricht", which is what a chat message is called. A member who found an empty inbox could not tell a slow delivery from a broken
+feature. One note per page, not per message — every state of the verification wall is about the
+same link. The validity stays vague on purpose: the lifetime is a backend constant the frontend
+cannot read, and a number that drifted from it would be worse than none.
+
 **System state is stated plainly and without exclamation.** "Entwurf wird gespeichert" ·
 "Entwurf gespeichert" · "Entwurf nicht gespeichert" · "14 Beiträge · zuletzt vor 12 Minuten von Bob" · "3 offen" ·
 "Erledigt (5)". No "Super!", no "Ups!", no exclamation marks anywhere.

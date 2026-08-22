@@ -8,6 +8,7 @@ import type { FieldMessages } from '@/lib/validation/fieldMessage'
 import { fieldMessage } from '@/lib/validation/fieldMessage'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -106,7 +107,7 @@ function startOver() {
             Wenn es ein Konto mit diesen Angaben gibt, ist ein Link an die hinterlegte
             E-Mail-Adresse unterwegs. Sieh in deinem Postfach nach.
           </p>
-          <p>Kommt nichts an, sieh auch im Spam-Ordner nach.</p>
+          <MailedLinkNote class="text-[13.5px]" />
         </div>
 
         <div class="mt-7 flex flex-col gap-3">

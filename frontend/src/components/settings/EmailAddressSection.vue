@@ -3,6 +3,7 @@
  * Moving a verified address. Nothing changes on submit: a link goes to the new address and
  * the old one keeps the account until that link is opened.
  */
+import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
 import { computed, ref } from 'vue'
 import {
   getGetCurrentUserQueryKey,
@@ -116,10 +117,14 @@ async function submit() {
     Aktuell: <span class="text-ink-8">{{ currentAddress }}</span>
   </p>
 
-  <p v-if="requestedFor" class="mb-4 text-[13px] leading-[1.6] text-ink-5">
-    Wir haben einen Link an <span class="text-ink-8">{{ requestedFor }}</span> geschickt. Bis du ihn
-    öffnest, bleibt deine bisherige Adresse in Kraft. An sie ist ebenfalls eine Nachricht unterwegs.
-  </p>
+  <template v-if="requestedFor">
+    <p class="text-[13px] leading-[1.6] text-ink-5">
+      Wir haben einen Link an <span class="text-ink-8">{{ requestedFor }}</span> geschickt. Bis du
+      ihn öffnest, bleibt deine bisherige Adresse in Kraft. An sie ist ebenfalls eine Nachricht
+      unterwegs.
+    </p>
+    <MailedLinkNote class="mb-4 text-[13px]" />
+  </template>
 
   <form ref="formElement" class="flex flex-col gap-4" novalidate @submit.prevent="submit">
     <Alert v-if="formError" variant="destructive" role="alert">
