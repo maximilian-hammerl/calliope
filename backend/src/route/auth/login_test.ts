@@ -2,6 +2,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { authFixture, password, postJson } from "@/src/test/auth.ts";
+import { INVALID_CREDENTIALS_MESSAGE } from "@/src/http/response.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("login");
@@ -45,5 +46,11 @@ Deno.test("POST /api/auth/login rejects a wrong password", async () => {
   });
 
   assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertEquals(await response.json(), { error: "Invalid credentials" });
+  // The frontend tells a wrong password from a lost session by this code, not the message.
+  // The code is asserted as a literal on purpose: it is what a client discriminates on, so
+  // renaming it has to fail here. The message is only text and comes from the constant.
+  assertEquals(await response.json(), {
+    error: INVALID_CREDENTIALS_MESSAGE,
+    code: "invalid_credentials",
+  });
 });

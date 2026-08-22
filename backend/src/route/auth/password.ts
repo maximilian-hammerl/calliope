@@ -10,6 +10,7 @@ import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  INVALID_CREDENTIALS_BODY,
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
@@ -68,10 +69,7 @@ export default new OpenAPIHono().openapi(
       case "changed":
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       case "wrong_password":
-        return c.json(
-          { error: "Invalid credentials" },
-          STATUS_CODE.Unauthorized,
-        );
+        return c.json(INVALID_CREDENTIALS_BODY, STATUS_CODE.Unauthorized);
       default:
         return assertUnreachable(result);
     }

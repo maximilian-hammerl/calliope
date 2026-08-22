@@ -76,6 +76,8 @@ Deno.test("POST /api/auth/email-address/change refuses a wrong password", async 
 
   // The whole point: a stolen session is not enough to move the account.
   assertEquals(response.status, STATUS_CODE.Unauthorized);
+  // The frontend tells a wrong password from a lost session by this code, not the message.
+  assertEquals((await response.json()).code, "invalid_credentials");
   assertEquals(await pendingAddress(), undefined);
 
   await flushBackgroundWork();

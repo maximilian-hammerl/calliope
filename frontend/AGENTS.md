@@ -247,6 +247,16 @@ on blank lines, and a post and a story idea's synopsis both use it — a single 
 thousand characters as one wall, and a textarea is the only thing members have to mark a break
 with.
 
+**A 401 is only a lost session when the API says so.** The wrong-password answer carries
+`code: "invalid_credentials"`; anything else without a code is a session that has ended, and only
+that signs the member out. The value comes from the generated client, so renaming it in the
+backend breaks compilation here rather than behaviour.
+
+Two exceptions stay named in `queryClient.ts`, each with its reason: the guard's own session
+check, whose 401 *is* its answer, and `logoutUser`, where the session being gone is what was
+asked for. There used to be a list of six operations, which is the shape that let `changePassword`
+be forgotten.
+
 ## Sessions and routing
 
 The session cookie is `httpOnly`, so `GET /api/auth/me` is the only way to know whether this

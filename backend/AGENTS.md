@@ -529,8 +529,7 @@ There is no undo once confirmed — the window is the hour before. A real one ne
 longer-lived token and a policy for what reverting means, and is not built.
 
 `requestEmailAddressChange` answers **401** for a wrong password, which is an *answer*, not a lost
-session. The frontend's `EXPECTED_401_MUTATIONS` has to list it or the global handler signs the
-member out mid-form; it did, once.
+session. Answer it with `INVALID_CREDENTIALS_BODY` — see below.
 
 ## Changing a password while signed in
 
@@ -568,8 +567,29 @@ leaked password is enough alone.
 - **A member who is a group's only administrator leaves it ungoverned.** That is the same hole
   leaving already opens, deliberately not fixed here — see the roadmap.
 
-`requestAccountDeletion` answers **401** for a wrong password, so the frontend's
-`EXPECTED_401_MUTATIONS` lists it, as it must for every re-authenticating mutation.
+`requestAccountDeletion` answers **401** for a wrong password, with `INVALID_CREDENTIALS_BODY`
+like every other re-authenticating route.
+
+## A 401 says which kind it is
+
+A 401 means two different things and the client has to tell them apart: the session has ended, or
+the password just sent was wrong. Every wrong-password answer therefore uses
+`INVALID_CREDENTIALS_BODY` from `http/response.ts`, which carries `code: "invalid_credentials"`;
+a missing or expired session answers without a code.
+
+The frontend signs a member out on any 401 it cannot account for, so a route that answers one
+*without* the code closes whatever dialog they were in and loses what they typed — on the home
+page that looks like nothing happening at all, which is why it hid for so long. Verified by
+dropping the code from `changePassword` on purpose: the member was thrown from `/members` to `/`
+mid-form.
+
+It is a **constant rather than a helper** deliberately. A helper returning `c.json(...)` widens
+the handler's return type to plain `Response`, which switches off the body and status checks for
+the whole route — the same trap as a content-less response.
+
+The four routes that answer it (`login`, `password`, `email_address/request_change`,
+`account/request_deletion`) each assert the code in their wrong-password test. Nothing in the
+type system requires it, since the field is optional; those tests are the guarantee.
 
 ## Blocking
 

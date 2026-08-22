@@ -6,6 +6,8 @@
 export type ApiErrorBody = {
   error: string
   issues?: { path: string; message: string }[]
+  /** Set only where a client has to act on the reason. See `queryClient`'s 401 handling. */
+  code?: string
 }
 
 /**

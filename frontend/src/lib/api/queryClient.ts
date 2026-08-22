@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
+import { LoginUser401Code } from '@/api/models'
 import { ApiError } from './apiFetch'
 
 /**
@@ -50,33 +51,41 @@ export function setSessionLostHandler(handler: () => void): void {
 }
 
 /**
- * Operations whose 401 is an answer rather than a failure: signing in, registering, signing
- * out, the two that re-authenticate with the current password, and the guard's own session
- * check.
+ * A 401 has two meanings and only one of them should sign anybody out. The API says which:
+ * a wrong password — signing in, or re-authenticating with a valid session — carries
+ * `code: invalid_credentials`, and anything else is a session that has ended.
  *
- * Leaving one out is not a small bug, and it hides well. A wrong password comes back 401, is
- * read as a lost session, and replaces the member onto the home page — dialog closed, whatever
- * they typed gone. The session itself survives, so it does not look like being signed out, and
- * from the home page the redirect lands where they already are and nothing appears to happen.
+ * Getting this wrong is not a small bug and it hides well. A wrong password read as a lost
+ * session replaces the member onto the home page: dialog closed, whatever they typed gone. The
+ * session itself survives, so it does not look like being signed out, and from the home page
+ * the redirect lands where they already are and nothing appears to happen.
  *
- * Discriminating on the current route instead does not work — during a navigation the router
+ * The value comes from the generated client rather than a literal, so renaming it in the
+ * backend breaks compilation here instead of behaviour.
+ */
+const INVALID_CREDENTIALS = LoginUser401Code.invalid_credentials
+
+/**
+ * Signing out is the one 401 that genuinely *is* a lost session and still must not be treated
+ * as one: the session was already gone, which is exactly what was being asked for.
+ */
+const EXPECTED_401_MUTATIONS = new Set(['logoutUser'])
+
+/**
+ * The guard's own session check, which asks whether there is a session at all — a 401 is its
+ * answer, not a failure. Taken from the generated client so a path change follows.
+ *
+ * Discriminating on the current route instead does not work: during a navigation the router
  * still reports the route being *left*, so the guard's 401 on the sign-in page looks like a
  * lost session and redirects to the page it is already on, which re-runs the guard. That loop
  * fired several hundred requests before the rate limiter stopped it.
  */
-const EXPECTED_401_MUTATIONS = new Set([
-  'loginUser',
-  'registerUser',
-  'logoutUser',
-  'requestEmailAddressChange',
-  'changePassword',
-  'requestAccountDeletion',
-])
-
-/** Taken from the generated client rather than written out, so a path change follows. */
 const SESSION_CHECK_KEY = JSON.stringify(getGetCurrentUserQueryKey())
 
-function isExpected(key: readonly unknown[] | undefined): boolean {
+function isExpected(error: ApiError, key: readonly unknown[] | undefined): boolean {
+  if (error.body.code === INVALID_CREDENTIALS) {
+    return true
+  }
   if (key === undefined) {
     return false
   }
@@ -89,7 +98,7 @@ function isExpected(key: readonly unknown[] | undefined): boolean {
 function handleError(error: unknown, key: readonly unknown[] | undefined): void {
   backendReachable.value = !isUnreachable(error)
 
-  if (error instanceof ApiError && error.status === 401 && !isExpected(key)) {
+  if (error instanceof ApiError && error.status === 401 && !isExpected(error, key)) {
     onSessionLost?.()
   }
 }

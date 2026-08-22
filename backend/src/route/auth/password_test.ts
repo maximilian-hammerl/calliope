@@ -65,6 +65,8 @@ Deno.test("PATCH /api/auth/password refuses a wrong current password", async () 
 
   // The point of asking: a session that was not the member's must not be able to lock them out.
   assertEquals(response.status, STATUS_CODE.Unauthorized);
+  // The frontend tells a wrong password from a lost session by this code, not the message.
+  assertEquals((await response.json()).code, "invalid_credentials");
   assertEquals((await login(currentPassword)).status, STATUS_CODE.OK);
 });
 

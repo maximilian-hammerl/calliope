@@ -8,6 +8,7 @@ import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  INVALID_CREDENTIALS_BODY,
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
@@ -50,7 +51,7 @@ export default new OpenAPIHono().openapi(
     const user = await UserService.selectUser(usernameOrEmailAddress, password);
 
     if (user === undefined) {
-      return c.json({ error: "Invalid credentials" }, STATUS_CODE.Unauthorized);
+      return c.json(INVALID_CREDENTIALS_BODY, STATUS_CODE.Unauthorized);
     }
 
     const sessionToken = await UserService.insertSessionForUser(user);

@@ -10,6 +10,7 @@ import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  INVALID_CREDENTIALS_BODY,
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
@@ -64,10 +65,7 @@ export default new OpenAPIHono().openapi(
       case "requested":
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       case "wrong_password":
-        return c.json(
-          { error: "Invalid credentials" },
-          STATUS_CODE.Unauthorized,
-        );
+        return c.json(INVALID_CREDENTIALS_BODY, STATUS_CODE.Unauthorized);
       case "in_use":
         return c.json(
           { error: "Another account already uses this address" },
@@ -76,10 +74,7 @@ export default new OpenAPIHono().openapi(
       // Unreachable through this route, which requires a verified session — kept because the
       // service is the thing that guarantees it, not the middleware.
       case "not_verified":
-        return c.json(
-          { error: "Invalid credentials" },
-          STATUS_CODE.Unauthorized,
-        );
+        return c.json(INVALID_CREDENTIALS_BODY, STATUS_CODE.Unauthorized);
       default:
         return assertUnreachable(result);
     }

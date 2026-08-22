@@ -55,6 +55,8 @@ Deno.test("POST /api/auth/account/deletion refuses a wrong password", async () =
 
   // A stolen session must not be able to end the account on its own.
   assertEquals(response.status, STATUS_CODE.Unauthorized);
+  // The frontend tells a wrong password from a lost session by this code, not the message.
+  assertEquals((await response.json()).code, "invalid_credentials");
   assertEquals(await outstandingTokens(), 0);
   assertEquals(await accountExists(), true);
 
