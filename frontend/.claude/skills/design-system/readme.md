@@ -250,6 +250,14 @@ page and its badge, and the action it can no longer take is **disabled rather th
 hiding it leaves a member wondering where it went, where a disabled control with a reason
 tells them the owner has finished with it.
 
+**A role is edited where it is read.** Each row of the members list carries a select showing
+that member's role, saving on change rather than behind a save button — the same shape as the
+story status in the rail. The trailing controls sit in one block with the longest action's width
+reserved, so the selects line up in a column instead of each being dragged sideways by the
+label beside it. A member who gives up their own last administration is warned, not refused:
+nothing in the database prevents it, and the reasoning for warning instead is recorded with the
+issue.
+
 **A membership shows one date, the one its state is about**: "eingeladen vor 3 Tagen" while an
 invitation is pending, "beigetreten vor 2 Tagen" once it has been accepted. Both are participles
 and both take the usual relative-then-absolute time. When somebody is in the group, when they

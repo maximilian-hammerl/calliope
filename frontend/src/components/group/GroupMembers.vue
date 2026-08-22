@@ -2,15 +2,28 @@
 import { computed, ref } from 'vue'
 import { PlusIcon } from '@lucide/vue'
 import { useQueryClient } from '@tanstack/vue-query'
-import { getListMembershipsQueryKey, useRemoveMember } from '@/api/memberships/memberships'
+import {
+  getListMembershipsQueryKey,
+  useRemoveMember,
+  useUpdateMembership,
+} from '@/api/memberships/memberships'
+import { getGetGroupQueryKey } from '@/api/groups/groups'
 import { useGetCurrentUser } from '@/api/auth/auth'
-import type { ListMemberships200ResultsItem } from '@/api/models'
+import type { ListMemberships200ResultsItem, UpdateMembershipBodyRole } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { pluralize } from '@/lib/format/formatText'
 import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
+import LastAdministratorDialog from '@/components/group/LastAdministratorDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const props = defineProps<{
   groupId: string
@@ -27,6 +40,11 @@ const ROLE_LABELS: Record<string, string> = {
   writer: 'Schreibt',
   reader: 'Liest',
 }
+
+const ROLES = (Object.keys(ROLE_LABELS) as UpdateMembershipBodyRole[]).map((value) => ({
+  value,
+  label: ROLE_LABELS[value] as string,
+}))
 
 const { data: currentUserData } = useGetCurrentUser()
 const currentUserId = computed<string | undefined>(() =>
@@ -79,6 +97,75 @@ const removalError = ref<string | undefined>(undefined)
 const removingUserId = ref<string | undefined>(undefined)
 
 const { mutateAsync: removeMember } = useRemoveMember()
+const { mutateAsync: updateMembership } = useUpdateMembership()
+
+const roleError = ref<string | undefined>(undefined)
+/** Which row is mid-change, so only that select is disabled. */
+const savingRoleFor = ref<string | undefined>(undefined)
+
+const joinedAdministrators = computed<number>(
+  () =>
+    props.memberships.filter(
+      (membership) => membership.status === 'joined' && membership.role === 'administrator',
+    ).length,
+)
+
+/**
+ * Only giving up one's own administration can leave a group ungoverned: an administrator
+ * demoting somebody else is still one themselves. Nothing refuses it — see
+ * `LastAdministratorDialog`.
+ */
+function wouldLeaveNobodyAdministering(
+  membership: ListMemberships200ResultsItem,
+  role: UpdateMembershipBodyRole,
+): boolean {
+  return (
+    membership.userId === currentUserId.value &&
+    membership.status === 'joined' &&
+    membership.role === 'administrator' &&
+    role !== 'administrator' &&
+    joinedAdministrators.value === 1
+  )
+}
+
+const pendingRoleChange = ref<
+  { membership: ListMemberships200ResultsItem; role: UpdateMembershipBodyRole } | undefined
+>(undefined)
+
+async function applyRole(
+  membership: ListMemberships200ResultsItem,
+  role: UpdateMembershipBodyRole,
+) {
+  roleError.value = undefined
+  savingRoleFor.value = membership.userId
+
+  try {
+    await updateMembership({ groupId: props.groupId, userId: membership.userId, data: { role } })
+    await queryClient.invalidateQueries({
+      queryKey: getListMembershipsQueryKey(props.groupId),
+    })
+    // Losing one's own administration changes what the whole page may offer.
+    if (membership.userId === currentUserId.value) {
+      await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.groupId) })
+    }
+  } catch {
+    roleError.value = `Die Rolle von ${membership.username} konnte nicht geändert werden. Versuche es noch einmal.`
+  } finally {
+    savingRoleFor.value = undefined
+    pendingRoleChange.value = undefined
+  }
+}
+
+function changeRole(membership: ListMemberships200ResultsItem, role: UpdateMembershipBodyRole) {
+  if (role === membership.role) {
+    return
+  }
+  if (wouldLeaveNobodyAdministering(membership, role)) {
+    pendingRoleChange.value = { membership, role }
+    return
+  }
+  void applyRole(membership, role)
+}
 
 async function remove(membership: ListMemberships200ResultsItem) {
   removalError.value = undefined
@@ -116,8 +203,8 @@ async function remove(membership: ListMemberships200ResultsItem) {
       </Button>
     </div>
 
-    <Alert v-if="removalError" variant="destructive" role="alert" class="mt-4">
-      <AlertDescription>{{ removalError }}</AlertDescription>
+    <Alert v-if="removalError ?? roleError" variant="destructive" role="alert" class="mt-4">
+      <AlertDescription>{{ removalError ?? roleError }}</AlertDescription>
     </Alert>
 
     <ul>
@@ -142,8 +229,12 @@ async function remove(membership: ListMemberships200ResultsItem) {
                 {{ membership.username }}
               </span>
               <span class="text-[12px] whitespace-nowrap text-ink-5">
-                {{ ROLE_LABELS[membership.role] ?? membership.role }}
-                <template v-if="membership.status === 'invited'">· eingeladen</template>
+                <template v-if="!mayAdminister">
+                  {{ ROLE_LABELS[membership.role] ?? membership.role }}
+                </template>
+                <template v-if="membership.status === 'invited'">
+                  <template v-if="!mayAdminister">· </template>eingeladen
+                </template>
               </span>
             </span>
             <span v-if="membershipDate(membership)" class="text-[11.5px] text-ink-6">
@@ -152,21 +243,59 @@ async function remove(membership: ListMemberships200ResultsItem) {
           </span>
         </RouterLink>
 
-        <!-- Leaving is the member's own act and lives elsewhere, so the viewer's own row
-             carries no remove control even for an administrator. -->
-        <Button
-          v-if="mayAdminister && membership.userId !== currentUserId"
-          variant="ghost"
-          size="sm"
-          class="ml-auto shrink-0 text-ink-5"
-          :disabled="removingUserId === membership.userId"
-          @click="remove(membership)"
-        >
-          {{ membership.status === 'invited' ? 'Einladung zurückziehen' : 'Entfernen' }}
-        </Button>
+        <!-- One trailing block, so the selects line up in a column: the action beside them runs
+             from "Entfernen" to "Einladung zurückziehen", and left to itself that dragged every
+             select to a different place. -->
+        <div v-if="mayAdminister" class="ml-auto flex shrink-0 items-center gap-2">
+          <!-- Outside the link on purpose: a select nested in one is neither valid markup nor
+               reachable by keyboard. -->
+          <Select
+            :model-value="membership.role"
+            :disabled="savingRoleFor === membership.userId"
+            @update:model-value="
+              (value) => changeRole(membership, value as UpdateMembershipBodyRole)
+            "
+          >
+            <SelectTrigger
+              class="h-11 w-[104px] text-[12px] md:h-8"
+              :aria-label="`Rolle von ${membership.username}`"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="role in ROLES" :key="role.value" :value="role.value">
+                {{ role.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <!-- Empty on the viewer's own row: leaving is the member's own act and lives
+               elsewhere. The width is the longest action's, so the column holds either way. -->
+          <div class="flex w-[178px] justify-end">
+            <Button
+              v-if="membership.userId !== currentUserId"
+              variant="ghost"
+              size="sm"
+              class="text-ink-5"
+              :disabled="removingUserId === membership.userId"
+              @click="remove(membership)"
+            >
+              {{ membership.status === 'invited' ? 'Einladung zurückziehen' : 'Entfernen' }}
+            </Button>
+          </div>
+        </div>
       </li>
     </ul>
   </section>
 
   <InviteMemberDialog v-model:open="inviting" :group-id="groupId" :member-ids="memberIds" />
+
+  <LastAdministratorDialog
+    :open="pendingRoleChange !== undefined"
+    :pending="savingRoleFor !== undefined"
+    @update:open="(value) => !value && (pendingRoleChange = undefined)"
+    @confirmed="
+      pendingRoleChange && applyRole(pendingRoleChange.membership, pendingRoleChange.role)
+    "
+  />
 </template>
