@@ -5,7 +5,7 @@
  */
 export function paragraphs(text: string): string[] {
   return text
-    .split(/\n{2,}/)
+    .split(/\n{2,}/u)
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph.length > 0)
 }

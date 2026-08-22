@@ -1,4 +1,5 @@
-import { computed, type MaybeRefOrGetter, toValue } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
+import { computed, toValue } from 'vue'
 import { useInfiniteQuery } from '@tanstack/vue-query'
 import { getListMessagesQueryKey, listMessages } from '@/api/chats/chats'
 import type { ListMessages200ResultsItem } from '@/api/models'

@@ -1,4 +1,5 @@
-import { computed, type ComputedRef, ref, type Ref } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
+import { computed, ref } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useSearch as useSearchQuery } from '@/api/search/search'
 import type { Search200 } from '@/api/models'

@@ -19,7 +19,7 @@ const props = defineProps<{
   options: ReadonlyArray<{ value: Value; label: string }>
 }>()
 
-const id = `filter-strip-${props.label.replace(/\s+/g, '-').toLowerCase()}`
+const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
 </script>
 
 <template>

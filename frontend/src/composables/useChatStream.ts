@@ -1,4 +1,5 @@
-import { onScopeDispose, ref, type Ref } from 'vue'
+import type { Ref } from 'vue'
+import { onScopeDispose, ref } from 'vue'
 import { useEventListener } from '@vueuse/core'
 
 /** What the backend pushes down the stream. Mirrors `ChatEvent` in `chat/chat_events.ts`. */

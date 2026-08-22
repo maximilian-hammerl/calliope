@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useGetGroup, useStartGroupConversation } from '@/api/groups/groups'
 import { getListChatsQueryKey } from '@/api/chats/chats'
 import { queryClient } from '@/lib/api/queryClient'

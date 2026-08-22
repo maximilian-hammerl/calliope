@@ -18,7 +18,7 @@ describe('formatActivityTime', () => {
 
   it('names the weekday between a day and a week', () => {
     expect(formatActivityTime(ago(2 * DAY), now)).toMatch(
-      /^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag), \d{2}:\d{2}$/,
+      /^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag), \d{2}:\d{2}$/u,
     )
   })
 

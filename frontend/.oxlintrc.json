@@ -1,12 +1,93 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue", "vitest"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "vue", "vitest", "import"],
   "env": {
     "browser": true
   },
   // The skill bundles are vendored reference material, not code we ship or maintain.
   "ignorePatterns": [".claude/**"],
+  // Globs below resolve against *this file's* directory. A config passed from elsewhere
+  // (`oxlint -c /tmp/…`) silently applies no overrides and lints what it should ignore.
   "categories": {
-    "correctness": "error"
-  }
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "rules": {
+    // `toSorted` is ES2023 and @vue/tsconfig pins `lib` to ES2022 on purpose — newer built-ins
+    // cost browser support, so they are the project's call. It reached Safari only in 16.4, past
+    // Vite's baseline target, and all three call sites copy the array before sorting anyway.
+    "unicorn/no-array-sort": "off",
+    // The naming rule from AGENTS.md, enforced rather than remembered. Unconfigured this wants
+    // kebab-case and reports every file in the project.
+    "unicorn/filename-case": ["error", { "cases": { "camelCase": true, "pascalCase": true } }],
+    // Catches a module imported twice for its values, and — unlike eslint's own
+    // no-duplicate-imports — leaves `import type { X }` beside `import { y }` alone, which is
+    // how most of this codebase is written. Verified by reintroducing a duplicate on purpose.
+    "import/no-duplicates": "error",
+    // Nothing outside the generated components has a cycle; this keeps it that way.
+    "import/no-cycle": "error",
+    // One form for a type-only import, so a line that disappears at compile time says so
+    // rather than hiding a `type` marker in the middle of a list.
+    "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
+    // `main.ts` imports the stylesheet for its side effect, which is the whole point of it.
+    "import/no-unassigned-import": "off",
+    "eslint/no-console": "error",
+    "eslint/require-unicode-regexp": "error",
+    "unicorn/prefer-string-replace-all": "error",
+    "unicorn/prefer-import-meta-properties": "error"
+    // Tried and left out, each with what it cost:
+    // The `promise`, `jsdoc` and `node` plugins — promise finds nothing here, jsdoc wants
+    //   `@param` and `@returns` on all 74 documented functions when the house rule is prose
+    //   about *why*, and node's three hits are all correct code in build scripts.
+    // "import/no-relative-parent-imports" — 23 hits, 20 of them the lazy route imports in
+    //   `router/routes.ts`, which is the Vue Router idiom.
+    // "import/consistent-type-specifier-style" — 20 files use the inline `{ type X }` form and
+    //   the rest use a top-level `import type`. Which one wins is a convention to decide, not
+    //   something to settle by turning a rule on.
+    // "import/no-named-export" (130), "group-exports" (30), "max-dependencies" (26) — opinions
+    //   about module shape that this codebase does not share.
+    // "no-negated-condition" (eslint and unicorn, 2 sites each) — both are `!== undefined`
+    //   with an else, and inverting them puts the exceptional branch first. This codebase
+    //   checks existence that way everywhere; the rule cannot tell that from a real negation.
+    // "eslint/no-use-before-define" — 11 hits, every one deliberate: `usePagedList` has to be
+    //   called before the query it pages, and two composables are mutually recursive.
+    // "unicorn/no-useless-undefined" — 11 hits against the rule that every ref is annotated,
+    //   which is what `ref<string | undefined>(undefined)` is for.
+    // "eslint/no-magic-numbers" — 233. The design system *is* literal numbers
+    //   (`text-[13.5px]`, `max-w-[60ch]`); a named constant per type size would read worse.
+    // "eslint/one-var" (613), "sort-imports" (355), "func-style" (133), "sort-keys" (132),
+    //   "no-ternary" (118), "capitalized-comments" (77) — style opinions this codebase
+    //   contradicts on purpose.
+    // "eslint/no-undefined" (227), "oxc/no-optional-chaining" (97),
+    //   "typescript/explicit-function-return-type" (91), "oxc/no-async-await" (58) —
+    //   restrictions that would rewrite everything and buy nothing.
+    // "unicorn/no-null" — 22; the API distinguishes null from undefined and the generated
+    //   schemas depend on it.
+    // "vue/define-props-destructuring" — 101 against `const props = defineProps<…>()`, which
+    //   is what both we and shadcn write.
+    // "eslint/max-lines-per-function" — 8; a `<script setup>` block is one function.
+    //
+    // And one that is on, via `correctness`, but gives no coverage where it matters:
+    // "no-unused-vars" cannot see inside `<script setup>`. A top-level binding is exposed to
+    // the template, oxlint does not read templates, so it cannot tell used from unused.
+    // `vue-tsc` builds a render function from the template and does catch it.
+  },
+  "overrides": [
+    {
+      // Generated by shadcn-vue and never reorganised. Its `index.ts` and its components import
+      // each other, which is ten cycles that are not ours to break.
+      "files": ["src/components/ui/**"],
+      "rules": {
+        "import/no-cycle": "off"
+      }
+    },
+    {
+      // A build script whose entire output is what it prints.
+      "files": ["scripts/**"],
+      "rules": {
+        "eslint/no-console": "off"
+      }
+    }
+  ]
 }

@@ -2,8 +2,7 @@
 import { computed } from 'vue'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { IDEA_STATUS_LABELS, LANGUAGE_LABELS } from '@/lib/format/storyIdea'
-import { READER_STATE_LABELS } from '@/lib/format/storyIdea'
+import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, READER_STATE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
 const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>()

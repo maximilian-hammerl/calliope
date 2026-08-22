@@ -13,8 +13,7 @@
 // `erasableSyntaxOnly` rejects the syntax stripping cannot handle (enum, namespace,
 // parameter properties) at check time rather than at run time.
 import { readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 
 /** Only the corner of OpenAPI this reads. Request bodies are inline — there are no $refs. */
 type Bound = { minLength?: number; maxLength?: number }
@@ -28,7 +27,7 @@ type Operation = {
 
 type OpenApiDocument = { paths: Record<string, Record<string, Operation | undefined>> }
 
-const here = dirname(fileURLToPath(import.meta.url))
+const here = import.meta.dirname
 const SPECIFICATION = resolve(here, '../../backend/open-api.json')
 const OUTPUT = resolve(here, '../src/api/textLimit.ts')
 

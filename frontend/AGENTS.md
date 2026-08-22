@@ -16,6 +16,33 @@ client. Linted by `oxlint`, formatted by `oxfmt`. Tasks are `npm run …` — se
   handler beside it also lets the returned promise be `void`ed, which a template expression
   cannot do. One file had both at once, which is how this drifted.
 
+## The lint configuration is a record, not a default
+
+`.oxlintrc.json` runs the `correctness`, `suspicious` and `perf` categories plus a handful of
+named rules, and **every rule that was tried and rejected is listed there with what it cost** —
+the same shape `backend/deno.jsonc` uses, so nobody re-tries `no-magic-numbers` on a codebase
+whose design system *is* literal numbers.
+
+Three things in it are easy to get wrong:
+
+- **Globs resolve against the config file's directory.** Running `oxlint -c /tmp/something.json`
+  silently applies no `overrides` at all and lints what `ignorePatterns` should have excluded. A
+  measurement taken that way is wrong in both directions.
+- **A type-only import is its own statement.** `import type { Ref } from 'vue'` above
+  `import { computed } from 'vue'`, never `import { computed, type Ref }`. Two lines from one
+  module is the price: a line that vanishes at compile time should say so, rather than hiding a
+  `type` marker in the middle of a list. `import/no-duplicates` tolerates the pair on purpose.
+- **`components/ui/**` is exempted from `import/no-cycle`**, because it is generated and not
+  reorganised: shadcn's `index.ts` and its components import each other, which is ten cycles
+  that are not ours to break. Nothing outside it has one, and the rule keeps it that way.
+- **Duplicate imports use `import/no-duplicates`, not eslint's `no-duplicate-imports`.** The
+  eslint rule also merges `import type { X }` into `import { y }`, which fights how most of
+  this codebase is written; the import plugin's version only flags real value duplicates.
+- **`no-unused-vars` gives no coverage in `<script setup>`.** A top-level binding is exposed to
+  the template, oxlint does not read templates, so it cannot tell used from unused. `vue-tsc`
+  builds a render function and does — which is why `noUnusedLocals` matters more here than the
+  lint rule.
+
 ## The design system is the source of truth
 
 `.claude/skills/design-system/` holds the visual and verbal rules, and they are findings from

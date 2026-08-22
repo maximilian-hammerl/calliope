@@ -1,4 +1,5 @@
-import { computed, type MaybeRefOrGetter, onMounted, ref, toValue, watch } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
+import { computed, onMounted, ref, toValue, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 /**

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue'
+import type { HTMLAttributes } from 'vue'
+import { computed } from 'vue'
 import { userInitial } from '@/lib/format/formatUser'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'

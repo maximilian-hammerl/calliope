@@ -1,4 +1,5 @@
-import { computed, type ComputedRef, ref, type Ref, toValue, watch } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
+import { computed, ref, toValue, watch } from 'vue'
 import { useEventListener, watchDebounced } from '@vueuse/core'
 import { createPost, deletePost, listPosts, updatePost } from '@/api/posts/posts'
 import { TEXT_LIMIT } from '@/api/textLimit'

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { GetStoryIdea200 } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { paragraphs } from '@/lib/format/paragraphs'
+import { tagLine } from '@/lib/format/storyTags'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
@@ -34,14 +35,13 @@ const seeking = computed<Array<{ label: string; value: string }>>(() =>
 
 /** The story block, mirroring the group's reference card. */
 const story = computed<Array<{ label: string; value: string }>>(() => {
-  const list = (tags: readonly string[]) => (tags.length === 0 ? undefined : tags.join(', '))
   return [
-    { label: 'Genre', value: list(props.idea.genres) },
-    { label: 'Subgenre', value: list(props.idea.subgenres) },
-    { label: 'Tropes', value: list(props.idea.tropes) },
+    { label: 'Genre', value: tagLine(props.idea.genres) },
+    { label: 'Subgenre', value: tagLine(props.idea.subgenres) },
+    { label: 'Tropes', value: tagLine(props.idea.tropes) },
     { label: 'Zeitform', value: props.idea.tense ?? undefined },
     { label: 'Perspektive', value: props.idea.perspective ?? undefined },
-    { label: 'Inhaltswarnungen', value: list(props.idea.contentWarnings) },
+    { label: 'Inhaltswarnungen', value: tagLine(props.idea.contentWarnings) },
   ].filter((entry): entry is { label: string; value: string } => entry.value !== undefined)
 })
 </script>

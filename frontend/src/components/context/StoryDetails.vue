@@ -5,19 +5,18 @@
  */
 import { computed } from 'vue'
 import type { GetGroup200 } from '@/api/models'
+import { tagLine } from '@/lib/format/storyTags'
 
 const props = defineProps<{ group: GetGroup200 }>()
 
 const fields = computed<Array<{ label: string; value: string }>>(() => {
-  const list = (tags: readonly string[]) => (tags.length === 0 ? undefined : tags.join(', '))
-
   return [
-    { label: 'Genre', value: list(props.group.genres) },
-    { label: 'Subgenre', value: list(props.group.subgenres) },
-    { label: 'Tropes', value: list(props.group.tropes) },
+    { label: 'Genre', value: tagLine(props.group.genres) },
+    { label: 'Subgenre', value: tagLine(props.group.subgenres) },
+    { label: 'Tropes', value: tagLine(props.group.tropes) },
     { label: 'Zeitform', value: props.group.tense ?? undefined },
     { label: 'Perspektive', value: props.group.perspective ?? undefined },
-    { label: 'Inhaltswarnungen', value: list(props.group.contentWarnings) },
+    { label: 'Inhaltswarnungen', value: tagLine(props.group.contentWarnings) },
   ].filter((field): field is { label: string; value: string } => field.value !== undefined)
 })
 </script>

@@ -18,7 +18,8 @@ import {
 } from '@/api/groups/groups'
 import type { GetGroup200 } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import StoryMetadataFields, { type StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
+import StoryMetadataFields from '@/components/group/StoryMetadataFields.vue'
+import type { StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
 import { fromTags, toTags } from '@/lib/format/storyTags'
 import { formatCount } from '@/lib/format/formatNumber'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
@@ -84,7 +85,6 @@ const metadata = ref<StoryMetadata>(emptyMetadata())
 
 /** The form holds comma-separated text; the API takes arrays and nulls. */
 function metadataForApi() {
-  const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
   return {
     subtitle: blank(subtitle.value),
     storyStatus: metadata.value.storyStatus,
@@ -99,6 +99,9 @@ function metadataForApi() {
 }
 
 // The two operations carry the same bounds, and a form cannot enforce two sets at once.
+/** An emptied optional field means null, not an empty string, to the API. */
+const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
+
 const LIMIT = TEXT_LIMIT.createGroup
 
 const titleError = ref<string | undefined>(undefined)
