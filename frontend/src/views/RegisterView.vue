@@ -194,9 +194,11 @@ async function submit() {
               required
               :aria-invalid="fieldErrors.username !== undefined ? true : undefined"
             />
+            <!-- The permanence gets its own sentence: it is the only part of this choice that
+                 cannot be undone, and two testers have registered with their address. -->
             <FieldDescription>
               Andere Mitglieder sehen deinen Benutzernamen und finden dich darüber. Wähle nichts,
-              was privat bleiben soll.
+              was privat bleiben soll. <strong>Ändern lässt er sich später nicht.</strong>
             </FieldDescription>
             <FieldError :errors="[fieldErrors.username]" />
           </Field>

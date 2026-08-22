@@ -221,6 +221,12 @@ group plans here. Completed steps stay under „Erledigt (N)" until someone dele
 **A member's own state on somebody else's thing is never shown to its owner.** A story idea
 carries "Gelesen" or "Gemerkt" for the member reading it and nothing for its author: "four
 members read your idea" is the statistic the research rejected. Saving something for later is
+**A username is permanent, and registration says so.** "Ändern lässt er sich später nicht", in
+the field's own description — the one moment the choice can still be made differently. Members
+asked for it to work this way: somebody with a bad reputation must not be able to reappear under
+a new name, so this is a protection rather than a missing feature, and it is never apologised for
+in the copy. Renaming is not planned (#54).
+
 **"Merken"** everywhere — never "Favorit", which names a feeling rather than an intention and
 promises a permanence the author can end by closing the idea.
 
