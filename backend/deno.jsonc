@@ -64,7 +64,7 @@
       // ioredis
       "read": true,
       // nodemailer
-      "sys": ["networkInterfaces"]
+      "sys": ["networkInterfaces", "hostname"]
     }
   },
   "imports": {
