@@ -5,7 +5,6 @@ import type { RouteRecordRaw } from 'vue-router'
  * guard, which would pull in the session query and the whole generated client.
  */
 export const routes: Array<RouteRecordRaw> = [
-  // Where signing in and registering land.
   // Where signing in and registering land. What it will hold is still open.
   {
     path: '/',
