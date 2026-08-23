@@ -54,8 +54,10 @@ before adding a surface.
 Where shadcn's defaults contradict it, the component is patched once rather than overridden at
 each call site — the Button's `outline` **is** the design system's Quiet level (`bg-paper-3`,
 `border-line-5`, `text-oak-deep`, 500) and its `secondary` variant is deleted rather than left as
-a borderless near-twin, every radius is `rounded-lg` because 6px is the control radius,
-`shadow-xs` is stripped from Input and the outline Button, `AvatarFallback`
+a borderless near-twin, **every control is `rounded-lg`** because 6px is the control radius — Button,
+Input, Textarea and SelectTrigger, which shadcn ships at four — `shadow-xs` is stripped from all
+four because nothing at rest casts a shadow, **Input and SelectTrigger carry `min-h-11 md:min-h-0`**
+so the 44px phone target is not written out at each call site (it was, at 39 of them), `AvatarFallback`
 carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour, and
 `DropdownMenuItem` and `DialogContent` carry the mobile rules below, `navigation-menu`'s
 trigger style drops shadcn's filled pills for the design system's underline-and-ink pattern,
@@ -83,10 +85,11 @@ After any `add`:
 
 ```bash
 git diff src/assets/main.css   # expect no change; restore the font import if there is one
-grep -c shadow-xs src/components/ui/button/index.ts src/components/ui/input/Input.vue  # expect 0
+grep -rc shadow-xs src/components/ui/                                                  # expect 0 everywhere
 grep -c border-line-5 src/components/ui/button/index.ts                                # expect 1
 grep -c secondary src/components/ui/button/index.ts                                    # expect 0
-grep -c rounded-md src/components/ui/button/index.ts                                   # expect 0
+grep -c rounded-md src/components/ui/button/index.ts src/components/ui/input/Input.vue src/components/ui/textarea/Textarea.vue src/components/ui/select/SelectTrigger.vue  # expect 0
+grep -c min-h-11 src/components/ui/input/Input.vue src/components/ui/select/SelectTrigger.vue  # expect 1 each
 grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                          # expect 1
 grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue                  # expect 1
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1

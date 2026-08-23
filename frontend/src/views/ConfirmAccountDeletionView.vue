@@ -63,7 +63,7 @@ const HEADINGS = {
           <p>Willst du dein Konto behalten, schließ dieses Fenster einfach.</p>
         </div>
 
-        <Button variant="destructive" class="mt-7 h-11 w-full md:h-9" @click="deleteAccount">
+        <Button variant="destructive" class="mt-7 w-full" @click="deleteAccount">
           Konto endgültig löschen
         </Button>
       </template>
@@ -82,7 +82,7 @@ const HEADINGS = {
           kannst du dich jederzeit neu anmelden.
         </p>
 
-        <Button as-child variant="outline" class="mt-7 h-11 w-full md:h-9">
+        <Button as-child variant="outline" class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Startseite</RouterLink>
         </Button>
       </template>
@@ -96,7 +96,7 @@ const HEADINGS = {
           <p>Dein Konto ist unverändert. Fordere in den Einstellungen einen neuen Link an.</p>
         </div>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>

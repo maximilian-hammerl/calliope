@@ -222,7 +222,6 @@ async function submit() {
     <form class="mt-3 flex flex-none gap-2 border-t border-line-3 pt-3" @submit.prevent="submit">
       <Input
         v-model="text"
-        class="h-11 md:h-9"
         name="message"
         placeholder="Schreib etwas …"
         autocomplete="off"

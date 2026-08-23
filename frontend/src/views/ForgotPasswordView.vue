@@ -111,12 +111,10 @@ function startOver() {
         </div>
 
         <div class="mt-7 flex flex-col gap-3">
-          <Button as-child class="h-11 md:h-9">
+          <Button as-child>
             <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
           </Button>
-          <Button variant="ghost" class="h-11 md:h-9" @click="startOver">
-            Andere Angaben verwenden
-          </Button>
+          <Button variant="ghost" @click="startOver"> Andere Angaben verwenden </Button>
         </div>
       </template>
 
@@ -137,7 +135,6 @@ function startOver() {
               <Input
                 id="login"
                 v-model="login"
-                class="h-11 md:h-9"
                 name="login"
                 pattern=".*\S.*"
                 :maxlength="LIMIT.login.maxLength"
@@ -151,7 +148,7 @@ function startOver() {
             </Field>
           </FieldGroup>
 
-          <Button type="submit" class="h-11 md:h-9" :disabled="isPending">
+          <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" data-icon="inline-start" />
             Link anfordern
           </Button>

@@ -89,7 +89,7 @@ const creating = ref<boolean>(false)
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <div class="mt-3 mb-2 flex flex-wrap items-baseline gap-3">
+        <div class="mb-2 flex flex-wrap items-baseline gap-3">
           <h1 class="text-[25px] leading-[1.2] text-ink-1">Gruppen entdecken</h1>
           <div class="ml-auto">
             <Button
@@ -113,7 +113,6 @@ const creating = ref<boolean>(false)
           <Input
             id="discover-search"
             v-model="term"
-            class="h-11 md:h-9"
             name="search"
             type="search"
             placeholder="z. B. Krimi"

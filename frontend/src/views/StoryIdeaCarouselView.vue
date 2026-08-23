@@ -67,7 +67,7 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <h1 class="mt-3 mb-2 text-[25px] leading-[1.2] text-ink-1">Story-Karussell</h1>
+        <h1 class="mb-2 text-[25px] leading-[1.2] text-ink-1">Story-Karussell</h1>
         <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
           Offene Ideen, die du noch nicht gelesen hast — eine nach der anderen.
         </p>

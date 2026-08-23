@@ -234,7 +234,6 @@ async function submit() {
             <Input
               id="group-title"
               v-model="title"
-              class="h-11 md:h-9"
               name="title"
               :maxlength="LIMIT.title.maxLength"
               placeholder="z. B. Der Erinnerungsmarkt"
@@ -249,7 +248,6 @@ async function submit() {
             <Input
               id="group-subtitle"
               v-model="subtitle"
-              class="h-11 md:h-9"
               name="subtitle"
               :maxlength="LIMIT.subtitle.maxLength"
               placeholder="z. B. Was du vergisst, gehört jemand anderem"

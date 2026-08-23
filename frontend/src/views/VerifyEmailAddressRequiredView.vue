@@ -195,7 +195,6 @@ async function signOut() {
             <Input
               id="emailAddress"
               v-model="newAddress"
-              class="h-11 md:h-9"
               name="emailAddress"
               type="email"
               :maxlength="LIMIT.emailAddress.maxLength"

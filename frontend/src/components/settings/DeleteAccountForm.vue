@@ -90,7 +90,6 @@ async function submit() {
         <Input
           id="deletionPassword"
           v-model="password"
-          class="h-11 md:h-9"
           name="deletionPassword"
           type="password"
           :maxlength="LIMIT.password.maxLength"
@@ -103,7 +102,7 @@ async function submit() {
     </FieldGroup>
 
     <div class="flex flex-col gap-3">
-      <Button type="submit" variant="destructive" class="h-11 md:h-9" :disabled="isPending">
+      <Button type="submit" variant="destructive" :disabled="isPending">
         <Spinner v-if="isPending" data-icon="inline-start" />
         Löschen-Link anfordern
       </Button>

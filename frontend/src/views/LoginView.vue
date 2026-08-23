@@ -156,7 +156,6 @@ async function submit() {
             <Input
               id="login"
               v-model="login"
-              class="h-11 md:h-9"
               name="login"
               pattern=".*\S.*"
               :maxlength="LIMIT.login.maxLength"
@@ -174,7 +173,6 @@ async function submit() {
             <Input
               id="password"
               v-model="password"
-              class="h-11 md:h-9"
               name="password"
               type="password"
               :maxlength="LIMIT.password.maxLength"
@@ -186,7 +184,7 @@ async function submit() {
           </Field>
         </FieldGroup>
 
-        <Button type="submit" class="h-11 md:h-9" :disabled="isPending">
+        <Button type="submit" :disabled="isPending">
           <Spinner v-if="isPending" data-icon="inline-start" />
           Anmelden
         </Button>

@@ -137,7 +137,6 @@ async function submit() {
         <Input
           id="newEmailAddress"
           v-model="newAddress"
-          class="h-11 md:h-9"
           name="emailAddress"
           type="email"
           :maxlength="LIMIT.emailAddress.maxLength"
@@ -155,7 +154,6 @@ async function submit() {
         <Input
           id="currentPassword"
           v-model="password"
-          class="h-11 md:h-9"
           name="password"
           type="password"
           :maxlength="LIMIT.password.maxLength"
@@ -167,7 +165,7 @@ async function submit() {
       </Field>
     </FieldGroup>
 
-    <Button type="submit" class="h-11 md:h-9" :disabled="isPending">
+    <Button type="submit" :disabled="isPending">
       <Spinner v-if="isPending" data-icon="inline-start" />
       Link an neue Adresse senden
     </Button>

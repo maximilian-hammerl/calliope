@@ -67,7 +67,6 @@ const TAG_FIELDS = [
       <Input
         :id="`group-${field.key}`"
         v-model="metadata[field.key]"
-        class="h-11 md:h-9"
         :name="field.key"
         :placeholder="field.placeholder"
       />
@@ -82,7 +81,6 @@ const TAG_FIELDS = [
       <Input
         id="group-tense"
         v-model="metadata.tense"
-        class="h-11 md:h-9"
         name="tense"
         :maxlength="LIMIT.tense.maxLength"
         placeholder="z. B. Vergangenheit"
@@ -94,7 +92,6 @@ const TAG_FIELDS = [
       <Input
         id="group-perspective"
         v-model="metadata.perspective"
-        class="h-11 md:h-9"
         name="perspective"
         :maxlength="LIMIT.perspective.maxLength"
         placeholder="z. B. Dritte Person, begrenzt"

@@ -140,7 +140,7 @@ async function submit() {
           </p>
         </div>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>
@@ -155,10 +155,10 @@ async function submit() {
         </div>
 
         <div class="mt-7 flex flex-col gap-3">
-          <Button as-child class="h-11 md:h-9">
+          <Button as-child>
             <RouterLink :to="{ name: 'forgotPassword' }">Neuen Link anfordern</RouterLink>
           </Button>
-          <Button as-child variant="ghost" class="h-11 md:h-9">
+          <Button as-child variant="ghost">
             <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
           </Button>
         </div>
@@ -181,7 +181,6 @@ async function submit() {
               <Input
                 id="password"
                 v-model="password"
-                class="h-11 md:h-9"
                 name="password"
                 type="password"
                 :maxlength="LIMIT.password.maxLength"
@@ -199,7 +198,6 @@ async function submit() {
               <Input
                 id="passwordConfirmation"
                 v-model="passwordConfirmation"
-                class="h-11 md:h-9"
                 name="passwordConfirmation"
                 type="password"
                 :maxlength="LIMIT.password.maxLength"
@@ -211,7 +209,7 @@ async function submit() {
             </Field>
           </FieldGroup>
 
-          <Button type="submit" class="h-11 md:h-9" :disabled="isPending">
+          <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" data-icon="inline-start" />
             Passwort speichern
           </Button>

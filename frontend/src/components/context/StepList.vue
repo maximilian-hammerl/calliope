@@ -173,7 +173,7 @@ const showingCompleted = ref<boolean>(false)
     <div v-if="adding" ref="addRow" class="mt-[9px] flex items-center gap-2">
       <Input
         v-model="newText"
-        class="h-11 flex-1 md:h-9"
+        class="flex-1"
         name="stepText"
         :maxlength="LIMIT.maxLength"
         placeholder="z. B. Kapitel 2 anlegen"

@@ -139,7 +139,6 @@ defineExpose({ reset })
       <Input
         :id="inputId"
         v-model="term"
-        class="h-11 md:h-9"
         name="search"
         role="combobox"
         aria-autocomplete="list"

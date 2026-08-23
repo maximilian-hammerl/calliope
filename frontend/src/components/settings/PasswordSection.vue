@@ -127,7 +127,6 @@ async function submitPassword() {
         <Input
           id="settingsCurrentPassword"
           v-model="currentPassword"
-          class="h-11 md:h-9"
           name="currentPassword"
           type="password"
           :maxlength="PASSWORD_LIMIT.currentPassword.maxLength"
@@ -143,7 +142,6 @@ async function submitPassword() {
         <Input
           id="settingsNewPassword"
           v-model="newPassword"
-          class="h-11 md:h-9"
           name="newPassword"
           type="password"
           :maxlength="PASSWORD_LIMIT.newPassword.maxLength"
@@ -161,7 +159,6 @@ async function submitPassword() {
         <Input
           id="settingsNewPasswordRepeat"
           v-model="newPasswordConfirmation"
-          class="h-11 md:h-9"
           name="newPasswordConfirmation"
           type="password"
           :maxlength="PASSWORD_LIMIT.newPassword.maxLength"
@@ -173,7 +170,7 @@ async function submitPassword() {
       </Field>
     </FieldGroup>
 
-    <Button type="submit" class="h-11 md:h-9" :disabled="isChangingPassword">
+    <Button type="submit" :disabled="isChangingPassword">
       <Spinner v-if="isChangingPassword" data-icon="inline-start" />
       Passwort ändern
     </Button>

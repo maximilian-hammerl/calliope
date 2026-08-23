@@ -183,7 +183,6 @@ async function submit() {
             <Input
               id="idea-title"
               v-model="title"
-              class="h-11 md:h-9"
               name="title"
               :maxlength="LIMIT.title.maxLength"
               placeholder="z. B. Briefe aus dem Leuchtturm"
@@ -198,7 +197,6 @@ async function submit() {
             <Input
               id="idea-subtitle"
               v-model="subtitle"
-              class="h-11 md:h-9"
               name="subtitle"
               :maxlength="LIMIT.subtitle.maxLength"
               placeholder="z. B. Zwei Wächter, eine See, die es nicht mehr gibt"
@@ -240,7 +238,6 @@ async function submit() {
             <Input
               id="idea-looking-for"
               v-model="lookingFor"
-              class="h-11 md:h-9"
               name="lookingFor"
               :maxlength="LIMIT.lookingFor.maxLength"
               placeholder="z. B. Eine Person, die den zweiten Wächter schreibt"
@@ -253,7 +250,7 @@ async function submit() {
               <select
                 id="idea-party-size"
                 v-model="partySize"
-                class="h-11 rounded-md border border-input bg-transparent px-3 text-[13px] md:h-9"
+                class="h-11 rounded-lg border border-input bg-transparent px-3 text-[13px] md:h-9"
               >
                 <option value="">Keine Angabe</option>
                 <option v-for="(label, value) in PARTY_SIZE_LABELS" :key="value" :value="value">
@@ -267,7 +264,7 @@ async function submit() {
               <select
                 id="idea-language"
                 v-model="language"
-                class="h-11 rounded-md border border-input bg-transparent px-3 text-[13px] md:h-9"
+                class="h-11 rounded-lg border border-input bg-transparent px-3 text-[13px] md:h-9"
               >
                 <option v-for="(label, value) in LANGUAGE_LABELS" :key="value" :value="value">
                   {{ label }}
@@ -281,7 +278,7 @@ async function submit() {
             <select
               id="idea-status"
               v-model="status"
-              class="h-11 rounded-md border border-input bg-transparent px-3 text-[13px] md:h-9"
+              class="h-11 rounded-lg border border-input bg-transparent px-3 text-[13px] md:h-9"
             >
               <option v-for="(label, value) in IDEA_STATUS_LABELS" :key="value" :value="value">
                 {{ label }}
@@ -297,7 +294,6 @@ async function submit() {
               <Input
                 id="idea-genres"
                 v-model="genres"
-                class="h-11 md:h-9"
                 name="genres"
                 placeholder="z. B. Fantasy, Mystery"
               />
@@ -309,7 +305,6 @@ async function submit() {
               <Input
                 id="idea-subgenres"
                 v-model="subgenres"
-                class="h-11 md:h-9"
                 name="subgenres"
                 placeholder="z. B. Cyberpunk, Dark Romance"
               />
@@ -320,7 +315,6 @@ async function submit() {
               <Input
                 id="idea-tropes"
                 v-model="tropes"
-                class="h-11 md:h-9"
                 name="tropes"
                 placeholder="z. B. Epistolary, Slow Burn"
               />
@@ -331,7 +325,6 @@ async function submit() {
               <Input
                 id="idea-content-warnings"
                 v-model="contentWarnings"
-                class="h-11 md:h-9"
                 name="contentWarnings"
                 placeholder="z. B. Verlust"
               />
@@ -344,7 +337,6 @@ async function submit() {
               <Input
                 id="idea-tense"
                 v-model="tense"
-                class="h-11 md:h-9"
                 name="tense"
                 :maxlength="LIMIT.tense.maxLength"
                 placeholder="z. B. Vergangenheit"
@@ -355,7 +347,6 @@ async function submit() {
               <Input
                 id="idea-perspective"
                 v-model="perspective"
-                class="h-11 md:h-9"
                 name="perspective"
                 :maxlength="LIMIT.perspective.maxLength"
                 placeholder="z. B. Erste Person"
@@ -364,7 +355,7 @@ async function submit() {
           </div>
         </FieldGroup>
 
-        <Button type="submit" class="h-11 md:h-9" :disabled="isPending">
+        <Button type="submit" :disabled="isPending">
           <Spinner v-if="isPending" data-icon="inline-start" />
           {{ props.idea ? 'Änderungen speichern' : 'Idee vorstellen' }}
         </Button>

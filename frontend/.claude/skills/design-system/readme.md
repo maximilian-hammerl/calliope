@@ -456,6 +456,12 @@ headers were competing with the writing. Production serves all three families fr
 origin as subsetted WOFF2 rather than from Google, so no page makes a third-party request; the
 typefaces and their axes are unchanged.
 
+**A page title starts where every other page's does.** The scroll container's own `py-5` is the
+whole gap between the top bar and the 25px heading — no page adds a top margin of its own. Two
+pages carried a stray `mt-3` and sat 32px down instead of 20px, which reads as a wobble when
+moving between them. Where an action shares the heading line, `items-baseline` against a 44px
+button pushes the title down a few pixels on a narrow screen; the *row* still starts at 20px.
+
 **Backgrounds.** Flat colour only. No images, no gradients, no textures, no patterns, no
 illustrations. The one exception is the diagonal hatch placeholder used for image thumbnails that
 have no asset yet.

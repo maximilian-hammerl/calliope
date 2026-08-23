@@ -63,7 +63,7 @@ const HEADINGS = {
           abgemeldet und meldest dich ab jetzt damit an.
         </p>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>
@@ -75,7 +75,7 @@ const HEADINGS = {
           anderen Adresse.
         </p>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>
@@ -89,7 +89,7 @@ const HEADINGS = {
           <p>Deine E-Mail-Adresse ist unverändert geblieben.</p>
         </div>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>

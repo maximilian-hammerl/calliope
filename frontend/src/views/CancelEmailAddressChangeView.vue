@@ -58,7 +58,7 @@ onMounted(async () => {
           </p>
         </div>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'forgotPassword' }">Passwort zurücksetzen</RouterLink>
         </Button>
       </template>
@@ -69,7 +69,7 @@ onMounted(async () => {
           abgelaufen, oder sie wurde inzwischen bestätigt.
         </p>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>

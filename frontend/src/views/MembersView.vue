@@ -78,7 +78,6 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
           <Input
             id="members-search"
             v-model="term"
-            class="h-11 md:h-9"
             name="search"
             type="search"
             placeholder="z. B. mira"

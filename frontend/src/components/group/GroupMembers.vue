@@ -305,7 +305,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
             "
           >
             <SelectTrigger
-              class="h-11 w-[104px] text-[12px] md:h-8"
+              class="w-[104px] text-[12px] md:h-8"
               :aria-label="`Rolle von ${membership.username}`"
             >
               <SelectValue />

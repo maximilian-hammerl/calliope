@@ -74,7 +74,7 @@ async function continueToApp() {
           Deine E-Mail-Adresse ist bestätigt. Du kannst jetzt loslegen.
         </p>
 
-        <Button class="mt-7 h-11 w-full md:h-9" @click="continueToApp">Weiter</Button>
+        <Button class="mt-7 w-full" @click="continueToApp">Weiter</Button>
       </template>
 
       <template v-else>
@@ -86,7 +86,7 @@ async function continueToApp() {
           <p>Melde dich an, um dir einen neuen schicken zu lassen.</p>
         </div>
 
-        <Button as-child class="mt-7 h-11 w-full md:h-9">
+        <Button as-child class="mt-7 w-full">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
       </template>

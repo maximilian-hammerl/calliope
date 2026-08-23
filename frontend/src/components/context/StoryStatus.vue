@@ -56,7 +56,7 @@ async function change(next: GetGroup200StoryStatus) {
       :disabled="isPending"
       @update:model-value="(value) => change(value as GetGroup200StoryStatus)"
     >
-      <SelectTrigger class="h-11 w-full text-[12.5px] md:h-9">
+      <SelectTrigger class="w-full text-[12.5px]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

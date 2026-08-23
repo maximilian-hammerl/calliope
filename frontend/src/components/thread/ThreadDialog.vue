@@ -134,7 +134,6 @@ async function submit() {
             <Input
               id="thread-title"
               v-model="title"
-              class="h-11 md:h-9"
               name="title"
               :maxlength="LIMIT.title.maxLength"
               placeholder="z. B. Plot oder Steckbriefe"

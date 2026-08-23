@@ -183,7 +183,6 @@ async function submit() {
             <Input
               id="username"
               v-model="username"
-              class="h-11 md:h-9"
               name="username"
               pattern=".*\S.*"
               :minlength="LIMIT.username.minLength"
@@ -208,7 +207,6 @@ async function submit() {
             <Input
               id="emailAddress"
               v-model="emailAddress"
-              class="h-11 md:h-9"
               name="emailAddress"
               type="email"
               :maxlength="LIMIT.emailAddress.maxLength"
@@ -230,7 +228,6 @@ async function submit() {
             <Input
               id="password"
               v-model="password"
-              class="h-11 md:h-9"
               name="password"
               type="password"
               :maxlength="LIMIT.password.maxLength"
@@ -246,7 +243,6 @@ async function submit() {
             <Input
               id="passwordConfirmation"
               v-model="passwordConfirmation"
-              class="h-11 md:h-9"
               name="passwordConfirmation"
               type="password"
               :maxlength="LIMIT.password.maxLength"
@@ -258,7 +254,7 @@ async function submit() {
           </Field>
         </FieldGroup>
 
-        <Button type="submit" class="h-11 md:h-9" :disabled="isPending">
+        <Button type="submit" :disabled="isPending">
           <Spinner v-if="isPending" data-icon="inline-start" />
           Konto erstellen
         </Button>

@@ -55,7 +55,7 @@ watch(
         v-model="term"
         aria-label="Suche"
         placeholder="Suche"
-        class="h-11 w-full rounded-md border border-input md:h-9 bg-transparent pr-3 pl-[30px] text-[13px] outline-none placeholder:text-ink-6 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        class="h-11 w-full rounded-lg border border-input md:h-9 bg-transparent pr-3 pl-[30px] text-[13px] outline-none placeholder:text-ink-6 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         @keydown.escape="open = false"
       />
     </ComboboxAnchor>

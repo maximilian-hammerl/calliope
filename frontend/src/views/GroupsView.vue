@@ -152,7 +152,6 @@ const creating = ref<boolean>(false)
           <Input
             id="groups-search"
             v-model="term"
-            class="h-11 md:h-9"
             name="search"
             type="search"
             placeholder="z. B. Erinnerungsmarkt"
