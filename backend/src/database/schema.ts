@@ -102,9 +102,12 @@ export interface Notification {
 
 export interface Report {
   category: ReportCategory;
+  closedAt: string | null;
+  closedBy: string | null;
   createdAt: Generated<string>;
   id: Generated<string>;
   reason: string;
+  reportedAuthorId: string | null;
   reportedChatGroupId: string | null;
   reportedChatMessageId: string | null;
   reportedStoryIdeaId: string | null;
@@ -413,11 +416,14 @@ export const REPORT_SCHEMA = z.object({
   reportedChatGroupId: z.uuidv7().nullable(),
   reportedChatMessageId: z.uuidv7().nullable(),
   reportedUserId: z.uuidv7().nullable(),
+  reportedAuthorId: z.uuidv7().nullable(),
   targetExcerpt: z.string(),
   category: REPORT_CATEGORY_SCHEMA,
   reason: z.string(),
   status: REPORT_STATUS_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
+  closedAt: z.iso.datetime({ offset: true }).nullable(),
+  closedBy: z.uuidv7().nullable(),
 });
 
 export const STORY_IDEA_SCHEMA = z.object({

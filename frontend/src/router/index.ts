@@ -12,7 +12,7 @@ declare module 'vue-router' {
      * nothing would catch. Omitting it means `member`, so forgetting to mark a route locks
      * it rather than exposing it.
      */
-    access?: 'member' | 'guest' | 'anyone'
+    access?: 'member' | 'guest' | 'anyone' | 'operator'
   }
 }
 
@@ -45,9 +45,9 @@ router.beforeEach(async (to) => {
   const access = to.meta.access ?? 'member'
 
   // Verification is orthogonal to access: `access` asks whether there is a session, this asks
-  // what state that session's account is in. Only member routes are affected — a verification
-  // link has to work signed out, and the wall itself would otherwise redirect to itself.
-  if (user !== undefined && access === 'member') {
+  // what state that session's account is in. An operator route needs it as much as a member
+  // one — the API refuses an unverified session whatever role it holds.
+  if (user !== undefined && (access === 'member' || access === 'operator')) {
     const addressIsUnconfirmed = user.emailAddressVerifiedAt === null
 
     if (addressIsUnconfirmed && to.name !== 'verifyEmailAddressRequired') {
@@ -68,6 +68,16 @@ router.beforeEach(async (to) => {
 
     case 'guest':
       return user === undefined ? true : { name: 'home' }
+
+    case 'operator': {
+      // Signed out goes to the sign-in page like any member route; signed in without a role
+      // goes home rather than to a refusal, because there is nothing there to explain to
+      // somebody who was never meant to see it. The API refuses independently.
+      if (user === undefined) {
+        return { name: 'login', query: { redirect: to.fullPath } }
+      }
+      return user.platformRole === null ? { name: 'home' } : true
+    }
 
     case 'anyone':
       return true

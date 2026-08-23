@@ -34,6 +34,7 @@ Deno.test.afterEach(async () => {
       eb.or([
         eb("reporterId", "in", fixtureUsers),
         eb("reportedUserId", "in", fixtureUsers),
+        eb("reportedAuthorId", "in", fixtureUsers),
       ])
     )
     .execute();

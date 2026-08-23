@@ -68,6 +68,12 @@ export const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/MemberView.vue'),
   },
   {
+    path: '/moderation',
+    name: 'moderation',
+    component: () => import('../views/ModerationView.vue'),
+    meta: { access: 'operator' },
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue'),

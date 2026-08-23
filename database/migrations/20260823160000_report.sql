@@ -66,6 +66,18 @@ CREATE TABLE public.report
     -- filed against its own author.
     reported_user_id  UUID                               REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
 
+    -- Who is answerable for the reported thing, resolved when the report is filed. Set for every
+    -- target type, including `user`, where it is the reported account itself.
+    --
+    -- Without this a report survives its target and loses the one fact an operator needs to act:
+    -- delete a reported post and `reported_writing_post_id` empties, leaving "somebody wrote
+    -- this" and no way to reach them. `reported_user_id` only ever names a *member* who was
+    -- reported, never the author of a reported post.
+    --
+    -- Not covered by the CHECK below, which is about the target columns: this one is always set,
+    -- whatever the type.
+    reported_author_id UUID                              REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
+
     -- What the reported thing said when it was reported, so the queue is still usable once the
     -- content is gone. Written by the server from what the reporter could see, never sent by the
     -- client — a snapshot the reporter composed would be evidence they wrote themselves.
@@ -84,6 +96,17 @@ CREATE TABLE public.report
 
     created_at        TIMESTAMPTZ               NOT NULL DEFAULT now(),
 
+    -- Who closed it and when. Named for closing rather than resolving because both non-open
+    -- states are a closing: `resolved` means something was done, `dismissed` means the report
+    -- was not valid, and `resolved_by` sitting on a dismissed report would read as a
+    -- contradiction. Which of the two an operator chose is the only signal there is about
+    -- whether a given member's reports are worth reading.
+    --
+    -- SET NULL like every other reference here: an operator's account going does not unclose
+    -- what they closed.
+    closed_at         TIMESTAMPTZ,
+    closed_by         UUID                               REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
+
     -- The polymorphism as a constraint, with the one concession SET NULL forces: this says that
     -- **no column other than the matching one is set**, rather than that the matching one is.
     -- "Exactly one" would be violated by the deletion this table exists to survive. Filing a
@@ -92,6 +115,12 @@ CREATE TABLE public.report
     --
     -- `ELSE false` matters: a CHECK passes when its expression is NULL, so a CASE with no
     -- matching branch would let a new target type through unchecked rather than stopping it.
+    -- A closed report says when it was closed, and an open one cannot pretend to have been.
+    CONSTRAINT report_closed_has_a_time CHECK (
+        (status = 'open' AND closed_at IS NULL)
+            OR (status <> 'open' AND closed_at IS NOT NULL)
+        ),
+
     CONSTRAINT report_target_matches_type CHECK (
         CASE target_type
             WHEN 'writing_group' THEN num_nonnulls(reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0

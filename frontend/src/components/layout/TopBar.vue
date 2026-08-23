@@ -40,6 +40,9 @@ const props = defineProps<{ user: GetCurrentUser200 }>()
 const route = useRoute()
 const router = useRouter()
 
+/** The menu is the only way in, so this is what makes the moderation queue reachable at all. */
+const isOperator = computed<boolean>(() => props.user.platformRole !== null)
+
 const environment = computed<EnvironmentNotice | undefined>(() => environmentNotice(ENVIRONMENT))
 
 const unread = computed<number>(() => props.user.unreadNotifications)
@@ -217,6 +220,18 @@ async function signOut() {
               <DropdownMenuItem @select="showingMessages = true">Nachrichten</DropdownMenuItem>
               <DropdownMenuItem @select="showingSettings = true">Einstellungen</DropdownMenuItem>
             </DropdownMenuGroup>
+
+            <!-- Only for operators, and in a group of its own: it belongs to this member the
+                 way the items above do, but it is about the site rather than about them. -->
+            <template v-if="isOperator">
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem as-child>
+                  <RouterLink :to="{ name: 'moderation' }">Moderation</RouterLink>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </template>
+
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem :disabled="isPending" @select="signOut">

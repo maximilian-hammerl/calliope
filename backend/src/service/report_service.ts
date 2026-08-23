@@ -1,8 +1,11 @@
 import { db } from "@/src/database/client.ts";
 import type {
   ReportCategory,
+  ReportStatus,
   ReportTargetType,
 } from "@/src/database/schema.ts";
+import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
+import { listResultsWithCount } from "@/src/list/list_endpoint_query.ts";
 import type { User } from "@/src/service/user_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
@@ -24,7 +27,7 @@ import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
  * second copy of the writing. Not in `text_limit.ts`: that file bounds what a member types, and
  * nobody types this.
  */
-const EXCERPT_LENGTH = 500;
+const EXCERPT_LENGTH = 2_000;
 
 function excerpt(text: string): string {
   const collapsed = text.trim();
@@ -54,24 +57,28 @@ const TARGET_COLUMN = {
  * each, and a second copy of either is how a private group's writing became readable once
  * already.
  */
+type ResolvedTarget = { excerpt: string; authorId: string | null };
+
 async function resolveTarget(
   user: User,
   targetType: ReportTargetType,
   targetId: string,
-): Promise<string | undefined> {
+): Promise<ResolvedTarget | undefined> {
   switch (targetType) {
     case "writing_group": {
       const group = await WritingGroupService.selectVisibleWritingGroup(
         user,
         targetId,
       );
-      return group === undefined ? undefined : excerpt(group.title);
+      return group === undefined
+        ? undefined
+        : { excerpt: excerpt(group.title), authorId: group.createdBy };
     }
 
     case "writing_thread": {
       const thread = await db
         .selectFrom("writingThread")
-        .select(["title", "writingGroupId"])
+        .select(["title", "writingGroupId", "createdBy"])
         .where("id", "=", targetId)
         .executeTakeFirst();
 
@@ -83,7 +90,9 @@ async function resolveTarget(
         user,
         thread.writingGroupId,
       );
-      return group === undefined ? undefined : excerpt(thread.title);
+      return group === undefined
+        ? undefined
+        : { excerpt: excerpt(thread.title), authorId: thread.createdBy };
     }
 
     case "writing_post": {
@@ -112,23 +121,29 @@ async function resolveTarget(
         user,
         post.writingGroupId,
       );
-      return group === undefined ? undefined : excerpt(post.text);
+      return group === undefined
+        ? undefined
+        : { excerpt: excerpt(post.text), authorId: post.createdBy };
     }
 
     case "story_idea": {
       const idea = await StoryIdeaService.selectStoryIdea(targetId, user.id);
-      return idea === undefined ? undefined : excerpt(idea.title);
+      return idea === undefined
+        ? undefined
+        : { excerpt: excerpt(idea.title), authorId: idea.createdBy };
     }
 
     case "chat_group": {
       const chat = await ChatGroupService.selectChatGroup(user, targetId);
-      return chat === undefined ? undefined : excerpt(chat.title ?? "");
+      return chat === undefined
+        ? undefined
+        : { excerpt: excerpt(chat.title ?? ""), authorId: chat.createdBy };
     }
 
     case "chat_message": {
       const message = await db
         .selectFrom("chatMessage")
-        .select(["text", "chatGroupId"])
+        .select(["text", "chatGroupId", "createdBy"])
         .where("id", "=", targetId)
         .executeTakeFirst();
 
@@ -140,12 +155,17 @@ async function resolveTarget(
         user,
         message.chatGroupId,
       );
-      return chat === undefined ? undefined : excerpt(message.text);
+      return chat === undefined
+        ? undefined
+        : { excerpt: excerpt(message.text), authorId: message.createdBy };
     }
 
     case "user": {
       const profile = await UserService.selectUserProfile(targetId);
-      return profile === undefined ? undefined : excerpt(profile.username);
+      // The reported account answers for itself.
+      return profile === undefined
+        ? undefined
+        : { excerpt: excerpt(profile.username), authorId: profile.id };
     }
 
     default:
@@ -166,9 +186,9 @@ async function insertReport(
     return "own_account";
   }
 
-  const targetExcerpt = await resolveTarget(user, targetType, targetId);
+  const target = await resolveTarget(user, targetType, targetId);
 
-  if (targetExcerpt === undefined) {
+  if (target === undefined) {
     return "not_found";
   }
 
@@ -186,7 +206,8 @@ async function insertReport(
       reporterId: user.id,
       targetType,
       [TARGET_COLUMN[targetType]]: targetId,
-      targetExcerpt,
+      targetExcerpt: target.excerpt,
+      reportedAuthorId: target.authorId,
       category,
       reason,
     })
@@ -230,4 +251,109 @@ async function insertReport(
   return undefined;
 }
 
-export const ReportService = { insertReport };
+/**
+ * Whether the thing a report names is still there. It needs no query of its own: the target
+ * columns are SET NULL, so a report whose column has emptied is one whose target is gone. That
+ * is the difference between "go and look" and "already handled by somebody, or by its author".
+ */
+const TARGET_STILL_EXISTS = Object.values(TARGET_COLUMN);
+
+/** What the queue shows, which is the row plus who filed it and whether the target is still there. */
+export type Report = {
+  id: string;
+  targetType: ReportTargetType;
+  targetExcerpt: string;
+  category: ReportCategory;
+  reason: string;
+  status: ReportStatus;
+  createdAt: string;
+  closedAt: string | null;
+  reporterUsername: string | null;
+  authorId: string | null;
+  authorUsername: string | null;
+  targetExists: boolean;
+};
+
+export type ReportFilters = {
+  status?: ReportStatus;
+  category?: ReportCategory;
+  targetType?: ReportTargetType;
+};
+
+function listReports(
+  query: ListQuery & ReportFilters,
+): Promise<ListResults<Report>> {
+  return listResultsWithCount(
+    db
+      .selectFrom("report")
+      // Left, because a reporter who has since deleted their account leaves the report behind.
+      .leftJoin("user", "user.id", "report.reporterId")
+      .select((eb) => [
+        "report.id",
+        "report.targetType",
+        "report.targetExcerpt",
+        "report.category",
+        "report.reason",
+        "report.status",
+        "report.createdAt",
+        "report.closedAt",
+        "user.username as reporterUsername",
+        // Who to act on, which survives the reported thing being deleted. A subselect rather
+        // than a second join to `user`: an aliased join widens the builder's type past what
+        // `listResultsWithCount` accepts, and one row by primary key costs nothing.
+        "report.reportedAuthorId as authorId",
+        eb
+          .selectFrom("user as author")
+          .select("author.username")
+          .whereRef("author.id", "=", "report.reportedAuthorId")
+          .as("authorUsername"),
+        // `$castTo`, not `cast`: the `$` marks a TypeScript-only narrowing that leaves the SQL
+        // alone, which is right because `num_nonnulls(...) = 1` already *is* a boolean in
+        // Postgres — the function returns integer, the comparison returns boolean. Kysely types
+        // a comparison as `SqlBool` (`boolean | 0 | 1`) because MySQL and SQLite answer 0/1;
+        // here it is a real boolean and only the type needs correcting. A `cast` would wrap
+        // CAST(… AS boolean) around something already boolean.
+        eb(eb.fn<number>("num_nonnulls", TARGET_STILL_EXISTS), "=", 1)
+          .$castTo<boolean>()
+          .as("targetExists"),
+      ])
+      .$if(query.status !== undefined, (builder) =>
+        // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+        builder.where("report.status", "=", query.status!))
+      .$if(query.category !== undefined, (builder) =>
+        // deno-lint-ignore no-non-null-assertion -- as above
+        builder.where("report.category", "=", query.category!))
+      .$if(query.targetType !== undefined, (builder) =>
+        // deno-lint-ignore no-non-null-assertion -- as above
+        builder.where("report.targetType", "=", query.targetType!)),
+    query,
+  );
+}
+
+/**
+ * Closing a report records who did it and when, which is the only account of what was done —
+ * nothing else in the product keeps one yet.
+ */
+async function closeReport(
+  reportId: string,
+  status: Exclude<ReportStatus, "open">,
+  operatorId: string,
+): Promise<"not_found" | undefined> {
+  const closed = await db
+    .updateTable("report")
+    .set({
+      status,
+      closedAt: Temporal.Now.instant().toString(),
+      closedBy: operatorId,
+    })
+    .where("id", "=", reportId)
+    // Only an open one closes: reopening, or overwriting who closed it, is a different act and
+    // not one this offers.
+    .where("status", "=", "open")
+    .returning("id")
+    .executeTakeFirst();
+
+  return closed === undefined ? "not_found" : undefined;
+}
+
+export const ReportService = { insertReport, listReports, closeReport };

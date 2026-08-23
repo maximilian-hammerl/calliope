@@ -31,6 +31,7 @@ export default defineConfig({
           listStoryIdeas: { query: { useQuery: true } },
           getStoryIdeaCarousel: { query: { useQuery: true } },
           listBlocks: { query: { useQuery: true } },
+          listReports: { query: { useQuery: true } },
         },
         // The generated client resolves for every status, so vue-query would see a 401 as a
         // success. The mutator throws instead. It lives outside src/api because that whole
