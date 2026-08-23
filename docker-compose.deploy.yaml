@@ -55,6 +55,9 @@ services:
     restart: unless-stopped
 
     environment:
+      # The backend reads this at boot and refuses to start without it, which is the point:
+      # the seed guard and the notice the frontend shows must agree about which instance this is.
+      ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT must be set}
       HOST_URL: ${HOST_URL:?set HOST_URL in .env}
       APP_NAME: ${APP_NAME:-}
       APP_DESCRIPTION: ${APP_DESCRIPTION:-}
