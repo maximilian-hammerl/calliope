@@ -100,8 +100,16 @@ not think you were on.
 
 The script fetches, works out which of the paths below applies, and does that one. Add
 `--dry-run` to print the plan and stop, which is worth doing whenever a migration changed.
-Afterwards it waits for the backend's health check and fetches `HOST_URL`, because a healthy
-container proves nothing about TLS, the routing, or the frontend build Caddy serves.
+Afterwards it waits for the backend's health check and then asks the deployment what it is
+running: `GET /api/health` reports the deployed commit as `releaseId`, and the served page
+carries it as `<meta name="commit">`. Both must equal what was just deployed. They are checked
+separately because the backend and the frontend are built by different compose services, and a
+current backend behind a stale bundle is exactly what a single 200 hides.
+
+The stamp is `git describe --always --dirty`, exported so compose interpolates it — shell
+variables win over `.env` — into `GIT_COMMIT` for the backend and `VITE_COMMIT` for the build.
+Neither is required: run by hand, the backend omits `releaseId` and the page says `unknown`.
+`-dirty` means somebody edited a file on the server.
 
 The sections below are what it automates, and what to do when it refuses.
 
