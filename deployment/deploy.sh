@@ -105,28 +105,33 @@ set -euo pipefail
 	touched_migrations="$(git diff --name-status --no-renames "$old" "$new" -- database/migrations/ |
 		awk '{ print $2 }')"
 
+	# Read unconditionally, rather than only when this pull touches a migration: the check
+	# below is about whether the database and the checkout agree *now*, and they can have
+	# diverged in an earlier deploy whose diff this one knows nothing about.
 	applied=""
-	if [ -n "$touched_migrations" ]; then
-		database_state="$(compose ps --format '{{.State}}' db 2>/dev/null | tail -n 1 || true)"
+	applied_known=false
+	database_state="$(compose ps --format '{{.State}}' db 2>/dev/null | tail -n 1 || true)"
 
-		if [ "$database_state" != "running" ]; then
-			# A first deploy, or a stack that is down: nothing can have been applied, so nothing
-			# can have diverged.
-			echo "The db container is ${database_state:-absent}; nothing has been applied yet."
-		else
-			# Asked separately, because the table is absent until dbmate's first run and a query
-			# against a missing table fails at parse time. Anything else failing here is a real
-			# problem and must not be read as "nothing is applied" — that skips the rebuild.
-			table_exists="$(compose exec -T db psql -U calliope -d calliope -tAc \
-				"select to_regclass('migration.schema_migration') is not null" </dev/null 2>/dev/null)" ||
-				fail "Cannot read the applied migrations from the database. Fix that before deploying:
+	if [ "$database_state" != "running" ]; then
+		# A first deploy, or a stack that is down: nothing can have been applied, so nothing
+		# can have diverged.
+		echo "The db container is ${database_state:-absent}; nothing has been applied yet."
+	else
+		# Asked separately, because the table is absent until dbmate's first run and a query
+		# against a missing table fails at parse time. Anything else failing here is a real
+		# problem and must not be read as "nothing is applied" — that skips the rebuild.
+		table_exists="$(compose exec -T db psql -U calliope -d calliope -tAc \
+			"select to_regclass('migration.schema_migration') is not null" </dev/null 2>/dev/null)" ||
+			fail "Cannot read the applied migrations from the database. Fix that before deploying:
 a failure here would look exactly like a database with nothing applied, and skip a rebuild
 that is needed."
 
-			if [ "$table_exists" = "t" ]; then
-				applied="$(compose exec -T db psql -U calliope -d calliope -tAc \
-					'select version from migration.schema_migration' </dev/null)"
-			fi
+		if [ "$table_exists" = "t" ]; then
+			applied="$(compose exec -T db psql -U calliope -d calliope -tAc \
+				'select version from migration.schema_migration' </dev/null)"
+			applied_known=true
+		else
+			echo "dbmate has not run here yet; there is nothing applied to compare."
 		fi
 	fi
 
@@ -141,8 +146,38 @@ that is needed."
 	# once. `|| true`: grep finds nothing when the list is empty, which is the ordinary case.
 	stale_versions="$(printf '%s\n' "$stale_versions" | grep -v '^[[:space:]]*$' | sort -u || true)"
 
+	# The differential check above answers "did this pull edit something already applied?".
+	# This one answers "do the database and the checkout agree at all?" — the accumulated state,
+	# which no single diff can see. dbmate records only a version and no checksum, so the sets
+	# are all there is to compare: matching versions never prove matching content.
+	versions() { printf '%s\n' "$1" | grep -v '^[[:space:]]*$' | sort -u || true; }
+
+	# Outside the branch below: the post-condition after the deploy needs this too, and it
+	# depends on the checkout rather than on whether the database was reachable a moment ago.
+	file_versions=""
+	for migration in "$REPOSITORY"/database/migrations/*.sql; do
+		[ -e "$migration" ] || continue
+		file_versions="$(printf '%s\n%s' "$file_versions" "$(basename "$migration" | cut -d _ -f 1)")"
+	done
+
+	orphaned_versions=""
+	unapplied_versions=""
+	if [ "$applied_known" = true ]; then
+		# Applied but absent from the checkout: a rollback to an older commit, a deleted
+		# migration, or one renamed to a different version leaving the old one behind. The
+		# schema then holds objects this checkout never defines.
+		orphaned_versions="$(comm -23 <(versions "$applied") <(versions "$file_versions"))"
+
+		# Present but never applied. Ordinarily the migrations this deploy is about to run, so
+		# it is reported rather than refused; the post-condition after the deploy is what turns
+		# a leftover into a failure.
+		unapplied_versions="$(comm -13 <(versions "$applied") <(versions "$file_versions"))"
+	fi
+
 	rebuild=false
 	[ -n "$stale_versions" ] && rebuild=true
+	# The same divergence as an edited migration, and the same remedy.
+	[ -n "$orphaned_versions" ] && rebuild=true
 
 	# Any compose change gets --force-recreate. A changed network option needs it — compose
 	# recreates the network but only *restarts* the containers, which then hold stale DNS — and
@@ -162,13 +197,26 @@ that is needed."
 	echo
 	echo "Plan for $environment:"
 	if [ "$rebuild" = true ]; then
-		echo "  ! rebuild the database — these applied migration versions changed:"
-		for version in $stale_versions; do echo "      $version"; done
+		echo "  ! rebuild the database"
+		if [ -n "$stale_versions" ]; then
+			echo "    these applied migration versions changed:"
+			for version in $stale_versions; do echo "      $version"; done
+		fi
+		if [ -n "$orphaned_versions" ]; then
+			echo "    these versions are applied but no migration defines them:"
+			for version in $orphaned_versions; do echo "      $version"; done
+		fi
 		if [ "$environment" = "$RESETTABLE" ]; then
 			echo "    every row is deleted, every account included, then seed data is written"
 		fi
+	elif [ "$applied_known" = true ]; then
+		echo "  migrations: the database matches the checkout"
 	else
 		echo "  migrations: nothing applied was edited"
+	fi
+	if [ -n "$unapplied_versions" ]; then
+		echo "  to apply: $(printf '%s' "$unapplied_versions" | wc -l | tr -d ' ') migration(s)"
+		for version in $unapplied_versions; do echo "      $version"; done
 	fi
 	[ "$recreate" = true ] && echo "  --force-recreate (the compose file changed)"
 	[ "$recreate_caddy" = true ] && echo "  --force-recreate caddy (the Caddyfile changed)"
@@ -176,8 +224,9 @@ that is needed."
 
 	if [ "$rebuild" = true ] && [ "$environment" != "$RESETTABLE" ]; then
 		fail "Refusing to rebuild the database on $environment: only $RESETTABLE is reset when a
-migration calls for it. Either add a migration instead of editing an applied one, or follow
-\"After a migration was edited rather than added\" in README.md by hand, knowing what it costs."
+migration calls for it. Either add a migration instead of editing or removing an applied one,
+or follow \"After a migration was edited rather than added\" in README.md by hand, knowing what
+it costs."
 	fi
 
 	if [ "$dry_run" = true ]; then
@@ -226,6 +275,18 @@ migration calls for it. Either add a migration instead of editing an applied one
 
 	host_url="$(sed -n 's/^[[:space:]]*HOST_URL[[:space:]]*=[[:space:]]*//p' "$ENV_FILE" |
 		tail -n 1 | tr -d '"'"'" | tr -d '[:space:]')"
+
+	# Every migration the checkout defines must be applied by now. The backend already waits on
+	# `migrate` completing, so this is the second lock rather than the first — but a version
+	# that silently did not run leaves the schema short of what the code expects, and that is
+	# worth one query to rule out.
+	still_applied="$(compose exec -T db psql -U calliope -d calliope -tAc \
+		'select version from migration.schema_migration' </dev/null)"
+	still_unapplied="$(comm -13 <(versions "$still_applied") <(versions "$file_versions"))"
+
+	[ -z "$still_unapplied" ] || fail "Deployed, but these migrations are still not applied:
+$still_unapplied
+The schema is behind what this commit expects. \`compose logs migrate\`."
 
 	echo
 	echo -n "Waiting for the backend to report healthy "
