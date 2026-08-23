@@ -2,14 +2,16 @@
 /** Thin on purpose: the fields that answer "would this person suit me" come next. */
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getGetUserQueryKey, useGetUser } from '@/api/users/users'
+import { getGetUserQueryKey, useGetUser, useLiftUserBan } from '@/api/users/users'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { useUnblockMember } from '@/api/blocks/blocks'
+import { GetCurrentUser200PlatformRole } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
 import type { GetUser200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import BanMemberDialog from '@/components/user/BanMemberDialog.vue'
 import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Button } from '@/components/ui/button'
@@ -34,6 +36,36 @@ const { data: currentUserData } = useGetCurrentUser()
 const isOwnProfile = computed<boolean>(
   () => currentUserData.value?.status === 200 && currentUserData.value.data.id === userId.value,
 )
+
+/**
+ * Operator-only, and never on one's own profile — the API refuses to ban an account holding a
+ * platform role anyway, which is what stops an operator banning themselves or another.
+ */
+const mayModerate = computed<boolean>(() => {
+  if (currentUserData.value?.status !== 200) {
+    return false
+  }
+  const role = currentUserData.value.data.platformRole
+  return (
+    role === GetCurrentUser200PlatformRole.moderator ||
+    role === GetCurrentUser200PlatformRole.administrator
+  )
+})
+
+const banning = ref<boolean>(false)
+const banError = ref<string | undefined>(undefined)
+const { mutateAsync: liftBan, isPending: liftingBan } = useLiftUserBan()
+
+async function liftTheBan() {
+  banError.value = undefined
+  try {
+    await liftBan({ userId: userId.value })
+  } catch {
+    banError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    return
+  }
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
+}
 
 const blocking = ref<boolean>(false)
 const blockError = ref<string | undefined>(undefined)
@@ -93,10 +125,38 @@ async function allowContactAgain() {
                 Blockieren
               </Button>
             </div>
+
+            <!-- Its own group, after the member-facing one: blocking is what any member may do
+                 to another, banning is the platform acting. `isBanned` is only sent to an
+                 operator, so this is absent for everybody else even before the check. -->
+            <div v-if="mayModerate && !isOwnProfile" class="w-full sm:w-auto">
+              <Button
+                v-if="member.isBanned"
+                variant="outline"
+                size="sm"
+                :disabled="liftingBan"
+                @click="liftTheBan"
+              >
+                Sperre aufheben
+              </Button>
+              <Button v-else variant="outline" size="sm" @click="banning = true">
+                Konto sperren
+              </Button>
+            </div>
           </div>
 
           <p v-if="blockError" class="mt-3 text-[12.5px] text-destructive" role="alert">
             {{ blockError }}
+          </p>
+
+          <p v-if="banError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+            {{ banError }}
+          </p>
+
+          <!-- Said plainly on the page, not only inside the dialog: an operator looking at this
+               profile has to be able to see the account's state without opening anything. -->
+          <p v-if="member.isBanned" class="mt-3 text-[12.5px] text-ink-5">
+            Dieses Konto ist gesperrt.
           </p>
 
           <p
@@ -132,6 +192,13 @@ async function allowContactAgain() {
     <BlockMemberDialog
       v-if="member"
       v-model:open="blocking"
+      :user-id="member.id"
+      :username="member.username"
+    />
+
+    <BanMemberDialog
+      v-if="member && mayModerate"
+      v-model:open="banning"
       :user-id="member.id"
       :username="member.username"
     />

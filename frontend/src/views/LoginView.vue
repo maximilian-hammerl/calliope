@@ -5,6 +5,9 @@ import { useLoginUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { ApiError } from '@/lib/api/apiFetch'
+// From the generated client, so renaming the code in the backend breaks compilation
+// here rather than quietly turning the message back into a generic failure.
+import { LoginUser403Code } from '@/api/models'
 import type { FieldMessages } from '@/lib/validation/fieldMessage'
 import { fieldMessage } from '@/lib/validation/fieldMessage'
 import { forgetCurrentUser } from '@/lib/auth/session'
@@ -114,6 +117,13 @@ async function submit() {
       // attributed to one field, so it stays a plain statement above the form.
       if (error.status === 401) {
         formError.value = 'Benutzername, E-Mail-Adresse oder Passwort ist nicht korrekt.'
+        return
+      }
+      // Reached only with the right password, which is what makes saying so safe. Deliberately
+      // without the operator's recorded reason: that note is written for operators.
+      if (error.status === 403 && error.body.code === LoginUser403Code.account_banned) {
+        formError.value =
+          'Dieses Konto wurde gesperrt. Wende dich an uns, wenn du das für einen Fehler hältst.'
         return
       }
       if (error.status === 400 && applyServerIssues(error)) {
