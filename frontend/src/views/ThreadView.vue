@@ -25,6 +25,7 @@ import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import PostItem from '@/components/thread/PostItem.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
@@ -146,6 +147,17 @@ const mayModifyThread = computed<boolean>(
     (thread.value?.createdBy !== null && thread.value?.createdBy === currentUserId.value),
 )
 
+const reportingThread = ref<boolean>(false)
+/** The post being reported, which is also what opens the dialog. */
+const reportedPost = ref<ListPosts200ResultsItem | undefined>(undefined)
+const reportingPost = computed<boolean>({
+  get: () => reportedPost.value !== undefined,
+  set: (open) => {
+    if (!open) {
+      reportedPost.value = undefined
+    }
+  },
+})
 const renamingThread = ref<boolean>(false)
 const deletingThread = ref<boolean>(false)
 const deletionError = ref<string | undefined>(undefined)
@@ -262,6 +274,7 @@ async function submit() {
             :may-modify="mayModifyThread"
             @rename="renamingThread = true"
             @delete="deletingThread = true"
+            @report="reportingThread = true"
           />
 
           <p v-if="posts.length === 0" class="text-[13.5px] leading-[1.7] text-ink-4">
@@ -287,6 +300,8 @@ async function submit() {
             :post="post"
             :first="index === 0"
             :divider="index < posts.length - 1"
+            :current-user-id="currentUserId"
+            @report="reportedPost = post"
           />
 
           <!-- Below the posts as well as in the strip above: this is where somebody is when
@@ -350,6 +365,22 @@ async function submit() {
   <ThreadDialog v-model:open="creatingThread" :group-id="groupId" @created="openThread" />
 
   <ThreadDialog v-if="thread" v-model:open="renamingThread" :group-id="groupId" :thread="thread" />
+
+  <ReportDialog
+    v-if="reportedPost"
+    v-model:open="reportingPost"
+    target-type="writing_post"
+    :target-id="reportedPost.id"
+    :subject="reportedPost.createdByUsername ?? 'Gelöschtes Konto'"
+  />
+
+  <ReportDialog
+    v-if="thread"
+    v-model:open="reportingThread"
+    target-type="writing_thread"
+    :target-id="thread.id"
+    :subject="thread.title"
+  />
 
   <DeleteThreadDialog
     v-if="thread"

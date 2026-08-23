@@ -19,6 +19,7 @@ import notifications from "./route/notifications.ts";
 import search from "./route/search.ts";
 import storyIdeas from "./route/story_ideas.ts";
 import blocks from "@/src/route/blocks.ts";
+import reports from "@/src/route/reports.ts";
 import users from "./route/users.ts";
 
 // Everything the API serves, without the prefix it is mounted under. Keeping the prefix out
@@ -48,6 +49,7 @@ const api = new OpenAPIHono({
   .route("/health", health)
   .route("/story-ideas", storyIdeas)
   .route("/blocks", blocks)
+  .route("/reports", reports)
   .route("/users", users)
   .route("/notifications", notifications)
   .route("/chats", chats)

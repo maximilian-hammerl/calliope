@@ -1,0 +1,312 @@
+import { assertEquals, assertExists } from "@std/assert";
+import { STATUS_CODE } from "@std/http/status";
+import { db } from "@/src/database/client.ts";
+import {
+  clearRateLimits,
+  createGroup,
+  deleteUsers,
+  getUserId,
+  registerUser,
+  request,
+} from "@/src/test/support.ts";
+
+// Its own accounts: the suite runs in parallel, so shared names collide.
+const reporter = "report-test-reporter";
+const author = "report-test-author";
+const outsider = "report-test-outsider";
+
+Deno.test.beforeEach(clearRateLimits);
+
+/**
+ * Reports outlive their reporter by design — that is the feature — so `deleteUsers` leaves them
+ * behind and a development database quietly fills with orphans. They go first, while they can
+ * still be found by who filed them.
+ */
+Deno.test.afterEach(async () => {
+  const fixtureUsers = db
+    .selectFrom("user")
+    .select("id")
+    .where("username", "in", [reporter, author, outsider]);
+
+  await db
+    .deleteFrom("report")
+    .where((eb) =>
+      eb.or([
+        eb("reporterId", "in", fixtureUsers),
+        eb("reportedUserId", "in", fixtureUsers),
+      ])
+    )
+    .execute();
+
+  await deleteUsers([reporter, author, outsider]);
+});
+
+const report = (
+  cookie: string,
+  targetType: string,
+  targetId: string,
+  reason = "Beleidigend",
+  category = "harassment",
+) =>
+  request("POST", "/api/reports", cookie, {
+    targetType,
+    targetId,
+    category,
+    reason,
+  });
+
+async function thread(cookie: string, groupId: string, title: string) {
+  const response = await request(
+    "POST",
+    `/api/groups/${groupId}/threads`,
+    cookie,
+    { title },
+  );
+  assertEquals(response.status, STATUS_CODE.Created);
+  return await response.json();
+}
+
+async function post(
+  cookie: string,
+  groupId: string,
+  threadId: string,
+  text: string,
+) {
+  const response = await request(
+    "POST",
+    `/api/groups/${groupId}/threads/${threadId}/posts`,
+    cookie,
+    { text },
+  );
+  assertEquals(response.status, STATUS_CODE.Created);
+  return await response.json();
+}
+
+const storedFor = (targetId: string) =>
+  db
+    .selectFrom("report")
+    .selectAll()
+    .where((eb) =>
+      eb.or([
+        eb("reportedWritingPostId", "=", targetId),
+        eb("reportedWritingGroupId", "=", targetId),
+        eb("reportedUserId", "=", targetId),
+      ])
+    )
+    .executeTakeFirst();
+
+Deno.test("POST /api/reports copies what was reported into the report", async () => {
+  const authorCookie = await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+
+  const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
+  const created = await thread(authorCookie, group.id, "Ein Thread");
+  const written = await post(
+    authorCookie,
+    group.id,
+    created.id,
+    "Etwas Übles.",
+  );
+
+  assertEquals(
+    (await report(reporterCookie, "writing_post", written.id)).status,
+    STATUS_CODE.OK,
+  );
+
+  const stored = await storedFor(written.id);
+  assertExists(stored);
+  // The excerpt is the point: the queue has to stay readable after the post is deleted, and it
+  // has to be the server's copy rather than one the reporter composed.
+  assertEquals(stored.targetExcerpt, "Etwas Übles.");
+  assertEquals(stored.reason, "Beleidigend");
+  assertEquals(stored.category, "harassment");
+  assertEquals(stored.status, "open");
+});
+
+Deno.test("a report survives the post it is about", async () => {
+  const authorCookie = await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+
+  const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
+  const created = await thread(authorCookie, group.id, "Ein Thread");
+  const written = await post(
+    authorCookie,
+    group.id,
+    created.id,
+    "Etwas Übles.",
+  );
+  await report(reporterCookie, "writing_post", written.id);
+
+  // Deleting your own post the moment it is reported must not erase the evidence.
+  assertEquals(
+    (await request(
+      "DELETE",
+      `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
+      authorCookie,
+      undefined,
+    )).status,
+    STATUS_CODE.OK,
+  );
+
+  const stored = await db
+    .selectFrom("report")
+    .selectAll()
+    .where("targetExcerpt", "=", "Etwas Übles.")
+    .executeTakeFirst();
+
+  assertExists(stored, "the report went with the post");
+  assertEquals(stored.reportedWritingPostId, null);
+  assertEquals(stored.targetType, "writing_post");
+});
+
+Deno.test("what the reporter cannot see cannot be reported", async () => {
+  const authorCookie = await registerUser(author);
+  const outsiderCookie = await registerUser(outsider);
+
+  const group = await createGroup(authorCookie, "Private Gruppe", "private");
+  const created = await thread(authorCookie, group.id, "Geheim");
+
+  // 404, not 403: answering differently would make reporting a way to discover that a private
+  // group's thread exists.
+  assertEquals(
+    (await report(outsiderCookie, "writing_thread", created.id)).status,
+    STATUS_CODE.NotFound,
+  );
+  assertEquals(
+    (await report(outsiderCookie, "writing_group", group.id)).status,
+    STATUS_CODE.NotFound,
+  );
+});
+
+Deno.test("reporting the same thing again rewrites the reason", async () => {
+  await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+  const authorId = await getUserId(author);
+
+  // Half a sentence submitted by a stray Enter, then said properly.
+  assertEquals(
+    (await report(reporterCookie, "user", authorId, "Beleidig")).status,
+    STATUS_CODE.OK,
+  );
+  assertEquals(
+    (await report(
+      reporterCookie,
+      "user",
+      authorId,
+      "Beleidigend, mehrfach.",
+      "hate",
+    )).status,
+    STATUS_CODE.OK,
+  );
+
+  const stored = await db
+    .selectFrom("report")
+    .selectAll()
+    .where("reportedUserId", "=", authorId)
+    .execute();
+
+  // One report, and it says what the reporter meant to say.
+  assertEquals(stored.length, 1);
+  assertEquals(stored[0]?.reason, "Beleidigend, mehrfach.");
+  // The category is corrected too: the same hurry produces both mistakes.
+  assertEquals(stored[0]?.category, "hate");
+});
+
+Deno.test("re-reporting keeps the excerpt from when it was first reported", async () => {
+  const authorCookie = await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+
+  const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
+  const created = await thread(authorCookie, group.id, "Ein Thread");
+  const written = await post(
+    authorCookie,
+    group.id,
+    created.id,
+    "Etwas Übles.",
+  );
+
+  await report(reporterCookie, "writing_post", written.id, "Kurz");
+
+  // The author edits it to something innocuous, then the reporter says more.
+  assertEquals(
+    (await request(
+      "PATCH",
+      `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
+      authorCookie,
+      { text: "Harmlos." },
+    )).status,
+    STATUS_CODE.OK,
+  );
+  await report(reporterCookie, "writing_post", written.id, "Ausführlicher");
+
+  const stored = await storedFor(written.id);
+  assertExists(stored);
+  assertEquals(stored.reason, "Ausführlicher");
+  // Editing what was reported must not let the author overwrite the evidence.
+  assertEquals(stored.targetExcerpt, "Etwas Übles.");
+});
+
+Deno.test("a second member reporting the same thing is its own report", async () => {
+  await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+  const outsiderCookie = await registerUser(outsider);
+  const authorId = await getUserId(author);
+
+  await report(reporterCookie, "user", authorId);
+
+  // The count of separate reporters is the signal an operator wants; only one member filing
+  // twice is the slip worth refusing.
+  assertEquals(
+    (await report(outsiderCookie, "user", authorId)).status,
+    STATUS_CODE.OK,
+  );
+});
+
+Deno.test("two members reporting the same thing can both still delete their accounts", async () => {
+  await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+  const outsiderCookie = await registerUser(outsider);
+  const authorId = await getUserId(author);
+
+  await report(reporterCookie, "user", authorId);
+  await report(outsiderCookie, "user", authorId);
+
+  // Both rows lose their reporter, which under NULLS NOT DISTINCT made them the same key and
+  // failed the *deletion* — a member unable to leave because somebody else reported the same
+  // thing they did. The index only covers live reporters for this reason.
+  await db
+    .deleteFrom("user")
+    .where("username", "in", [reporter, outsider])
+    .execute();
+
+  const surviving = await db
+    .selectFrom("report")
+    .select(db.fn.countAll().as("count"))
+    .where("reportedUserId", "=", authorId)
+    .executeTakeFirstOrThrow();
+  assertEquals(
+    Number(surviving.count),
+    2,
+    "the reports went with their reporters",
+  );
+});
+
+Deno.test("reporting your own account is refused", async () => {
+  const reporterCookie = await registerUser(reporter);
+
+  assertEquals(
+    (await report(reporterCookie, "user", await getUserId(reporter))).status,
+    STATUS_CODE.Forbidden,
+  );
+});
+
+Deno.test("POST /api/reports needs a session", async () => {
+  const response = await request("POST", "/api/reports", "", {
+    targetType: "user",
+    targetId: crypto.randomUUID(),
+    category: "other",
+    reason: "x",
+  });
+
+  assertEquals(response.status, STATUS_CODE.Unauthorized);
+});

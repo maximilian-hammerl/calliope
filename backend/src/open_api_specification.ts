@@ -17,6 +17,7 @@ export const SEARCH_TAG = "search";
 export const CHATS_TAG = "chats";
 export const STORY_IDEAS_TAG = "story-ideas";
 export const BLOCKS_TAG = "blocks";
+export const REPORTS_TAG = "reports";
 
 type Tag =
   | typeof OPERATIONS_TAG
@@ -31,6 +32,7 @@ type Tag =
   | typeof CHATS_TAG
   | typeof STORY_IDEAS_TAG
   | typeof BLOCKS_TAG
+  | typeof REPORTS_TAG
   | typeof SEARCH_TAG;
 
 // Type safe tags to descriptions mapping, so there cannot be new tags without descriptions
@@ -45,6 +47,8 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
     "The public board of story ideas seeking writers, and their lifecycle",
   [BLOCKS_TAG]:
     "Refusing contact from another member, and the list of who is refused",
+  [REPORTS_TAG]:
+    "Reporting something to the operators, with the reason it is being reported",
   [MEMBERSHIPS_TAG]:
     "Managing who belongs to a writing group, in which role, and their invitations",
 

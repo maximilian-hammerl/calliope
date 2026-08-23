@@ -194,6 +194,7 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
             <ChatConversation
               v-else
               :chat-group-id="selected.id"
+              :title="selected.title"
               :live="liveByChat[selected.id] ?? []"
             />
           </template>

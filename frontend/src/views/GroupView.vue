@@ -19,6 +19,7 @@ import type {
 import { MessageCircle, Pencil } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import GroupMembers from '@/components/group/GroupMembers.vue'
@@ -91,6 +92,7 @@ function leaveGroupPage() {
   void router.push({ name: 'groups' })
 }
 
+const reportingGroup = ref<boolean>(false)
 const editingGroup = ref<boolean>(false)
 
 /** A visitor: somebody reading a public group they are in no relation to. */
@@ -187,6 +189,12 @@ async function askIntoGroup() {
             Unterhaltung beginnen
           </Button>
 
+          <!-- After the group's own action rather than beside it: reporting a group is rare and
+               should not sit level with the thing everybody came to do. -->
+          <Button variant="ghost" size="sm" class="mt-7 ml-2" @click="reportingGroup = true">
+            Melden
+          </Button>
+
           <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
             {{ conversationError }}
           </p>
@@ -233,6 +241,14 @@ async function askIntoGroup() {
       </RailBlock>
     </template>
   </AppLayout>
+
+  <ReportDialog
+    v-if="group"
+    v-model:open="reportingGroup"
+    target-type="writing_group"
+    :target-id="group.id"
+    :subject="group.title"
+  />
 
   <ThreadDialog v-model:open="creatingThread" :group-id="groupId" @created="openThread" />
   <GroupDialog v-if="group" v-model:open="editingGroup" :group="group" />

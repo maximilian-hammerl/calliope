@@ -12,6 +12,7 @@ import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BanMemberDialog from '@/components/user/BanMemberDialog.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Button } from '@/components/ui/button'
@@ -67,6 +68,7 @@ async function liftTheBan() {
   await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
 }
 
+const reporting = ref<boolean>(false)
 const blocking = ref<boolean>(false)
 const blockError = ref<string | undefined>(undefined)
 
@@ -124,6 +126,7 @@ async function allowContactAgain() {
               <Button v-else variant="outline" size="sm" @click="blocking = true">
                 Blockieren
               </Button>
+              <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
             </div>
 
             <!-- Its own group, after the member-facing one: blocking is what any member may do
@@ -194,6 +197,14 @@ async function allowContactAgain() {
       v-model:open="blocking"
       :user-id="member.id"
       :username="member.username"
+    />
+
+    <ReportDialog
+      v-if="member"
+      v-model:open="reporting"
+      target-type="user"
+      :target-id="member.id"
+      :subject="member.username"
     />
 
     <BanMemberDialog

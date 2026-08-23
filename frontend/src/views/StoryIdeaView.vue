@@ -21,6 +21,7 @@ import type { GroupInitialValues } from '@/components/group/GroupDialog.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
 import DeleteStoryIdeaDialog from '@/components/story-idea/DeleteStoryIdeaDialog.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
@@ -84,6 +85,7 @@ const isOwn = computed<boolean>(
     userData.value.data.id === idea.value.createdBy,
 )
 
+const reporting = ref<boolean>(false)
 const editing = ref<boolean>(false)
 const deleting = ref<boolean>(false)
 const removing = ref<boolean>(false)
@@ -148,6 +150,7 @@ async function remove() {
               >
                 {{ toggle.label }}
               </Button>
+              <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
               <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and
                    a member who kept the idea should see why they cannot write. -->
               <Button
@@ -189,6 +192,14 @@ async function remove() {
       </div>
     </div>
   </AppLayout>
+
+  <ReportDialog
+    v-if="idea"
+    v-model:open="reporting"
+    target-type="story_idea"
+    :target-id="idea.id"
+    :subject="idea.title"
+  />
 
   <StoryIdeaDialog v-if="idea" v-model:open="editing" :idea="idea" />
   <DeleteStoryIdeaDialog

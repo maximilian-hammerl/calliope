@@ -8,6 +8,8 @@ import {
   useReadChat,
 } from '@/api/chats/chats'
 import { useChatMessages } from '@/composables/useChatMessages'
+import { useGetCurrentUser } from '@/api/auth/auth'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import type { ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
@@ -18,7 +20,33 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
-const props = defineProps<{ chatGroupId: string; live: ListMessages200ResultsItem[] }>()
+const props = defineProps<{
+  chatGroupId: string
+  title: string
+  live: ListMessages200ResultsItem[]
+}>()
+
+const { data: currentUserData } = useGetCurrentUser()
+const currentUserId = computed<string | undefined>(() =>
+  currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
+)
+
+/** The message being reported, which is also what opens the dialog. */
+const reportingChat = ref<boolean>(false)
+const reportedMessage = ref<ListMessages200ResultsItem | undefined>(undefined)
+const reportingMessage = computed<boolean>({
+  get: () => reportedMessage.value !== undefined,
+  set: (open) => {
+    if (!open) {
+      reportedMessage.value = undefined
+    }
+  },
+})
+
+/** Only your own message is excluded; one from a deleted account is still reportable. */
+function mayReport(message: ListMessages200ResultsItem): boolean {
+  return currentUserId.value !== undefined && message.createdBy !== currentUserId.value
+}
 
 const queryClient = useQueryClient()
 
@@ -164,8 +192,15 @@ async function submit() {
       class="mb-3 flex flex-none flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-line-3 pb-3"
     >
       <span class="text-[12.5px] text-ink-4">{{ participants }}</span>
-      <div class="ml-auto">
+      <div class="ml-auto flex items-center gap-4">
         <ChatInvite :chat-group-id="chatGroupId" :member-ids="memberIds" />
+        <button
+          type="button"
+          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          @click="reportingChat = true"
+        >
+          Melden
+        </button>
       </div>
     </div>
 
@@ -205,6 +240,17 @@ async function submit() {
           <p class="text-[13.5px] leading-[1.6] whitespace-pre-wrap text-ink-2">
             {{ message.text }}
           </p>
+
+          <!-- The same row a post carries, at the same weight and in the same place. -->
+          <div v-if="mayReport(message)" class="mt-[6px] flex items-center text-[12px] text-ink-5">
+            <button
+              type="button"
+              class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+              @click="reportedMessage = message"
+            >
+              Melden
+            </button>
+          </div>
         </li>
       </ul>
 
@@ -233,4 +279,19 @@ async function submit() {
       </Button>
     </form>
   </div>
+
+  <ReportDialog
+    v-model:open="reportingChat"
+    target-type="chat_group"
+    :target-id="props.chatGroupId"
+    :subject="props.title"
+  />
+
+  <ReportDialog
+    v-if="reportedMessage"
+    v-model:open="reportingMessage"
+    target-type="chat_message"
+    :target-id="reportedMessage.id"
+    :subject="reportedMessage.createdByUsername ?? 'Gelöschtes Konto'"
+  />
 </template>

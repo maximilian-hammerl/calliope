@@ -386,13 +386,19 @@ Weight alone turned out to be too quiet to find when a single row is unread, so 
 5px `--oak` dot in a fixed gutter at the left, empty on the rows that have been read so both stay
 aligned. It is still one mark and still not a count.
 
+**A per-post action sits below the writing, not beside the byline.** One recessed row —
+`text-[12px]` in `--ink-5`, 14px under the last paragraph — because the byline was already
+competing with the prose and the actions would have made it worse. "Melden" is the first one
+that works; the rest are specified below and unbuilt. A chat message carries the same row at the
+same weight, closer under it because the messages themselves sit closer together.
+
 **A control that does nothing does not ship.** The post actions were disabled buttons under
 every post for a while, and a reader learns from that to stop looking rather than to wait. The
 copy below stays specified — it is what the buttons will say when they work (#36, #37, #38) —
 but nothing renders it until it does something.
 
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
-Zitieren · Merken · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
+Zitieren · Merken · Melden · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
 Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
 Editor einklappen · Editor ausklappen · Gruppen-Kontext · Gruppe bearbeiten ·
 Änderungen speichern · Entfernen · Einladung zurückziehen.

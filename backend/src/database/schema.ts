@@ -22,6 +22,30 @@ export type NotificationType =
 
 export type PlatformRole = "administrator" | "moderator";
 
+export type ReportCategory =
+  | "harassment"
+  | "hate"
+  | "illegal_content"
+  | "legal_issue"
+  | "missing_content_warning"
+  | "other"
+  | "plagiarism"
+  | "self_harm"
+  | "sexual_content"
+  | "spam"
+  | "violence";
+
+export type ReportStatus = "dismissed" | "open" | "resolved";
+
+export type ReportTargetType =
+  | "chat_group"
+  | "chat_message"
+  | "story_idea"
+  | "user"
+  | "writing_group"
+  | "writing_post"
+  | "writing_thread";
+
 export type StoryIdeaPartySize = "group" | "one_on_one";
 
 export type StoryIdeaReaderState = "marked" | "read";
@@ -74,6 +98,24 @@ export interface Notification {
   writingGroupId: string | null;
   writingPostId: string | null;
   writingThreadId: string | null;
+}
+
+export interface Report {
+  category: ReportCategory;
+  createdAt: Generated<string>;
+  id: Generated<string>;
+  reason: string;
+  reportedChatGroupId: string | null;
+  reportedChatMessageId: string | null;
+  reportedStoryIdeaId: string | null;
+  reportedUserId: string | null;
+  reportedWritingGroupId: string | null;
+  reportedWritingPostId: string | null;
+  reportedWritingThreadId: string | null;
+  reporterId: string | null;
+  status: Generated<ReportStatus>;
+  targetExcerpt: string;
+  targetType: ReportTargetType;
 }
 
 export interface StoryIdea {
@@ -218,6 +260,7 @@ export interface DB {
   chatGroup: ChatGroup;
   chatMessage: ChatMessage;
   notification: Notification;
+  report: Report;
   storyIdea: StoryIdea;
   storyIdeaReader: StoryIdeaReader;
   user: User;
@@ -300,6 +343,35 @@ export const STORY_IDEA_READER_STATE_SCHEMA = z.enum(STORY_IDEA_READER_STATES);
 export const PLATFORM_ROLES = ["administrator", "moderator"] as const;
 export const PLATFORM_ROLE_SCHEMA = z.enum(PLATFORM_ROLES);
 
+export const REPORT_TARGET_TYPES = [
+  "chat_group",
+  "chat_message",
+  "story_idea",
+  "user",
+  "writing_group",
+  "writing_post",
+  "writing_thread",
+] as const;
+export const REPORT_TARGET_TYPE_SCHEMA = z.enum(REPORT_TARGET_TYPES);
+
+export const REPORT_STATUSES = ["dismissed", "open", "resolved"] as const;
+export const REPORT_STATUS_SCHEMA = z.enum(REPORT_STATUSES);
+
+export const REPORT_CATEGORIES = [
+  "harassment",
+  "hate",
+  "illegal_content",
+  "legal_issue",
+  "missing_content_warning",
+  "other",
+  "plagiarism",
+  "self_harm",
+  "sexual_content",
+  "spam",
+  "violence",
+] as const;
+export const REPORT_CATEGORY_SCHEMA = z.enum(REPORT_CATEGORIES);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -328,6 +400,24 @@ export const NOTIFICATION_SCHEMA = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   occurredAt: z.iso.datetime({ offset: true }),
   readAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+export const REPORT_SCHEMA = z.object({
+  id: z.uuidv7(),
+  reporterId: z.uuidv7().nullable(),
+  targetType: REPORT_TARGET_TYPE_SCHEMA,
+  reportedWritingGroupId: z.uuidv7().nullable(),
+  reportedWritingThreadId: z.uuidv7().nullable(),
+  reportedWritingPostId: z.uuidv7().nullable(),
+  reportedStoryIdeaId: z.uuidv7().nullable(),
+  reportedChatGroupId: z.uuidv7().nullable(),
+  reportedChatMessageId: z.uuidv7().nullable(),
+  reportedUserId: z.uuidv7().nullable(),
+  targetExcerpt: z.string(),
+  category: REPORT_CATEGORY_SCHEMA,
+  reason: z.string(),
+  status: REPORT_STATUS_SCHEMA,
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const STORY_IDEA_SCHEMA = z.object({

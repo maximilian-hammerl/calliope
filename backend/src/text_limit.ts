@@ -47,8 +47,10 @@ export const TEXT_LIMIT = {
   storyIdeaDetail: 500,
   /** Roughly a long chapter. Posts are long-form prose, so this is deliberately generous. */
   postText: 100_000,
-  /** An operator's note about why an account was banned. A paragraph, not an essay. */
-  banReason: 1_000,
+  /** An operator's note about why an account was banned. Same room as a report's reason. */
+  banReason: 2_000,
+  /** Why a member is reporting something. Room to explain, not to write an essay. */
+  reportReason: 2_000,
 } as const;
 
 /**

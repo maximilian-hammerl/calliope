@@ -13,7 +13,7 @@ const props = defineProps<{
   mayModify?: boolean
 }>()
 
-defineEmits<{ rename: []; delete: [] }>()
+defineEmits<{ rename: []; delete: []; report: [] }>()
 
 // Numbers always carry a noun: a bare badge number was tested and misread.
 const meta = computed<string>(() =>
@@ -43,6 +43,11 @@ const meta = computed<string>(() =>
 
     <!-- On the thread's own page, as the group's actions are on the group's: the tab strip is
          for switching threads, not for acting on one. -->
+    <div class="flex shrink-0 items-center gap-2">
+      <!-- Outside the mayModify group: reporting is what somebody who may *not* change it does. -->
+      <Button variant="ghost" size="sm" @click="$emit('report')">Melden</Button>
+    </div>
+
     <div v-if="props.mayModify" class="flex shrink-0 items-center gap-2">
       <Button variant="outline" size="sm" @click="$emit('rename')">
         <Pencil :stroke-width="1.5" />
