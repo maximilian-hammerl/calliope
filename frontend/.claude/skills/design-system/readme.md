@@ -250,6 +250,14 @@ page and its badge, and the action it can no longer take is **disabled rather th
 hiding it leaves a member wondering where it went, where a disabled control with a reason
 tells them the owner has finished with it.
 
+**A thread is renamed and deleted from its own header.** „Umbenennen" and „Löschen" sit beside
+the thread's title, not in the tab strip that lists the threads: the strip is for moving between
+them, and a control there would have to appear on hover or hide behind a menu. Both show only for
+a member who may modify the thread — its author, or an administrator — and one dialog does both
+verbs of a subject, filled from the thread when renaming and empty when creating. The deletion
+confirmation names the post count, because „diesen Thread löschen" understates what goes, and the
+singular drops the numeral: „sein Beitrag", never „seine 1 Beitrag".
+
 **A member leaves from their own row.** The members list is the one place on a group's page
 that is about the reader, and the row that already carries „Entfernen" for everybody else
 carries „Gruppe verlassen" for them. The confirmation says what leaving actually costs, which
@@ -425,8 +433,8 @@ says recedes.
 `--accent-deep` `#4f4132` for solid actions. **No second hue.** Per-group colour coding was tried
 and rejected ("Gruppen benötigen keine unterschiedliche Farben"). Colour never signals status,
 quality or achievement. `--signal-error` / `--signal-ok` exist for form validation only and appear
-in none of the mockups. The single exception is `--destructive` as a button fill, for deleting an
-account — see Buttons.
+in none of the mockups. The single exception is `--destructive` as a button fill, for the few acts
+that destroy writing irreversibly — see Buttons.
 
 Surface hierarchy is inverted from the usual convention: rails are **recessed** (`--paper-2`), the
 canvas sits above them (`--paper-1`), and the raised surfaces (`--paper-0`) are the top bar, the
@@ -481,11 +489,15 @@ now carries it on every page, and the heading-line copy went with the duplicatio
 text only in `--ink-5`, for per-post actions.
 
 *Destructive* is a fourth level and the only place `--destructive` `#8a3f37` appears as a fill.
-It belongs to the account-deletion flow and nothing else: "Löschen-Link anfordern" where it is
-asked for, "Konto endgültig löschen" where it happens. Not for removing a member, withdrawing
-an invitation or deleting a post:
-those are ordinary administration, they are reversible by doing them again, and colouring them
-red would spend the one signal the product has. Reserve it, or it stops meaning anything.
+It is reserved for acts that **destroy a body of writing, including other people's, and cannot be
+undone by repeating them**. Three qualify: the account-deletion flow ("Löschen-Link anfordern"
+where it is asked for, "Konto endgültig löschen" where it happens), deleting a thread with its
+posts, and leaving a group as its last member, which takes the group with it. Not for removing a
+member, withdrawing an invitation, leaving a group that outlives you, or deleting a single post:
+those are ordinary administration, they are reversible by doing them again or they cost one
+paragraph, and colouring them red would spend the one signal the product has. And never on the
+trigger — the weight goes on the confirmation, where the consequences are stated. Reserve it, or
+it stops meaning anything.
 
 **States.** Hover darkens by one ink or paper step (solid → `--accent-deeper`; quiet →
 `--paper-4`; plain → `--ink-4`); never a colour change and never a lift. Press is a further step
