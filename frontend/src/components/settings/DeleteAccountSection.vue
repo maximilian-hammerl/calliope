@@ -19,7 +19,7 @@ const requested = ref<boolean>(false)
 <template>
   <template v-if="requested">
     <p class="text-[13px] leading-[1.6] text-ink-5">
-      Wir haben einen Link an <span class="text-ink-8">{{ currentAddress }}</span> geschickt. Erst
+      Wir haben einen Link an <span class="text-ink-2">{{ currentAddress }}</span> geschickt. Erst
       wenn du ihn öffnest, wird dein Konto gelöscht. Bis dahin bleibt alles, wie es ist.
     </p>
     <MailedLinkNote class="mb-4 text-[13px]" />
@@ -27,7 +27,7 @@ const requested = ref<boolean>(false)
 
   <DeleteAccountForm @requested="requested = true">
     <p>
-      Löschen ist <span class="text-ink-8">endgültig</span>. Wir können dein Konto danach nicht
+      Löschen ist <span class="text-ink-2">endgültig</span>. Wir können dein Konto danach nicht
       zurückholen.
     </p>
     <p>

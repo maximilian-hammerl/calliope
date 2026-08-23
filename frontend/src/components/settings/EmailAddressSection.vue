@@ -114,12 +114,12 @@ async function submit() {
 
 <template>
   <p class="mb-4 text-[13px] leading-[1.6] text-ink-5">
-    Aktuell: <span class="text-ink-8">{{ currentAddress }}</span>
+    Aktuell: <span class="text-ink-2">{{ currentAddress }}</span>
   </p>
 
   <template v-if="requestedFor">
     <p class="text-[13px] leading-[1.6] text-ink-5">
-      Wir haben einen Link an <span class="text-ink-8">{{ requestedFor }}</span> geschickt. Bis du
+      Wir haben einen Link an <span class="text-ink-2">{{ requestedFor }}</span> geschickt. Bis du
       ihn öffnest, bleibt deine bisherige Adresse in Kraft. An sie ist ebenfalls eine Nachricht
       unterwegs.
     </p>

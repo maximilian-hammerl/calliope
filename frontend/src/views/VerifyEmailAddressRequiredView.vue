@@ -134,7 +134,7 @@ async function signOut() {
         <CalliopeLogo :size="40" wordmark class="mb-1" />
         <h1 class="text-[25px] leading-[1.2]">Bestätige deine E-Mail-Adresse</h1>
         <p class="text-[13.5px] leading-[1.5] text-ink-5">
-          Wir haben dir einen Link an <span class="text-ink-8">{{ emailAddress }}</span> geschickt.
+          Wir haben dir einen Link an <span class="text-ink-2">{{ emailAddress }}</span> geschickt.
           Öffne ihn, dann geht es los.
         </p>
         <!-- One note for the whole page: every state here is about the same mailed link, and
@@ -220,7 +220,7 @@ async function signOut() {
       <div v-else class="mt-7">
         <template v-if="deletionRequested">
           <p class="text-[13.5px] leading-[1.6] text-ink-5">
-            Wir haben einen Link an <span class="text-ink-8">{{ emailAddress }}</span> geschickt.
+            Wir haben einen Link an <span class="text-ink-2">{{ emailAddress }}</span> geschickt.
             Erst wenn du ihn öffnest, wird dein Konto gelöscht. Kommst du an diese Adresse nicht
             heran, ändere sie zuerst.
           </p>
@@ -230,7 +230,7 @@ async function signOut() {
 
         <DeleteAccountForm v-else @requested="deletionRequested = true">
           <p>
-            Löschen ist <span class="text-ink-8">endgültig</span>. Es passiert nicht sofort: wir
+            Löschen ist <span class="text-ink-2">endgültig</span>. Es passiert nicht sofort: wir
             schicken dir erst einen Link an deine E-Mail-Adresse.
           </p>
           <p>Du bist noch in keiner Gruppe, also geht nichts verloren, was jemand anderes liest.</p>
