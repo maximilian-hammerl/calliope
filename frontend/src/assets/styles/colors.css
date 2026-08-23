@@ -5,6 +5,31 @@
 :root {
   --radius: 6px; /* --radius-control */
 
+  /* Calliope's own ramps, which theme.css exposes as utilities (bg-paper-1, text-ink-2, …).
+     They live here rather than in @theme so a `.dark` block can redefine them; stated as
+     literals there, every one of the ~400 uses was a fixed light colour. See issue #60. */
+  --paper-0: #fffdf9; /* raised: top bar, cards, composer */
+  --paper-1: #f7f4ee; /* the app canvas */
+  --paper-2: #f2ede3; /* rails, recessed below the canvas */
+  --paper-3: #eee5d3; /* quiet button fill, active rail row */
+  --paper-4: #e5d9c2; /* avatars, quiet hover */
+  --line-1: #f0e9dc;
+  --line-2: #e8e0d2;
+  --line-3: #e6dfd2; /* the default hairline */
+  --line-4: #ddd2bd;
+  --line-5: #cdbfa6; /* the strong border: quiet buttons, inputs */
+  --ink-1: #2b2620; /* headings */
+  --ink-2: #302a23; /* prose */
+  --ink-3: #4a4238;
+  --ink-4: #5c5346;
+  --ink-5: #6d6153; /* secondary interface text */
+  --ink-6: #7d7364;
+  --paper-edge: #efe9de;
+  --ink-label: #6f6455;
+  --oak: #8a6a3a; /* the one accent */
+  --oak-deep: #4f4132; /* solid actions */
+  --oak-deeper: #3f3427; /* solid hover */
+
   --background: #f7f4ee; /* --paper-1, app canvas */
   --foreground: #302a23; /* --ink-2, prose */
   --card: #fffdf9; /* --paper-0, raised */
@@ -46,7 +71,9 @@
 }
 
 /* Calliope defines no dark theme — this is an extrapolation of the ink family,
-   kept so shadcn's dark variant does not fall back to greys. Review before use. */
+   kept so shadcn's dark variant does not fall back to greys. Review before use.
+   It deliberately does not redefine the ramps above, so a dark appearance is still
+   half-light until those values are authored. #60 */
 .dark {
   --background: #201c17;
   --foreground: #efe9de;
