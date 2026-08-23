@@ -56,7 +56,8 @@ each call site — the Button's `outline` **is** the design system's Quiet level
 `border-line-5`, `text-oak-deep`, 500) and its `secondary` variant is deleted rather than left as
 a borderless near-twin, **every control is `rounded-lg`** because 6px is the control radius — Button,
 Input, Textarea and SelectTrigger, which shadcn ships at four — `shadow-xs` is stripped from all
-four because nothing at rest casts a shadow, **Input and SelectTrigger carry `min-h-11 md:min-h-0`**
+four because nothing at rest casts a shadow, `Spinner` is `size-3.5` rather than shadcn's
+`size-4` so it matches the icons and the text it sits beside, **Input and SelectTrigger carry `min-h-11 md:min-h-0`**
 so the 44px phone target is not written out at each call site (it was, at 39 of them), `AvatarFallback`
 carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the rail colour, and
 `DropdownMenuItem` and `DialogContent` carry the mobile rules below, `navigation-menu`'s
@@ -100,6 +101,7 @@ grep -c border-line-5 src/components/ui/button/index.ts                         
 grep -c secondary src/components/ui/button/index.ts                                    # expect 0
 grep -c rounded-md src/components/ui/button/index.ts src/components/ui/input/Input.vue src/components/ui/textarea/Textarea.vue src/components/ui/select/SelectTrigger.vue  # expect 0
 grep -c min-h-11 src/components/ui/input/Input.vue src/components/ui/select/SelectTrigger.vue  # expect 1 each
+grep -c 'size-3.5' src/components/ui/spinner/Spinner.vue                               # expect 1
 grep -c bg-avatar src/components/ui/avatar/AvatarFallback.vue                          # expect 1
 grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue                  # expect 1
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
