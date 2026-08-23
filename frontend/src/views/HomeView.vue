@@ -6,6 +6,7 @@
  */
 import { APP_NAME } from '@/lib/branding'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
 </script>
 
 <template>
@@ -13,6 +14,8 @@ import AppLayout from '@/components/layout/AppLayout.vue'
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <h1 class="mb-2 text-[25px] leading-[1.2] text-ink-1">Willkommen bei {{ APP_NAME }}</h1>
+
+        <EnvironmentNotice class="mb-6 max-w-[60ch]" />
         <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
           Ein Ort für private Schreibgruppen: ihr denkt euch eine Geschichte aus und schreibt sie
           gemeinsam, Beitrag für Beitrag. Und wer noch Mitschreibende sucht, stellt seine Idee als

@@ -38,6 +38,9 @@ services:
       # Baked into the bundle at build time, so the tab title and the wordmark are right from
       # the first paint. Renaming means rebuilding, which a deploy does anyway.
       VITE_APP_NAME: ${APP_NAME:-Calliope}
+      # No fallback, unlike the name above: the build refuses to produce a bundle that cannot
+      # say which instance it is for.
+      VITE_ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT must be set}
     volumes:
       - ./frontend:/app
       # orval reads the specification at ../backend/open-api.json, which is outside the

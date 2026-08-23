@@ -289,6 +289,21 @@ were asked is no longer what a reader wants to know.
 **Relative time under a day, absolute above it.** "vor 12 Minuten" → "Dienstag, 09:14" →
 "12. Februar". Edits are disclosed quietly, appended: "· bearbeitet".
 
+**An instance that is not production says so, in one sentence.** Development, testing and
+staging each carry a notice where there is room to read it — signing in, registering, and the
+home page — and a badge beside the wordmark everywhere else. The badge is the whole point of the
+split: a phone already stacks three bars, and this must not become a fourth, so inside the
+application the sentence lives in the badge's `title`. It says the one thing that changes what
+somebody does, never a list of three, and that thing is not the same everywhere: where the
+database is reset it is that writing can be deleted, and where it is not — a preview instance,
+which keeps what it is given — it is that the member's own groups are not there. A warning that
+is untrue of the instance it sits on is how the true ones stop being read. Where the instance
+is reachable by strangers, the pages that take a password add a second line telling people not
+to reuse one. **Never the destructive fill**: red is reserved for irreversibly destroying
+writing, and a red bar on every page of a test instance would spend that signal by the time a
+real deletion dialog needs it. Quiet is the right weight — this is chrome, not the member's
+content. Production says nothing at all.
+
 **Reassurance is factual, not warm-fuzzy.** "Privat — nur Alice, Bob und Carol sehen diesen
 Thread." State who can see it; do not promise safety.
 

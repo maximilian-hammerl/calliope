@@ -6,6 +6,7 @@
  * The fixtures themselves are in `seed/`; this file is the guard, the cleanup and the order.
  */
 import { db } from "@/src/database/client.ts";
+import { ENVIRONMENT, type Environment } from "@/src/environment.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { USER } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
@@ -15,7 +16,20 @@ import { writeFixtures } from "@/seed/write.ts";
 /** The one password every seeded account shares. Local only — see the guard below. */
 const PASSWORD = "calliope";
 
-function assertLocalDatabase(): void {
+const SEEDABLE: ReadonlyArray<Environment> = ["development", "testing"] as const;
+
+function assertSeedable(): void {
+  // Accounts here share one password, so an environment that keeps what people write must
+  // never get them — not even with --force, which is exactly the flag somebody reaches for.
+  if (!SEEDABLE.includes(ENVIRONMENT)) {
+    console.error(
+      `Refusing to seed: ENVIRONMENT is "${ENVIRONMENT}". Seed data is only for ${
+        SEEDABLE.join(" and ")
+      }.`,
+    );
+    Deno.exit(1);
+  }
+
   const url = new URL(getRequiredEnvVariable("DATABASE_URL"));
   // Not "db": that is the compose service name in production as much as in development, so
   // accepting it would let the containerised seed wipe production without --force.
@@ -102,7 +116,7 @@ ${urls}`;
 }
 
 export async function seedDatabase() {
-  assertLocalDatabase();
+  assertSeedable();
   await removePreviousSeed();
   await writeFixtures();
 

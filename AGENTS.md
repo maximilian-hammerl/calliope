@@ -45,7 +45,7 @@ change a link in that chain, regenerate the ones downstream.
 
 ## Deployment
 
-`docker-compose.production.yaml` and the `Caddyfile` at the root; see
+`docker-compose.deploy.yaml` and the `Caddyfile` at the root; see
 [deployment/README.md](deployment/README.md) for the procedure and the backups.
 
 - **`docker compose exec -T` forwards stdin.** In a script, any such command that is not
@@ -61,4 +61,4 @@ change a link in that chain, regenerate the ones downstream.
   previous configuration while the deploy reports success.
 - **Both compose files use the project name `calliope`.** `docker compose down -v` from a
   copy of the repository will therefore remove the volumes of your running dev stack; pass
-  `-p` something else when testing the production stack locally.
+  `-p` something else when testing the deployed stack locally.

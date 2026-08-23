@@ -9,6 +9,7 @@ import type { FieldMessages } from '@/lib/validation/fieldMessage'
 import { fieldMessage, PASSWORDS_DIFFER } from '@/lib/validation/fieldMessage'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
+import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -171,6 +172,8 @@ async function submit() {
           Leg ein Konto an, um einer Schreibgruppe beizutreten.
         </p>
       </div>
+
+      <EnvironmentNotice class="mt-6" about-passwords />
 
       <form ref="formElement" class="mt-7 flex flex-col gap-5" novalidate @submit.prevent="submit">
         <Alert v-if="formError" variant="destructive" role="alert">

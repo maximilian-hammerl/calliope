@@ -67,14 +67,18 @@ before closing the current one.
 ```bash
 git clone https://github.com/maximilian-hammerl/calliope.git /opt/calliope
 cd /opt/calliope
-cp .env.production.example .env
+cp .env.deploy.example .env
 ```
 
-Edit `.env`: set `HOST_URL` and generate a password that exists nowhere else.
+Edit `.env`: set `ENVIRONMENT` to what this machine actually is — it ships empty, and the
+instance at calliope.hammerl.dev is `testing`, not `production` — set `HOST_URL`, and generate
+a password that exists nowhere else. The frontend build refuses to run until `ENVIRONMENT` is
+one of the four values, so a mislabelled instance fails the deploy rather than telling members
+their writing is safe when it is not.
 
 ```bash
 chmod 600 .env
-docker compose -f docker-compose.production.yaml up -d --build
+docker compose -f docker-compose.deploy.yaml up -d --build
 ```
 
 The stack orders itself: the database becomes healthy, `migrate` applies the migrations and
@@ -87,7 +91,7 @@ port 80 reachable and DNS already pointing here.
 ```bash
 cd /opt/calliope
 git pull
-docker compose -f docker-compose.production.yaml up -d --build
+docker compose -f docker-compose.deploy.yaml up -d --build
 ```
 
 Migrations run automatically as part of `up`.
@@ -100,11 +104,11 @@ recorded — so the database has to be rebuilt. **This deletes every row, every 
 
 ```bash
 cd /opt/calliope && git pull
-docker compose -f docker-compose.production.yaml stop backend
-docker compose -f docker-compose.production.yaml run --rm migrate drop
-docker compose -f docker-compose.production.yaml run --rm migrate up
-docker compose -f docker-compose.production.yaml up -d --build
-docker compose -f docker-compose.production.yaml run --rm --no-deps backend --seed --force
+docker compose -f docker-compose.deploy.yaml stop backend
+docker compose -f docker-compose.deploy.yaml run --rm migrate drop
+docker compose -f docker-compose.deploy.yaml run --rm migrate up
+docker compose -f docker-compose.deploy.yaml up -d --build
+docker compose -f docker-compose.deploy.yaml run --rm --no-deps backend --seed --force
 ```
 
 Two of those steps are not obvious. **Stop the backend first**, or its open connections make
@@ -121,7 +125,7 @@ network keeps stale DNS: `migrate` failed with `lookup db on 127.0.0.11:53: no s
 the backend never started and the site was down until the containers were replaced.
 
 ```bash
-docker compose -f docker-compose.production.yaml up -d --force-recreate
+docker compose -f docker-compose.deploy.yaml up -d --force-recreate
 ```
 
 ### The client's address only survives over IPv4 by default
@@ -140,7 +144,7 @@ running and Caddy keeps serving the previous configuration — the deploy report
 while nothing about the routing has changed. Force it:
 
 ```bash
-docker compose -f docker-compose.production.yaml up -d --force-recreate caddy
+docker compose -f docker-compose.deploy.yaml up -d --force-recreate caddy
 ```
 
 This only bites when the Caddyfile is the sole change. Anything that also alters the
@@ -219,9 +223,9 @@ Into a scratch database first, to check the dump before touching live data:
 
 ```bash
 cd /opt/calliope
-docker compose -f docker-compose.production.yaml exec -T db \
+docker compose -f docker-compose.deploy.yaml exec -T db \
 	psql -U calliope -d postgres -c 'CREATE DATABASE restore_check;' </dev/null
-docker compose -f docker-compose.production.yaml exec -T db \
+docker compose -f docker-compose.deploy.yaml exec -T db \
 	pg_restore --username calliope --no-password --dbname restore_check \
 	< /var/backups/calliope/calliope-<timestamp>.dump
 ```
@@ -229,7 +233,7 @@ docker compose -f docker-compose.production.yaml exec -T db \
 Over the live database, which drops and recreates every object the dump contains:
 
 ```bash
-docker compose -f docker-compose.production.yaml exec -T db \
+docker compose -f docker-compose.deploy.yaml exec -T db \
 	pg_restore --username calliope --no-password --clean --if-exists --dbname calliope \
 	< /var/backups/calliope/calliope-<timestamp>.dump
 ```

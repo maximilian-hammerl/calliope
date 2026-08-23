@@ -80,7 +80,7 @@ cd backend && deno task test
 
 ## Deployment
 
-`git pull` and `docker compose -f docker-compose.production.yaml up -d --build` on the server.
+`git pull` and `docker compose -f docker-compose.deploy.yaml up -d --build` on the server.
 The [deployment runbook](deployment/README.md) covers provisioning a fresh machine, the backup timer, and how to restore
 a dump.
 

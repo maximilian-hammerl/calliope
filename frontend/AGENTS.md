@@ -129,7 +129,7 @@ checkout has none:
 npm run open-api:generate-client
 ```
 
-CI runs this before `validate:check`, and the production compose file runs it before
+CI runs this before `validate:check`, and the deploy compose file runs it before
 building. Regenerate whenever the backend's specification changes.
 
 Three things about the generated code:

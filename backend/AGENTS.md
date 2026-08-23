@@ -78,8 +78,11 @@ Three things about it are deliberate:
 - **It owns its nine usernames.** Cleanup matches id *or* username, so an account somebody made
   by hand as `mira` cannot block a re-run — and neither can renumbering the ids later.
 
-It refuses any `DATABASE_URL` host that is not obviously local unless passed `--force`, because
-it deletes rows. It refreshes only its own fixture, so half-built state you are testing
+It refuses to run unless **both** guards agree: `ENVIRONMENT` is `development` or `testing`, and
+the `DATABASE_URL` host is obviously local. Only the second takes `--force`, which is how the
+deployed testing instance is seeded against a host called `db`; no flag gets past the first,
+because these accounts share one password and an environment that keeps what people write must
+never be given them. It refreshes only its own fixture, so half-built state you are testing
 survives.
 
 Inserted through Kysely rather than the services, since those generate their own ids. Database

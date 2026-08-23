@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
@@ -19,9 +20,42 @@ const BACKEND_URL = 'http://localhost:8000'
  */
 process.env.VITE_APP_NAME ||= 'Calliope'
 
+/**
+ * Which instance the bundle is for. Unlike the name above it has no default on a build: an
+ * instance that cannot say what it is would claim to be production, and somebody would lose
+ * writing to it. Serving defaults to development, so a checkout still runs with no setup.
+ */
+const ENVIRONMENTS = ['development', 'testing', 'staging', 'production']
+
+/**
+ * A plugin rather than a line beside the name above, because the two commands need opposite
+ * answers and `config` is where Vite says which one is running — early enough that what it
+ * sets still reaches `import.meta.env`.
+ */
+function environment(): Plugin {
+  return {
+    name: 'calliope:environment',
+    config(_config, { command }) {
+      if (command !== 'build') {
+        process.env.VITE_ENVIRONMENT ||= 'development'
+        return
+      }
+
+      const value = process.env.VITE_ENVIRONMENT
+      if (value === undefined || !ENVIRONMENTS.includes(value)) {
+        throw new Error(
+          `VITE_ENVIRONMENT must be one of ${ENVIRONMENTS.join(', ')} to build, not ${
+            value === undefined ? 'unset' : `"${value}"`
+          }. It comes from ENVIRONMENT in .env.`,
+        )
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools(), tailwindcss()],
+  plugins: [environment(), vue(), vueDevTools(), tailwindcss()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -15,6 +15,9 @@ import { LogOut, Search } from '@lucide/vue'
 import { useLogoutUser } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/auth/session'
+import type { EnvironmentNotice } from '@/lib/environment'
+import { ENVIRONMENT, environmentNotice } from '@/lib/environment'
+import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import SearchField from '@/components/search/SearchField.vue'
 import { requestedChatId } from '@/lib/chat/openChatDialog'
@@ -36,6 +39,8 @@ const props = defineProps<{ user: GetCurrentUser200 }>()
 
 const route = useRoute()
 const router = useRouter()
+
+const environment = computed<EnvironmentNotice | undefined>(() => environmentNotice(ENVIRONMENT))
 
 const unread = computed<number>(() => props.user.unreadNotifications)
 
@@ -99,6 +104,13 @@ async function signOut() {
       >
         <CalliopeLogo :size="22" wordmark />
       </RouterLink>
+
+      <!-- Beside the wordmark rather than in a bar of its own: a phone already carries three,
+           and this has to be visible on every page without costing a fourth. The full sentence
+           is on the way in and on the home page; here it is the `title`. -->
+      <CalliopeBadge v-if="environment" :title="environment.sentence" class="-ml-3 md:-ml-4">
+        {{ environment.label }}
+      </CalliopeBadge>
 
       <!-- Below `md` the destinations live in the bottom bar. The active mark stays the 2px
            underline at the foot of the bar, drawn here since the patched trigger carries none. -->

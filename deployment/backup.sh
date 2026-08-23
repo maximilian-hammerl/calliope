@@ -7,7 +7,7 @@
 # separate, still missing, step.
 set -euo pipefail
 
-COMPOSE_FILE=/opt/calliope/docker-compose.production.yaml
+COMPOSE_FILE=/opt/calliope/docker-compose.deploy.yaml
 BACKUP_DIRECTORY=/var/backups/calliope
 RETENTION_DAYS=14
 
