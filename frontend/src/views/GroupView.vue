@@ -18,7 +18,7 @@ import type {
 } from '@/api/models'
 import { MessageCircle, PencilIcon } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
+import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import GroupMembers from '@/components/group/GroupMembers.vue'
@@ -81,6 +81,11 @@ function goToGroups() {
 }
 
 const creatingThread = ref<boolean>(false)
+/** Creating a thread from the group opens it: that is what the member asked for. */
+function openThread(threadId: string) {
+  void router.push({ name: 'thread', params: { groupId: groupId.value, threadId } })
+}
+
 /** A private group answers 404 to a non-member, so staying here would show an error. */
 function leaveGroupPage() {
   void router.push({ name: 'groups' })
@@ -229,6 +234,6 @@ async function askIntoGroup() {
     </template>
   </AppLayout>
 
-  <CreateThreadDialog v-model:open="creatingThread" :group-id="groupId" />
+  <ThreadDialog v-model:open="creatingThread" :group-id="groupId" @created="openThread" />
   <GroupDialog v-if="group" v-model:open="editingGroup" :group="group" />
 </template>

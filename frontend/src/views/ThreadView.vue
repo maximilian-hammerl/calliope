@@ -3,7 +3,13 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
-import { useGetThread, useListThreads } from '@/api/threads/threads'
+import { useGetCurrentUser } from '@/api/auth/auth'
+import {
+  getListThreadsQueryKey,
+  useDeleteThread,
+  useGetThread,
+  useListThreads,
+} from '@/api/threads/threads'
 import { getListPostsQueryKey, useCreatePost, useListPosts, useUpdatePost } from '@/api/posts/posts'
 import { useListMemberships } from '@/api/memberships/memberships'
 import type {
@@ -16,7 +22,8 @@ import type {
 import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import ThreadTabs from '@/components/thread/ThreadTabs.vue'
-import CreateThreadDialog from '@/components/thread/CreateThreadDialog.vue'
+import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
+import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
 import PostItem from '@/components/thread/PostItem.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
@@ -40,7 +47,17 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 
+const { data: currentUserData } = useGetCurrentUser()
+const currentUserId = computed<string | undefined>(() =>
+  currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
+)
+
 const groupId = computed<string>(() => String(route.params.groupId))
+
+/** A thread created from inside another one is still what the member asked to open. */
+function openThread(newThreadId: string) {
+  void router.push({ name: 'thread', params: { groupId: groupId.value, threadId: newThreadId } })
+}
 const threadId = computed<string>(() => String(route.params.threadId))
 
 const { data: groupData } = useGetGroup(groupId)
@@ -118,6 +135,37 @@ const mayWrite = computed<boolean>(
     group.value?.status === 'joined' &&
     (group.value.role === 'writer' || group.value.role === 'administrator'),
 )
+
+/**
+ * The rule `mayModify` gives content: an administrator of the group, or whoever started it.
+ * The endpoint decides; this only keeps the controls off a page that cannot use them.
+ */
+const mayModifyThread = computed<boolean>(
+  () =>
+    mayAdminister.value ||
+    (thread.value?.createdBy !== null && thread.value?.createdBy === currentUserId.value),
+)
+
+const renamingThread = ref<boolean>(false)
+const deletingThread = ref<boolean>(false)
+const deletionError = ref<string | undefined>(undefined)
+
+const { mutateAsync: deleteThread, isPending: isDeletingThread } = useDeleteThread()
+
+async function confirmDeleteThread() {
+  deletionError.value = undefined
+  try {
+    await deleteThread({ groupId: groupId.value, threadId: threadId.value })
+  } catch {
+    deletionError.value = 'Der Thread konnte nicht gelöscht werden. Versuche es noch einmal.'
+    return
+  }
+
+  await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(groupId.value) })
+  deletingThread.value = false
+  // The thread this page is about no longer exists.
+  void router.push({ name: 'group', params: { groupId: groupId.value } })
+}
 
 const mayAdminister = computed<boolean>(
   () => group.value?.status === 'joined' && group.value.role === 'administrator',
@@ -211,6 +259,9 @@ async function submit() {
             :title="thread.title"
             :post-count="postCount"
             :last-activity-at="thread.lastActivityAt"
+            :may-modify="mayModifyThread"
+            @rename="renamingThread = true"
+            @delete="deletingThread = true"
           />
 
           <p v-if="posts.length === 0" class="text-[13.5px] leading-[1.7] text-ink-4">
@@ -296,5 +347,17 @@ async function submit() {
     </template>
   </AppLayout>
 
-  <CreateThreadDialog v-model:open="creatingThread" :group-id="groupId" />
+  <ThreadDialog v-model:open="creatingThread" :group-id="groupId" @created="openThread" />
+
+  <ThreadDialog v-if="thread" v-model:open="renamingThread" :group-id="groupId" :thread="thread" />
+
+  <DeleteThreadDialog
+    v-if="thread"
+    v-model:open="deletingThread"
+    :title="thread.title"
+    :post-count="postCount"
+    :pending="isDeletingThread"
+    :error="deletionError"
+    @confirmed="confirmDeleteThread"
+  />
 </template>
