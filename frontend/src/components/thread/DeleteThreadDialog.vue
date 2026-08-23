@@ -69,7 +69,7 @@ const posts = computed<string | undefined>(() => {
           Abbrechen
         </Button>
         <Button type="button" variant="destructive" :disabled="pending" @click="$emit('confirmed')">
-          <Spinner v-if="pending" data-icon="inline-start" />
+          <Spinner v-if="pending" />
           Thread löschen
         </Button>
       </DialogFooter>

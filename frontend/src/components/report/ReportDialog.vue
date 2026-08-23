@@ -147,7 +147,7 @@ async function confirm() {
             Abbrechen
           </Button>
           <Button type="button" :disabled="isPending" @click="confirm">
-            <Spinner v-if="isPending" data-icon="inline-start" />
+            <Spinner v-if="isPending" />
             Melden
           </Button>
         </template>

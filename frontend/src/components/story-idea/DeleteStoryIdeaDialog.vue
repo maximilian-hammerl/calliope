@@ -51,7 +51,7 @@ defineEmits<{ confirmed: [] }>()
           Abbrechen
         </Button>
         <Button type="button" :disabled="pending" @click="$emit('confirmed')">
-          <Spinner v-if="pending" data-icon="inline-start" />
+          <Spinner v-if="pending" />
           Idee löschen
         </Button>
       </DialogFooter>

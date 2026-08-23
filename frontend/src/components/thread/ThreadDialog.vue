@@ -149,7 +149,7 @@ async function submit() {
             Abbrechen
           </Button>
           <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" data-icon="inline-start" />
+            <Spinner v-if="isPending" />
             {{ renaming ? 'Änderungen speichern' : 'Thread anlegen' }}
           </Button>
         </DialogFooter>

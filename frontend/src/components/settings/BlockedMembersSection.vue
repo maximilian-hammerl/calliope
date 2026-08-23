@@ -50,7 +50,7 @@ async function allowContactAgain(userId: string) {
     </Alert>
 
     <div v-if="isPending" class="flex items-center gap-2 text-[13px] text-ink-5">
-      <Spinner data-icon="inline-start" />
+      <Spinner />
       Einen Moment.
     </div>
 

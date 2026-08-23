@@ -288,7 +288,7 @@ async function submit() {
             Abbrechen
           </Button>
           <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" data-icon="inline-start" />
+            <Spinner v-if="isPending" />
             {{ editing ? 'Änderungen speichern' : 'Gruppe gründen' }}
           </Button>
         </DialogFooter>

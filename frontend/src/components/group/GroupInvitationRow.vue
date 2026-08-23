@@ -40,11 +40,11 @@ const offer = computed<string | undefined>(() =>
 
     <template #actions>
       <Button size="sm" :disabled="isBusy" @click="accept">
-        <Spinner v-if="isAccepting" data-icon="inline-start" />
+        <Spinner v-if="isAccepting" />
         Beitreten
       </Button>
       <Button variant="outline" size="sm" :disabled="isBusy" @click="decline">
-        <Spinner v-if="isDeclining" data-icon="inline-start" />
+        <Spinner v-if="isDeclining" />
         Ablehnen
       </Button>
       <span v-if="offer" class="text-[12.5px] text-ink-5">{{ offer }}</span>

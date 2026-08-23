@@ -149,7 +149,7 @@ function startOver() {
           </FieldGroup>
 
           <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" data-icon="inline-start" />
+            <Spinner v-if="isPending" />
             Link anfordern
           </Button>
         </form>

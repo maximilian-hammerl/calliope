@@ -103,7 +103,7 @@ async function submit() {
 
     <div class="flex flex-col gap-3">
       <Button type="submit" variant="destructive" :disabled="isPending">
-        <Spinner v-if="isPending" data-icon="inline-start" />
+        <Spinner v-if="isPending" />
         Löschen-Link anfordern
       </Button>
       <slot name="cancel" />

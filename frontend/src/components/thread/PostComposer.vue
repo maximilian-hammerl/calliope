@@ -112,7 +112,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
           <!-- Locked while sending: a flaky connection must not produce a double post, but two
                deliberate posts in a row stay possible. -->
           <Button size="lg" :disabled="sending || text.trim().length === 0" @click="emit('submit')">
-            <Spinner v-if="sending" data-icon="inline-start" />
+            <Spinner v-if="sending" />
             {{ sending ? 'Wird gesendet …' : 'Beitrag senden' }}
           </Button>
         </div>

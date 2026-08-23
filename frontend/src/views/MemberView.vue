@@ -91,7 +91,7 @@ async function allowContactAgain() {
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <div v-if="isPending" class="flex items-center gap-2 text-note text-ink-5">
-          <Spinner data-icon="inline-start" />
+          <Spinner />
           Einen Moment.
         </div>
 

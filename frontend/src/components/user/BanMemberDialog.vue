@@ -108,7 +108,7 @@ async function confirm() {
         <!-- Solid, not destructive: the design system reserves that fill for acts that destroy
              writing and cannot be undone by repeating them. A ban destroys nothing and lifts. -->
         <Button type="button" :disabled="isPending" @click="confirm">
-          <Spinner v-if="isPending" data-icon="inline-start" />
+          <Spinner v-if="isPending" />
           Konto sperren
         </Button>
       </DialogFooter>

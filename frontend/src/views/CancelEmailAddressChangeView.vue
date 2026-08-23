@@ -40,7 +40,7 @@ onMounted(async () => {
       </div>
 
       <div v-if="status === 'cancelling'" class="mt-6 flex items-center gap-2 text-note text-ink-5">
-        <Spinner data-icon="inline-start" />
+        <Spinner />
         Einen Moment, wir brechen die Änderung ab.
       </div>
 

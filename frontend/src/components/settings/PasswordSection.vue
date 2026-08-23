@@ -171,7 +171,7 @@ async function submitPassword() {
     </FieldGroup>
 
     <Button type="submit" :disabled="isChangingPassword">
-      <Spinner v-if="isChangingPassword" data-icon="inline-start" />
+      <Spinner v-if="isChangingPassword" />
       Passwort ändern
     </Button>
   </form>

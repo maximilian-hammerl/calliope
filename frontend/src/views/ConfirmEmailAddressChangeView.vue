@@ -50,7 +50,7 @@ const HEADINGS = {
       </div>
 
       <div v-if="status === 'confirming'" class="mt-6 flex items-center gap-2 text-note text-ink-5">
-        <Spinner data-icon="inline-start" />
+        <Spinner />
         Einen Moment, wir prüfen deinen Link.
       </div>
 

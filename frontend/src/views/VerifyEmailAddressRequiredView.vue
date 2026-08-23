@@ -153,7 +153,7 @@ async function signOut() {
       <template v-if="mode === 'choices'">
         <div class="mt-7 flex flex-col gap-3">
           <Button :disabled="isResending" @click="resendLink">
-            <Spinner v-if="isResending" data-icon="inline-start" />
+            <Spinner v-if="isResending" />
             Link erneut senden
           </Button>
           <Button variant="outline" @click="mode = 'correcting'">
@@ -210,7 +210,7 @@ async function signOut() {
 
         <div class="flex flex-col gap-3">
           <Button type="submit" :disabled="isChanging">
-            <Spinner v-if="isChanging" data-icon="inline-start" />
+            <Spinner v-if="isChanging" />
             Adresse ändern und Link senden
           </Button>
           <Button type="button" variant="outline" @click="mode = 'choices'"> Abbrechen </Button>

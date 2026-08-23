@@ -210,7 +210,7 @@ async function submit() {
           </FieldGroup>
 
           <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" data-icon="inline-start" />
+            <Spinner v-if="isPending" />
             Passwort speichern
           </Button>
         </form>

@@ -120,7 +120,7 @@ async function submit() {
             Abbrechen
           </Button>
           <Button type="submit" :disabled="isPending || selected === undefined">
-            <Spinner v-if="isPending" data-icon="inline-start" />
+            <Spinner v-if="isPending" />
             Mitglied einladen
           </Button>
         </DialogFooter>

@@ -210,7 +210,7 @@ async function submit() {
            earlier watcher loop happened. -->
       <div v-if="hasOlder" class="mb-3.5 flex justify-center">
         <Button variant="ghost" size="sm" :disabled="isLoadingOlder" @click="loadOlderKeepingPlace">
-          <Spinner v-if="isLoadingOlder" data-icon="inline-start" />
+          <Spinner v-if="isLoadingOlder" />
           Ältere Nachrichten
         </Button>
       </div>
@@ -271,7 +271,7 @@ async function submit() {
         :maxlength="TEXT_LIMIT.createMessage.text.maxLength"
       />
       <Button type="submit" :disabled="sending || text.trim().length === 0">
-        <Spinner v-if="sending" data-icon="inline-start" />
+        <Spinner v-if="sending" />
         Senden
       </Button>
     </form>

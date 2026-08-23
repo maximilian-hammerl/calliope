@@ -66,11 +66,11 @@ async function onDecline() {
 
     <div class="mt-3.5 flex flex-wrap items-center gap-2">
       <Button size="sm" :disabled="isBusy" @click="accept">
-        <Spinner v-if="isAccepting" data-icon="inline-start" />
+        <Spinner v-if="isAccepting" />
         Beitreten
       </Button>
       <Button variant="outline" size="sm" :disabled="isBusy" @click="onDecline">
-        <Spinner v-if="isDeclining" data-icon="inline-start" />
+        <Spinner v-if="isDeclining" />
         Ablehnen
       </Button>
     </div>
