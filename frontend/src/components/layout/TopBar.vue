@@ -99,7 +99,7 @@ async function signOut() {
 
 <template>
   <header class="flex flex-col border-b border-line-3 bg-paper-0">
-    <div class="flex h-[52px] items-center gap-5 px-[18px] md:h-[54px] md:gap-7 md:px-6">
+    <div class="flex h-[52px] items-center gap-5 px-gutter md:h-[54px] md:gap-7 md:px-6">
       <RouterLink
         :to="{ name: 'home' }"
         class="flex min-h-11 items-center md:min-h-0"
@@ -247,7 +247,7 @@ async function signOut() {
     <div
       v-if="searchOpen"
       ref="searchRow"
-      class="flex items-center gap-2 border-t border-line-2 px-[18px] py-[9px] md:hidden"
+      class="flex items-center gap-2 border-t border-line-2 px-gutter py-[9px] md:hidden"
     >
       <SearchField class="flex-1" />
       <button

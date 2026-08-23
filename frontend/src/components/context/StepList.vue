@@ -117,7 +117,7 @@ const showingCompleted = ref<boolean>(false)
 
 <template>
   <div>
-    <div class="mb-[10px] flex items-baseline gap-2">
+    <div class="mb-2.5 flex items-baseline gap-2">
       <span class="text-[12.5px] font-semibold text-ink-4">Nächste Schritte</span>
       <span class="text-[11.5px] text-ink-5">{{ open.length }} offen</span>
     </div>
@@ -126,7 +126,7 @@ const showingCompleted = ref<boolean>(false)
       Das hat gerade nicht geklappt. Versuche es noch einmal.
     </p>
 
-    <div class="flex flex-col gap-[6px]">
+    <div class="flex flex-col gap-1.5">
       <PanelCard v-for="step in open" :key="step.id">
         <div class="flex items-start gap-2">
           <!-- For a reader the mark is a mark, not a control: plain span, no pointer. -->
@@ -137,7 +137,7 @@ const showingCompleted = ref<boolean>(false)
             :aria-label="`„${step.text}“ als erledigt abhaken`"
             @click="setDone(step, true)"
           >
-            <Square :size="14" :stroke-width="1.5" class="mt-[2px] shrink-0 text-ink-6" />
+            <Square :size="14" :stroke-width="1.5" class="mt-0.5 shrink-0 text-ink-6" />
             <span class="flex-1">
               {{ step.text }}
               <br />
@@ -147,7 +147,7 @@ const showingCompleted = ref<boolean>(false)
             </span>
           </button>
           <span v-else class="flex flex-1 items-start gap-2">
-            <Square :size="14" :stroke-width="1.5" class="mt-[2px] shrink-0 text-ink-6" />
+            <Square :size="14" :stroke-width="1.5" class="mt-0.5 shrink-0 text-ink-6" />
             <span class="flex-1">
               {{ step.text }}
               <br />
@@ -183,7 +183,7 @@ const showingCompleted = ref<boolean>(false)
       />
       <button
         type="button"
-        class="flex min-h-11 items-center rounded-lg border border-line-5 bg-paper-3 px-[10px] text-[12.5px] font-medium text-oak-deep disabled:opacity-50 md:min-h-0 md:py-[5px]"
+        class="flex min-h-11 items-center rounded-lg border border-line-5 bg-paper-3 px-2.5 text-[12.5px] font-medium text-oak-deep disabled:opacity-50 md:min-h-0 md:py-[5px]"
         :disabled="isCreating || newText.trim().length === 0"
         @click="submit"
       >
@@ -196,7 +196,7 @@ const showingCompleted = ref<boolean>(false)
     <button
       v-else
       type="button"
-      class="mt-[9px] flex min-h-11 items-center gap-[4px] rounded-lg border border-line-5 bg-paper-3 px-[10px] text-[12.5px] font-medium text-oak-deep disabled:opacity-50 md:min-h-0 md:py-[5px]"
+      class="mt-[9px] flex min-h-11 items-center gap-1 rounded-lg border border-line-5 bg-paper-3 px-2.5 text-[12.5px] font-medium text-oak-deep disabled:opacity-50 md:min-h-0 md:py-[5px]"
       :disabled="!mayWrite"
       :title="mayWrite ? undefined : 'Nur wer schreibt, kann Schritte anlegen'"
       aria-label="Schritt anlegen"
@@ -206,10 +206,10 @@ const showingCompleted = ref<boolean>(false)
       Schritt
     </button>
 
-    <div v-if="completed.length > 0" class="mt-[12px]">
+    <div v-if="completed.length > 0" class="mt-3">
       <button
         type="button"
-        class="flex min-h-11 items-center gap-[4px] text-[12.5px] text-ink-5 hover:text-ink-2 md:min-h-0"
+        class="flex min-h-11 items-center gap-1 text-[12.5px] text-ink-5 hover:text-ink-2 md:min-h-0"
         @click="showingCompleted = !showingCompleted"
       >
         <component
@@ -220,7 +220,7 @@ const showingCompleted = ref<boolean>(false)
         Erledigt ({{ completed.length }})
       </button>
 
-      <div v-if="showingCompleted" class="mt-[6px] flex flex-col gap-[6px]">
+      <div v-if="showingCompleted" class="mt-1.5 flex flex-col gap-1.5">
         <PanelCard v-for="step in completed" :key="step.id">
           <div class="flex items-start gap-2">
             <button
@@ -230,7 +230,7 @@ const showingCompleted = ref<boolean>(false)
               :aria-label="`„${step.text}“ wieder öffnen`"
               @click="setDone(step, false)"
             >
-              <SquareCheck :size="14" :stroke-width="1.5" class="mt-[2px] shrink-0 text-ink-6" />
+              <SquareCheck :size="14" :stroke-width="1.5" class="mt-0.5 shrink-0 text-ink-6" />
               <span class="flex-1 text-ink-5">
                 {{ step.text }}
                 <br />
@@ -240,7 +240,7 @@ const showingCompleted = ref<boolean>(false)
               </span>
             </button>
             <span v-else class="flex flex-1 items-start gap-2">
-              <SquareCheck :size="14" :stroke-width="1.5" class="mt-[2px] shrink-0 text-ink-6" />
+              <SquareCheck :size="14" :stroke-width="1.5" class="mt-0.5 shrink-0 text-ink-6" />
               <span class="flex-1 text-ink-5">
                 {{ step.text }}
                 <br />

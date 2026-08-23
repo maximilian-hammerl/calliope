@@ -75,7 +75,12 @@ version. Its `readme.md` is the file to edit; the prototype components under `co
 **Type comes from the named scale**, never a literal: `text-body`, `text-note`, `text-nav`,
 `text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2`, declared in `theme.css`. Each sets
 the size *and* the line height, which is the point — writing the pair by hand is how 13.5px ended
-up with four different line heights. Spacing has no such scale yet and is still written out.
+up with four different line heights.
+
+**Spacing is Tailwind's scale**, which already covers the design system's 2px steps — `1.5` is
+6px, `3.5` is 14px. Two exceptions: `px-gutter` (18px, the phone gutter, paired with `md:px-10`),
+and a bracketed value like `pb-[11px]`, which means deliberately off the scale — an optical
+alignment. Do not convert those to fractional steps; the bracket is the signal.
 
 Icons are **Lucide at `stroke-width="1.5"`** — Lucide's default of 2 is heavier than anything
 else on the page. They accompany a label rather than replacing it.

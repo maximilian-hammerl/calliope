@@ -31,14 +31,14 @@ defineProps<{ label: string; collapsible?: boolean }>()
       >
         {{ label }}
       </AccordionTrigger>
-      <AccordionContent class="pt-[10px] pb-0 text-[12.5px]">
+      <AccordionContent class="pt-2.5 pb-0 text-[12.5px]">
         <slot />
       </AccordionContent>
     </AccordionItem>
   </Accordion>
 
   <div v-else>
-    <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">{{ label }}</div>
+    <div class="mb-2.5 text-[12.5px] font-semibold text-ink-4">{{ label }}</div>
     <slot />
   </div>
 </template>

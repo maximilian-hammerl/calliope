@@ -50,7 +50,7 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
     <!-- The row the placeholder actions used to occupy, in the same place and at the same
          weight (47cce00): below the writing, recessed to the metadata's size and colour, so it
          does not compete with the prose. Restored now that something in it works. -->
-    <div v-if="mayReport" class="mt-[14px] flex items-center gap-4 text-[12px] text-ink-5">
+    <div v-if="mayReport" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
       <button
         type="button"
         class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"

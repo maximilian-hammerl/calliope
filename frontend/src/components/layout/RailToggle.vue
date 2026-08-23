@@ -11,7 +11,7 @@ defineEmits<{ click: [] }>()
        34px column. -->
   <button
     type="button"
-    class="flex w-[34px] flex-none flex-col items-center gap-[14px] bg-paper-edge pt-4 text-ink-label"
+    class="flex w-[34px] flex-none flex-col items-center gap-3.5 bg-paper-edge pt-4 text-ink-label"
     :class="side === 'left' ? 'border-r border-line-3' : 'border-l border-line-3'"
     :title="`${label} einblenden`"
     @click="$emit('click')"

@@ -32,7 +32,7 @@ const entries = computed<Array<number | typeof GAP>>(() => {
 <template>
   <nav
     v-if="pageCount > 1"
-    class="flex flex-wrap items-center gap-x-[2px] gap-y-1"
+    class="flex flex-wrap items-center gap-x-0.5 gap-y-1"
     aria-label="Seiten"
   >
     <button

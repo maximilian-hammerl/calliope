@@ -63,7 +63,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
     {{ own ? 'niemand kann sie mehr beantworten' : 'du kannst sie nicht mehr beantworten' }}.
   </p>
 
-  <p v-if="idea.subtitle" class="mt-[4px] max-w-[60ch] text-note text-ink-3">
+  <p v-if="idea.subtitle" class="mt-1 max-w-[60ch] text-note text-ink-3">
     {{ idea.subtitle }}
   </p>
 
@@ -92,7 +92,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
 
   <div class="mt-8 grid max-w-[60ch] grid-cols-1 gap-8 border-t border-line-3 pt-6 sm:grid-cols-2">
     <div v-if="seeking.length > 0">
-      <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">Die Suche</div>
+      <div class="mb-2.5 text-[12.5px] font-semibold text-ink-4">Die Suche</div>
       <div class="text-rail text-ink-4">
         <div v-for="entry in seeking" :key="entry.label">
           <span class="text-ink-6">{{ entry.label }}:&nbsp;</span>
@@ -102,7 +102,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
     </div>
 
     <div v-if="story.length > 0">
-      <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">Die Geschichte</div>
+      <div class="mb-2.5 text-[12.5px] font-semibold text-ink-4">Die Geschichte</div>
       <div class="text-rail text-ink-4">
         <div v-for="entry in story" :key="entry.label">
           <span class="text-ink-6">{{ entry.label }}:&nbsp;</span>

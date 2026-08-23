@@ -98,7 +98,7 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
 
 <template>
   <AppLayout>
-    <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <h1 class="text-h1">Moderation</h1>
         <p class="mt-2 max-w-[60ch] text-body text-ink-4">
@@ -169,15 +169,15 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
 
               <!-- What the thing said when it was reported, which is what makes a report about
                    deleted content still judgeable. -->
-              <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-row text-ink-3">
+              <p class="mt-1.5 line-clamp-3 max-w-[60ch] text-row text-ink-3">
                 {{ report.targetExcerpt }}
               </p>
 
-              <p class="mt-[6px] max-w-[60ch] text-row text-ink-4">
+              <p class="mt-1.5 max-w-[60ch] text-row text-ink-4">
                 {{ report.reason }}
               </p>
 
-              <p class="mt-[8px] text-[12.5px] leading-[1.6] text-ink-5">
+              <p class="mt-2 text-[12.5px] leading-[1.6] text-ink-5">
                 <template v-if="report.authorUsername">
                   von
                   <RouterLink
@@ -192,7 +192,7 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
                 {{ formatActivityTime(report.createdAt) }}
               </p>
 
-              <div v-if="report.status === 'open'" class="mt-[10px] flex items-center gap-2">
+              <div v-if="report.status === 'open'" class="mt-2.5 flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"

@@ -265,7 +265,7 @@ async function submit() {
         @create="creatingThread = true"
       />
 
-      <div class="flex-1 overflow-auto px-[18px] pt-7 pb-8 md:px-10">
+      <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
         <div class="reading-column">
           <ThreadHeader
             :title="thread.title"
@@ -312,7 +312,7 @@ async function submit() {
         </div>
       </div>
 
-      <div v-if="sendError" class="px-[18px] pb-3 md:px-10">
+      <div v-if="sendError" class="px-gutter pb-3 md:px-10">
         <Alert variant="destructive" role="alert" class="reading-column">
           <AlertDescription>{{ sendError }}</AlertDescription>
         </Alert>
@@ -330,12 +330,12 @@ async function submit() {
 
     <div
       v-else-if="isPending"
-      class="reading-column px-[18px] py-5 text-[12.5px] text-ink-5 md:px-10"
+      class="reading-column px-gutter py-5 text-[12.5px] text-ink-5 md:px-10"
     >
       Thread wird geladen …
     </div>
 
-    <div v-else-if="isError" class="reading-column px-[18px] py-5 md:px-10">
+    <div v-else-if="isError" class="reading-column px-gutter py-5 md:px-10">
       <p class="max-w-[46ch] text-body text-ink-4">
         Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
       </p>

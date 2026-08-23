@@ -25,7 +25,7 @@ const open = defineModel<boolean>('open', { required: true })
 
       <DialogContent
         data-slot="context-sheet"
-        class="fixed inset-x-0 bottom-0 z-50 flex max-h-[85svh] flex-col gap-5 overflow-y-auto rounded-t-lg border-t border-line-3 bg-paper-2 px-[18px] pt-4 pb-8 shadow-[0_-2px_16px_rgba(43,38,32,0.14)] data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom"
+        class="fixed inset-x-0 bottom-0 z-50 flex max-h-[85svh] flex-col gap-5 overflow-y-auto rounded-t-lg border-t border-line-3 bg-paper-2 px-gutter pt-4 pb-8 shadow-[0_-2px_16px_rgba(43,38,32,0.14)] data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom"
       >
         <div class="flex items-center">
           <DialogTitle

@@ -147,7 +147,7 @@ onScopeDispose(clearTimer)
        Solid paper with a hairline, never a shadow, and never over the top bar. -->
   <div
     v-else
-    class="fixed inset-x-0 bottom-0 z-50 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line-4 bg-paper-0 px-[18px] py-[10px] md:px-10"
+    class="fixed inset-x-0 bottom-0 z-50 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line-4 bg-paper-0 px-gutter py-2.5 md:px-10"
     role="status"
     aria-live="polite"
   >

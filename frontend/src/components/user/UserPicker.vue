@@ -180,7 +180,7 @@ defineExpose({ reset })
             :id="optionId(user)"
             type="button"
             role="option"
-            class="flex min-h-[44px] w-full items-center gap-[10px] border-b border-line-3 border-l-2 pr-2 pl-[10px] text-left text-[13.5px] hover:bg-paper-2 hover:text-ink-1 md:min-h-[38px]"
+            class="flex min-h-[44px] w-full items-center gap-2.5 border-b border-line-3 border-l-2 pr-2 pl-2.5 text-left text-[13.5px] hover:bg-paper-2 hover:text-ink-1 md:min-h-[38px]"
             :class="[
               // One border-left-color utility at a time: paired with a static
               // border-l-transparent, Tailwind's own emission order decides the winner

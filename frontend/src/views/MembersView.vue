@@ -66,7 +66,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
 <template>
   <AppLayout>
-    <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <h1 class="mb-2 text-h1 text-ink-1">Mitglieder</h1>
         <p class="mb-6 max-w-[60ch] text-body text-ink-4">

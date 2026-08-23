@@ -63,7 +63,7 @@ watch(
   <!-- Threads live in tabs, so they appear nowhere else. Sticky under the group title, on
        solid paper so the posts never show through it. -->
   <div
-    class="sticky top-0 z-[2] bg-paper-1 px-[18px] shadow-[0_1px_0_var(--color-line-3)] md:px-10 md:pt-[15px]"
+    class="sticky top-0 z-[2] bg-paper-1 px-gutter shadow-[0_1px_0_var(--color-line-3)] md:px-10 md:pt-[15px]"
   >
     <!-- The tabs scroll; the arrows and "Thread" do not. Inside the scroller the create button
          was pushed off the edge by the tenth tab, which made starting a thread unreachable in
@@ -112,7 +112,7 @@ watch(
       <button
         v-if="mayWrite"
         type="button"
-        class="flex min-h-11 flex-none items-end gap-[4px] border-b-2 border-transparent pb-[11px] text-nav whitespace-nowrap text-ink-5 hover:text-oak-deep md:min-h-0 md:items-center"
+        class="flex min-h-11 flex-none items-end gap-1 border-b-2 border-transparent pb-[11px] text-nav whitespace-nowrap text-ink-5 hover:text-oak-deep md:min-h-0 md:items-center"
         aria-label="Thread anlegen"
         @click="$emit('create')"
       >

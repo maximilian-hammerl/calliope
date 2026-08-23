@@ -208,7 +208,7 @@ async function submit() {
       <!-- A button rather than a scroll trigger: this list also moves when a message arrives
            and when one is sent, and a load fired by scrolling into those movements is how the
            earlier watcher loop happened. -->
-      <div v-if="hasOlder" class="mb-[14px] flex justify-center">
+      <div v-if="hasOlder" class="mb-3.5 flex justify-center">
         <Button variant="ghost" size="sm" :disabled="isLoadingOlder" @click="loadOlderKeepingPlace">
           <Spinner v-if="isLoadingOlder" data-icon="inline-start" />
           Ältere Nachrichten
@@ -223,7 +223,7 @@ async function submit() {
            to about ninety-five characters, half again the comfortable measure. In px rather
            than `ch`: this list inherits 16px while the messages are 13.5px, so a ch cap here
            measures the wrong text and comes out a third too wide. -->
-      <ul v-else-if="messages.length > 0" class="flex max-w-[520px] flex-col gap-[14px]">
+      <ul v-else-if="messages.length > 0" class="flex max-w-[520px] flex-col gap-3.5">
         <li v-for="message in messages" :key="message.id">
           <div class="flex items-baseline gap-2">
             <span class="text-[12.5px] font-semibold text-ink-3">
@@ -239,7 +239,7 @@ async function submit() {
           </p>
 
           <!-- The same row a post carries, at the same weight and in the same place. -->
-          <div v-if="mayReport(message)" class="mt-[6px] flex items-center text-[12px] text-ink-5">
+          <div v-if="mayReport(message)" class="mt-1.5 flex items-center text-[12px] text-ink-5">
             <button
               type="button"
               class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"

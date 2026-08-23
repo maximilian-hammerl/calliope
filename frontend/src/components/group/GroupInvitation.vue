@@ -57,14 +57,14 @@ async function onDecline() {
 <template>
   <!-- Raised paper on the canvas with a hairline, no fill and no shadow: the same way a panel
        card is set apart, since this is a state of the page rather than a warning about it. -->
-  <section class="border border-line-3 bg-paper-0 px-4 py-[14px]">
+  <section class="border border-line-3 bg-paper-0 px-4 py-3.5">
     <p class="max-w-[60ch] text-body text-ink-2">{{ sentence }}</p>
 
     <Alert v-if="error" variant="destructive" role="alert" class="mt-3">
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
 
-    <div class="mt-[14px] flex flex-wrap items-center gap-2">
+    <div class="mt-3.5 flex flex-wrap items-center gap-2">
       <Button size="sm" :disabled="isBusy" @click="accept">
         <Spinner v-if="isAccepting" data-icon="inline-start" />
         Beitreten

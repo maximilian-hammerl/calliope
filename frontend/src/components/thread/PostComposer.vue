@@ -34,13 +34,13 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
   <button
     v-if="collapsed"
     type="button"
-    class="min-h-11 flex-none border-t border-line-3 bg-paper-0 px-[18px] py-[13px] text-left md:px-10"
+    class="min-h-11 flex-none border-t border-line-3 bg-paper-0 px-gutter py-[13px] text-left md:px-10"
     @click="expand"
   >
     <div class="reading-column flex items-center gap-3 text-[12.5px] text-ink-5">
       <span class="font-semibold text-ink-4">Weiterschreiben</span>
       <span
-        class="ml-auto flex items-center gap-[4px] rounded-lg border border-line-4 px-[9px] py-[4px] text-oak-deep"
+        class="ml-auto flex items-center gap-1 rounded-lg border border-line-4 px-[9px] py-1 text-oak-deep"
       >
         Editor ausklappen
         <ChevronUp :size="14" :stroke-width="1.5" />
@@ -48,9 +48,9 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
     </div>
   </button>
 
-  <div v-else class="flex-none border-t border-line-3 bg-paper-0 px-[18px] pt-[13px] pb-4 md:px-10">
+  <div v-else class="flex-none border-t border-line-3 bg-paper-0 px-gutter pt-[13px] pb-4 md:px-10">
     <div class="reading-column">
-      <div class="mb-[10px] flex items-center gap-[14px] text-[12.5px] text-ink-5">
+      <div class="mb-2.5 flex items-center gap-3.5 text-[12.5px] text-ink-5">
         <span class="font-semibold text-ink-4">Weiterschreiben</span>
 
         <!-- Continuous and without a timestamp: the point is that saving is happening, not
@@ -73,7 +73,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
 
         <button
           type="button"
-          class="ml-auto flex min-h-11 items-center gap-[4px] rounded-lg border border-line-4 px-[9px] text-oak-deep md:min-h-0 md:py-[4px]"
+          class="ml-auto flex min-h-11 items-center gap-1 rounded-lg border border-line-4 px-[9px] text-oak-deep md:min-h-0 md:py-1"
           aria-label="Editor einklappen"
           @click="collapsed = true"
         >
@@ -92,7 +92,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
       />
 
       <div
-        class="mt-[6px] flex items-center justify-between gap-[14px] border-t border-line-1 pt-[11px]"
+        class="mt-1.5 flex items-center justify-between gap-3.5 border-t border-line-1 pt-[11px]"
       >
         <div class="hidden gap-[15px] text-[12.5px] text-ink-5 sm:flex">
           <span
@@ -105,7 +105,7 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
             {{ tool }}
           </span>
         </div>
-        <div class="ml-auto flex items-center gap-[10px]">
+        <div class="ml-auto flex items-center gap-2.5">
           <Button variant="outline" size="sm" disabled title="Noch nicht verfügbar"
             >Vorschau</Button
           >

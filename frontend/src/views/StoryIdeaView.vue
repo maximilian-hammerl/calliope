@@ -113,7 +113,7 @@ async function remove() {
 
 <template>
   <AppLayout>
-    <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <div v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</div>
 

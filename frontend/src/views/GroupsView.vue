@@ -104,12 +104,12 @@ const creating = ref<boolean>(false)
 
 <template>
   <AppLayout>
-    <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <!-- Above the heading, because an invitation is waiting on an answer and the groups
              below are not waiting on anything. Absent entirely when there are none. -->
         <section v-if="invitations.length > 0" class="mb-9">
-          <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-[10px]">
+          <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
             <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
             <span class="text-[11.5px] text-ink-5">
               {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}

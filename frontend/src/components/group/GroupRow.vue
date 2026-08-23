@@ -29,23 +29,23 @@ defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
 
     <!-- The story's own line, between its name and what it is about. Darker and a step larger
          than the synopsis, so the order reads title → subtitle → synopsis. -->
-    <p v-if="group.subtitle" class="mt-[4px] max-w-[60ch] text-note text-ink-3">
+    <p v-if="group.subtitle" class="mt-1 max-w-[60ch] text-note text-ink-3">
       {{ group.subtitle }}
     </p>
 
     <!-- Clamped, like a story idea's teaser: a synopsis may run to eight thousand characters,
          and one long one would otherwise push every row after it off the page. -->
-    <p v-if="group.synopsis" class="mt-[6px] line-clamp-3 max-w-[60ch] text-row text-ink-4">
+    <p v-if="group.synopsis" class="mt-1.5 line-clamp-3 max-w-[60ch] text-row text-ink-4">
       {{ group.synopsis }}
     </p>
 
     <!-- Every date this row shows sits on one line, so an invitation's own date joins the
          group's activity rather than starting a second meta line. -->
-    <div class="mt-[6px] text-rail text-ink-5">
+    <div class="mt-1.5 text-rail text-ink-5">
       zuletzt {{ formatActivityTime(group.lastActivityAt) }}<slot name="meta" />
     </div>
 
-    <div v-if="$slots.actions" class="mt-[10px] flex flex-wrap items-center gap-2">
+    <div v-if="$slots.actions" class="mt-2.5 flex flex-wrap items-center gap-2">
       <slot name="actions" />
     </div>
   </div>

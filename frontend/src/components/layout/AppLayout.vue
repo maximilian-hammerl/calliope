@@ -49,7 +49,7 @@ const sheetOpen = ref<boolean>(false)
       <template v-if="hasRail && $slots.infoRail && railFits">
         <aside
           v-if="leftOpen"
-          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-r border-line-3 bg-paper-2 px-[14px] py-4 lg:flex"
+          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-r border-line-3 bg-paper-2 px-3.5 py-4 lg:flex"
         >
           <div class="flex items-center">
             <RailLabel>Über die Gruppe</RailLabel>
@@ -73,7 +73,7 @@ const sheetOpen = ref<boolean>(false)
         <button
           v-if="hasRail && $slots.rail && !railFits"
           type="button"
-          class="flex min-h-11 flex-none items-center gap-2 border-b border-line-3 bg-paper-2 px-[18px] text-left font-mono text-[10.5px] font-semibold tracking-[0.14em] text-ink-label uppercase"
+          class="flex min-h-11 flex-none items-center gap-2 border-b border-line-3 bg-paper-2 px-gutter text-left font-mono text-[10.5px] font-semibold tracking-[0.14em] text-ink-label uppercase"
           @click="sheetOpen = true"
         >
           <PanelRight :size="14" :stroke-width="1.5" />
@@ -86,13 +86,13 @@ const sheetOpen = ref<boolean>(false)
       <template v-if="hasRail && $slots.rail">
         <aside
           v-if="railFits && rightOpen"
-          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-l border-line-3 bg-paper-2 px-[14px] py-4 lg:flex"
+          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-l border-line-3 bg-paper-2 px-3.5 py-4 lg:flex"
         >
           <div class="flex items-center">
             <RailLabel>Gruppen-Kontext</RailLabel>
             <button
               type="button"
-              class="ml-auto rounded-md border border-line-4 px-[6px] text-[13px] leading-[1.1] text-ink-label"
+              class="ml-auto rounded-md border border-line-4 px-1.5 text-[13px] leading-[1.1] text-ink-label"
               aria-label="Gruppen-Kontext einklappen"
               @click="rightOpen = false"
             >

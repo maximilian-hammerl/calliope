@@ -8,7 +8,7 @@ const PLACEHOLDER_FILES = [
 
 <template>
   <div>
-    <div class="flex flex-col gap-[6px] text-[12.5px] text-ink-4">
+    <div class="flex flex-col gap-1.5 text-[12.5px] text-ink-4">
       <div v-for="file in PLACEHOLDER_FILES" :key="file.name" class="flex items-baseline gap-2">
         <span class="font-mono text-[10.5px] text-ink-6">{{ file.type }}</span>
         <span class="truncate">{{ file.name }}</span>

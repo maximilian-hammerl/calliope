@@ -123,7 +123,7 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
         >
           <button
             type="button"
-            class="flex min-h-11 items-center gap-[4px] py-[7px] text-[13px] text-ink-5 hover:text-oak-deep md:min-h-0"
+            class="flex min-h-11 items-center gap-1 py-[7px] text-[13px] text-ink-5 hover:text-oak-deep md:min-h-0"
             @click="creating = !creating"
           >
             <Plus :size="14" :stroke-width="1.5" />

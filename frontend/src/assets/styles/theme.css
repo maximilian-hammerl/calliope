@@ -52,6 +52,12 @@
   --text-rail: 12.5px;
   --text-rail--line-height: 1.95;
 
+  /* The page gutter on a phone, paired with `md:px-10` everywhere it appears. Not on the 2px
+     scale and not drift either: one value, written out at twenty-five sites, that nothing named.
+     Every other spacing value comes from Tailwind's own scale, which already covers the design
+     system's — 6px is `1.5`, 14px is `3.5`, and so on. */
+  --spacing-gutter: 18px;
+
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;

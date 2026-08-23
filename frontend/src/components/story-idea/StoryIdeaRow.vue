@@ -47,15 +47,15 @@ const story = computed<string>(() =>
       </CalliopeBadge>
     </div>
 
-    <p v-if="idea.subtitle" class="mt-[4px] max-w-[60ch] text-note text-ink-3">
+    <p v-if="idea.subtitle" class="mt-1 max-w-[60ch] text-note text-ink-3">
       {{ idea.subtitle }}
     </p>
 
-    <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-row text-ink-4">
+    <p class="mt-1.5 line-clamp-3 max-w-[60ch] text-row text-ink-4">
       {{ idea.teaser }}
     </p>
 
-    <div v-if="story !== ''" class="mt-[8px] max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5">
+    <div v-if="story !== ''" class="mt-2 max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5">
       {{ story }}
     </div>
 
@@ -63,12 +63,12 @@ const story = computed<string>(() =>
          deciding to read, not one tag among the others. -->
     <div
       v-if="idea.contentWarnings.length > 0"
-      class="mt-[2px] max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5"
+      class="mt-0.5 max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5"
     >
       <span class="text-ink-6">Inhaltswarnungen:&nbsp;</span>{{ idea.contentWarnings.join(', ') }}
     </div>
 
-    <div class="mt-[6px] text-rail text-ink-5">
+    <div class="mt-1.5 text-rail text-ink-5">
       von
       <RouterLink
         :to="{ name: 'member', params: { userId: idea.createdBy } }"

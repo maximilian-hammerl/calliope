@@ -135,7 +135,7 @@ async function askIntoGroup() {
         @create="creatingThread = true"
       />
 
-      <div class="flex-1 overflow-auto px-[18px] pt-7 pb-8 md:px-10">
+      <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
         <div class="reading-column">
           <!-- Above the group's own text: what to do about the invitation comes before
                reading further into a group you have not joined. -->
@@ -205,11 +205,11 @@ async function askIntoGroup() {
       </div>
     </template>
 
-    <div v-else-if="isPending" class="px-[18px] py-5 text-[12.5px] text-ink-5 md:px-10">
+    <div v-else-if="isPending" class="px-gutter py-5 text-[12.5px] text-ink-5 md:px-10">
       <div class="reading-column">Gruppe wird geladen …</div>
     </div>
 
-    <div v-else-if="isError" class="reading-column px-[18px] py-5 md:px-10">
+    <div v-else-if="isError" class="reading-column px-gutter py-5 md:px-10">
       <p class="max-w-[46ch] text-body text-ink-4">
         Diese Gruppe gibt es nicht, oder sie ist privat und du gehörst nicht dazu.
       </p>

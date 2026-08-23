@@ -11,7 +11,7 @@ import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
 
 <template>
   <AppLayout>
-    <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <h1 class="mb-2 text-h1 text-ink-1">Willkommen bei {{ APP_NAME }}</h1>
 

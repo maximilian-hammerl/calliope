@@ -17,7 +17,7 @@ const visibilityLabel = computed<string>(() =>
 </script>
 
 <template>
-  <div class="px-[18px] pt-5 md:px-10">
+  <div class="px-gutter pt-5 md:px-10">
     <div class="reading-column">
       <!-- A group title is 25px Newsreader regular, never bold. The badge sits inside the
            heading rather than beside it: as a flex sibling it dropped to a third line
@@ -35,7 +35,7 @@ const visibilityLabel = computed<string>(() =>
       </h1>
     </div>
 
-    <p v-if="subtitle" class="reading-column mt-[4px] text-note text-ink-3">
+    <p v-if="subtitle" class="reading-column mt-1 text-note text-ink-3">
       {{ subtitle }}
     </p>
   </div>

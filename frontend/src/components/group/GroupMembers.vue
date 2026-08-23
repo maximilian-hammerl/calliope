@@ -216,7 +216,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
 
 <template>
   <section class="mt-9">
-    <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-[10px]">
+    <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
       <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Mitglieder</h2>
       <span class="text-[11.5px] text-ink-5">
         {{ pluralize(joinedCount, 'Mitglied', 'Mitglieder') }}

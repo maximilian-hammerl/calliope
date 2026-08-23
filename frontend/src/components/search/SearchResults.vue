@@ -54,15 +54,13 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
 
 <template>
   <div :class="cn('flex flex-col', props.class)" data-slot="search-results">
-    <p v-if="!termIsLongEnough" class="px-[14px] py-[11px] text-[12.5px] text-ink-5">
+    <p v-if="!termIsLongEnough" class="px-3.5 py-[11px] text-[12.5px] text-ink-5">
       Gib mindestens {{ minimumLength }} Zeichen ein.
     </p>
 
-    <p v-else-if="isSearching" class="px-[14px] py-[11px] text-[12.5px] text-ink-5">
-      Wird gesucht …
-    </p>
+    <p v-else-if="isSearching" class="px-3.5 py-[11px] text-[12.5px] text-ink-5">Wird gesucht …</p>
 
-    <p v-else-if="foundNothing" class="px-[14px] py-[11px] text-[12.5px] text-ink-5">
+    <p v-else-if="foundNothing" class="px-3.5 py-[11px] text-[12.5px] text-ink-5">
       Nichts gefunden.
     </p>
 
@@ -72,7 +70,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
         :key="entry.key"
         class="border-t border-line-2 first:border-t-0"
       >
-        <div class="px-[14px] pt-[10px] pb-[6px] text-[11.5px] font-semibold text-ink-5">
+        <div class="px-3.5 pt-2.5 pb-1.5 text-[11.5px] font-semibold text-ink-5">
           {{ entry.heading }}
         </div>
 
@@ -82,7 +80,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             v-for="group in results?.groups.results"
             :key="group.id"
             :to="groupTarget(group.id)"
-            class="flex min-h-[38px] items-center gap-2 px-[14px] py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
+            class="flex min-h-[38px] items-center gap-2 px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
             <span class="truncate">{{ group.title }}</span>
             <CalliopeBadge>
@@ -96,7 +94,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             v-for="thread in results?.threads.results"
             :key="thread.id"
             :to="threadTarget(thread.writingGroupId, thread.id)"
-            class="flex min-h-[38px] flex-col justify-center px-[14px] py-[7px] hover:bg-paper-2"
+            class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
           >
             <span class="truncate text-[13px] text-ink-2">{{ thread.title }}</span>
             <!-- A result that can come from anywhere says where it came from. -->
@@ -109,7 +107,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             v-for="idea in results?.storyIdeas.results"
             :key="idea.id"
             :to="{ name: 'storyIdea', params: { ideaId: idea.id } }"
-            class="flex min-h-[38px] items-center gap-2 px-[14px] py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
+            class="flex min-h-[38px] items-center gap-2 px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
             <span class="truncate">{{ idea.title }}</span>
             <!-- Unlike the board, this list holds closed ideas and the reader's own, so both
@@ -126,7 +124,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             v-for="user in results?.users.results"
             :key="user.id"
             :to="{ name: 'member', params: { userId: user.id } }"
-            class="flex min-h-[38px] items-center px-[14px] py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
+            class="flex min-h-[38px] items-center px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
             {{ user.username }}
           </RouterLink>
@@ -136,7 +134,7 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
           v-if="
             entry.section && remaining(entry.section.results.length, entry.section.totalResults) > 0
           "
-          class="px-[14px] pt-[2px] pb-[9px] text-[11.5px] text-ink-6"
+          class="px-3.5 pt-0.5 pb-[9px] text-[11.5px] text-ink-6"
         >
           {{
             pluralize(

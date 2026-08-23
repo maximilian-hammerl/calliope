@@ -130,13 +130,13 @@ watch(notifications, async (loaded) => {
                either way — you land on the thing it is about, from wherever you were. -->
           <button
             type="button"
-            class="group flex min-h-[44px] w-full items-start gap-3 px-2 py-[12px] text-left hover:bg-paper-1"
+            class="group flex min-h-[44px] w-full items-start gap-3 px-2 py-3 text-left hover:bg-paper-1"
             @click="follow(notification)"
           >
             <!-- Always in the flow, coloured only when unread, so read and unread rows keep
                  the same left edge. -->
             <span
-              class="mt-[8px] size-[5px] shrink-0 rounded-full"
+              class="mt-2 size-[5px] shrink-0 rounded-full"
               :class="notification.readAt === null ? 'bg-oak' : 'bg-transparent'"
               aria-hidden="true"
             />
@@ -152,7 +152,7 @@ watch(notifications, async (loaded) => {
             <!-- Present at rest rather than on hover: this is what says the row leads
                  somewhere, and touch never hovers. -->
             <ChevronRight
-              class="mt-[4px] shrink-0 text-ink-6 group-hover:text-ink-3"
+              class="mt-1 shrink-0 text-ink-6 group-hover:text-ink-3"
               :size="14"
               :stroke-width="1.5"
             />

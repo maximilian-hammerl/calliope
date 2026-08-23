@@ -403,6 +403,14 @@ mockups and has no small-prose size because the mockups had none.
 A size still written as `text-[…]` is either a genuine one-off or something the scale has not
 caught up with — check before adding another.
 
+**Spacing comes from Tailwind's own scale, which already covers this one.** `1.5` is 6px, `2.5`
+is 10px, `3.5` is 14px: the 2px steps in `tokens/spacing.css` are all reachable without writing
+a number. Only two things are exceptions. `px-gutter` is the phone gutter — 18px, off the scale,
+paired with `md:px-10` in every page frame, and named because twenty-five sites wrote it out.
+And a value in brackets, `pb-[11px]`, means *deliberately off the scale* — usually an optical
+alignment like the tab baseline. That is what the bracket is for, so do not "tidy" one into a
+fractional step: `pb-2.75` would make an exception look like a rule.
+
 **A control that does nothing does not ship.** The post actions were disabled buttons under
 every post for a while, and a reader learns from that to stop looking rather than to wait. The
 copy below stays specified — it is what the buttons will say when they work (#36, #37, #38) —

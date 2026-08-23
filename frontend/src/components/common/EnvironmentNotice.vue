@@ -27,7 +27,7 @@ const warnAboutPasswords = computed<boolean>(
 <template>
   <div
     v-if="notice"
-    class="rounded-lg border border-line-5 bg-paper-3 px-[13px] py-[10px]"
+    class="rounded-lg border border-line-5 bg-paper-3 px-[13px] py-2.5"
     role="status"
   >
     <p class="text-[13px] leading-[1.5] text-ink-2">{{ notice.sentence }}</p>

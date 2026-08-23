@@ -87,7 +87,7 @@ const creating = ref<boolean>(false)
 
 <template>
   <AppLayout>
-    <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <div class="mb-2 flex flex-wrap items-baseline gap-3">
           <h1 class="text-h1 text-ink-1">Gruppen entdecken</h1>
