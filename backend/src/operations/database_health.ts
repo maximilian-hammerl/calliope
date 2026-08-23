@@ -32,6 +32,12 @@ export const APPLICATION_HEALTH_STATUS = z
       .string()
       .describe("Current application version")
       .optional(),
+    releaseId: z
+      .string()
+      .describe(
+        "The build running behind that version — the deployed commit. Absent when the deploy did not stamp one.",
+      )
+      .optional(),
   })
   .describe("General information about application and current version");
 

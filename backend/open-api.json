@@ -10336,6 +10336,10 @@
                         "version": {
                           "type": "string",
                           "description": "Current application version"
+                        },
+                        "releaseId": {
+                          "type": "string",
+                          "description": "The build running behind that version — the deployed commit. Absent when the deploy did not stamp one."
                         }
                       },
                       "required": [
@@ -10520,6 +10524,10 @@
                         "version": {
                           "type": "string",
                           "description": "Current application version"
+                        },
+                        "releaseId": {
+                          "type": "string",
+                          "description": "The build running behind that version — the deployed commit. Absent when the deploy did not stamp one."
                         }
                       },
                       "required": [

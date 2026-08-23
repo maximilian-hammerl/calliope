@@ -193,6 +193,12 @@ migration calls for it. Either add a migration instead of editing an applied one
 	up_flags=()
 	[ "$recreate" = true ] && up_flags+=(--force-recreate)
 
+	# --dirty so a file edited on the server says so, rather than claiming to be the commit.
+	# Exported because compose interpolates from the shell in preference to .env, which is what
+	# lets a deploy stamp a build without writing to a file nobody meant to change.
+	GIT_COMMIT="$(git describe --always --dirty)"
+	export GIT_COMMIT
+
 	if [ "$rebuild" = true ]; then
 		# Stop the backend first, or its open connections make `drop` fail with "database is
 		# being accessed by other users". And `up`, not the service's own `migrate` command:
@@ -234,15 +240,24 @@ migration calls for it. Either add a migration instead of editing an applied one
 		fail "The backend is \"${state:-unknown}\" after two minutes. \`compose logs backend\`."
 
 	# Through Caddy over the real address, because a healthy container proves nothing about
-	# TLS, the routing, or the frontend build that Caddy serves.
+	# TLS, the routing, or the frontend build that Caddy serves. Both halves are checked
+	# separately: they are built by different services, and a current backend behind a stale
+	# bundle is exactly what a single 200 hides.
 	if [ -n "$host_url" ]; then
-		status="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$host_url")"
-		[ "$status" = "200" ] || fail "$host_url answered $status."
-		echo "$host_url answered 200."
+		health="$(curl -sS --max-time 20 "$host_url/api/health")"
+		printf '%s' "$health" | grep -q "\"releaseId\":\"$GIT_COMMIT\"" ||
+			fail "The backend reports $(printf '%s' "$health" | sed -n 's/.*"releaseId":"\([^"]*\)".*/\1/p' |
+				head -n 1), not $GIT_COMMIT. Something older is still answering."
+
+		page="$(curl -sS --max-time 20 "$host_url/")"
+		printf '%s' "$page" | grep -q "name=\"commit\" content=\"$GIT_COMMIT\"" ||
+			fail "The page Caddy serves is not from $GIT_COMMIT. The frontend build did not reach it."
+
+		echo "$host_url serves $GIT_COMMIT, backend and page both."
 	else
 		echo "No HOST_URL in $ENV_FILE; skipped the end-to-end check." >&2
 	fi
 
-	echo "Deployed $(git rev-parse --short HEAD) to $environment."
+	echo "Deployed $GIT_COMMIT to $environment."
 	exit 0
 }

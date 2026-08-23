@@ -21,6 +21,13 @@ const BACKEND_URL = 'http://localhost:8000'
 process.env.VITE_APP_NAME ||= 'Calliope'
 
 /**
+ * The build this bundle came from, stamped by `deployment/deploy.sh` and read back off the
+ * served page to prove Caddy is serving what the deploy just built. Defaulted for the same
+ * reason as the name above, and to the same word the compose file falls back to.
+ */
+process.env.VITE_COMMIT ||= 'unknown'
+
+/**
  * Which instance the bundle is for. Unlike the name above it has no default on a build: an
  * instance that cannot say what it is would claim to be production, and somebody would lose
  * writing to it. Serving defaults to development, so a checkout still runs with no setup.

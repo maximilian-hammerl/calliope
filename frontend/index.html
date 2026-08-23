@@ -11,6 +11,9 @@
     <meta name="theme-color" content="#4f4132" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>%VITE_APP_NAME%</title>
+    <!-- The build this bundle came from, so a deploy can verify what is actually being served
+         rather than only that something answered. "unknown" outside a deploy. -->
+    <meta name="commit" content="%VITE_COMMIT%" />
   </head>
   <body>
     <div id="app"></div>

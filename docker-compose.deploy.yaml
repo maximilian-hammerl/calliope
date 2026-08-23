@@ -41,6 +41,9 @@ services:
       # No fallback, unlike the name above: the build refuses to produce a bundle that cannot
       # say which instance it is for.
       VITE_ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT must be set}
+      # Stamped by deploy.sh so it can check that the bundle Caddy serves is the one it built.
+      # Defaulted rather than required: a build by hand is not a deploy and has nothing to say.
+      VITE_COMMIT: ${GIT_COMMIT:-unknown}
     volumes:
       - ./frontend:/app
       # orval reads the specification at ../backend/open-api.json, which is outside the
@@ -59,6 +62,10 @@ services:
       # the seed guard and the notice the frontend shows must agree about which instance this is.
       ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT must be set}
       HOST_URL: ${HOST_URL:?set HOST_URL in .env}
+      # Reported as releaseId by the health endpoint. Runtime rather than a build argument:
+      # the backend image compiles a binary, and a value that changes every deploy would
+      # rebuild it from scratch every deploy.
+      GIT_COMMIT: ${GIT_COMMIT:-}
       APP_NAME: ${APP_NAME:-}
       APP_DESCRIPTION: ${APP_DESCRIPTION:-}
       APP_CONTACT_NAME: ${APP_CONTACT_NAME:-}
