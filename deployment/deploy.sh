@@ -249,11 +249,11 @@ migration calls for it. Either add a migration instead of editing an applied one
 			fail "The backend reports $(printf '%s' "$health" | sed -n 's/.*"releaseId":"\([^"]*\)".*/\1/p' |
 				head -n 1), not $GIT_COMMIT. Something older is still answering."
 
-		page="$(curl -sS --max-time 20 "$host_url/")"
-		printf '%s' "$page" | grep -q "name=\"commit\" content=\"$GIT_COMMIT\"" ||
-			fail "The page Caddy serves is not from $GIT_COMMIT. The frontend build did not reach it."
+		frontend="$(curl -sS --max-time 20 "$host_url/")"
+		printf '%s' "$frontend" | grep -q "name=\"commit\" content=\"$GIT_COMMIT\"" ||
+			fail "The frontend Caddy serves is not from $GIT_COMMIT. The frontend build did not reach it."
 
-		echo "$host_url serves $GIT_COMMIT, backend and page both."
+		echo "$host_url serves $GIT_COMMIT, backend and frontend both."
 	else
 		echo "No HOST_URL in $ENV_FILE; skipped the end-to-end check." >&2
 	fi
