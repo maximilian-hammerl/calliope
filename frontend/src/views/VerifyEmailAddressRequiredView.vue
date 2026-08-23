@@ -8,6 +8,7 @@ import {
   useLogoutUser,
   useResendEmailAddressVerification,
 } from '@/api/auth/auth'
+import { Pencil, Trash2 } from '@lucide/vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { queryClient } from '@/lib/api/queryClient'
@@ -151,11 +152,12 @@ async function signOut() {
 
       <template v-if="mode === 'choices'">
         <div class="mt-7 flex flex-col gap-3">
-          <Button class="h-11 md:h-9" :disabled="isResending" @click="resendLink">
+          <Button :disabled="isResending" @click="resendLink">
             <Spinner v-if="isResending" data-icon="inline-start" />
             Link erneut senden
           </Button>
-          <Button variant="ghost" class="h-11 md:h-9" @click="mode = 'correcting'">
+          <Button variant="outline" @click="mode = 'correcting'">
+            <Pencil :stroke-width="1.5" />
             E-Mail-Adresse ändern
           </Button>
           <!--
@@ -163,7 +165,8 @@ async function signOut() {
             back to this page, so without it the only way out of a mistyped address is to
             prove an address they may not want to give.
           -->
-          <Button variant="ghost" class="h-11 md:h-9" @click="mode = 'deleting'">
+          <Button variant="outline" @click="mode = 'deleting'">
+            <Trash2 :stroke-width="1.5" />
             Konto löschen
           </Button>
         </div>
@@ -207,13 +210,11 @@ async function signOut() {
         </FieldGroup>
 
         <div class="flex flex-col gap-3">
-          <Button type="submit" class="h-11 md:h-9" :disabled="isChanging">
+          <Button type="submit" :disabled="isChanging">
             <Spinner v-if="isChanging" data-icon="inline-start" />
             Adresse ändern und Link senden
           </Button>
-          <Button type="button" variant="ghost" class="h-11 md:h-9" @click="mode = 'choices'">
-            Abbrechen
-          </Button>
+          <Button type="button" variant="outline" @click="mode = 'choices'"> Abbrechen </Button>
         </div>
       </form>
 
@@ -225,9 +226,7 @@ async function signOut() {
             heran, ändere sie zuerst.
           </p>
 
-          <Button variant="ghost" class="mt-5 h-11 w-full md:h-9" @click="mode = 'choices'">
-            Zurück
-          </Button>
+          <Button variant="outline" class="mt-5 w-full" @click="mode = 'choices'"> Zurück </Button>
         </template>
 
         <DeleteAccountForm v-else @requested="deletionRequested = true">
@@ -238,9 +237,7 @@ async function signOut() {
           <p>Du bist noch in keiner Gruppe, also geht nichts verloren, was jemand anderes liest.</p>
 
           <template #cancel>
-            <Button type="button" variant="ghost" class="h-11 md:h-9" @click="mode = 'choices'">
-              Abbrechen
-            </Button>
+            <Button type="button" variant="outline" @click="mode = 'choices'"> Abbrechen </Button>
           </template>
         </DeleteAccountForm>
       </div>
