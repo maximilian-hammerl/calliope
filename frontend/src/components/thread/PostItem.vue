@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { paragraphs } from '@/lib/format/formatText'
 import type { ListPosts200ResultsItem } from '@/api/models'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Textarea } from '@/components/ui/textarea'
 
 const props = defineProps<{
   post: ListPosts200ResultsItem
@@ -10,9 +13,20 @@ const props = defineProps<{
   first: boolean
   /** Absent while the reader is unknown; reporting your own post is not a thing. */
   currentUserId?: string
+  mayAdminister?: boolean
+  /** The thread decides which post is open, so two cannot be edited at once. */
+  editing?: boolean
+  saving?: boolean
+  error?: string
 }>()
 
-defineEmits<{ report: [] }>()
+const emit = defineEmits<{
+  report: []
+  edit: []
+  cancel: []
+  save: [text: string]
+  delete: []
+}>()
 
 // Only your own post is excluded. A post whose author is gone is still reportable: the writing
 // is still there, and removing it is still something an operator can do.
@@ -20,11 +34,54 @@ const mayReport = computed<boolean>(
   () => props.currentUserId !== undefined && props.post.createdBy !== props.currentUserId,
 )
 
+/** The API's own rule, so the row never offers what the endpoint would refuse. */
+const mayModify = computed<boolean>(
+  () =>
+    props.mayAdminister ||
+    (props.post.createdBy !== null && props.post.createdBy === props.currentUserId),
+)
+
+/**
+ * Edited where it sits rather than in the composer: that one is bound to the member's draft,
+ * which the database allows exactly one of per thread, so borrowing it would put a half-written
+ * post at risk to fix a typo.
+ */
+const draft = ref<string>('')
+
+/** `Textarea`'s root *is* the native element, so the ref is the component and `$el` the field. */
+const textarea = useTemplateRef<ComponentPublicInstance>('textarea')
+
+watch(
+  () => props.editing,
+  async (open) => {
+    if (!open) return
+    draft.value = props.post.text
+    await nextTick()
+    // Focus follows the opening, as it does for the composer: open and type is one gesture.
+    const field = textarea.value?.$el
+    if (field instanceof HTMLTextAreaElement) field.focus()
+  },
+  { immediate: true },
+)
+
+const unchanged = computed<boolean>(() => draft.value.trim() === props.post.text.trim())
+
+/**
+ * Named only when somebody other than the author edited it — an administrator may, and that is
+ * the one case worth saying out loud. "bearbeitet von federkiel" beside "federkiel" is noise.
+ */
+const editedNote = computed<string | undefined>(() => {
+  if (props.post.editedAt === null) return undefined
+
+  const editor = props.post.editedByUsername
+  const byAnother = editor !== null && editor !== props.post.createdByUsername
+  return byAnother ? `bearbeitet von ${editor}` : 'bearbeitet'
+})
+
 // Metadata is deliberately recessed: post headers were competing with the writing.
 const meta = computed<string>(() => {
   const author = props.post.createdByUsername ?? 'Gelöschtes Konto'
-  const edited = props.post.editedAt !== null
-  return [author, formatActivityTime(props.post.createdAt), edited ? 'bearbeitet' : undefined]
+  return [author, formatActivityTime(props.post.createdAt), editedNote.value]
     .filter((part) => part !== undefined)
     .join(' · ')
 })
@@ -41,7 +98,22 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
       <span class="text-[12px] leading-[1.3] text-ink-6">{{ meta }}</span>
     </div>
 
-    <div class="flex flex-col gap-[0.9em]">
+    <div v-if="editing" class="flex flex-col gap-2.5">
+      <Textarea
+        ref="textarea"
+        v-model="draft"
+        rows="6"
+        class="prose-post"
+        :disabled="saving"
+        aria-label="Beitrag bearbeiten"
+      />
+
+      <Alert v-if="error" variant="destructive" role="alert">
+        <AlertDescription>{{ error }}</AlertDescription>
+      </Alert>
+    </div>
+
+    <div v-else class="flex flex-col gap-[0.9em]">
       <p v-for="(paragraph, index) in blocks" :key="index" class="prose-post">
         {{ paragraph }}
       </p>
@@ -50,14 +122,55 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
     <!-- The row the placeholder actions used to occupy, in the same place and at the same
          weight (47cce00): below the writing, recessed to the metadata's size and colour, so it
          does not compete with the prose. Restored now that something in it works. -->
-    <div v-if="mayReport" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
-      <button
-        type="button"
-        class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
-        @click="$emit('report')"
-      >
-        Melden
-      </button>
+    <div
+      v-if="mayModify || mayReport"
+      class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5"
+    >
+      <template v-if="editing">
+        <button
+          type="button"
+          class="flex min-h-11 items-center font-medium text-oak-deep disabled:opacity-50 md:min-h-0"
+          :disabled="saving || unchanged"
+          @click="emit('save', draft)"
+        >
+          {{ saving ? 'Wird gespeichert …' : 'Speichern' }}
+        </button>
+        <button
+          type="button"
+          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          :disabled="saving"
+          @click="emit('cancel')"
+        >
+          Abbrechen
+        </button>
+      </template>
+
+      <template v-else>
+        <button
+          v-if="mayModify"
+          type="button"
+          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          @click="emit('edit')"
+        >
+          Bearbeiten
+        </button>
+        <button
+          v-if="mayModify"
+          type="button"
+          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          @click="emit('delete')"
+        >
+          Löschen
+        </button>
+        <button
+          v-if="mayReport"
+          type="button"
+          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          @click="emit('report')"
+        >
+          Melden
+        </button>
+      </template>
     </div>
   </article>
 </template>

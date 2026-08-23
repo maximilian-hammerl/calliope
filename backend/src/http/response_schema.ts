@@ -52,7 +52,15 @@ export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
   CREATED_BY_USERNAME,
 );
 
-export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME);
+export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
+  .extend({
+    /**
+     * Who changed it, which is not implied by the row: `mayModify` lets the author or somebody
+     * administering the group edit. Null when nothing has been edited, and null once that
+     * account is gone, exactly like the author's name above.
+     */
+    editedByUsername: z.string().nullable(),
+  });
 
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   /** Null for a group's founder, and once the inviter's account is gone. */

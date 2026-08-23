@@ -22,7 +22,7 @@ CREATE TABLE public.writing_post
     text              TEXT        NOT NULL,
     is_draft          BOOLEAN     NOT NULL,
 
-    created_by        uuid        references public.user (id) on update cascade on delete set null,
+    created_by        UUID        REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
 
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -30,7 +30,14 @@ CREATE TABLE public.writing_post
     -- is told about ("· bearbeitet"). Writing a draft is not an edit, and neither is
     -- publishing one. Stated outright rather than inferred from two timestamps disagreeing,
     -- which could not tell those three apart.
-    edited_at         TIMESTAMPTZ
+    edited_at         TIMESTAMPTZ,
+    -- Because `mayModify` lets two different people edit — the author, or somebody
+    -- administering the group — so who did it is not implied by the row. Asymmetric like
+    -- `writing_group_next_step`: an editor implies a time, a time outlives its editor.
+    edited_by         UUID        REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT writing_post_editor_needs_time CHECK (
+        edited_by IS NULL OR edited_at IS NOT NULL
+        )
 );
 
 ---

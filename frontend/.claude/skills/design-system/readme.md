@@ -250,6 +250,29 @@ page and its badge, and the action it can no longer take is **disabled rather th
 hiding it leaves a member wondering where it went, where a disabled control with a reason
 tells them the owner has finished with it.
 
+**A post is edited where it sits, never in the composer.** Its paragraphs become a field in
+place, at the same 17px serif they were being read in, so the words do not move when the reader
+starts changing them; Speichern and Abbrechen replace Bearbeiten and Löschen in the row the post
+already has. The composer is not available for this even though it is the other place prose is
+written: it is bound to the member's draft, which the database allows exactly one of per thread,
+so borrowing it would put a half-written post at risk in order to fix a typo. Saving is disabled
+until something actually changes, so the action cannot claim work it did not do.
+
+**An edit says who made it, but only when that is somebody else.** „· bearbeitet" for an author
+changing their own post, „· bearbeitet von nachtschreiber" where somebody administering the group
+changed a member's. Naming the author beside their own name is noise; naming an administrator is
+the entire disclosure, because the alternative is a member finding their words altered with
+nothing to say anybody else was there. A post edited by an account since deleted falls back to
+plain „· bearbeitet" — there is no longer anybody to name.
+
+**A confirmation names whose writing it is, when it is not yours.** „Beitrag von X löschen?" and
+„Du löschst, was jemand anderes geschrieben hat" where somebody administering a group removes a
+member's post; plain „Beitrag löschen?" for your own, and no name where the author's account is
+gone, because there is nobody to name. Removing your own paragraph and moderating another
+member's are not the same act, and the confirmation is the place that difference registers. The
+button stays Solid in both: a single post is one paragraph, which the destructive fill explicitly
+excludes.
+
 **A thread is renamed and deleted from its own header.** „Umbenennen" and „Löschen" sit beside
 the thread's title, not in the tab strip that lists the threads: the strip is for moving between
 them, and a control there would have to appear on hover or hide behind a menu. Both show only for

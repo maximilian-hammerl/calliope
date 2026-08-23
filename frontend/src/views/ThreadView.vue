@@ -10,7 +10,13 @@ import {
   useGetThread,
   useListThreads,
 } from '@/api/threads/threads'
-import { getListPostsQueryKey, useCreatePost, useListPosts, useUpdatePost } from '@/api/posts/posts'
+import {
+  getListPostsQueryKey,
+  useCreatePost,
+  useDeletePost,
+  useListPosts,
+  useUpdatePost,
+} from '@/api/posts/posts'
 import { useListMemberships } from '@/api/memberships/memberships'
 import type {
   GetGroup200,
@@ -26,6 +32,7 @@ import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
+import DeletePostDialog from '@/components/thread/DeletePostDialog.vue'
 import PostItem from '@/components/thread/PostItem.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
@@ -194,6 +201,93 @@ const creatingThread = ref<boolean>(false)
 const { mutateAsync: createPost, isPending: sending } = useCreatePost()
 const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost()
 
+/**
+ * A second instance of the same mutation, so editing a published post and publishing a draft
+ * do not share one `isPending` — the composer and a post can be busy independently.
+ */
+const { mutateAsync: savePost, isPending: savingPost } = useUpdatePost()
+
+const editingPostId = ref<string | undefined>(undefined)
+const editError = ref<string | undefined>(undefined)
+
+function startEditing(postId: string) {
+  editError.value = undefined
+  editingPostId.value = postId
+}
+
+function stopEditing() {
+  editError.value = undefined
+  editingPostId.value = undefined
+}
+
+async function saveEdit(postId: string, text: string) {
+  const trimmed = text.trim()
+  editError.value = undefined
+
+  if (trimmed.length === 0) {
+    editError.value = 'Ein Beitrag braucht Text.'
+    return
+  }
+
+  // Checked here rather than with `maxlength`, for the reason the composer states: prose that
+  // stops dead mid-word is worse than being told why.
+  if (trimmed.length > TEXT_LIMIT.updatePost.text.maxLength) {
+    editError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.updatePost.text.maxLength)} Zeichen haben.`
+    return
+  }
+
+  try {
+    await savePost({
+      groupId: groupId.value,
+      threadId: threadId.value,
+      postId,
+      data: { text: trimmed },
+    })
+  } catch {
+    editError.value = 'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.'
+    return
+  }
+
+  await queryClient.invalidateQueries({
+    queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
+  })
+  stopEditing()
+}
+
+const deletingPost = ref<ListPosts200ResultsItem | undefined>(undefined)
+const deletePostError = ref<string | undefined>(undefined)
+
+const { mutateAsync: removePost, isPending: removingPost } = useDeletePost()
+
+/** Named only when it is somebody else's and that account still exists. */
+const deletingPostAuthor = computed<string | undefined>(() =>
+  deletingPost.value !== undefined && deletingPost.value.createdBy !== currentUserId.value
+    ? (deletingPost.value.createdByUsername ?? undefined)
+    : undefined,
+)
+
+async function confirmDeletePost() {
+  const post = deletingPost.value
+  if (post === undefined) return
+
+  deletePostError.value = undefined
+
+  try {
+    await removePost({ groupId: groupId.value, threadId: threadId.value, postId: post.id })
+  } catch {
+    deletePostError.value = 'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.'
+    return
+  }
+
+  // The header's count is the list's own totalResults, so one invalidation covers both.
+  // The post being edited may be the one just deleted.
+  if (editingPostId.value === post.id) stopEditing()
+  await queryClient.invalidateQueries({
+    queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
+  })
+  deletingPost.value = undefined
+}
+
 // Owns the composer's text between visits: loads any existing draft into it, saves as it is
 // written, and lets go of the row once it has been published.
 const { status: draftStatus, draftId, forget: forgetDraft } = useDraft(groupId, threadId, draft)
@@ -301,7 +395,15 @@ async function submit() {
             :first="index === 0"
             :divider="index < posts.length - 1"
             :current-user-id="currentUserId"
+            :may-administer="mayAdminister"
+            :editing="editingPostId === post.id"
+            :saving="savingPost && editingPostId === post.id"
+            :error="editingPostId === post.id ? editError : undefined"
             @report="reportedPost = post"
+            @edit="startEditing(post.id)"
+            @cancel="stopEditing"
+            @save="saveEdit(post.id, $event)"
+            @delete="deletingPost = post"
           />
 
           <!-- Below the posts as well as in the strip above: this is where somebody is when
@@ -390,5 +492,15 @@ async function submit() {
     :pending="isDeletingThread"
     :error="deletionError"
     @confirmed="confirmDeleteThread"
+  />
+
+  <DeletePostDialog
+    v-if="deletingPost"
+    :open="deletingPost !== undefined"
+    :author-name="deletingPostAuthor"
+    :pending="removingPost"
+    :error="deletePostError"
+    @update:open="deletingPost = $event ? deletingPost : undefined"
+    @confirmed="confirmDeletePost"
   />
 </template>

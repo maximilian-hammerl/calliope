@@ -244,6 +244,7 @@ export interface WritingPost {
   createdAt: Generated<string>;
   createdBy: string | null;
   editedAt: string | null;
+  editedBy: string | null;
   id: Generated<string>;
   isDraft: boolean;
   text: string;
@@ -553,6 +554,7 @@ export const WRITING_POST_SCHEMA = z.object({
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   editedAt: z.iso.datetime({ offset: true }).nullable(),
+  editedBy: z.uuidv7().nullable(),
 });
 
 export const WRITING_THREAD_SCHEMA = z.object({

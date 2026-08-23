@@ -19,9 +19,10 @@ export type Post =
     | "createdBy"
     | "createdAt"
     | "editedAt"
+    | "editedBy"
   >
-  // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
-  & { createdByUsername: string | null };
+  // Both null once that account is deleted, because the columns are ON DELETE SET NULL.
+  & { createdByUsername: string | null; editedByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "writingPost.id",
@@ -31,6 +32,7 @@ const SELECTED_COLUMNS = [
   "writingPost.createdBy",
   "writingPost.createdAt",
   "writingPost.editedAt",
+  "writingPost.editedBy",
 ] as const;
 
 /** Reads one post back with its author, bypassing the draft filter: after a write the
@@ -42,7 +44,17 @@ function postWithAuthorById(
   return executor
     .selectFrom("writingPost")
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .select([...SELECTED_COLUMNS, "user.username as createdByUsername"])
+    .select([
+      ...SELECTED_COLUMNS,
+      "user.username as createdByUsername",
+      // A subquery rather than a second join on `user`: an alias widens the builder's table
+      // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
+      (eb) =>
+        eb.selectFrom("user as editor")
+          .select("editor.username")
+          .whereRef("editor.id", "=", "writingPost.editedBy")
+          .as("editedByUsername"),
+    ])
     .where("writingPost.id", "=", postId);
 }
 
@@ -102,7 +114,17 @@ function postsWithAuthor(
 ) {
   return readableBy(viewerId, executor)
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
+    .select([
+      ...SELECTED_COLUMNS,
+      "user.username as createdByUsername",
+      // A subquery rather than a second join on `user`: an alias widens the builder's table
+      // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
+      (eb) =>
+        eb.selectFrom("user as editor")
+          .select("editor.username")
+          .whereRef("editor.id", "=", "writingPost.editedBy")
+          .as("editedByUsername"),
+    ]);
 }
 
 /** Scoped to the thread, so a post id from another thread cannot be reached through it. */
@@ -169,8 +191,13 @@ async function updatePost(
         ...(isPublishing
           ? { createdAt: Temporal.Now.instant().toString() }
           : {}),
+        // Who, not only when: `mayModify` lets somebody administering the group edit another
+        // member's post, and the reader is told which of the two happened.
         ...(isEditingPublished
-          ? { editedAt: Temporal.Now.instant().toString() }
+          ? {
+            editedAt: Temporal.Now.instant().toString(),
+            editedBy: context.actorId,
+          }
           : {}),
       })
       .where("id", "=", postId)

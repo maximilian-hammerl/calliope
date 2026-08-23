@@ -107,6 +107,57 @@ Deno.test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
   assert(edited.editedAt !== null);
 });
 
+Deno.test("PATCH …/posts/{postId} records who edited, not only when", async () => {
+  const { writerCookie, posts, draft } = await draftByWriter();
+
+  await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
+    isDraft: false,
+  });
+
+  const edited = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    writerCookie,
+    { text: "Doch anders." },
+  )).json();
+
+  assertEquals(edited.editedByUsername, writer);
+});
+
+Deno.test("PATCH …/posts/{postId} names the administrator who edited another's post", async () => {
+  const { adminCookie, writerCookie, posts, draft } = await draftByWriter();
+
+  await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
+    isDraft: false,
+  });
+
+  const edited = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    adminCookie,
+    { text: "Von der Verwaltung geändert." },
+  )).json();
+
+  // The whole point of the column: the author and the editor are different people, and a
+  // reader is told which.
+  assertEquals(edited.createdByUsername, writer);
+  assertEquals(edited.editedByUsername, administrator);
+});
+
+Deno.test("PATCH …/posts/{postId} leaves the editor unnamed until something is edited", async () => {
+  const { writerCookie, posts, draft } = await draftByWriter();
+
+  const published = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    writerCookie,
+    { isDraft: false },
+  )).json();
+
+  assertEquals(published.editedAt, null);
+  assertEquals(published.editedByUsername, null);
+});
+
 Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {
   const { adminCookie, writerCookie, group, posts } = await draftByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");

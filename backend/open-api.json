@@ -8999,7 +8999,12 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "editedBy": {
+                      "type": ["string", "null"],
+                      "format": "uuid"
+                    },
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
                     "id",
@@ -9009,7 +9014,9 @@
                     "createdBy",
                     "createdAt",
                     "editedAt",
-                    "createdByUsername"
+                    "editedBy",
+                    "createdByUsername",
+                    "editedByUsername"
                   ]
                 }
               }
@@ -9307,7 +9314,12 @@
                             "type": ["string", "null"],
                             "format": "date-time"
                           },
-                          "createdByUsername": { "type": ["string", "null"] }
+                          "editedBy": {
+                            "type": ["string", "null"],
+                            "format": "uuid"
+                          },
+                          "createdByUsername": { "type": ["string", "null"] },
+                          "editedByUsername": { "type": ["string", "null"] }
                         },
                         "required": [
                           "id",
@@ -9317,7 +9329,9 @@
                           "createdBy",
                           "createdAt",
                           "editedAt",
-                          "createdByUsername"
+                          "editedBy",
+                          "createdByUsername",
+                          "editedByUsername"
                         ]
                       }
                     }
@@ -9580,7 +9594,12 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "editedBy": {
+                      "type": ["string", "null"],
+                      "format": "uuid"
+                    },
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
                     "id",
@@ -9590,7 +9609,9 @@
                     "createdBy",
                     "createdAt",
                     "editedAt",
-                    "createdByUsername"
+                    "editedBy",
+                    "createdByUsername",
+                    "editedByUsername"
                   ]
                 }
               }
@@ -9865,7 +9886,12 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "editedBy": {
+                      "type": ["string", "null"],
+                      "format": "uuid"
+                    },
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
                     "id",
@@ -9875,7 +9901,9 @@
                     "createdBy",
                     "createdAt",
                     "editedAt",
-                    "createdByUsername"
+                    "editedBy",
+                    "createdByUsername",
+                    "editedByUsername"
                   ]
                 }
               }
