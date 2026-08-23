@@ -152,11 +152,13 @@ that is needed."
 	# are all there is to compare: matching versions never prove matching content.
 	versions() { printf '%s\n' "$1" | grep -v '^[[:space:]]*$' | sort -u || true; }
 
-	# Outside the branch below: the post-condition after the deploy needs this too, and it
-	# depends on the checkout rather than on whether the database was reachable a moment ago.
+	# From the commit being deployed, not from the working tree: at this point nothing has been
+	# pulled yet, so the files on disk are the *old* checkout and an incoming migration would be
+	# invisible — the plan would report a database that matches a checkout it is about to
+	# replace. After the fast-forward the two agree, which is what lets the post-condition below
+	# reuse this.
 	file_versions=""
-	for migration in "$REPOSITORY"/database/migrations/*.sql; do
-		[ -e "$migration" ] || continue
+	for migration in $(git ls-tree -r --name-only "$new" -- database/migrations/); do
 		file_versions="$(printf '%s\n%s' "$file_versions" "$(basename "$migration" | cut -d _ -f 1)")"
 	done
 
@@ -209,14 +211,15 @@ that is needed."
 		if [ "$environment" = "$RESETTABLE" ]; then
 			echo "    every row is deleted, every account included, then seed data is written"
 		fi
-	elif [ "$applied_known" = true ]; then
-		echo "  migrations: the database matches the checkout"
-	else
+	elif [ "$applied_known" != true ]; then
 		echo "  migrations: nothing applied was edited"
-	fi
-	if [ -n "$unapplied_versions" ]; then
-		echo "  to apply: $(printf '%s' "$unapplied_versions" | wc -l | tr -d ' ') migration(s)"
+	elif [ -n "$unapplied_versions" ]; then
+		# `wc -l` counts newlines, and `versions` ends every line with one — printing the value
+		# with `printf '%s'` instead reported a single migration as zero.
+		echo "  migrations: $(versions "$unapplied_versions" | wc -l | tr -d ' ') to apply, nothing applied was edited"
 		for version in $unapplied_versions; do echo "      $version"; done
+	else
+		echo "  migrations: the database matches the checkout"
 	fi
 	[ "$recreate" = true ] && echo "  --force-recreate (the compose file changed)"
 	[ "$recreate_caddy" = true ] && echo "  --force-recreate caddy (the Caddyfile changed)"
