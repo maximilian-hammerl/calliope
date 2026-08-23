@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayModify } from "@/src/service/writing_group_authorization.ts";
@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Deletes a thread and every post in it. Only the member who started it, or an administrator of the group, may delete it.",
     operationId: "deleteThread",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: THREAD_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

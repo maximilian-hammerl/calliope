@@ -12,6 +12,10 @@
     "validate:fix": "deno task format:fix && deno task lint:fix && deno task type-check",
     "validate:check": "deno task format:check && deno task lint:check && deno task type-check",
     "db:seed": "deno run --permission-set=default --env-file=../.env seed.ts",
+    // Takes <username> <role>, or <username> alone for revoke:
+    //   deno task grant-role nachtschreiber administrator
+    "grant-role": "deno run --permission-set=default --env-file=../.env main.ts --grant-role",
+    "revoke-role": "deno run --permission-set=default --env-file=../.env main.ts --revoke-role",
     "open-api:generate": "deno run --permission-set=default --allow-write --env-file=../.env generate_open_api_spec.ts && deno fmt open-api.json",
     "open-api:check": "deno task open-api:generate && test -z \"$(git status --porcelain open-api.json)\" && echo 'OpenAPI spec is up-to-date' || (echo 'OpenAPI spec is out-of-date, run: deno task open-api:generate' && exit 1)",
     "open-api:lint": "deno x --yes --unstable-detect-cjs npm:@stoplight/spectral-cli lint open-api.json --ruleset .spectral.yaml --fail-severity warn"

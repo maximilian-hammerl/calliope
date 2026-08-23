@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
 import { userExists } from "@/src/service/user_in_writing_group_service.ts";
@@ -27,7 +27,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Anybody already in the chat may invite. The invited member has to accept before they are part of the conversation.",
     operationId: "inviteToChat",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: CHAT_PARAMS,
       body: { required: true, content: jsonContent(INVITE_BODY) },

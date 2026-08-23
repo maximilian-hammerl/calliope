@@ -603,6 +603,10 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
+                    "platformRole": {
+                      "type": ["string", "null"],
+                      "enum": ["administrator", "moderator", null]
+                    },
                     "unreadNotifications": { "type": "integer" }
                   },
                   "required": [
@@ -610,6 +614,7 @@
                     "username",
                     "emailAddress",
                     "emailAddressVerifiedAt",
+                    "platformRole",
                     "unreadNotifications"
                   ]
                 }

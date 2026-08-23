@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import {
   listQuerySchema,
@@ -36,7 +36,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of the chats the current user belongs to or has been invited to, most recently active first, each with how many messages they have not read.",
     operationId: "listChats",
-    middleware: requireSession,
+    middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
     request: {
       body: { required: true, content: jsonContent(LIST_CHATS_BODY) },

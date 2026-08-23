@@ -3,7 +3,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -61,7 +61,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Changes a group's title, description or visibility. Only an administrator of the group may do so, and only one who has joined it.",
     operationId: "updateGroup",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_GROUP_BODY) },

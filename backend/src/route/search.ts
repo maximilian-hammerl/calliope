@@ -7,7 +7,7 @@ import {
 } from "@/src/http/response_schema.ts";
 import { SEARCH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
@@ -53,7 +53,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Story ideas include the reader's own and closed ones, which the interface labels. Posts, chat messages and next steps are not searched.",
     operationId: "search",
-    middleware: requireSession,
+    middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
     request: {
       body: { required: true, content: jsonContent(SEARCH_BODY) },

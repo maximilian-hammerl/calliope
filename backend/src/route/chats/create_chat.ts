@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import {
@@ -26,7 +26,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Creates a chat with the current user as its first member. Everybody else has to be invited and accept.",
     operationId: "createChat",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(CREATE_CHAT_BODY) },
     },

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Withdraws this member's own block. Invitations withdrawn when it was made are not restored — they were somebody's decision to make again.",
     operationId: "unblockMember",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: BLOCK_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

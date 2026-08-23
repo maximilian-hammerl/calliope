@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STORY_IDEA_CAROUSEL_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
@@ -29,7 +29,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The idea to show and the two either side of it, out of the open ideas the member has not read and did not write. Takes no filters: the set is the view's own. A missing neighbour is the end of the set, where the carousel stops rather than wrapping.",
     operationId: "getStoryIdeaCarousel",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(CAROUSEL_BODY) },
     },

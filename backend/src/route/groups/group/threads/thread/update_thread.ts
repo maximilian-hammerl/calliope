@@ -3,7 +3,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayModify } from "@/src/service/writing_group_authorization.ts";
@@ -38,7 +38,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Renames a thread. Only the member who started it, or an administrator of the group, may change it.",
     operationId: "updateThread",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_THREAD_BODY) },

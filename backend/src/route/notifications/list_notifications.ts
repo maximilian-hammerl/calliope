@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { NOTIFICATION_RESPONSE } from "@/src/http/response_schema.ts";
 import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
@@ -39,7 +39,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of what has happened to the current user, newest first. A notification only exists while its recipient belongs to the group it is about, so nothing here needs filtering by access.",
     operationId: "listNotifications",
-    middleware: requireSession,
+    middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
     request: {
       body: { required: true, content: jsonContent(LIST_NOTIFICATIONS_BODY) },

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -21,7 +21,7 @@ export default new OpenAPIHono().openapi(
     tags: [STORY_IDEAS_TAG],
     summary: "Take one's own story idea off the board",
     operationId: "deleteStoryIdea",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: IDEA_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

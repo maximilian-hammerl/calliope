@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayModify } from "@/src/service/writing_group_authorization.ts";
@@ -33,7 +33,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Deletes a post. Only its author, or an administrator of the group, may delete it.",
     operationId: "deletePost",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: POST_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

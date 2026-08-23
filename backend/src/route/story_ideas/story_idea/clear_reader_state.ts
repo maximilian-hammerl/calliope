@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -23,7 +23,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Removes the member's own state. Answers the same way whether a state was there or not, because unread is the absence of one.",
     operationId: "clearReaderState",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: IDEA_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

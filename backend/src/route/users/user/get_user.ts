@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { USER_PROFILE_RESPONSE } from "@/src/http/response_schema.ts";
@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     summary: "Read a member's profile",
     description: "The name and the date they joined.",
     operationId: "getUser",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: USER_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

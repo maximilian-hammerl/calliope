@@ -3,7 +3,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
@@ -42,7 +42,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Adds a post to the thread, either published or as a draft. Writers and administrators may write posts; readers may not.",
     operationId: "createPost",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(CREATE_POST_BODY) },

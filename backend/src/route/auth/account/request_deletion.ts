@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session_allowing_unverified_email_address.ts";
+import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
 import { AccountDeletionService } from "@/src/service/account_deletion_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import {
@@ -29,7 +29,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Requires the current password. Deletes nothing yet: a link goes to the address on file, and the account lives until that link is opened. Reachable with an unverified address: somebody who mistyped theirs must still be able to leave.",
     operationId: "requestAccountDeletion",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(REQUEST_DELETION_BODY) },
     },

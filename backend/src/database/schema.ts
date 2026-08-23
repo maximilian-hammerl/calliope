@@ -20,6 +20,8 @@ export type NotificationType =
   | "role_changed_in_writing_group"
   | "visibility_changed_in_writing_group";
 
+export type PlatformRole = "administrator" | "moderator";
+
 export type StoryIdeaPartySize = "group" | "one_on_one";
 
 export type StoryIdeaReaderState = "marked" | "read";
@@ -107,6 +109,7 @@ export interface User {
   emailAddressVerifiedAt: string | null;
   hashedPassword: string;
   id: Generated<string>;
+  platformRole: PlatformRole | null;
   updatedAt: Generated<string>;
   username: string;
 }
@@ -291,6 +294,9 @@ export const STORY_IDEA_PARTY_SIZE_SCHEMA = z.enum(STORY_IDEA_PARTY_SIZES);
 export const STORY_IDEA_READER_STATES = ["marked", "read"] as const;
 export const STORY_IDEA_READER_STATE_SCHEMA = z.enum(STORY_IDEA_READER_STATES);
 
+export const PLATFORM_ROLES = ["administrator", "moderator"] as const;
+export const PLATFORM_ROLE_SCHEMA = z.enum(PLATFORM_ROLES);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -356,6 +362,7 @@ export const USER_SCHEMA = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   emailAddressVerifiedAt: z.iso.datetime({ offset: true }).nullable(),
+  platformRole: PLATFORM_ROLE_SCHEMA.nullable(),
 });
 
 export const USER_BLOCK_SCHEMA = z.object({

@@ -1,6 +1,6 @@
 import { db } from "@/src/database/client.ts";
 import { hashPassword } from "@/src/util/password.ts";
-import { USER, VERIFIED_USERNAMES } from "@/seed/accounts.ts";
+import { PLATFORM_ROLES, USER, VERIFIED_USERNAMES } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
@@ -124,6 +124,7 @@ async function writeAccounts(): Promise<void> {
       // Verified, because every gated route refuses an unverified member and the fixture is
       // meant for working on everything else.
       emailAddressVerifiedAt: Temporal.Now.instant().toString(),
+      platformRole: PLATFORM_ROLES[name as keyof typeof PLATFORM_ROLES] ?? null,
     })),
   ).execute();
 

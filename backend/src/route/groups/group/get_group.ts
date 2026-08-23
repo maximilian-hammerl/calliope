@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a single group. A private group the current user does not belong to is reported as missing rather than forbidden, so that its existence stays hidden.",
     operationId: "getGroup",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

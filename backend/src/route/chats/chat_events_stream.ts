@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { subscribeToChatEvents } from "@/src/event/chat_events.ts";
 import { addShutdownSignalListener } from "@/src/util/shutdown_signal.ts";
 
@@ -31,7 +31,7 @@ addShutdownSignalListener(() => {
   return Promise.resolve();
 });
 
-export default new Hono().get("/", requireSession, (c) => {
+export default new Hono().get("/", authenticated, (c) => {
   const user = c.get("user");
 
   return streamSSE(c, async (stream) => {

@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
   userExists,
@@ -37,7 +37,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Invites a user to the group with a role. The invitation always starts as such; only the invited user can turn it into a membership.",
     operationId: "inviteMember",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_MEMBERSHIP_BODY) },

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { checkJoinedChatMember } from "@/src/route/chats/chat/chat_membership.ts";
 import {
@@ -22,7 +22,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Everything already sent counts as read. Unread is a comparison against this moment, not a receipt per message.",
     operationId: "readChat",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: CHAT_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

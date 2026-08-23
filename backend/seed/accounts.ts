@@ -17,6 +17,16 @@ export const USER = {
   lesezeichen: userId(9),
 } as const;
 
+/**
+ * Platform roles, so the operator surfaces can be worked on without granting a role by hand
+ * every time the database is rebuilt. Two accounts, one of each, because the difference
+ * between them is the thing worth being able to see.
+ */
+export const PLATFORM_ROLES = {
+  federkiel: "administrator",
+  kommafehler: "moderator",
+} as const satisfies Partial<Record<keyof typeof USER, string>>;
+
 /** Everyone but `unverified`, whose address is deliberately left unconfirmed. */
 export const VERIFIED_USERNAMES =
   (Object.keys(USER) as Array<keyof typeof USER>)

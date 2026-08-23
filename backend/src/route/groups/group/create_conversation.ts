@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
@@ -27,7 +27,7 @@ export default new OpenAPIHono().openapi(
     description:
       "For asking into a group found through discovery: creates a chat titled after the group and invites every joined administrator. Each has to accept before anything is read — there is no join request, only people talking.",
     operationId: "startGroupConversation",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.Created]: {

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
@@ -30,7 +30,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Removes a membership or a pending invitation: one's own, which also declines an invitation, or anybody's for an administrator of the group. Removing the last remaining member deletes the group along with it.",
     operationId: "removeMember",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: MEMBERSHIP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

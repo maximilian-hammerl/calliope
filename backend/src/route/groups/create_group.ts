@@ -3,7 +3,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -55,7 +55,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Creates a writing group and joins the creating user to it as its administrator. Groups are private unless the request asks for a public one.",
     operationId: "createGroup",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(CREATE_GROUP_BODY) },
     },

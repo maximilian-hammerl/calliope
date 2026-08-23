@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -30,7 +30,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The member's own state on somebody else's idea. Idempotent: setting it again overwrites what was there. Unread is the absence of a state, so clearing it is a DELETE.",
     operationId: "setReaderState",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: IDEA_PARAMS,
       body: { required: true, content: jsonContent(SET_READER_STATE_BODY) },

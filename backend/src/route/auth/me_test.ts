@@ -24,10 +24,13 @@ Deno.test("GET /api/auth/me reports the signed-in user", async () => {
     "emailAddress",
     "emailAddressVerifiedAt",
     "id",
+    "platformRole",
     "unreadNotifications",
     "username",
   ]);
   assertEquals(body.unreadNotifications, 0);
+  // Null for an ordinary member, which is what a freshly registered account is.
+  assertEquals(body.platformRole, null);
 });
 
 Deno.test("GET /api/auth/me rejects a request without a session", async () => {

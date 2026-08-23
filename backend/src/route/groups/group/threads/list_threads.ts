@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import {
@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Every thread of the group, most recently written in first. Not paged: the tab strip these fill is the only way between threads.",
     operationId: "listThreads",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayModify } from "@/src/service/writing_group_authorization.ts";
@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Completed steps are never removed on their own; this is the only way one leaves.",
     operationId: "deleteStep",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: STEP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
@@ -59,7 +59,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Newest first. The reader's own ideas are excluded unless asked for with author `mine`; without a status filter only open ideas appear. The search looks at titles and the ideas themselves.",
     operationId: "listStoryIdeas",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(LIST_STORY_IDEAS_BODY) },
     },

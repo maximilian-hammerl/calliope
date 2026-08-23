@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import {
@@ -42,7 +42,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Everyone in the chat, including those who have been invited and not yet accepted. Visible to anybody the chat is visible to — an invitation has to be able to see who it would be joining.",
     operationId: "listChatMemberships",
-    middleware: requireSession,
+    middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
     request: {
       params: CHAT_PARAMS,

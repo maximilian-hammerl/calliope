@@ -3,7 +3,12 @@ import type { User } from "@/src/service/user_service.ts";
 import { resolveSessionUser } from "@/src/middleware/session_user.ts";
 
 /**
- * A session *and* a verified email address. This is the default for every route: gating had
+ * A session *and* a verified email address — both, deliberately, and this is why the pair is
+ * not split into two composable middlewares: a route that listed only the first half would
+ * fail *open*, and there are sixty chances to make that mistake. Authorization composes on top
+ * of this; authentication does not decompose below it.
+ *
+ * This is the default for every route: gating had
  * to be the thing you get by not thinking about it, because the alternative was adding a
  * second middleware to thirty-three files and every omission being a silent hole.
  *

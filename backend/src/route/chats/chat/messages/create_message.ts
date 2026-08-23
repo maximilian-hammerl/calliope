@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_MESSAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { ChatMessageService } from "@/src/service/chat_message_service.ts";
 import { publishChatEvent } from "@/src/event/chat_events.ts";
@@ -29,7 +29,7 @@ export default new OpenAPIHono().openapi(
     tags: [CHATS_TAG],
     summary: "Send a message",
     operationId: "createMessage",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: CHAT_PARAMS,
       body: { required: true, content: jsonContent(CREATE_MESSAGE_BODY) },

@@ -4,15 +4,24 @@ Postgres 18, migrated with [dbmate](https://github.com/amacneil/dbmate), typed w
 `kysely-codegen`. Tasks are `deno task …` — see the root [AGENTS.md](../AGENTS.md) for the
 conventions shared with the other projects.
 
-## Before release, migrations are edited in place
+## Migrations may be edited in place until a staging or production instance exists
 
-Calliope has no members yet and every database it has is disposable, so a schema change is made
-**by editing the migration that created the table** rather than by stacking an `ALTER` on top.
-The files stay readable as one definition per table, which is worth more right now than a
-history nobody will ever replay.
+The rule hangs on the environments, not on a feeling about how finished the product is.
+`ENVIRONMENT` is one of `development`, `testing`, `staging` or `production`, and a `testing`
+instance is one whose database is reset when a migration calls for it — that is what the word
+means here, and it is written into `.env.deploy.example`.
 
-dbmate records a migration by version and will not re-run an edited one, so the database has to
-be rebuilt — that is the cost, and it is the whole cost:
+**While the only deployed instance is `testing`**, a schema change is made **by editing the
+migration that created the table** rather than by stacking an `ALTER` on top. The files stay
+readable as one definition per table, which is worth more right now than a history nobody will
+ever replay. Today that is where Calliope is.
+
+**The day a `staging` or `production` instance runs, this stops.** Neither is reset for a
+migration, so from then on a schema change is a new migration, `migrate:down` matters, and an
+applied file is never touched again.
+
+dbmate records a migration by version and will not re-run an edited one, so an edited file means
+the database has to be rebuilt — that is the cost, and it is the whole cost:
 
 ```bash
 cd database && dbmate --env-file ../.env drop && dbmate --env-file ../.env up
@@ -20,12 +29,14 @@ deno task types:generate && cd ../backend && deno task db:seed
 ```
 
 It drops **everything**, hand-made test accounts and rows included, so say so before doing it to
-somebody else's database. Production is dropped the same way; see
-[deployment/README.md](../deployment/README.md), and stop the backend first or open connections
-block the drop.
+somebody else's database. A deployed instance is dropped the same way — `deployment/deploy.sh`
+detects an edited migration and does it, but only on `testing`, and refuses elsewhere. Stop the
+backend first or open connections block the drop.
 
-**This changes the day the first real member signs up.** From then on a schema change is a new
-migration, `migrate:down` matters, and an applied file is never touched again.
+**Editing in place is permission, not obligation.** A change that adds something new rather than
+altering something existing is clearer as its own migration even while editing is still allowed:
+nothing has to be rebuilt, and the file reads as the feature it belongs to. Prefer a new
+migration whenever the change is purely additive.
 
 Every `migrate:down` must actually reverse its `migrate:up`, including dropping enum types
 and trigger functions. Test the round trip against a throwaway database rather than the one

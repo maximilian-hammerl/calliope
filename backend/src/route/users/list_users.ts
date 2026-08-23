@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { USER_RESPONSE } from "@/src/http/response_schema.ts";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
@@ -39,7 +39,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of members, narrowed to those whose username contains the search term when one is given. Only the id and the username are returned, never an email address.",
     operationId: "listUsers",
-    middleware: requireSession,
+    middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
     request: {
       body: { required: true, content: jsonContent(LIST_USERS_BODY) },

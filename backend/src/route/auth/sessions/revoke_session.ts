@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { USER_SESSION_SCHEMA } from "@/src/database/schema.ts";
 import {
@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Scoped to the requesting member, so an id alone cannot end somebody else's session. Ending the session asking is allowed: it is the same as signing out.",
     operationId: "revokeSession",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: SESSION_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

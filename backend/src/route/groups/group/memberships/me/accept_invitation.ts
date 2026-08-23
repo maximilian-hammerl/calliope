@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -25,7 +25,7 @@ export default new OpenAPIHono().openapi(
       "Turns the current user's invitation into a membership. Only the invited user can accept, and only once.",
     operationId: "acceptInvitation",
     // Addressed as `me`, because an invitation can only ever be accepted by its invitee.
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import {
@@ -22,7 +22,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Signs the member out everywhere else and leaves the session asking alone — signing somebody out of the tab they are working in punishes good hygiene. No password: this is the defensive act, and asking for one blocks the case it exists for.",
     operationId: "revokeOtherSessions",
-    middleware: requireSession,
+    middleware: authenticated,
     responses: {
       [STATUS_CODE.OK]: {
         description: "The other sessions were ended",

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import {
   COMMON_RESPONSES,
@@ -21,7 +21,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Opening the list is the act of having read it, so this marks all of the current user's unread notifications at once rather than one at a time.",
     operationId: "readNotifications",
-    middleware: requireSession,
+    middleware: authenticated,
     responses: {
       [STATUS_CODE.OK]: {
         description: "How many were unread",

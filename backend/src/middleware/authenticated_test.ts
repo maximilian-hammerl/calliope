@@ -3,8 +3,8 @@ import { STATUS_CODE } from "@std/http/status";
 import { Hono } from "hono";
 import { db } from "@/src/database/client.ts";
 import { type User, UserService } from "@/src/service/user_service.ts";
-import requireSession from "./require_session.ts";
-import requireSessionAllowingUnverifiedEmail from "./require_session_allowing_unverified_email_address.ts";
+import authenticated from "./authenticated.ts";
+import authenticatedAllowingUnverifiedEmailAddress from "./authenticated_allowing_unverified_email_address.ts";
 
 const username = "require-session-test-user";
 const password = "a-complex-password";
@@ -12,11 +12,11 @@ const emailAddress = "require-session-test-user@example.com";
 
 // A bare app, so the test exercises the middleware rather than a route that happens to use it.
 const app = new Hono<{ Variables: { user: User } }>()
-  .use(requireSession)
+  .use(authenticated)
   .get("/probe", (c) => c.json({ username: c.get("user").username }));
 
 const permissiveApp = new Hono<{ Variables: { user: User } }>()
-  .use(requireSessionAllowingUnverifiedEmail)
+  .use(authenticatedAllowingUnverifiedEmailAddress)
   .get("/probe", (c) => c.json({ username: c.get("user").username }));
 
 async function createUserWithSession({ verified = true } = {}) {
@@ -45,7 +45,7 @@ Deno.test.afterEach(async () => {
   await db.deleteFrom("user").where("username", "=", username).execute();
 });
 
-Deno.test("requireSession passes a valid session through to the handler", async () => {
+Deno.test("authenticated passes a valid session through to the handler", async () => {
   const { session } = await createUserWithSession();
 
   const response = await app.request("/probe", {
@@ -57,7 +57,7 @@ Deno.test("requireSession passes a valid session through to the handler", async 
   assertEquals(await response.json(), { username });
 });
 
-Deno.test("requireSession rejects a forged token for a real session", async () => {
+Deno.test("authenticated rejects a forged token for a real session", async () => {
   const { session } = await createUserWithSession();
 
   // The session id is real; only the token is wrong. Knowing an id must not be enough.
@@ -74,7 +74,7 @@ Deno.test("requireSession rejects a forged token for a real session", async () =
   assertStringIncludes(setCookie, "session=;");
 });
 
-Deno.test("requireSession refuses a session whose address is unverified", async () => {
+Deno.test("authenticated refuses a session whose address is unverified", async () => {
   const { session } = await createUserWithSession({ verified: false });
 
   const response = await app.request("/probe", {

@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { STORY_IDEA_BODY } from "@/src/route/story_ideas/create_story_idea.ts";
 import {
@@ -33,7 +33,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Only the idea's author may change it, its status included. Absent fields stay as they are.",
     operationId: "updateStoryIdea",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: IDEA_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_STORY_IDEA_BODY) },

@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
 import {
   COMMON_RESPONSES,
@@ -21,7 +21,7 @@ const accept = new OpenAPIHono().openapi(
     tags: [CHATS_TAG],
     summary: "Accept an invitation to a chat",
     operationId: "acceptChatInvitation",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: CHAT_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -65,7 +65,7 @@ const leave = new OpenAPIHono().openapi(
     description:
       "The same act either way. The last member out takes the chat and its messages with them.",
     operationId: "leaveChat",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: CHAT_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

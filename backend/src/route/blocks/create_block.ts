@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { userExists } from "@/src/service/user_in_writing_group_service.ts";
 import {
@@ -25,7 +25,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Neither member can invite the other afterwards, in either direction, and any invitation between them that is still unanswered is withdrawn. Nothing already shared is touched: a group or chat they are both in stays, and is left by leaving it. Blocking somebody already blocked changes nothing.",
     operationId: "blockMember",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(CREATE_BLOCK_BODY) },
     },

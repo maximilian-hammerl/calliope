@@ -150,9 +150,21 @@ Each leaf exports `new OpenAPIHono().openapi(createRoute({…}), handler)`. Use
 `app.openapi()` rather than `defineOpenAPIRoute`: only the former derives the handler's
 environment from the route's middleware, so `c.get("user")` stays typed.
 
-Write `middleware: requireSession`, not `middleware: [requireSession]`. An array widens to
-`MiddlewareHandler[]`, which loses the middleware's environment and leaves `c.get("user")`
-as `never`.
+**An array of middleware needs `as const`.** Without it the array widens to
+`MiddlewareHandler[]`, the route loses the middleware's environment, and `c.get("user")` becomes
+`never` — a symptom that gives no hint of the cause
+([honojs/middleware#847](https://github.com/honojs/middleware/issues/847)). This file used to say
+arrays did not work at all, which was that bug read as a rule.
+
+```ts
+middleware: authenticated,                                    // one is written bare
+middleware: [authenticated, authorizedAsModerator] as const,  // two or more, always as const
+```
+
+**Authentication first, then authorization.** `authenticated` establishes *who* is asking;
+`authorizedAs…` says what they may do, reads the role off the user the first one set, and answers
+401 if it is missing rather than throwing. The names say which of the two a middleware is, which
+is the whole reason they are not all called `require…`.
 
 Mount literal segments before parameters, or `/me` is swallowed by `/:userId`.
 
@@ -491,13 +503,18 @@ Registering leaves `user.email_verified_at` null and starts a session anyway. Th
 the point: without one there is no way back in to correct a mistyped address, and a single
 slip at registration would orphan the account for good.
 
-**Gating is the default, not an opt-in.** `require_session.ts` refuses an unverified member
+**Gating is the default, not an opt-in.** `authenticated.ts` refuses an unverified member
 with **403** — the session is fine, so 401 would send them back to the sign-in page they came
-from. Five routes use `require_session_allowing_unverified_email_address.ts` instead: the four
+from. Five routes use `authenticated_allowing_unverified_email_address.ts` instead: the four
 somebody needs *in order to* verify — reading who they are, signing out, resending, correcting
 the address — and asking for deletion, which is how somebody leaves without ever verifying.
-Choosing nothing gets the strict one, so a forgotten route fails closed. Both share `session_user.ts`, so how a session is read cannot drift
-between them.
+Choosing nothing gets the strict one, so a forgotten route fails closed. Both share
+`session_user.ts`, so how a session is read cannot drift between them.
+
+That property is also why the session check and the verification check are **one** middleware
+rather than two composable ones. Authorization composes on top of `authenticated`; authentication
+does not decompose below it — a route that listed only the session half would fail *open*, and
+there are sixty routes in which to make that mistake.
 
 Every gated route therefore declares 403. Where the route has no reason of its own it spreads
 `FORBIDDEN_RESPONSE`; the twenty-four that refuse for their own reasons keep their own, more

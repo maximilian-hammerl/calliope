@@ -3,7 +3,7 @@ import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -65,7 +65,7 @@ export default new OpenAPIHono().openapi(
     tags: [STORY_IDEAS_TAG],
     summary: "Post a story idea seeking writers",
     operationId: "createStoryIdea",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(STORY_IDEA_BODY) },
     },

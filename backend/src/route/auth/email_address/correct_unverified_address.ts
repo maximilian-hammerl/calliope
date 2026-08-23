@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session_allowing_unverified_email_address.ts";
+import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
 import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
@@ -26,7 +26,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The escape hatch for an address mistyped at registration, which would otherwise orphan the account. Refuses once the address has been verified: changing a proven address has to notify the old one and offer an undo, or a stolen session could move the account to another inbox.",
     operationId: "changeEmailAddress",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: {
         required: true,

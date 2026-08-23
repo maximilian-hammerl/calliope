@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { EmailAddressChangeService } from "@/src/service/email_address_change_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Requires the current password. Changes nothing yet: a link goes to the new address, and the account keeps the old one until that link is opened. The old address is told at the same time and can cancel.",
     operationId: "requestEmailAddressChange",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(REQUEST_CHANGE_BODY) },
     },

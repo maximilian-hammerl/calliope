@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
   listQuerySchema,
@@ -82,7 +82,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of groups, by default the ones the current user has joined. The membership filter selects invitations, public groups they are not in, or everything they may see instead.",
     operationId: "listGroups",
-    middleware: requireSession,
+    middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
     request: {
       body: { required: true, content: jsonContent(LIST_GROUPS_BODY) },

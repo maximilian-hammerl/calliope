@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import {
@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a single thread of the group. A thread id belonging to another group is reported as missing.",
     operationId: "getThread",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: THREAD_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

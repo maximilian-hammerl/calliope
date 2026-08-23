@@ -3,6 +3,7 @@ import { scheduleCronJobs } from "@/src/cron.ts";
 import { getAbortSignalForShutdown } from "@/src/util/abort_signal.ts";
 import { runHealthCheck } from "@/health_check.ts";
 import { seedDatabase } from "@/seed.ts";
+import { grantRole, revokeRole } from "@/grant_role.ts";
 
 if (import.meta.main) {
   // Not from the environment: Docker sets HOSTNAME to the container id, and binding to
@@ -18,6 +19,16 @@ if (import.meta.main) {
 
   if (Deno.args.includes("--seed")) {
     await seedDatabase();
+  }
+
+  // Both exit when done, like the seed above: these are commands the image can run, not
+  // options that change how the server behaves.
+  if (Deno.args.includes("--grant-role")) {
+    await grantRole();
+  }
+
+  if (Deno.args.includes("--revoke-role")) {
+    await revokeRole();
   }
 
   scheduleCronJobs();

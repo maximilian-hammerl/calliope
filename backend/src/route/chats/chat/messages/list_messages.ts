@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_MESSAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatMessageService } from "@/src/service/chat_message_service.ts";
 import {
   cursorQuerySchema,
@@ -28,7 +28,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of messages, newest first. Paged by cursor rather than offset: messages arrive while somebody reads, and an offset would repeat or skip whatever crossed the boundary.",
     operationId: "listMessages",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       params: CHAT_PARAMS,
       body: { required: true, content: jsonContent(cursorQuerySchema()) },

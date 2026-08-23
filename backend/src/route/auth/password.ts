@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { PasswordChangeService } from "@/src/service/password_change_service.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
@@ -30,7 +30,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Requires the current password, so a session that was not the member's cannot lock them out of their own account. Every other session ends and any outstanding reset link stops working; this session survives.",
     operationId: "changePassword",
-    middleware: requireSession,
+    middleware: authenticated,
     request: {
       body: { required: true, content: jsonContent(CHANGE_PASSWORD_BODY) },
     },

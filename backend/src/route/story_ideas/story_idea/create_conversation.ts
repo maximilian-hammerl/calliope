@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import requireSession from "@/src/middleware/require_session.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
@@ -26,7 +26,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Creates a chat titled after the idea and invites its author — §11's public idea → private conversation. The author has to accept before anything is read, the same consent every chat invitation carries.",
     operationId: "startStoryIdeaConversation",
-    middleware: requireSession,
+    middleware: authenticated,
     request: { params: IDEA_PARAMS },
     responses: {
       [STATUS_CODE.Created]: {

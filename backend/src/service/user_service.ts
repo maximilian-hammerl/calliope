@@ -16,7 +16,13 @@ import type {
 
 export type User = Pick<
   Selectable<DatabaseUser>,
-  "id" | "username" | "emailAddress" | "emailAddressVerifiedAt"
+  | "id"
+  | "username"
+  | "emailAddress"
+  | "emailAddressVerifiedAt"
+  // Carried on the session user so an authorisation check costs no query of its own — the
+  // reason the role is a column rather than a table of its own.
+  | "platformRole"
 >;
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
@@ -63,7 +69,13 @@ async function insertUser(
       emailAddress,
     })
     .onConflict((oc) => oc.doNothing())
-    .returning(["id", "username", "emailAddress", "emailAddressVerifiedAt"])
+    .returning([
+      "id",
+      "username",
+      "emailAddress",
+      "emailAddressVerifiedAt",
+      "platformRole",
+    ])
     .executeTakeFirst();
 }
 
@@ -78,6 +90,7 @@ async function selectUser(
       "username",
       "emailAddress",
       "emailAddressVerifiedAt",
+      "platformRole",
       "hashedPassword",
     ])
     // Addresses are stored lower-cased by the register route, so the comparison has to
@@ -106,6 +119,7 @@ async function selectUser(
     username: user.username,
     emailAddress: user.emailAddress,
     emailAddressVerifiedAt: user.emailAddressVerifiedAt,
+    platformRole: user.platformRole,
   };
 }
 
@@ -169,7 +183,13 @@ async function selectUserForSession(
 
   return await db
     .selectFrom("user")
-    .select(["id", "username", "emailAddress", "emailAddressVerifiedAt"])
+    .select([
+      "id",
+      "username",
+      "emailAddress",
+      "emailAddressVerifiedAt",
+      "platformRole",
+    ])
     .where("id", "=", databaseUserSession.userId)
     .executeTakeFirst();
 }
