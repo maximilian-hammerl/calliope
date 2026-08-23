@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PlusIcon } from '@lucide/vue'
+import { Plus } from '@lucide/vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import {
   getListMembershipsQueryKey,
@@ -228,7 +228,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
         class="ml-auto"
         @click="inviting = true"
       >
-        <PlusIcon :stroke-width="1.5" />
+        <Plus :stroke-width="1.5" />
         Mitglied einladen
       </Button>
     </div>

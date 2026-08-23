@@ -11,7 +11,7 @@ import {
 import { APP_NAME } from '@/lib/branding'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { LogOutIcon, Search } from '@lucide/vue'
+import { LogOut, Search } from '@lucide/vue'
 import { useLogoutUser } from '@/api/auth/auth'
 import type { GetCurrentUser200 } from '@/api/models'
 import { forgetCurrentUser } from '@/lib/auth/session'
@@ -208,7 +208,7 @@ async function signOut() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem :disabled="isPending" @select="signOut">
-                <LogOutIcon />
+                <LogOut />
                 Abmelden
               </DropdownMenuItem>
             </DropdownMenuGroup>

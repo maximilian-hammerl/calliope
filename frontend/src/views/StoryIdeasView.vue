@@ -125,7 +125,7 @@ const creating = ref<boolean>(false)
               aria-label="Storyidee vorstellen"
               @click="creating = true"
             >
-              <Plus data-icon="inline-start" :stroke-width="1.5" />
+              <Plus :stroke-width="1.5" />
               Storyidee
             </Button>
           </div>

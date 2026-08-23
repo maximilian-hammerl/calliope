@@ -82,7 +82,7 @@ const HEADINGS = {
           kannst du dich jederzeit neu anmelden.
         </p>
 
-        <Button as-child variant="secondary" class="mt-7 h-11 w-full md:h-9">
+        <Button as-child variant="outline" class="mt-7 h-11 w-full md:h-9">
           <RouterLink :to="{ name: 'login' }">Zur Startseite</RouterLink>
         </Button>
       </template>

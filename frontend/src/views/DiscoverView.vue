@@ -98,7 +98,7 @@ const creating = ref<boolean>(false)
               aria-label="Gruppe gründen"
               @click="creating = true"
             >
-              <Plus data-icon="inline-start" :stroke-width="1.5" />
+              <Plus :stroke-width="1.5" />
               Gruppe
             </Button>
           </div>

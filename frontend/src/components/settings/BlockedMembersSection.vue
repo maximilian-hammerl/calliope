@@ -73,7 +73,7 @@ async function allowContactAgain(userId: string) {
         </div>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           class="ml-auto"
           :disabled="pendingId === block.blockedId"

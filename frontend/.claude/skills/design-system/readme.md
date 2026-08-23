@@ -258,6 +258,12 @@ verbs of a subject, filled from the thread when renaming and empty when creating
 confirmation names the post count, because „diesen Thread löschen" understates what goes, and the
 singular drops the numeral: „sein Beitrag", never „seine 1 Beitrag".
 
+**„Löschen" destroys the thing; „Entfernen" takes it out of something that survives.** A thread,
+a story idea and an account are deleted; a member is removed from a group, an invitation is
+withdrawn. The words are not interchangeable and the reader is entitled to tell the two apart
+before pressing: a story idea's own delete said „Entfernen" for months while doing a real
+`DELETE`.
+
 **A member leaves from their own row.** The members list is the one place on a group's page
 that is about the reader, and the row that already carries „Entfernen" for everybody else
 carries „Gruppe verlassen" for them. The confirmation says what leaving actually costs, which
@@ -488,6 +494,22 @@ moved "Gruppen entdecken" from the foot of Meine Gruppen onto its heading line; 
 now carries it on every page, and the heading-line copy went with the duplication. *Plain* —
 text only in `--ink-5`, for per-post actions.
 
+**Which level an act gets is decided by its subject, never by the page it was built on.**
+Solid completes a form or a dialog, one per screen. Quiet is an action on the object the screen
+is *about*, or on a section, sitting in a header or a heading line. Plain is an action on one row
+of a list, where five borders would tile the page. One question settles it: is the subject the
+whole screen, or one row of it? Without that test the treatment tracked whoever wrote the page —
+the block toggle was Quiet in its one branch and Plain in the other, and a single story-idea
+header carried four different levels side by side.
+
+**One implementation per level, and it lives in the Button component.** Quiet is
+`variant="outline"`, carrying the fill *and* the border; there is no second bordered variant,
+because `secondary` existed as Quiet with its border missing and drifted into the same jobs.
+Anything hand-rolled states the level exactly — „＋ Schritt" in the rail is the same six
+declarations as the component, checked against it rather than eyeballed. The one deliberate
+departure is „＋ Thread" in the tab strip, which shares a baseline with the tabs: a bordered box
+there breaks the strip, so it is Plain and its neighbours are what make it findable.
+
 *Destructive* is a fourth level and the only place `--destructive` `#8a3f37` appears as a fill.
 It is reserved for acts that **destroy a body of writing, including other people's, and cannot be
 undone by repeating them**. Three qualify: the account-deletion flow ("Löschen-Link anfordern"
@@ -616,15 +638,27 @@ never matched the hairline weight and changed shape from platform to platform.
 | `×` | `X` | delete a step (plain, never red — a step is re-creatable in seconds) |
 | `⌕` | `Search` | search |
 | `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
-| — | `Pencil` | edit an existing thing ("Gruppe bearbeiten") |
+| — | `Pencil` | edit an existing thing ("Gruppe bearbeiten", "Umbenennen") |
+| — | `Trash2` | delete a thing for good ("Löschen") |
+| — | `MessageCircle` | start a conversation ("Unterhaltung beginnen") |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px
-interface text — and let them inherit `currentColor` rather than carrying a colour.
+interface text — and let them inherit `currentColor` rather than carrying a colour. Inside a
+button the component does that sizing; a call site passing its own `size` is overriding a
+decision that belongs in one place.
 
 **Words still come first.** An icon accompanies a label, it does not replace one: the buttons
-read "Gruppe gründen" and "Thread", with the mark in front. Nothing becomes an icon-only
-control.
+read "Gruppe gründen" and "Thread", with the mark in front. The exception is movement that has
+nothing to name — the rail's collapse chevron, the tab strip's scroll arrows, the carousel's two —
+which carry an `aria-label` instead. No *act* is ever icon-only.
+
+**One act, one mark, wherever it appears.** `Plus` adds, `Pencil` edits, `Trash2` deletes for
+good, so a member who has learned one has learned it for every object. Two things take no mark on
+purpose: „Entfernen", because removing somebody from a group that survives is a different act
+from destroying a thing, and a dialog's confirm button, whose title has already named the act.
+Import each icon under one name — a `PencilIcon` beside a `Pencil` is one file twice and reads as
+two decisions.
 
 Unchanged: file types stay mono text (`PNG` `MD` `JPG`), never a file icon. Avatars are
 initials in `--text-avatar` on `--surface-avatar`, never generated images. **No emoji** — the round-1 emoji

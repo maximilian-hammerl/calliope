@@ -89,7 +89,7 @@ async function allowContactAgain() {
               </Button>
               <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
                    where the consequences are spelled out. -->
-              <Button v-else variant="ghost" size="sm" @click="blocking = true">
+              <Button v-else variant="outline" size="sm" @click="blocking = true">
                 Blockieren
               </Button>
             </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Pencil } from '@lucide/vue'
+import { Pencil, Trash2 } from '@lucide/vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { Button } from '@/components/ui/button'
 import { pluralize } from '@/lib/format/formatText'
@@ -34,19 +34,22 @@ const meta = computed<string>(() =>
        depend on post actions that do not exist yet, and a dead control now sits beside the
        working order toggle and page strip below. The prototype keeps the specification. -->
   <div class="mb-7 flex flex-wrap items-start gap-x-4 gap-y-2">
-    <div class="min-w-0 flex-1">
+    <!-- Full width on a phone so the actions wrap under it: sharing the row squeezed
+         "1 Beitrag · zuletzt vor 2 Minuten" onto three lines at 375px. -->
+    <div class="w-full min-w-0 md:w-auto md:flex-1">
       <h2 class="mb-[5px] text-[20px] leading-[1.3] text-ink-1">{{ title }}</h2>
       <div v-if="meta" class="text-[12.5px] leading-[1.3] text-ink-5">{{ meta }}</div>
     </div>
 
     <!-- On the thread's own page, as the group's actions are on the group's: the tab strip is
          for switching threads, not for acting on one. -->
-    <div v-if="props.mayModify" class="flex shrink-0 items-center gap-1">
-      <Button variant="ghost" size="sm" class="text-ink-5" @click="$emit('rename')">
-        <Pencil data-icon="inline-start" :stroke-width="1.5" />
+    <div v-if="props.mayModify" class="flex shrink-0 items-center gap-2">
+      <Button variant="outline" size="sm" @click="$emit('rename')">
+        <Pencil :stroke-width="1.5" />
         Umbenennen
       </Button>
-      <Button variant="ghost" size="sm" class="text-ink-5" @click="$emit('delete')">
+      <Button variant="outline" size="sm" @click="$emit('delete')">
+        <Trash2 :stroke-width="1.5" />
         Löschen
       </Button>
     </div>

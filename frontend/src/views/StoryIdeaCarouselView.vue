@@ -144,7 +144,7 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
                     <Button
                       v-for="toggle in readerStateToggles(idea.readerState)"
                       :key="toggle.title"
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
                       :title="toggle.title"
                       :disabled="savingReaderState"
@@ -157,7 +157,7 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
                       :disabled="startingConversation"
                       @click="askAboutIdea(idea.id)"
                     >
-                      <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
+                      <MessageCircle :stroke-width="1.5" />
                       Unterhaltung beginnen
                     </Button>
                   </template>

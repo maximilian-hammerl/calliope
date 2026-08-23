@@ -105,7 +105,7 @@ async function endEverywhereElse() {
           </div>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             class="ml-auto"
             :disabled="pendingId === session.id"

@@ -8,7 +8,7 @@ import {
   useGetStoryIdea,
 } from '@/api/story-ideas/story-ideas'
 import { useGetCurrentUser } from '@/api/auth/auth'
-import { MessageCircle } from '@lucide/vue'
+import { MessageCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
 import type { GetStoryIdea200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { queryClient } from '@/lib/api/queryClient'
@@ -19,6 +19,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import type { GroupInitialValues } from '@/components/group/GroupDialog.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
+import DeleteStoryIdeaDialog from '@/components/story-idea/DeleteStoryIdeaDialog.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
 import { Button } from '@/components/ui/button'
 
@@ -84,6 +85,7 @@ const isOwn = computed<boolean>(
 )
 
 const editing = ref<boolean>(false)
+const deleting = ref<boolean>(false)
 const removing = ref<boolean>(false)
 const removalError = ref<string | undefined>(undefined)
 
@@ -102,6 +104,7 @@ async function remove() {
   }
 
   await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListStoryIdeasQueryKey()) })
+  deleting.value = false
   await router.push({ name: 'storyIdeasMine' })
 }
 </script>
@@ -116,11 +119,16 @@ async function remove() {
           <template #actions>
             <template v-if="isOwn">
               <Button variant="outline" size="sm" @click="foundingGroup = true">
+                <Plus :stroke-width="1.5" />
                 Gruppe gründen
               </Button>
-              <Button variant="outline" size="sm" @click="editing = true">Bearbeiten</Button>
-              <Button variant="ghost" size="sm" :disabled="removing" @click="remove">
-                Entfernen
+              <Button variant="outline" size="sm" @click="editing = true">
+                <Pencil :stroke-width="1.5" />
+                Bearbeiten
+              </Button>
+              <Button variant="outline" size="sm" :disabled="removing" @click="deleting = true">
+                <Trash2 :stroke-width="1.5" />
+                Löschen
               </Button>
             </template>
 
@@ -132,7 +140,7 @@ async function remove() {
               <Button
                 v-for="toggle in readerStateToggles(idea.readerState)"
                 :key="toggle.title"
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 :title="toggle.title"
                 :disabled="savingReaderState"
@@ -152,17 +160,13 @@ async function remove() {
                 "
                 @click="askAboutIdea(idea.id)"
               >
-                <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
+                <MessageCircle :stroke-width="1.5" />
                 Unterhaltung beginnen
               </Button>
             </template>
           </template>
 
           <template #notices>
-            <p v-if="removalError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-              {{ removalError }}
-            </p>
-
             <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
               {{ conversationError }}
             </p>
@@ -187,6 +191,14 @@ async function remove() {
   </AppLayout>
 
   <StoryIdeaDialog v-if="idea" v-model:open="editing" :idea="idea" />
+  <DeleteStoryIdeaDialog
+    v-if="idea"
+    v-model:open="deleting"
+    :title="idea.title"
+    :pending="removing"
+    :error="removalError"
+    @confirmed="remove"
+  />
   <GroupDialog
     v-if="idea"
     v-model:open="foundingGroup"

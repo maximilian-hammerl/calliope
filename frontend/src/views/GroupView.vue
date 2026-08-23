@@ -16,7 +16,7 @@ import type {
   ListMemberships200ResultsItem,
   ListThreads200ResultsItem,
 } from '@/api/models'
-import { MessageCircle, PencilIcon } from '@lucide/vue'
+import { MessageCircle, Pencil } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
@@ -169,7 +169,7 @@ async function askIntoGroup() {
             class="mt-7"
             @click="editingGroup = true"
           >
-            <PencilIcon :stroke-width="1.5" />
+            <Pencil :stroke-width="1.5" />
             Gruppe bearbeiten
           </Button>
 
@@ -183,7 +183,7 @@ async function askIntoGroup() {
             :disabled="startingConversation"
             @click="askIntoGroup"
           >
-            <MessageCircle data-icon="inline-start" :stroke-width="1.5" />
+            <MessageCircle :stroke-width="1.5" />
             Unterhaltung beginnen
           </Button>
 
