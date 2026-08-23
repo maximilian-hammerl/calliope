@@ -90,13 +90,31 @@ port 80 reachable and DNS already pointing here.
 
 ```bash
 cd /opt/calliope
-git pull
-docker compose -f docker-compose.deploy.yaml up -d --build
+./deployment/deploy.sh --environment testing
 ```
+
+`--environment` is required, must be one of `testing`, `staging` or `production`, and must
+match `ENVIRONMENT` in `.env` — the script refuses on a mismatch. It is a statement of intent
+rather than a lookup: the mistake worth catching is running a deploy against a server you did
+not think you were on.
+
+The script fetches, works out which of the paths below applies, and does that one. Add
+`--dry-run` to print the plan and stop, which is worth doing whenever a migration changed.
+Afterwards it waits for the backend's health check and fetches `HOST_URL`, because a healthy
+container proves nothing about TLS, the routing, or the frontend build Caddy serves.
+
+The sections below are what it automates, and what to do when it refuses.
 
 Migrations run automatically as part of `up`.
 
 ### After a migration was edited rather than added
+
+`deploy.sh` detects this and, on `testing`, does it. On `staging` and `production` it refuses
+and points here, because only `testing` is reset when a migration calls for it. It compares the
+migrations touched between the deployed commit and the new one against the versions recorded in
+`migration.schema_migration`: only an *already applied* version that changed forces a rebuild, so
+a migration added and then edited between two deploys is an ordinary deploy. Renames count —
+three in this repository's history kept their version prefix while rewriting the body.
 
 Pre-release, a schema change edits the migration that created the table (see
 [database/AGENTS.md](../database/AGENTS.md)), and dbmate will not re-run a version it has already
@@ -119,6 +137,11 @@ creates one when its volume is initialised — so after a drop, `up -d` fails wi
 
 ### After changing a network option
 
+`deploy.sh` passes `--force-recreate` whenever the compose file changed at all. That is broader
+than this case, and deliberately so: telling a network change from any other compose change by
+reading YAML is more fragile than recreating containers that a compose change was going to
+restart anyway.
+
 Compose has to delete and recreate the network, which stops every container attached to it —
 but it *starts* them again rather than recreating them, and a container that outlived its
 network keeps stale DNS: `migrate` failed with `lookup db on 127.0.0.11:53: no such host`, so
@@ -137,6 +160,8 @@ backend saw the true client, over IPv6 it did not. `enable_ipv6: true` on the de
 gives IPv6 a DNAT path of its own and both families now arrive intact.
 
 ### After changing only the Caddyfile
+
+`deploy.sh` does this when the Caddyfile changed and the compose file did not.
 
 `Caddyfile` is bind-mounted and Caddy reads it once, at startup. `up -d` compares the
 *service definition*, which a changed file does not alter, so it leaves the container
@@ -245,7 +270,6 @@ does *not* read a dump needs `</dev/null` — otherwise it swallows the rest of 
 
 - **The dumps never leave the server.** They cover mistakes in the data, not the loss of
   the machine. Offsite copies, encrypted, are still to be set up.
-- **No deploy automation.** Redeploying is the manual `git pull` above.
 - **Bounces are read by a person**, not by the application — see above.
 - **Mail still in flight is lost on restart.** Sends are deliberately not awaited by the
   request that triggered them, and nothing drains them on shutdown; a member caught by a
