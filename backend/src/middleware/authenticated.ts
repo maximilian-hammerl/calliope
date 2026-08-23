@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import type { User } from "@/src/service/user_service.ts";
 import { resolveSessionUser } from "@/src/middleware/session_user.ts";
+import { ACCOUNT_BANNED_BODY } from "@/src/http/response.ts";
 
 /**
  * A session *and* a verified email address — both, deliberately, and this is why the pair is
@@ -23,6 +24,10 @@ export default createMiddleware<{
 
   if (user === undefined) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  if (user.bannedAt !== null) {
+    return c.json(ACCOUNT_BANNED_BODY, 403);
   }
 
   if (user.emailAddressVerifiedAt === null) {

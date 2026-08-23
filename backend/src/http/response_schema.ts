@@ -136,6 +136,10 @@ export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   // Whether the *reader* has blocked them, which is the reader's own information. Never
   // whether they have blocked the reader: that would be the disclosure a neutral 403 avoids.
   isBlocked: z.boolean(),
+  // Present only for an operator, and absent for everybody else rather than false: a ban is
+  // the platform acting, and telling one member that another was banned is not this page's
+  // business. Operators need it because the control that bans must also be able to lift.
+  isBanned: z.boolean().optional(),
 });
 
 /**

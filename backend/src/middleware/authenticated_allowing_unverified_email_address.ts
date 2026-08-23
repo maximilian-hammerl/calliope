@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import type { User } from "@/src/service/user_service.ts";
 import { resolveSessionUser } from "@/src/middleware/session_user.ts";
+import { ACCOUNT_BANNED_BODY } from "@/src/http/response.ts";
 
 /**
  * A session, without asking whether the address behind it has been verified.
@@ -18,6 +19,12 @@ export default createMiddleware<{
 
   if (user === undefined) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  // Banned reaches nothing, this set included: these routes exist so somebody can verify or
+  // leave, and a banned account is doing neither.
+  if (user.bannedAt !== null) {
+    return c.json(ACCOUNT_BANNED_BODY, 403);
   }
 
   c.set("user", user);

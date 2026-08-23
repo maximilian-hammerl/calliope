@@ -6,6 +6,7 @@ import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
+import { BanService } from "@/src/service/ban_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { conversationTitle } from "@/src/util/conversation_title.ts";
 import {
@@ -77,9 +78,13 @@ export default new OpenAPIHono().openapi(
 
     // Blocked administrators are skipped rather than refused: one administrator's block must
     // not make a whole group unreachable. Only when none is left does this fail.
-    const administratorIds = await BlockService.withoutBlocked(
-      user.id,
-      await UserInWritingGroupService.selectJoinedAdministratorIds(group.id),
+    // Banned administrators are skipped for the same reason and in the same way: they cannot
+    // sign in, so approaching them produces a conversation nobody can answer.
+    const administratorIds = await BanService.withoutBanned(
+      await BlockService.withoutBlocked(
+        user.id,
+        await UserInWritingGroupService.selectJoinedAdministratorIds(group.id),
+      ),
     );
 
     // The ungoverned-group hole (roadmap item 1) seen from outside: nobody left to ask.

@@ -23,6 +23,9 @@ export type User = Pick<
   // Carried on the session user so an authorisation check costs no query of its own — the
   // reason the role is a column rather than a table of its own.
   | "platformRole"
+  // Belt to the braces: banning ends every session, so a banned member should have none. This
+  // refuses the one that somehow outlived it, and costs nothing to check.
+  | "bannedAt"
 >;
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
@@ -75,6 +78,7 @@ async function insertUser(
       "emailAddress",
       "emailAddressVerifiedAt",
       "platformRole",
+      "bannedAt",
     ])
     .executeTakeFirst();
 }
@@ -91,6 +95,7 @@ async function selectUser(
       "emailAddress",
       "emailAddressVerifiedAt",
       "platformRole",
+      "bannedAt",
       "hashedPassword",
     ])
     // Addresses are stored lower-cased by the register route, so the comparison has to
@@ -120,6 +125,7 @@ async function selectUser(
     emailAddress: user.emailAddress,
     emailAddressVerifiedAt: user.emailAddressVerifiedAt,
     platformRole: user.platformRole,
+    bannedAt: user.bannedAt,
   };
 }
 
@@ -189,6 +195,7 @@ async function selectUserForSession(
       "emailAddress",
       "emailAddressVerifiedAt",
       "platformRole",
+      "bannedAt",
     ])
     .where("id", "=", databaseUserSession.userId)
     .executeTakeFirst();
@@ -285,6 +292,12 @@ function listUsers(
     db
       .selectFrom("user")
       .select(["user.id", "user.username"])
+      // Banned accounts are not offered to anybody, the way a blocked one is not offered to the
+      // member who blocked them — but for everyone, since a ban is the platform's act rather
+      // than one member's. They stay in the groups and conversations they were already part of;
+      // this is the list you find somebody *new* in. An operator view needs its own query, which
+      // is what #46 says.
+      .where("user.bannedAt", "is", null)
       .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where(
           "user.username",

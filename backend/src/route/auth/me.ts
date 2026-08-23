@@ -52,6 +52,16 @@ export default new OpenAPIHono().openapi(
     const user = c.get("user");
     const unreadNotifications = await NotificationService.countUnread(user.id);
 
-    return c.json({ ...user, unreadNotifications }, STATUS_CODE.OK);
+    // Named rather than spread: the session user carries whatever the middleware needs, and
+    // spreading it published each new field here by accident. `bannedAt` is the second — and
+    // it would always be null anyway, since a banned member never reaches this route.
+    return c.json({
+      id: user.id,
+      username: user.username,
+      emailAddress: user.emailAddress,
+      emailAddressVerifiedAt: user.emailAddressVerifiedAt,
+      platformRole: user.platformRole,
+      unreadNotifications,
+    }, STATUS_CODE.OK);
   },
 );

@@ -8,6 +8,7 @@ import {
   userExists,
   UserInWritingGroupService,
 } from "@/src/service/user_in_writing_group_service.ts";
+import { BanService } from "@/src/service/ban_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -96,7 +97,12 @@ export default new OpenAPIHono().openapi(
     }
 
     // Neutral on purpose: it does not say who blocked whom, only that this cannot happen.
-    if (await BlockService.isBlockedBetween(user.id, userId)) {
+    // A ban refuses contact the same way, and answers the same neutral refusal: an inviter
+    // must not learn that a moderation action was taken against somebody else.
+    if (
+      await BlockService.isBlockedBetween(user.id, userId) ||
+      await BanService.isBanned(userId)
+    ) {
       return c.json(
         { error: "Contact is not possible" },
         STATUS_CODE.Forbidden,

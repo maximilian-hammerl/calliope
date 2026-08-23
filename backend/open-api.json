@@ -127,7 +127,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -156,7 +156,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -185,7 +185,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -214,7 +214,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -243,7 +243,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -317,7 +317,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -346,7 +346,36 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credentials were right and the account is banned. Answered only after the password verifies, so it discloses nothing to somebody guessing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -375,7 +404,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -404,7 +433,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -433,7 +462,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -484,7 +513,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -513,7 +542,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -542,7 +571,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -571,7 +600,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -642,7 +671,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -671,7 +700,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -700,7 +729,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -729,7 +758,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -798,7 +827,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -827,7 +856,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -856,7 +885,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -885,7 +914,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -955,7 +984,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -984,7 +1013,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1013,7 +1042,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1042,7 +1071,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1071,7 +1100,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1134,7 +1163,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1163,7 +1192,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1192,7 +1221,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1221,7 +1250,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1250,7 +1279,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1301,7 +1330,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1330,7 +1359,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1359,7 +1388,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1388,7 +1417,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1457,7 +1486,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1486,7 +1515,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1515,7 +1544,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1544,7 +1573,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1573,7 +1602,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1602,7 +1631,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1676,7 +1705,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1705,7 +1734,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1734,7 +1763,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1763,7 +1792,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1792,7 +1821,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1821,7 +1850,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1884,7 +1913,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1913,7 +1942,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1942,7 +1971,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -1971,7 +2000,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2000,7 +2029,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2029,7 +2058,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2092,7 +2121,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2121,7 +2150,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2150,7 +2179,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2179,7 +2208,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2208,7 +2237,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2277,7 +2306,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2306,7 +2335,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2335,7 +2364,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2364,7 +2393,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2393,7 +2422,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2456,7 +2485,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2485,7 +2514,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2514,7 +2543,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2543,7 +2572,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2572,7 +2601,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2655,7 +2684,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2684,7 +2713,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2713,7 +2742,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2742,7 +2771,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2771,7 +2800,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2800,7 +2829,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2851,7 +2880,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2880,7 +2909,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2909,7 +2938,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2938,7 +2967,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2967,7 +2996,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -2996,7 +3025,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3055,7 +3084,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3084,7 +3113,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3113,7 +3142,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3142,7 +3171,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3171,7 +3200,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3200,7 +3229,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3229,7 +3258,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3303,7 +3332,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3332,7 +3361,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3361,7 +3390,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3390,7 +3419,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3419,7 +3448,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3624,7 +3653,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3653,7 +3682,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3682,7 +3711,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3711,7 +3740,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3740,7 +3769,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3769,7 +3798,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3954,7 +3983,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -3983,7 +4012,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4012,7 +4041,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4041,7 +4070,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4070,7 +4099,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4099,7 +4128,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4236,7 +4265,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4265,7 +4294,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4294,7 +4323,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4323,7 +4352,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4352,7 +4381,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4381,7 +4410,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4410,7 +4439,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4619,7 +4648,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4648,7 +4677,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4677,7 +4706,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4706,7 +4735,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4735,7 +4764,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4764,7 +4793,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4793,7 +4822,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4879,7 +4908,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4908,7 +4937,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4937,7 +4966,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4966,7 +4995,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -4995,7 +5024,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5024,7 +5053,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5053,7 +5082,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5082,7 +5111,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5197,7 +5226,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5226,7 +5255,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5255,7 +5284,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5284,7 +5313,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5313,7 +5342,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5342,7 +5371,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5371,7 +5400,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5400,7 +5429,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5509,7 +5538,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5538,7 +5567,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5567,7 +5596,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5596,7 +5625,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5625,7 +5654,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5654,7 +5683,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5683,7 +5712,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5779,7 +5808,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5808,7 +5837,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5837,7 +5866,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5866,7 +5895,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5895,7 +5924,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5924,7 +5953,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5953,7 +5982,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -5982,7 +6011,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6101,7 +6130,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6130,7 +6159,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6159,7 +6188,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6188,7 +6217,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6217,7 +6246,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6246,7 +6275,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6275,7 +6304,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6338,7 +6367,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6367,7 +6396,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6396,7 +6425,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6425,7 +6454,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6454,7 +6483,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6483,7 +6512,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6512,7 +6541,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6613,7 +6642,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6642,7 +6671,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6671,7 +6700,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6700,7 +6729,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6729,7 +6758,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6758,7 +6787,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6787,7 +6816,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6888,7 +6917,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6917,7 +6946,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6946,7 +6975,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -6975,7 +7004,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7004,7 +7033,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7033,7 +7062,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7062,7 +7091,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7168,7 +7197,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7197,7 +7226,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7226,7 +7255,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7255,7 +7284,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7284,7 +7313,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7313,7 +7342,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7342,7 +7371,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7405,7 +7434,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7434,7 +7463,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7463,7 +7492,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7492,7 +7521,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7521,7 +7550,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7550,7 +7579,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7579,7 +7608,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7678,7 +7707,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7707,7 +7736,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7736,7 +7765,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7765,7 +7794,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7794,7 +7823,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7823,7 +7852,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7852,7 +7881,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7946,7 +7975,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -7975,7 +8004,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8004,7 +8033,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8033,7 +8062,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8062,7 +8091,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8091,7 +8120,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8120,7 +8149,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8207,7 +8236,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8236,7 +8265,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8265,7 +8294,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8294,7 +8323,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8323,7 +8352,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8352,7 +8381,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8381,7 +8410,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8484,7 +8513,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8513,7 +8542,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8542,7 +8571,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8571,7 +8600,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8600,7 +8629,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8629,7 +8658,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8658,7 +8687,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8721,7 +8750,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8750,7 +8779,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8779,7 +8808,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8808,7 +8837,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8837,7 +8866,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8866,7 +8895,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -8895,7 +8924,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9003,7 +9032,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9032,7 +9061,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9061,7 +9090,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9090,7 +9119,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9119,7 +9148,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9148,7 +9177,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9177,7 +9206,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9315,7 +9344,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9344,7 +9373,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9373,7 +9402,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9402,7 +9431,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9431,7 +9460,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9460,7 +9489,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9489,7 +9518,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9584,7 +9613,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9613,7 +9642,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9642,7 +9671,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9671,7 +9700,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9700,7 +9729,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9729,7 +9758,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9758,7 +9787,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9869,7 +9898,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9898,7 +9927,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9927,7 +9956,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9956,7 +9985,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -9985,7 +10014,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10014,7 +10043,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10043,7 +10072,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10112,7 +10141,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10141,7 +10170,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10170,7 +10199,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10199,7 +10228,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10228,7 +10257,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10257,7 +10286,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10286,7 +10315,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10426,7 +10455,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10455,7 +10484,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10484,7 +10513,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10766,7 +10795,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10795,7 +10824,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10824,7 +10853,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10853,7 +10882,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10882,7 +10911,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -10911,7 +10940,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11092,7 +11121,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11121,7 +11150,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11150,7 +11179,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11179,7 +11208,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11208,7 +11237,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11237,7 +11266,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11519,7 +11548,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11548,7 +11577,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11577,7 +11606,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11606,7 +11635,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11635,7 +11664,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11664,7 +11693,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11693,7 +11722,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11812,7 +11841,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11841,7 +11870,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11870,7 +11899,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11899,7 +11928,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11928,7 +11957,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11957,7 +11986,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -11986,7 +12015,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12175,7 +12204,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12204,7 +12233,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12233,7 +12262,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12262,7 +12291,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12291,7 +12320,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12320,7 +12349,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12349,7 +12378,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12405,7 +12434,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12434,7 +12463,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12463,7 +12492,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12492,7 +12521,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12521,7 +12550,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12550,7 +12579,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12579,7 +12608,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12665,7 +12694,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12694,7 +12723,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12723,7 +12752,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12752,7 +12781,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12781,7 +12810,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12810,7 +12839,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12839,7 +12868,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12912,7 +12941,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12941,7 +12970,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12970,7 +12999,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -12999,7 +13028,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13028,7 +13057,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13057,7 +13086,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13086,7 +13115,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13143,7 +13172,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13172,7 +13201,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13201,7 +13230,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13230,7 +13259,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13259,7 +13288,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13288,7 +13317,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13387,7 +13416,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13416,7 +13445,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13445,7 +13474,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13474,7 +13503,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13503,7 +13532,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13532,7 +13561,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13595,7 +13624,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13624,7 +13653,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13653,7 +13682,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13682,7 +13711,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13711,7 +13740,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13740,7 +13769,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13769,7 +13798,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13828,7 +13857,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13857,7 +13886,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13886,7 +13915,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13915,7 +13944,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13944,7 +13973,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -13973,7 +14002,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14002,7 +14031,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14100,7 +14129,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14129,7 +14158,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14158,7 +14187,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14187,7 +14216,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14216,7 +14245,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14245,7 +14274,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14260,7 +14289,7 @@
       "get": {
         "tags": ["users"],
         "summary": "Read a member's profile",
-        "description": "The name and the date they joined.",
+        "description": "The name and the date they joined. An operator additionally sees whether the account is banned; nobody else does.",
         "operationId": "getUser",
         "parameters": [
           {
@@ -14281,7 +14310,8 @@
                     "id": { "type": "string", "format": "uuid" },
                     "username": { "type": "string" },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "isBlocked": { "type": "boolean" }
+                    "isBlocked": { "type": "boolean" },
+                    "isBanned": { "type": "boolean" }
                   },
                   "required": ["id", "username", "createdAt", "isBlocked"]
                 }
@@ -14309,7 +14339,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14338,7 +14368,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14367,7 +14397,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14396,7 +14426,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14425,7 +14455,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14454,7 +14484,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14483,7 +14513,518 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{userId}/ban": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Ban an account for breaking the platform rules",
+        "description": "Ends every session the account has and refuses it from then on, at sign-in and on any session that outlives the ban. Deliberately not a deletion: the name and the address stay held, so the address cannot register again. Nothing the account wrote is removed — that is a separate act. An account holding a platform role cannot be banned; revoke the role first.",
+        "operationId": "banUser",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": ["reason"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The account is banned and its sessions are ended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an operator, or the target holds a platform role and cannot be banned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account is already banned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["users"],
+        "summary": "Lift a ban",
+        "description": "Restores access. Nothing is reclaimed, because nothing was released: the name and address were held throughout. The sessions ended at the ban and do not come back.",
+        "operationId": "liftUserBan",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The ban is lifted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an operator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such account, or it is not banned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14838,7 +15379,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14867,7 +15408,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14896,7 +15437,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14925,7 +15466,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14954,7 +15495,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -14983,7 +15524,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15034,7 +15575,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15063,7 +15604,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15092,7 +15633,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15121,7 +15662,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15150,7 +15691,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15242,7 +15783,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15271,7 +15812,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15300,7 +15841,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15329,7 +15870,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15358,7 +15899,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15387,7 +15928,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15510,7 +16051,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15539,7 +16080,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15568,7 +16109,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15597,7 +16138,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15626,7 +16167,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15655,7 +16196,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15751,7 +16292,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15780,7 +16321,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15809,7 +16350,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15838,7 +16379,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15867,7 +16408,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15896,7 +16437,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15925,7 +16466,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -15954,7 +16495,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16078,7 +16619,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16107,7 +16648,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16136,7 +16677,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16165,7 +16706,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16194,7 +16735,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16223,7 +16764,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16252,7 +16793,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16333,7 +16874,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16362,7 +16903,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16391,7 +16932,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16420,7 +16961,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16449,7 +16990,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16478,7 +17019,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16537,7 +17078,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16566,7 +17107,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16595,7 +17136,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16624,7 +17165,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16653,7 +17194,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16682,7 +17223,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16790,7 +17331,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16819,7 +17360,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16848,7 +17389,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16877,7 +17418,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16906,7 +17447,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16935,7 +17476,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -16964,7 +17505,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17055,7 +17596,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17084,7 +17625,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17113,7 +17654,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17142,7 +17683,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17171,7 +17712,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17200,7 +17741,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17229,7 +17770,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17288,7 +17829,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17317,7 +17858,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17346,7 +17887,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17375,7 +17916,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17404,7 +17945,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17433,7 +17974,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17762,7 +18303,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17791,7 +18332,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17820,7 +18361,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17849,7 +18390,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17878,7 +18419,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
@@ -17907,7 +18448,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": ["invalid_credentials"]
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]

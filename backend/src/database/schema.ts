@@ -104,6 +104,9 @@ export interface StoryIdeaReader {
 }
 
 export interface User {
+  bannedAt: string | null;
+  bannedBy: string | null;
+  banReason: string | null;
   createdAt: Generated<string>;
   emailAddress: string;
   emailAddressVerifiedAt: string | null;
@@ -363,6 +366,9 @@ export const USER_SCHEMA = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
   emailAddressVerifiedAt: z.iso.datetime({ offset: true }).nullable(),
   platformRole: PLATFORM_ROLE_SCHEMA.nullable(),
+  bannedAt: z.iso.datetime({ offset: true }).nullable(),
+  bannedBy: z.uuidv7().nullable(),
+  banReason: z.string().nullable(),
 });
 
 export const USER_BLOCK_SCHEMA = z.object({

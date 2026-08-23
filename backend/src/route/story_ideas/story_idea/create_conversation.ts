@@ -5,6 +5,7 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
+import { BanService } from "@/src/service/ban_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { conversationTitle } from "@/src/util/conversation_title.ts";
 import {
@@ -67,7 +68,12 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "This idea is closed" }, STATUS_CODE.Forbidden);
     }
     // Neutral on purpose: it does not say who blocked whom, only that this cannot happen.
-    if (await BlockService.isBlockedBetween(user.id, idea.createdBy)) {
+    // Same neutral refusal for a banned author: a conversation with an account that cannot
+    // sign in is one nobody can answer.
+    if (
+      await BlockService.isBlockedBetween(user.id, idea.createdBy) ||
+      await BanService.isBanned(idea.createdBy)
+    ) {
       return c.json(
         { error: "Contact is not possible" },
         STATUS_CODE.Forbidden,

@@ -6,6 +6,7 @@ import { UserService } from "@/src/service/user_service.ts";
 import { sessionProvenance } from "@/src/util/session_provenance.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import {
+  ACCOUNT_BANNED_BODY,
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
@@ -38,6 +39,11 @@ export default new OpenAPIHono().openapi(
         description: "User logged in",
         content: jsonContent(OK_RESPONSE),
       },
+      [STATUS_CODE.Forbidden]: {
+        description:
+          "The credentials were right and the account is banned. Answered only after the password verifies, so it discloses nothing to somebody guessing.",
+        content: jsonContent(ERROR_RESPONSE),
+      },
       [STATUS_CODE.Unauthorized]: {
         description: "Invalid credentials",
         content: jsonContent(ERROR_RESPONSE),
@@ -53,6 +59,13 @@ export default new OpenAPIHono().openapi(
 
     if (user === undefined) {
       return c.json(INVALID_CREDENTIALS_BODY, STATUS_CODE.Unauthorized);
+    }
+
+    // Only after the password has verified, which is what makes saying so safe: whoever sees
+    // this could already prove the account exists. A wrong password still gets the answer
+    // above, so the address is never confirmed to somebody guessing.
+    if (user.bannedAt !== null) {
+      return c.json(ACCOUNT_BANNED_BODY, STATUS_CODE.Forbidden);
     }
 
     const sessionToken = await UserService.insertSessionForUser(

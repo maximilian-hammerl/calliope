@@ -3,6 +3,7 @@ import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { BanService } from "@/src/service/ban_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
 import { userExists } from "@/src/service/user_in_writing_group_service.ts";
@@ -74,7 +75,12 @@ export default new OpenAPIHono().openapi(
     }
 
     // Neutral on purpose: it does not say who blocked whom, only that this cannot happen.
-    if (await BlockService.isBlockedBetween(user.id, userId)) {
+    // A ban refuses contact the same way, and answers the same neutral refusal: an inviter
+    // must not learn that a moderation action was taken against somebody else.
+    if (
+      await BlockService.isBlockedBetween(user.id, userId) ||
+      await BanService.isBanned(userId)
+    ) {
       return c.json(
         { error: "Contact is not possible" },
         STATUS_CODE.Forbidden,

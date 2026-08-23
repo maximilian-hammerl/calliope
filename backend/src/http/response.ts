@@ -21,8 +21,21 @@ export const INVALID_CREDENTIALS = "invalid_credentials" as const;
 
 export const INVALID_CREDENTIALS_MESSAGE = "Invalid credentials" as const;
 
+/**
+ * A third meaning for a refusal the client has to tell apart. Without it a banned member is
+ * simply refused, which reads as an ended session and signs them out with no explanation —
+ * true, and useless to them.
+ */
+export const ACCOUNT_BANNED = "account_banned" as const;
+
+/**
+ * Deliberately says nothing about why. The reason an operator recorded is a note for
+ * operators; what the member is told is this one sentence, the same for everybody.
+ */
+export const ACCOUNT_BANNED_MESSAGE = "Account banned" as const;
+
 /** Machine-readable reasons, for the few a client has to act on differently. */
-const ERROR_CODE = z.enum([INVALID_CREDENTIALS]);
+const ERROR_CODE = z.enum([INVALID_CREDENTIALS, ACCOUNT_BANNED]);
 
 /**
  * The single error shape for every failure the API reports. `issues` is only filled in for
@@ -50,6 +63,20 @@ export type ErrorResponse = z.infer<typeof ERROR_RESPONSE>;
 export const INVALID_CREDENTIALS_BODY = {
   error: INVALID_CREDENTIALS_MESSAGE,
   code: INVALID_CREDENTIALS,
+} as const;
+
+/**
+ * The body for a banned account, wherever it is refused: signing in, and any request carrying a
+ * session that outlived the ban. **403, not 401** — signing in got the password right, and a
+ * live session is perfectly valid, so "unauthenticated" would be false in both places and would
+ * send the member back to a sign-in page that cannot help them.
+ *
+ * A constant for the same reason as the one above: a helper returning `c.json(...)` widens the
+ * handler's return type and switches off the route's body and status checks.
+ */
+export const ACCOUNT_BANNED_BODY = {
+  error: ACCOUNT_BANNED_MESSAGE,
+  code: ACCOUNT_BANNED,
 } as const;
 
 /**
