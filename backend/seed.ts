@@ -16,7 +16,10 @@ import { writeFixtures } from "@/seed/write.ts";
 /** The one password every seeded account shares. Local only — see the guard below. */
 const PASSWORD = "calliope";
 
-const SEEDABLE: ReadonlyArray<Environment> = ["development", "testing"] as const;
+const SEEDABLE: ReadonlyArray<Environment> = [
+  "development",
+  "testing",
+] as const;
 
 function assertSeedable(): void {
   // Accounts here share one password, so an environment that keeps what people write must
