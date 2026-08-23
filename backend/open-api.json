@@ -17442,8 +17442,8 @@
     "/api/search": {
       "query": {
         "tags": ["search"],
-        "summary": "Search groups, threads and members at once",
-        "description": "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Posts are not searched yet.",
+        "summary": "Search groups, threads, story ideas and members at once",
+        "description": "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Story ideas include the reader's own and closed ones, which the interface labels. Posts, chat messages and next steps are not searched.",
         "operationId": "search",
         "requestBody": {
           "required": true,
@@ -17627,6 +17627,91 @@
                       },
                       "required": ["totalResults", "results"]
                     },
+                    "storyIdeas": {
+                      "type": "object",
+                      "properties": {
+                        "totalResults": { "type": "integer", "minimum": 0 },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "title": { "type": "string" },
+                              "subtitle": { "type": ["string", "null"] },
+                              "teaser": { "type": "string" },
+                              "synopsis": { "type": "string" },
+                              "genres": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "subgenres": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "tropes": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "contentWarnings": {
+                                "type": "array",
+                                "items": { "type": "string" }
+                              },
+                              "tense": { "type": ["string", "null"] },
+                              "perspective": { "type": ["string", "null"] },
+                              "language": {
+                                "type": "string",
+                                "enum": ["english", "german"]
+                              },
+                              "lookingFor": { "type": ["string", "null"] },
+                              "partySize": {
+                                "type": ["string", "null"],
+                                "enum": ["group", "one_on_one", null]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": ["closed", "open"]
+                              },
+                              "createdBy": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "createdByUsername": { "type": "string" },
+                              "readerState": {
+                                "type": ["string", "null"],
+                                "enum": ["marked", "read", null]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title",
+                              "subtitle",
+                              "teaser",
+                              "synopsis",
+                              "genres",
+                              "subgenres",
+                              "tropes",
+                              "contentWarnings",
+                              "tense",
+                              "perspective",
+                              "language",
+                              "lookingFor",
+                              "partySize",
+                              "status",
+                              "createdBy",
+                              "createdAt",
+                              "createdByUsername",
+                              "readerState"
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["totalResults", "results"]
+                    },
                     "users": {
                       "type": "object",
                       "properties": {
@@ -17646,7 +17731,7 @@
                       "required": ["totalResults", "results"]
                     }
                   },
-                  "required": ["groups", "threads", "users"]
+                  "required": ["groups", "threads", "storyIdeas", "users"]
                 }
               }
             }

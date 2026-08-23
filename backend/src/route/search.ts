@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
   FOUND_THREAD_RESPONSE,
   GROUP_RESPONSE,
+  STORY_IDEA_RESPONSE,
   USER_RESPONSE,
 } from "@/src/http/response_schema.ts";
 import { SEARCH_TAG } from "@/src/open_api_specification.ts";
@@ -9,6 +10,7 @@ import { STATUS_CODE } from "@std/http/status";
 import requireSession from "@/src/middleware/require_session.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { listResponseSchema } from "@/src/list/list_endpoint.ts";
@@ -36,6 +38,7 @@ const SEARCH_BODY = z.object({
 const SEARCH_RESPONSE = z.object({
   groups: listResponseSchema(GROUP_RESPONSE),
   threads: listResponseSchema(FOUND_THREAD_RESPONSE),
+  storyIdeas: listResponseSchema(STORY_IDEA_RESPONSE),
   users: listResponseSchema(USER_RESPONSE),
 });
 
@@ -46,9 +49,9 @@ export default new OpenAPIHono().openapi(
     method: "query",
     path: "/",
     tags: [SEARCH_TAG],
-    summary: "Search groups, threads and members at once",
+    summary: "Search groups, threads, story ideas and members at once",
     description:
-      "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Posts are not searched yet.",
+      "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Story ideas include the reader's own and closed ones, which the interface labels. Posts, chat messages and next steps are not searched.",
     operationId: "search",
     middleware: requireSession,
     // Required, so that an absent body cannot skip validation and lose the defaults.
@@ -78,7 +81,7 @@ export default new OpenAPIHono().openapi(
     // Read before the searches, so the member filter has it and the others are unaffected.
     const blockedIds = await BlockService.selectBlockedIds(user.id);
 
-    const [groups, threads, users] = await Promise.all([
+    const [groups, threads, storyIdeas, users] = await Promise.all([
       WritingGroupService.listVisibleWritingGroups(user, {
         search,
         limit,
@@ -96,6 +99,21 @@ export default new OpenAPIHono().openapi(
         sortAttribute: "writingThread.lastActivityAt",
         sortOrder: "desc",
       }),
+      StoryIdeaService.listStoryIdeas({
+        search,
+        limit,
+        offset: 0,
+        readerId: user.id,
+        // Newest first, as the board sorts: an idea has no activity to be recent by.
+        sortAttribute: "storyIdea.createdAt",
+        sortOrder: "desc",
+        // Unlike the board, neither the reader's own ideas nor closed ones are held back —
+        // somebody searching for an idea wants the one they mean, and both carry a label.
+        status: "any",
+        // Read or marked is the reader's own bookkeeping, not a reason to hide a match.
+        readerState: "any",
+        hiddenAuthorIds: blockedIds,
+      }),
       UserService.listUsers({
         search,
         limit,
@@ -106,6 +124,6 @@ export default new OpenAPIHono().openapi(
       }),
     ]);
 
-    return c.json({ groups, threads, users }, STATUS_CODE.OK);
+    return c.json({ groups, threads, storyIdeas, users }, STATUS_CODE.OK);
   },
 );

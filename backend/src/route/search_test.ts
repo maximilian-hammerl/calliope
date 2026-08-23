@@ -7,6 +7,7 @@ import {
   registerUser,
   request,
 } from "@/src/test/support.ts";
+import { createIdea, patchIdea } from "@/src/test/story_ideas.ts";
 
 const owner = "search-owner";
 const outsider = "search-outsider";
@@ -17,7 +18,12 @@ Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([owner, outsider]));
 
 type Section = { results: Array<Record<string, string>>; totalResults: number };
-type SearchResults = { groups: Section; threads: Section; users: Section };
+type SearchResults = {
+  groups: Section;
+  threads: Section;
+  storyIdeas: Section;
+  users: Section;
+};
 
 async function search(cookie: string, body: unknown): Promise<SearchResults> {
   const response = await request("QUERY", "/api/search", cookie, body);
@@ -44,6 +50,7 @@ function totals(found: SearchResults) {
   return {
     groups: found.groups.totalResults,
     threads: found.threads.totalResults,
+    storyIdeas: found.storyIdeas.totalResults,
     users: found.users.totalResults,
   };
 }
@@ -130,6 +137,35 @@ Deno.test("QUERY /api/search reports how many more there are", async () => {
   // Five shown however many were found: the interface says „N weitere" from the difference.
   assertEquals(found.groups.results.length, 5);
   assertEquals(found.groups.totalResults, before.groups + 7);
+});
+
+Deno.test("QUERY /api/search finds story ideas, the reader's own included", async () => {
+  const cookie = await registerUser(owner);
+  const before = totals(await search(cookie, { search: TERM }));
+
+  await createIdea(cookie, { title: `${TERM} Idee` });
+
+  const found = await search(cookie, { search: TERM });
+
+  // The board deliberately never shows an author their own ideas; searching for one you wrote
+  // has to find it, or the field cannot answer "where is that idea I had".
+  assertEquals(found.storyIdeas.totalResults, before.storyIdeas + 1);
+  assert(titles(found.storyIdeas).includes(`${TERM} Idee`));
+});
+
+Deno.test("QUERY /api/search finds a closed story idea", async () => {
+  const cookie = await registerUser(owner);
+  const before = totals(await search(cookie, { search: TERM }));
+
+  const idea = await (await createIdea(cookie, { title: `${TERM} Zu` })).json();
+  await patchIdea(cookie, idea.id, { status: "closed" });
+
+  const found = await search(cookie, { search: TERM });
+
+  // Closed on the board means "stops cluttering it", not "cannot be found": the page is still
+  // readable, and the interface labels the result.
+  assertEquals(found.storyIdeas.totalResults, before.storyIdeas + 1);
+  assert(titles(found.storyIdeas).includes(`${TERM} Zu`));
 });
 
 Deno.test("QUERY /api/search finds members by name", async () => {

@@ -3,8 +3,15 @@ import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import type { Search200 } from '@/api/models'
 import { pluralize } from '@/lib/format/formatText'
+import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
 import { cn } from '@/lib/utils'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import { useGetCurrentUser } from '@/api/auth/auth'
+
+const { data: userData } = useGetCurrentUser()
+const currentUserId = computed<string | undefined>(() =>
+  userData.value?.status === 200 ? userData.value.data.id : undefined,
+)
 
 const props = defineProps<{
   results: Search200 | undefined
@@ -22,6 +29,7 @@ const sections = computed(() =>
   [
     { key: 'groups', heading: 'Gruppen', section: props.results?.groups },
     { key: 'threads', heading: 'Threads', section: props.results?.threads },
+    { key: 'storyIdeas', heading: 'Storyideen', section: props.results?.storyIdeas },
     { key: 'users', heading: 'Mitglieder', section: props.results?.users },
   ].filter((entry) => (entry.section?.results.length ?? 0) > 0),
 )
@@ -93,6 +101,23 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             <span class="truncate text-[13px] text-ink-2">{{ thread.title }}</span>
             <!-- A result that can come from anywhere says where it came from. -->
             <span class="truncate text-[11.5px] text-ink-6">{{ thread.writingGroupTitle }}</span>
+          </RouterLink>
+        </template>
+
+        <template v-else-if="entry.key === 'storyIdeas'">
+          <RouterLink
+            v-for="idea in results?.storyIdeas.results"
+            :key="idea.id"
+            :to="{ name: 'storyIdea', params: { ideaId: idea.id } }"
+            class="flex min-h-[38px] items-center gap-2 px-[14px] py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
+          >
+            <span class="truncate">{{ idea.title }}</span>
+            <!-- Unlike the board, this list holds closed ideas and the reader's own, so both
+                 say so. Open and somebody else's are the resting state and say nothing. -->
+            <CalliopeBadge v-if="idea.status !== 'open'">
+              {{ IDEA_STATUS_LABELS[idea.status] }}
+            </CalliopeBadge>
+            <CalliopeBadge v-if="idea.createdBy === currentUserId">Von dir</CalliopeBadge>
           </RouterLink>
         </template>
 
