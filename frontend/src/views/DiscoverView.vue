@@ -90,7 +90,7 @@ const creating = ref<boolean>(false)
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <div class="mb-2 flex flex-wrap items-baseline gap-3">
-          <h1 class="text-[25px] leading-[1.2] text-ink-1">Gruppen entdecken</h1>
+          <h1 class="text-h1 text-ink-1">Gruppen entdecken</h1>
           <div class="ml-auto">
             <Button
               variant="outline"
@@ -103,7 +103,7 @@ const creating = ref<boolean>(false)
             </Button>
           </div>
         </div>
-        <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
           Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
           sobald dich jemand einlädt.
         </p>
@@ -125,10 +125,7 @@ const creating = ref<boolean>(false)
           </FieldDescription>
         </Field>
 
-        <p
-          v-if="hasLoaded && groups.length === 0"
-          class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
-        >
+        <p v-if="hasLoaded && groups.length === 0" class="max-w-[46ch] text-body text-ink-4">
           <template v-if="settled === ''">
             Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
           </template>

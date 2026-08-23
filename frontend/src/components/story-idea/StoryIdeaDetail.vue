@@ -48,7 +48,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
 
 <template>
   <div class="flex flex-wrap items-baseline gap-3">
-    <component :is="heading" class="text-[25px] leading-[1.2] text-ink-1">
+    <component :is="heading" class="text-h1 text-ink-1">
       {{ idea.title }}
       <CalliopeBadge class="ml-3">{{ IDEA_STATUS_LABELS[idea.status] }}</CalliopeBadge>
     </component>
@@ -58,12 +58,12 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
     </div>
   </div>
 
-  <p v-if="idea.status === 'closed'" class="mt-3 max-w-[60ch] text-[13px] leading-[1.6] text-ink-5">
+  <p v-if="idea.status === 'closed'" class="mt-3 max-w-[60ch] text-row text-ink-5">
     Diese Storyidee ist geschlossen. Sie bleibt lesbar, aber
     {{ own ? 'niemand kann sie mehr beantworten' : 'du kannst sie nicht mehr beantworten' }}.
   </p>
 
-  <p v-if="idea.subtitle" class="mt-[4px] max-w-[60ch] text-[13.5px] leading-[1.5] text-ink-3">
+  <p v-if="idea.subtitle" class="mt-[4px] max-w-[60ch] text-note text-ink-3">
     {{ idea.subtitle }}
   </p>
 
@@ -93,7 +93,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
   <div class="mt-8 grid max-w-[60ch] grid-cols-1 gap-8 border-t border-line-3 pt-6 sm:grid-cols-2">
     <div v-if="seeking.length > 0">
       <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">Die Suche</div>
-      <div class="text-[12.5px] leading-[1.95] text-ink-4">
+      <div class="text-rail text-ink-4">
         <div v-for="entry in seeking" :key="entry.label">
           <span class="text-ink-6">{{ entry.label }}:&nbsp;</span>
           <span>{{ entry.value }}</span>
@@ -103,7 +103,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
 
     <div v-if="story.length > 0">
       <div class="mb-[10px] text-[12.5px] font-semibold text-ink-4">Die Geschichte</div>
-      <div class="text-[12.5px] leading-[1.95] text-ink-4">
+      <div class="text-rail text-ink-4">
         <div v-for="entry in story" :key="entry.label">
           <span class="text-ink-6">{{ entry.label }}:&nbsp;</span>
           <span>{{ entry.value }}</span>

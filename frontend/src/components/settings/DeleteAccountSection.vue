@@ -18,7 +18,7 @@ const requested = ref<boolean>(false)
 
 <template>
   <template v-if="requested">
-    <p class="text-[13px] leading-[1.6] text-ink-5">
+    <p class="text-row text-ink-5">
       Wir haben einen Link an <span class="text-ink-2">{{ currentAddress }}</span> geschickt. Erst
       wenn du ihn öffnest, wird dein Konto gelöscht. Bis dahin bleibt alles, wie es ist.
     </p>

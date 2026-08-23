@@ -155,7 +155,7 @@ async function signOut() {
             <NavigationMenuLink v-else as-child class="flex-row">
               <RouterLink
                 :to="{ name: destination.name }"
-                class="flex h-full items-center gap-1.5 px-1 text-[13.5px] leading-[1.2] whitespace-nowrap text-ink-5 hover:text-ink-1"
+                class="flex h-full items-center gap-1.5 px-1 text-nav whitespace-nowrap text-ink-5 hover:text-ink-1"
               >
                 <component :is="destination.icon" :size="16" :stroke-width="1.5" />
                 {{ destination.label }}

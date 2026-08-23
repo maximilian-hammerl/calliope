@@ -19,7 +19,7 @@ const props = defineProps<{ class?: HTMLAttributes['class'] }>()
 </script>
 
 <template>
-  <p :class="cn('text-[13.5px] leading-[1.6] text-ink-5', props.class)">
+  <p :class="cn('text-note text-ink-5', props.class)">
     Die E-Mail kann ein paar Minuten brauchen. Kommt nichts an, sieh auch im Spam-Ordner nach. Links
     gelten nur kurze Zeit.
   </p>

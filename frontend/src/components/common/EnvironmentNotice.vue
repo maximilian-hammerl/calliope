@@ -31,7 +31,7 @@ const warnAboutPasswords = computed<boolean>(
     role="status"
   >
     <p class="text-[13px] leading-[1.5] text-ink-2">{{ notice.sentence }}</p>
-    <p v-if="warnAboutPasswords" class="mt-1 text-[12.5px] leading-[1.5] text-ink-4">
+    <p v-if="warnAboutPasswords" class="mt-1 text-control text-ink-4">
       {{ PASSWORD_REUSE_WARNING }}
     </p>
   </div>

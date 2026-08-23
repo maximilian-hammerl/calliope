@@ -90,10 +90,7 @@ async function allowContactAgain() {
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <div
-          v-if="isPending"
-          class="flex items-center gap-2 text-[13.5px] leading-[1.5] text-ink-5"
-        >
+        <div v-if="isPending" class="flex items-center gap-2 text-note text-ink-5">
           <Spinner data-icon="inline-start" />
           Einen Moment.
         </div>
@@ -105,7 +102,7 @@ async function allowContactAgain() {
             <UserAvatar :username="member.username" size="lg" />
 
             <div class="flex min-w-0 flex-col gap-1">
-              <h1 class="truncate text-[25px] leading-[1.2]">{{ member.username }}</h1>
+              <h1 class="truncate text-h1">{{ member.username }}</h1>
               <p class="text-[12px] text-ink-6">
                 Dabei seit {{ formatJoinedDate(member.createdAt) }}
               </p>
@@ -162,30 +159,27 @@ async function allowContactAgain() {
             Dieses Konto ist gesperrt.
           </p>
 
-          <p
-            v-if="member.isBlocked"
-            class="mt-4 border-l-2 border-line-4 pl-3 text-[13px] leading-[1.6] text-ink-5"
-          >
+          <p v-if="member.isBlocked" class="mt-4 border-l-2 border-line-4 pl-3 text-row text-ink-5">
             Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
           </p>
 
           <!-- Said outright rather than left as blank space: an empty page reads as an error. -->
-          <p class="mt-8 border-t border-line-3 pt-6 text-[13.5px] leading-[1.6] text-ink-5">
+          <p class="mt-8 border-t border-line-3 pt-6 text-note text-ink-5">
             {{ member.username }} hat noch nichts über sich erzählt. Steckbriefe für Mitglieder —
             Genres, woran jemand schreibt, was jemand sucht — kommen noch.
           </p>
         </template>
 
         <template v-else-if="notFound">
-          <h1 class="text-[25px] leading-[1.2]">Kein Mitglied gefunden</h1>
-          <p class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
+          <h1 class="text-h1">Kein Mitglied gefunden</h1>
+          <p class="mt-5 text-note text-ink-5">
             Dieses Konto gibt es nicht mehr, oder der Link stimmt nicht.
           </p>
         </template>
 
         <template v-else>
-          <h1 class="text-[25px] leading-[1.2]">Das hat nicht geklappt</h1>
-          <p class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
+          <h1 class="text-h1">Das hat nicht geklappt</h1>
+          <p class="mt-5 text-note text-ink-5">
             Wir konnten dieses Mitglied gerade nicht laden. Versuche es später noch einmal.
           </p>
         </template>

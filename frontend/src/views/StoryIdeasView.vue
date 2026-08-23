@@ -114,7 +114,7 @@ const creating = ref<boolean>(false)
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
         <div class="mb-2 flex flex-wrap items-baseline gap-3">
-          <h1 class="text-[25px] leading-[1.2] text-ink-1">
+          <h1 class="text-h1 text-ink-1">
             {{ props.mine ? 'Meine Storyideen' : 'Storyideen entdecken' }}
           </h1>
 
@@ -131,7 +131,7 @@ const creating = ref<boolean>(false)
           </div>
         </div>
 
-        <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
           <template v-if="props.mine">
             Deine Ideen, auch die abgeschlossenen. Ändere ihren Status, wenn sich etwas tut.
           </template>
@@ -170,10 +170,7 @@ const creating = ref<boolean>(false)
           </FieldDescription>
         </Field>
 
-        <p
-          v-if="hasLoaded && ideas.length === 0"
-          class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
-        >
+        <p v-if="hasLoaded && ideas.length === 0" class="max-w-[46ch] text-body text-ink-4">
           <template v-if="settled !== ''">Keine Idee passt zu „{{ settled }}“.</template>
           <template v-else-if="props.mine"> Du hast noch keine Storyidee vorgestellt. </template>
           <!-- Without these the filters' own emptiness would read as an empty board. The

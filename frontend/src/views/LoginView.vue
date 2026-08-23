@@ -152,8 +152,8 @@ async function submit() {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">Anmelden</h1>
-        <p class="text-[13.5px] leading-[1.5] text-ink-5">Melde dich an, um weiterzuschreiben.</p>
+        <h1 class="text-h1">Anmelden</h1>
+        <p class="text-note text-ink-5">Melde dich an, um weiterzuschreiben.</p>
       </div>
 
       <EnvironmentNotice class="mt-6" about-passwords />

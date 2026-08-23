@@ -58,7 +58,7 @@ async function onDecline() {
   <!-- Raised paper on the canvas with a hairline, no fill and no shadow: the same way a panel
        card is set apart, since this is a state of the page rather than a warning about it. -->
   <section class="border border-line-3 bg-paper-0 px-4 py-[14px]">
-    <p class="max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-2">{{ sentence }}</p>
+    <p class="max-w-[60ch] text-body text-ink-2">{{ sentence }}</p>
 
     <Alert v-if="error" variant="destructive" role="alert" class="mt-3">
       <AlertDescription>{{ error }}</AlertDescription>

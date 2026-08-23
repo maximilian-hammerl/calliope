@@ -66,7 +66,7 @@ async function change(next: GetGroup200StoryStatus) {
       </SelectContent>
     </Select>
 
-    <p v-else class="text-[12.5px] leading-[1.95] font-medium text-ink-4">
+    <p v-else class="text-rail font-medium text-ink-4">
       {{ STORY_STATUS.find((entry) => entry.value === status)?.label }}
     </p>
 

@@ -90,8 +90,8 @@ function startOver() {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">Passwort vergessen</h1>
-        <p v-if="!requested" class="text-[13.5px] leading-[1.5] text-ink-5">
+        <h1 class="text-h1">Passwort vergessen</h1>
+        <p v-if="!requested" class="text-note text-ink-5">
           Wir schicken dir einen Link, mit dem du ein neues Passwort vergeben kannst.
         </p>
       </div>
@@ -102,7 +102,7 @@ function startOver() {
         registered.
       -->
       <template v-if="requested">
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Wenn es ein Konto mit diesen Angaben gibt, ist ein Link an die hinterlegte
             E-Mail-Adresse unterwegs. Sieh in deinem Postfach nach.

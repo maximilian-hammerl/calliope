@@ -22,7 +22,7 @@ const visibilityLabel = computed<string>(() =>
       <!-- A group title is 25px Newsreader regular, never bold. The badge sits inside the
            heading rather than beside it: as a flex sibling it dropped to a third line
            whenever the title wrapped to two, with room to spare on the second. -->
-      <h1 class="text-[25px] leading-[1.2] text-ink-1">
+      <h1 class="text-h1 text-ink-1">
         <RouterLink
           v-if="groupId !== undefined"
           :to="{ name: 'group', params: { groupId } }"
@@ -35,7 +35,7 @@ const visibilityLabel = computed<string>(() =>
       </h1>
     </div>
 
-    <p v-if="subtitle" class="reading-column mt-[4px] text-[13.5px] leading-[1.5] text-ink-3">
+    <p v-if="subtitle" class="reading-column mt-[4px] text-note text-ink-3">
       {{ subtitle }}
     </p>
   </div>

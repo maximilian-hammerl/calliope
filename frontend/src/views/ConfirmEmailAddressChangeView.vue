@@ -46,19 +46,16 @@ const HEADINGS = {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">{{ HEADINGS[status] }}</h1>
+        <h1 class="text-h1">{{ HEADINGS[status] }}</h1>
       </div>
 
-      <div
-        v-if="status === 'confirming'"
-        class="mt-6 flex items-center gap-2 text-[13.5px] leading-[1.5] text-ink-5"
-      >
+      <div v-if="status === 'confirming'" class="mt-6 flex items-center gap-2 text-note text-ink-5">
         <Spinner data-icon="inline-start" />
         Einen Moment, wir prüfen deinen Link.
       </div>
 
       <template v-else-if="status === 'done'">
-        <p class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
+        <p class="mt-5 text-note text-ink-5">
           Dein Konto gehört jetzt zu deiner neuen E-Mail-Adresse. Du wurdest auf allen Geräten
           abgemeldet und meldest dich ab jetzt damit an.
         </p>
@@ -69,7 +66,7 @@ const HEADINGS = {
       </template>
 
       <template v-else-if="status === 'in_use'">
-        <p class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
+        <p class="mt-5 text-note text-ink-5">
           Diese E-Mail-Adresse gehört inzwischen zu einem anderen Konto. Deine bisherige Adresse
           bleibt unverändert — fordere die Änderung in den Einstellungen noch einmal an, mit einer
           anderen Adresse.
@@ -81,7 +78,7 @@ const HEADINGS = {
       </template>
 
       <template v-else>
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit, nur ein
             einziges Mal, und ein Abbruch macht sie ungültig.

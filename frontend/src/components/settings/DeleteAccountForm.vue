@@ -76,7 +76,7 @@ async function submit() {
 
 <template>
   <form ref="formElement" class="flex flex-col gap-5" novalidate @submit.prevent="submit">
-    <div class="flex flex-col gap-3 text-[13px] leading-[1.6] text-ink-5">
+    <div class="flex flex-col gap-3 text-row text-ink-5">
       <slot />
     </div>
 

@@ -68,8 +68,8 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <h1 class="mb-2 text-[25px] leading-[1.2] text-ink-1">Mitglieder</h1>
-        <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+        <h1 class="mb-2 text-h1 text-ink-1">Mitglieder</h1>
+        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
           Wer hier schreibt. Öffne ein Profil, um zu sehen, ob jemand zu dir passen könnte.
         </p>
 
@@ -88,10 +88,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
           <FieldDescription> Sucht in Namen, ab {{ LIMIT.minLength }} Zeichen. </FieldDescription>
         </Field>
 
-        <p
-          v-if="hasLoaded && members.length === 0"
-          class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
-        >
+        <p v-if="hasLoaded && members.length === 0" class="max-w-[46ch] text-body text-ink-4">
           <template v-if="settled === ''">Hier ist noch niemand.</template>
           <template v-else>Kein Mitglied gefunden, das zu „{{ settled }}“ passt.</template>
         </p>

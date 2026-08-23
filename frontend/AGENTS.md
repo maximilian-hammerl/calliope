@@ -72,6 +72,11 @@ A source of truth that lags the code stops being one, and the next person follow
 version. Its `readme.md` is the file to edit; the prototype components under `components/` and
 `ui_kits/` are throwaway mockups and need not follow.
 
+**Type comes from the named scale**, never a literal: `text-body`, `text-note`, `text-nav`,
+`text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2`, declared in `theme.css`. Each sets
+the size *and* the line height, which is the point — writing the pair by hand is how 13.5px ended
+up with four different line heights. Spacing has no such scale yet and is still written out.
+
 Icons are **Lucide at `stroke-width="1.5"`** — Lucide's default of 2 is heavier than anything
 else on the page. They accompany a label rather than replacing it.
 

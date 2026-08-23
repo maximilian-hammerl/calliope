@@ -51,11 +51,11 @@ const HEADINGS = {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">{{ HEADINGS[status] }}</h1>
+        <h1 class="text-h1">{{ HEADINGS[status] }}</h1>
       </div>
 
       <template v-if="status === 'asking'">
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Danach ist dein Konto weg, und wir können es nicht zurückholen. Was du in Gruppen
             geschrieben hast, bleibt dort stehen, aber ohne deinen Namen.
@@ -70,14 +70,14 @@ const HEADINGS = {
 
       <div
         v-else-if="status === 'deleting'"
-        class="mt-6 flex items-center gap-2 text-[13.5px] leading-[1.5] text-ink-5"
+        class="mt-6 flex items-center gap-2 text-note text-ink-5"
       >
         <Spinner data-icon="inline-start" />
         Einen Moment.
       </div>
 
       <template v-else-if="status === 'done'">
-        <p class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
+        <p class="mt-5 text-note text-ink-5">
           Dein Konto ist gelöscht, und du bist überall abgemeldet. Wenn du irgendwann zurückwillst,
           kannst du dich jederzeit neu anmelden.
         </p>
@@ -88,7 +88,7 @@ const HEADINGS = {
       </template>
 
       <template v-else>
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
             einziges Mal.

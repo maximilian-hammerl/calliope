@@ -177,15 +177,15 @@ async function remove() {
         </StoryIdeaDetail>
 
         <template v-else-if="notFound">
-          <h1 class="text-[25px] leading-[1.2]">Keine Idee gefunden</h1>
-          <p class="mt-5 max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
+          <h1 class="text-h1">Keine Idee gefunden</h1>
+          <p class="mt-5 max-w-[46ch] text-body text-ink-4">
             Diese Idee gibt es nicht mehr, oder der Link stimmt nicht.
           </p>
         </template>
 
         <template v-else>
-          <h1 class="text-[25px] leading-[1.2]">Das hat nicht geklappt</h1>
-          <p class="mt-5 max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
+          <h1 class="text-h1">Das hat nicht geklappt</h1>
+          <p class="mt-5 max-w-[46ch] text-body text-ink-4">
             Wir konnten diese Idee gerade nicht laden. Versuche es später noch einmal.
           </p>
         </template>

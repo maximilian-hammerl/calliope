@@ -55,7 +55,7 @@ async function confirm() {
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-4">
+      <div class="flex flex-col gap-3 text-note text-ink-4">
         <Alert v-if="error" variant="destructive" role="alert">
           <AlertDescription>{{ error }}</AlertDescription>
         </Alert>

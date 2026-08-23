@@ -32,7 +32,7 @@ const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
         :key="option.value"
         type="button"
         :aria-pressed="model === option.value"
-        class="flex min-h-11 flex-none items-end pb-[11px] text-[13.5px] leading-[1.2] whitespace-nowrap md:min-h-0"
+        class="flex min-h-11 flex-none items-end pb-[11px] text-nav whitespace-nowrap md:min-h-0"
         :class="
           model === option.value
             ? 'border-b-2 border-oak font-medium text-ink-1'

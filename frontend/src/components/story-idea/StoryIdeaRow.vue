@@ -28,7 +28,7 @@ const story = computed<string>(() =>
 
 <template>
   <div class="py-[26px]">
-    <div class="text-[20px] leading-[1.3]">
+    <div class="text-h2">
       <RouterLink
         :to="{ name: 'storyIdea', params: { ideaId: idea.id } }"
         class="text-ink-1 underline-offset-[6px] hover:underline"
@@ -47,11 +47,11 @@ const story = computed<string>(() =>
       </CalliopeBadge>
     </div>
 
-    <p v-if="idea.subtitle" class="mt-[4px] max-w-[60ch] text-[13.5px] leading-[1.5] text-ink-3">
+    <p v-if="idea.subtitle" class="mt-[4px] max-w-[60ch] text-note text-ink-3">
       {{ idea.subtitle }}
     </p>
 
-    <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
+    <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-row text-ink-4">
       {{ idea.teaser }}
     </p>
 
@@ -68,7 +68,7 @@ const story = computed<string>(() =>
       <span class="text-ink-6">Inhaltswarnungen:&nbsp;</span>{{ idea.contentWarnings.join(', ') }}
     </div>
 
-    <div class="mt-[6px] text-[12.5px] leading-[1.95] text-ink-5">
+    <div class="mt-[6px] text-rail text-ink-5">
       von
       <RouterLink
         :to="{ name: 'member', params: { userId: idea.createdBy } }"

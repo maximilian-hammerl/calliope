@@ -124,16 +124,16 @@ async function submit() {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">
+        <h1 class="text-h1">
           {{ status === 'done' ? 'Passwort geändert' : 'Neues Passwort' }}
         </h1>
-        <p v-if="status === 'form'" class="text-[13.5px] leading-[1.5] text-ink-5">
+        <p v-if="status === 'form'" class="text-note text-ink-5">
           Vergib ein neues Passwort für dein Konto.
         </p>
       </div>
 
       <template v-if="status === 'done'">
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Dein neues Passwort ist gespeichert. Du wurdest auf allen Geräten abgemeldet und kannst
             dich jetzt neu anmelden.
@@ -146,7 +146,7 @@ async function submit() {
       </template>
 
       <template v-else-if="status === 'expired'">
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
             einziges Mal.

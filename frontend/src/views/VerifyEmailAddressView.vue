@@ -56,21 +56,18 @@ async function continueToApp() {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">
+        <h1 class="text-h1">
           {{ status === 'done' ? 'E-Mail-Adresse bestätigt' : 'E-Mail-Adresse bestätigen' }}
         </h1>
       </div>
 
-      <div
-        v-if="status === 'verifying'"
-        class="mt-6 flex items-center gap-2 text-[13.5px] leading-[1.5] text-ink-5"
-      >
+      <div v-if="status === 'verifying'" class="mt-6 flex items-center gap-2 text-note text-ink-5">
         <Spinner data-icon="inline-start" />
         Einen Moment, wir prüfen deinen Link.
       </div>
 
       <template v-else-if="status === 'done'">
-        <p class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">
+        <p class="mt-5 text-note text-ink-5">
           Deine E-Mail-Adresse ist bestätigt. Du kannst jetzt loslegen.
         </p>
 
@@ -78,7 +75,7 @@ async function continueToApp() {
       </template>
 
       <template v-else>
-        <div class="mt-5 flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-5">
+        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
           <p>
             Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
             einziges Mal.

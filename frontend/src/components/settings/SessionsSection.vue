@@ -65,7 +65,7 @@ async function endEverywhereElse() {
 
 <template>
   <div class="flex flex-col gap-4">
-    <p class="text-[13.5px] leading-[1.6] text-ink-4">
+    <p class="text-note text-ink-4">
       Wo du angemeldet bist. Eine Anmeldung endet nach 24 Stunden ohne Nutzung von selbst.
     </p>
 
@@ -79,7 +79,7 @@ async function endEverywhereElse() {
     </div>
 
     <template v-else>
-      <p class="text-[13px] leading-[1.6] text-ink-5">
+      <p class="text-row text-ink-5">
         <template v-if="others === 0">Du bist nur hier angemeldet.</template>
         <template v-else>
           Neben dieser gibt es {{ pluralize(others, 'weitere Anmeldung', 'weitere Anmeldungen') }}.

@@ -81,7 +81,7 @@ watch(
 
       <div
         ref="scroller"
-        class="scroll-x-hidden flex min-w-0 flex-1 items-baseline gap-5 text-[13.5px] leading-[1.2] whitespace-nowrap motion-safe:scroll-smooth"
+        class="scroll-x-hidden flex min-w-0 flex-1 items-baseline gap-5 text-nav whitespace-nowrap motion-safe:scroll-smooth"
         @scroll="measure"
       >
         <RouterLink
@@ -112,7 +112,7 @@ watch(
       <button
         v-if="mayWrite"
         type="button"
-        class="flex min-h-11 flex-none items-end gap-[4px] border-b-2 border-transparent pb-[11px] text-[13.5px] leading-[1.2] whitespace-nowrap text-ink-5 hover:text-oak-deep md:min-h-0 md:items-center"
+        class="flex min-h-11 flex-none items-end gap-[4px] border-b-2 border-transparent pb-[11px] text-nav whitespace-nowrap text-ink-5 hover:text-oak-deep md:min-h-0 md:items-center"
         aria-label="Thread anlegen"
         @click="$emit('create')"
       >

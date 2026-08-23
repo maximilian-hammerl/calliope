@@ -128,8 +128,8 @@ onScopeDispose(clearTimer)
     <CalliopeLogo :size="34" wordmark />
 
     <div>
-      <h1 class="text-[25px] leading-[1.2] text-ink-1">Keine Verbindung</h1>
-      <p class="mt-2 max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
+      <h1 class="text-h1 text-ink-1">Keine Verbindung</h1>
+      <p class="mt-2 max-w-[46ch] text-body text-ink-4">
         Der Server antwortet gerade nicht. Wahrscheinlich läuft ein Update — das dauert meist nur
         ein paar Sekunden.
       </p>

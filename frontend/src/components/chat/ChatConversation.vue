@@ -215,10 +215,7 @@ async function submit() {
         </Button>
       </div>
 
-      <p
-        v-if="hasLoaded && messages.length === 0"
-        class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
-      >
+      <p v-if="hasLoaded && messages.length === 0" class="max-w-[46ch] text-body text-ink-4">
         Noch nichts geschrieben. Fang an.
       </p>
 
@@ -237,7 +234,7 @@ async function submit() {
             </span>
           </div>
           <!-- Plain text, deliberately: a chat is remarks, not prose. -->
-          <p class="text-[13.5px] leading-[1.6] whitespace-pre-wrap text-ink-2">
+          <p class="text-note whitespace-pre-wrap text-ink-2">
             {{ message.text }}
           </p>
 

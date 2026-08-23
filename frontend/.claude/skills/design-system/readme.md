@@ -392,6 +392,17 @@ competing with the prose and the actions would have made it worse. "Melden" is t
 that works; the rest are specified below and unbuilt. A chat message carries the same row at the
 same weight, closer under it because the messages themselves sit closer together.
 
+**The type scale is named, and the name carries the line height.** `text-body`, `text-note`,
+`text-nav`, `text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2` — declared once in
+`theme.css`, so a size and its leading cannot drift apart. They had: 13.5px was written by hand
+in 149 places and had picked up four different line heights for two different jobs. `body` is
+page prose in `--ink-4`, `note` the quieter second voice in `--ink-5`, and `nav` the single-line
+interface text; those two are additions to `tokens/typography.css`, which was written for the
+mockups and has no small-prose size because the mockups had none.
+
+A size still written as `text-[…]` is either a genuine one-off or something the scale has not
+caught up with — check before adding another.
+
 **A control that does nothing does not ship.** The post actions were disabled buttons under
 every post for a while, and a reader learns from that to stop looking rather than to wait. The
 copy below stays specified — it is what the buttons will say when they work (#36, #37, #38) —

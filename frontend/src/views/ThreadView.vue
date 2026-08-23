@@ -277,7 +277,7 @@ async function submit() {
             @report="reportingThread = true"
           />
 
-          <p v-if="posts.length === 0" class="text-[13.5px] leading-[1.7] text-ink-4">
+          <p v-if="posts.length === 0" class="text-body text-ink-4">
             Noch keine Beiträge in „{{ thread.title }}“.
             <template v-if="mayWrite">Schreib den ersten.</template>
           </p>
@@ -336,7 +336,7 @@ async function submit() {
     </div>
 
     <div v-else-if="isError" class="reading-column px-[18px] py-5 md:px-10">
-      <p class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
+      <p class="max-w-[46ch] text-body text-ink-4">
         Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
       </p>
       <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>

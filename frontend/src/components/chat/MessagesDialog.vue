@@ -182,12 +182,12 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
             ← Alle Unterhaltungen
           </button>
 
-          <p v-if="selectedId === undefined" class="text-[13.5px] leading-[1.7] text-ink-4">
+          <p v-if="selectedId === undefined" class="text-body text-ink-4">
             Wähle links eine Unterhaltung.
           </p>
 
           <template v-else-if="selected">
-            <div v-if="selectedIsInvitation" class="text-[13.5px] leading-[1.7] text-ink-4">
+            <div v-if="selectedIsInvitation" class="text-body text-ink-4">
               <p>Du bist zu „{{ selected.title }}“ eingeladen.</p>
               <Button size="sm" class="mt-4" @click="accept(selected.id)">Beitreten</Button>
             </div>

@@ -158,11 +158,11 @@ defineExpose({ reset })
     <!-- Results are rows rather than a native menu: the set changes with every keystroke, and
          a menu would close over the field being typed into. -->
     <div class="mt-3 min-h-[44px]">
-      <p v-if="!termIsLongEnough" class="text-[12.5px] leading-[1.5] text-ink-5">
+      <p v-if="!termIsLongEnough" class="text-control text-ink-5">
         Gib mindestens {{ LIMIT.minLength }} Zeichen ein. Ein Teil des Namens genügt.
       </p>
-      <p v-else-if="isFetching" class="text-[12.5px] leading-[1.5] text-ink-5">Wird gesucht …</p>
-      <p v-else-if="candidates.length === 0" class="text-[12.5px] leading-[1.5] text-ink-5">
+      <p v-else-if="isFetching" class="text-control text-ink-5">Wird gesucht …</p>
+      <p v-else-if="candidates.length === 0" class="text-control text-ink-5">
         Niemand gefunden, der oder die nicht schon dabei ist.
       </p>
 

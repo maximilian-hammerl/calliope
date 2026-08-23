@@ -110,10 +110,7 @@ watch(notifications, async (loaded) => {
         <DialogDescription>Was in deinen Gruppen passiert ist.</DialogDescription>
       </DialogHeader>
 
-      <p
-        v-if="hasLoaded && notifications.length === 0"
-        class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4"
-      >
+      <p v-if="hasLoaded && notifications.length === 0" class="max-w-[46ch] text-body text-ink-4">
         Im Moment ist es still.
       </p>
 
@@ -144,7 +141,7 @@ watch(notifications, async (loaded) => {
               aria-hidden="true"
             />
             <span
-              class="min-w-0 flex-1 text-[13.5px] leading-[1.6]"
+              class="min-w-0 flex-1 text-note"
               :class="notification.readAt === null ? 'font-medium text-ink-1' : 'text-ink-4'"
             >
               {{ notificationText(notification) }}

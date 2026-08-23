@@ -74,7 +74,7 @@ async function confirm() {
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-4">
+      <div class="flex flex-col gap-3 text-note text-ink-4">
         <Alert v-if="error" variant="destructive" role="alert">
           <AlertDescription>{{ error }}</AlertDescription>
         </Alert>
@@ -94,7 +94,7 @@ async function confirm() {
               :maxlength="TEXT_LIMIT.banUser.reason.maxLength"
               autocomplete="off"
             />
-            <p class="text-[12.5px] leading-[1.5] text-ink-5">
+            <p class="text-control text-ink-5">
               Nur für andere Moderatorinnen und Moderatoren. Das gesperrte Konto sieht ihn nicht.
             </p>
           </Field>

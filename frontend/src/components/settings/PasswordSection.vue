@@ -107,7 +107,7 @@ async function submitPassword() {
 </script>
 
 <template>
-  <p v-if="passwordChanged" class="mb-4 text-[13px] leading-[1.6] text-ink-5">
+  <p v-if="passwordChanged" class="mb-4 text-row text-ink-5">
     Dein neues Passwort ist gespeichert. Auf allen anderen Geräten wurdest du abgemeldet.
   </p>
 

@@ -100,8 +100,8 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
   <AppLayout>
     <div class="flex-1 overflow-auto px-[18px] py-5 pb-8 md:px-10">
       <div class="max-w-[760px]">
-        <h1 class="text-[25px] leading-[1.2]">Moderation</h1>
-        <p class="mt-2 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+        <h1 class="text-h1">Moderation</h1>
+        <p class="mt-2 max-w-[60ch] text-body text-ink-4">
           Was Mitglieder gemeldet haben, das Älteste zuerst.
         </p>
 
@@ -141,9 +141,7 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
 
         <p v-if="isPending" class="mt-6 text-[13.5px] text-ink-5">Einen Moment.</p>
 
-        <p v-else-if="reports.length === 0" class="mt-6 text-[13.5px] leading-[1.7] text-ink-4">
-          Nichts zu tun.
-        </p>
+        <p v-else-if="reports.length === 0" class="mt-6 text-body text-ink-4">Nichts zu tun.</p>
 
         <template v-else>
           <p class="mt-6 text-[12.5px] text-ink-5">
@@ -171,11 +169,11 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
 
               <!-- What the thing said when it was reported, which is what makes a report about
                    deleted content still judgeable. -->
-              <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-[13px] leading-[1.6] text-ink-3">
+              <p class="mt-[6px] line-clamp-3 max-w-[60ch] text-row text-ink-3">
                 {{ report.targetExcerpt }}
               </p>
 
-              <p class="mt-[6px] max-w-[60ch] text-[13px] leading-[1.6] text-ink-4">
+              <p class="mt-[6px] max-w-[60ch] text-row text-ink-4">
                 {{ report.reason }}
               </p>
 

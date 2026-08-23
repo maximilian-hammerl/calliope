@@ -16,7 +16,7 @@ const ROLE_LABELS: Record<string, string> = {
      `sticky` covered the block above it, and its own opaque paper hid it completely. -->
 <template>
   <div>
-    <div class="text-[12.5px] leading-[1.95] text-ink-4">
+    <div class="text-rail text-ink-4">
       <div v-for="membership in memberships" :key="membership.userId">
         {{ membership.username }}
         <span class="text-ink-6">

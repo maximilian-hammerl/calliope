@@ -37,7 +37,7 @@ const meta = computed<string>(() =>
     <!-- Full width on a phone so the actions wrap under it: sharing the row squeezed
          "1 Beitrag · zuletzt vor 2 Minuten" onto three lines at 375px. -->
     <div class="w-full min-w-0 md:w-auto md:flex-1">
-      <h2 class="mb-[5px] text-[20px] leading-[1.3] text-ink-1">{{ title }}</h2>
+      <h2 class="mb-[5px] text-h2 text-ink-1">{{ title }}</h2>
       <div v-if="meta" class="text-[12.5px] leading-[1.3] text-ink-5">{{ meta }}</div>
     </div>
 

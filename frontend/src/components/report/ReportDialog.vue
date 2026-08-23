@@ -131,7 +131,7 @@ async function confirm() {
               rows="4"
               :maxlength="TEXT_LIMIT.createReport.reason.maxLength"
             />
-            <p class="text-[12.5px] leading-[1.5] text-ink-5">
+            <p class="text-control text-ink-5">
               Die gemeldete Person erfährt nicht, wer sie gemeldet hat.
             </p>
           </Field>

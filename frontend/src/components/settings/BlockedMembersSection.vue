@@ -40,7 +40,7 @@ async function allowContactAgain(userId: string) {
 
 <template>
   <div class="flex flex-col gap-4">
-    <p class="text-[13.5px] leading-[1.6] text-ink-4">
+    <p class="text-note text-ink-4">
       Wen du blockiert hast. Ihr könnt euch nicht einladen; gemeinsame Gruppen und Unterhaltungen
       bleiben, bis eine Seite sie verlässt.
     </p>
@@ -54,9 +54,7 @@ async function allowContactAgain(userId: string) {
       Einen Moment.
     </div>
 
-    <p v-else-if="blocks.length === 0" class="text-[13px] leading-[1.6] text-ink-5">
-      Du hast niemanden blockiert.
-    </p>
+    <p v-else-if="blocks.length === 0" class="text-row text-ink-5">Du hast niemanden blockiert.</p>
 
     <ul v-else class="flex flex-col">
       <li

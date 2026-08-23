@@ -132,8 +132,8 @@ async function signOut() {
     <div class="w-full max-w-[380px]">
       <div class="flex flex-col gap-2">
         <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-[25px] leading-[1.2]">Bestätige deine E-Mail-Adresse</h1>
-        <p class="text-[13.5px] leading-[1.5] text-ink-5">
+        <h1 class="text-h1">Bestätige deine E-Mail-Adresse</h1>
+        <p class="text-note text-ink-5">
           Wir haben dir einen Link an <span class="text-ink-2">{{ emailAddress }}</span> geschickt.
           Öffne ihn, dann geht es los.
         </p>
@@ -148,7 +148,7 @@ async function signOut() {
 
       <!-- No note here: the one under the heading is a standing statement about mailed links
            and already covers this. -->
-      <p v-else-if="resent" class="mt-5 text-[13.5px] leading-[1.6] text-ink-5">Ist unterwegs.</p>
+      <p v-else-if="resent" class="mt-5 text-note text-ink-5">Ist unterwegs.</p>
 
       <template v-if="mode === 'choices'">
         <div class="mt-7 flex flex-col gap-3">
@@ -219,7 +219,7 @@ async function signOut() {
 
       <div v-else class="mt-7">
         <template v-if="deletionRequested">
-          <p class="text-[13.5px] leading-[1.6] text-ink-5">
+          <p class="text-note text-ink-5">
             Wir haben einen Link an <span class="text-ink-2">{{ emailAddress }}</span> geschickt.
             Erst wenn du ihn öffnest, wird dein Konto gelöscht. Kommst du an diese Adresse nicht
             heran, ändere sie zuerst.

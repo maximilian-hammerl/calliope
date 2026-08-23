@@ -41,7 +41,7 @@ defineEmits<{ confirmed: [] }>()
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex flex-col gap-3 text-[13.5px] leading-[1.6] text-ink-4">
+      <div class="flex flex-col gap-3 text-note text-ink-4">
         <p v-if="props.deletesTheGroup">
           Alle Threads, Beiträge und Nächsten Schritte gehen mit ihr. Das lässt sich nicht
           zurückholen.

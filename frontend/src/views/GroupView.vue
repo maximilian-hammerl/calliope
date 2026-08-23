@@ -148,16 +148,12 @@ async function askIntoGroup() {
           />
 
           <div v-if="group.synopsis" class="flex max-w-[60ch] flex-col gap-[0.9em]">
-            <p
-              v-for="(paragraph, index) in synopsis"
-              :key="index"
-              class="text-[13.5px] leading-[1.7] text-ink-4"
-            >
+            <p v-for="(paragraph, index) in synopsis" :key="index" class="text-body text-ink-4">
               {{ paragraph }}
             </p>
           </div>
 
-          <p v-if="threads.length === 0" class="mt-7 text-[13.5px] leading-[1.7] text-ink-4">
+          <p v-if="threads.length === 0" class="mt-7 text-body text-ink-4">
             Noch keine Threads in dieser Gruppe.
             <template v-if="mayWrite">Leg den ersten an.</template>
           </p>
@@ -214,7 +210,7 @@ async function askIntoGroup() {
     </div>
 
     <div v-else-if="isError" class="reading-column px-[18px] py-5 md:px-10">
-      <p class="max-w-[46ch] text-[13.5px] leading-[1.7] text-ink-4">
+      <p class="max-w-[46ch] text-body text-ink-4">
         Diese Gruppe gibt es nicht, oder sie ist privat und du gehörst nicht dazu.
       </p>
       <Button variant="outline" size="sm" class="mt-5" @click="goToGroups">

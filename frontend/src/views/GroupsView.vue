@@ -128,7 +128,7 @@ const creating = ref<boolean>(false)
         <!-- Both actions sit on the heading line. Discovery used to be a text link below the
              list, where testers missed it and a member with many groups never reached it. -->
         <div class="mb-2 flex flex-wrap items-baseline gap-3">
-          <h1 class="text-[25px] leading-[1.2] text-ink-1">Meine Gruppen</h1>
+          <h1 class="text-h1 text-ink-1">Meine Gruppen</h1>
 
           <div class="ml-auto">
             <Button
@@ -143,7 +143,7 @@ const creating = ref<boolean>(false)
           </div>
         </div>
 
-        <p class="mb-6 max-w-[60ch] text-[13.5px] leading-[1.7] text-ink-4">
+        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
           Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
         </p>
 
@@ -165,7 +165,7 @@ const creating = ref<boolean>(false)
         </Field>
 
         <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
-          <p class="text-[13.5px] leading-[1.7] text-ink-4">
+          <p class="text-body text-ink-4">
             <template v-if="settled !== ''">
               Keine deiner Gruppen passt zu „{{ settled }}“.
             </template>
