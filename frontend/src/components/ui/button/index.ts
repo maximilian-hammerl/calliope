@@ -3,8 +3,23 @@ import { cva } from 'class-variance-authority'
 
 export { default as Button } from './Button.vue'
 
-// Icons are 14px, not Lucide-in-shadcn's 16: "size them to the text they sit beside", and this
-// level's text is 14px. `xs` sets its own below.
+/**
+ * Which level an act gets is decided by its subject, never by the page it was built on. One
+ * question settles it: is the subject the whole screen, or one row of it?
+ *
+ *   default      Solid — completes a form or a dialog; one per screen
+ *   outline      Quiet — an action on the object the screen is about, or on a section
+ *   ghost        Plain — an action on one row of a list
+ *   destructive  destroys writing, including other people's, and repeating it cannot undo that
+ *
+ * A dismiss beside a Solid act takes Quiet. Icons follow the act — `Plus` adds, `Pencil` edits,
+ * `Trash2` deletes for good — while „Entfernen" and a footer's confirm take none.
+ *
+ * Reasons, exceptions and the copy rules: `.claude/skills/design-system/readme.md`, "Buttons".
+ *
+ * Icons are 14px, not Lucide-in-shadcn's 16: "size them to the text they sit beside", and this
+ * level's text is 14px. `xs` sets its own below.
+ */
 export const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-3.5 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
