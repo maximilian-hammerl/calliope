@@ -548,8 +548,17 @@ paragraph, and colouring them red would spend the one signal the product has. An
 trigger — the weight goes on the confirmation, where the consequences are stated. Reserve it, or
 it stops meaning anything.
 
-**States.** Hover darkens by one ink or paper step (solid → `--accent-deeper`; quiet →
-`--paper-4`; plain → `--ink-4`); never a colour change and never a lift. Press is a further step
+**States.** Hover darkens by one step (solid → `--accent-deeper`; quiet → `--paper-4`; plain →
+`--accent-deep`); never a lift, and never a *hue* change — `--accent-deep` is one degree of hue
+from `--ink-5` and thirteen points of lightness below it, so on plain text it reads as darkening
+rather than as a second colour. Plain hover changes the text and nothing else: giving it a
+`--surface-quiet` background would turn a Plain control into a Quiet one under the pointer, same
+fill and same text, only the border missing.
+
+**A control with a selected state darkens to `--ink-1` instead.** Tabs, the filter strips and the
+top bar's destinations all mark selection with an accent underline, so a hover that moved toward
+accent would read as selected. They are the one exception to the line above, and the reason is
+the selection rather than the control: anything that can look chosen keeps its hover in ink. Press is a further step
 down with no scale transform. Focus is a 2px `--focus-ring` outline at 2px offset — visible and
 never removed; the spec requires keyboard operability throughout. Active navigation is a 2px
 underline in `--accent`, and active rail rows are `--paper-0` with a 1px `--border-default` — never

@@ -31,7 +31,12 @@ export const buttonVariants = cva(
         // Quiet, the second level: paper-3 fill, line-5 border, accent-deep at 500. Byte for
         // byte what „＋ Schritt" hand-rolls in the rail — the two must not drift apart again.
         outline: 'border border-line-5 bg-paper-3 font-medium text-oak-deep hover:bg-paper-4',
-        ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+        // Plain: the text darkens and nothing else. shadcn's own ghost adds a background on
+        // hover, and `--accent` here is `--surface-quiet` — the Quiet fill — so that turned a
+        // Plain button into a Quiet one under the pointer, border aside. The text colour it
+        // already used, `--accent-foreground`, is `--accent-deep`, which is what the fourteen
+        // hand-rolled plain controls hover to.
+        ghost: 'hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
