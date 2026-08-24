@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight, PanelRight } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, useSlots } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import type { GetCurrentUser200 } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
@@ -38,17 +38,39 @@ const hasRail = computed<boolean>(() => props.activeGroupId !== undefined)
  */
 const railFits = useMediaQuery('(min-width: 1024px)')
 const sheetOpen = ref<boolean>(false)
+
+const slots = useSlots()
+const leftRailFits = computed<boolean>(
+  () => hasRail.value && slots.infoRail !== undefined && railFits.value,
+)
+const rightRailFits = computed<boolean>(
+  () => hasRail.value && slots.rail !== undefined && railFits.value,
+)
+
+/** What a rail gave up by collapsing to its strip, or nothing while it is still open. */
+function slack(collapsed: boolean, rail: string): string {
+  return collapsed ? `calc(var(${rail}) - var(--container-rail-collapsed))` : '0px'
+}
+
+/**
+ * Handed to `.reading-column`, which takes it back so the page body does not slide sideways.
+ * Zero wherever a rail is not a rail: below `lg`, and on the pages without any.
+ */
+const railSlack = computed<Record<string, string>>(() => ({
+  '--rail-slack-left': slack(leftRailFits.value && !leftOpen.value, '--container-rail-left'),
+  '--rail-slack-right': slack(rightRailFits.value && !rightOpen.value, '--container-rail-right'),
+}))
 </script>
 
 <template>
   <div class="flex h-svh flex-col bg-paper-1">
     <TopBar v-if="user" :user="user" />
 
-    <div class="flex min-h-0 flex-1 items-stretch">
-      <template v-if="hasRail && $slots.infoRail && railFits">
+    <div class="flex min-h-0 flex-1 items-stretch" :style="railSlack">
+      <template v-if="leftRailFits">
         <aside
           v-if="leftOpen"
-          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-r border-line-3 bg-paper-2 px-3.5 py-4 lg:flex"
+          class="w-rail-left flex-none flex-col gap-5 overflow-y-auto border-r border-line-3 bg-paper-2 px-3.5 py-4 lg:flex"
         >
           <div class="flex items-center">
             <RailLabel>Über die Gruppe</RailLabel>
@@ -85,7 +107,7 @@ const sheetOpen = ref<boolean>(false)
       <template v-if="hasRail && $slots.rail">
         <aside
           v-if="railFits && rightOpen"
-          class="w-[262px] flex-none flex-col gap-5 overflow-y-auto border-l border-line-3 bg-paper-2 px-3.5 py-4 lg:flex"
+          class="w-rail-right flex-none flex-col gap-5 overflow-y-auto border-l border-line-3 bg-paper-2 px-3.5 py-4 lg:flex"
         >
           <div class="flex items-center">
             <RailLabel>Gruppen-Kontext</RailLabel>

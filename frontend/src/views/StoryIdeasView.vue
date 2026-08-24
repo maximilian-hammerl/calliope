@@ -112,101 +112,99 @@ const creating = ref<boolean>(false)
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <div class="mb-2 flex flex-wrap items-baseline gap-3">
-          <h1 class="text-h1 text-ink-1">
-            {{ props.mine ? 'Meine Storyideen' : 'Storyideen entdecken' }}
-          </h1>
+      <div class="mb-2 flex flex-wrap items-baseline gap-3">
+        <h1 class="text-h1 text-ink-1">
+          {{ props.mine ? 'Meine Storyideen' : 'Storyideen entdecken' }}
+        </h1>
 
-          <div class="ml-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Storyidee vorstellen"
-              @click="creating = true"
-            >
-              <Plus :stroke-width="1.5" />
-              Storyidee
-            </Button>
-          </div>
+        <div class="ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Storyidee vorstellen"
+            @click="creating = true"
+          >
+            <Plus :stroke-width="1.5" />
+            Storyidee
+          </Button>
         </div>
-
-        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
-          <template v-if="props.mine">
-            Deine Ideen, auch die abgeschlossenen. Ändere ihren Status, wenn sich etwas tut.
-          </template>
-          <template v-else>
-            Ideen, die Mitschreibende suchen. Gefällt dir eine, sieh dir das Profil dazu an.
-          </template>
-        </p>
-
-        <!-- One grid for both strips, so the labels share a column and the strips align. -->
-        <div
-          v-if="hasLoaded && !mine"
-          class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
-        >
-          <FilterStrip
-            v-model="readerState"
-            label="Gelesen oder nicht"
-            :options="READER_STATE_FILTERS"
-          />
-          <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
-        </div>
-
-        <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
-          <FieldLabel for="ideas-search">Suche</FieldLabel>
-          <Input
-            id="ideas-search"
-            v-model="term"
-            name="search"
-            type="search"
-            placeholder="z. B. Leuchtturm"
-            :maxlength="LIMIT.maxLength"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <FieldDescription>
-            Sucht in Titeln und Ideen, ab {{ LIMIT.minLength }} Zeichen.
-          </FieldDescription>
-        </Field>
-
-        <p v-if="hasLoaded && ideas.length === 0" class="max-w-[46ch] text-body text-ink-4">
-          <template v-if="settled !== ''">Keine Idee passt zu „{{ settled }}“.</template>
-          <template v-else-if="props.mine"> Du hast noch keine Storyidee vorgestellt. </template>
-          <!-- Without these the filters' own emptiness would read as an empty board. The
-               default view avoids claiming why it is empty: nothing unread and nothing at all
-               look the same from here, and only one of them would be true. -->
-          <template v-else-if="readerState === 'unread' && status === 'open'">
-            Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ und „Gemerkt“ findest du, was du
-            schon kennst.
-          </template>
-          <template v-else-if="readerState !== 'any' || status !== 'any'">
-            Keine Idee passt zu diesen Filtern.
-          </template>
-          <template v-else>
-            Im Moment sucht keine Idee nach Mitschreibenden. Stell deine vor.
-          </template>
-        </p>
-
-        <div v-else-if="hasLoaded">
-          <StoryIdeaRow
-            v-for="(idea, index) in ideas"
-            :key="idea.id"
-            :idea="idea"
-            :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-          />
-        </div>
-
-        <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
-        </div>
-
-        <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Ideen werden geladen …</p>
-
-        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-          Die Ideen lassen sich gerade nicht laden. Versuche es später noch einmal.
-        </p>
       </div>
+
+      <p class="mb-6 max-w-[60ch] text-body text-ink-4">
+        <template v-if="props.mine">
+          Deine Ideen, auch die abgeschlossenen. Ändere ihren Status, wenn sich etwas tut.
+        </template>
+        <template v-else>
+          Ideen, die Mitschreibende suchen. Gefällt dir eine, sieh dir das Profil dazu an.
+        </template>
+      </p>
+
+      <!-- One grid for both strips, so the labels share a column and the strips align. -->
+      <div
+        v-if="hasLoaded && !mine"
+        class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
+      >
+        <FilterStrip
+          v-model="readerState"
+          label="Gelesen oder nicht"
+          :options="READER_STATE_FILTERS"
+        />
+        <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
+      </div>
+
+      <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
+        <FieldLabel for="ideas-search">Suche</FieldLabel>
+        <Input
+          id="ideas-search"
+          v-model="term"
+          name="search"
+          type="search"
+          placeholder="z. B. Leuchtturm"
+          :maxlength="LIMIT.maxLength"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <FieldDescription>
+          Sucht in Titeln und Ideen, ab {{ LIMIT.minLength }} Zeichen.
+        </FieldDescription>
+      </Field>
+
+      <p v-if="hasLoaded && ideas.length === 0" class="max-w-[46ch] text-body text-ink-4">
+        <template v-if="settled !== ''">Keine Idee passt zu „{{ settled }}“.</template>
+        <template v-else-if="props.mine"> Du hast noch keine Storyidee vorgestellt. </template>
+        <!-- Without these the filters' own emptiness would read as an empty board. The
+             default view avoids claiming why it is empty: nothing unread and nothing at all
+             look the same from here, and only one of them would be true. -->
+        <template v-else-if="readerState === 'unread' && status === 'open'">
+          Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ und „Gemerkt“ findest du, was du schon
+          kennst.
+        </template>
+        <template v-else-if="readerState !== 'any' || status !== 'any'">
+          Keine Idee passt zu diesen Filtern.
+        </template>
+        <template v-else>
+          Im Moment sucht keine Idee nach Mitschreibenden. Stell deine vor.
+        </template>
+      </p>
+
+      <div v-else-if="hasLoaded">
+        <StoryIdeaRow
+          v-for="(idea, index) in ideas"
+          :key="idea.id"
+          :idea="idea"
+          :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
+        />
+      </div>
+
+      <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+      </div>
+
+      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Ideen werden geladen …</p>
+
+      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+        Die Ideen lassen sich gerade nicht laden. Versuche es später noch einmal.
+      </p>
     </div>
   </AppLayout>
 

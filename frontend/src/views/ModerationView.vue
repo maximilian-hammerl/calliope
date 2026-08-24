@@ -99,130 +99,128 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <h1 class="text-h1">Moderation</h1>
-        <p class="mt-2 max-w-[60ch] text-body text-ink-4">
-          Was Mitglieder gemeldet haben, das Älteste zuerst.
+      <h1 class="text-h1">Moderation</h1>
+      <p class="mt-2 max-w-[60ch] text-body text-ink-4">
+        Was Mitglieder gemeldet haben, das Älteste zuerst.
+      </p>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <Select :model-value="status" @update:model-value="(value) => (status = value as Status)">
+          <SelectTrigger class="w-[160px] text-[12.5px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">
+              {{ label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          :model-value="category"
+          @update:model-value="(value) => (category = value as Category | 'all')"
+        >
+          <SelectTrigger class="w-[220px] text-[12.5px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Gründe</SelectItem>
+            <SelectItem
+              v-for="(label, value) in REPORT_CATEGORY_LABELS"
+              :key="value"
+              :value="value"
+            >
+              {{ label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <p v-if="error" class="mt-4 text-[12.5px] text-destructive" role="alert">{{ error }}</p>
+
+      <p v-if="isPending" class="mt-6 text-[13.5px] text-ink-5">Einen Moment.</p>
+
+      <p v-else-if="reports.length === 0" class="mt-6 text-body text-ink-4">Nichts zu tun.</p>
+
+      <template v-else>
+        <p class="mt-6 text-[12.5px] text-ink-5">
+          {{ pluralize(total, 'Meldung', 'Meldungen') }}
         </p>
 
-        <div class="mt-6 flex flex-wrap items-center gap-3">
-          <Select :model-value="status" @update:model-value="(value) => (status = value as Status)">
-            <SelectTrigger class="w-[160px] text-[12.5px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">
-                {{ label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            :model-value="category"
-            @update:model-value="(value) => (category = value as Category | 'all')"
+        <ul class="mt-2 flex flex-col">
+          <li
+            v-for="report in reports"
+            :key="report.id"
+            class="border-b border-line-2 py-[18px] last:border-b-0"
           >
-            <SelectTrigger class="w-[220px] text-[12.5px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Gründe</SelectItem>
-              <SelectItem
-                v-for="(label, value) in REPORT_CATEGORY_LABELS"
-                :key="value"
-                :value="value"
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span class="text-[13.5px] text-ink-2">
+                {{ TARGET_LABELS[report.targetType] }}
+              </span>
+              <CalliopeBadge>{{ REPORT_CATEGORY_LABELS[report.category] }}</CalliopeBadge>
+              <!-- Only when it is gone: still being there is the ordinary case and says
+                   nothing worth a mark. -->
+              <CalliopeBadge v-if="!report.targetExists">Gelöscht</CalliopeBadge>
+              <CalliopeBadge v-if="report.status !== 'open'">
+                {{ STATUS_LABELS[report.status] }}
+              </CalliopeBadge>
+            </div>
+
+            <!-- Quoted, in the reading serif behind a rule: it is the writing under review,
+                 and an operator must never read it as the reporter's words. -->
+            <div class="mt-2 max-w-[60ch] border-l border-line-4 pl-3">
+              <p class="line-clamp-3 font-serif text-row text-ink-2">
+                {{ report.targetExcerpt }}
+              </p>
+              <p class="mt-1 text-control text-ink-5">
+                <template v-if="report.authorUsername">
+                  von
+                  <RouterLink
+                    :to="{ name: 'member', params: { userId: report.authorId } }"
+                    class="underline-offset-[6px] hover:underline"
+                  >
+                    {{ report.authorUsername }}
+                  </RouterLink>
+                </template>
+                <template v-else>von einem gelöschten Konto</template>
+              </p>
+            </div>
+
+            <!-- Named where it is said, rather than pooled in a line below both texts. -->
+            <p class="mt-2.5 max-w-[60ch] text-row text-ink-4">
+              <span class="text-ink-5">
+                {{ report.reporterUsername ?? 'Ein gelöschtes Konto' }} meldet:
+              </span>
+              {{ report.reason }}
+            </p>
+
+            <p class="mt-2 text-control text-ink-5">
+              {{ formatActivityTime(report.createdAt) }}
+            </p>
+
+            <div v-if="report.status === 'open'" class="mt-2.5 flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="isClosing && closingId === report.id"
+                @click="closeReport(report.id, 'resolved')"
               >
-                {{ label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+                Erledigt
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                :disabled="isClosing && closingId === report.id"
+                @click="closeReport(report.id, 'dismissed')"
+              >
+                Verwerfen
+              </Button>
+            </div>
+          </li>
+        </ul>
 
-        <p v-if="error" class="mt-4 text-[12.5px] text-destructive" role="alert">{{ error }}</p>
-
-        <p v-if="isPending" class="mt-6 text-[13.5px] text-ink-5">Einen Moment.</p>
-
-        <p v-else-if="reports.length === 0" class="mt-6 text-body text-ink-4">Nichts zu tun.</p>
-
-        <template v-else>
-          <p class="mt-6 text-[12.5px] text-ink-5">
-            {{ pluralize(total, 'Meldung', 'Meldungen') }}
-          </p>
-
-          <ul class="mt-2 flex flex-col">
-            <li
-              v-for="report in reports"
-              :key="report.id"
-              class="border-b border-line-2 py-[18px] last:border-b-0"
-            >
-              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span class="text-[13.5px] text-ink-2">
-                  {{ TARGET_LABELS[report.targetType] }}
-                </span>
-                <CalliopeBadge>{{ REPORT_CATEGORY_LABELS[report.category] }}</CalliopeBadge>
-                <!-- Only when it is gone: still being there is the ordinary case and says
-                     nothing worth a mark. -->
-                <CalliopeBadge v-if="!report.targetExists">Gelöscht</CalliopeBadge>
-                <CalliopeBadge v-if="report.status !== 'open'">
-                  {{ STATUS_LABELS[report.status] }}
-                </CalliopeBadge>
-              </div>
-
-              <!-- Quoted, in the reading serif behind a rule: it is the writing under review,
-                   and an operator must never read it as the reporter's words. -->
-              <div class="mt-2 max-w-[60ch] border-l border-line-4 pl-3">
-                <p class="line-clamp-3 font-serif text-row text-ink-2">
-                  {{ report.targetExcerpt }}
-                </p>
-                <p class="mt-1 text-control text-ink-5">
-                  <template v-if="report.authorUsername">
-                    von
-                    <RouterLink
-                      :to="{ name: 'member', params: { userId: report.authorId } }"
-                      class="underline-offset-[6px] hover:underline"
-                    >
-                      {{ report.authorUsername }}
-                    </RouterLink>
-                  </template>
-                  <template v-else>von einem gelöschten Konto</template>
-                </p>
-              </div>
-
-              <!-- Named where it is said, rather than pooled in a line below both texts. -->
-              <p class="mt-2.5 max-w-[60ch] text-row text-ink-4">
-                <span class="text-ink-5">
-                  {{ report.reporterUsername ?? 'Ein gelöschtes Konto' }} meldet:
-                </span>
-                {{ report.reason }}
-              </p>
-
-              <p class="mt-2 text-control text-ink-5">
-                {{ formatActivityTime(report.createdAt) }}
-              </p>
-
-              <div v-if="report.status === 'open'" class="mt-2.5 flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  :disabled="isClosing && closingId === report.id"
-                  @click="closeReport(report.id, 'resolved')"
-                >
-                  Erledigt
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  :disabled="isClosing && closingId === report.id"
-                  @click="closeReport(report.id, 'dismissed')"
-                >
-                  Verwerfen
-                </Button>
-              </div>
-            </li>
-          </ul>
-
-          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
-        </template>
-      </div>
+        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+      </template>
     </div>
   </AppLayout>
 </template>

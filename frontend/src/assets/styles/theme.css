@@ -19,6 +19,15 @@
   --container-dialog-wide: 760px;
   --container-dialog-workspace: 960px;
 
+  /* The desktop frame, from tokens/spacing.css. In the same namespace as the dialogs above
+     because that is the one Tailwind draws `w-` and `max-w-` from, whatever the box is for.
+     The reading column is centred between the two rail widths rather than inside whatever
+     `main` happens to be, so `.reading-column` in base.css needs the rails' numbers too. */
+  --container-rail-left: 262px;
+  --container-rail-right: 262px;
+  --container-rail-collapsed: 34px;
+  --container-reading: 684px;
+
   /* The type scale, named for the job rather than the number — the same reason the widths
      above are named. `text-body` sets the size *and* the line height, so the pair cannot drift
      apart: before this there were 149 places writing `text-[13.5px] leading-[1.7]` by hand, and

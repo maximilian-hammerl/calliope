@@ -418,10 +418,14 @@ async function submit() {
         </div>
       </div>
 
+      <!-- The alert brings its own padding, which would outrank the reading column's, so the
+           column is a wrapper here rather than the alert itself. -->
       <div v-if="sendError" class="px-gutter pb-3 md:px-10">
-        <Alert variant="destructive" role="alert" class="reading-column">
-          <AlertDescription>{{ sendError }}</AlertDescription>
-        </Alert>
+        <div class="reading-column">
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>{{ sendError }}</AlertDescription>
+          </Alert>
+        </div>
       </div>
 
       <!-- Readers may read and comment, so they get no composer. -->
@@ -434,18 +438,17 @@ async function submit() {
       />
     </template>
 
-    <div
-      v-else-if="isPending"
-      class="reading-column px-gutter py-5 text-[12.5px] text-ink-5 md:px-10"
-    >
-      Thread wird geladen …
+    <div v-else-if="isPending" class="px-gutter py-5 text-[12.5px] text-ink-5 md:px-10">
+      <div class="reading-column">Thread wird geladen …</div>
     </div>
 
-    <div v-else-if="isError" class="reading-column px-gutter py-5 md:px-10">
-      <p class="max-w-[46ch] text-body text-ink-4">
-        Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
-      </p>
-      <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>
+    <div v-else-if="isError" class="px-gutter py-5 md:px-10">
+      <div class="reading-column">
+        <p class="max-w-[46ch] text-body text-ink-4">
+          Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
+        </p>
+        <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>
+      </div>
     </div>
 
     <!-- What the member does. -->
