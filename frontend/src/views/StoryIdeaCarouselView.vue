@@ -155,7 +155,7 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
                       @click="askAboutIdea(idea.id)"
                     >
                       <MessageCircle :stroke-width="1.5" />
-                      Unterhaltung beginnen
+                      Chat beginnen
                     </Button>
                   </template>
                   <template #notices>

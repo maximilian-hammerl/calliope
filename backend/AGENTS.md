@@ -452,7 +452,7 @@ deno task open-api:generate
 
 `open-api.json` is committed, and the frontend's client is generated from it, so regenerate
 that too when the shape changes. `HOST_URL` ends up in the `servers` entry, so generate with
-the same value CI uses — which is why CI copies `.env.example`.
+the same value CI uses — which is why CI copies `.example.env`.
 
 `open-api:lint` is currently disabled in CI: the document declares `3.2.0` so the `query`
 operations are legal, and Spectral only understands up to 3.1, so it silently falls back to

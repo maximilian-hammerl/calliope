@@ -41,8 +41,8 @@ async function allowContactAgain(userId: string) {
 <template>
   <div class="flex flex-col gap-4">
     <p class="text-note text-ink-4">
-      Wen du blockiert hast. Ihr könnt euch nicht einladen; gemeinsame Gruppen und Unterhaltungen
-      bleiben, bis eine Seite sie verlässt.
+      Wen du blockiert hast. Ihr könnt euch nicht einladen; gemeinsame Gruppen und Chats bleiben,
+      bis eine Seite sie verlässt.
     </p>
 
     <Alert v-if="error" variant="destructive" role="alert">

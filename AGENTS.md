@@ -63,6 +63,10 @@ change a link in that chain, regenerate the ones downstream.
   down -v` from a *copy* of the repository therefore removes your dev stack's volumes; pass `-p`
   something else. `docker-compose.yaml` takes the directory's name, so a second checkout is
   isolated for free.
-- **A second checkout needs only its ports moved**, all of them variables defaulting to the
-  single-checkout value — see `.env.example`. The Vite proxy target is the one that matters:
-  without it a second frontend quietly proxies into the first checkout's database.
+- **A second checkout needs its ports moved in two files.** `.env` holds them all, each
+  defaulting to the single-checkout value — see `.example.env`. The Vite proxy target is the one
+  that matters: without it a second frontend quietly proxies into the first checkout's database.
+  `.claude/launch.json` needs the same two ports again, because the preview tooling reads neither
+  `.env` nor a variable — a `${BACKEND_PORT}` there is used as a literal string. It is gitignored
+  for that reason, with `.claude/launch.example.json` carrying the defaults; a stale copy points
+  the preview at the *other* checkout's server, which looks like the app being broken.

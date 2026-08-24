@@ -18,7 +18,7 @@ set -euo pipefail
 	ENV_FILE="$REPOSITORY/.env"
 
 	# Only `testing` is reset when a migration calls for it, and only `testing` gets seed
-	# accounts — see the ENVIRONMENT comment in .env.deploy.example. `development` is not a
+	# accounts — see the ENVIRONMENT comment in .example.deploy.env. `development` is not a
 	# deploy target.
 	DEPLOYABLE=(testing staging production)
 	RESETTABLE=testing
@@ -73,7 +73,7 @@ set -euo pipefail
 		tail -n 1 | tr -d '"'"'" | tr -d '[:space:]')"
 
 	[ -n "$declared" ] ||
-		fail "$ENV_FILE declares no ENVIRONMENT. See .env.deploy.example."
+		fail "$ENV_FILE declares no ENVIRONMENT. See .example.deploy.env."
 
 	# The flag is a statement of intent, not a lookup — the mistake worth catching is running
 	# this against a server you did not think you were on.

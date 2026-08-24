@@ -8,6 +8,7 @@ import {
   useReadChat,
 } from '@/api/chats/chats'
 import { useChatMessages } from '@/composables/useChatMessages'
+import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import type { ListMessages200ResultsItem } from '@/api/models'
@@ -15,6 +16,7 @@ import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
 import ChatInvite from '@/components/chat/ChatInvite.vue'
+import LeaveChatDialog from '@/components/chat/LeaveChatDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -93,6 +95,29 @@ const participants = computed<string>(() =>
     )
     .join(', '),
 )
+
+const {
+  leave,
+  isBusy: isLeaving,
+  error: leaveError,
+} = useOwnChatMembership(() => props.chatGroupId)
+const askingToLeave = ref<boolean>(false)
+
+/**
+ * An invitation is a membership row too, so an unanswered one keeps the conversation alive
+ * after the last joined member walks out — the trigger only fires when no row is left.
+ */
+const leavingDeletesTheChat = computed<boolean>(() => members.value.length === 1)
+
+/** Offered only once the memberships are known, or the confirmation would guess at the above. */
+const knowsWhoIsHere = computed<boolean>(() => members.value.length > 0)
+
+async function confirmLeave() {
+  if (await leave()) {
+    // Nothing further to close: the chat leaves the list, which takes this pane with it.
+    askingToLeave.value = false
+  }
+}
 
 const text = ref<string>('')
 const sendError = ref<string | undefined>(undefined)
@@ -201,6 +226,14 @@ async function submit() {
         >
           Melden
         </button>
+        <button
+          v-if="knowsWhoIsHere"
+          type="button"
+          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          @click="askingToLeave = true"
+        >
+          Verlassen
+        </button>
       </div>
     </div>
 
@@ -276,6 +309,14 @@ async function submit() {
       </Button>
     </form>
   </div>
+
+  <LeaveChatDialog
+    v-model:open="askingToLeave"
+    :pending="isLeaving"
+    :deletes-the-chat="leavingDeletesTheChat"
+    :error="leaveError"
+    @confirmed="confirmLeave"
+  />
 
   <ReportDialog
     v-model:open="reportingChat"
