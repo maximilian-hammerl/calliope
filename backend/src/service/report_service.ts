@@ -1,6 +1,7 @@
 import { db } from "@/src/database/client.ts";
 import type {
   ReportCategory,
+  ReportOutcome,
   ReportStatus,
   ReportTargetType,
 } from "@/src/database/schema.ts";
@@ -198,14 +199,18 @@ async function insertReport(
     return "own_content";
   }
 
-  // Reporting the same thing again rewrites the reason rather than being refused: half a
-  // sentence submitted by a stray Enter is the likely way it happens, and saying it again is
-  // the member's only way to fix it.
+  // Reporting the same thing under the same category again rewrites the reason rather than being
+  // refused: half a sentence submitted by a stray Enter is the likely way it happens, and saying
+  // it again is the member's only way to fix it. Under a *different* category it is a second
+  // claim rather than a correction, so it inserts a row of its own — see the index.
   //
   // One statement, so two reports racing cannot both insert. The ON CONFLICT clause has to
-  // restate the index's own predicate because that index is partial — without it Postgres
-  // answers "no unique or exclusion constraint matching the ON CONFLICT specification". It is
-  // spelled through `eb.fn` rather than a raw `sql` template so the column names stay checked.
+  // restate the index's own predicate because that index is partial — and it has to say it the
+  // *same way*: `closed_at IS NULL` rather than a status, since the status is a generated column
+  // and a partial index cannot carry one. Any disagreement and Postgres answers "no unique or
+  // exclusion constraint matching the ON CONFLICT specification" for every report ever filed.
+  // It is spelled through `eb.fn` rather than a raw `sql` template so the column names stay
+  // checked.
   await db
     .insertInto("report")
     .values({
@@ -221,6 +226,7 @@ async function insertReport(
       conflict
         .columns([
           "reporterId",
+          "category",
           "reportedWritingGroupId",
           "reportedWritingThreadId",
           "reportedWritingPostId",
@@ -229,7 +235,7 @@ async function insertReport(
           "reportedChatMessageId",
           "reportedUserId",
         ])
-        .where("status", "=", "open")
+        .where("closedAt", "is", null)
         .where("reporterId", "is not", null)
         .where((eb) =>
           eb(
@@ -246,11 +252,12 @@ async function insertReport(
             1,
           )
         )
-        // The category too: somebody correcting a half-typed reason may well have picked the
-        // wrong category in the same hurry. `target_excerpt` stays as it was first reported, so
-        // an author who edits what was reported cannot overwrite the evidence through somebody
-        // else's re-report.
-        .doUpdateSet({ category, reason })
+        // The reason alone. The category cannot be rewritten because it is part of the key — a
+        // different one is a different report — which is also what keeps this from overwriting a
+        // report an operator is already holding with something about another subject entirely.
+        // `target_excerpt` stays as it was first reported, so an author who edits what was
+        // reported cannot overwrite the evidence through somebody else's re-report.
+        .doUpdateSet({ reason })
     )
     .execute();
 
@@ -273,7 +280,15 @@ export type Report = {
   reason: string;
   status: ReportStatus;
   createdAt: string;
+  // The lifecycle, as the two moments it consists of plus what was decided. `status` is derived
+  // from the timestamps by the database, so it cannot disagree with them.
+  inProgressAt: string | null;
   closedAt: string | null;
+  closingOutcome: ReportOutcome | null;
+  closingNote: string | null;
+  // Whoever is dealing with it, which on a closed report is whoever closed it. Null for a report
+  // nobody has taken, and also for one whose operator has since deleted their account.
+  operatorUsername: string | null;
   reporterUsername: string | null;
   authorId: string | null;
   authorUsername: string | null;
@@ -284,6 +299,7 @@ export type ReportFilters = {
   status?: ReportStatus;
   category?: ReportCategory;
   targetType?: ReportTargetType;
+  closingOutcome?: ReportOutcome;
 };
 
 function listReports(
@@ -302,8 +318,18 @@ function listReports(
         "report.reason",
         "report.status",
         "report.createdAt",
+        "report.inProgressAt",
         "report.closedAt",
+        "report.closingOutcome",
+        "report.closingNote",
         "user.username as reporterUsername",
+        // The operator's name, by subselect for the reason the author's below is one: an aliased
+        // join widens the builder's type past what `listResultsWithCount` accepts.
+        eb
+          .selectFrom("user as operator")
+          .select("operator.username")
+          .whereRef("operator.id", "=", "report.operatorId")
+          .as("operatorUsername"),
         // Who to act on, which survives the reported thing being deleted. A subselect rather
         // than a second join to `user`: an aliased join widens the builder's type past what
         // `listResultsWithCount` accepts, and one row by primary key costs nothing.
@@ -331,35 +357,92 @@ function listReports(
         builder.where("report.category", "=", query.category!))
       .$if(query.targetType !== undefined, (builder) =>
         // deno-lint-ignore no-non-null-assertion -- as above
-        builder.where("report.targetType", "=", query.targetType!)),
+        builder.where("report.targetType", "=", query.targetType!))
+      .$if(query.closingOutcome !== undefined, (builder) =>
+        // deno-lint-ignore no-non-null-assertion -- as above
+        builder.where("report.closingOutcome", "=", query.closingOutcome!)),
     query,
   );
 }
 
 /**
- * Closing a report records who did it and when, which is the only account of what was done —
- * nothing else in the product keeps one yet.
+ * Where an operator is moving a report. There are only two moves, because there is no reopening:
+ * taking one, and closing it with what was decided.
  */
-async function closeReport(
+export type ReportMove =
+  | { toStatus: "in_progress" }
+  | { toStatus: "closed"; outcome: ReportOutcome; note: string };
+
+export type ReportMoveRefusal =
+  | "not_found"
+  | "already_closed"
+  | "held_by_another";
+
+/**
+ * Moves a report and records the move in the same statement, because the record *is* the row: the
+ * lifecycle only goes forward, so nothing a move writes is ever overwritten and the report itself
+ * is the account of what happened to it. That is what a second table was for while reopening
+ * existed.
+ *
+ * Both moves are one `UPDATE` whose `WHERE` carries the whole rule, so two operators arriving
+ * together resolve to one winner rather than both passing a check and then both writing.
+ */
+async function moveReport(
   reportId: string,
-  status: Exclude<ReportStatus, "open">,
+  move: ReportMove,
   operatorId: string,
-): Promise<"not_found" | undefined> {
-  const closed = await db
+): Promise<ReportMoveRefusal | undefined> {
+  const now = Temporal.Now.instant().toString();
+
+  const moved = await db
     .updateTable("report")
-    .set({
-      status,
-      closedAt: Temporal.Now.instant().toString(),
-      closedBy: operatorId,
-    })
+    .set(
+      move.toStatus === "in_progress"
+        // Taking a report already taken is deliberately allowed, and overwrites the holder: the
+        // state says "somebody has this", and a lock nobody can pick strands a report the day its
+        // holder stops reading the queue. The cost is that only the last holder is recorded.
+        ? { operatorId, inProgressAt: now }
+        // Closing from `open` never sets `in_progress_at`, which is honest — nobody took it — and
+        // it still records who closed it, because `operator_id` is set either way.
+        : {
+          operatorId,
+          closedAt: now,
+          closingOutcome: move.outcome,
+          closingNote: move.note,
+        },
+    )
     .where("id", "=", reportId)
-    // Only an open one closes: reopening, or overwriting who closed it, is a different act and
-    // not one this offers.
-    .where("status", "=", "open")
+    // Nothing moves a closed report. This is where reopening would have gone.
+    .where("closedAt", "is", null)
+    .$if(move.toStatus === "closed", (builder) =>
+      // Only whoever holds it may close it, so two operators cannot both judge one case — or
+      // anybody, once that account is gone, which is the whole of the escape hatch.
+      builder.where((eb) =>
+        eb.or([
+          eb("operatorId", "is", null),
+          eb("operatorId", "=", operatorId),
+        ])
+      ))
     .returning("id")
     .executeTakeFirst();
 
-  return closed === undefined ? "not_found" : undefined;
+  if (moved !== undefined) {
+    return undefined;
+  }
+
+  // Only to say *why*. The statement above is the arbiter; this read can be a moment stale under
+  // a race, which costs a slightly wrong sentence and never a wrong outcome.
+  const report = await db
+    .selectFrom("report")
+    .select(["closedAt"])
+    .where("id", "=", reportId)
+    .executeTakeFirst();
+
+  if (report === undefined) {
+    return "not_found";
+  }
+
+  return report.closedAt === null ? "held_by_another" : "already_closed";
 }
 
-export const ReportService = { insertReport, listReports, closeReport };
+export const ReportService = { insertReport, listReports, moveReport };

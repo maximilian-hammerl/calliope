@@ -5,6 +5,7 @@ import { GROUPS } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
 import { BLOCKS } from "@/seed/blocks.ts";
+import { REPORTS } from "@/seed/reports.ts";
 import { notificationId } from "@/seed/ids.ts";
 
 /**
@@ -25,6 +26,7 @@ function assertDistinctIds(): void {
     ]),
     ...STORY_IDEAS.map((idea) => idea.id),
     ...CHATS.flatMap((chat) => [chat.id, ...chat.messages.map((m) => m.id)]),
+    ...REPORTS.map((report) => report.id),
   ];
 
   const seen = new Set(ids);
@@ -329,6 +331,70 @@ async function writeNotifications(): Promise<void> {
 }
 
 /** In dependency order, which is the reason this lives in one place. */
+/** The column a report's target id goes in, which `report_target_matches_type` also enforces. */
+const REPORT_TARGET_COLUMN = {
+  writing_group: "reportedWritingGroupId",
+  writing_thread: "reportedWritingThreadId",
+  writing_post: "reportedWritingPostId",
+  story_idea: "reportedStoryIdeaId",
+  chat_group: "reportedChatGroupId",
+  chat_message: "reportedChatMessageId",
+  user: "reportedUserId",
+} as const;
+
+/** Three hours apart and oldest first, so the queue's oldest-first sort has something to sort. */
+const HOURS_BETWEEN_REPORTS = 3;
+
+function reportedAt(index: number, total: number): Temporal.Instant {
+  return Temporal.Now.instant().subtract({
+    hours: (total - index) * HOURS_BETWEEN_REPORTS,
+  });
+}
+
+/**
+ * One insert, because the lifecycle is columns on the report rather than rows beside it. The
+ * timestamps are what a state *is* here: `status` is generated from them, so a fixture cannot
+ * state a status its own timestamps contradict.
+ */
+async function writeReports(): Promise<void> {
+  await db.insertInto("report").values(
+    REPORTS.map((report, index) => {
+      const at = reportedAt(index, REPORTS.length);
+      const progress = report.progress;
+      const closing = progress !== undefined && "outcome" in progress
+        ? progress
+        : undefined;
+
+      return {
+        id: report.id,
+        reporterId: report.reporter,
+        targetType: report.targetType,
+        // Null for a deleted target, which is the state SET NULL leaves behind and the one the
+        // queue's "Gelöscht" badge is for.
+        ...(report.targetId === null
+          ? {}
+          : { [REPORT_TARGET_COLUMN[report.targetType]]: report.targetId }),
+        reportedAuthorId: report.author,
+        targetExcerpt: report.excerpt,
+        category: report.category,
+        reason: report.reason,
+        createdAt: at.toString(),
+        operatorId: progress?.operator ?? null,
+        // Twenty minutes after it was filed, and the closing twenty after that, so both sit inside
+        // the three hours before the next report and read in the order they happened.
+        inProgressAt: progress?.taken === true
+          ? at.add({ minutes: 20 }).toString()
+          : null,
+        closedAt: closing === undefined
+          ? null
+          : at.add({ minutes: 40 }).toString(),
+        closingOutcome: closing?.outcome ?? null,
+        closingNote: closing?.note ?? null,
+      };
+    }),
+  ).execute();
+}
+
 export async function writeFixtures(): Promise<void> {
   assertDistinctIds();
   assertFoundersAdminister();
@@ -340,4 +406,6 @@ export async function writeFixtures(): Promise<void> {
   await writeChats();
   await writeStoryIdeas();
   await writeNotifications();
+  // Last, because a report points at a post, an idea or an account that has to exist first.
+  await writeReports();
 }

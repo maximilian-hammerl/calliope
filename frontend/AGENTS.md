@@ -169,7 +169,7 @@ Three things about the generated code:
   query in `orval.config.ts` under `override.operations`. A new list endpoint needs the same
   entry.
 - **The client resolves for every status and never throws**, which would make vue-query treat
-  a 401 as a success. `src/lib/apiFetch.ts` is the mutator that throws `ApiError` instead. It
+  a 401 as a success. `src/lib/api/apiFetch.ts` is the mutator that throws `ApiError` instead. It
   lives outside `src/api/` because that directory is generated.
 - **Every operation gets its own copy of each response model** (`LoginUser401`,
   `GetCurrentUser429`, …) and there is no shared error type, which is why `ApiErrorBody` is
@@ -357,6 +357,10 @@ were mistaken for bugs in it, and each was fine in a real browser:
   `scroll-behavior`, and the latter swallows a plain `scrollLeft` assignment with it.
 - **CSS animations freeze at their first keyframe** while the pane is hidden, so a measured
   rect can be mid-animation: read computed styles instead, or measure at rest.
+- **Floating content will not close while the pane is hidden.** A reka `Select` opens, shows the
+  right options, and then swallows every attempt to pick one — pointer, `Escape` and keyboard
+  alike — so the trigger reports a value the component never received. `tabs_select` to front the
+  pane first and it behaves; a selection that "does not take" is the pane, not the component.
 
 So verify structure and position there — is the element in the DOM, did `scrollLeft` change, is
 the target 44px — and treat "the animation did not play" or "the event did not fire" as unproven
@@ -450,6 +454,12 @@ Never write a bound as a literal. `src/api/textLimit.ts` is generated from
 `npm run open-api:generate-client`, keyed by operation and request-body property:
 `TEXT_LIMIT.registerUser.username.maxLength`. It lives in the gitignored `src/api/`, so it is
 rebuilt from the document every time and cannot go stale.
+
+**A union request body keeps its bounds in the branches.** `moveReport`'s is a `oneOf`, and the
+generator reads every branch as well as the top level: reading only the top produced no bounds at
+all for such an operation, silently, which is the one failure this file exists to prevent. A
+property in more than one branch has to agree with itself — `note` is in both the reopening and the
+closing — and branches that disagreed would make the number here a guess, so that throws instead.
 
 The generator is TypeScript run by Node's own type stripping — `node scripts/…​.ts`, no build
 step and no runner. Stripping erases types without checking them, so `tsconfig.node.json`

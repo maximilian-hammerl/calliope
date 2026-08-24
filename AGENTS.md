@@ -16,6 +16,12 @@ Each project carries its own conventions; read the one you are working in:
 - **Deno for the backend and `database/`, Node for the frontend.** Backend tasks are
   `deno task …`; frontend tasks are `npm run …`. Do not mix them — `deno task` will happily
   run a `package.json` script and then fail in confusing ways.
+- **Stopping `deno task dev` takes `kill -KILL` on its process group.** SIGTERM makes the
+  `--watch` child release the port while both it and the task runner stay alive, so a free port
+  is not proof the backend stopped: the next saved file restarts it, back onto the port and back
+  into the connections that make `dbmate drop` fail. Find it with
+  `lsof -nP -iTCP:$BACKEND_PORT -sTCP:LISTEN`, its group with `ps -o pgid= -p <pid>`, and send
+  the signal to `-<pgid>`.
 - **Pin exact dependency versions.** No `^` or `~` ranges, in either `deno.jsonc` or
   `package.json`. `deno add` writes a caret; rewrite it.
 - **Comment the non-obvious, and only that.** Explain why a thing is the way it is when it

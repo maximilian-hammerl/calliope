@@ -18,11 +18,15 @@ import { resolve } from 'node:path'
 /** Only the corner of OpenAPI this reads. Request bodies are inline — there are no $refs. */
 type Bound = { minLength?: number; maxLength?: number }
 
+type Schema = {
+  properties?: Record<string, Bound>
+  oneOf?: Schema[]
+  anyOf?: Schema[]
+}
+
 type Operation = {
   operationId?: string
-  requestBody?: {
-    content?: Record<string, { schema?: { properties?: Record<string, Bound> } }>
-  }
+  requestBody?: { content?: Record<string, { schema?: Schema }> }
 }
 
 type OpenApiDocument = { paths: Record<string, Record<string, Operation | undefined>> }
@@ -33,17 +37,48 @@ const OUTPUT = resolve(here, '../src/api/textLimit.ts')
 
 const specification = JSON.parse(readFileSync(SPECIFICATION, 'utf8')) as OpenApiDocument
 
-function boundsOf(operation: Operation): Record<string, Bound> {
-  const schema = operation.requestBody?.content?.['application/json']?.schema
-  const bounds: Record<string, Bound> = {}
+/**
+ * Bounds from a schema and from every branch of a union, because a `oneOf` body keeps its
+ * properties inside the branches rather than at the top — `moveReport`'s does. Reading only the top
+ * level produced no bounds at all for such an operation, silently, which is the one failure this
+ * file exists to prevent.
+ *
+ * A property in more than one branch has to agree with itself: `note` appears in both the reopening
+ * and the closing. Branches that disagreed would make the number written here a guess about which
+ * one an input is for, so that fails loudly instead.
+ */
+function collectBounds(
+  schema: Schema | undefined,
+  operationId: string,
+  into: Record<string, Bound>,
+): void {
+  if (schema === undefined) return
 
-  for (const [property, definition] of Object.entries(schema?.properties ?? {})) {
+  for (const [property, definition] of Object.entries(schema.properties ?? {})) {
     const bound: Bound = {}
     if (typeof definition.minLength === 'number') bound.minLength = definition.minLength
     if (typeof definition.maxLength === 'number') bound.maxLength = definition.maxLength
-    if (Object.keys(bound).length > 0) bounds[property] = bound
+    if (Object.keys(bound).length === 0) continue
+
+    const existing = into[property]
+    if (existing !== undefined && JSON.stringify(existing) !== JSON.stringify(bound)) {
+      throw new Error(
+        `${operationId}.${property} is bounded two ways across the branches of its request body: ` +
+          `${JSON.stringify(existing)} and ${JSON.stringify(bound)}`,
+      )
+    }
+
+    into[property] = bound
   }
 
+  for (const branch of [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])]) {
+    collectBounds(branch, operationId, into)
+  }
+}
+
+function boundsOf(operation: Operation, operationId: string): Record<string, Bound> {
+  const bounds: Record<string, Bound> = {}
+  collectBounds(operation.requestBody?.content?.['application/json']?.schema, operationId, bounds)
   return bounds
 }
 
@@ -51,7 +86,7 @@ const operations: Record<string, Record<string, Bound>> = {}
 for (const methods of Object.values(specification.paths)) {
   for (const operation of Object.values(methods)) {
     if (operation?.operationId === undefined) continue
-    const bounds = boundsOf(operation)
+    const bounds = boundsOf(operation, operation.operationId)
     if (Object.keys(bounds).length > 0) operations[operation.operationId] = bounds
   }
 }

@@ -19,3 +19,4 @@ export const messageId = kind("f");
 export const stepId = kind("9");
 export const storyIdeaId = kind("7");
 export const notificationId = kind("8");
+export const reportId = kind("6");

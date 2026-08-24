@@ -1,4 +1,4 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import closeReport from "./report/close_report.ts";
+import moveReport from "./report/move_report.ts";
 
-export default new OpenAPIHono().route("/", closeReport);
+export default new OpenAPIHono().route("/", moveReport);

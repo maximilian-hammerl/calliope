@@ -34,6 +34,12 @@ export async function close(): Promise<void> {
 export const TEST_PREFIX = "db-test-";
 
 export async function cleanUp(): Promise<void> {
+  // Reports outlive their reporter on purpose - the references are SET NULL, not CASCADE - so
+  // deleting the accounts leaves them behind. They go by what the fixture wrote into them.
+  await client.query(`DELETE FROM public.report WHERE target_excerpt LIKE $1`, [
+    `${TEST_PREFIX}%`,
+  ]);
+
   // Users cascade to their memberships, and groups to their threads and posts.
   await client.query(`DELETE FROM public."user" WHERE username LIKE $1`, [
     `${TEST_PREFIX}%`,
@@ -242,4 +248,60 @@ export async function insertChatMessage(
     [chatGroupId, authorId],
   );
   return firstRow(rows).id;
+}
+
+/**
+ * A report of one member by another. `target_excerpt` carries the fixture prefix because that is
+ * what `cleanUp` finds these rows by. The lifecycle is the two timestamps: `status` is generated
+ * from them and cannot be written.
+ */
+export async function insertReport(
+  reporterId: string,
+  reportedUserId: string,
+  {
+    category = "harassment",
+    inProgressAt = null,
+    closedAt = null,
+    closingOutcome = null,
+    closingNote = null,
+    operatorId = null,
+  }: {
+    /** Part of the one-report-per-member key, so two reports in one test need two of these. */
+    category?: string;
+    inProgressAt?: string | null;
+    closedAt?: string | null;
+    closingOutcome?: string | null;
+    closingNote?: string | null;
+    operatorId?: string | null;
+  } = {},
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO public.report (reporter_id, target_type, reported_user_id, reported_author_id,
+                                target_excerpt, category, reason, operator_id,
+                                in_progress_at, closed_at, closing_outcome, closing_note)
+     VALUES ($1, 'user', $2, $2, $3, $9::public.report_category, 'Grund', $4, $5, $6,
+             $7::public.report_outcome, $8)
+     RETURNING id`,
+    [
+      reporterId,
+      reportedUserId,
+      `${TEST_PREFIX}excerpt`,
+      operatorId,
+      inProgressAt,
+      closedAt,
+      closingOutcome,
+      closingNote,
+      category,
+    ],
+  );
+  return firstRow(rows).id;
+}
+
+/** The status the database derived for a report, which nothing may write. */
+export async function reportStatus(reportId: string): Promise<string> {
+  const { rows } = await client.query<{ status: string }>(
+    `SELECT status FROM public.report WHERE id = $1`,
+    [reportId],
+  );
+  return firstRow(rows).status;
 }

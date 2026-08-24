@@ -41,8 +41,8 @@ ideas board and notifications — while leaving shared groups, shared conversati
 everything written alone. That was the gap between the board and announcing it to testers.
 
 What is still missing is most of what makes a **community** rather than a set of groups: no
-public forum, no administration, no files, no data export, and **no reporting** — a blocked
-member is handled privately, but nothing yet reaches a moderator. The product is usable by
+public forum, no files and no data export. Reporting now reaches somebody: a member can report
+any of seven kinds of thing, and an operator works the queue at `/moderation`. The product is usable by
 people who already know each other; for strangers it now opens a first door with a lock on
 the inside, but still no caretaker.
 
@@ -55,7 +55,7 @@ the inside, but still no caretaker.
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Starting a conversation ("Unterhaltung beginnen") opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, starting a conversation with the author ("Unterhaltung beginnen"), and founding a group from one's own idea ("Gruppe gründen"). |
-| Administration   | Not started. Blocking is built, but moderation, reports and a queue are not — see the roadmap.                                                                            |
+| Administration   | Partly built: platform roles (moderator, administrator), reporting of all seven target kinds, the operators' queue at `/moderation` with its lifecycle and an audit trail, and banning an account. **No** removing reported content (#62), operator view of a member (#46) or of a group (#47), and no settings screen. |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. Blocking refuses contact. **No** data export, no GDPR configuration.  |
 
 Two Phase 2 items (§43) arrived early because they were cheap alongside the group work: group
@@ -231,8 +231,25 @@ that cannot be run.
 
 ### 8. Administration (§42)
 
-Users, roles, moderation queue, reports, settings. Needed once strangers can reach each other
-at scale, which is to say once 7 exists.
+Roles, reporting, the queue and bans are built. What is left is the acting: **removing reported
+content** (#62) is the hole an operator meets most, since every content delete is gated on
+`mayModify` and no operator path exists; then an operator's view of a member (#46) and of a group
+(#47), transferring a group's administration (#49), and a settings screen. Needed in full once
+strangers reach each other at scale, which is to say once 7 exists.
+
+**The queue's lifecycle** is a report moving `open → in_progress → closed`, and a closing is final:
+there is no reopening. What that buys is that the lifecycle only goes forward, so the report itself
+is the record §16 asks for — who has it, when they took it, when they closed it, with what outcome
+and a mandatory note — rather than a log table beside it. `status` is a generated column over the
+two timestamps, so it cannot disagree with them. Taking a report somebody already holds hands it
+over, because a claim nobody could take over would strand a report the day its holder stopped
+reading the queue; closing it is reserved to whoever holds it. The outcome enum is what `resolved`
+and `dismissed` used to say between them, and says it finely enough to be worth reading a second
+time.
+
+**No undo for a mis-closing** is the accepted cost. The friction of an outcome and a written note
+makes one unlikely, and a closed report no longer blocks the same member reporting the thing again,
+so a live problem returns to the queue on its own. Adding reopening later is additive.
 
 ### Session revocation, unplaced
 

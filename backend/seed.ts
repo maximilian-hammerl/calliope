@@ -11,6 +11,7 @@ import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { USER } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
 import { CHATS } from "@/seed/chats.ts";
+import { REPORTS } from "@/seed/reports.ts";
 import { writeFixtures } from "@/seed/write.ts";
 
 /** The one password every seeded account shares. Local only — see the guard below. */
@@ -49,6 +50,12 @@ function assertSeedable(): void {
 // Only its own rows, so half-built state survives a re-seed. Users cascade; the groups and
 // chats need removing explicitly because their creator is not their only member.
 async function removePreviousSeed(): Promise<void> {
+  // Before the accounts, and explicitly: a report's references are SET NULL rather than CASCADE
+  // so that it outlives its reporter and its target, which is exactly why deleting the users
+  // below would leave these rows behind. Their events go with them.
+  await db.deleteFrom("report")
+    .where("id", "in", REPORTS.map((report) => report.id))
+    .execute();
   await db.deleteFrom("writingGroup")
     .where("id", "in", GROUPS.map((group) => group.id))
     .execute();

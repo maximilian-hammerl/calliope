@@ -672,6 +672,56 @@ produce, and the assertion was checked by introducing it on purpose.
 `GET /users/{userId}` carries `isBlocked`, which is only ever *the reader's own* block. Whether
 somebody blocked the reader is exactly the disclosure the neutral 403 avoids.
 
+## The report lifecycle
+
+A report is `open`, `in_progress` or `closed`, and `PATCH /reports/{reportId}` is the one route that
+moves it. There are two moves — taking one and closing it — and **no reopening**: a closing is
+final. The body is a discriminated union on the destination, so the document itself says that a
+closing carries an outcome and a note and that taking one does not; it reaches the generated client
+as a `oneOf`, where building a closing without an outcome is a type error. A `refine` would enforce
+the same rule invisibly, since it survives into neither the document nor the client.
+
+`resolved` and `dismissed` used to be two closings. They are one now, and `report_outcome` says
+which kind it was far more precisely — `content_removed`, `no_violation`, `duplicate` and six
+others. A closing carries an outcome *and* a note, for the reason a member's report carries a
+category and a reason: the enum is what the queue filters on, the prose is what the next operator
+reads.
+
+**There is no table beside the report, because the lifecycle only goes forward.** An earlier version
+of this had one, on the argument that a mutable status cannot be audited — true, but only while
+reopening exists to send a status backwards over a closing. Without it every move is written once
+and nothing is ever overwritten, so the row *is* the record §16 asks for: who has it, when they took
+it, when they closed it, with what outcome and note.
+
+- **`status` is a generated column** over `in_progress_at` and `closed_at`, so it cannot disagree
+  with them, and `kysely-codegen` types it `Generated<ReportStatus>` so nothing can try to write it.
+  The timestamps are the truth; the column exists because the queue filters and indexes on one
+  three-valued token, and spelled out by hand that filter is three predicates where forgetting
+  `closed_at IS NULL` in the middle one silently includes every closed report that was ever taken.
+- **A CHECK on this table cannot reference it.** `report_closed_has_an_outcome` is written against
+  `closed_at`, not against `status`, for that reason — and so is the unique index's predicate, since
+  a partial index cannot carry a generated column either.
+- **There is no `opened_at`.** `created_at` already is it: a report is open from the moment it
+  exists, and a report with neither timestamp set is one nobody has touched.
+- **Taking a report somebody already holds is allowed** and hands it over. The state means "somebody
+  has this, move on", not a lock — a claim nobody could take over would strand a report the day its
+  holder stopped reading the queue. The cost, accepted: only the last holder is recorded.
+- **Only the holder may close it**, which is what stops two operators judging one case; the loser
+  gets a 409. `operator_id` is `ON DELETE SET NULL`, so a report whose holder deleted their account
+  is held by nobody and anybody may close it — that is the whole of the escape hatch, and it falls
+  out of the reference rather than being written.
+- **Closing sets `operator_id` either way**, so closing one straight from the queue still records
+  who did it while leaving `in_progress_at` null — honest, because nobody took it.
+
+**The category is part of the one-report-per-member index key**, which is the line between
+correcting a report and making a second claim. Without it a member who reported a post as harassment
+and then noticed it was also plagiarism had the first claim silently overwritten. Two consequences,
+and the second has bitten three times: the predicate is `closed_at IS NULL` rather than a status, or
+taking a report would drop it out of the index and let the same member file it again; and
+`insertReport`'s `ON CONFLICT` clause has to restate that predicate *the same way*, because any
+disagreement makes Postgres answer "no unique or exclusion constraint matching the ON CONFLICT
+specification" for every report anybody files.
+
 ## Paths in mailed links must exist in the frontend
 
 The address-change mails pointed at `/confirm-email-change` for a day while the router only had

@@ -14380,7 +14380,7 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": ["dismissed", "open", "resolved"]
+                    "enum": ["closed", "in_progress", "open"]
                   },
                   "category": {
                     "type": "string",
@@ -14408,6 +14408,20 @@
                       "writing_group",
                       "writing_post",
                       "writing_thread"
+                    ]
+                  },
+                  "closingOutcome": {
+                    "type": "string",
+                    "enum": [
+                      "account_banned",
+                      "content_removed",
+                      "content_warning_added",
+                      "duplicate",
+                      "insufficient_information",
+                      "no_violation",
+                      "other",
+                      "target_gone",
+                      "warning_given"
                     ]
                   }
                 }
@@ -14462,16 +14476,37 @@
                           "reason": { "type": "string" },
                           "status": {
                             "type": "string",
-                            "enum": ["dismissed", "open", "resolved"]
+                            "enum": ["closed", "in_progress", "open"]
                           },
                           "createdAt": {
                             "type": "string",
+                            "format": "date-time"
+                          },
+                          "inProgressAt": {
+                            "type": ["string", "null"],
                             "format": "date-time"
                           },
                           "closedAt": {
                             "type": ["string", "null"],
                             "format": "date-time"
                           },
+                          "closingOutcome": {
+                            "type": ["string", "null"],
+                            "enum": [
+                              "account_banned",
+                              "content_removed",
+                              "content_warning_added",
+                              "duplicate",
+                              "insufficient_information",
+                              "no_violation",
+                              "other",
+                              "target_gone",
+                              "warning_given",
+                              null
+                            ]
+                          },
+                          "closingNote": { "type": ["string", "null"] },
+                          "operatorUsername": { "type": ["string", "null"] },
                           "reporterUsername": { "type": ["string", "null"] },
                           "authorId": {
                             "type": ["string", "null"],
@@ -14488,7 +14523,11 @@
                           "reason",
                           "status",
                           "createdAt",
+                          "inProgressAt",
                           "closedAt",
+                          "closingOutcome",
+                          "closingNote",
+                          "operatorUsername",
                           "reporterUsername",
                           "authorId",
                           "authorUsername",
@@ -14682,9 +14721,9 @@
     "/api/reports/{reportId}": {
       "patch": {
         "tags": ["reports"],
-        "summary": "Close a report as resolved or dismissed",
-        "description": "Records who closed it and when. `resolved` means something was done about it, `dismissed` means the report was not valid — the two are kept apart because which one an operator chose is the only signal about whether a member's reports are worth reading. Only an open report can be closed.",
-        "operationId": "closeReport",
+        "summary": "Take a report, or close it",
+        "description": "Takes a report so other operators know it is in hand, or closes it with an outcome and a note saying what was decided. Both are recorded on the report itself, and a closed report is final — there is no reopening. Taking one somebody else already has is allowed and hands it over, so a forgotten claim cannot strand a report; closing it is reserved to whoever holds it.",
+        "operationId": "moveReport",
         "parameters": [
           {
             "schema": { "type": "string", "format": "uuid" },
@@ -14698,21 +14737,48 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": ["dismissed", "resolved"]
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "string", "enum": ["in_progress"] }
+                    },
+                    "required": ["status"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "string", "enum": ["closed"] },
+                      "outcome": {
+                        "type": "string",
+                        "enum": [
+                          "account_banned",
+                          "content_removed",
+                          "content_warning_added",
+                          "duplicate",
+                          "insufficient_information",
+                          "no_violation",
+                          "other",
+                          "target_gone",
+                          "warning_given"
+                        ]
+                      },
+                      "note": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    },
+                    "required": ["status", "outcome", "note"]
                   }
-                },
-                "required": ["status"]
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The report is closed",
+            "description": "The report has moved",
             "content": {
               "application/json": {
                 "schema": {
@@ -14811,7 +14877,36 @@
             }
           },
           "404": {
-            "description": "No such report, or it is closed already",
+            "description": "No such report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The report is already closed, or another operator holds it and this is a closing. Refetching the queue shows the operator which of the two it was.",
             "content": {
               "application/json": {
                 "schema": {

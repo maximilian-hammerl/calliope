@@ -51,6 +51,8 @@ export const TEXT_LIMIT = {
   banReason: 2_000,
   /** Why a member is reporting something. Room to explain, not to write an essay. */
   reportReason: 2_000,
+  /** What an operator decided about a report, beside the outcome. Same room as the reason it answers. */
+  reportClosingNote: 2_000,
 } as const;
 
 /**

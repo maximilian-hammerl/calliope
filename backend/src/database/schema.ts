@@ -35,7 +35,18 @@ export type ReportCategory =
   | "spam"
   | "violence";
 
-export type ReportStatus = "dismissed" | "open" | "resolved";
+export type ReportOutcome =
+  | "account_banned"
+  | "content_removed"
+  | "content_warning_added"
+  | "duplicate"
+  | "insufficient_information"
+  | "no_violation"
+  | "other"
+  | "target_gone"
+  | "warning_given";
+
+export type ReportStatus = "closed" | "in_progress" | "open";
 
 export type ReportTargetType =
   | "chat_group"
@@ -103,9 +114,12 @@ export interface Notification {
 export interface Report {
   category: ReportCategory;
   closedAt: string | null;
-  closedBy: string | null;
+  closingNote: string | null;
+  closingOutcome: ReportOutcome | null;
   createdAt: Generated<string>;
   id: Generated<string>;
+  inProgressAt: string | null;
+  operatorId: string | null;
   reason: string;
   reportedAuthorId: string | null;
   reportedChatGroupId: string | null;
@@ -358,8 +372,21 @@ export const REPORT_TARGET_TYPES = [
 ] as const;
 export const REPORT_TARGET_TYPE_SCHEMA = z.enum(REPORT_TARGET_TYPES);
 
-export const REPORT_STATUSES = ["dismissed", "open", "resolved"] as const;
+export const REPORT_STATUSES = ["closed", "in_progress", "open"] as const;
 export const REPORT_STATUS_SCHEMA = z.enum(REPORT_STATUSES);
+
+export const REPORT_OUTCOMES = [
+  "account_banned",
+  "content_removed",
+  "content_warning_added",
+  "duplicate",
+  "insufficient_information",
+  "no_violation",
+  "other",
+  "target_gone",
+  "warning_given",
+] as const;
+export const REPORT_OUTCOME_SCHEMA = z.enum(REPORT_OUTCOMES);
 
 export const REPORT_CATEGORIES = [
   "harassment",
@@ -421,10 +448,13 @@ export const REPORT_SCHEMA = z.object({
   targetExcerpt: z.string(),
   category: REPORT_CATEGORY_SCHEMA,
   reason: z.string(),
-  status: REPORT_STATUS_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
+  operatorId: z.uuidv7().nullable(),
+  inProgressAt: z.iso.datetime({ offset: true }).nullable(),
   closedAt: z.iso.datetime({ offset: true }).nullable(),
-  closedBy: z.uuidv7().nullable(),
+  closingOutcome: REPORT_OUTCOME_SCHEMA.nullable(),
+  closingNote: z.string().nullable(),
+  status: REPORT_STATUS_SCHEMA,
 });
 
 export const STORY_IDEA_SCHEMA = z.object({
