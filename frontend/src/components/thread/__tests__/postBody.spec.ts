@@ -72,9 +72,9 @@ describe('PostBody', () => {
   })
 
   it('renders every node and mark the format allows', () => {
-    // `PostBody` does not guard `generateHTML`, so this is what keeps that safe: if the schema ever
-    // accepted something these extensions cannot render, a post would throw while rendering. The
-    // fixture is the whole vocabulary, and the backend asserts the schema accepts the same one.
+    // `PostBody` does not guard `generateHTML`, and this is one half of what keeps that safe: every
+    // type in the fixture renders. The other half is the backend's "the schema accepts nothing the
+    // fixture does not carry", which is what stops the schema growing past these extensions.
     const html = render(EXPECTED)
 
     for (const element of [

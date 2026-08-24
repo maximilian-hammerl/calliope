@@ -1,6 +1,9 @@
 import { assertEquals } from "@std/assert";
 import type { DocumentNode } from "@/src/document/document_schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import {
+  DOCUMENT_SCHEMA,
+  DOCUMENT_VOCABULARY,
+} from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 
 /**
@@ -505,4 +508,30 @@ Deno.test("the projection keeps both blocks of a cell holding two", () => {
     })),
     "Eins Zwei",
   );
+});
+
+/**
+ * The half the fixture cannot prove on its own.
+ *
+ * The fixture is *produced by* the frontend's extensions, so every type in it is one the editor can
+ * make and the renderer can render. This asserts the schema accepts nothing beyond what is in it —
+ * so schema ⊆ fixture ⊆ extensions, and `PostBody` can render without a guard.
+ *
+ * Adding a node or mark to the schema therefore fails here until the fixture carries one too, and
+ * the only way to put it in the fixture is to produce it from the editor.
+ */
+Deno.test("the schema accepts nothing the fixture does not carry", () => {
+  const used = { nodes: new Set<string>(), marks: new Set<string>() };
+
+  const walk = (node: DocumentNode) => {
+    used.nodes.add(node.type);
+    for (const mark of node.marks ?? []) {
+      used.marks.add(mark.type);
+    }
+    (node.content ?? []).forEach(walk);
+  };
+  walk(FIXTURE as DocumentNode);
+
+  assertEquals(DOCUMENT_VOCABULARY.nodes, [...used.nodes].toSorted());
+  assertEquals(DOCUMENT_VOCABULARY.marks, [...used.marks].toSorted());
 });

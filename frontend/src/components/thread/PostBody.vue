@@ -13,10 +13,12 @@
  * path, a class is a safe token. **Loosening that schema loosens this**, which is why the two are
  * named together here.
  *
- * Nothing guards `generateHTML` against throwing, deliberately. It is handed a document this
- * vocabulary produced and the API validated against the same vocabulary, so a throw would mean
- * those two had drifted — a bug worth seeing rather than a case worth degrading for. The test
- * renders the whole conformance fixture, which is what keeps that true.
+ * Nothing guards `generateHTML` against throwing, and two tests are what make that safe rather
+ * than optimistic. `__tests__/postBody.spec.ts` renders the whole conformance fixture here, so
+ * every type in it is one these extensions can render; and the backend's
+ * `document_schema_test.ts` asserts the schema accepts nothing the fixture does not carry. Between
+ * them the schema cannot allow a document this cannot render, so a throw would mean a drift that
+ * already failed a test — worth seeing rather than degrading for.
  */
 import { computed } from 'vue'
 import { generateHTML } from '@tiptap/core'

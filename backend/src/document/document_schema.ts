@@ -250,3 +250,37 @@ export const DOCUMENT_SCHEMA = z.strictObject({
   .openapi("PostDocument", { maxLength: TEXT_LIMIT.postText });
 
 export type PostDocument = z.infer<typeof DOCUMENT_SCHEMA>;
+
+/**
+ * The node and mark types this schema accepts, read back out of the schema itself.
+ *
+ * It exists to prove the direction the conformance fixture cannot. The fixture shows the editor
+ * *can produce* every type here; this shows the schema *accepts nothing beyond* them. Together they
+ * close the gap that would otherwise only surface as a thrown render: a type the schema allowed and
+ * the frontend's extensions could not make would reach `PostBody`, which renders without a guard.
+ *
+ * Reading Zod's own structure means casting through it. That is deliberate — a Zod version that
+ * moved `options` or `unwrap` breaks the test that uses this, which is exactly where it should be
+ * noticed rather than in a silent empty list.
+ */
+function branchNames(union: unknown): string[] {
+  const options = (union as { options?: unknown[] }).options ?? [];
+
+  return options
+    .map((branch) =>
+      (branch as { shape?: { type?: { value?: unknown } } }).shape?.type?.value
+    )
+    .filter((name): name is string => typeof name === "string")
+    .toSorted();
+}
+
+export const DOCUMENT_VOCABULARY = {
+  // `doc` is the document itself rather than a branch of the node union, so it is named here.
+  nodes: [
+    "doc",
+    ...branchNames(
+      (NODE_SCHEMA as unknown as { unwrap: () => unknown }).unwrap(),
+    ),
+  ].toSorted(),
+  marks: branchNames(MARK_SCHEMA),
+};
