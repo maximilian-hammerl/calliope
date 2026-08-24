@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { paragraphs } from '@/lib/format/formatText'
 import { favouriteToggle } from '@/lib/format/favourite'
 import { useFavourite } from '@/composables/useFavourite'
-import type { ListPosts200ResultsItem } from '@/api/models'
+import type { ListPosts200ResultsItem, PostDocument } from '@/api/models'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Textarea } from '@/components/ui/textarea'
+import { emptyDocument } from '@/lib/document/emptyDocument'
+import { sameDocument } from '@/lib/document/sameDocument'
+import PostBody from '@/components/thread/PostBody.vue'
+import PostEditor from '@/components/thread/PostEditor.vue'
 
 const props = defineProps<{
   post: ListPosts200ResultsItem
@@ -26,7 +27,7 @@ const emit = defineEmits<{
   report: []
   edit: []
   cancel: []
-  save: [text: string]
+  save: [document: PostDocument, text: string]
   delete: []
   favouriteChanged: []
 }>()
@@ -60,25 +61,28 @@ const mayModify = computed<boolean>(
  * which the database allows exactly one of per thread, so borrowing it would put a half-written
  * post at risk to fix a typo.
  */
-const draft = ref<string>('')
+const draft = ref<PostDocument>(emptyDocument())
+const draftText = ref<string>('')
 
-/** `Textarea`'s root *is* the native element, so the ref is the component and `$el` the field. */
-const textarea = useTemplateRef<ComponentPublicInstance>('textarea')
+const postEditor = useTemplateRef<{ focus: () => void }>('postEditor')
 
 watch(
   () => props.editing,
   async (open) => {
     if (!open) return
-    draft.value = props.post.text
+    // The stored document, not a rebuild from `post.text`: that projection has no marks in it,
+    // so editing a post with a heading or a bold word would silently flatten it.
+    draft.value = props.post.document
+    draftText.value = props.post.text
     await nextTick()
     // Focus follows the opening, as it does for the composer: open and type is one gesture.
-    const field = textarea.value?.$el
-    if (field instanceof HTMLTextAreaElement) field.focus()
+    postEditor.value?.focus()
   },
   { immediate: true },
 )
 
-const unchanged = computed<boolean>(() => draft.value.trim() === props.post.text.trim())
+/** Compared as documents: re-bolding a word changes no prose, and Speichern must still light up. */
+const unchanged = computed<boolean>(() => sameDocument(draft.value, props.post.document))
 
 /**
  * Named only when somebody other than the author edited it — an administrator may, and that is
@@ -99,8 +103,6 @@ const meta = computed<string>(() => {
     .filter((part) => part !== undefined)
     .join(' · ')
 })
-
-const blocks = computed<string[]>(() => paragraphs(props.post.text))
 </script>
 
 <template>
@@ -113,13 +115,12 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
     </div>
 
     <div v-if="editing" class="flex flex-col gap-2.5">
-      <Textarea
-        ref="textarea"
-        v-model="draft"
-        rows="6"
-        class="prose-post"
+      <PostEditor
+        ref="postEditor"
+        v-model:document="draft"
+        v-model:text="draftText"
         :disabled="saving"
-        aria-label="Beitrag bearbeiten"
+        framed
       />
 
       <Alert v-if="error" variant="destructive" role="alert">
@@ -127,11 +128,7 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
       </Alert>
     </div>
 
-    <div v-else class="flex flex-col gap-[0.9em]">
-      <p v-for="(paragraph, index) in blocks" :key="index" class="prose-post">
-        {{ paragraph }}
-      </p>
-    </div>
+    <PostBody v-else :document="post.document" />
 
     <!-- The row the placeholder actions used to occupy, in the same place and at the same
          weight (47cce00): below the writing, recessed to the metadata's size and colour, so it
@@ -145,7 +142,7 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
           type="button"
           class="flex min-h-11 items-center font-medium text-oak-deep disabled:opacity-50 md:min-h-0"
           :disabled="saving || unchanged"
-          @click="emit('save', draft)"
+          @click="emit('save', draft, draftText)"
         >
           {{ saving ? 'Wird gespeichert …' : 'Speichern' }}
         </button>

@@ -42,6 +42,23 @@ Every `migrate:down` must actually reverse its `migrate:up`, including dropping 
 and trigger functions. Test the round trip against a throwaway database rather than the one
 you are working in.
 
+## `json` and `jsonb` generate as `unknown`
+
+`typeMapping` in `.kysely-codegenrc.ts` maps both to `unknown` rather than letting kysely-codegen
+emit its own `Json` type. That type is a recursive union, and a recursive type in a route's
+response exhausts TypeScript's instantiation budget: `@hono/zod-openapi` fails with **TS2589**,
+whose message names neither the column nor the route, and because the budget is global the route
+it lands on moves as unrelated code changes.
+
+`unknown` forces the reader to say what the column holds, which is what a Zod schema does anyway —
+`writing_post.document` is validated by `backend/src/document/document_schema.ts` and typed by its
+`PostDocument`. Selecting such a column takes a `$castTo<…>()`, which is the one line of ceremony
+this costs and the right place for the assertion to live.
+
+`columnOverrides` in the same file is the per-column escape hatch, for a column whose database
+type maps to no schema at all. Prefer `typeMapping` where the rule is about the *type*: an
+override has to be remembered for every future column, and a forgotten one fails confusingly.
+
 ## A cascading foreign key needs an index of its own
 
 Postgres indexes the *referenced* side of a foreign key and nothing on the referencing side, so a

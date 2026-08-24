@@ -6,6 +6,7 @@ import {
   createGroup,
   deleteUsers,
   getUserId,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -84,7 +85,7 @@ async function post(
     "POST",
     `/api/groups/${groupId}/threads/${threadId}/posts`,
     cookie,
-    { text },
+    postBody(text),
   );
   assertEquals(response.status, STATUS_CODE.Created);
   return await response.json();
@@ -272,7 +273,7 @@ Deno.test("re-reporting keeps the excerpt from when it was first reported", asyn
       "PATCH",
       `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
       authorCookie,
-      { text: "Harmlos." },
+      postBody("Harmlos."),
     )).status,
     STATUS_CODE.OK,
   );

@@ -314,9 +314,15 @@ The brand is there because **"iOS" identifies nothing to a member who knows Appl
 also why `deviceType` is translated ("Handy", "Tablet") while the brand is printed as it comes.
 A kind with no German word is left off rather than guessed at.
 
-Routes need a session unless marked `meta: { guestOnly: true }`, which also bounces a
-signed-in visitor away. A page that should be readable by everyone would need a flag of its
-own.
+**A route says who may open it with one `meta.access` value**, never a set of booleans: separate
+flags let a route claim to be both guests-only and open to everyone, which means nothing and which
+nothing would catch. `member` (the default when omitted, so a forgotten route locks rather than
+leaks), `guest` which bounces a signed-in visitor away, `operator`, and `anyone` for a page that
+must be readable either way — the mailed-link landing pages, and anything legal. The guard
+switches over it with `assertUnreachable`, so a fifth kind cannot be added without handling it.
+
+Verification is orthogonal: `access` asks whether there is a session, and the unverified-address
+redirect asks what state that session's account is in.
 
 The dev server proxies `/api` to `http://localhost:8000`, which keeps development
 same-origin exactly like production behind Caddy: relative URLs, no CORS, and the cookie sent

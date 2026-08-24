@@ -10,6 +10,7 @@ import { FAVOURITES } from "@/seed/favourites.ts";
 import { notificationId } from "@/seed/ids.ts";
 import { FAVOURITE_COLUMN } from "@/src/service/favourite_target.ts";
 import type { FavouriteTargetType } from "@/src/service/favourite_target.ts";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
 
 /**
  * The ids are written by hand, so two of them can be the same by accident — a notification
@@ -230,6 +231,7 @@ async function writeGroups(): Promise<void> {
       thread.posts.map((post, index) => ({
         id: post.id,
         writingThreadId: thread.id,
+        document: plainTextToDocument(post.text),
         text: post.text,
         isDraft: post.isDraft ?? false,
         createdBy: post.by,

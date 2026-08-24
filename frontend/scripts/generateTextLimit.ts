@@ -15,8 +15,12 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-/** Only the corner of OpenAPI this reads. Request bodies are inline — there are no $refs. */
-type Bound = { minLength?: number; maxLength?: number }
+/**
+ * Only the corner of OpenAPI this reads. Request-body properties are inline except where a schema
+ * is registered as a component — the post document is, because it is described once and referred
+ * to from both routes — so a `$ref` has to be followed to find the bound behind it.
+ */
+type Bound = { minLength?: number; maxLength?: number; $ref?: string }
 
 type Schema = {
   properties?: Record<string, Bound>
@@ -29,7 +33,10 @@ type Operation = {
   requestBody?: { content?: Record<string, { schema?: Schema }> }
 }
 
-type OpenApiDocument = { paths: Record<string, Record<string, Operation | undefined>> }
+type OpenApiDocument = {
+  paths: Record<string, Record<string, Operation | undefined>>
+  components?: { schemas?: Record<string, Bound> }
+}
 
 const here = import.meta.dirname
 const SPECIFICATION = resolve(here, '../../backend/open-api.json')
@@ -37,15 +44,21 @@ const OUTPUT = resolve(here, '../src/api/textLimit.ts')
 
 const specification = JSON.parse(readFileSync(SPECIFICATION, 'utf8')) as OpenApiDocument
 
+/** A `$ref` only ever points into `components.schemas` here, and never at another `$ref`. */
+function resolveReference(definition: Bound): Bound {
+  if (definition.$ref === undefined) return definition
+  const name = definition.$ref.replace('#/components/schemas/', '')
+  return specification.components?.schemas?.[name] ?? {}
+}
+
 /**
  * Bounds from a schema and from every branch of a union, because a `oneOf` body keeps its
  * properties inside the branches rather than at the top — `moveReport`'s does. Reading only the top
  * level produced no bounds at all for such an operation, silently, which is the one failure this
  * file exists to prevent.
  *
- * A property in more than one branch has to agree with itself: `note` appears in both the reopening
- * and the closing. Branches that disagreed would make the number written here a guess about which
- * one an input is for, so that fails loudly instead.
+ * A property in more than one branch has to agree with itself. Branches that disagreed would make
+ * the number written here a guess about which one an input is for, so that fails loudly instead.
  */
 function collectBounds(
   schema: Schema | undefined,
@@ -54,7 +67,10 @@ function collectBounds(
 ): void {
   if (schema === undefined) return
 
-  for (const [property, definition] of Object.entries(schema.properties ?? {})) {
+  for (const [property, reference] of Object.entries(schema.properties ?? {})) {
+    // Resolved first: a property may be a component reference rather than an inline schema, which
+    // is how `createPost`'s document carries its bound.
+    const definition = resolveReference(reference)
     const bound: Bound = {}
     if (typeof definition.minLength === 'number') bound.minLength = definition.minLength
     if (typeof definition.maxLength === 'number') bound.maxLength = definition.maxLength

@@ -13,6 +13,7 @@ import {
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
 
 /**
  * What the API returns for each resource: the table's own columns plus the name behind the
@@ -62,6 +63,8 @@ export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA
 export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
   .extend({
+    // The generated column is `z.unknown()`, which would reach the client as `unknown`.
+    document: DOCUMENT_SCHEMA,
     /**
      * Who changed it, which is not implied by the row: `mayModify` lets the author or somebody
      * administering the group edit. Null when nothing has been edited, and null once that

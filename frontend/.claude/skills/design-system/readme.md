@@ -328,6 +328,17 @@ written: it is bound to the member's draft, which the database allows exactly on
 so borrowing it would put a half-written post at risk in order to fix a typo. Saving is disabled
 until something actually changes, so the action cannot claim work it did not do.
 
+**The field it becomes is a raised surface and one hairline** — `--paper-0`, 1px
+`--border-default`, the control radius — because without them an edited post is indistinguishable
+from the posts above and below it: same ground, no outline, only a toolbar appearing to say anything
+happened. It was a plain textarea once, which had that chrome for free.
+
+**Its padding is cancelled by an equal negative margin**, so the field bleeds outward and the prose
+does not move by even a pixel when Bearbeiten is clicked. The margin covers the padding *and* the
+1px border, which is why both are bracketed values; change one and the other changes with it, or the
+words start jumping. The bleed is smaller on a phone (11px against 15px) because the gutter is only
+18px there, and a field 3px from the screen edge reads as a mistake.
+
 **An edit says who made it, but only when that is somebody else.** „· bearbeitet" for an author
 changing their own post, „· bearbeitet von nachtschreiber" where somebody administering the group
 changed a member's. Naming the author beside their own name is noise; naming an administrator is
@@ -778,6 +789,29 @@ something that does not exist is worse than a shorter bar. The active item takes
 Threads stay tabs — a horizontally scrolling strip under the group title, never a dropdown. The
 composer is a one-line bar that expands on focus, collapsed by default. Prose stays 17px — never
 shrink the reading size. Every target is at least 44px (`--tap-min`).
+
+**The formatting toolbar is text, not a row of icons.** It sits *below* the writing, in the
+footer the inert placeholder already occupied, and its controls are short labels styled to show
+what they do — a bold **B**, an italic *I*, an underlined U, a struck-through S, `H2` and `H3`,
+Liste, 1. Liste, „“, Code in mono, Link. That follows the rule that an icon accompanies a label
+rather than replacing it, and it is what the placeholder was always going to become.
+
+**Alignment is the one exception**, and only because four spelled-out words are longer than the
+toolbar the rest of the controls fit in: `AlignLeft`, `AlignCenter`, `AlignRight`, `AlignJustify`
+as glyphs, each carrying the German word as its accessible name. Any further control that cannot
+be labelled needs the same argument made out loud, or it is a row of icons by drift.
+
+An active control is `--paper-0` with a 1px `--border-default`, the same treatment an active rail
+row gets; an inactive one is borderless and `--ink-5`. **The row scrolls sideways in its own
+container** rather than wrapping or hiding below `sm` — formatting has to be reachable on a phone,
+and a second row would push the writing off a short screen. Every control is 44px on a phone.
+
+**The composer's prose is 17px**, like everything else a member reads. It was 16.5px while it was
+a textarea, which was the reading size quietly shrinking by half a pixel; the editor renders at
+`prose-post`, so what is being written now matches what it will look like.
+
+„Vorschau" is **gone** rather than disabled: a WYSIWYG editor previews itself, and a control that
+does nothing does not ship. The copy stays specified above for whenever it means something again.
 
 **Both rails hold group context, split by what a member does with it.** The left rail is
 reference: the story's own facts, its files, who is in it — what a member checks while writing.
