@@ -473,67 +473,36 @@ take a member off the page they are on.
 
 ## Favourites
 
-One mark over five kinds, and the wording for all of them lives in `lib/format/favourite.ts` —
-`favouriteToggle()` for the button, `FAVOURITE_FILTER_LABELS` for the strip. Never write „Favorit"
-at a call site; the design system's state-toggle rule is what those two encode, and it was already
-copied by hand once.
+One mark over five kinds. The wording lives in `lib/format/favourite.ts` — never write „Favorit" at
+a call site; it was copied by hand once already.
 
-- **`FavouriteToggle.vue` emits, it does not invalidate.** What has to be refetched belongs to the
-  caller: a list wants its own key, a detail page wants that one thing, and the carousel wants
-  neither — invalidating its own query would rebuild the set around the reader and take the idea
-  they are looking at out of it. Same rule `NotificationsDialog` follows.
-- **Two surfaces deliberately do not use the component.** A post's row and the chat header are
-  *text actions sharing one baseline*, not button rows, so they render a raw button in the local
-  idiom — and take their label from `favouriteToggle()` anyway, which is what stops the wording
-  drifting across the five. That is the same exception `AGENTS.md` already makes for rail strips
-  and tabs; the raw button carries the 44px rule itself.
-- **The filter is `FilterStrip`, on every list that shows a favouritable kind** — both group lists,
-  both idea boards, the chats dialog and the thread. Adding a sixth list means adding the strip,
-  or the surfaces drift.
-- **Every list row marks the reader's own favourite** — the ordering alone does not say where the
-  favourites stop, and search is not ordered by it at all. `FavouriteMark` and `ReadMark` are the
-  two marks; both render `CalliopeBadge`'s `mark` variant, so a glyph chip keeps the border, radius
-  and 21px height of the word chips beside it.
-- **The mark is 25px where the word was 60**, which is the whole reason it exists: as a word it
-  pushed the chats rail's unread count onto a second line and made that row 22px taller than its
-  neighbours. It is also what lets the ten-tab strip and the search popover carry it.
-- **Marks are named, not hidden.** `aria-label` *and* `title` — nothing else in the interface is
-  icon-only, and hover is desktop-only, so the accessible name is what carries a phone.
-- **`FavouriteToggle` shows its own failure, unlike its success.** The success is emitted, because
-  what to refetch differs per caller; the failure is not, because it is the same sentence wherever
-  it happens. It is rendered inside an `inline-flex` box holding the button, so the component stays
-  one flex item in a row of buttons and no caller has to provide an error region. The two raw-button
-  surfaces say the same thing themselves, in their own row's size.
-- **Four marks, all on `CalliopeBadge`'s `mark` variant**: `FavouriteMark`, `ReadMark`,
-  `ClosedMark` and `VisibilityMark`. Only the last renders for both of its states; the other three
-  are a chip or nothing. Page headings keep the word — `GroupHeader` and `StoryIdeaDetail` — which
-  is what teaches the mark and keeps it off the screen where somebody is about to write.
+- **`FavouriteToggle` emits its success and shows its own failure.** What to refetch belongs to the
+  caller and differs; the message is the same sentence everywhere, and delegating it is how it went
+  unshown. It renders inside an `inline-flex` box, so it stays one flex item in a row of buttons.
+- **A post's row and the chat header use a raw button**, because those rows are text actions on one
+  baseline rather than buttons — the same exception this file makes for rail strips and tabs. They
+  still take their label from `favouriteToggle()`, and carry the 44px rule themselves.
+- **`FilterStrip` on every list that shows a favouritable kind**, the idea board included on „Meine
+  Storyideen", where the read and status filters are hidden: your own ideas cannot be unread.
+- **Four marks on `CalliopeBadge`'s `mark` variant** — `FavouriteMark`, `ReadMark`, `ClosedMark`,
+  `VisibilityMark` — so a glyph chip keeps the border, radius and 21px height of the words beside
+  it. Only `VisibilityMark` renders for both its states. Page headings keep the word, which is what
+  teaches the mark.
+- **A mark is 25px where the word was 60**, which is why it exists: as a word it pushed the chats
+  rail's unread count onto a second line, and the ten-tab strip and search popover could not carry
+  it at all.
+- **Marks are named, not hidden**: `aria-label` *and* `title`, since nothing else here is icon-only
+  and hover is desktop-only.
 - **`VisibilityMark` ships as an open question.** `Lock` and `LockOpen` are a shackle apart at 13px
-  and visibility is the fact whose misreading costs the most; filling either, and `Lock`/`Globe`,
-  were tried and are worse. It is out there to collect member feedback — if somebody reports
-  misjudging who could read a group, the fix is the word. The reasoning is in the design system so
-  nobody re-runs the three failed experiments.
-- **`lib/format/group.ts` holds both group vocabularies**: `VISIBILITY_LABELS`, which was written
-  out at three call sites, and `MEMBERSHIP_LABELS` for the search popover.
-- **The search popover labels membership**, because search reaches past the groups the reader
-  belongs to (`membership: "any"`) and nothing else on the row says which side of that line a
-  result is on — opening one you are in means you can write, the other means you can only read.
-  Absent for a group not joined, which is the resting state.
-- **`StoryIdeaDetail` renders the actions, and has no slots.** It used to take `#actions` and
-  `#notices`, and its two callers — the idea's page and the carousel — filled them separately and
-  drifted: the carousel never grew „Melden" and went a release without „Favorit". Sharing the
-  component was not enough, because a slot is where two callers disagree. The slots are deleted
-  rather than left as an optional override; a seam left open is the one that gets used.
-- **What the callers still decide is what to refetch**, which genuinely differs, so it is emits:
-  `readChanged`, `favouriteChanged`, `report`, `edit`, `remove`, `foundGroup`. The page refetches
-  the idea; the carousel updates its slide by hand via `setReadLocally` / `setFavouriteLocally` and
-  invalidates only the board, because refetching its own query would rebuild the set around the
-  reader and take the idea they are looking at out of it. Only *reading* moves an idea in or out of
-  that set, so the favourite's version adjusts no total. Dialogs stay with the callers too — the
-  carousel needs a report dialog keyed by id, since it holds every slide at once, and never shows
-  editing or deletion.
-- **The idea board shows the favourite strip on „Meine Storyideen" too**, where the read and status
-  filters are hidden: your own ideas cannot be unread, but they can certainly be favourites.
+  on the fact whose misreading costs most; the design system records what else was tried and what
+  feedback would settle it.
+- **`StoryIdeaDetail` renders the actions and has no slots.** Its two callers filled `#actions`
+  themselves and drifted — a slot is where two callers disagree, so it is deleted rather than left
+  as an override. What they still decide is emitted: the page refetches the idea, the carousel
+  updates its slide via `setReadLocally` / `setFavouriteLocally` and invalidates only the board.
+  Only *reading* moves an idea in or out of that set, so the favourite's version adjusts no total.
+- **`lib/format/group.ts` holds both group vocabularies.** `MEMBERSHIP_LABELS` is for the search
+  popover, which reaches past the groups the reader belongs to with nothing else saying so.
 
 ## Length limits
 

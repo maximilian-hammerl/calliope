@@ -44,42 +44,25 @@ you are working in.
 
 ## A cascading foreign key needs an index of its own
 
-Postgres indexes the *referenced* side of a foreign key — it is a primary key — and nothing on the
-referencing side. So `ON DELETE CASCADE` has to find the rows pointing at what is being deleted,
-and without an index on that column it scans the whole table, once per deleted row.
+Postgres indexes the *referenced* side of a foreign key and nothing on the referencing side, so a
+delete scans the whole table once per deleted row to find what points at it. `ON DELETE SET NULL`
+counts too: the rows still have to be found before they can be nulled.
 
-`favourite` is the worked example, and shipped without them. `favourite_one_per_member_idx` leads
-with `user_id`, so a lookup by target is not a prefix of it and cannot use it; deleting a thread of
-a hundred posts cascaded to a hundred deletes, each scanning every favourite on the platform. The
-per-kind indexes live in `20260824100000_favourite.sql`, beside the table they belong to.
+Index every reference, **partial on `<column> IS NOT NULL`** — an equality lookup still uses it,
+since `col = $1` implies the predicate, so there is no judgement to make per column.
 
-**Partial, where a row names exactly one thing.** These tables hold one nullable reference per kind
-with a CHECK that exactly one is set, so a plain index would carry every row of the table with four
-fifths of its entries NULL, once for each kind. `WHERE <column> IS NOT NULL` keeps each index to
-the rows of its own kind, and the planner still uses it for an equality lookup, because `col = $1`
-implies `col IS NOT NULL`.
+**Read the constraints, not the columns.** `notification` looked like it needed five and needed
+three: two of its columns are halves of composites pointing at the *membership*, so those cascades
+search by `(recipient_id, …)` and an existing index leads them. `pg_get_constraintdef` says which.
 
-**Measuring this is easy to get wrong**, and it was got wrong twice before the index was written:
+**A partial index only counts if its predicate is the column being present.** `report`'s
+`report_one_open_per_reporter_and_category_idx` leads with `reporter_id` and still cannot find a
+member's reports, because `reporter_id = $1` does not imply its `closed_at IS NULL`.
 
-- **A small table always answers Seq Scan.** With thirteen rows the planner will not use an index
-  whatever exists, so an EXPLAIN there says nothing either way. Fill a throwaway copy to a hundred
-  thousand rows inside a transaction and roll it back.
-- **`CREATE TABLE … (LIKE … INCLUDING ALL)` copies the indexes**, renaming them, so a "before" case
-  built that way already has the index under test. Plain `LIKE` copies columns only. The giveaway
-  is an index name in the plan that nobody created.
-- **`WHERE col = uuidv7()` never uses an index.** The function is volatile, so it is evaluated per
-  row. Compare against a literal.
-- **`LIKE` copies columns and nothing else.** The probe's inserts fail on `NOT NULL DEFAULT now()`
-  without `INCLUDING DEFAULTS`, and on a `GENERATED ALWAYS AS … STORED` column — `report.status` —
-  without `INCLUDING GENERATED`. Both errors name the column, so they are quick to read; the point
-  is to add the two rather than reach for `INCLUDING ALL`.
-
-**A partial index still counts, if its predicate is the column being present.** `WHERE col IS NOT
-NULL` serves `col = $1`, so an audit that skips every partial index reports the fix it just made as
-missing. But a partial index predicated on anything *else* does not: `report`'s
-`report_one_open_per_reporter_and_category_idx` leads with `reporter_id` and is useless for finding
-a member's reports, because `reporter_id = $1` does not imply its `closed_at IS NULL`. Measured:
-sequential scan with only that index, index scan once `report_reporter_idx` exists.
+Four things make the measurement lie, all hit here: a small table answers `Seq Scan` whatever
+exists, so fill a throwaway copy to a hundred thousand rows; `LIKE … INCLUDING ALL` copies the
+indexes, so the "before" case already has the one under test; `WHERE col = uuidv7()` is volatile
+and never uses an index; and plain `LIKE` needs `INCLUDING DEFAULTS` and `INCLUDING GENERATED`.
 
 This finds what is left, and is worth running after adding a table:
 
@@ -87,8 +70,7 @@ This finds what is left, and is worth running after adding a table:
 WITH fk AS (
   SELECT c.conrelid::regclass::text AS tbl,
          (SELECT a.attname FROM pg_attribute a
-           WHERE a.attrelid = c.conrelid AND a.attnum = c.conkey[1]) AS first_col,
-         c.confdeltype
+           WHERE a.attrelid = c.conrelid AND a.attnum = c.conkey[1]) AS first_col
   FROM pg_constraint c
   WHERE c.contype = 'f' AND c.connamespace = 'public'::regnamespace
 ), led AS (
@@ -98,29 +80,12 @@ WITH fk AS (
   FROM pg_index i
   WHERE i.indpred IS NULL OR pg_get_expr(i.indpred, i.indrelid) LIKE '%IS NOT NULL%'
 )
-SELECT fk.tbl, fk.first_col, fk.confdeltype
-FROM fk
+SELECT fk.tbl, fk.first_col FROM fk
 WHERE NOT EXISTS (SELECT 1 FROM led WHERE led.tbl = fk.tbl AND led.first_col = fk.first_col)
 ORDER BY 1, 2;
 ```
 
-It reports the FK's *first* column, which is the one an index has to lead with; a composite is
-covered by an index leading with that column even if the rest differs.
-
-**Read the constraints, not the columns.** `notification` looked like it needed five indexes and
-needed three: `writing_group_id` and `chat_group_id` are not foreign keys of their own there, but
-halves of composites pointing at the *membership* — `(recipient_id, writing_group_id)` references
-`user_in_writing_group` — so those cascades search by `(recipient_id, …)`, which the existing
-recipient index already leads. A notification about a group dies with the membership rather than
-with the group, and that shape is what makes two of the five unnecessary. `actor_id`,
-`writing_thread_id` and `writing_post_id` are standalone and got one each, in
-`20260816131056_notification.sql`. `pg_get_constraintdef` over `pg_constraint` is what tells you
-which is which.
-
-**`ON DELETE SET NULL` needs one too.** It is not a delete, so it is easy to skip, but Postgres
-still has to *find* the rows before it can null them — `notification.actor_id` is the case here,
-and the plan goes from a sequential scan to an index scan exactly like a cascade does. `report`
-references seven things that way and is worth the same look.
+It reports the FK's *first* column, which is the one an index has to lead with.
 
 ## No pgcrypto
 

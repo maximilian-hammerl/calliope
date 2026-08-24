@@ -691,45 +691,30 @@ somebody blocked the reader is exactly the disclosure the neutral 403 avoids.
 
 ## Favourites
 
-One mark over five kinds — group, thread, post, story idea, chat — private to the member who set
-it. `PUT`/`DELETE /favourites/{targetType}/{targetId}` is the whole API: one pair of routes rather
-than five, the same argument that makes `ReportDialog` one component for seven kinds.
+One mark over five kinds, private to the member who set it. `PUT`/`DELETE
+/favourites/{targetType}/{targetId}` is the whole API — one pair of routes rather than five, the
+argument that makes `ReportDialog` one component for seven kinds.
 
-- **`favourite` carries no `target_type` column**, unlike `report`. Its references all cascade, so
-  exactly one is set for the row's whole life and the kind is readable off the data;
-  `notification` is the same shape for the same reason. `report` needs the enum precisely because
-  its references are `ON DELETE SET NULL`, which leaves a row naming nothing. The kind survives as
-  *request* vocabulary only — `FAVOURITE_COLUMN` in `service/favourite_target.ts` maps it to the
-  column to write, and `satisfies` makes a new kind a compile error naming it.
-- **`favourite_target.ts` is a leaf module on purpose.** The five services that join `favourite`
-  need its constants, and `favourite_service` reaches `visible_target`, which reaches back into
-  those services. Importing the constants from `favourite_service` closed that circle, and
-  TypeScript answers a circular import with `any` — which surfaced as a join column silently typed
-  as anything at all rather than as an error. Nothing about it looked wrong.
-- **Setting one is visibility-checked, clearing one is not.** `resolveVisibleTarget` is shared with
-  reporting, so the rules cannot drift. Clearing skips the check deliberately: a member who has
-  lost access to something they favourited must still be able to remove the mark, and refusing
-  would strand a row they can see in their own filter.
-- **Favouriting your own thing is allowed.** Marking what you are working on is the ordinary case.
-- **Every reference has its own partial index**, because the cascade needs one and
-  `favourite_one_per_member_idx` cannot serve it — it leads with `user_id`. Without them deleting a
-  thread scanned the whole table once per post. They are in the table's own migration; see
-  `database/AGENTS.md`, which also records the three ways this measurement goes wrong.
+- **`favourite` carries no `target_type` column**, unlike `report`, whose references are `SET NULL`
+  and so leave a row naming nothing. These cascade, so the kind is readable off the data and
+  survives only as request vocabulary: `FAVOURITE_COLUMN` maps it to the column to write.
+- **`favourite_target.ts` is a leaf module.** Importing its constants from `favourite_service`
+  closed a circle, and TypeScript answers that with `any` — a join column was unchecked rather than
+  an error, which nothing about it looked like.
+- **Setting one is visibility-checked, clearing one is not.** A member who has lost access to
+  something they favourited must still be able to remove the mark. `resolveVisibleTarget` is shared
+  with reporting, so the rules cannot drift. Favouriting your own thing is allowed.
 - **Ordering is one term, `ListOrdering.firstDescending`**, passed by the endpoint and never by a
-  request — which is what keeps it out of `dynamic.ref`'s injection surface. It names the output
-  alias `isFavourite` rather than a column, because the flag is an expression and Postgres resolves
-  an alias in `ORDER BY`. Posts are the one kind that does **not** pass it: a thread is read in the
-  order it was written, and hoisting a marked passage would put the end of a chapter above its
-  beginning. The thread strip writes its own term instead, since it is not a list endpoint.
+  request, which keeps it out of `dynamic.ref`'s injection surface. Posts do **not** pass it: a
+  thread is read in the order it was written. The thread strip writes its own, not being a list
+  endpoint.
 
-**One rule, two projections.** Favourites are why this pattern is written down: joining `favourite`
-into the group's visibility check would have put it on all seventeen callers, sixteen of which only
-ask yes or no. So `selectVisibleWritingGroup` is a lean gate and `selectWritingGroupForReader` is
-the full read, both built on the same base query builder. `selectStoryIdeaGate` and the chat's
-`ChatGroupGate` exist for the same reason, and the two chats ones mattered most: `selectChatGroup`
-ran a correlated `COUNT` over `chatMessage` on every message sent and every page read, to answer a
-question nobody was asking. Narrowing a selector produces a compile error at each caller that
-needed the wide one, so the boundary is found rather than guessed.
+**One rule, two projections.** Joining `favourite` into the group's visibility check would have put
+it on all seventeen callers, sixteen of which only ask yes or no — so `selectVisibleWritingGroup` is
+a lean gate and `selectWritingGroupForReader` the full read, both on the same base builder.
+`selectStoryIdeaGate` and `ChatGroupGate` exist for the same reason; the chat one mattered most,
+having run a correlated `COUNT` over `chatMessage` on every message sent. Narrowing a selector makes
+the compiler name each caller that needed the wide one.
 
 ## The report lifecycle
 
