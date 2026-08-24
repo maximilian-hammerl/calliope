@@ -67,7 +67,7 @@ before closing the current one.
 ```bash
 git clone https://github.com/maximilian-hammerl/calliope.git /opt/calliope
 cd /opt/calliope
-cp .env.deploy.example .env
+cp .example.deploy.env .env
 ```
 
 Edit `.env`: set `ENVIRONMENT` to what this machine actually is — it ships empty, and the

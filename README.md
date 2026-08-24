@@ -32,7 +32,8 @@ Requires [Deno](https://deno.com), [Node](https://nodejs.org),
 [dbmate](https://github.com/amacneil/dbmate).
 
 ```bash
-cp .env.example .env
+cp .example.env .env
+cp .claude/launch.example.json .claude/launch.json
 docker compose up -d --wait
 cd database && deno task migrations:migrate
 ```

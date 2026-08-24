@@ -1,4 +1,7 @@
 .env
+# Per-checkout, like .env: the preview tooling's port cannot be read from .env, so a
+# second checkout has to state its own. Copy .claude/launch.example.json.
+.claude/launch.json
 
 # Local scratch notes; never commit
 abc
