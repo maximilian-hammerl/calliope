@@ -72,12 +72,22 @@ app.use(structuredLogger({
   // one carried the status, and with no id tying them together they could not be read back as a
   // pair under concurrent traffic — which left a 400 naming no route at all.
   onResponse: (requestLogger, c, elapsed) => {
-    requestLogger.info("Request", {
+    const request = {
       method: c.req.method,
       path: c.req.path,
       status: c.res.status,
       durationMs: Math.round(elapsed),
-    });
+    };
+
+    // The container polls this every ten seconds, so at `info` it would be 8,640 lines a day
+    // burying everything the log exists to show. Only the *healthy* answer drops to `debug`: a
+    // 503 here is the container about to be restarted, which is exactly what you want to read.
+    if (c.req.path === "/api/health" && c.res.status === STATUS_CODE.OK) {
+      requestLogger.debug("Request", request);
+      return;
+    }
+
+    requestLogger.info("Request", request);
   },
   onError: (requestLogger, error, c, elapsed) => {
     const request = {

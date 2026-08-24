@@ -102,8 +102,8 @@ same reason), `service/`, `util/`, `middleware/`, `database/`, `redis/`, `test/`
 and helpers, never imported by anything that ships).
 
 A few files stay at `src/`'s root deliberately: `app.ts` composes everything, `text_limit.ts`
-is domain constants read across layers, and `open_api_specification.ts`, `cron.ts` and
-`cors_options.ts` are app-wide configuration.
+is domain constants read across layers, and `open_api_specification.ts`, `cron.ts`,
+`cors_options.ts` and `logging.ts` are app-wide configuration.
 
 `service/` is flat on purpose. Grouping it by domain would give `service/writing/writing_group_service.ts`
 — the word twice — so it would also mean dropping the prefixes, turning a move into renaming
@@ -322,6 +322,36 @@ a default would sit in a public repository forever.
 
 Component names (`CalliopeBadge`, `CalliopeLogo`) are identifiers, not branding, and stay. So do
 the systemd units, the compose project and the database name.
+
+## What the log says
+
+`src/logging.ts` configures LogTape once and exports the one logger. Only `main.ts` calls
+`configureLogging()`, which is why the test suite is silent. Requests are logged by
+`@hono/structured-logger` in `app.ts` — eighteen lines with no runtime dependencies, kept because
+it supplies the elapsed time and puts the logger on the context.
+
+- **One line per request**, carrying method, path, status and duration. It was two — an incoming
+  line with the path and a completed line with the status — and with nothing tying them together,
+  a 400 in the production log named no route at all. That is what turned a member's jammed
+  composer into a morning of work.
+- **A refusal is logged where it is produced, in the `defaultHook`.** That hook *returns* a
+  response rather than throwing, so the request middleware's `onError` never sees it: a validation
+  failure logged only by the middleware says `400` and nothing more. The line carries the same
+  mapped `{path, message}` issues the client is sent, so no value a member typed reaches the log.
+- **JSON lines in every environment.** `JSON.stringify(new Error("boom"))` is `{}`, so an error is
+  spelled out field by field in `describeError` — and a formatter that differed between
+  development and production would hide exactly that.
+- **`debug` in development and testing, `info` in staging and production**, from `ENVIRONMENT`. A
+  *healthy* `/api/health` drops to `debug` for the same reason: the container polls it every ten
+  seconds, which at `info` is 8,640 lines a day burying everything the log is for. A 503 there
+  still logs, because that is the container about to be restarted.
+- **An expected refusal is a warning, a bug is an error.** `HTTPException` is how Hono reports the
+  first, and it gets no stack — one per unauthenticated request would bury the second. Nothing
+  throws one today, so that branch is classification rather than a tested path.
+- **LogTape's meta logger is pinned to `warning`**, or it prints a paragraph about itself at every
+  boot, at the top of every `docker compose logs`.
+
+`logging_test.ts` pins the first two against a capturing sink, both checked by breaking them.
 
 ## Never raw SQL without asking
 
