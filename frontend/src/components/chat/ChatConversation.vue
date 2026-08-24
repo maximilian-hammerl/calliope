@@ -33,7 +33,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ favouriteChanged: [] }>()
 
-const { savingFavourite, changeFavourite } = useFavourite()
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
 
 const favourite = computed(() => favouriteToggle(props.isFavourite ?? false))
 
@@ -246,6 +246,16 @@ async function submit() {
         >
           {{ favourite.label }}
         </button>
+
+        <!-- As in `PostItem`: a raw button says its own failure, because it is not the shared
+             component that carries one. -->
+        <span
+          v-if="favouriteError"
+          class="flex items-center text-[12.5px] text-destructive"
+          role="alert"
+        >
+          {{ favouriteError }}
+        </span>
         <button
           type="button"
           class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"

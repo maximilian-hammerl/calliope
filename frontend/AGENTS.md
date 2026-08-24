@@ -426,6 +426,30 @@ conventions when you do it — `cn()` for class merging, a `data-slot` attribute
 HTMLAttributes['class']` as a prop — so the result does not read as foreign. Let reka position
 its own floating content; an `absolute` of our own fights it and sends the popover off-screen.
 
+## An error a composable produces must have a renderer
+
+Every `use*` that catches a failure and turns it into a German sentence — `useFavourite`,
+`useStoryIdeaActions`, the settings forms — is producing something for a member to read. If no
+component reads it, the failure is silent: the control re-enables, nothing changes, and it looks
+like a dead button rather than a request that did not go through.
+
+`useFavourite` shipped exactly that way. `favouriteError` was set on every failure and destructured
+by none of its five call sites, so an offline member, a 429 from the limiter, or a 404 from a group
+that went private in another tab all produced nothing at all on screen.
+
+Two shapes, and which one to use depends on where the control sits:
+
+- **A component used in more than one layout renders its own**, because delegating is what let this
+  one go unshown. `FavouriteToggle` wraps its button and the message in an `inline-flex` box, which
+  stays a single flex item in a row of buttons.
+- **A form or a section uses `Alert variant="destructive"`** with `role="alert"`, which is what the
+  settings sections, the dialogs and the composer already do. In a compact row a plain
+  `text-destructive` paragraph with `role="alert"` is the quieter version — `StepList` and the
+  story idea's `conversationError` both take that shape.
+
+Whichever it is, the message is written once in the composable rather than at each call site, so
+the wording cannot drift between the surfaces that share it.
+
 ## Exhaustive switches
 
 `lib/assertUnreachable.ts` in the `default` branch of any `switch` over a union. It is a
@@ -475,6 +499,11 @@ copied by hand once.
   neighbours. It is also what lets the ten-tab strip and the search popover carry it.
 - **Marks are named, not hidden.** `aria-label` *and* `title` — nothing else in the interface is
   icon-only, and hover is desktop-only, so the accessible name is what carries a phone.
+- **`FavouriteToggle` shows its own failure, unlike its success.** The success is emitted, because
+  what to refetch differs per caller; the failure is not, because it is the same sentence wherever
+  it happens. It is rendered inside an `inline-flex` box holding the button, so the component stays
+  one flex item in a row of buttons and no caller has to provide an error region. The two raw-button
+  surfaces say the same thing themselves, in their own row's size.
 - **Four marks, all on `CalliopeBadge`'s `mark` variant**: `FavouriteMark`, `ReadMark`,
   `ClosedMark` and `VisibilityMark`. Only the last renders for both of its states; the other three
   are a chip or nothing. Page headings keep the word — `GroupHeader` and `StoryIdeaDetail` — which

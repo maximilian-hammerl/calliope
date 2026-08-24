@@ -49,13 +49,39 @@ CREATE TABLE public.favourite
 -- no reference that can empty under it.
 --
 -- It is also what every list looks a favourite up through, since `user_id` leads it: each list
--- joins on its own column and the member's id. A per-kind index would only start paying once one
--- member has favourites in the thousands.
+-- joins on its own column and the member's id. Leading with `user_id` is what makes it useless for
+-- the cascade, which is why the per-kind indexes below exist.
 CREATE UNIQUE INDEX favourite_one_per_member_idx
     ON public.favourite (user_id, writing_group_id, writing_thread_id, writing_post_id,
                          story_idea_id, chat_group_id)
     NULLS NOT DISTINCT;
 
+-- One index per kind, so a cascade can find the favourites pointing at what is being deleted.
+-- Postgres indexes the *referenced* side of a foreign key and nothing on the referencing side, so
+-- without these `ON DELETE CASCADE` scans this whole table once per row deleted: a thread of a
+-- hundred posts meant a hundred scans. The index above cannot serve it either, because it leads
+-- with `user_id` and a lookup by target is not a prefix of that.
+--
+-- **Partial, because each row names exactly one thing.** A plain index would carry every row with
+-- four fifths of its entries NULL, five times over. `WHERE ... IS NOT NULL` keeps each to the rows
+-- of its own kind, and an equality lookup still uses it, since `col = $1` implies `col IS NOT
+-- NULL`. See `database/AGENTS.md` for how to measure this without fooling yourself.
+CREATE INDEX favourite_writing_group_idx ON public.favourite (writing_group_id)
+    WHERE writing_group_id IS NOT NULL;
+
+CREATE INDEX favourite_writing_thread_idx ON public.favourite (writing_thread_id)
+    WHERE writing_thread_id IS NOT NULL;
+
+CREATE INDEX favourite_writing_post_idx ON public.favourite (writing_post_id)
+    WHERE writing_post_id IS NOT NULL;
+
+CREATE INDEX favourite_story_idea_idx ON public.favourite (story_idea_id)
+    WHERE story_idea_id IS NOT NULL;
+
+CREATE INDEX favourite_chat_group_idx ON public.favourite (chat_group_id)
+    WHERE chat_group_id IS NOT NULL;
+
 -- migrate:down
 
+-- The indexes go with the table.
 DROP TABLE public.favourite;

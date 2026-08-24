@@ -42,6 +42,40 @@ Every `migrate:down` must actually reverse its `migrate:up`, including dropping 
 and trigger functions. Test the round trip against a throwaway database rather than the one
 you are working in.
 
+## A cascading foreign key needs an index of its own
+
+Postgres indexes the *referenced* side of a foreign key — it is a primary key — and nothing on the
+referencing side. So `ON DELETE CASCADE` has to find the rows pointing at what is being deleted,
+and without an index on that column it scans the whole table, once per deleted row.
+
+`favourite` is the worked example, and shipped without them. `favourite_one_per_member_idx` leads
+with `user_id`, so a lookup by target is not a prefix of it and cannot use it; deleting a thread of
+a hundred posts cascaded to a hundred deletes, each scanning every favourite on the platform. The
+per-kind indexes live in `20260824100000_favourite.sql`, beside the table they belong to.
+
+**Partial, where a row names exactly one thing.** These tables hold one nullable reference per kind
+with a CHECK that exactly one is set, so a plain index would carry every row of the table with four
+fifths of its entries NULL, once for each kind. `WHERE <column> IS NOT NULL` keeps each index to
+the rows of its own kind, and the planner still uses it for an equality lookup, because `col = $1`
+implies `col IS NOT NULL`.
+
+**Measuring this is easy to get wrong**, and it was got wrong twice before the index was written:
+
+- **A small table always answers Seq Scan.** With thirteen rows the planner will not use an index
+  whatever exists, so an EXPLAIN there says nothing either way. Fill a throwaway copy to a hundred
+  thousand rows inside a transaction and roll it back.
+- **`CREATE TABLE … (LIKE … INCLUDING ALL)` copies the indexes**, renaming them, so a "before" case
+  built that way already has the index under test. Plain `LIKE` copies columns only. The giveaway
+  is an index name in the plan that nobody created.
+- **`WHERE col = uuidv7()` never uses an index.** The function is volatile, so it is evaluated per
+  row. Compare against a literal.
+
+`notification` has the same shape and still has the gap — none of its indexes leads with
+`writing_group_id`, `writing_thread_id`, `writing_post_id`, `chat_group_id` or `actor_id`. It is
+written by the system rather than by members, so the volume is lower, but the fix is the same when
+it matters. `report` is not affected in the same way: its references are `ON DELETE SET NULL`,
+which still has to find the rows, so it is worth the same look.
+
 ## No pgcrypto
 
 Passwords and session tokens are hashed in the backend, so nothing in the schema needs the

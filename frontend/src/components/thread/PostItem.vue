@@ -31,7 +31,7 @@ const emit = defineEmits<{
   favouriteChanged: []
 }>()
 
-const { savingFavourite, changeFavourite } = useFavourite()
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
 
 const favourite = computed(() => favouriteToggle(props.post.isFavourite))
 
@@ -188,6 +188,12 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
         >
           {{ favourite.label }}
         </button>
+
+        <!-- Beside the action that failed, in the row's own size: the shared `FavouriteToggle`
+             carries its own message, and a raw button has to say the same thing itself. -->
+        <span v-if="favouriteError" class="flex items-center text-destructive" role="alert">
+          {{ favouriteError }}
+        </span>
         <button
           v-if="mayReport"
           type="button"

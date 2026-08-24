@@ -60,10 +60,20 @@ async function favouriteChanged(ideaId: string, isFavourite: boolean) {
 }
 
 /**
- * Which idea is being reported. The carousel holds every slide at once, so a boolean would open
- * the dialog for all of them — the id is what says which.
+ * Which idea is being reported, and whether the dialog is open — two refs rather than one.
+ * The carousel holds every slide at once, so the target cannot be a boolean on the slide; and the
+ * target cannot drive the dialog either, because clearing it would unmount the dialog mid-close
+ * and skip its exit animation. So the target is kept after closing and `reportingOpen` does the
+ * opening. `ReportDialog` resets its own form whenever `open` changes, so a second report starts
+ * clean whichever idea it is about.
  */
 const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined)
+const reportingOpen = ref<boolean>(false)
+
+function reportIdea(idea: { id: string; title: string }) {
+  reportingIdea.value = { id: idea.id, title: idea.title }
+  reportingOpen.value = true
+}
 </script>
 
 <template>
@@ -141,7 +151,7 @@ const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined)
                 heading="h2"
                 @read-changed="(isRead) => markIdea(idea.id, isRead)"
                 @favourite-changed="(isFavourite) => favouriteChanged(idea.id, isFavourite)"
-                @report="reportingIdea = { id: idea.id, title: idea.title }"
+                @report="reportIdea(idea)"
               />
             </div>
           </div>
@@ -150,13 +160,13 @@ const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined)
     </div>
   </AppLayout>
 
-  <!-- One dialog for the whole track rather than one per slide: `reportingIdea` says which. -->
+  <!-- One dialog for the whole track rather than one per slide: `reportingIdea` says which. The
+       `v-if` only holds until the first report; after that it stays mounted so it can close. -->
   <ReportDialog
     v-if="reportingIdea"
-    :open="true"
+    v-model:open="reportingOpen"
     target-type="story_idea"
     :target-id="reportingIdea.id"
     :subject="reportingIdea.title"
-    @update:open="(open) => !open && (reportingIdea = undefined)"
   />
 </template>

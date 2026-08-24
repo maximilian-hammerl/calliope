@@ -11,6 +11,9 @@
  * It emits rather than invalidating, because what has to be refetched belongs to the caller: a
  * list wants its own key, a detail page wants that one thing, and the carousel wants neither.
  *
+ * It does **not** delegate the error the same way. A failure is the same sentence wherever it
+ * happens, and leaving it to the caller is how it ended up produced and never shown at all.
+ *
  * **It takes no level.** This only ever appears on a thing's own page — a group, a thread, an idea
  * — which is always the object the screen is about, and that is Quiet by the design system's rule.
  * The prop that used to allow otherwise was set to `ghost` at all three call sites and put a Plain
@@ -31,7 +34,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ changed: [isFavourite: boolean] }>()
 
-const { savingFavourite, changeFavourite } = useFavourite()
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
 
 const toggle = computed(() => favouriteToggle(props.isFavourite))
 
@@ -44,14 +47,23 @@ async function change() {
 </script>
 
 <template>
-  <Button
-    type="button"
-    variant="outline"
-    size="sm"
-    :title="toggle.title"
-    :disabled="savingFavourite"
-    @click="change"
-  >
-    {{ toggle.label }}
-  </Button>
+  <!-- One inline-flex box rather than the bare button, so a failure has somewhere to be said: in
+       a row of buttons this stays a single flex item, and the message appears beside the control
+       that produced it instead of relying on five callers to remember an error region. -->
+  <span class="inline-flex items-center gap-2">
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      :title="toggle.title"
+      :disabled="savingFavourite"
+      @click="change"
+    >
+      {{ toggle.label }}
+    </Button>
+
+    <span v-if="favouriteError" class="text-[12.5px] text-destructive" role="alert">
+      {{ favouriteError }}
+    </span>
+  </span>
 </template>

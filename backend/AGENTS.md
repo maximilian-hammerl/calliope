@@ -711,6 +711,10 @@ than five, the same argument that makes `ReportDialog` one component for seven k
   lost access to something they favourited must still be able to remove the mark, and refusing
   would strand a row they can see in their own filter.
 - **Favouriting your own thing is allowed.** Marking what you are working on is the ordinary case.
+- **Every reference has its own partial index**, because the cascade needs one and
+  `favourite_one_per_member_idx` cannot serve it — it leads with `user_id`. Without them deleting a
+  thread scanned the whole table once per post. They are in the table's own migration; see
+  `database/AGENTS.md`, which also records the three ways this measurement goes wrong.
 - **Ordering is one term, `ListOrdering.firstDescending`**, passed by the endpoint and never by a
   request — which is what keeps it out of `dynamic.ref`'s injection surface. It names the output
   alias `isFavourite` rather than a column, because the flag is an expression and Postgres resolves
