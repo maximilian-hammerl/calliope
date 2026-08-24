@@ -234,16 +234,10 @@ const favouriteColumn = (eb: ExpressionBuilder<DB, "favourite">) =>
   eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE);
 
 /**
- * Whether the member may see the group, and their own standing in it. **Not the whole row**, and
- * that is the point: sixteen of the seventeen callers use this as an authorisation gate and most
- * of them only test it for `undefined`, while a group carries a synopsis of up to eight thousand
- * characters and four tag arrays. Fetching those to answer a yes/no question is what this stopped.
- *
- * `title` is here because it is small and because it is the excerpt `resolveVisibleTarget` needs
- * for a reported group.
- *
- * The one caller that renders a group asks `selectWritingGroupForReader` instead. Both are built
- * on `visibleToUser`, so the *rule* is written once and only the projection differs.
+ * Whether the member may see the group, and their own standing in it — **not** the whole row.
+ * Sixteen of the seventeen callers use this as a gate, and a group carries a synopsis of up to
+ * eight thousand characters. `selectWritingGroupForReader` is the full read; both build on
+ * `visibleToUser`, so the rule is written once and only the projection differs.
  */
 export type VisibleWritingGroupGate = {
   id: string;

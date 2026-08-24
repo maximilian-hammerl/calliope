@@ -46,6 +46,9 @@ CREATE INDEX writing_thread_writing_group_id_idx ON public.writing_thread (writi
 CREATE INDEX writing_thread_created_by_idx ON public.writing_thread (created_by);
 CREATE INDEX writing_post_writing_thread_id_idx ON public.writing_post (writing_thread_id);
 CREATE INDEX writing_post_created_by_idx ON public.writing_post (created_by);
+-- Partial, unlike its neighbour above: most posts are never edited.
+CREATE INDEX writing_post_edited_by_idx
+    ON public.writing_post (edited_by) WHERE edited_by IS NOT NULL;
 
 -- The composer holds exactly one draft per thread, so two tabs cannot quietly leave a second
 -- one behind. Authors are compared as ids: a draft whose author was deleted has created_by

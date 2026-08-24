@@ -1,19 +1,11 @@
 <script setup lang="ts">
 /**
- * A group's visibility as a mark, for a row that is scanned rather than read. Unlike „Favorit",
- * „Gelesen" and „Geschlossen", **both states show one**: those three are a mark or nothing, because
- * their absence says nothing worth a chip, while a group is always one of two things and
- * „öffentlich" should be read rather than inferred from a missing lock.
+ * Both states show a mark, unlike „Favorit" and „Gelesen": a group is always one of two things, so
+ * „öffentlich" should be read rather than inferred from a missing lock. The page heading keeps the
+ * word, which is what teaches the lock.
  *
- * The page heading keeps the word — see `GroupHeader`. That is what teaches the lock: you meet
- * „Privat" on the group's own page, and it is also the screen somebody is on when they are about to
- * write, which is where a misread visibility would actually cost something.
- *
- * **Open question, pending member feedback.** The two glyphs differ only by where the shackle sits,
- * which is a fine distinction at 13px, and this is the fact whose misreading costs the most. Three
- * ways out were tried and are worse: filling either lock makes a solid body that stops reading as a
- * lock at all, and `Globe` for public claims the internet when „öffentlich" here means the
- * community. If members do report confusing the two, the fix is the word — see the design system.
+ * The two glyphs are a shackle apart at 13px and this is the mark whose misreading costs most, so
+ * it ships to collect feedback — see the design system, which records what else was tried.
  */
 import { computed } from 'vue'
 import { Lock, LockOpen } from '@lucide/vue'

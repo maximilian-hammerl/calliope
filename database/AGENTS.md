@@ -69,12 +69,58 @@ implies `col IS NOT NULL`.
   is an index name in the plan that nobody created.
 - **`WHERE col = uuidv7()` never uses an index.** The function is volatile, so it is evaluated per
   row. Compare against a literal.
+- **`LIKE` copies columns and nothing else.** The probe's inserts fail on `NOT NULL DEFAULT now()`
+  without `INCLUDING DEFAULTS`, and on a `GENERATED ALWAYS AS … STORED` column — `report.status` —
+  without `INCLUDING GENERATED`. Both errors name the column, so they are quick to read; the point
+  is to add the two rather than reach for `INCLUDING ALL`.
 
-`notification` has the same shape and still has the gap — none of its indexes leads with
-`writing_group_id`, `writing_thread_id`, `writing_post_id`, `chat_group_id` or `actor_id`. It is
-written by the system rather than by members, so the volume is lower, but the fix is the same when
-it matters. `report` is not affected in the same way: its references are `ON DELETE SET NULL`,
-which still has to find the rows, so it is worth the same look.
+**A partial index still counts, if its predicate is the column being present.** `WHERE col IS NOT
+NULL` serves `col = $1`, so an audit that skips every partial index reports the fix it just made as
+missing. But a partial index predicated on anything *else* does not: `report`'s
+`report_one_open_per_reporter_and_category_idx` leads with `reporter_id` and is useless for finding
+a member's reports, because `reporter_id = $1` does not imply its `closed_at IS NULL`. Measured:
+sequential scan with only that index, index scan once `report_reporter_idx` exists.
+
+This finds what is left, and is worth running after adding a table:
+
+```sql
+WITH fk AS (
+  SELECT c.conrelid::regclass::text AS tbl,
+         (SELECT a.attname FROM pg_attribute a
+           WHERE a.attrelid = c.conrelid AND a.attnum = c.conkey[1]) AS first_col,
+         c.confdeltype
+  FROM pg_constraint c
+  WHERE c.contype = 'f' AND c.connamespace = 'public'::regnamespace
+), led AS (
+  SELECT i.indrelid::regclass::text AS tbl,
+         (SELECT a.attname FROM pg_attribute a
+           WHERE a.attrelid = i.indrelid AND a.attnum = i.indkey[0]) AS first_col
+  FROM pg_index i
+  WHERE i.indpred IS NULL OR pg_get_expr(i.indpred, i.indrelid) LIKE '%IS NOT NULL%'
+)
+SELECT fk.tbl, fk.first_col, fk.confdeltype
+FROM fk
+WHERE NOT EXISTS (SELECT 1 FROM led WHERE led.tbl = fk.tbl AND led.first_col = fk.first_col)
+ORDER BY 1, 2;
+```
+
+It reports the FK's *first* column, which is the one an index has to lead with; a composite is
+covered by an index leading with that column even if the rest differs.
+
+**Read the constraints, not the columns.** `notification` looked like it needed five indexes and
+needed three: `writing_group_id` and `chat_group_id` are not foreign keys of their own there, but
+halves of composites pointing at the *membership* — `(recipient_id, writing_group_id)` references
+`user_in_writing_group` — so those cascades search by `(recipient_id, …)`, which the existing
+recipient index already leads. A notification about a group dies with the membership rather than
+with the group, and that shape is what makes two of the five unnecessary. `actor_id`,
+`writing_thread_id` and `writing_post_id` are standalone and got one each, in
+`20260816131056_notification.sql`. `pg_get_constraintdef` over `pg_constraint` is what tells you
+which is which.
+
+**`ON DELETE SET NULL` needs one too.** It is not a delete, so it is easy to skip, but Postgres
+still has to *find* the rows before it can null them — `notification.actor_id` is the case here,
+and the plan goes from a sequential scan to an index scan exactly like a cascade does. `report`
+references seven things that way and is worth the same look.
 
 ## No pgcrypto
 

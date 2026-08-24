@@ -18,12 +18,8 @@ export type FavouriteRefusal = "not_found";
 
 /**
  * **You can only favourite what you can see**, through the same resolver reporting uses: answering
- * differently for a thing that exists and a thing the member cannot see would turn favouriting
- * into a way of discovering private writing.
- *
- * Favouriting one's *own* group, idea or post is deliberately allowed, unlike reporting it and
- * unlike marking a story idea read. Both of those are about somebody else's thing by definition;
- * keeping your own group at the top of your own list is an ordinary thing to want.
+ * differently for a thing that exists and one the member cannot see would turn favouriting into a
+ * way of discovering private writing. Favouriting your *own* thing is deliberately allowed.
  */
 async function setFavourite(
   user: User,

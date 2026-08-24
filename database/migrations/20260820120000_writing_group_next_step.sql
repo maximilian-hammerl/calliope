@@ -23,6 +23,12 @@ CREATE TABLE public.writing_group_next_step
 -- The list is read per group, open steps by age, completed ones by completion.
 CREATE INDEX writing_group_next_step_group_idx
     ON public.writing_group_next_step (writing_group_id, completed_at, created_at);
+-- Partial: a step carries no completer until somebody ticks it.
+CREATE INDEX writing_group_next_step_created_by_idx
+    ON public.writing_group_next_step (created_by) WHERE created_by IS NOT NULL;
+
+CREATE INDEX writing_group_next_step_completed_by_idx
+    ON public.writing_group_next_step (completed_by) WHERE completed_by IS NOT NULL;
 
 -- migrate:down
 

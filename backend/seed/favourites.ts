@@ -10,15 +10,12 @@ import {
 import type { FavouriteTargetType } from "@/src/service/favourite_target.ts";
 
 /**
- * Favourites across all five kinds, because every filter in the interface is otherwise an empty
- * list on a fresh checkout and the flag is never true anywhere: reaching either state means
- * clicking through five surfaces by hand before the feature can be looked at.
+ * All five kinds, because every filter is otherwise an empty list on a fresh checkout and the flag
+ * is never true anywhere.
  *
- * **What this fixture cannot show is the ordering**, on three of the five kinds. Groups, threads
- * and chats sort by `last_activity_at`, which the seed does not spread — see `write.ts` — so the
- * whole fixture ties and "first" is arbitrary before any favourite is involved. Posts and story
- * ideas do carry staggered timestamps, and those two are where a favourite visibly moves
- * something. The backend tests are what prove the term itself.
+ * It cannot show the *ordering* on groups, threads or chats: they sort by `last_activity_at`, which
+ * the seed does not spread — see `write.ts`. Posts and ideas are staggered, so those two are where
+ * a favourite visibly moves something.
  */
 export type FavouriteFixture = {
   id: string;

@@ -1,12 +1,7 @@
 <script setup lang="ts">
 /**
- * „Gelesen" as a mark, the read state's half of what `FavouriteMark` does for favourites — the two
- * sit side by side on an idea row and are built alike for that reason.
- *
- * `BookCheck` rather than `BookOpenCheck`: an open book reads as *being* read, and its two page
- * curves plus the check are dense at 14px. A closed book with a check is a finished one. The check
- * is not the collision with `SquareCheck` it first looks like — a check means done in both, and the
- * noun in front of it says done with what.
+ * `BookCheck`, not `BookOpenCheck`: an open book reads as *being* read, and its page curves plus
+ * the check are dense at 13px.
  */
 import { BookCheck } from '@lucide/vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'

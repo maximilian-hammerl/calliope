@@ -1,27 +1,10 @@
 -- migrate:up
 
--- One member marking one thing, in the polymorphic shape `report` and `notification` both use:
--- one nullable reference per kind and a CHECK holding them together.
+-- One member marking one thing. No `target_type` column, unlike `report` and `notification`:
+-- these references CASCADE, so exactly one stays non-null for the row's life and the kind is
+-- readable off the data. A sixth kind is then a column and nothing else.
 --
--- **It carries no target-type column, and the reason is worth knowing**, because the two tables it
--- resembles both do.
---
--- `report`'s references are ON DELETE SET NULL, because a report is evidence and must outlive
--- what it names — so once the target is deleted the columns say nothing, and only
--- `target_type` still records what kind of thing it was. `notification.type` is not a target
--- discriminant at all: four of its seven values set `writing_group_id` and nothing else, so the
--- type carries what the columns cannot.
---
--- Here neither holds. These references CASCADE, so exactly one is non-null for the whole life of
--- the row, and each column has exactly one meaning — the kind is always readable off the data. A
--- column repeating it could only ever disagree with it.
---
--- What follows is that the CHECK gets to be the whole rule in one line rather than a CASE per
--- kind, and that a sixth kind is a column and nothing else: no enum value, no new branch, and
--- `num_nonnulls` covers it the moment it exists.
---
--- No `updated_at`: nothing about a favourite changes. It exists or it does not, and `created_at`
--- is what orders one member's favourites among themselves if anything ever wants to.
+-- No `updated_at`: a favourite exists or it does not.
 CREATE TABLE public.favourite
 (
     id                UUID PRIMARY KEY                DEFAULT uuidv7(),
@@ -56,16 +39,8 @@ CREATE UNIQUE INDEX favourite_one_per_member_idx
                          story_idea_id, chat_group_id)
     NULLS NOT DISTINCT;
 
--- One index per kind, so a cascade can find the favourites pointing at what is being deleted.
--- Postgres indexes the *referenced* side of a foreign key and nothing on the referencing side, so
--- without these `ON DELETE CASCADE` scans this whole table once per row deleted: a thread of a
--- hundred posts meant a hundred scans. The index above cannot serve it either, because it leads
--- with `user_id` and a lookup by target is not a prefix of that.
---
--- **Partial, because each row names exactly one thing.** A plain index would carry every row with
--- four fifths of its entries NULL, five times over. `WHERE ... IS NOT NULL` keeps each to the rows
--- of its own kind, and an equality lookup still uses it, since `col = $1` implies `col IS NOT
--- NULL`. See `database/AGENTS.md` for how to measure this without fooling yourself.
+-- Per kind, because the cascade needs one and the index above cannot serve it: it leads with
+-- `user_id`. Partial, so each holds only its own kind.
 CREATE INDEX favourite_writing_group_idx ON public.favourite (writing_group_id)
     WHERE writing_group_id IS NOT NULL;
 

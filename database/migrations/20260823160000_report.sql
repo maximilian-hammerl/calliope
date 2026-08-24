@@ -249,6 +249,38 @@ CREATE INDEX report_status_created_idx ON public.report (status, created_at DESC
 CREATE INDEX report_status_category_idx ON public.report (status, category);
 CREATE INDEX report_status_closing_outcome_idx ON public.report (status, closing_outcome);
 
+-- All ten references, none led by an index above: the unique index leads with `reporter_id` but is
+-- partial on `closed_at IS NULL`, so it cannot find a member's closed reports.
+CREATE INDEX report_reporter_idx ON public.report (reporter_id)
+    WHERE reporter_id IS NOT NULL;
+
+CREATE INDEX report_reported_author_idx ON public.report (reported_author_id)
+    WHERE reported_author_id IS NOT NULL;
+
+CREATE INDEX report_operator_idx ON public.report (operator_id)
+    WHERE operator_id IS NOT NULL;
+
+CREATE INDEX report_reported_user_idx ON public.report (reported_user_id)
+    WHERE reported_user_id IS NOT NULL;
+
+CREATE INDEX report_reported_writing_group_idx ON public.report (reported_writing_group_id)
+    WHERE reported_writing_group_id IS NOT NULL;
+
+CREATE INDEX report_reported_writing_thread_idx ON public.report (reported_writing_thread_id)
+    WHERE reported_writing_thread_id IS NOT NULL;
+
+CREATE INDEX report_reported_writing_post_idx ON public.report (reported_writing_post_id)
+    WHERE reported_writing_post_id IS NOT NULL;
+
+CREATE INDEX report_reported_story_idea_idx ON public.report (reported_story_idea_id)
+    WHERE reported_story_idea_id IS NOT NULL;
+
+CREATE INDEX report_reported_chat_group_idx ON public.report (reported_chat_group_id)
+    WHERE reported_chat_group_id IS NOT NULL;
+
+CREATE INDEX report_reported_chat_message_idx ON public.report (reported_chat_message_id)
+    WHERE reported_chat_message_id IS NOT NULL;
+
 -- migrate:down
 
 DROP TABLE public.report;

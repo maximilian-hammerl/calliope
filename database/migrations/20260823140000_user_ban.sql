@@ -25,7 +25,12 @@ ALTER TABLE public.user
             OR (banned_at IS NOT NULL AND ban_reason IS NOT NULL)
         );
 
+-- Partial: `banned_by` is null on all but a handful of accounts.
+CREATE INDEX user_banned_by_idx ON public.user (banned_by) WHERE banned_by IS NOT NULL;
+
 -- migrate:down
+
+DROP INDEX public.user_banned_by_idx;
 
 ALTER TABLE public.user
     DROP CONSTRAINT user_ban_is_complete;

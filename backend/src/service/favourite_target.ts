@@ -1,17 +1,9 @@
 import type { Favourite } from "@/src/database/schema.ts";
 
 /**
- * What a favourite can name, and where each kind's id goes. A leaf module on purpose: the five
- * services that join `favourite` need these constants, and `favourite_service` reaches
- * `visible_target`, which reaches back into those services. Importing the constants from there
- * closed that circle, and TypeScript answers a circular import with `any` — which showed up as a
- * join column silently typed as anything at all rather than as an error.
- *
- * **The kind is request vocabulary, not a stored fact.** `favourite` carries no `target_type`
- * column: its references cascade, so exactly one is set for the row's whole life and each column
- * means one thing, which makes the kind readable off the data. What the API needs a name for is
- * *which column to write* — see the migration for why the table differs from `report` and
- * `notification` here.
+ * What a favourite can name, and where each kind's id goes. A leaf module because the five services
+ * that join `favourite` need these, and importing them from `favourite_service` closed a circle —
+ * which TypeScript answers with `any`, so a join column was unchecked rather than an error.
  */
 export const FAVOURITE_TARGET_TYPES = [
   "writing_group",

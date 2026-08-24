@@ -1,12 +1,7 @@
 <script setup lang="ts">
 /**
- * „Geschlossen" as a mark. `CircleCheckBig` rather than a lock, which was the first thought and the
- * wrong one: a closed idea keeps its page and every word of it, and a lock says you cannot get in.
- * The author has finished looking for co-writers, which is settled rather than shut — and a check
- * already means *done* here, with the noun in front saying done with what.
- *
- * One-sided, like every mark here: an open idea is the board's resting state and takes no chip. The
- * idea's own page still writes both words out, because there the status is the subject.
+ * `CircleCheckBig` rather than a lock: a closed idea keeps its page and every word of it, so a lock
+ * would say you cannot get in. The author has only stopped looking, which a check already says.
  */
 import { CircleCheckBig } from '@lucide/vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'

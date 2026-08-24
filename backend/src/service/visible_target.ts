@@ -9,18 +9,12 @@ import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 
 /**
  * Whether a member may see one of the things this platform lets them act on, and what it says.
+ * Reporting and favouriting both ask, because either answering differently for a thing that exists
+ * and a thing the member cannot see would turn it into a way of discovering private writing.
  *
- * Two features ask: reporting, which needs the excerpt as well, and favouriting, which needs only
- * the answer. Both must ask, because either one answering differently for a thing that exists and
- * a thing the member cannot see would turn it into a way of discovering private writing.
- *
- * Typed over `ReportTargetType` because that is the widest set — `FavouriteTargetType`'s five
- * values are a subset of these seven, so a favourite's type is assignable without a cast.
- *
- * Threads, posts and chat messages are reached through the thing that governs them rather than
- * checked here: the group's visibility rule and the chat's membership rule live in one place
- * each, and a second copy of either is how a private group's writing became readable once
- * already.
+ * Typed over `ReportTargetType`, the wider set, so a favourite's five values are assignable.
+ * Threads, posts and messages are reached through whatever governs them, so the group's visibility
+ * rule and the chat's membership rule each stay in one place.
  */
 export type VisibleTarget = { authorId: string | null };
 
@@ -42,18 +36,10 @@ function excerpt(text: string): string {
 }
 
 /**
- * `undefined` when the member may not see it, which every caller answers as 404 so that asking
- * cannot confirm something exists.
- */
-/**
- * **The excerpt is opt-in, because one kind of it is expensive.** A post's body runs to a hundred
- * thousand characters, which Postgres stores out of line, so selecting it costs a detoast and the
- * whole string over the wire — measured at about 0.1ms server-side per call plus the transfer,
- * against 500 reads. Reporting needs it and asks; favouriting only needs the answer and does not,
- * and favouriting is the one people do freely.
+ * `undefined` when the member may not see it, which every caller answers as 404.
  *
- * One dispatch either way. Two functions would mean two copies of five visibility rules, which is
- * the thing this module exists to prevent — so what varies is a column in one branch, not a rule.
+ * The excerpt is opt-in because a post's body is TOASTed: selecting it costs a detoast and the
+ * whole string over the wire, and favouriting needs only the answer.
  */
 export function resolveVisibleTarget(
   user: User,

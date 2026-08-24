@@ -28,15 +28,11 @@ const props = withDefaults(
 )
 
 /**
- * The actions live here rather than in a slot, and the slot is gone rather than left as an
- * override. Both callers — the idea's own page and the carousel — filled it themselves and drifted:
- * the carousel never grew „Melden", and it went a release without „Favorit" after the page got one.
- * A seam left open is the one that gets used.
+ * The actions live here rather than in a slot, and the slot is gone rather than left as an override:
+ * both callers filled it themselves and drifted, and a seam left open is the one that gets used.
  *
- * What a caller still decides is what to *refetch*, which genuinely differs — the page refetches
- * the idea, the carousel updates its slide by hand because refetching would rebuild the set around
- * the reader. So those are emits, and the dialogs stay with the callers: the carousel needs a
- * report dialog keyed by id and never shows editing or deletion at all.
+ * What a caller still decides is what to refetch, which genuinely differs, so those are emits. The
+ * dialogs stay with the callers too — the carousel keys its report dialog by id.
  */
 const emit = defineEmits<{
   readChanged: [isRead: boolean]
