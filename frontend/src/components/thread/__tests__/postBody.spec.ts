@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import type { PostDocument } from '@/api/models'
 import PostBody from '@/components/thread/PostBody.vue'
+import { EXPECTED } from '@/lib/document/__tests__/documentFixture'
 
 /**
  * `PostBody` is the application's only `v-html`, so what it refuses to turn into markup is the part
@@ -70,15 +71,30 @@ describe('PostBody', () => {
     expect(html).toContain('Zelle')
   })
 
-  it('renders empty rather than throwing on a document it cannot understand', () => {
-    // Deliberately outside the type: this is the case where a stored document predates the
-    // vocabulary the renderer knows.
-    const html = render({
-      type: 'doc',
-      content: [{ type: 'unbekannt' }],
-    } as unknown as PostDocument)
+  it('renders every node and mark the format allows', () => {
+    // `PostBody` does not guard `generateHTML`, so this is what keeps that safe: if the schema ever
+    // accepted something these extensions cannot render, a post would throw while rendering. The
+    // fixture is the whole vocabulary, and the backend asserts the schema accepts the same one.
+    const html = render(EXPECTED)
 
-    expect(html).toContain('div')
-    expect(html).not.toContain('unbekannt')
+    for (const element of [
+      '<h2',
+      '<ul',
+      '<ol',
+      '<blockquote',
+      '<pre',
+      '<hr',
+      '<br',
+      '<img',
+      '<table',
+      '<strong',
+      '<em',
+      '<u',
+      '<s>',
+      '<code',
+      '<a ',
+    ]) {
+      expect(html, `missing ${element}`).toContain(element)
+    }
   })
 })

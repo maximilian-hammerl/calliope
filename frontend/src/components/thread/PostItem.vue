@@ -4,6 +4,7 @@ import { formatActivityTime } from '@/lib/format/formatTime'
 import type { ListPosts200ResultsItem, PostDocument } from '@/api/models'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { emptyDocument } from '@/lib/document/emptyDocument'
+import { sameDocument } from '@/lib/document/sameDocument'
 import PostBody from '@/components/thread/PostBody.vue'
 import PostEditor from '@/components/thread/PostEditor.vue'
 
@@ -67,9 +68,7 @@ watch(
 )
 
 /** Compared as documents: re-bolding a word changes no prose, and Speichern must still light up. */
-const unchanged = computed<boolean>(
-  () => JSON.stringify(draft.value) === JSON.stringify(props.post.document),
-)
+const unchanged = computed<boolean>(() => sameDocument(draft.value, props.post.document))
 
 /**
  * Named only when somebody other than the author edited it — an administrator may, and that is

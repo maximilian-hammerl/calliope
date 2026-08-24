@@ -8,16 +8,17 @@
  * rather than replace it. Alignment is the one exception and says why below.
  */
 import type { Component } from 'vue'
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import type { ChainedCommands, Editor } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { AlignCenter, AlignJustify, AlignLeft, AlignRight } from '@lucide/vue'
 import type { PostDocument } from '@/api/models'
-import { EDITOR_EXTENSIONS } from '@/lib/document/extensions'
+import { DOCUMENT_EXTENSIONS } from '@/lib/document/extensions'
+import { sameDocument } from '@/lib/document/sameDocument'
+import LinkDialog from '@/components/thread/LinkDialog.vue'
 
 const props = defineProps<{ document: PostDocument; disabled?: boolean }>()
 
-const linkError = ref<string | undefined>(undefined)
 const emit = defineEmits<{
   'update:document': [PostDocument]
   /** The prose, for the length guard and the empty check — `getText()` rather than a second walker. */
@@ -26,7 +27,7 @@ const emit = defineEmits<{
 
 const editor = useEditor({
   content: props.document,
-  extensions: EDITOR_EXTENSIONS,
+  extensions: DOCUMENT_EXTENSIONS,
   editable: !props.disabled,
   editorProps: {
     attributes: {
@@ -34,6 +35,12 @@ const editor = useEditor({
       class:
         'prose-post min-h-[76px] w-full text-ink-3 caret-oak outline-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-ink-6 [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
       'aria-label': 'Beitrag schreiben',
+      // Tiptap sets `role="textbox"` when it creates the view, and then loses it: mounting
+      // through `EditorContent` calls `setOptions({ element })`, which hands ProseMirror
+      // `editorProps` as stored — without the role it injected — and `setProps` replaces rather
+      // than merges. Declared here so it survives, with the `aria-multiline` the role needs.
+      role: 'textbox',
+      'aria-multiline': 'true',
     },
   },
   onUpdate: ({ editor: instance }) => {
@@ -52,7 +59,7 @@ watch(
   (next) => {
     const instance = editor.value
     if (instance === undefined) return
-    if (JSON.stringify(instance.getJSON()) === JSON.stringify(next)) return
+    if (sameDocument(instance.getJSON() as PostDocument, next)) return
     instance.commands.setContent(next, { emitUpdate: false })
   },
 )
@@ -61,8 +68,6 @@ watch(
   () => props.disabled,
   (disabled) => editor.value?.setEditable(!disabled),
 )
-
-onBeforeUnmount(() => editor.value?.destroy())
 
 defineExpose({ focus: () => editor.value?.commands.focus() })
 
@@ -190,38 +195,32 @@ function isActive(tool: Tool): boolean {
   return instance !== undefined && tool.active(instance)
 }
 
+const linkDialogOpen = ref<boolean>(false)
+
 /**
- * A prompt rather than a dialog, for this pass. The scheme is checked here as well as by the API,
- * so a member is told at once instead of on submit.
+ * The address of the link under the cursor, read when the dialog opens rather than derived.
+ *
+ * A `computed` passed as a prop looked equivalent and was not: the dialog fills its field from a
+ * watcher on `open`, so whether it saw the current href depended on the order two props updated in
+ * one render. A snapshot is what the dialog actually wants — the link as it was when it was asked
+ * for — and it cannot be stale.
  */
-function setLink() {
-  const instance = editor.value
-  if (instance === undefined) return
+const linkHref = ref<string | undefined>(undefined)
 
-  if (instance.isActive('link')) {
-    instance.chain().focus().unsetLink().run()
-    return
-  }
+function openLinkDialog() {
+  const attributes = editor.value?.getAttributes('link') as { href?: unknown } | undefined
+  linkHref.value = typeof attributes?.href === 'string' ? attributes.href : undefined
+  linkDialogOpen.value = true
+}
 
-  const entered = globalThis.prompt('Adresse des Links')?.trim()
-  if (entered === undefined || entered.length === 0) return
+function setLink(href: string) {
+  // `extendMarkRange` so editing a link with the cursor merely inside it replaces the whole thing
+  // rather than splitting it in two.
+  editor.value?.chain().focus().extendMarkRange('link').setLink({ href }).run()
+}
 
-  let url: URL
-  try {
-    url = new URL(entered)
-  } catch {
-    linkError.value =
-      'Das ist keine vollständige Adresse. Sie muss mit http:// oder https:// beginnen.'
-    return
-  }
-
-  if (!['http:', 'https:'].includes(url.protocol)) {
-    linkError.value = 'Nur Links mit https:// oder http:// sind möglich.'
-    return
-  }
-
-  linkError.value = undefined
-  instance.chain().focus().setLink({ href: url.toString() }).run()
+function removeLink() {
+  editor.value?.chain().focus().extendMarkRange('link').unsetLink().run()
 }
 
 function apply(tool: Tool) {
@@ -234,10 +233,6 @@ function apply(tool: Tool) {
 <template>
   <div>
     <EditorContent :editor="editor" />
-
-    <p v-if="linkError" class="mt-1.5 text-[11.5px] leading-[1.5] text-destructive" role="alert">
-      {{ linkError }}
-    </p>
 
     <!-- Scrolls rather than wrapping or hiding: formatting has to be reachable on a phone, and a
          second row would push the writing off a short screen. -->
@@ -267,7 +262,7 @@ function apply(tool: Tool) {
         </button>
       </template>
 
-      <!-- Not in `TOOLS`: it prompts for an address, so it is not a chainable toggle. -->
+      <!-- Not in `TOOLS`: it opens a dialog for the address, so it is not a chainable toggle. -->
       <button
         type="button"
         title="Link"
@@ -279,10 +274,17 @@ function apply(tool: Tool) {
             ? 'border-line-4 bg-paper-0 text-ink-1'
             : 'border-transparent text-ink-5 hover:text-ink-2'
         "
-        @click="setLink()"
+        @click="openLinkDialog()"
       >
         Link
       </button>
     </div>
+
+    <LinkDialog
+      v-model:open="linkDialogOpen"
+      :href="linkHref"
+      @submit="setLink"
+      @remove="removeLink"
+    />
   </div>
 </template>

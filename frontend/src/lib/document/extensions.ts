@@ -27,21 +27,22 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { Underline } from '@tiptap/extension-underline'
 
 /**
- * What the composer can produce, and therefore what the backend must accept.
+ * The whole vocabulary `DOCUMENT_SCHEMA` accepts — one list, used to edit, to render, and to build
+ * the conformance fixture.
  *
- * `DOCUMENT_SCHEMA` in the backend allows a wider vocabulary than this on purpose — images and
- * tables are in the format but have no controls yet — so the list here is a subset, not a
- * disagreement. Anything absent is also absent from a **paste**: pasting a table drops it rather
- * than storing something no control can edit.
+ * **It is deliberately not "what the composer has controls for".** It was that once, and the
+ * consequence was silent data loss: ProseMirror drops a document it cannot parse *in full*, so an
+ * editor without `Table` opened a post containing one as an empty paragraph, and saving destroyed
+ * the prose around it too. A control a member does not have is a missing button; a node type the
+ * editor cannot hold is a lost post. `__tests__/extensions.spec.ts` holds that line.
  *
- * `Image` is deliberately not loaded. Its `src` must be a relative path under our own origin
- * (#31), so a pasted image would carry an absolute URL the server refuses, and the member would
- * see a validation error they cannot act on.
+ * The one cost of loading `Image` before #31: a pasted external image carries an absolute `src`,
+ * which the schema refuses on save. A validation error on an edge case, against losing a post.
  *
  * The alignment types are the two block nodes that have the attribute in the schema. Adding a
  * third here without adding it there produces documents the API rejects.
  */
-export const EDITOR_EXTENSIONS = [
+export const DOCUMENT_EXTENSIONS = [
   // Behaviour rather than vocabulary: these add no node or mark, so they cannot widen what the
   // API has to accept. `UndoRedo` is not optional — a textarea gets undo from the browser, and a
   // contenteditable without a history plugin has none at all.
@@ -74,21 +75,9 @@ export const EDITOR_EXTENSIONS = [
   // so a class set that way is stored in every link. Links are styled from the wrapper instead.
   Link.configure({ openOnClick: false }),
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
-]
-
-/**
- * What rendering a stored post has to understand: everything `DOCUMENT_SCHEMA` accepts, which is
- * wider than the composer can produce. A document holding a table would otherwise be dropped
- * silently on the way to the screen.
- *
- * The fixture in `__tests__/tiptapVocabulary.spec.ts` is built on this list, so what the schema
- * allows, the reader renders, and the test pins, are one vocabulary.
- */
-export const RENDER_EXTENSIONS = [
-  ...EDITOR_EXTENSIONS,
+  // No control makes these yet, but the schema accepts them, so the editor must be able to hold
+  // them — see the note above.
   Image.configure({ HTMLAttributes: { class: 'max-w-full rounded-lg' } }),
-  // Wide content scrolls in its own container rather than widening the reading column; the wrapper
-  // is Tiptap's own, which is why the class goes there.
   Table.configure({ HTMLAttributes: { class: 'w-full border-collapse text-note' } }),
   TableRow,
   TableHeader.configure({

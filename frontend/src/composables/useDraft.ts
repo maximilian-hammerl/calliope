@@ -4,6 +4,7 @@ import { useEventListener, watchDebounced } from '@vueuse/core'
 import type { PostDocument } from '@/api/models'
 import { createPost, deletePost, listPosts, updatePost } from '@/api/posts/posts'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { sameDocument } from '@/lib/document/sameDocument'
 
 export type DraftStatus = 'idle' | 'saving' | 'saved' | 'failed'
 
@@ -36,11 +37,11 @@ export function useDraft(
   const savedOnce = ref<boolean>(false)
 
   /**
-   * What the server currently holds, serialised, so an unchanged draft is never written again.
-   * Comparing the *document* rather than its prose matters: bolding a word changes no text, and
-   * a text comparison would decide there was nothing to save.
+   * What the server currently holds, so an unchanged draft is never written again. Comparing the
+   * *document* rather than its prose matters: bolding a word changes no text, and a text comparison
+   * would decide there was nothing to save.
    */
-  let storedDocument = ''
+  let storedDocument: PostDocument | undefined
 
   const status = computed<DraftStatus>(() => {
     if (failed.value) return 'failed'
@@ -53,7 +54,7 @@ export function useDraft(
     draftId.value = undefined
     savedOnce.value = false
     failed.value = false
-    storedDocument = ''
+    storedDocument = undefined
 
     try {
       // At most one draft per member per thread, enforced by a partial unique index.
@@ -64,7 +65,7 @@ export function useDraft(
       const existing = response.status === 200 ? response.data.results[0] : undefined
       if (existing !== undefined) {
         draftId.value = existing.id
-        storedDocument = JSON.stringify(existing.document)
+        storedDocument = existing.document
         document.value = existing.document
         // The server's own projection, so the client needs no second walker to know the prose.
         text.value = existing.text
@@ -81,8 +82,8 @@ export function useDraft(
     // Before the existing draft has arrived, saving would create a second one and lose it.
     if (!loaded.value) return
 
-    const current = JSON.stringify(document.value)
-    if (current === storedDocument) return
+    const current = document.value
+    if (storedDocument !== undefined && sameDocument(current, storedDocument)) return
     if (text.value.trim().length > TEXT_LIMIT.createPost.document.maxLength) return
 
     saving.value = true
@@ -135,8 +136,9 @@ export function useDraft(
   })
 
   function flush() {
-    const current = JSON.stringify(document.value)
-    if (!loaded.value || current === storedDocument) return
+    const current = document.value
+    if (!loaded.value) return
+    if (storedDocument !== undefined && sameDocument(current, storedDocument)) return
     if (text.value.trim().length === 0 || draftId.value === undefined) return
 
     // The generated function, with `keepalive` passed through as a `RequestInit` — so the URL,
@@ -160,7 +162,7 @@ export function useDraft(
     draftId.value = undefined
     savedOnce.value = false
     failed.value = false
-    storedDocument = ''
+    storedDocument = undefined
   }
 
   return { status, draftId, loaded, forget }

@@ -13,15 +13,16 @@ import type {
   PostDocument,
 } from "@/src/document/document_schema.ts";
 
-/** Blocks become their own paragraph; everything else runs inline into the block holding it. */
-const BLOCK_TYPES = new Set([
-  "paragraph",
-  "heading",
-  "blockquote",
-  "codeBlock",
-  "listItem",
-  "tableRow",
-]);
+/**
+ * Blocks that hold inline content and become one paragraph of the projection. Everything else with
+ * children is a container and is recursed into.
+ *
+ * The container case is not decoration: this used to filter a node's children to a set of known
+ * block types, which meant a **nested** list was neither a known block nor recursed into, so its
+ * text vanished from the projection — unsearchable, absent from the moderation excerpt, and
+ * uncounted against the length limit.
+ */
+const LEAF_BLOCKS = new Set(["paragraph", "heading", "codeBlock"]);
 
 function inlineText(node: DocumentNode): string {
   switch (node.type) {
@@ -39,24 +40,21 @@ function inlineText(node: DocumentNode): string {
 }
 
 function blocks(node: DocumentNode): string[] {
-  if (!BLOCK_TYPES.has(node.type)) {
-    return (node.content ?? []).flatMap(blocks);
+  if (LEAF_BLOCKS.has(node.type)) {
+    const text = inlineText(node).trim();
+    return text.length > 0 ? [text] : [];
   }
 
-  // A list item or a row holds blocks of its own; anything else is inline within this one.
-  const nested = (node.content ?? []).filter((child) =>
-    BLOCK_TYPES.has(child.type)
-  );
-  if (nested.length > 0) {
-    return nested.flatMap(blocks);
+  if (node.type === "tableRow") {
+    // A row reads as one line, or a table becomes a paragraph per cell. A cell may hold several
+    // blocks of its own, which run together with a space rather than disappearing.
+    const cells = (node.content ?? [])
+      .map((cell) => blocks(cell).join(" ").trim())
+      .filter((cell) => cell.length > 0);
+    return cells.length > 0 ? [cells.join("\t")] : [];
   }
 
-  const text = node.type === "tableRow"
-    // Cells read as one line, or a table becomes a paragraph per cell.
-    ? (node.content ?? []).map(inlineText).join("\t").trim()
-    : inlineText(node).trim();
-
-  return text.length > 0 ? [text] : [];
+  return (node.content ?? []).flatMap(blocks);
 }
 
 export function documentToPlainText(document: DocumentNode): string {

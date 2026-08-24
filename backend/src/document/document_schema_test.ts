@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import type { DocumentNode } from "@/src/document/document_schema.ts";
 import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 
@@ -429,5 +430,79 @@ Deno.test("the schema refuses a tree too deep to walk", () => {
   assertEquals(
     DOCUMENT_SCHEMA.safeParse({ type: "doc", content: [node] }).success,
     false,
+  );
+});
+
+/**
+ * The projection is what `ILIKE` search, the report excerpt and the length limit all read, so text
+ * missing from it is text a member can hide from search and from moderation. A nested list used to
+ * disappear from it entirely.
+ *
+ * Typed helpers rather than `as never` at each call: the cast was only needed because the helpers
+ * returned loose object literals, and it would have hidden a real mismatch just as well.
+ */
+function paragraph(text: string): DocumentNode {
+  return { type: "paragraph", content: [{ type: "text", text }] };
+}
+
+function cell(...blocks: DocumentNode[]): DocumentNode {
+  return { type: "tableCell", content: blocks };
+}
+
+function doc(...content: DocumentNode[]): DocumentNode {
+  return { type: "doc", content };
+}
+
+Deno.test("the projection keeps the text of a nested list", () => {
+  assertEquals(
+    documentToPlainText(doc({
+      type: "bulletList",
+      content: [{
+        type: "listItem",
+        content: [paragraph("Aussen"), {
+          type: "bulletList",
+          content: [{ type: "listItem", content: [paragraph("INNEN")] }],
+        }],
+      }],
+    })),
+    "Aussen\n\nINNEN",
+  );
+});
+
+Deno.test("the projection keeps a quotation and what follows it", () => {
+  assertEquals(
+    documentToPlainText(
+      doc(
+        { type: "blockquote", content: [paragraph("Zitat")] },
+        paragraph("Danach"),
+      ),
+    ),
+    "Zitat\n\nDanach",
+  );
+});
+
+Deno.test("the projection reads a table row as one line", () => {
+  assertEquals(
+    documentToPlainText(doc({
+      type: "table",
+      content: [{
+        type: "tableRow",
+        content: [cell(paragraph("A")), cell(paragraph("B"))],
+      }],
+    })),
+    "A\tB",
+  );
+});
+
+Deno.test("the projection keeps both blocks of a cell holding two", () => {
+  assertEquals(
+    documentToPlainText(doc({
+      type: "table",
+      content: [{
+        type: "tableRow",
+        content: [cell(paragraph("Eins"), paragraph("Zwei"))],
+      }],
+    })),
+    "Eins Zwei",
   );
 });
