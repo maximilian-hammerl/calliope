@@ -174,25 +174,27 @@
                           "properties": {
                             "color": {
                               "type": ["string", "null"],
-                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
                             },
                             "backgroundColor": {
                               "type": ["string", "null"],
-                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
                             },
                             "fontFamily": {
                               "type": ["string", "null"],
                               "minLength": 1,
                               "maxLength": 200,
-                              "pattern": "^[\\w\\s,'\"-]+$/u"
+                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$/u"
                             },
                             "fontSize": {
                               "type": ["string", "null"],
-                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%)$"
+                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)$"
                             },
                             "lineHeight": {
                               "type": ["string", "null"],
-                              "pattern": "^\\d(\\.\\d+)?$"
+                              "pattern": "^(normal|\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)?)$"
                             }
                           },
                           "additionalProperties": false
@@ -444,25 +446,27 @@
                           "properties": {
                             "color": {
                               "type": ["string", "null"],
-                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
                             },
                             "backgroundColor": {
                               "type": ["string", "null"],
-                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
                             },
                             "fontFamily": {
                               "type": ["string", "null"],
                               "minLength": 1,
                               "maxLength": 200,
-                              "pattern": "^[\\w\\s,'\"-]+$/u"
+                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$/u"
                             },
                             "fontSize": {
                               "type": ["string", "null"],
-                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%)$"
+                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)$"
                             },
                             "lineHeight": {
                               "type": ["string", "null"],
-                              "pattern": "^\\d(\\.\\d+)?$"
+                              "pattern": "^(normal|\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)?)$"
                             }
                           },
                           "additionalProperties": false

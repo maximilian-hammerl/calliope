@@ -25,36 +25,71 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 const MAX_DEPTH = 20;
 const MAX_NODES = 10_000;
 
+/**
+ * Tiptap emits `""` for an attribute it parsed and found unset, so an empty string means absent.
+ * It has to be `preprocess` rather than `transform`, which runs after validation and would be too
+ * late; a bonus is that the emptiness never reaches the database, since what is stored is what
+ * this parsed.
+ *
+ * **Every optional attribute goes through this**, not only the style-derived ones — the one
+ * `.nullish()` in this file is the one below. A paste that leaves an attribute unset otherwise
+ * refuses the whole post, which is what jammed the composer on the testing instance.
+ */
+function unset<T extends z.ZodType>(schema: T) {
+  return z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    schema.nullish(),
+  );
+}
+
 // Free values, so each is a real predicate rather than `z.string()`. Nothing here is ever
-// interpolated into CSS — the renderer binds them as style properties — but a value that cannot
-// be a colour has no business being stored as one.
-const COLOUR = z.string().regex(
-  /^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\))$/i,
-  "Not a hex or rgb() colour",
-).nullish();
+// interpolated into CSS — the renderer binds them as style properties — but the two things that
+// must stay impossible are `;`, which would open a second declaration, and `url(`, which would
+// fetch from a member's post. That is why these are a union of known forms rather than a charset
+// permissive enough to keep `(` for `rgb()`.
+const HEX = /#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}/;
+const NUMBER = /\d{1,3}(\.\d+)?%?/;
+/** Both syntaxes: `rgb(0, 0, 0)` and the modern `rgb(0 0 0 / 87%)`. */
+const FUNCTIONAL = new RegExp(
+  `(rgb|rgba|hsl|hsla)\\(\\s*${NUMBER.source}(\\s*,\\s*|\\s+)${NUMBER.source}(\\s*,\\s*|\\s+)${NUMBER.source}` +
+    `((\\s*,\\s*|\\s*/\\s*)${NUMBER.source})?\\s*\\)`,
+);
+/** `transparent`, `red`, `currentcolor` — a keyword the browser ignores if it does not know it. */
+const KEYWORD = /[a-z]{3,20}/;
 
-/** A family name or a fallback list, and nothing that could close a declaration. */
-const FONT_FAMILY = z.string().min(1).max(200).regex(
-  /^[\w\s,'"-]+$/u,
-  "Not a font family list",
-).nullish();
+const COLOUR = unset(
+  z.string().max(60).regex(
+    new RegExp(`^(${HEX.source}|${FUNCTIONAL.source}|${KEYWORD.source})$`, "i"),
+    "Not a colour",
+  ),
+);
 
-const FONT_SIZE = z.string().regex(
-  /^\d{1,3}(\.\d+)?(px|pt|rem|em|%)$/,
-  "Not a length",
-).nullish();
+/** A family name or a fallback list. Letters of any script, and nothing that closes a declaration. */
+const FONT_FAMILY = unset(
+  z.string().min(1).max(200).regex(
+    /^[\p{L}\p{N}\s,'"._-]+$/u,
+    "Not a font family list",
+  ),
+);
 
-/** Unitless, as the editor emits it, and bounded: a line height of 400 is a denial of layout. */
-const LINE_HEIGHT = z.string()
-  .regex(/^\d(\.\d+)?$/, "Not a line height")
-  .refine(
-    (value) => Number(value) >= 0.5 && Number(value) <= 4,
-    "Line height out of range",
-  )
-  .nullish();
+const LENGTH_UNIT = "px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax";
+const FONT_SIZE = unset(
+  z.string().regex(
+    new RegExp(`^\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})$`),
+    "Not a length",
+  ),
+);
 
-const TEXT_ALIGN = z.enum(["left", "center", "right", "justify"]).nullish();
-const SAFE_TOKEN = z.string().max(100).regex(/^[\w\s-]*$/u).nullish();
+/** Unitless as the editor emits it, or as a paste or a stylesheet writes it. */
+const LINE_HEIGHT = unset(
+  z.string().regex(
+    new RegExp(`^(normal|\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})?)$`),
+    "Not a line height",
+  ),
+);
+
+const TEXT_ALIGN = unset(z.enum(["left", "center", "right", "justify"]));
+const SAFE_TOKEN = unset(z.string().max(100).regex(/^[\w\s-]*$/u));
 
 /**
  * The one place JSON storage does *not* remove the injection risk: a link is a URL the reader's
@@ -82,10 +117,10 @@ const MARK_SCHEMA = z.discriminatedUnion("type", [
     type: z.literal("link"),
     attrs: z.strictObject({
       href: HREF,
-      target: z.enum(["_blank", "_self"]).nullish(),
+      target: unset(z.enum(["_blank", "_self"])),
       rel: SAFE_TOKEN,
       class: SAFE_TOKEN,
-      title: z.string().max(500).nullish(),
+      title: unset(z.string().max(500)),
     }),
   }),
   z.strictObject({
@@ -102,9 +137,9 @@ const MARK_SCHEMA = z.discriminatedUnion("type", [
 
 /** `colwidth` is a pixel width per spanned column, which is why it is a list and not a number. */
 const CELL_ATTRIBUTES = z.strictObject({
-  colspan: z.int().min(1).max(100).nullish(),
-  rowspan: z.int().min(1).max(100).nullish(),
-  colwidth: z.array(z.int().min(1).max(10_000)).max(100).nullish(),
+  colspan: unset(z.int().min(1).max(100)),
+  rowspan: unset(z.int().min(1).max(100)),
+  colwidth: unset(z.array(z.int().min(1).max(10_000)).max(100)),
   align: TEXT_ALIGN,
 }).optional();
 
@@ -150,8 +185,7 @@ const NODE_SCHEMA: z.ZodType<DocumentNode, DocumentNode> = z.lazy(() =>
       attrs: z.strictObject({
         level: z.int().min(1).max(6),
         textAlign: TEXT_ALIGN,
-      })
-        .strict(),
+      }),
       content: z.array(NODE_SCHEMA).optional(),
     }),
     z.strictObject({
@@ -161,8 +195,8 @@ const NODE_SCHEMA: z.ZodType<DocumentNode, DocumentNode> = z.lazy(() =>
     z.strictObject({
       type: z.literal("orderedList"),
       attrs: z.strictObject({
-        start: z.int().min(1).max(10_000).nullish(),
-        type: z.enum(["a", "A", "i", "I", "1"]).nullish(),
+        start: unset(z.int().min(1).max(10_000)),
+        type: unset(z.enum(["a", "A", "i", "I", "1"])),
       }).optional(),
       content: z.array(NODE_SCHEMA).optional(),
     }),
@@ -185,10 +219,10 @@ const NODE_SCHEMA: z.ZodType<DocumentNode, DocumentNode> = z.lazy(() =>
       type: z.literal("image"),
       attrs: z.strictObject({
         src: IMAGE_SRC,
-        alt: z.string().max(1_000).nullish(),
-        title: z.string().max(500).nullish(),
-        width: z.int().min(1).max(10_000).nullish(),
-        height: z.int().min(1).max(10_000).nullish(),
+        alt: unset(z.string().max(1_000)),
+        title: unset(z.string().max(500)),
+        width: unset(z.int().min(1).max(10_000)),
+        height: unset(z.int().min(1).max(10_000)),
       }),
     }),
     z.strictObject({

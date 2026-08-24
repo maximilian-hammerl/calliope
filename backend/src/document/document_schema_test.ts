@@ -402,6 +402,42 @@ Deno.test("the schema refuses what it does not know", () => {
         attrs: { src: "https://elsewhere.example/x.png" },
       }],
     }],
+    ["a colour that fetches", {
+      type: "doc",
+      content: [{
+        type: "paragraph",
+        content: [{
+          type: "text",
+          text: "a",
+          marks: [{ type: "textStyle", attrs: { color: "url(https://x/y)" } }],
+        }],
+      }],
+    }],
+    ["a font family that closes a declaration", {
+      type: "doc",
+      content: [{
+        type: "paragraph",
+        content: [{
+          type: "text",
+          text: "a",
+          marks: [{
+            type: "textStyle",
+            attrs: { fontFamily: "Arial; background: url(x)" },
+          }],
+        }],
+      }],
+    }],
+    ["a line height that carries a second declaration", {
+      type: "doc",
+      content: [{
+        type: "paragraph",
+        content: [{
+          type: "text",
+          text: "a",
+          marks: [{ type: "textStyle", attrs: { lineHeight: "1;color:red" } }],
+        }],
+      }],
+    }],
     ["an empty document", { type: "doc", content: [] }],
     ["an empty text node", {
       type: "doc",
@@ -419,6 +455,77 @@ Deno.test("the schema refuses what it does not know", () => {
     cases.filter(([, value]) => DOCUMENT_SCHEMA.safeParse(value).success).map(
       ([name]) => name,
     ),
+    [],
+  );
+});
+
+/**
+ * Every case here was a **400 on the testing instance**, from one member pasting text written
+ * somewhere else. The composer stayed jammed until the paste was deleted, because a document that
+ * cannot be saved cannot be autosaved either — seven identical failures, two seconds apart.
+ *
+ * The frontend now strips styling on paste, so most of these no longer reach the API from our own
+ * editor. They stay here anyway: the guard is a courtesy to the member, and the schema is what
+ * actually decides.
+ */
+Deno.test("the schema accepts a paste out of another program", () => {
+  function styled(attrs: Record<string, unknown>): unknown {
+    return {
+      type: "doc",
+      content: [{
+        type: "paragraph",
+        content: [{
+          type: "text",
+          text: "a",
+          marks: [{ type: "textStyle", attrs }],
+        }],
+      }],
+    };
+  }
+
+  const cases: Array<[string, unknown]> = [
+    // Tiptap emits "" for an attribute it parsed and found unset, which is most of them.
+    [
+      "Word, which sets one of the five",
+      styled({
+        color: null,
+        backgroundColor: "",
+        fontFamily: "",
+        fontSize: "10.5pt",
+        lineHeight: "",
+      }),
+    ],
+    [
+      "Google Docs, which writes the absence out",
+      styled({
+        backgroundColor: "transparent",
+      }),
+    ],
+    [
+      "a page using the modern colour syntax",
+      styled({
+        color: "rgb(0 0 0 / 87%)",
+      }),
+    ],
+    ["a page using a named colour", styled({ color: "red" })],
+    [
+      "a page whose stylesheet sets a line height",
+      styled({
+        lineHeight: "normal",
+      }),
+    ],
+    [
+      "a font stack that is not spelled in ASCII",
+      styled({
+        fontFamily: "Söhne, 'Helvetica Neue', sans-serif",
+      }),
+    ],
+  ];
+
+  assertEquals(
+    cases.filter(([, value]) => !DOCUMENT_SCHEMA.safeParse(value).success).map((
+      [name],
+    ) => name),
     [],
   );
 });
