@@ -1,14 +1,16 @@
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
+import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
 import { retry } from "@std/async/retry";
 
 /**
  * Reads what the tests actually sent. A reset token is stored hashed, so the message is the
  * only place its plaintext exists and testing the flow means fetching the mail.
  *
- * Mailpit is in `docker-compose.yaml` beside Postgres and Redis; its web interface is on the
- * port after its SMTP one.
+ * Mailpit is in `docker-compose.yaml` beside Postgres and Redis, on a port of its own so a
+ * second checkout reads its own mailbox.
  */
-const MAILPIT_URL = `http://${getRequiredEnvVariable("SMTP_HOST")}:8025`;
+const MAILPIT_URL = `http://${getRequiredEnvVariable("SMTP_HOST")}:${
+  getOptionalEnvVariable("MAILPIT_PORT") ?? "8025"
+}`;
 
 type MailpitMessage = {
   ID: string;

@@ -1,4 +1,5 @@
-import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
+import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
@@ -36,7 +37,10 @@ Deno.test("POST /api/auth/forgot-password mails a link to a registered address",
   assertStringIncludes(mail.subject, "Calliope");
   assertStringIncludes(mail.text, username);
   // The link has to point at the frontend route that spends the token, not at the API.
-  assertMatch(mail.text, /http:\/\/localhost:5173\/reset-password\?token=/);
+  assertStringIncludes(
+    mail.text,
+    `${getRequiredEnvVariable("HOST_URL")}/reset-password?token=`,
+  );
 });
 
 Deno.test("POST /api/auth/forgot-password answers the same way for an unknown address", async () => {

@@ -3,13 +3,16 @@ import { scheduleCronJobs } from "@/src/cron.ts";
 import { getAbortSignalForShutdown } from "@/src/util/abort_signal.ts";
 import { runHealthCheck } from "@/health_check.ts";
 import { seedDatabase } from "@/seed.ts";
+import { getOptionalEnvVariable } from "@/src/util/env.ts";
 import { grantRole, revokeRole } from "@/grant_role.ts";
 
 if (import.meta.main) {
   // Not from the environment: Docker sets HOSTNAME to the container id, and binding to
   // that leaves 127.0.0.1 unanswered.
   const HOSTNAME = "0.0.0.0";
-  const PORT = 8000;
+
+  // Defaulted, because the healthcheck and Caddy expect 8000.
+  const PORT = Number(getOptionalEnvVariable("BACKEND_PORT") ?? 8000);
 
   // The image is distroless, so the health check has nothing else to run. Exits before the
   // cron jobs below are scheduled.
