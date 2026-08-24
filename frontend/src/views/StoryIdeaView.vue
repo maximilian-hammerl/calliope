@@ -114,82 +114,80 @@ async function remove() {
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <div v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</div>
+      <div v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</div>
 
-        <StoryIdeaDetail v-else-if="idea" :idea="idea" :own="isOwn">
-          <template #actions>
-            <template v-if="isOwn">
-              <Button variant="outline" size="sm" @click="foundingGroup = true">
-                <Plus :stroke-width="1.5" />
-                Gruppe gründen
-              </Button>
-              <Button variant="outline" size="sm" @click="editing = true">
-                <Pencil :stroke-width="1.5" />
-                Bearbeiten
-              </Button>
-              <Button variant="outline" size="sm" :disabled="removing" @click="deleting = true">
-                <Trash2 :stroke-width="1.5" />
-                Löschen
-              </Button>
-            </template>
-
-            <!-- The visitor's one action, solid for that reason. Only while the idea is open:
-                 closed means the author asked not to be asked, and the API enforces it too. -->
-            <template v-else>
-              <!-- Choosing the state an idea already has clears it, which is why the label
-                   names the state rather than the act. -->
-              <Button
-                v-for="toggle in readerStateToggles(idea.readerState)"
-                :key="toggle.title"
-                variant="outline"
-                size="sm"
-                :title="toggle.title"
-                :disabled="savingReaderState"
-                @click="markIdea(toggle.next)"
-              >
-                {{ toggle.label }}
-              </Button>
-              <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
-              <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and
-                   a member who kept the idea should see why they cannot write. -->
-              <Button
-                size="sm"
-                :disabled="startingConversation || idea.status === 'closed'"
-                :title="
-                  idea.status === 'closed'
-                    ? 'Diese Storyidee ist geschlossen und kann nicht mehr beantwortet werden'
-                    : undefined
-                "
-                @click="askAboutIdea(idea.id)"
-              >
-                <MessageCircle :stroke-width="1.5" />
-                Chat beginnen
-              </Button>
-            </template>
+      <StoryIdeaDetail v-else-if="idea" :idea="idea" :own="isOwn">
+        <template #actions>
+          <template v-if="isOwn">
+            <Button variant="outline" size="sm" @click="foundingGroup = true">
+              <Plus :stroke-width="1.5" />
+              Gruppe gründen
+            </Button>
+            <Button variant="outline" size="sm" @click="editing = true">
+              <Pencil :stroke-width="1.5" />
+              Bearbeiten
+            </Button>
+            <Button variant="outline" size="sm" :disabled="removing" @click="deleting = true">
+              <Trash2 :stroke-width="1.5" />
+              Löschen
+            </Button>
           </template>
 
-          <template #notices>
-            <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-              {{ conversationError }}
-            </p>
+          <!-- The visitor's one action, solid for that reason. Only while the idea is open:
+               closed means the author asked not to be asked, and the API enforces it too. -->
+          <template v-else>
+            <!-- Choosing the state an idea already has clears it, which is why the label
+                 names the state rather than the act. -->
+            <Button
+              v-for="toggle in readerStateToggles(idea.readerState)"
+              :key="toggle.title"
+              variant="outline"
+              size="sm"
+              :title="toggle.title"
+              :disabled="savingReaderState"
+              @click="markIdea(toggle.next)"
+            >
+              {{ toggle.label }}
+            </Button>
+            <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
+            <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and
+                 a member who kept the idea should see why they cannot write. -->
+            <Button
+              size="sm"
+              :disabled="startingConversation || idea.status === 'closed'"
+              :title="
+                idea.status === 'closed'
+                  ? 'Diese Storyidee ist geschlossen und kann nicht mehr beantwortet werden'
+                  : undefined
+              "
+              @click="askAboutIdea(idea.id)"
+            >
+              <MessageCircle :stroke-width="1.5" />
+              Chat beginnen
+            </Button>
           </template>
-        </StoryIdeaDetail>
-
-        <template v-else-if="notFound">
-          <h1 class="text-h1">Keine Idee gefunden</h1>
-          <p class="mt-5 max-w-[46ch] text-body text-ink-4">
-            Diese Idee gibt es nicht mehr, oder der Link stimmt nicht.
-          </p>
         </template>
 
-        <template v-else>
-          <h1 class="text-h1">Das hat nicht geklappt</h1>
-          <p class="mt-5 max-w-[46ch] text-body text-ink-4">
-            Wir konnten diese Idee gerade nicht laden. Versuche es später noch einmal.
+        <template #notices>
+          <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+            {{ conversationError }}
           </p>
         </template>
-      </div>
+      </StoryIdeaDetail>
+
+      <template v-else-if="notFound">
+        <h1 class="text-h1">Keine Idee gefunden</h1>
+        <p class="mt-5 max-w-[46ch] text-body text-ink-4">
+          Diese Idee gibt es nicht mehr, oder der Link stimmt nicht.
+        </p>
+      </template>
+
+      <template v-else>
+        <h1 class="text-h1">Das hat nicht geklappt</h1>
+        <p class="mt-5 max-w-[46ch] text-body text-ink-4">
+          Wir konnten diese Idee gerade nicht laden. Versuche es später noch einmal.
+        </p>
+      </template>
     </div>
   </AppLayout>
 

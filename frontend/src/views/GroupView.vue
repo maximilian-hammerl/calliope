@@ -209,13 +209,15 @@ async function askIntoGroup() {
       <div class="reading-column">Gruppe wird geladen …</div>
     </div>
 
-    <div v-else-if="isError" class="reading-column px-gutter py-5 md:px-10">
-      <p class="max-w-[46ch] text-body text-ink-4">
-        Diese Gruppe gibt es nicht, oder sie ist privat und du gehörst nicht dazu.
-      </p>
-      <Button variant="outline" size="sm" class="mt-5" @click="goToGroups">
-        Zu meinen Gruppen
-      </Button>
+    <div v-else-if="isError" class="px-gutter py-5 md:px-10">
+      <div class="reading-column">
+        <p class="max-w-[46ch] text-body text-ink-4">
+          Diese Gruppe gibt es nicht, oder sie ist privat und du gehörst nicht dazu.
+        </p>
+        <Button variant="outline" size="sm" class="mt-5" @click="goToGroups">
+          Zu meinen Gruppen
+        </Button>
+      </div>
     </div>
 
     <!-- What the member does. -->

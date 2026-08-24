@@ -88,71 +88,64 @@ const creating = ref<boolean>(false)
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <div class="mb-2 flex flex-wrap items-baseline gap-3">
-          <h1 class="text-h1 text-ink-1">Gruppen entdecken</h1>
-          <div class="ml-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Gruppe gründen"
-              @click="creating = true"
-            >
-              <Plus :stroke-width="1.5" />
-              Gruppe
-            </Button>
-          </div>
+      <div class="mb-2 flex flex-wrap items-baseline gap-3">
+        <h1 class="text-h1 text-ink-1">Gruppen entdecken</h1>
+        <div class="ml-auto">
+          <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
+            <Plus :stroke-width="1.5" />
+            Gruppe
+          </Button>
         </div>
-        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
-          Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
-          sobald dich jemand einlädt.
-        </p>
-
-        <Field class="mb-7 max-w-[380px]">
-          <FieldLabel for="discover-search">Suche</FieldLabel>
-          <Input
-            id="discover-search"
-            v-model="term"
-            name="search"
-            type="search"
-            placeholder="z. B. Krimi"
-            :maxlength="LIMIT.maxLength"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <FieldDescription>
-            Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
-          </FieldDescription>
-        </Field>
-
-        <p v-if="hasLoaded && groups.length === 0" class="max-w-[46ch] text-body text-ink-4">
-          <template v-if="settled === ''">
-            Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
-          </template>
-          <template v-else>
-            Keine öffentliche Gruppe gefunden, die zu „{{ settled }}“ passt.
-          </template>
-        </p>
-
-        <div v-else-if="hasLoaded">
-          <GroupRow
-            v-for="(group, index) in groups"
-            :key="group.id"
-            :group="group"
-            :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-          />
-        </div>
-
-        <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
-        </div>
-
-        <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
-
-        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-          Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
-        </p>
       </div>
+      <p class="mb-6 max-w-[60ch] text-body text-ink-4">
+        Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
+        sobald dich jemand einlädt.
+      </p>
+
+      <Field class="mb-7 max-w-[380px]">
+        <FieldLabel for="discover-search">Suche</FieldLabel>
+        <Input
+          id="discover-search"
+          v-model="term"
+          name="search"
+          type="search"
+          placeholder="z. B. Krimi"
+          :maxlength="LIMIT.maxLength"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <FieldDescription>
+          Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
+        </FieldDescription>
+      </Field>
+
+      <p v-if="hasLoaded && groups.length === 0" class="max-w-[46ch] text-body text-ink-4">
+        <template v-if="settled === ''">
+          Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
+        </template>
+        <template v-else>
+          Keine öffentliche Gruppe gefunden, die zu „{{ settled }}“ passt.
+        </template>
+      </p>
+
+      <div v-else-if="hasLoaded">
+        <GroupRow
+          v-for="(group, index) in groups"
+          :key="group.id"
+          :group="group"
+          :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
+        />
+      </div>
+
+      <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+      </div>
+
+      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
+
+      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+        Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
+      </p>
     </div>
 
     <GroupDialog v-model:open="creating" @saved="openGroup" />

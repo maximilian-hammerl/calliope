@@ -67,69 +67,67 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <h1 class="mb-2 text-h1 text-ink-1">Mitglieder</h1>
-        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
-          Wer hier schreibt. Öffne ein Profil, um zu sehen, ob jemand zu dir passen könnte.
+      <h1 class="mb-2 text-h1 text-ink-1">Mitglieder</h1>
+      <p class="mb-6 max-w-[60ch] text-body text-ink-4">
+        Wer hier schreibt. Öffne ein Profil, um zu sehen, ob jemand zu dir passen könnte.
+      </p>
+
+      <Field class="mb-7 max-w-[380px]">
+        <FieldLabel for="members-search">Suche</FieldLabel>
+        <Input
+          id="members-search"
+          v-model="term"
+          name="search"
+          type="search"
+          placeholder="z. B. mira"
+          :maxlength="LIMIT.maxLength"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <FieldDescription> Sucht in Namen, ab {{ LIMIT.minLength }} Zeichen. </FieldDescription>
+      </Field>
+
+      <p v-if="hasLoaded && members.length === 0" class="max-w-[46ch] text-body text-ink-4">
+        <template v-if="settled === ''">Hier ist noch niemand.</template>
+        <template v-else>Kein Mitglied gefunden, das zu „{{ settled }}“ passt.</template>
+      </p>
+
+      <template v-else-if="hasLoaded">
+        <p class="mb-1 text-[11.5px] text-ink-5">
+          {{ pluralize(totalResults ?? 0, 'Mitglied', 'Mitglieder') }}
         </p>
 
-        <Field class="mb-7 max-w-[380px]">
-          <FieldLabel for="members-search">Suche</FieldLabel>
-          <Input
-            id="members-search"
-            v-model="term"
-            name="search"
-            type="search"
-            placeholder="z. B. mira"
-            :maxlength="LIMIT.maxLength"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <FieldDescription> Sucht in Namen, ab {{ LIMIT.minLength }} Zeichen. </FieldDescription>
-        </Field>
-
-        <p v-if="hasLoaded && members.length === 0" class="max-w-[46ch] text-body text-ink-4">
-          <template v-if="settled === ''">Hier ist noch niemand.</template>
-          <template v-else>Kein Mitglied gefunden, das zu „{{ settled }}“ passt.</template>
-        </p>
-
-        <template v-else-if="hasLoaded">
-          <p class="mb-1 text-[11.5px] text-ink-5">
-            {{ pluralize(totalResults ?? 0, 'Mitglied', 'Mitglieder') }}
-          </p>
-
-          <ul>
-            <li
-              v-for="member in members"
-              :key="member.id"
-              class="border-b border-line-3 first:border-t"
+        <ul>
+          <li
+            v-for="member in members"
+            :key="member.id"
+            class="border-b border-line-3 first:border-t"
+          >
+            <RouterLink
+              :to="{ name: 'member', params: { userId: member.id } }"
+              class="flex min-h-[44px] items-center gap-3 py-2 hover:bg-paper-2"
             >
-              <RouterLink
-                :to="{ name: 'member', params: { userId: member.id } }"
-                class="flex min-h-[44px] items-center gap-3 py-2 hover:bg-paper-2"
-              >
-                <UserAvatar :username="member.username" />
-                <span class="min-w-0 truncate text-[13.5px] text-ink-2">
-                  {{ member.username }}
-                </span>
-              </RouterLink>
-            </li>
-          </ul>
+              <UserAvatar :username="member.username" />
+              <span class="min-w-0 truncate text-[13.5px] text-ink-2">
+                {{ member.username }}
+              </span>
+            </RouterLink>
+          </li>
+        </ul>
 
-          <!-- Replaces the "N weitere Mitglieder — such nach einem Namen" line: the rest is
-               reachable now, so pointing at the search field instead of offering it would be
-               an apology for a list that no longer stops. -->
-          <div v-if="pageCount > 1" class="mt-5 border-t border-line-2 pt-3">
-            <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
-          </div>
-        </template>
+        <!-- Replaces the "N weitere Mitglieder — such nach einem Namen" line: the rest is
+             reachable now, so pointing at the search field instead of offering it would be
+             an apology for a list that no longer stops. -->
+        <div v-if="pageCount > 1" class="mt-5 border-t border-line-2 pt-3">
+          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        </div>
+      </template>
 
-        <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Mitglieder werden geladen …</p>
+      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Mitglieder werden geladen …</p>
 
-        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-          Die Mitglieder lassen sich gerade nicht laden. Versuche es später noch einmal.
-        </p>
-      </div>
+      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+        Die Mitglieder lassen sich gerade nicht laden. Versuche es später noch einmal.
+      </p>
     </div>
   </AppLayout>
 </template>

@@ -105,101 +105,94 @@ const creating = ref<boolean>(false)
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <!-- Above the heading, because an invitation is waiting on an answer and the groups
-             below are not waiting on anything. Absent entirely when there are none. -->
-        <section v-if="invitations.length > 0" class="mb-9">
-          <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
-            <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
-            <span class="text-[11.5px] text-ink-5">
-              {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}
-            </span>
-          </div>
-
-          <div
-            v-for="(invitation, index) in invitations"
-            :key="invitation.id"
-            :class="index > 0 ? 'border-t border-line-2' : ''"
-          >
-            <GroupInvitationRow :group="invitation" />
-          </div>
-        </section>
-
-        <!-- Both actions sit on the heading line. Discovery used to be a text link below the
-             list, where testers missed it and a member with many groups never reached it. -->
-        <div class="mb-2 flex flex-wrap items-baseline gap-3">
-          <h1 class="text-h1 text-ink-1">Meine Gruppen</h1>
-
-          <div class="ml-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Gruppe gründen"
-              @click="creating = true"
-            >
-              <Plus :stroke-width="1.5" />
-              Gruppe
-            </Button>
-          </div>
+      <!-- Above the heading, because an invitation is waiting on an answer and the groups
+           below are not waiting on anything. Absent entirely when there are none. -->
+      <section v-if="invitations.length > 0" class="mb-9">
+        <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
+          <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
+          <span class="text-[11.5px] text-ink-5">
+            {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}
+          </span>
         </div>
 
-        <p class="mb-6 max-w-[60ch] text-body text-ink-4">
-          Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
-        </p>
-
-        <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
-          <FieldLabel for="groups-search">Suche</FieldLabel>
-          <Input
-            id="groups-search"
-            v-model="term"
-            name="search"
-            type="search"
-            placeholder="z. B. Erinnerungsmarkt"
-            :maxlength="LIMIT.maxLength"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <FieldDescription>
-            Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
-          </FieldDescription>
-        </Field>
-
-        <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
-          <p class="text-body text-ink-4">
-            <template v-if="settled !== ''">
-              Keine deiner Gruppen passt zu „{{ settled }}“.
-            </template>
-            <template v-else>
-              Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
-              bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
-            </template>
-          </p>
+        <div
+          v-for="(invitation, index) in invitations"
+          :key="invitation.id"
+          :class="index > 0 ? 'border-t border-line-2' : ''"
+        >
+          <GroupInvitationRow :group="invitation" />
         </div>
+      </section>
 
-        <div v-else-if="hasLoaded">
-          <!-- No action button: the title is the link, and nothing else in the product says
-               "x öffnen". -->
-          <GroupRow
-            v-for="(group, index) in groups"
-            :key="group.id"
-            :group="group"
-            :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-          />
+      <!-- Both actions sit on the heading line. Discovery used to be a text link below the
+           list, where testers missed it and a member with many groups never reached it. -->
+      <div class="mb-2 flex flex-wrap items-baseline gap-3">
+        <h1 class="text-h1 text-ink-1">Meine Gruppen</h1>
+
+        <div class="ml-auto">
+          <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
+            <Plus :stroke-width="1.5" />
+            Gruppe
+          </Button>
         </div>
-
-        <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
-        </div>
-
-        <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
-
-        <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-          Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
-        </p>
-
-        <!-- The way out of this page: without it, listing only your own groups would leave
-             no way to find a public one. -->
       </div>
+
+      <p class="mb-6 max-w-[60ch] text-body text-ink-4">
+        Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
+      </p>
+
+      <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
+        <FieldLabel for="groups-search">Suche</FieldLabel>
+        <Input
+          id="groups-search"
+          v-model="term"
+          name="search"
+          type="search"
+          placeholder="z. B. Erinnerungsmarkt"
+          :maxlength="LIMIT.maxLength"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <FieldDescription>
+          Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
+        </FieldDescription>
+      </Field>
+
+      <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
+        <p class="text-body text-ink-4">
+          <template v-if="settled !== ''">
+            Keine deiner Gruppen passt zu „{{ settled }}“.
+          </template>
+          <template v-else>
+            Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
+            bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
+          </template>
+        </p>
+      </div>
+
+      <div v-else-if="hasLoaded">
+        <!-- No action button: the title is the link, and nothing else in the product says
+             "x öffnen". -->
+        <GroupRow
+          v-for="(group, index) in groups"
+          :key="group.id"
+          :group="group"
+          :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
+        />
+      </div>
+
+      <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+      </div>
+
+      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
+
+      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+        Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
+      </p>
+
+      <!-- The way out of this page: without it, listing only your own groups would leave
+           no way to find a public one. -->
     </div>
   </AppLayout>
 

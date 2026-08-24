@@ -17,11 +17,11 @@
 
   /* Layout — desktop */
   --topbar-h: 54px;
-  --rail-left-w: 216px;
+  --rail-left-w: 262px;
   --rail-right-w: 262px;
   --rail-collapsed-w: 34px;
   --thread-gutter: 40px;
-  --reading-max: 684px;      /* hard cap on the reading column */
+  --reading-max: 684px;      /* centred between the two rail widths, not inside what is left */
   --post-gap: 26px;          /* padding above/below each post, divider between */
 
   /* Layout — mobile */

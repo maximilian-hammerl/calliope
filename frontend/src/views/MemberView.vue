@@ -89,101 +89,99 @@ async function allowContactAgain() {
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="max-w-[760px]">
-        <div v-if="isPending" class="flex items-center gap-2 text-note text-ink-5">
-          <Spinner />
-          Einen Moment.
-        </div>
+      <div v-if="isPending" class="flex items-center gap-2 text-note text-ink-5">
+        <Spinner />
+        Einen Moment.
+      </div>
 
-        <template v-else-if="member">
-          <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
-               squeezed the name into an ellipsis, which is the one thing this page must show. -->
-          <div class="flex flex-wrap items-center gap-4">
-            <UserAvatar :username="member.username" size="lg" />
+      <template v-else-if="member">
+        <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
+             squeezed the name into an ellipsis, which is the one thing this page must show. -->
+        <div class="flex flex-wrap items-center gap-4">
+          <UserAvatar :username="member.username" size="lg" />
 
-            <div class="flex min-w-0 flex-col gap-1">
-              <h1 class="truncate text-h1">{{ member.username }}</h1>
-              <p class="text-[12px] text-ink-6">
-                Dabei seit {{ formatJoinedDate(member.createdAt) }}
-              </p>
-            </div>
-
-            <div v-if="!isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
-              <Button
-                v-if="member.isBlocked"
-                variant="outline"
-                size="sm"
-                :disabled="unblocking"
-                @click="allowContactAgain"
-              >
-                Blockierung aufheben
-              </Button>
-              <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
-                   where the consequences are spelled out. -->
-              <Button v-else variant="outline" size="sm" @click="blocking = true">
-                Blockieren
-              </Button>
-              <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
-            </div>
-
-            <!-- Its own group, after the member-facing one: blocking is what any member may do
-                 to another, banning is the platform acting. `isBanned` is only sent to an
-                 operator, so this is absent for everybody else even before the check. -->
-            <div v-if="mayModerate && !isOwnProfile" class="w-full sm:w-auto">
-              <Button
-                v-if="member.isBanned"
-                variant="outline"
-                size="sm"
-                :disabled="liftingBan"
-                @click="liftTheBan"
-              >
-                Sperre aufheben
-              </Button>
-              <Button v-else variant="outline" size="sm" @click="banning = true">
-                Konto sperren
-              </Button>
-            </div>
+          <div class="flex min-w-0 flex-col gap-1">
+            <h1 class="truncate text-h1">{{ member.username }}</h1>
+            <p class="text-[12px] text-ink-6">
+              Dabei seit {{ formatJoinedDate(member.createdAt) }}
+            </p>
           </div>
 
-          <p v-if="blockError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-            {{ blockError }}
-          </p>
+          <div v-if="!isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
+            <Button
+              v-if="member.isBlocked"
+              variant="outline"
+              size="sm"
+              :disabled="unblocking"
+              @click="allowContactAgain"
+            >
+              Blockierung aufheben
+            </Button>
+            <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
+                 where the consequences are spelled out. -->
+            <Button v-else variant="outline" size="sm" @click="blocking = true">
+              Blockieren
+            </Button>
+            <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
+          </div>
 
-          <p v-if="banError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-            {{ banError }}
-          </p>
+          <!-- Its own group, after the member-facing one: blocking is what any member may do
+               to another, banning is the platform acting. `isBanned` is only sent to an
+               operator, so this is absent for everybody else even before the check. -->
+          <div v-if="mayModerate && !isOwnProfile" class="w-full sm:w-auto">
+            <Button
+              v-if="member.isBanned"
+              variant="outline"
+              size="sm"
+              :disabled="liftingBan"
+              @click="liftTheBan"
+            >
+              Sperre aufheben
+            </Button>
+            <Button v-else variant="outline" size="sm" @click="banning = true">
+              Konto sperren
+            </Button>
+          </div>
+        </div>
 
-          <!-- Said plainly on the page, not only inside the dialog: an operator looking at this
-               profile has to be able to see the account's state without opening anything. -->
-          <p v-if="member.isBanned" class="mt-3 text-[12.5px] text-ink-5">
-            Dieses Konto ist gesperrt.
-          </p>
+        <p v-if="blockError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+          {{ blockError }}
+        </p>
 
-          <p v-if="member.isBlocked" class="mt-4 border-l-2 border-line-4 pl-3 text-row text-ink-5">
-            Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
-          </p>
+        <p v-if="banError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+          {{ banError }}
+        </p>
 
-          <!-- Said outright rather than left as blank space: an empty page reads as an error. -->
-          <p class="mt-8 border-t border-line-3 pt-6 text-note text-ink-5">
-            {{ member.username }} hat noch nichts über sich erzählt. Steckbriefe für Mitglieder —
-            Genres, woran jemand schreibt, was jemand sucht — kommen noch.
-          </p>
-        </template>
+        <!-- Said plainly on the page, not only inside the dialog: an operator looking at this
+             profile has to be able to see the account's state without opening anything. -->
+        <p v-if="member.isBanned" class="mt-3 text-[12.5px] text-ink-5">
+          Dieses Konto ist gesperrt.
+        </p>
 
-        <template v-else-if="notFound">
-          <h1 class="text-h1">Kein Mitglied gefunden</h1>
-          <p class="mt-5 text-note text-ink-5">
-            Dieses Konto gibt es nicht mehr, oder der Link stimmt nicht.
-          </p>
-        </template>
+        <p v-if="member.isBlocked" class="mt-4 border-l-2 border-line-4 pl-3 text-row text-ink-5">
+          Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
+        </p>
 
-        <template v-else>
-          <h1 class="text-h1">Das hat nicht geklappt</h1>
-          <p class="mt-5 text-note text-ink-5">
-            Wir konnten dieses Mitglied gerade nicht laden. Versuche es später noch einmal.
-          </p>
-        </template>
-      </div>
+        <!-- Said outright rather than left as blank space: an empty page reads as an error. -->
+        <p class="mt-8 max-w-[60ch] border-t border-line-3 pt-6 text-note text-ink-5">
+          {{ member.username }} hat noch nichts über sich erzählt. Steckbriefe für Mitglieder —
+          Genres, woran jemand schreibt, was jemand sucht — kommen noch.
+        </p>
+      </template>
+
+      <template v-else-if="notFound">
+        <h1 class="text-h1">Kein Mitglied gefunden</h1>
+        <p class="mt-5 text-note text-ink-5">
+          Dieses Konto gibt es nicht mehr, oder der Link stimmt nicht.
+        </p>
+      </template>
+
+      <template v-else>
+        <h1 class="text-h1">Das hat nicht geklappt</h1>
+        <p class="mt-5 text-note text-ink-5">
+          Wir konnten dieses Mitglied gerade nicht laden. Versuche es später noch einmal.
+        </p>
+      </template>
     </div>
 
     <BlockMemberDialog

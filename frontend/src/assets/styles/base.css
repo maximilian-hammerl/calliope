@@ -45,14 +45,21 @@
     color: #302a23;
     text-wrap: pretty;
   }
-  /* The reading column: 684px, per the design system, centred in whatever space is left once
-     the rails have taken theirs. Bands that carry a full-width border (the group header, the
-     thread tabs, the composer) keep the border and put this on their inner content, so the
-     banding still reaches the rails while the text lines up with the posts. */
+  /* The reading column: 684px, per the design system, centred between the rails' full widths.
+     Centred inside `main` instead, it slid sideways whenever a rail collapsed and handed `main`
+     the width — the padding takes that back. `AppLayout` sets the two variables, 0 where there
+     are no rails, and a padding utility here would outrank them, so the gutter goes on a wrapper.
+     Bands that carry a full-width border (the group header, the thread tabs, the composer) keep
+     the border and put this on their inner content, so the banding still reaches the rails while
+     the text lines up with the posts. */
   .reading-column {
     width: 100%;
-    max-width: 684px;
+    max-width: calc(
+      var(--container-reading) + var(--rail-slack-left, 0px) + var(--rail-slack-right, 0px)
+    );
     margin-inline: auto;
+    padding-inline-start: var(--rail-slack-left, 0px);
+    padding-inline-end: var(--rail-slack-right, 0px);
   }
   /* Mono rail labels: always uppercase with tracking. */
   .label-rail {
