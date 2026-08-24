@@ -13,7 +13,7 @@ import type { GetStoryIdea200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { queryClient } from '@/lib/api/queryClient'
 import { listKeyPrefix, listOnlyFilter } from '@/lib/api/queryKeys'
-import { readerStateToggles } from '@/lib/format/storyIdea'
+import { readToggle } from '@/lib/format/storyIdea'
 import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
@@ -34,17 +34,12 @@ const idea = computed<GetStoryIdea200 | undefined>(() =>
   data.value?.status === 200 ? data.value.data : undefined,
 )
 
-const {
-  savingReaderState,
-  changeReaderState,
-  startingConversation,
-  conversationError,
-  askAboutIdea,
-} = useStoryIdeaActions()
+const { savingRead, changeRead, startingConversation, conversationError, askAboutIdea } =
+  useStoryIdeaActions()
 
 /** The page shows one idea, so it can simply refetch what it changed. */
-async function markIdea(state: GetStoryIdea200['readerState']) {
-  await changeReaderState(ideaId.value, state)
+async function markIdea(isRead: boolean) {
+  await changeRead(ideaId.value, isRead)
   await queryClient.invalidateQueries({ queryKey: getGetStoryIdeaQueryKey(ideaId.value) })
   await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
 }
@@ -139,12 +134,12 @@ async function remove() {
             <!-- Choosing the state an idea already has clears it, which is why the label
                  names the state rather than the act. -->
             <Button
-              v-for="toggle in readerStateToggles(idea.readerState)"
+              v-for="toggle in [readToggle(idea.isRead)]"
               :key="toggle.title"
               variant="outline"
               size="sm"
               :title="toggle.title"
-              :disabled="savingReaderState"
+              :disabled="savingRead"
               @click="markIdea(toggle.next)"
             >
               {{ toggle.label }}

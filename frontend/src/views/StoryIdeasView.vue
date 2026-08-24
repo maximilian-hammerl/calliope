@@ -37,7 +37,7 @@ const IDEAS_PER_PAGE = 10
  * Defaults to `unread`, which is what the filter is for — reading what has not been read.
  * The endpoint's own default is `any`, so no other caller inherits this choice.
  */
-const readerState = ref<'unread' | 'read' | 'marked' | 'any'>('unread')
+const readerState = ref<'unread' | 'read' | 'any'>('unread')
 
 /**
  * Explicit rather than inferred from the reading filter: a member who removes a mark from a
@@ -55,7 +55,6 @@ const STATUS_FILTERS = [
 const READER_STATE_FILTERS = [
   { value: 'unread', label: 'Ungelesen' },
   { value: 'read', label: 'Gelesen' },
-  { value: 'marked', label: 'Gemerkt' },
   { value: 'any', label: 'Alle' },
 ] as const
 

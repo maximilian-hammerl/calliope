@@ -5,6 +5,7 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
+  FAVOURITE_FILTER,
   listQuerySchema,
   listResponseSchema,
 } from "@/src/list/list_endpoint.ts";
@@ -68,7 +69,7 @@ const MEMBERSHIP = z
 
 const LIST_GROUPS_BODY = listQuerySchema(
   SORT_ATTRIBUTE,
-  { membership: MEMBERSHIP },
+  { membership: MEMBERSHIP, favourite: FAVOURITE_FILTER },
   "desc",
 );
 

@@ -101,18 +101,19 @@ Deno.test("a closed report has to say how it turned out", async () => {
 Deno.test("a report that is not closed carries neither outcome nor note", async () => {
   const { reporterId, reportedId } = await twoMembers("report-outcome");
 
-  await Promise.all(
-    [
+  for (
+    const extra of [
       { category: "spam", closingOutcome: "no_violation" },
       { category: "hate", closingNote: "Etwas entschieden." },
-    ].map((extra) =>
-      assertRejects(
-        () => insertReport(reporterId, reportedId, extra),
-        Error,
-        "report_closed_has_an_outcome",
-      )
-    ),
-  );
+    ]
+  ) {
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    await assertRejects(
+      () => insertReport(reporterId, reportedId, extra),
+      Error,
+      "report_closed_has_an_outcome",
+    );
+  }
 });
 
 Deno.test("a report may be worked on without being closed", async () => {

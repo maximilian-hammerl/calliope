@@ -107,7 +107,7 @@ Deno.test("QUERY /api/story-ideas/carousel carries whole ideas, not ids", async 
   assertEquals(typeof step.next.teaser, "string");
   assertEquals(typeof step.next.synopsis, "string");
   assertEquals(typeof step.next.createdByUsername, "string");
-  assertEquals(step.next.readerState, null);
+  assertEquals(step.next.isRead, false);
 });
 
 Deno.test("QUERY /api/story-ideas/carousel keeps an anchor the member has read", async () => {
@@ -117,7 +117,7 @@ Deno.test("QUERY /api/story-ideas/carousel keeps an anchor the member has read",
 
   const marking = await request(
     "PUT",
-    `/api/story-ideas/${middle.id}/reader-state`,
+    `/api/story-ideas/${middle.id}/read`,
     other,
     { state: "read" },
   );
@@ -127,7 +127,7 @@ Deno.test("QUERY /api/story-ideas/carousel keeps an anchor the member has read",
 
   // Marking the idea on screen as read must not invalidate the URL the member is sitting on.
   assertEquals(step.storyIdea.id, middle.id);
-  assertEquals(step.storyIdea.readerState, "read");
+  assertEquals(step.storyIdea.isRead, true);
 });
 
 Deno.test("QUERY /api/story-ideas/carousel refuses the member's own idea as an anchor", async () => {

@@ -91,6 +91,8 @@ export default new OpenAPIHono().openapi(
         sortOrder: "desc",
         // Search looks everywhere the reader may look, which is what the default narrows.
         membership: "any",
+        // Search ranks by relevance to the term, not by what the reader keeps.
+        favourite: "any",
       }),
       WritingThreadService.listVisibleThreads(user, {
         search,
@@ -112,6 +114,7 @@ export default new OpenAPIHono().openapi(
         status: "any",
         // Read or marked is the reader's own bookkeeping, not a reason to hide a match.
         readerState: "any",
+        favourite: "any",
         hiddenAuthorIds: blockedIds,
       }),
       UserService.listUsers({

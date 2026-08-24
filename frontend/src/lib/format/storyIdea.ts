@@ -12,33 +12,18 @@ export const LANGUAGE_LABELS: Record<GetStoryIdea200['language'], string> = {
 }
 
 /**
- * The member's own state. "Merken" is the design system's word for saving something for
- * later — «"Merken", not "Zu Lesezeichen hinzufügen"» — so it is reused rather than
- * inventing "Favorit", which would also promise a permanence the author can end.
+ * Whether the member has read it, which is the only state this table carries now. Keeping
+ * something to come back to used to be the second value of the same column and is a favourite
+ * now — one mechanism across groups, threads, ideas, chats and posts.
+ *
+ * The button names the state it will put the idea in rather than the act: "Als gelesen markieren"
+ * and its undo were wider than most ideas' titles on a phone, so the long phrasing stays as the
+ * `title`, which is also where the fact that it is a toggle lives.
  */
-export const READER_STATE_LABELS = {
-  read: 'Gelesen',
-  marked: 'Gemerkt',
-} as const
-
-type ReaderState = GetStoryIdea200['readerState']
-
-/**
- * One button per state, naming the state it will put the idea in. "Als gelesen markieren" and
- * its undo were wider than most ideas' titles on a phone; the full phrasing stays as the
- * button's `title`, which is also where the fact that it is a toggle now lives.
- */
-export function readerStateToggles(
-  current: ReaderState,
-): ReadonlyArray<{ label: string; title: string; next: ReaderState }> {
-  return [
-    current === 'read'
-      ? { label: 'Nicht gelesen', title: 'Als ungelesen markieren', next: null }
-      : { label: 'Gelesen', title: 'Als gelesen markieren', next: 'read' },
-    current === 'marked'
-      ? { label: 'Nicht gemerkt', title: 'Nicht mehr merken', next: null }
-      : { label: 'Gemerkt', title: 'Merken', next: 'marked' },
-  ]
+export function readToggle(isRead: boolean): { label: string; title: string; next: boolean } {
+  return isRead
+    ? { label: 'Nicht gelesen', title: 'Als ungelesen markieren', next: false }
+    : { label: 'Gelesen', title: 'Als gelesen markieren', next: true }
 }
 
 export const PARTY_SIZE_LABELS = {

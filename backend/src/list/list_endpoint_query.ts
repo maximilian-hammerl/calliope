@@ -29,6 +29,18 @@ export type ListResults<Result> = {
 };
 
 /**
+ * A selected column to sort by *before* the member's own choice, which is how favourites float to
+ * the top of a list whatever it is sorted by. It names an output alias rather than a table column
+ * — `isFavourite` is an expression, not something `dynamic.ref` could reach — and Postgres
+ * resolves an alias in ORDER BY.
+ *
+ * Descending, because the values are booleans and `true` sorts above `false`. Unlike
+ * `sortAttribute` this never comes from a request: it is a constant the endpoint passes, so it
+ * cannot be the injection that an unchecked `dynamic.ref` would otherwise be.
+ */
+export type ListOrdering = { firstDescending?: string };
+
+/**
  * Runs a page and its total against the same query builder, so the two can never disagree
  * about which rows they are describing.
  *
@@ -39,9 +51,19 @@ export type ListResults<Result> = {
 export async function listResultsWithCount<TB extends keyof DB, Result>(
   queryBuilder: SelectQueryBuilder<DB, TB, Result>,
   query: ListQuery,
+  ordering: ListOrdering = {},
 ): Promise<ListResults<Result>> {
   const [results, { count }] = await Promise.all([
     queryBuilder
+      .$if(
+        ordering.firstDescending !== undefined,
+        (builder) =>
+          builder.orderBy(
+            // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+            db.dynamic.ref(ordering.firstDescending!),
+            (orderBy) => orderBy.desc(),
+          ),
+      )
       .orderBy(
         db.dynamic.ref(query.sortAttribute),
         (orderBy) =>

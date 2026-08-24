@@ -1,7 +1,8 @@
-import type { Selectable } from "kysely";
+import type { ExpressionBuilder, Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
+  DB,
   StoryLanguage,
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
@@ -17,6 +18,11 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import {
+  FAVOURITE_COLUMN,
+  type FavouriteFilter,
+  IS_FAVOURITE,
+} from "@/src/service/favourite_target.ts";
 
 export type WritingGroup =
   & Pick<
@@ -46,6 +52,8 @@ export type WritingGroup =
     role: UserInWritingGroupRole | null;
     /** Null unless the reader was invited to this group; the invitations list dates rows by it. */
     invitedAt: string | null;
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
   };
 
 /**
@@ -173,6 +181,9 @@ async function insertWritingGroup(
       role: "administrator",
       // Nobody invited the founder, so there is no date to state.
       invitedAt: null,
+      // Founding a group does not favourite it: that is the member's own act, and one they can
+      // take the moment this returns.
+      isFavourite: false,
     };
   });
 }
@@ -193,6 +204,19 @@ function visibleToUser(user: User) {
     )
     // Left as well: an account that has been deleted leaves the group behind with no author.
     .leftJoin("user", "user.id", "writingGroup.createdBy")
+    // And again for the reader's own favourite, bound to their id so no query here can see
+    // another member's.
+    .leftJoin(
+      "favourite",
+      (join) =>
+        join
+          .onRef(
+            `favourite.${FAVOURITE_COLUMN.writing_group}`,
+            "=",
+            "writingGroup.id",
+          )
+          .on("favourite.userId", "=", user.id),
+    )
     .where((eb) =>
       eb.or([
         eb("writingGroup.visibility", "=", "public"),
@@ -214,24 +238,50 @@ const OWN_MEMBERSHIP_COLUMNS = [
   "userInWritingGroup.invitedAt",
 ] as const;
 
+/**
+ * The reader's own favourite as a flag rather than the row. `$castTo` because `IS NOT NULL`
+ * already *is* a boolean in Postgres and only Kysely's type needs correcting — the same reason
+ * `report`'s `targetExists` needs it.
+ */
+const favouriteColumn = (eb: ExpressionBuilder<DB, "favourite">) =>
+  eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE);
+
 /** Returns nothing when the group does not exist or is private and not the user's. */
 async function selectVisibleWritingGroup(
   user: User,
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
-    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+    .select((eb) => [
+      ...SELECTED_COLUMNS,
+      AUTHOR_COLUMN,
+      ...OWN_MEMBERSHIP_COLUMNS,
+      favouriteColumn(eb),
+    ])
     .where("writingGroup.id", "=", writingGroupId)
     .executeTakeFirst();
 }
 
 function listVisibleWritingGroups(
   user: User,
-  query: ListQuery & { membership: MembershipFilter },
+  query: ListQuery & {
+    membership: MembershipFilter;
+    favourite: FavouriteFilter;
+  },
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
     visibleToUser(user)
-      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+      .select((eb) => [
+        ...SELECTED_COLUMNS,
+        AUTHOR_COLUMN,
+        ...OWN_MEMBERSHIP_COLUMNS,
+        favouriteColumn(eb),
+      ])
+      // Only the reader's own favourites, which narrows like every other filter here.
+      .$if(
+        query.favourite === "only",
+        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      )
       // Narrows what visibleToUser allows; it never widens it, so a private group the reader
       // has nothing to do with stays out however this is set. One $if per value rather than
       // one clever one: the status literals then type themselves, and "any" is simply the
@@ -271,6 +321,9 @@ function listVisibleWritingGroups(
           ),
       ),
     query,
+    // Favourites first, whatever the reader sorted by. A first term rather than a sort option:
+    // it is not one of the ways to order a list, it is what comes before them.
+    { firstDescending: IS_FAVOURITE },
   );
 }
 
@@ -348,7 +401,23 @@ async function updateWritingGroup(
             .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
             .on("userInWritingGroup.userId", "=", changedBy),
       )
-      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+      .leftJoin(
+        "favourite",
+        (join) =>
+          join
+            .onRef(
+              `favourite.${FAVOURITE_COLUMN.writing_group}`,
+              "=",
+              "writingGroup.id",
+            )
+            .on("favourite.userId", "=", changedBy),
+      )
+      .select((eb) => [
+        ...SELECTED_COLUMNS,
+        AUTHOR_COLUMN,
+        ...OWN_MEMBERSHIP_COLUMNS,
+        favouriteColumn(eb),
+      ])
       .where("writingGroup.id", "=", updated.id)
       .executeTakeFirstOrThrow();
   });

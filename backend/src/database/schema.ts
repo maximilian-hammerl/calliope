@@ -59,8 +59,6 @@ export type ReportTargetType =
 
 export type StoryIdeaPartySize = "group" | "one_on_one";
 
-export type StoryIdeaReaderState = "marked" | "read";
-
 export type StoryIdeaStatus = "closed" | "open";
 
 export type StoryLanguage = "english" | "german";
@@ -95,6 +93,17 @@ export interface ChatMessage {
   createdBy: string | null;
   id: Generated<string>;
   text: string;
+}
+
+export interface Favourite {
+  chatGroupId: string | null;
+  createdAt: Generated<string>;
+  id: Generated<string>;
+  storyIdeaId: string | null;
+  userId: string;
+  writingGroupId: string | null;
+  writingPostId: string | null;
+  writingThreadId: string | null;
 }
 
 export interface Notification {
@@ -157,7 +166,6 @@ export interface StoryIdea {
 
 export interface StoryIdeaReader {
   createdAt: Generated<string>;
-  state: StoryIdeaReaderState;
   storyIdeaId: string;
   userId: string;
 }
@@ -277,6 +285,7 @@ export interface WritingThread {
 export interface DB {
   chatGroup: ChatGroup;
   chatMessage: ChatMessage;
+  favourite: Favourite;
   notification: Notification;
   report: Report;
   storyIdea: StoryIdea;
@@ -355,9 +364,6 @@ export const STORY_IDEA_STATUS_SCHEMA = z.enum(STORY_IDEA_STATUSES);
 export const STORY_IDEA_PARTY_SIZES = ["group", "one_on_one"] as const;
 export const STORY_IDEA_PARTY_SIZE_SCHEMA = z.enum(STORY_IDEA_PARTY_SIZES);
 
-export const STORY_IDEA_READER_STATES = ["marked", "read"] as const;
-export const STORY_IDEA_READER_STATE_SCHEMA = z.enum(STORY_IDEA_READER_STATES);
-
 export const PLATFORM_ROLES = ["administrator", "moderator"] as const;
 export const PLATFORM_ROLE_SCHEMA = z.enum(PLATFORM_ROLES);
 
@@ -416,6 +422,17 @@ export const CHAT_MESSAGE_SCHEMA = z.object({
   chatGroupId: z.uuidv7(),
   text: z.string(),
   createdBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+});
+
+export const FAVOURITE_SCHEMA = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+  writingGroupId: z.uuidv7().nullable(),
+  writingThreadId: z.uuidv7().nullable(),
+  writingPostId: z.uuidv7().nullable(),
+  storyIdeaId: z.uuidv7().nullable(),
+  chatGroupId: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 
@@ -480,7 +497,6 @@ export const STORY_IDEA_SCHEMA = z.object({
 export const STORY_IDEA_READER_SCHEMA = z.object({
   storyIdeaId: z.uuidv7(),
   userId: z.uuidv7(),
-  state: STORY_IDEA_READER_STATE_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
 });
 

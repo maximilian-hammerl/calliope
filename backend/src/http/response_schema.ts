@@ -3,7 +3,6 @@ import {
   CHAT_GROUP_SCHEMA,
   CHAT_MESSAGE_SCHEMA,
   NOTIFICATION_SCHEMA,
-  STORY_IDEA_READER_SCHEMA,
   STORY_IDEA_SCHEMA,
   USER_IN_CHAT_GROUP_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
@@ -44,9 +43,17 @@ const OWN_MEMBERSHIP = {
   invitedAt: USER_IN_WRITING_GROUP_SCHEMA.shape.invitedAt.nullable(),
 };
 
+/**
+ * The reader's own favourite, on every kind that has one. Extended in rather than picked from a
+ * table, because it is a fact about the reader and the thing rather than about the thing —
+ * `favourite` holds it, and nobody else's is ever visible here.
+ */
+export const OWN_FAVOURITE = { isFavourite: z.boolean() };
+
 export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
   .extend(CREATED_BY_USERNAME)
-  .extend(OWN_MEMBERSHIP);
+  .extend(OWN_MEMBERSHIP)
+  .extend(OWN_FAVOURITE);
 
 export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
   CREATED_BY_USERNAME,
@@ -120,7 +127,10 @@ export const STORY_IDEA_RESPONSE = STORY_IDEA_SCHEMA.extend({
   createdByUsername: z.string(),
   // The requesting member's own state, null while unread. Never another member's: a count of
   // readers is exactly the statistic the research rejected.
-  readerState: STORY_IDEA_READER_SCHEMA.shape.state.nullable(),
+  // Read is the presence of a row, so it reaches the client as the fact it is rather than as
+  // a nullable enum. Favouriting is `isFavourite`, and no longer the same column.
+  isRead: z.boolean(),
+  ...OWN_FAVOURITE,
 });
 
 /**

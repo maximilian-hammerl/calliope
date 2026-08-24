@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, READER_STATE_LABELS } from '@/lib/format/storyIdea'
+import { IDEA_STATUS_LABELS, LANGUAGE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 
 const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
@@ -39,9 +39,7 @@ const story = computed<string>(() =>
       <CalliopeBadge v-if="idea.status !== 'open'" class="ml-3">
         {{ IDEA_STATUS_LABELS[idea.status] }}
       </CalliopeBadge>
-      <CalliopeBadge v-if="idea.readerState !== null" class="ml-3">
-        {{ READER_STATE_LABELS[idea.readerState] }}
-      </CalliopeBadge>
+      <CalliopeBadge v-if="idea.isRead" class="ml-3">Gelesen</CalliopeBadge>
       <CalliopeBadge v-if="idea.language !== 'german'" class="ml-3">
         {{ LANGUAGE_LABELS[idea.language] }}
       </CalliopeBadge>

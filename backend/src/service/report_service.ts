@@ -8,11 +8,7 @@ import type {
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
 import { listResultsWithCount } from "@/src/list/list_endpoint_query.ts";
 import type { User } from "@/src/service/user_service.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
 
 /**
  * What a member has reported to the operators.
@@ -22,20 +18,6 @@ import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
  * whether something exists. And **the excerpt is written here, never sent by the client**: a
  * snapshot composed by the person filing the report would be evidence they wrote themselves.
  */
-
-/**
- * Long enough to judge a short post or message, short enough that the table does not become a
- * second copy of the writing. Not in `text_limit.ts`: that file bounds what a member types, and
- * nobody types this.
- */
-const EXCERPT_LENGTH = 2_000;
-
-function excerpt(text: string): string {
-  const collapsed = text.trim();
-  return collapsed.length <= EXCERPT_LENGTH
-    ? collapsed
-    : `${collapsed.slice(0, EXCERPT_LENGTH - 1).trimEnd()}…`;
-}
 
 /** The column the target's id goes in, which `report_target_matches_type` also enforces. */
 const TARGET_COLUMN = {
@@ -47,132 +29,6 @@ const TARGET_COLUMN = {
   chat_message: "reportedChatMessageId",
   user: "reportedUserId",
 } as const satisfies Record<ReportTargetType, string>;
-
-/**
- * Resolves the target through the reader's own visibility and returns what it said, or
- * `undefined` when they may not see it — which the route answers as 404, so reporting cannot
- * confirm that something exists.
- *
- * Threads, posts and chat messages are reached through the thing that governs them rather than
- * checked here: the group's visibility rule and the chat's membership rule live in one place
- * each, and a second copy of either is how a private group's writing became readable once
- * already.
- */
-type ResolvedTarget = { excerpt: string; authorId: string | null };
-
-async function resolveTarget(
-  user: User,
-  targetType: ReportTargetType,
-  targetId: string,
-): Promise<ResolvedTarget | undefined> {
-  switch (targetType) {
-    case "writing_group": {
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        targetId,
-      );
-      return group === undefined
-        ? undefined
-        : { excerpt: excerpt(group.title), authorId: group.createdBy };
-    }
-
-    case "writing_thread": {
-      const thread = await db
-        .selectFrom("writingThread")
-        .select(["title", "writingGroupId", "createdBy"])
-        .where("id", "=", targetId)
-        .executeTakeFirst();
-
-      if (thread === undefined) {
-        return undefined;
-      }
-
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        thread.writingGroupId,
-      );
-      return group === undefined
-        ? undefined
-        : { excerpt: excerpt(thread.title), authorId: thread.createdBy };
-    }
-
-    case "writing_post": {
-      const post = await db
-        .selectFrom("writingPost")
-        .innerJoin(
-          "writingThread",
-          "writingThread.id",
-          "writingPost.writingThreadId",
-        )
-        .select([
-          "writingPost.text",
-          "writingPost.isDraft",
-          "writingPost.createdBy",
-          "writingThread.writingGroupId",
-        ])
-        .where("writingPost.id", "=", targetId)
-        .executeTakeFirst();
-
-      // A draft is visible only to its author, and reporting your own draft is not a thing.
-      if (post === undefined || (post.isDraft && post.createdBy !== user.id)) {
-        return undefined;
-      }
-
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        post.writingGroupId,
-      );
-      return group === undefined
-        ? undefined
-        : { excerpt: excerpt(post.text), authorId: post.createdBy };
-    }
-
-    case "story_idea": {
-      const idea = await StoryIdeaService.selectStoryIdea(targetId, user.id);
-      return idea === undefined
-        ? undefined
-        : { excerpt: excerpt(idea.title), authorId: idea.createdBy };
-    }
-
-    case "chat_group": {
-      const chat = await ChatGroupService.selectChatGroup(user, targetId);
-      return chat === undefined
-        ? undefined
-        : { excerpt: excerpt(chat.title ?? ""), authorId: chat.createdBy };
-    }
-
-    case "chat_message": {
-      const message = await db
-        .selectFrom("chatMessage")
-        .select(["text", "chatGroupId", "createdBy"])
-        .where("id", "=", targetId)
-        .executeTakeFirst();
-
-      if (message === undefined) {
-        return undefined;
-      }
-
-      const chat = await ChatGroupService.selectChatGroup(
-        user,
-        message.chatGroupId,
-      );
-      return chat === undefined
-        ? undefined
-        : { excerpt: excerpt(message.text), authorId: message.createdBy };
-    }
-
-    case "user": {
-      const profile = await UserService.selectUserProfile(targetId);
-      // The reported account answers for itself.
-      return profile === undefined
-        ? undefined
-        : { excerpt: excerpt(profile.username), authorId: profile.id };
-    }
-
-    default:
-      return assertUnreachable(targetType);
-  }
-}
 
 export type ReportRefusal = "not_found" | "own_account" | "own_content";
 
@@ -187,7 +43,11 @@ async function insertReport(
     return "own_account";
   }
 
-  const target = await resolveTarget(user, targetType, targetId);
+  // Reporting is the caller that wants the excerpt: it is the copy of what was said that keeps
+  // the queue readable once the content is gone.
+  const target = await resolveVisibleTarget(user, targetType, targetId, {
+    withExcerpt: true,
+  });
 
   if (target === undefined) {
     return "not_found";

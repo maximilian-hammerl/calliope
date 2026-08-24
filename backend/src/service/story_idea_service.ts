@@ -3,7 +3,6 @@ import { db } from "@/src/database/client.ts";
 import type {
   StoryIdea as DatabaseStoryIdea,
   StoryIdeaPartySize,
-  StoryIdeaReaderState,
   StoryIdeaStatus,
   StoryLanguage,
 } from "@/src/database/schema.ts";
@@ -13,6 +12,11 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import {
+  FAVOURITE_COLUMN,
+  type FavouriteFilter,
+  IS_FAVOURITE,
+} from "@/src/service/favourite_target.ts";
 
 export type StoryIdea =
   & Pick<
@@ -39,13 +43,18 @@ export type StoryIdea =
   & { createdByUsername: string }
   // The reading member's own state, null while unread. Never anybody else's: what a member
   // has read is theirs, and a count of readers is the statistic the research rejected.
-  & { readerState: StoryIdeaReaderState | null };
+  & {
+    isRead: boolean;
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
+  };
 
 /** The board's default is `open`: what is still worth answering. */
 export type StatusFilter = StoryIdeaStatus | "any";
 
 /** `unread` is the absence of a row, which is why it is not a value of the enum itself. */
-export type ReaderStateFilter = StoryIdeaReaderState | "unread" | "any";
+/** `marked` was a third value here until favouriting became its own thing across five kinds. */
+export type ReaderStateFilter = "read" | "unread" | "any";
 
 const SELECTED_COLUMNS = [
   "storyIdea.id",
@@ -122,8 +131,8 @@ function toRow(values: Partial<StoryIdeaValues>) {
 }
 
 /**
- * Left join on the reader, so an unread idea still comes back — with `readerState` null. The
- * join is bound to one member's id: no query here can see another member's state.
+ * Left join on the reader, so an unread idea still comes back — with `isRead` false. The join is
+ * bound to one member's id: no query here can see another member's state.
  */
 function withAuthor(readerId: string) {
   return db
@@ -136,10 +145,28 @@ function withAuthor(readerId: string) {
           .onRef("storyIdeaReader.storyIdeaId", "=", "storyIdea.id")
           .on("storyIdeaReader.userId", "=", readerId),
     )
-    .select([
+    // And the reader's own favourite, which since the split is a separate fact from having read
+    // it: favouriting an unread idea leaves it unread.
+    .leftJoin(
+      "favourite",
+      (join) =>
+        join
+          .onRef(
+            `favourite.${FAVOURITE_COLUMN.story_idea}`,
+            "=",
+            "storyIdea.id",
+          )
+          .on("favourite.userId", "=", readerId),
+    )
+    .select((eb) => [
       ...SELECTED_COLUMNS,
       "user.username as createdByUsername",
-      "storyIdeaReader.state as readerState",
+      // `$castTo` for the reason `report`'s `targetExists` needs it: `IS NOT NULL` already *is*
+      // a boolean in Postgres, and only Kysely's type needs correcting.
+      eb("storyIdeaReader.userId", "is not", null).$castTo<boolean>().as(
+        "isRead",
+      ),
+      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
     ]);
 }
 
@@ -147,6 +174,7 @@ export type StoryIdeaFilters = {
   /** Whose state to report, and to filter by. Always the requesting member. */
   readerId: string;
   readerState: ReaderStateFilter;
+  favourite: FavouriteFilter;
   status: StatusFilter;
   language?: StoryLanguage;
   /** Only the reader's own ideas — the view that manages, not the one that browses. */
@@ -204,19 +232,20 @@ function filtered(query: StoryIdeaFilters) {
     .$if(query.language !== undefined, (queryBuilder) =>
       // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
       queryBuilder.where("storyIdea.language", "=", query.language!))
-    // Unread is the missing row, so it filters on the join rather than on a value.
+    // Unread is the missing row, so both directions filter on the join rather than on a value.
     .$if(
       query.readerState === "unread",
-      (queryBuilder) => queryBuilder.where("storyIdeaReader.state", "is", null),
+      (queryBuilder) =>
+        queryBuilder.where("storyIdeaReader.userId", "is", null),
     )
     .$if(
-      query.readerState === "read" || query.readerState === "marked",
+      query.readerState === "read",
       (queryBuilder) =>
-        queryBuilder.where(
-          "storyIdeaReader.state",
-          "=",
-          query.readerState as StoryIdeaReaderState,
-        ),
+        queryBuilder.where("storyIdeaReader.userId", "is not", null),
+    )
+    .$if(
+      query.favourite === "only",
+      (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
     )
     .$if(
       query.search !== undefined,
@@ -246,7 +275,11 @@ function filtered(query: StoryIdeaFilters) {
 function listStoryIdeas(
   query: ListQuery & StoryIdeaFilters,
 ): Promise<ListResults<StoryIdea>> {
-  return listResultsWithCount(filtered(query), query);
+  // Favourites first, whatever the reader sorted by — a term before the sort rather than one of
+  // its options.
+  return listResultsWithCount(filtered(query), query, {
+    firstDescending: IS_FAVOURITE,
+  });
 }
 async function selectStoryIdea(
   ideaId: string,
@@ -320,24 +353,20 @@ async function deleteStoryIdea(
  * Upsert, because a member setting a state twice is not an error: the second one wins and the
  * first row is simply overwritten.
  */
-async function setReaderState(
-  ideaId: string,
-  userId: string,
-  state: StoryIdeaReaderState,
-): Promise<void> {
+async function markRead(ideaId: string, userId: string): Promise<void> {
   await db
     .insertInto("storyIdeaReader")
-    .values({ storyIdeaId: ideaId, userId, state })
+    .values({ storyIdeaId: ideaId, userId })
+    // A row is the whole of the fact, so a second click has nothing to overwrite — but it must
+    // not fail either, and marking read is the one action that fires without being asked for.
     .onConflict((conflict) =>
-      conflict
-        .columns(["storyIdeaId", "userId"])
-        .doUpdateSet({ state })
+      conflict.columns(["storyIdeaId", "userId"]).doNothing()
     )
     .execute();
 }
 
-/** Back to unread, which is the absence of a row rather than a third value. */
-async function clearReaderState(
+/** Back to unread, which is the absence of a row rather than a value. */
+async function clearRead(
   ideaId: string,
   userId: string,
 ): Promise<void> {
@@ -379,6 +408,7 @@ async function selectCarousel(
     excludeCreatedBy: readerId,
     status: "open" as const,
     readerState: "unread" as const,
+    favourite: "any" as const,
   };
 
   // Counts the whole set, and its single row is where a carousel opened without an anchor
@@ -396,6 +426,7 @@ async function selectCarousel(
   const anchor = anchorId === undefined ? undefined : await filtered({
     ...set,
     readerState: "any",
+    favourite: "any",
     id: anchorId,
   }).executeTakeFirst();
 
@@ -433,8 +464,8 @@ export const StoryIdeaService = {
   listStoryIdeas,
   selectCarousel,
   selectStoryIdea,
-  setReaderState,
-  clearReaderState,
+  markRead,
+  clearRead,
   insertStoryIdea,
   updateStoryIdea,
   deleteStoryIdea,

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import {
-  useClearReaderState,
-  useSetReaderState,
+  useClearStoryIdeaRead,
+  useMarkStoryIdeaRead,
   useStartStoryIdeaConversation,
 } from '@/api/story-ideas/story-ideas'
 import { getListChatsQueryKey } from '@/api/chats/chats'
@@ -16,24 +16,24 @@ import { listOnlyFilter } from '@/lib/api/queryKeys'
  * one on screen if it refetched.
  */
 export function useStoryIdeaActions() {
-  const { mutateAsync: setReaderState } = useSetReaderState()
-  const { mutateAsync: clearReaderState } = useClearReaderState()
-  const savingReaderState = ref<boolean>(false)
+  const { mutateAsync: markRead } = useMarkStoryIdeaRead()
+  const { mutateAsync: clearRead } = useClearStoryIdeaRead()
+  const savingRead = ref<boolean>(false)
 
   /**
-   * Null puts the idea back to unread, which is the absence of a row rather than a third value.
-   * Choosing the state an idea already has clears it, so one control both sets and undoes.
+   * False puts the idea back to unread, which is the absence of a row rather than a value. One
+   * control both sets and undoes.
    */
-  async function changeReaderState(ideaId: string, state: 'read' | 'marked' | null) {
-    savingReaderState.value = true
+  async function changeRead(ideaId: string, isRead: boolean) {
+    savingRead.value = true
     try {
-      if (state === null) {
-        await clearReaderState({ ideaId })
+      if (isRead) {
+        await markRead({ ideaId })
       } else {
-        await setReaderState({ ideaId, data: { state } })
+        await clearRead({ ideaId })
       }
     } finally {
-      savingReaderState.value = false
+      savingRead.value = false
     }
   }
 
@@ -57,8 +57,8 @@ export function useStoryIdeaActions() {
   }
 
   return {
-    savingReaderState,
-    changeReaderState,
+    savingRead,
+    changeRead,
     startingConversation,
     conversationError,
     askAboutIdea,

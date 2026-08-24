@@ -2,10 +2,9 @@
 import { ref, watch } from 'vue'
 import { ArrowLeft, ArrowRight, MessageCircle } from '@lucide/vue'
 import { getListStoryIdeasQueryKey } from '@/api/story-ideas/story-ideas'
-import type { GetStoryIdea200 } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { readerStateToggles } from '@/lib/format/storyIdea'
+import { readToggle } from '@/lib/format/storyIdea'
 import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
 import { useStoryIdeaCarousel } from '@/composables/useStoryIdeaCarousel'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -22,16 +21,11 @@ const {
   isPending,
   isError,
   goTo,
-  setReaderStateLocally,
+  setReadLocally,
 } = useStoryIdeaCarousel()
 
-const {
-  savingReaderState,
-  changeReaderState,
-  startingConversation,
-  conversationError,
-  askAboutIdea,
-} = useStoryIdeaActions()
+const { savingRead, changeRead, startingConversation, conversationError, askAboutIdea } =
+  useStoryIdeaActions()
 
 /**
  * Whether the next change of `index` is a step the reader took, and so worth animating.
@@ -56,9 +50,9 @@ function step(by: number) {
  * the set around the reader and take the idea they are looking at out of it. The board is
  * invalidated instead, because that is where the change has to show.
  */
-async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
-  await changeReaderState(ideaId, state)
-  setReaderStateLocally(ideaId, state)
+async function markIdea(ideaId: string, isRead: boolean) {
+  await changeRead(ideaId, isRead)
+  setReadLocally(ideaId, isRead)
   await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
 }
 </script>
@@ -135,15 +129,14 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
             <div v-for="idea in track" :key="idea.id" class="w-full shrink-0 grow-0">
               <StoryIdeaDetail :idea="idea" heading="h2">
                 <template #actions>
-                  <!-- Choosing the state an idea already has clears it, which is why the label
-                       names the state rather than the act. -->
+                  <!-- The label names the state it will put the idea in rather than the act. -->
                   <Button
-                    v-for="toggle in readerStateToggles(idea.readerState)"
+                    v-for="toggle in [readToggle(idea.isRead)]"
                     :key="toggle.title"
                     variant="outline"
                     size="sm"
                     :title="toggle.title"
-                    :disabled="savingReaderState"
+                    :disabled="savingRead"
                     @click="markIdea(idea.id, toggle.next)"
                   >
                     {{ toggle.label }}
