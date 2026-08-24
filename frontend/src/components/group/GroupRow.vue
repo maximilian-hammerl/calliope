@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import VisibilityMark from '@/components/group/VisibilityMark.vue'
+import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
 
 /**
  * One group in a list. Meine Gruppen, Einladungen and Gruppen entdecken all show the same
@@ -22,9 +23,10 @@ defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
       >
         {{ group.title }}
       </RouterLink>
-      <CalliopeBadge class="ml-3">
-        {{ group.visibility === 'private' ? 'Privat' : 'Öffentlich' }}
-      </CalliopeBadge>
+      <VisibilityMark :visibility="group.visibility" class="ml-3" />
+      <!-- After the group's own state, because this one is the reader's: the same order the
+           story-idea row puts them in. -->
+      <FavouriteMark v-if="group.isFavourite" class="ml-3" />
     </div>
 
     <!-- The story's own line, between its name and what it is about. Darker and a step larger

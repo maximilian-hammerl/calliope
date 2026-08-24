@@ -13,6 +13,7 @@ import { useListStoryIdeas } from '@/api/story-ideas/story-ideas'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import { usePagedList } from '@/composables/usePagedList'
 import FilterStrip from '@/components/common/FilterStrip.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
@@ -46,10 +47,21 @@ const readerState = ref<'unread' | 'read' | 'any'>('unread')
  */
 const status = ref<'open' | 'closed' | 'any'>('open')
 
+/**
+ * Offered on both boards, unlike the reading filter: a member's own ideas cannot be unread, but
+ * they can certainly be favourites.
+ */
+const favourite = ref<'any' | 'only'>('any')
+
 const STATUS_FILTERS = [
   { value: 'open', label: IDEA_STATUS_LABELS.open },
   { value: 'closed', label: IDEA_STATUS_LABELS.closed },
   { value: 'any', label: 'Alle' },
+] as const
+
+const FAVOURITE_FILTERS = [
+  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
 ] as const
 
 const READER_STATE_FILTERS = [
@@ -75,7 +87,7 @@ watchDebounced(
 const { page, offset, pageCount, goToPage } = usePagedList(IDEAS_PER_PAGE, () => totalResults.value)
 
 // A search or a filter narrows the board, so whatever page was open is about a different set.
-watch([settled, readerState, status], () => goToPage(1))
+watch([settled, readerState, status, favourite], () => goToPage(1))
 
 const { data, isPending, isError } = useListStoryIdeas(
   () => ({
@@ -83,6 +95,7 @@ const { data, isPending, isError } = useListStoryIdeas(
     offset: offset.value,
     author: props.mine ? ('mine' as const) : ('others' as const),
     readerState: props.mine ? ('any' as const) : readerState.value,
+    favourite: favourite.value,
     status: props.mine ? undefined : status.value,
     search: settled.value === '' ? undefined : settled.value,
   }),
@@ -140,15 +153,20 @@ const creating = ref<boolean>(false)
 
       <!-- One grid for both strips, so the labels share a column and the strips align. -->
       <div
-        v-if="hasLoaded && !mine"
+        v-if="hasLoaded"
         class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
       >
-        <FilterStrip
-          v-model="readerState"
-          label="Gelesen oder nicht"
-          :options="READER_STATE_FILTERS"
-        />
-        <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
+        <!-- Neither reading nor status says anything on one's own ideas, so those two are the
+             discovery board's; the favourite belongs to both. -->
+        <template v-if="!mine">
+          <FilterStrip
+            v-model="readerState"
+            label="Gelesen oder nicht"
+            :options="READER_STATE_FILTERS"
+          />
+          <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
+        </template>
+        <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
       </div>
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
@@ -175,8 +193,7 @@ const creating = ref<boolean>(false)
              default view avoids claiming why it is empty: nothing unread and nothing at all
              look the same from here, and only one of them would be true. -->
         <template v-else-if="readerState === 'unread' && status === 'open'">
-          Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ und „Gemerkt“ findest du, was du schon
-          kennst.
+          Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ findest du, was du schon kennst.
         </template>
         <template v-else-if="readerState !== 'any' || status !== 'any'">
           Keine Idee passt zu diesen Filtern.

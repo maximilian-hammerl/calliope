@@ -12,6 +12,11 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import {
+  FAVOURITE_COLUMN,
+  type FavouriteFilter,
+  IS_FAVOURITE,
+} from "@/src/service/favourite_target.ts";
 
 export type ChatGroup =
   & Pick<
@@ -25,6 +30,8 @@ export type ChatGroup =
     createdByUsername: string | null;
     /** How many messages arrived after this member last read, for their list entry. */
     unreadMessages: number;
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
   };
 
 const SELECTED_COLUMNS = [
@@ -48,8 +55,29 @@ function chatsOf(user: User) {
     .innerJoin("userInChatGroup", (join) =>
       join
         .onRef("userInChatGroup.chatGroupId", "=", "chatGroup.id")
-        .on("userInChatGroup.userId", "=", user.id))
+        .on("userInChatGroup.userId", "=", user.id));
+}
+
+/**
+ * The list's own projection, which is the expensive one: the unread count is a correlated COUNT
+ * over every message of the chat. Kept apart from the rule above so the gate does not pay for it —
+ * `checkJoinedChatMember` runs on every message sent and every page of messages read, and it was
+ * counting unread messages each time only to throw the number away.
+ */
+function chatsWithDetail(user: User) {
+  return chatsOf(user)
     .leftJoin("user", "user.id", "chatGroup.createdBy")
+    .leftJoin(
+      "favourite",
+      (join) =>
+        join
+          .onRef(
+            `favourite.${FAVOURITE_COLUMN.chat_group}`,
+            "=",
+            "chatGroup.id",
+          )
+          .on("favourite.userId", "=", user.id),
+    )
     .select((eb) => [
       ...SELECTED_COLUMNS,
       "userInChatGroup.status",
@@ -82,32 +110,59 @@ function chatsOf(user: User) {
           .select((inner) => inner.fn.countAll<number>().as("count")),
         eb.lit(0),
       ).as("unreadMessages"),
+      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
     ]);
 }
 
 function listChatGroups(
   user: User,
-  query: ListQuery,
+  query: ListQuery & { favourite: FavouriteFilter },
 ): Promise<ListResults<ChatGroup>> {
-  let chats = chatsOf(user);
-
-  if (query.search !== undefined) {
-    chats = chats.where(
-      "chatGroup.title",
-      "ilike",
-      searchPattern(query.search),
-    );
-  }
-
-  return listResultsWithCount(chats, query);
+  return listResultsWithCount(
+    chatsWithDetail(user)
+      // `$if` rather than reassigning the builder through an `if`, which is what the rest of this
+      // codebase does and what the conditional-selects recipe asks for.
+      .$if(query.search !== undefined, (queryBuilder) =>
+        queryBuilder.where(
+          "chatGroup.title",
+          "ilike",
+          // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+          searchPattern(query.search!),
+        ))
+      .$if(
+        query.favourite === "only",
+        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      ),
+    query,
+    // Favourites first, whatever the reader sorted by.
+    { firstDescending: IS_FAVOURITE },
+  );
 }
 
 /** Returns nothing when the chat does not exist or the user is not in it. */
+/**
+ * Whether the member is in the chat at all, and what it is called. Not the list's projection: all
+ * four callers use this as a gate and only one reads anything off it — `title` for the excerpt of
+ * a reported chat, `createdBy` for who answers for it.
+ */
+export type ChatGroupGate = {
+  id: string;
+  title: string;
+  createdBy: string | null;
+  status: UserInChatGroupStatus;
+};
+
 async function selectChatGroup(
   user: User,
   chatGroupId: string,
-): Promise<ChatGroup | undefined> {
+): Promise<ChatGroupGate | undefined> {
   return await chatsOf(user)
+    .select([
+      "chatGroup.id",
+      "chatGroup.title",
+      "chatGroup.createdBy",
+      "userInChatGroup.status",
+    ])
     .where("chatGroup.id", "=", chatGroupId)
     .executeTakeFirst();
 }
@@ -158,8 +213,9 @@ async function insertChatGroup(
     return chatGroup.id;
   });
 
-  // Re-read rather than RETURNING: the unread count and the founder's name are joined.
-  return await chatsOf(creator)
+  // Re-read rather than RETURNING: the unread count, the founder's name and the favourite are all
+  // joined, and a newly created chat is answered in the same shape the list uses.
+  return await chatsWithDetail(creator)
     .where("chatGroup.id", "=", id)
     .executeTakeFirstOrThrow();
 }

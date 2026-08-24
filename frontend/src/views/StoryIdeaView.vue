@@ -8,13 +8,10 @@ import {
   useGetStoryIdea,
 } from '@/api/story-ideas/story-ideas'
 import { useGetCurrentUser } from '@/api/auth/auth'
-import { MessageCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
 import type { GetStoryIdea200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { queryClient } from '@/lib/api/queryClient'
 import { listKeyPrefix, listOnlyFilter } from '@/lib/api/queryKeys'
-import { readToggle } from '@/lib/format/storyIdea'
-import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import type { GroupInitialValues } from '@/components/group/GroupDialog.vue'
@@ -22,7 +19,6 @@ import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
 import DeleteStoryIdeaDialog from '@/components/story-idea/DeleteStoryIdeaDialog.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
-import { Button } from '@/components/ui/button'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,12 +30,8 @@ const idea = computed<GetStoryIdea200 | undefined>(() =>
   data.value?.status === 200 ? data.value.data : undefined,
 )
 
-const { savingRead, changeRead, startingConversation, conversationError, askAboutIdea } =
-  useStoryIdeaActions()
-
-/** The page shows one idea, so it can simply refetch what it changed. */
-async function markIdea(isRead: boolean) {
-  await changeRead(ideaId.value, isRead)
+/** The page shows one idea, so it can simply refetch what it changed — and the board it came from. */
+async function refreshIdea() {
   await queryClient.invalidateQueries({ queryKey: getGetStoryIdeaQueryKey(ideaId.value) })
   await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
 }
@@ -111,64 +103,17 @@ async function remove() {
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</div>
 
-      <StoryIdeaDetail v-else-if="idea" :idea="idea" :own="isOwn">
-        <template #actions>
-          <template v-if="isOwn">
-            <Button variant="outline" size="sm" @click="foundingGroup = true">
-              <Plus :stroke-width="1.5" />
-              Gruppe gründen
-            </Button>
-            <Button variant="outline" size="sm" @click="editing = true">
-              <Pencil :stroke-width="1.5" />
-              Bearbeiten
-            </Button>
-            <Button variant="outline" size="sm" :disabled="removing" @click="deleting = true">
-              <Trash2 :stroke-width="1.5" />
-              Löschen
-            </Button>
-          </template>
-
-          <!-- The visitor's one action, solid for that reason. Only while the idea is open:
-               closed means the author asked not to be asked, and the API enforces it too. -->
-          <template v-else>
-            <!-- Choosing the state an idea already has clears it, which is why the label
-                 names the state rather than the act. -->
-            <Button
-              v-for="toggle in [readToggle(idea.isRead)]"
-              :key="toggle.title"
-              variant="outline"
-              size="sm"
-              :title="toggle.title"
-              :disabled="savingRead"
-              @click="markIdea(toggle.next)"
-            >
-              {{ toggle.label }}
-            </Button>
-            <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
-            <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and
-                 a member who kept the idea should see why they cannot write. -->
-            <Button
-              size="sm"
-              :disabled="startingConversation || idea.status === 'closed'"
-              :title="
-                idea.status === 'closed'
-                  ? 'Diese Storyidee ist geschlossen und kann nicht mehr beantwortet werden'
-                  : undefined
-              "
-              @click="askAboutIdea(idea.id)"
-            >
-              <MessageCircle :stroke-width="1.5" />
-              Chat beginnen
-            </Button>
-          </template>
-        </template>
-
-        <template #notices>
-          <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-            {{ conversationError }}
-          </p>
-        </template>
-      </StoryIdeaDetail>
+      <StoryIdeaDetail
+        v-else-if="idea"
+        :idea="idea"
+        :own="isOwn"
+        @read-changed="refreshIdea"
+        @favourite-changed="refreshIdea"
+        @report="reporting = true"
+        @edit="editing = true"
+        @remove="deleting = true"
+        @found-group="foundingGroup = true"
+      />
 
       <template v-else-if="notFound">
         <h1 class="text-h1">Keine Idee gefunden</h1>

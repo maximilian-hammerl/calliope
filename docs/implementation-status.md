@@ -35,6 +35,13 @@ the reader their own ideas, a detail page, and a Meine-Storyideen view. With thr
 destinations the navigation was rebuilt around **menus in both bars** — Gruppen and Storyideen
 each open their two pages, Mitglieder stays a link, and every destination carries its icon.
 
+One mark now runs through the whole product: **Favoriten** (#73) on a group, a thread, a post, a
+story idea or a chat, private to the member who set it, floating what they marked to the top of
+every list that holds it — and deliberately not doing so among the posts of a thread, which is
+prose and reads in the order it was written. That subsumed the older per-kind bookmark (#37),
+which is why the word changed: „Merken" was right for a story idea alone and says nothing true
+about a group you are already in.
+
 Strangers can also now be refused: **blocking** stops contact in both directions, withdraws the
 invitations still open between the two, and takes the other member out of lists, search, the
 ideas board and notifications — while leaving shared groups, shared conversations and
@@ -52,6 +59,7 @@ the inside, but still no caretaker.
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
 | Writing groups   | Member-created, private/public, invitations with acceptance, roles, group discussions, next steps. **No** files, **no** way for a member to leave (#26) and **no** way to change a role once given (#27). |
+| Favourites       | One mechanism over groups, threads, posts, story ideas and chats (#73): a private mark that floats the thing to the top of its list — except among posts, where a thread keeps its reading order and the mark drives the filter instead. Every list that shows a favouritable kind offers the filter. |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Starting a conversation ("Unterhaltung beginnen") opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, starting a conversation with the author ("Unterhaltung beginnen"), and founding a group from one's own idea ("Gruppe gründen"). |
@@ -122,13 +130,13 @@ These are decisions, not omissions, and each is recorded where it was made:
   content. The story status and the next-steps checklist are real — steps are added inline, ticked off recording who completed them,
   and completed ones keep forever under a done-items disclosure ("Erledigt (N)") unless
   deleted by hand.
-- A post carries **no actions at all**. Quoting (#36), bookmarking (#37) and annotations (#38)
-  are specified in the design system's copy and not built, and the disabled buttons that stood
-  in for them are gone: a control that has never worked teaches a reader to stop looking. The
-  thread's **post filter** ("Alle Beiträge ▾") went earlier for the same reason — its only real
-  options are bookmarked and annotated posts. The design-system prototype keeps the
-  specification for all of them, including the finding that the filter is one menu rather than
-  a row of chips.
+- A post carries **one** action of its own: favouriting, which arrived with #73 and closed #37
+  along the way. **Quoting (#36)** and **annotations (#38)** are still specified in the design
+  system's copy and not built, and the disabled buttons that stood in for them are gone: a control
+  that has never worked teaches a reader to stop looking. The thread's **post filter** ("Alle
+  Beiträge") is back, with the one of its two real options that now exists — „Favoriten" — and
+  „Mit Anmerkungen" joins it with #38. The design-system prototype keeps the specification for the
+  rest, including the finding that the filter is one menu rather than a row of chips.
 
 ## Correctly absent
 

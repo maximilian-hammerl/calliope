@@ -7,7 +7,7 @@ export type SortOrder = z.infer<typeof SORT_ORDER>;
 
 /**
  * Narrowing a list to the reader's own favourites, which four of them take. Here rather than at
- * each route so the four cannot drift apart, and `any` by default because a list that hid
+ * each route so no two of them can drift apart, and `any` by default because a list that hid
  * everything unfavourited unless asked would surprise every caller.
  *
  * An enum rather than a boolean, matching `status` and `readerState` beside it: a list that grows

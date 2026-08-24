@@ -8,6 +8,11 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import {
+  FAVOURITE_COLUMN,
+  type FavouriteFilter,
+  IS_FAVOURITE,
+} from "@/src/service/favourite_target.ts";
 
 export type Post =
   & Pick<
@@ -21,6 +26,10 @@ export type Post =
     | "editedAt"
     | "editedBy"
   >
+  & {
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
+  }
   // Both null once that account is deleted, because the columns are ON DELETE SET NULL.
   & { createdByUsername: string | null; editedByUsername: string | null };
 
@@ -39,21 +48,35 @@ const SELECTED_COLUMNS = [
  * caller has already established that it may see the row. */
 function postWithAuthorById(
   postId: string,
+  viewerId: string,
   executor: typeof db | Transaction = db,
 ) {
   return executor
     .selectFrom("writingPost")
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .select([
+    // The acting member's own favourite: writing or editing a post changes nothing about whether
+    // they keep it, and the response carries the flag like every other post does.
+    .leftJoin(
+      "favourite",
+      (join) =>
+        join
+          .onRef(
+            `favourite.${FAVOURITE_COLUMN.writing_post}`,
+            "=",
+            "writingPost.id",
+          )
+          .on("favourite.userId", "=", viewerId),
+    )
+    .select((eb) => [
       ...SELECTED_COLUMNS,
+      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
-      (eb) =>
-        eb.selectFrom("user as editor")
-          .select("editor.username")
-          .whereRef("editor.id", "=", "writingPost.editedBy")
-          .as("editedByUsername"),
+      eb.selectFrom("user as editor")
+        .select("editor.username")
+        .whereRef("editor.id", "=", "writingPost.editedBy")
+        .as("editedByUsername"),
     ])
     .where("writingPost.id", "=", postId);
 }
@@ -85,7 +108,8 @@ async function insertPost(
     }
 
     // Re-read rather than RETURNING, which cannot reach the joined author name.
-    return await postWithAuthorById(id, transaction).executeTakeFirstOrThrow();
+    return await postWithAuthorById(id, createdBy, transaction)
+      .executeTakeFirstOrThrow();
   });
 }
 
@@ -114,16 +138,28 @@ function postsWithAuthor(
 ) {
   return readableBy(viewerId, executor)
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .select([
+    // The reader's own favourite, bound to their id so no query here can see another member's.
+    .leftJoin(
+      "favourite",
+      (join) =>
+        join
+          .onRef(
+            `favourite.${FAVOURITE_COLUMN.writing_post}`,
+            "=",
+            "writingPost.id",
+          )
+          .on("favourite.userId", "=", viewerId),
+    )
+    .select((eb) => [
       ...SELECTED_COLUMNS,
+      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
-      (eb) =>
-        eb.selectFrom("user as editor")
-          .select("editor.username")
-          .whereRef("editor.id", "=", "writingPost.editedBy")
-          .as("editedByUsername"),
+      eb.selectFrom("user as editor")
+        .select("editor.username")
+        .whereRef("editor.id", "=", "writingPost.editedBy")
+        .as("editedByUsername"),
     ]);
 }
 
@@ -142,12 +178,20 @@ async function selectPost(
 function listPosts(
   threadId: string,
   viewerId: string,
-  query: ListQuery & { isDraft: boolean },
+  query: ListQuery & { isDraft: boolean; favourite: FavouriteFilter },
 ): Promise<ListResults<Post>> {
+  // **No favourites-first ordering here, deliberately.** A thread is prose and reads in the order
+  // it was written, so hoisting a favourited post above the paragraph before it would break the
+  // reading. What a favourite earns a post is the thread's own filter, which is what #37 asked
+  // for before this issue absorbed it.
   return listResultsWithCount(
     postsWithAuthor(viewerId)
       .where("writingPost.writingThreadId", "=", threadId)
       .where("writingPost.isDraft", "=", query.isDraft)
+      .$if(
+        query.favourite === "only",
+        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      )
       // The body rather than a title: a post has none.
       .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where(
@@ -219,7 +263,7 @@ async function updatePost(
       });
     }
 
-    return await postWithAuthorById(updated.id, transaction)
+    return await postWithAuthorById(updated.id, context.actorId, transaction)
       .executeTakeFirstOrThrow();
   });
 }

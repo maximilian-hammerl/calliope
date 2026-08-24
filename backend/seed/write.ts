@@ -6,7 +6,10 @@ import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
 import { BLOCKS } from "@/seed/blocks.ts";
 import { REPORTS } from "@/seed/reports.ts";
+import { FAVOURITES } from "@/seed/favourites.ts";
 import { notificationId } from "@/seed/ids.ts";
+import { FAVOURITE_COLUMN } from "@/src/service/favourite_target.ts";
+import type { FavouriteTargetType } from "@/src/service/favourite_target.ts";
 
 /**
  * The ids are written by hand, so two of them can be the same by accident — a notification
@@ -27,6 +30,7 @@ function assertDistinctIds(): void {
     ...STORY_IDEAS.map((idea) => idea.id),
     ...CHATS.flatMap((chat) => [chat.id, ...chat.messages.map((m) => m.id)]),
     ...REPORTS.map((report) => report.id),
+    ...FAVOURITES.map((favourite) => favourite.id),
   ];
 
   const seen = new Set(ids);
@@ -52,6 +56,35 @@ function assertFoundersAdminister(): void {
     const creator = chat.members.find((member) => member.user === chat.by);
     if (creator === undefined || creator.status === "invited") {
       throw new Error(`${chat.title}: the creator has not joined`);
+    }
+  }
+}
+
+/**
+ * A favourite naming an id no fixture holds fails as a foreign key violation, which reports the
+ * constraint and the uuid and not which entry is wrong. `postId(305)` is one past the end of the
+ * long thread and looks perfectly reasonable in the source.
+ */
+function assertFavouritesNameSomething(): void {
+  const known = {
+    writing_group: new Set(GROUPS.map((group) => group.id)),
+    writing_thread: new Set(
+      GROUPS.flatMap((group) => (group.threads ?? []).map((t) => t.id)),
+    ),
+    writing_post: new Set(
+      GROUPS.flatMap((group) =>
+        (group.threads ?? []).flatMap((t) => t.posts.map((post) => post.id))
+      ),
+    ),
+    story_idea: new Set(STORY_IDEAS.map((idea) => idea.id)),
+    chat_group: new Set(CHATS.map((chat) => chat.id)),
+  } as const satisfies Record<FavouriteTargetType, ReadonlySet<string>>;
+
+  for (const favourite of FAVOURITES) {
+    if (!known[favourite.targetType].has(favourite.targetId)) {
+      throw new Error(
+        `${favourite.user} favourites a ${favourite.targetType} that the fixture does not hold: ${favourite.targetId}`,
+      );
     }
   }
 }
@@ -395,10 +428,30 @@ async function writeReports(): Promise<void> {
   ).execute();
 }
 
+/**
+ * One row per favourite, with the kind written into the column it belongs in rather than beside
+ * it: `favourite` has no `target_type`, so `FAVOURITE_COLUMN` is shared with the services rather
+ * than restated here — a second copy is what would drift.
+ *
+ * Nothing cleans these up. Every reference cascades, including the member's, so deleting the
+ * seeded accounts takes the favourites with them; `report` needs its own delete only because its
+ * references are SET NULL.
+ */
+async function writeFavourites(): Promise<void> {
+  await db.insertInto("favourite").values(
+    FAVOURITES.map((favourite) => ({
+      id: favourite.id,
+      userId: favourite.user,
+      ...{ [FAVOURITE_COLUMN[favourite.targetType]]: favourite.targetId },
+    })),
+  ).execute();
+}
+
 export async function writeFixtures(): Promise<void> {
   assertDistinctIds();
   assertFoundersAdminister();
   assertBlocksHaveNoPendingInvitation();
+  assertFavouritesNameSomething();
 
   await writeAccounts();
   await writeBlocks();
@@ -406,6 +459,7 @@ export async function writeFixtures(): Promise<void> {
   await writeChats();
   await writeStoryIdeas();
   await writeNotifications();
+  await writeFavourites();
   // Last, because a report points at a post, an idea or an account that has to exist first.
   await writeReports();
 }

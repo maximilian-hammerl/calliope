@@ -7,6 +7,7 @@ import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import {
+  FAVOURITE_FILTER,
   listQuerySchema,
   listResponseSchema,
 } from "@/src/list/list_endpoint.ts";
@@ -41,6 +42,7 @@ const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
  * member's draft unreachable, whatever is asked for here.
  */
 const LIST_POSTS_BODY = listQuerySchema(SORT_ATTRIBUTE, {
+  favourite: FAVOURITE_FILTER,
   isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
 }, "asc");
 

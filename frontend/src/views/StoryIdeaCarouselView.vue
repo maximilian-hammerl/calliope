@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { ArrowLeft, ArrowRight, MessageCircle } from '@lucide/vue'
+import { ArrowLeft, ArrowRight } from '@lucide/vue'
 import { getListStoryIdeasQueryKey } from '@/api/story-ideas/story-ideas'
 import { queryClient } from '@/lib/api/queryClient'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { readToggle } from '@/lib/format/storyIdea'
-import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
 import { useStoryIdeaCarousel } from '@/composables/useStoryIdeaCarousel'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import { Button } from '@/components/ui/button'
 
 const {
@@ -22,10 +21,8 @@ const {
   isError,
   goTo,
   setReadLocally,
+  setFavouriteLocally,
 } = useStoryIdeaCarousel()
-
-const { savingRead, changeRead, startingConversation, conversationError, askAboutIdea } =
-  useStoryIdeaActions()
 
 /**
  * Whether the next change of `index` is a step the reader took, and so worth animating.
@@ -46,15 +43,27 @@ function step(by: number) {
 }
 
 /**
- * The slide keeps its own new state rather than the query refetching: a refetch would rebuild
- * the set around the reader and take the idea they are looking at out of it. The board is
- * invalidated instead, because that is where the change has to show.
+ * The change itself has already happened in `StoryIdeaDetail`; what is left is the part only this
+ * view can decide. The slide keeps its own new state rather than the query refetching, because a
+ * refetch would rebuild the set around the reader and take the idea they are looking at out of it.
+ * The board is invalidated instead, since that is where the change has to show.
  */
 async function markIdea(ideaId: string, isRead: boolean) {
-  await changeRead(ideaId, isRead)
   setReadLocally(ideaId, isRead)
   await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
 }
+
+/** The same rule as reading, minus the total: favouriting moves nothing in or out of the set. */
+async function favouriteChanged(ideaId: string, isFavourite: boolean) {
+  setFavouriteLocally(ideaId, isFavourite)
+  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+}
+
+/**
+ * Which idea is being reported. The carousel holds every slide at once, so a boolean would open
+ * the dialog for all of them — the id is what says which.
+ */
+const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined)
 </script>
 
 <template>
@@ -127,39 +136,27 @@ async function markIdea(ideaId: string, isRead: boolean) {
             :style="{ transform: `translateX(-${index * 100}%)` }"
           >
             <div v-for="idea in track" :key="idea.id" class="w-full shrink-0 grow-0">
-              <StoryIdeaDetail :idea="idea" heading="h2">
-                <template #actions>
-                  <!-- The label names the state it will put the idea in rather than the act. -->
-                  <Button
-                    v-for="toggle in [readToggle(idea.isRead)]"
-                    :key="toggle.title"
-                    variant="outline"
-                    size="sm"
-                    :title="toggle.title"
-                    :disabled="savingRead"
-                    @click="markIdea(idea.id, toggle.next)"
-                  >
-                    {{ toggle.label }}
-                  </Button>
-                  <Button size="sm" :disabled="startingConversation" @click="askAboutIdea(idea.id)">
-                    <MessageCircle :stroke-width="1.5" />
-                    Chat beginnen
-                  </Button>
-                </template>
-                <template #notices>
-                  <p
-                    v-if="conversationError"
-                    class="mt-3 text-[12.5px] text-destructive"
-                    role="alert"
-                  >
-                    {{ conversationError }}
-                  </p>
-                </template>
-              </StoryIdeaDetail>
+              <StoryIdeaDetail
+                :idea="idea"
+                heading="h2"
+                @read-changed="(isRead) => markIdea(idea.id, isRead)"
+                @favourite-changed="(isFavourite) => favouriteChanged(idea.id, isFavourite)"
+                @report="reportingIdea = { id: idea.id, title: idea.title }"
+              />
             </div>
           </div>
         </div>
       </div>
     </div>
   </AppLayout>
+
+  <!-- One dialog for the whole track rather than one per slide: `reportingIdea` says which. -->
+  <ReportDialog
+    v-if="reportingIdea"
+    :open="true"
+    target-type="story_idea"
+    :target-id="reportingIdea.id"
+    :subject="reportingIdea.title"
+    @update:open="(open) => !open && (reportingIdea = undefined)"
+  />
 </template>

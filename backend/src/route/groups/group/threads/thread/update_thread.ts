@@ -86,9 +86,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await WritingThreadService.updateThread(threadId, {
-      title,
-    });
+    const updated = await WritingThreadService.updateThread(
+      threadId,
+      { title },
+      c.get("user").id,
+    );
     if (updated === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

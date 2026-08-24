@@ -55,11 +55,12 @@ export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
   .extend(OWN_MEMBERSHIP)
   .extend(OWN_FAVOURITE);
 
-export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
-  CREATED_BY_USERNAME,
-);
+export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA
+  .extend(CREATED_BY_USERNAME)
+  .extend(OWN_FAVOURITE);
 
 export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
+  .extend(OWN_FAVOURITE)
   .extend({
     /**
      * Who changed it, which is not implied by the row: `mayModify` lets the author or somebody
@@ -239,6 +240,7 @@ export const NOTIFICATION_RESPONSE = z.discriminatedUnion("type", [
 
 /** A chat as its list entry: the group, its founder's name, and this member's unread count. */
 export const CHAT_GROUP_RESPONSE = CHAT_GROUP_SCHEMA.extend({
+  ...OWN_FAVOURITE,
   /** The reader's own standing in it, so the interface knows whether to show a conversation. */
   status: USER_IN_CHAT_GROUP_SCHEMA.shape.status,
   createdByUsername: z.string().nullable(),
@@ -264,6 +266,5 @@ export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA
  * anywhere has to say where it came from — „Plot" alone is meaningless when it could be from
  * any group, which is the same reason a notification about a post names both.
  */
-export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE.extend({
-  writingGroupTitle: z.string(),
-});
+export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE
+  .extend({ writingGroupTitle: z.string() });

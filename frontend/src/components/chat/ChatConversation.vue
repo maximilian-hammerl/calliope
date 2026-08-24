@@ -7,6 +7,8 @@ import {
   useListChatMemberships,
   useReadChat,
 } from '@/api/chats/chats'
+import { favouriteToggle } from '@/lib/format/favourite'
+import { useFavourite } from '@/composables/useFavourite'
 import { useChatMessages } from '@/composables/useChatMessages'
 import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
 import { useGetCurrentUser } from '@/api/auth/auth'
@@ -26,7 +28,21 @@ const props = defineProps<{
   chatGroupId: string
   title: string
   live: ListMessages200ResultsItem[]
+  isFavourite?: boolean
 }>()
+
+const emit = defineEmits<{ favouriteChanged: [] }>()
+
+const { savingFavourite, changeFavourite } = useFavourite()
+
+const favourite = computed(() => favouriteToggle(props.isFavourite ?? false))
+
+async function toggleFavourite() {
+  const { next } = favourite.value
+  if (await changeFavourite('chat_group', props.chatGroupId, next)) {
+    emit('favouriteChanged')
+  }
+}
 
 const { data: currentUserData } = useGetCurrentUser()
 const currentUserId = computed<string | undefined>(() =>
@@ -219,6 +235,17 @@ async function submit() {
       <span class="text-[12.5px] text-ink-4">{{ participants }}</span>
       <div class="ml-auto flex items-center gap-4">
         <ChatInvite :chat-group-id="chatGroupId" :member-ids="memberIds" />
+        <!-- A raw button like the ones beside it: this row is text actions on one baseline, not
+             buttons. The wording still comes from `favouriteToggle`. -->
+        <button
+          type="button"
+          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          :title="favourite.title"
+          :disabled="savingFavourite"
+          @click="toggleFavourite"
+        >
+          {{ favourite.label }}
+        </button>
         <button
           type="button"
           class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"

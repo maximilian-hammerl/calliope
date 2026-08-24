@@ -3,6 +3,8 @@ import type { ComponentPublicInstance } from 'vue'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { paragraphs } from '@/lib/format/formatText'
+import { favouriteToggle } from '@/lib/format/favourite'
+import { useFavourite } from '@/composables/useFavourite'
 import type { ListPosts200ResultsItem } from '@/api/models'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Textarea } from '@/components/ui/textarea'
@@ -26,7 +28,19 @@ const emit = defineEmits<{
   cancel: []
   save: [text: string]
   delete: []
+  favouriteChanged: []
 }>()
+
+const { savingFavourite, changeFavourite } = useFavourite()
+
+const favourite = computed(() => favouriteToggle(props.post.isFavourite))
+
+async function toggleFavourite() {
+  const { next } = favourite.value
+  if (await changeFavourite('writing_post', props.post.id, next)) {
+    emit('favouriteChanged')
+  }
+}
 
 // Only your own post is excluded. A post whose author is gone is still reportable: the writing
 // is still there, and removing it is still something an operator can do.
@@ -161,6 +175,18 @@ const blocks = computed<string[]>(() => paragraphs(props.post.text))
           @click="emit('delete')"
         >
           Löschen
+        </button>
+        <!-- A raw button rather than `FavouriteToggle`, because this row is text actions sharing
+             one baseline rather than buttons: the component's own shape would sit wrong here. The
+             wording still comes from `favouriteToggle`, so it cannot drift from the other four. -->
+        <button
+          type="button"
+          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          :title="favourite.title"
+          :disabled="savingFavourite"
+          @click="toggleFavourite"
+        >
+          {{ favourite.label }}
         </button>
         <button
           v-if="mayReport"

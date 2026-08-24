@@ -166,6 +166,15 @@ export function useStoryIdeaCarousel() {
     track.value = track.value.map((idea) => (idea.id === ideaId ? { ...idea, isRead } : idea))
   }
 
+  /**
+   * The favourite's counterpart, and simpler for a reason worth stating: favouriting does not move
+   * an idea in or out of this set — only reading does — so there is no total to adjust. The slide
+   * still has to be updated by hand, because refetching would rebuild the set around the reader.
+   */
+  function setFavouriteLocally(ideaId: string, isFavourite: boolean) {
+    track.value = track.value.map((idea) => (idea.id === ideaId ? { ...idea, isFavourite } : idea))
+  }
+
   return {
     track,
     index,
@@ -180,5 +189,6 @@ export function useStoryIdeaCarousel() {
       index.value = clamp(slide)
     },
     setReadLocally,
+    setFavouriteLocally,
   }
 }

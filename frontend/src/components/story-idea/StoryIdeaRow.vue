@@ -2,8 +2,11 @@
 import { computed } from 'vue'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
-import { IDEA_STATUS_LABELS, LANGUAGE_LABELS } from '@/lib/format/storyIdea'
+import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import ClosedMark from '@/components/story-idea/ClosedMark.vue'
+import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
+import ReadMark from '@/components/story-idea/ReadMark.vue'
 
 const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
 
@@ -36,10 +39,11 @@ const story = computed<string>(() =>
         {{ idea.title }}
       </RouterLink>
       <!-- Open is the board's resting state and says nothing; the others are worth a mark. -->
-      <CalliopeBadge v-if="idea.status !== 'open'" class="ml-3">
-        {{ IDEA_STATUS_LABELS[idea.status] }}
-      </CalliopeBadge>
-      <CalliopeBadge v-if="idea.isRead" class="ml-3">Gelesen</CalliopeBadge>
+      <ClosedMark v-if="idea.status !== 'open'" class="ml-3" />
+      <!-- The reader's own two states, as marks rather than words: the idea's own status keeps
+           the badge, so the row reads as one fact about the idea and then what you did with it. -->
+      <ReadMark v-if="idea.isRead" class="ml-3" />
+      <FavouriteMark v-if="idea.isFavourite" class="ml-2" />
       <CalliopeBadge v-if="idea.language !== 'german'" class="ml-3">
         {{ LANGUAGE_LABELS[idea.language] }}
       </CalliopeBadge>

@@ -194,8 +194,8 @@ heading, not a paraphrase of it. Two names for one place reads as two places.
 pushed right with `ml-auto`, wrapping onto their own line when the width runs out. "Mitglieder ·
 3 Mitglieder · [＋ Mitglied einladen]" is the pattern; Meine Gruppen follows it.
 
-**Verbs are what the member does, not what the system does.** "Weiterschreiben", not "Neuer
-Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gruppe erstellen" —
+**Verbs are what the member does, not what the system does.** „Weiterschreiben", not „Neuer
+Beitrag". „Melden", not „Meldung einreichen". „Gruppe gründen", not „Gruppe erstellen" —
 founding a group is a social act.
 
 **When we mail a link, say what to expect of it.** One sentence, the same everywhere
@@ -227,23 +227,93 @@ Schritte anlegen"): a deliberate exception to hiding what one cannot do, so a re
 group plans here. Completed steps stay under „Erledigt (N)" until someone deletes them.
 
 **A member's own state on somebody else's thing is never shown to its owner.** A story idea
-carries "Gelesen" or "Gemerkt" for the member reading it and nothing for its author: "four
-members read your idea" is the statistic the research rejected. Saving something for later is
+carries „Gelesen" or „Favorit" for the member reading it and nothing for its author: "four
+members read your idea" is the statistic the research rejected. Saving something for later is a
+private act, and a count of who has done it turns the board into a scoreboard — the same finding
+arrived at from the other side.
+
 **A username is permanent, and registration says so.** "Ändern lässt er sich später nicht", in
 the field's own description — the one moment the choice can still be made differently. Members
 asked for it to work this way: somebody with a bad reputation must not be able to reappear under
 a new name, so this is a protection rather than a missing feature, and it is never apologised for
 in the copy. Renaming is not planned (#54).
 
-**"Merken"** everywhere — never "Favorit", which names a feeling rather than an intention and
-promises a permanence the author can end by closing the idea.
+**„Favorit"** everywhere — the word this document used to forbid, and the reversal is the point.
+„Merken" was right while the mark existed only on a story idea, where it means noted for later.
+The mark now spans groups, threads, posts, ideas and chats, and „gemerkt" says something untrue
+about a group you already belong to or a conversation you are in — you are not planning to get to
+those. „Favorit" is about what you come back to, which is exactly what the mark now does: it
+floats the thing to the top of its list. The old objection stands and is outweighed rather than
+answered — an author can still close an idea somebody favourited, and its page and badge survive
+that, so the mark never breaks.
 
-**A state toggle is labelled with the state, not the act.** "Gelesen" and "Gemerkt", and
-"Nicht gelesen" and "Nicht gemerkt" once set — never "Als gelesen markieren" and its undo,
-which were wider than most story ideas' own titles on a phone and pushed the one solid action
-onto a second row. The long phrasing survives as the button's `title`, which is also where
-the fact that clicking it again undoes it belongs. `readerStateToggles()` in
-`lib/format/storyIdea.ts` is the one place either wording lives.
+**A state toggle is labelled with the state, not the act.** „Gelesen" and „Favorit", and „Nicht
+gelesen" and „Kein Favorit" once set — never „Als gelesen markieren" and its undo, which were
+wider than most story ideas' own titles on a phone and pushed the one solid action onto a second
+row. The long phrasing survives as the button's `title`, which is also where the fact that
+clicking it again undoes it belongs. `readToggle()` in `lib/format/storyIdea.ts` and
+`favouriteToggle()` in `lib/format/favourite.ts` are the one place either wording lives, and the
+two sit side by side on an idea precisely because they are built the same way.
+
+**A favourite floats its thing to the top, except among prose.** Groups, threads, ideas and chats
+put favourites first whatever the list is sorted by — that is what the mark is *for*, and a member
+in twenty groups should not have to search for the four they open daily. A post does not: a thread
+is read in the order it was written, and hoisting a marked passage would put the end of a chapter
+above its beginning. What a favourite earns a post is the thread's own „Favoriten" filter, offered
+on every list that shows a favouritable kind so the surfaces cannot drift apart.
+
+**The button says the word, the row shows the mark.** „Favorit" and „Kein Favorit" stay words on
+a button, because a button names the state it will move the thing *to* — a star there would sit on
+the things that are **not** favourites, a few pixels from a star meaning they are, and a mark
+cannot point forward and describe the present at once. On a row, where nothing points anywhere,
+`Star` is the mark and `BookCheck` is „Gelesen". Both carry `aria-label` **and** `title`, so the
+word is a hover away on a desktop and always there for a screen reader; nothing else in the
+interface is icon-only, which is why these two are named rather than `aria-hidden`.
+
+**A list row states what it is and what you did with it, as marks.** A list sorted favourites-first
+otherwise gives no sign of where they stop, which only looks fine while the filter is on. The
+thing's own state comes first and the reader's after it: lock then star on a group, closed then
+read then favourite on an idea.
+
+**A mark is one-sided or two-sided, and which one is a decision.** „Favorit", „Gelesen" and
+„Geschlossen" are a mark *or nothing* — their absence says nothing worth a chip, and an open idea
+is the board's resting state. Visibility is two-sided: a group is always private or public, and
+`LockOpen` is there so „öffentlich" is read rather than inferred from a missing lock.
+
+**The lock pair is shipped as an open question, not as a finding.** `Lock` and `LockOpen` differ
+only by where the shackle sits, which is a fine distinction at 13px, and visibility is the fact
+whose misreading costs the most — a private group taken for a public one is somebody writing to a
+room they think is smaller than it is. Three ways round it were tried and are all worse: filling
+either lock makes a solid body that stops reading as a lock, and `Globe` for public claims the
+internet when „öffentlich" here means the community. So it goes out as the pair and **the thing to
+watch for is a member reporting they misjudged who could read a group**; the fix, if it comes, is
+the word, which costs 92px and nothing else. Two mitigations are already in place: the group's own
+page keeps the word, and that is the screen somebody is on when they are about to write.
+
+**Which words survive: the ones a member is deciding on.** „Von dir" and „Mitglied" stay words,
+because the row's marks are facts about the thing while those two say what the reader may *do* with
+it — and neither has a glyph anybody would guess. A `User` icon means *a person*, not *you*, and
+the Lucide marks that do say authorship all collide with `Pencil`, which already means edit.
+
+And a **page heading keeps the word** where a row takes the mark: „Privat" on the group's own
+page, „Offen" or „Geschlossen" on the idea's. That is not an inconsistency, it is how the mark is taught — you meet the word on
+the thing's own page and the chip in the list means it from then on.
+
+The mark **is a badge**, with a glyph where the word goes: same border, same 3px radius, same 21px
+height, `align-bottom` because a box holding no text has its baseline at its own bottom edge and
+sat 2px high without it. A `mark` variant of `CalliopeBadge` owns all of that, so a chip cannot
+drift from the chips beside it. It costs 25px against about 60 for the word, which is what lets the
+tab strip, the chats rail and the search popover carry it at all — as a word it pushed a chat's
+unread count onto a second line and made that row 22px taller than its neighbours.
+
+**Nothing is filled.** A filled `Star` was tried and read as a different weight of thing on a page
+where nothing else is filled. Fill was then tried on `Lock` and on `LockOpen`, to tell two
+near-identical glyphs apart, and failed in both directions for a different reason: a filled body
+stops reading as a lock. Fill is not the tool for separating two marks.
+
+Marks measured against the words they replace: „PRIVAT" 92px and „GESCHLOSSEN" 99px — the two
+widest chips in the interface — against 25px each. A search result that is closed and your own
+spent 168px of a 414px row on chips before this.
 
 **A thing its owner has ended stays readable, and says so.** A closed story idea keeps its
 page and its badge, and the action it can no longer take is **disabled rather than hidden** —
@@ -464,7 +534,7 @@ copy below stays specified — it is what the buttons will say when they work (#
 but nothing renders it until it does something.
 
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
-Zitieren · Merken · Melden · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
+Zitieren · Favorit · Kein Favorit · Melden · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
 Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
 Editor einklappen · Editor ausklappen · Gruppen-Kontext · Gruppe bearbeiten ·
 Änderungen speichern · Entfernen · Einladung zurückziehen.
@@ -594,6 +664,17 @@ of a list, where five borders would tile the page. One question settles it: is t
 whole screen, or one row of it? Without that test the treatment tracked whoever wrote the page —
 the block toggle was Quiet in its one branch and Plain in the other, and a single story-idea
 header carried four different levels side by side.
+
+That header did it again the day it grew a fourth button: „Favorit" Plain, „Gelesen" Quiet,
+„Melden" Plain, „Chat beginnen" Solid — alternating, and every one of them an act on the idea the
+page is about. **The test would have caught it, so what changed is that the test is now hard to
+skip**: `FavouriteToggle` no longer takes a level, because it only ever sits on a thing's own page,
+and its prop had been set to Plain at all three call sites. A control that appears at one altitude
+should not offer a level at all.
+
+„Melden" is Quiet for the same reason, on every page that carries it. Reporting *should* recede,
+and **placement** is what does that — it sits last, after the ordinary actions — not a quieter
+level. A level says what an act is on; how often anybody wants it is a matter of where it goes.
 
 **One implementation per level, and it lives in the Button component.** Quiet is
 `variant="outline"`, carrying the fill *and* the border; there is no second bordered variant,
@@ -749,6 +830,10 @@ never matched the hairline weight and changed shape from platform to platform.
 | — | `Pencil` | edit an existing thing ("Gruppe bearbeiten", "Umbenennen") |
 | — | `Trash2` | delete a thing for good ("Löschen") |
 | — | `MessageCircle` | start a chat ("Chat beginnen") |
+| — | `Star` | a row's „Favorit" mark — never on the toggle, which keeps its word |
+| — | `BookCheck` | a row's „Gelesen" mark. Closed, not `BookOpenCheck`: an open book reads as *being* read, and its page curves plus the check are dense at 13px |
+| — | `Lock` `LockOpen` | a row's „Privat" / „Öffentlich" mark, both always shown — see the open question above |
+| — | `CircleCheckBig` | a row's „Geschlossen" mark for a story idea. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px
@@ -762,7 +847,9 @@ nothing to name — the rail's collapse chevron, the tab strip's scroll arrows, 
 which carry an `aria-label` instead. No *act* is ever icon-only.
 
 **One act, one mark, wherever it appears.** `Plus` adds, `Pencil` edits, `Trash2` deletes for
-good, so a member who has learned one has learned it for every object. Two things take no mark on
+good, so a member who has learned one has learned it for every object. `BookCheck` beside
+`SquareCheck` is not the exception it looks like: a check means *done* in both, and the noun in
+front of it says done with what — a step, or a reading. Two things take no mark on
 purpose: „Entfernen", because removing somebody from a group that survives is a different act
 from destroying a thing, and a dialog's confirm button, whose title has already named the act.
 Import each icon under one name — a `PencilIcon` beside a `Pencil` is one file twice and reads as

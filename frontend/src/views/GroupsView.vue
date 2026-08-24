@@ -3,6 +3,8 @@ import { Plus } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useListGroups } from '@/api/groups/groups'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
+import FilterStrip from '@/components/common/FilterStrip.vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
@@ -44,7 +46,15 @@ const { page, offset, pageCount, goToPage } = usePagedList(
   () => totalResults.value,
 )
 // A search narrows the list, so whatever page was open is about a different set of groups.
-watch(settled, () => goToPage(1))
+/** Offered on every list that shows a favouritable kind, so none of them can drift apart. */
+const favourite = ref<'any' | 'only'>('any')
+
+const FAVOURITE_FILTERS = [
+  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
+] as const
+
+watch([settled, favourite], () => goToPage(1))
 
 const { data, isPending, isError } = useListGroups(
   () => ({
@@ -54,6 +64,7 @@ const { data, isPending, isError } = useListGroups(
     // Most recently written in first: people come back to continue a story, not to look one up
     // alphabetically — and the row already dates itself by this column.
     sortAttribute: 'lastActivityAt' as const,
+    favourite: favourite.value,
     sortOrder: 'desc' as const,
   }),
   // Keeps the page strip and the count on screen while the next page loads.
@@ -140,6 +151,12 @@ const creating = ref<boolean>(false)
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
       </p>
+
+      <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
+           them. -->
+      <div class="mb-6">
+        <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
+      </div>
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="groups-search">Suche</FieldLabel>

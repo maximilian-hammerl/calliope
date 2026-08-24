@@ -52,6 +52,23 @@ timestamps are **stamped from fixture position**, five minutes apart, because on
 statement shares a single `now()` — a column full of ties has no defined sort order, and paging
 over it repeats rows across pages.
 
+**Favourites are seeded across all five kinds** (`seed/favourites.ts`), because every filter in
+the interface is otherwise an empty list on a fresh checkout and the flag is never true anywhere.
+Three posts spread through the 105-post thread are the ones that earn the fixture: coming back to
+marked passages across six pages is what the post filter is *for*, and `write.ts` asserts every
+favourite names an id the fixture actually holds — an FK violation reports the constraint and a
+uuid, not which entry is wrong.
+
+**It cannot demonstrate the ordering on three of the five.** Groups, threads and chats sort by
+`last_activity_at`, which the seed does not spread and *cannot*: the column is the database's, a
+`BEFORE UPDATE` trigger overwrites any value a fixture writes, and the cascade from inserting posts
+stamps every row with the seeding moment. All 19 threads and all 3 chats therefore share one
+timestamp and the 17 groups share two, so „Gruppen entdecken" pages 13 public groups over a tie of
+9 — a boundary with no defined order, which is the same trap the post and story-idea timestamps
+were staggered to avoid. Those two are staggered, and they are where a favourite visibly moves
+something. Fixing the rest means disabling a trigger for the seed; the deeper fix is a unique
+tiebreak in `listResultsWithCount`, which has none.
+
 **The fixtures live in `seed/`, one file per kind**, with `seed.ts` keeping the guard, the
 cleanup and the order: `accounts.ts`, `writing_groups.ts`, `story_ideas.ts`, `chats.ts`,
 `ids.ts` and `write.ts`. A group's members, threads, posts and steps are nested in its own
@@ -671,6 +688,44 @@ produce, and the assertion was checked by introducing it on purpose.
 
 `GET /users/{userId}` carries `isBlocked`, which is only ever *the reader's own* block. Whether
 somebody blocked the reader is exactly the disclosure the neutral 403 avoids.
+
+## Favourites
+
+One mark over five kinds — group, thread, post, story idea, chat — private to the member who set
+it. `PUT`/`DELETE /favourites/{targetType}/{targetId}` is the whole API: one pair of routes rather
+than five, the same argument that makes `ReportDialog` one component for seven kinds.
+
+- **`favourite` carries no `target_type` column**, unlike `report`. Its references all cascade, so
+  exactly one is set for the row's whole life and the kind is readable off the data;
+  `notification` is the same shape for the same reason. `report` needs the enum precisely because
+  its references are `ON DELETE SET NULL`, which leaves a row naming nothing. The kind survives as
+  *request* vocabulary only — `FAVOURITE_COLUMN` in `service/favourite_target.ts` maps it to the
+  column to write, and `satisfies` makes a new kind a compile error naming it.
+- **`favourite_target.ts` is a leaf module on purpose.** The five services that join `favourite`
+  need its constants, and `favourite_service` reaches `visible_target`, which reaches back into
+  those services. Importing the constants from `favourite_service` closed that circle, and
+  TypeScript answers a circular import with `any` — which surfaced as a join column silently typed
+  as anything at all rather than as an error. Nothing about it looked wrong.
+- **Setting one is visibility-checked, clearing one is not.** `resolveVisibleTarget` is shared with
+  reporting, so the rules cannot drift. Clearing skips the check deliberately: a member who has
+  lost access to something they favourited must still be able to remove the mark, and refusing
+  would strand a row they can see in their own filter.
+- **Favouriting your own thing is allowed.** Marking what you are working on is the ordinary case.
+- **Ordering is one term, `ListOrdering.firstDescending`**, passed by the endpoint and never by a
+  request — which is what keeps it out of `dynamic.ref`'s injection surface. It names the output
+  alias `isFavourite` rather than a column, because the flag is an expression and Postgres resolves
+  an alias in `ORDER BY`. Posts are the one kind that does **not** pass it: a thread is read in the
+  order it was written, and hoisting a marked passage would put the end of a chapter above its
+  beginning. The thread strip writes its own term instead, since it is not a list endpoint.
+
+**One rule, two projections.** Favourites are why this pattern is written down: joining `favourite`
+into the group's visibility check would have put it on all seventeen callers, sixteen of which only
+ask yes or no. So `selectVisibleWritingGroup` is a lean gate and `selectWritingGroupForReader` is
+the full read, both built on the same base query builder. `selectStoryIdeaGate` and the chat's
+`ChatGroupGate` exist for the same reason, and the two chats ones mattered most: `selectChatGroup`
+ran a correlated `COUNT` over `chatMessage` on every message sent and every page read, to answer a
+question nobody was asking. Narrowing a selector produces a compile error at each caller that
+needed the wide one, so the boundary is found rather than guessed.
 
 ## The report lifecycle
 

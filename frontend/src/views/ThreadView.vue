@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import {
+  getGetThreadQueryKey,
   getListThreadsQueryKey,
   useDeleteThread,
   useGetThread,
@@ -39,6 +40,8 @@ import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
+import FilterStrip from '@/components/common/FilterStrip.vue'
 import { useDraft } from '@/composables/useDraft'
 import { useSteps } from '@/composables/useSteps'
 import { usePagedList } from '@/composables/usePagedList'
@@ -75,6 +78,24 @@ const group = computed<GetGroup200 | undefined>(() =>
 )
 
 const { data: threadData, isPending, isError } = useGetThread(groupId, threadId)
+
+/**
+ * The thread's own query and the strip it sits in — the strip orders favourites first, so it has
+ * to be refetched or the tab stays where it was.
+ */
+/** The page of posts this one is on, which carries the flag the row draws. */
+async function refreshPosts() {
+  await queryClient.invalidateQueries({
+    queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
+  })
+}
+
+async function refreshThread() {
+  await queryClient.invalidateQueries({
+    queryKey: getGetThreadQueryKey(groupId.value, threadId.value),
+  })
+  await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(groupId.value) })
+}
 const thread = computed<GetThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
 )
@@ -114,11 +135,30 @@ function showOrder(next: 'oldest' | 'newest') {
   navigate({ order: next === 'oldest' ? undefined : next, page: undefined })
 }
 
+/**
+ * The post filter the design system specifies ("Alle Beiträge"), which was absent rather than
+ * disabled while neither of its options existed. Favourites is the first of the two; annotations
+ * (#38) are the other.
+ *
+ * A filter, never a reordering: a thread reads in the order it was written, so a favourited post
+ * stays where it is and this narrows to them instead.
+ */
+const postFilter = ref<'any' | 'only'>('any')
+
+const POST_FILTERS = [
+  { value: 'any', label: 'Alle Beiträge' },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
+] as const
+
+// A filter is about a different set, so whatever page was open is about something else.
+watch(postFilter, () => goToPage(1))
+
 const postsQuery = computed(() => ({
   limit: POSTS_PER_PAGE,
   offset: offset.value,
   sortAttribute: 'createdAt' as const,
   sortOrder: order.value === 'newest' ? ('desc' as const) : ('asc' as const),
+  favourite: postFilter.value,
 }))
 
 const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
@@ -370,10 +410,19 @@ async function submit() {
             :post-count="postCount"
             :last-activity-at="thread.lastActivityAt"
             :may-modify="mayModifyThread"
+            :thread-id="thread.id"
+            :is-favourite="thread.isFavourite"
             @rename="renamingThread = true"
             @delete="deletingThread = true"
             @report="reportingThread = true"
+            @favourite-changed="refreshThread"
           />
+
+          <!-- The filter the header's own comment has been waiting on. It sits under the header
+               rather than in it, beside the order toggle and the page strip it belongs with. -->
+          <div class="mb-5">
+            <FilterStrip v-model="postFilter" label="Beiträge" :options="POST_FILTERS" />
+          </div>
 
           <p v-if="posts.length === 0" class="text-body text-ink-4">
             Noch keine Beiträge in „{{ thread.title }}“.
@@ -404,6 +453,7 @@ async function submit() {
             :saving="savingPost && editingPostId === post.id"
             :error="editingPostId === post.id ? editError : undefined"
             @report="reportedPost = post"
+            @favourite-changed="refreshPosts"
             @edit="startEditing(post.id)"
             @cancel="stopEditing"
             @save="saveEdit(post.id, $event)"

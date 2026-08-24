@@ -4886,6 +4886,7 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isFavourite": { "type": "boolean" },
                     "status": {
                       "type": "string",
                       "enum": ["invited", "joined"]
@@ -4899,6 +4900,7 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
+                    "isFavourite",
                     "status",
                     "createdByUsername",
                     "unreadMessages"
@@ -7691,7 +7693,8 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -7700,7 +7703,8 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "isFavourite"
                   ]
                 }
               }
@@ -7955,7 +7959,8 @@
                             "type": "string",
                             "format": "date-time"
                           },
-                          "createdByUsername": { "type": ["string", "null"] }
+                          "createdByUsername": { "type": ["string", "null"] },
+                          "isFavourite": { "type": "boolean" }
                         },
                         "required": [
                           "id",
@@ -7964,7 +7969,8 @@
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
-                          "createdByUsername"
+                          "createdByUsername",
+                          "isFavourite"
                         ]
                       }
                     }
@@ -8220,7 +8226,8 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -8229,7 +8236,8 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "isFavourite"
                   ]
                 }
               }
@@ -8497,7 +8505,8 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -8506,7 +8515,8 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "isFavourite"
                   ]
                 }
               }
@@ -9020,6 +9030,7 @@
                       "format": "uuid"
                     },
                     "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" },
                     "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
@@ -9032,6 +9043,7 @@
                     "editedAt",
                     "editedBy",
                     "createdByUsername",
+                    "isFavourite",
                     "editedByUsername"
                   ]
                 }
@@ -9291,6 +9303,11 @@
                     "enum": ["asc", "desc"],
                     "default": "asc"
                   },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
+                  },
                   "isDraft": { "type": "boolean", "default": false }
                 }
               }
@@ -9335,6 +9352,7 @@
                             "format": "uuid"
                           },
                           "createdByUsername": { "type": ["string", "null"] },
+                          "isFavourite": { "type": "boolean" },
                           "editedByUsername": { "type": ["string", "null"] }
                         },
                         "required": [
@@ -9347,6 +9365,7 @@
                           "editedAt",
                           "editedBy",
                           "createdByUsername",
+                          "isFavourite",
                           "editedByUsername"
                         ]
                       }
@@ -9615,6 +9634,7 @@
                       "format": "uuid"
                     },
                     "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" },
                     "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
@@ -9627,6 +9647,7 @@
                     "editedAt",
                     "editedBy",
                     "createdByUsername",
+                    "isFavourite",
                     "editedByUsername"
                   ]
                 }
@@ -9907,6 +9928,7 @@
                       "format": "uuid"
                     },
                     "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" },
                     "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
@@ -9919,6 +9941,7 @@
                     "editedAt",
                     "editedBy",
                     "createdByUsername",
+                    "isFavourite",
                     "editedByUsername"
                   ]
                 }
@@ -12698,6 +12721,7 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isFavourite": { "type": "boolean" },
                     "status": {
                       "type": "string",
                       "enum": ["invited", "joined"]
@@ -12711,6 +12735,7 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
+                    "isFavourite",
                     "status",
                     "createdByUsername",
                     "unreadMessages"
@@ -17131,6 +17156,7 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isFavourite": { "type": "boolean" },
                     "status": {
                       "type": "string",
                       "enum": ["invited", "joined"]
@@ -17144,6 +17170,7 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
+                    "isFavourite",
                     "status",
                     "createdByUsername",
                     "unreadMessages"
@@ -17361,6 +17388,11 @@
                     "type": "string",
                     "enum": ["asc", "desc"],
                     "default": "desc"
+                  },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
                   }
                 }
               }
@@ -17395,6 +17427,7 @@
                             "type": "string",
                             "format": "date-time"
                           },
+                          "isFavourite": { "type": "boolean" },
                           "status": {
                             "type": "string",
                             "enum": ["invited", "joined"]
@@ -17408,6 +17441,7 @@
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
+                          "isFavourite",
                           "status",
                           "createdByUsername",
                           "unreadMessages"
@@ -19548,6 +19582,7 @@
                               "createdByUsername": {
                                 "type": ["string", "null"]
                               },
+                              "isFavourite": { "type": "boolean" },
                               "writingGroupTitle": { "type": "string" }
                             },
                             "required": [
@@ -19558,6 +19593,7 @@
                               "createdAt",
                               "lastActivityAt",
                               "createdByUsername",
+                              "isFavourite",
                               "writingGroupTitle"
                             ]
                           }

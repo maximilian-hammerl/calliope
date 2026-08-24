@@ -122,7 +122,8 @@ async function allowContactAgain() {
             <Button v-else variant="outline" size="sm" @click="blocking = true">
               Blockieren
             </Button>
-            <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
+            <!-- Quiet beside Blockieren: both act on the member the page is about. -->
+            <Button variant="outline" size="sm" @click="reporting = true">Melden</Button>
           </div>
 
           <!-- Its own group, after the member-facing one: blocking is what any member may do

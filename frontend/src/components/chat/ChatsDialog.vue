@@ -6,6 +6,9 @@ import { getListChatsQueryKey, useCreateChat, useListChats } from '@/api/chats/c
 import type { ListChats200ResultsItem, ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
+import FilterStrip from '@/components/common/FilterStrip.vue'
+import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { useChatStream } from '@/composables/useChatStream'
 import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
@@ -28,7 +31,18 @@ const props = defineProps<{ startAt?: string }>()
 
 const queryClient = useQueryClient()
 
-const { data, refetch } = useListChats({ limit: 50 })
+/** Offered on every list that shows a favouritable kind, so none of them can drift apart. */
+const favourite = ref<'any' | 'only'>('any')
+
+const FAVOURITE_FILTERS = [
+  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
+] as const
+
+const { data, refetch } = useListChats(() => ({
+  limit: 50,
+  favourite: favourite.value,
+}))
 const chats = computed<ListChats200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
 )
@@ -155,6 +169,9 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
             Chat
           </button>
 
+          <!-- Favourites float to the top of this list already; this narrows it to them. -->
+          <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
+
           <form v-if="creating" class="mb-2 flex gap-2" @submit.prevent="create">
             <Input
               v-model="newTitle"
@@ -184,6 +201,9 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
           >
             <span class="flex w-full items-baseline gap-2 text-[13px]">
               {{ chat.title }}
+              <!-- Back on the title line, where the badge could not go: as a word it pushed the
+                   unread count onto a second row and cost 22px of height. -->
+              <FavouriteMark v-if="chat.isFavourite" />
               <span v-if="chat.unreadMessages > 0" class="ml-auto text-[11.5px] text-oak-deep">
                 {{ chat.unreadMessages }} neu
               </span>
@@ -242,6 +262,8 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
               :chat-group-id="selected.id"
               :title="selected.title"
               :live="liveByChat[selected.id] ?? []"
+              :is-favourite="selected.isFavourite"
+              @favourite-changed="refetch"
             />
           </template>
         </div>
