@@ -1,5 +1,10 @@
 import { db } from "@/src/database/client.ts";
-import { createGroup, deleteUsers, request } from "@/src/test/support.ts";
+import {
+  createGroup,
+  deleteUsers,
+  postBody,
+  request,
+} from "@/src/test/support.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 
 /**
@@ -61,7 +66,7 @@ export async function aPublicGroup(cookie: string, title: string) {
     "POST",
     `/api/groups/${group.id}/threads/${thread.id}/posts`,
     cookie,
-    { text: "Ein Absatz." },
+    postBody("Ein Absatz."),
   )).json();
   return { group, thread, post };
 }

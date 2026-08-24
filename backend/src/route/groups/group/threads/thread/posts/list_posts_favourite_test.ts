@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import {
   clearRateLimits,
   createGroup,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -52,7 +53,7 @@ async function aThreadWithPosts(cookie: string) {
       "POST",
       `/api/groups/${group.id}/threads/${thread.id}/posts`,
       cookie,
-      { text },
+      postBody(text),
     )).json();
 
   return {
