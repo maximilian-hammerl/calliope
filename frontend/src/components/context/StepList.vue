@@ -5,7 +5,6 @@ import {
   getListStepsQueryKey,
   useCreateStep,
   useDeleteStep,
-  useListSteps,
   useUpdateStep,
 } from '@/api/steps/steps'
 import type { ListSteps200ResultsItem } from '@/api/models'
@@ -13,6 +12,7 @@ import { useGetCurrentUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { queryClient } from '@/lib/api/queryClient'
+import { useSteps } from '@/composables/useSteps'
 import PanelCard from '@/components/common/PanelCard.vue'
 import { Input } from '@/components/ui/input'
 
@@ -20,17 +20,7 @@ const props = defineProps<{ groupId: string; mayWrite: boolean; mayAdminister: b
 
 const LIMIT = TEXT_LIMIT.createStep.text
 
-const { data } = useListSteps(() => props.groupId)
-const steps = computed<ListSteps200ResultsItem[]>(() =>
-  data.value?.status === 200 ? data.value.data.results : [],
-)
-
-const open = computed<ListSteps200ResultsItem[]>(() =>
-  steps.value.filter((step) => step.completedAt === null),
-)
-const completed = computed<ListSteps200ResultsItem[]>(() =>
-  steps.value.filter((step) => step.completedAt !== null),
-)
+const { open, completed } = useSteps(() => props.groupId)
 
 const { data: userData } = useGetCurrentUser()
 const currentUserId = computed<string | undefined>(() =>
@@ -117,11 +107,6 @@ const showingCompleted = ref<boolean>(false)
 
 <template>
   <div>
-    <div class="mb-2.5 flex items-baseline gap-2">
-      <span class="text-[12.5px] font-semibold text-ink-4">Nächste Schritte</span>
-      <span class="text-[11.5px] text-ink-5">{{ open.length }} offen</span>
-    </div>
-
     <p v-if="failed" class="mb-2 text-[11.5px] leading-[1.5] text-destructive" role="alert">
       Das hat gerade nicht geklappt. Versuche es noch einmal.
     </p>

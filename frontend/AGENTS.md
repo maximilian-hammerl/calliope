@@ -67,6 +67,20 @@ single chevron, which is what the icon table asks for.
 The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
 above is not hypothetical.
 
+**Every icon shadcn hardcodes is `aria-hidden`**, because not one of them says anything the
+markup around it has not said already: the chevrons in `AccordionTrigger` (both), `SelectTrigger`,
+the two `SelectScroll*Button`s, `DropdownMenuSubTrigger` and `NavigationMenuTrigger` are
+affordances next to an `aria-expanded`; the `Check` and `Circle` in `SelectItem` and the two
+`DropdownMenu*Item`s sit inside a reka `*ItemIndicator` that only renders when the item's own
+`aria-selected` or `aria-checked` is already true; and the dialogs' `X` sits beside the `sr-only`
+label that names the button. An icon that duplicates state is read twice by a screen reader and
+adds nothing the second time.
+
+**Both dialogs' close buttons say „Schließen".** shadcn ships `<span class="sr-only">Close</span>`,
+which is English in an interface that is German everywhere a member can read — and `sr-only` is
+exactly why it survived a year of looking at these dialogs. `ContextSheet` had it right with
+`aria-label`. Anything visible only to a screen reader still gets read, so it is still copy.
+
 **Keep it updated.** When the interface departs from what that document says — a new icon set,
 a changed rule, a pattern it does not cover — change the document in the same piece of work.
 A source of truth that lags the code stops being one, and the next person follows the stale
@@ -109,6 +123,10 @@ grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/di
 grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
+grep -c aria-hidden src/components/ui/accordion/AccordionTrigger.vue                    # expect 2
+grep -c 'sr-only">Schließen' src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 1 each
+# Every icon in ui/ is hidden or named — Spinner is the only named one. Expect no output.
+grep -rL 'aria-hidden\|aria-label' $(grep -rl '@lucide/vue' src/components/ui/ --include='*.vue')
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).

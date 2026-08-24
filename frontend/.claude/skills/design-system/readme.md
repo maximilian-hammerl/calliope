@@ -703,13 +703,19 @@ reference: the story's own facts, its files, who is in it — what a member chec
 The right rail is action: the next steps, and the story's status with the control that changes
 it. Neither appears on the groups overview, which has no group to be about.
 
-**The left rail's blocks are closed until asked for.** Each is a disclosure — `ChevronRight`
+**Every block in both rails is closed until asked for.** Each is a disclosure — `ChevronRight`
 shut, `ChevronDown` open — and none opens by default, because everything visible at once was
 reported as distracting. Several may be open together; the choice is not remembered between
-visits, since the rail is reference material a member reaches for rather than a workspace to
-arrange. The right rail stays as it is: what a member *does* should not need a click to appear.
-And the mobile sheet stacks everything open — a sheet opened on purpose is not what was
-distracting anybody.
+visits, since a rail is material a member reaches for rather than a workspace to arrange. And
+the mobile sheet stacks everything open — a sheet opened on purpose is not what was distracting
+anybody.
+
+The right rail was the exception until members asked for the accordion there too. It had been
+left alone on the reasoning that what a member *does* should not need a click, and the one thing
+that reasoning was right about is kept: a closed block may carry a **count** beside its label —
+„Nächste Schritte  3 offen" — so the rail still says there is something to do without being
+opened. It is the only thing a closed block shows, and only where there is a number worth
+reading; the reference blocks have none.
 
 Neither rail navigates. The group list moved to the overview page, because the daily loop starts
 there — members described scanning every group for new replies before answering any, and a rail

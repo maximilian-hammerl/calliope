@@ -48,8 +48,6 @@ async function change(next: GetGroup200StoryStatus) {
 
 <template>
   <div>
-    <div class="mb-2.5 text-[12.5px] font-semibold text-ink-4">Story-Status</div>
-
     <Select
       v-if="mayEdit"
       :model-value="status"

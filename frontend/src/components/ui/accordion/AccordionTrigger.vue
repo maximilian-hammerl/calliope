@@ -25,13 +25,16 @@ const delegatedProps = reactiveOmit(props, 'class')
     >
       <slot />
       <!-- Patched: shadcn rotates one ChevronDown, where the design system's icon table gives
-           a disclosure ChevronRight shut and ChevronDown open. -->
+           a disclosure ChevronRight shut and ChevronDown open. Both are decorative — the
+           trigger's own `aria-expanded` already says which way it points. -->
       <slot name="icon">
         <ChevronRight
           class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5"
+          aria-hidden="true"
         />
         <ChevronDown
           class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5"
+          aria-hidden="true"
         />
       </slot>
     </AccordionTrigger>

@@ -11,14 +11,13 @@ import ContextSheet from '@/components/layout/ContextSheet.vue'
 import BottomBar from '@/components/layout/BottomBar.vue'
 
 const props = defineProps<{ activeGroupId?: string }>()
+// Both rails' blocks are accordions, and `collapsible` is true only where the rail is a rail —
+// in the sheet they are stacked.
 defineSlots<{
   default: () => unknown
   /** What the member does: next steps, the story's status. */
-  rail?: () => unknown
-  /**
-   * What the member looks up while writing: the story's own facts, who is here.
-   * `collapsible` is true only where the rail is a rail — in the sheet the blocks are stacked.
-   */
+  rail?: (props: { collapsible: boolean }) => unknown
+  /** What the member looks up while writing: the story's own facts, who is here. */
   infoRail?: (props: { collapsible: boolean }) => unknown
 }>()
 
@@ -99,7 +98,7 @@ const sheetOpen = ref<boolean>(false)
               <ChevronRight :size="14" :stroke-width="1.5" />
             </button>
           </div>
-          <slot name="rail" />
+          <slot name="rail" :collapsible="true" />
         </aside>
         <RailToggle
           v-else-if="railFits"
@@ -109,7 +108,7 @@ const sheetOpen = ref<boolean>(false)
         />
 
         <ContextSheet v-else v-model:open="sheetOpen">
-          <slot name="rail" />
+          <slot name="rail" :collapsible="false" />
           <slot name="infoRail" :collapsible="false" />
         </ContextSheet>
       </template>

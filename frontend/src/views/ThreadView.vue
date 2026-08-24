@@ -40,6 +40,7 @@ import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { useDraft } from '@/composables/useDraft'
+import { useSteps } from '@/composables/useSteps'
 import { usePagedList } from '@/composables/usePagedList'
 import PostComposer from '@/components/thread/PostComposer.vue'
 import StepList from '@/components/context/StepList.vue'
@@ -132,6 +133,9 @@ const { data: membershipsData } = useListMemberships(groupId)
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
 )
+
+// Served from the block's own query: the rail's label says how many are open while it is closed.
+const { open: openSteps } = useSteps(groupId)
 
 /**
  * The group reports the reader's own standing, so the role no longer has to be read out of
@@ -445,9 +449,17 @@ async function submit() {
     </div>
 
     <!-- What the member does. -->
-    <template #rail>
-      <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
-      <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
+    <template #rail="{ collapsible }">
+      <RailBlock
+        label="Nächste Schritte"
+        :meta="`${openSteps.length} offen`"
+        :collapsible="collapsible"
+      >
+        <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
+      </RailBlock>
+      <RailBlock label="Story-Status" :collapsible="collapsible">
+        <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
+      </RailBlock>
     </template>
 
     <!-- What the member looks up while writing. -->

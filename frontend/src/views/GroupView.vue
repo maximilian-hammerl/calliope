@@ -27,6 +27,7 @@ import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
 import RailBlock from '@/components/context/RailBlock.vue'
+import { useSteps } from '@/composables/useSteps'
 import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
@@ -55,6 +56,9 @@ const { data: membershipsData } = useListMemberships(groupId)
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
 )
+
+// Served from the block's own query: the rail's label says how many are open while it is closed.
+const { open: openSteps } = useSteps(groupId)
 
 /**
  * Straight off the group, which reports the reader's own standing. Only a joined membership
@@ -219,9 +223,17 @@ async function askIntoGroup() {
     </div>
 
     <!-- What the member does. -->
-    <template #rail>
-      <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
-      <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
+    <template #rail="{ collapsible }">
+      <RailBlock
+        label="Nächste Schritte"
+        :meta="`${openSteps.length} offen`"
+        :collapsible="collapsible"
+      >
+        <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
+      </RailBlock>
+      <RailBlock label="Story-Status" :collapsible="collapsible">
+        <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
+      </RailBlock>
     </template>
 
     <!-- What the member looks up while writing. -->
