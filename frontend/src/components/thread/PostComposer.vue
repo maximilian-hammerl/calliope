@@ -2,12 +2,16 @@
 import { ChevronDown, ChevronUp } from '@lucide/vue'
 import { nextTick, ref, useTemplateRef } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import type { PostDocument } from '@/api/models'
 import type { DraftStatus } from '@/composables/useDraft'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import PostEditor from '@/components/thread/PostEditor.vue'
 
 defineProps<{ sending: boolean; draftStatus: DraftStatus }>()
-const text = defineModel<string>({ required: true })
+const document = defineModel<PostDocument>({ required: true })
+/** The prose of the document, from the editor rather than a second walker. */
+const text = defineModel<string>('text', { required: true })
 const emit = defineEmits<{ submit: [] }>()
 
 /**
@@ -17,17 +21,14 @@ const emit = defineEmits<{ submit: [] }>()
  */
 const collapsed = ref<boolean>(useMediaQuery('(max-width: 767px)').value)
 
-const textarea = useTemplateRef<HTMLTextAreaElement>('textarea')
+const editor = useTemplateRef<{ focus: () => void }>('editor')
 
 /** Focus follows the expansion, so opening the bar and typing is one gesture, not two. */
 async function expand() {
   collapsed.value = false
   await nextTick()
-  textarea.value?.focus()
+  editor.value?.focus()
 }
-
-// A rich text editor comes later. The formatting row is inert until then.
-const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
 </script>
 
 <template>
@@ -82,33 +83,15 @@ const TOOLS = ['B', 'I', '„“', 'Liste', 'Bild', 'Datei'] as const
         </button>
       </div>
 
-      <textarea
-        ref="textarea"
-        v-model="text"
-        rows="3"
-        aria-label="Beitrag schreiben"
-        placeholder="Schreib weiter …"
-        class="min-h-[76px] w-full resize-y border-none bg-transparent font-serif text-[16.5px] leading-[1.75] text-ink-3 caret-oak outline-none placeholder:text-ink-6"
+      <PostEditor
+        ref="editor"
+        v-model:document="document"
+        v-model:text="text"
+        :disabled="sending"
       />
 
-      <div
-        class="mt-1.5 flex items-center justify-between gap-3.5 border-t border-line-1 pt-[11px]"
-      >
-        <div class="hidden gap-[15px] text-[12.5px] text-ink-5 sm:flex">
-          <span
-            v-for="(tool, index) in TOOLS"
-            :key="tool"
-            class="opacity-50"
-            :class="[index === 0 ? 'font-semibold' : '', index === 1 ? 'italic' : '']"
-            title="Noch nicht verfügbar"
-          >
-            {{ tool }}
-          </span>
-        </div>
+      <div class="mt-[11px] flex items-center">
         <div class="ml-auto flex items-center gap-2.5">
-          <Button variant="outline" size="sm" disabled title="Noch nicht verfügbar"
-            >Vorschau</Button
-          >
           <!-- Locked while sending: a flaky connection must not produce a double post, but two
                deliberate posts in a row stay possible. -->
           <Button size="lg" :disabled="sending || text.trim().length === 0" @click="emit('submit')">

@@ -1,6 +1,7 @@
 import type { ComputedRef, Ref } from 'vue'
 import { computed, ref, toValue, watch } from 'vue'
 import { useEventListener, watchDebounced } from '@vueuse/core'
+import type { PostDocument } from '@/api/models'
 import { createPost, deletePost, listPosts, updatePost } from '@/api/posts/posts'
 import { TEXT_LIMIT } from '@/api/textLimit'
 
@@ -18,6 +19,8 @@ export type DraftStatus = 'idle' | 'saving' | 'saved' | 'failed'
 export function useDraft(
   groupId: Ref<string> | (() => string),
   threadId: Ref<string> | (() => string),
+  document: Ref<PostDocument>,
+  /** The document's prose, which decides whether the composer counts as empty. */
   text: Ref<string>,
 ): {
   status: ComputedRef<DraftStatus>
@@ -32,8 +35,12 @@ export function useDraft(
   const failed = ref<boolean>(false)
   const savedOnce = ref<boolean>(false)
 
-  /** What the server currently holds, so an unchanged draft is never written again. */
-  let storedText = ''
+  /**
+   * What the server currently holds, serialised, so an unchanged draft is never written again.
+   * Comparing the *document* rather than its prose matters: bolding a word changes no text, and
+   * a text comparison would decide there was nothing to save.
+   */
+  let storedDocument = ''
 
   const status = computed<DraftStatus>(() => {
     if (failed.value) return 'failed'
@@ -46,7 +53,7 @@ export function useDraft(
     draftId.value = undefined
     savedOnce.value = false
     failed.value = false
-    storedText = ''
+    storedDocument = ''
 
     try {
       // At most one draft per member per thread, enforced by a partial unique index.
@@ -57,7 +64,9 @@ export function useDraft(
       const existing = response.status === 200 ? response.data.results[0] : undefined
       if (existing !== undefined) {
         draftId.value = existing.id
-        storedText = existing.text
+        storedDocument = JSON.stringify(existing.document)
+        document.value = existing.document
+        // The server's own projection, so the client needs no second walker to know the prose.
         text.value = existing.text
         savedOnce.value = true
       }
@@ -72,16 +81,16 @@ export function useDraft(
     // Before the existing draft has arrived, saving would create a second one and lose it.
     if (!loaded.value) return
 
-    const current = text.value.trim()
-    if (current === storedText) return
-    if (current.length > TEXT_LIMIT.createPost.text.maxLength) return
+    const current = JSON.stringify(document.value)
+    if (current === storedDocument) return
+    if (text.value.trim().length > TEXT_LIMIT.createPost.document.maxLength) return
 
     saving.value = true
     failed.value = false
 
     try {
-      if (current.length === 0) {
-        // An emptied composer means the draft is abandoned, and `text` may not be empty.
+      if (text.value.trim().length === 0) {
+        // An emptied composer means the draft is abandoned, and a post may not be empty.
         if (draftId.value !== undefined) {
           await deletePost(toValue(groupId), toValue(threadId), draftId.value)
           draftId.value = undefined
@@ -89,20 +98,20 @@ export function useDraft(
         }
       } else if (draftId.value === undefined) {
         const created = await createPost(toValue(groupId), toValue(threadId), {
-          text: current,
+          document: document.value,
           isDraft: true,
         })
         if (created.status === 201) draftId.value = created.data.id
         savedOnce.value = true
       } else {
         await updatePost(toValue(groupId), toValue(threadId), draftId.value, {
-          text: current,
+          document: document.value,
         })
         savedOnce.value = true
       }
-      storedText = current
+      storedDocument = current
     } catch {
-      // The text is never cleared on failure, and the next keystroke tries again.
+      // The document is never cleared on failure, and the next keystroke tries again.
       failed.value = true
     } finally {
       saving.value = false
@@ -114,7 +123,7 @@ export function useDraft(
    * what keeps a long stretch of writing from spending the shared rate-limit budget — it is
    * 300 requests per fifteen minutes and counted per address, so a household shares one.
    */
-  watchDebounced(text, save, { debounce: 2_000, maxWait: 10_000 })
+  watchDebounced(document, save, { debounce: 2_000, maxWait: 10_000 })
 
   watch([() => toValue(groupId), () => toValue(threadId)], load, { immediate: true })
 
@@ -126,20 +135,24 @@ export function useDraft(
   })
 
   function flush() {
-    const current = text.value.trim()
-    if (!loaded.value || current === storedText || current.length === 0) return
-    if (draftId.value === undefined) return
+    const current = JSON.stringify(document.value)
+    if (!loaded.value || current === storedDocument) return
+    if (text.value.trim().length === 0 || draftId.value === undefined) return
 
-    const url = `/api/groups/${toValue(groupId)}/threads/${toValue(threadId)}/posts/${draftId.value}`
-    globalThis
-      .fetch(url, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text: current }),
-        credentials: 'same-origin',
-        keepalive: true,
-      })
-      .catch(() => undefined)
+    // The generated function, with `keepalive` passed through as a `RequestInit` — so the URL,
+    // the body's type and the error shape all still come from the client. This was a hand-written
+    // `fetch` until it was noticed that an unchecked body is exactly how it went on sending
+    // `{ text }` for a while after the API stopped accepting it.
+    //
+    // Nothing is done with a failure on purpose: the page is going away, and there is nobody left
+    // to tell. The next load reads the draft the server does have.
+    updatePost(
+      toValue(groupId),
+      toValue(threadId),
+      draftId.value,
+      { document: document.value },
+      { keepalive: true },
+    ).catch(() => undefined)
   }
 
   /** Called once a draft has been published, so nothing tries to save it again. */
@@ -147,7 +160,7 @@ export function useDraft(
     draftId.value = undefined
     savedOnce.value = false
     failed.value = false
-    storedText = ''
+    storedDocument = ''
   }
 
   return { status, draftId, loaded, forget }

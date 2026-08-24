@@ -6,6 +6,7 @@ import {
   createGroup,
   deleteUsers,
   getUserId,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -89,7 +90,7 @@ async function aPostBy(cookie: string) {
     "POST",
     `/api/groups/${group.id}/threads/${thread.id}/posts`,
     cookie,
-    { text: "Etwas Übles." },
+    postBody("Etwas Übles."),
   )).json();
   return { group, thread, post };
 }

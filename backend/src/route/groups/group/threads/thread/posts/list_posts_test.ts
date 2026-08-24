@@ -5,6 +5,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -30,11 +31,13 @@ async function threadWithDraft() {
   )).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
 
-  await request("POST", posts, writerCookie, { text: "Veröffentlicht" });
-  await request("POST", posts, writerCookie, {
-    text: "Entwurf",
-    isDraft: true,
-  });
+  await request("POST", posts, writerCookie, postBody("Veröffentlicht"));
+  await request(
+    "POST",
+    posts,
+    writerCookie,
+    postBody("Entwurf", { isDraft: true }),
+  );
 
   return { adminCookie, writerCookie, posts };
 }
@@ -49,7 +52,7 @@ Deno.test("QUERY …/posts lets a non-member read a public group's posts, but no
     { title: "Kapitel 1" },
   )).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
-  await request("POST", posts, adminCookie, { text: "Veröffentlicht" });
+  await request("POST", posts, adminCookie, postBody("Veröffentlicht"));
   await request("POST", posts, adminCookie, { text: "Entwurf", isDraft: true });
 
   const outsiderCookie = await registerUser(outsider);

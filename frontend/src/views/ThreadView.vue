@@ -24,6 +24,7 @@ import type {
   ListMemberships200ResultsItem,
   ListPosts200ResultsItem,
   ListThreads200ResultsItem,
+  PostDocument,
 } from '@/api/models'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
@@ -37,6 +38,7 @@ import PostItem from '@/components/thread/PostItem.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { emptyDocument } from '@/lib/document/emptyDocument'
 import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { useDraft } from '@/composables/useDraft'
@@ -194,7 +196,9 @@ const mayAdminister = computed<boolean>(
   () => group.value?.status === 'joined' && group.value.role === 'administrator',
 )
 
-const draft = ref<string>('')
+/** The composer holds a document; `draftText` is its prose, which the editor supplies. */
+const draft = ref<PostDocument>(emptyDocument())
+const draftText = ref<string>('')
 const sendError = ref<string | undefined>(undefined)
 function goToGroup() {
   void router.push({ name: 'group', params: { groupId: groupId.value } })
@@ -224,7 +228,7 @@ function stopEditing() {
   editingPostId.value = undefined
 }
 
-async function saveEdit(postId: string, text: string) {
+async function saveEdit(postId: string, document: PostDocument, text: string) {
   const trimmed = text.trim()
   editError.value = undefined
 
@@ -235,8 +239,8 @@ async function saveEdit(postId: string, text: string) {
 
   // Checked here rather than with `maxlength`, for the reason the composer states: prose that
   // stops dead mid-word is worse than being told why.
-  if (trimmed.length > TEXT_LIMIT.updatePost.text.maxLength) {
-    editError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.updatePost.text.maxLength)} Zeichen haben.`
+  if (trimmed.length > TEXT_LIMIT.updatePost.document.maxLength) {
+    editError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.updatePost.document.maxLength)} Zeichen haben.`
     return
   }
 
@@ -245,7 +249,7 @@ async function saveEdit(postId: string, text: string) {
       groupId: groupId.value,
       threadId: threadId.value,
       postId,
-      data: { text: trimmed },
+      data: { document },
     })
   } catch {
     editError.value = 'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.'
@@ -294,19 +298,23 @@ async function confirmDeletePost() {
 
 // Owns the composer's text between visits: loads any existing draft into it, saves as it is
 // written, and lets go of the row once it has been published.
-const { status: draftStatus, draftId, forget: forgetDraft } = useDraft(groupId, threadId, draft)
+const {
+  status: draftStatus,
+  draftId,
+  forget: forgetDraft,
+} = useDraft(groupId, threadId, draft, draftText)
 
 async function submit() {
   sendError.value = undefined
-  const text = draft.value.trim()
+  const text = draftText.value.trim()
   if (text.length === 0) {
     return
   }
 
   // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word
   // with no explanation is worse than being told why, and the draft is kept either way.
-  if (text.length > TEXT_LIMIT.createPost.text.maxLength) {
-    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.text.maxLength)} Zeichen haben.`
+  if (text.length > TEXT_LIMIT.createPost.document.maxLength) {
+    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.document.maxLength)} Zeichen haben.`
     return
   }
 
@@ -318,11 +326,15 @@ async function submit() {
         groupId: groupId.value,
         threadId: threadId.value,
         postId: draftId.value,
-        data: { text, isDraft: false },
+        data: { document: draft.value, isDraft: false },
       })
       forgetDraft()
     } else {
-      await createPost({ groupId: groupId.value, threadId: threadId.value, data: { text } })
+      await createPost({
+        groupId: groupId.value,
+        threadId: threadId.value,
+        data: { document: draft.value },
+      })
     }
   } catch {
     sendError.value = 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
@@ -330,7 +342,8 @@ async function submit() {
   }
 
   // Only cleared once the post is really stored, so nothing a member wrote is lost.
-  draft.value = ''
+  draft.value = emptyDocument()
+  draftText.value = ''
 
   // Every page, not the one being shown: the new post changes the count, and with it which
   // page anything sits on. The exact key would also miss, since it carries this page's body.
@@ -406,7 +419,7 @@ async function submit() {
             @report="reportedPost = post"
             @edit="startEditing(post.id)"
             @cancel="stopEditing"
-            @save="saveEdit(post.id, $event)"
+            @save="(document, text) => saveEdit(post.id, document, text)"
             @delete="deletingPost = post"
           />
 
@@ -428,6 +441,7 @@ async function submit() {
       <PostComposer
         v-if="mayWrite"
         v-model="draft"
+        v-model:text="draftText"
         :sending="sending || publishing"
         :draft-status="draftStatus"
         @submit="submit"

@@ -6,6 +6,7 @@ import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
 import { BLOCKS } from "@/seed/blocks.ts";
 import { notificationId } from "@/seed/ids.ts";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
 
 /**
  * The ids are written by hand, so two of them can be the same by accident — a notification
@@ -195,6 +196,7 @@ async function writeGroups(): Promise<void> {
       thread.posts.map((post, index) => ({
         id: post.id,
         writingThreadId: thread.id,
+        document: plainTextToDocument(post.text),
         text: post.text,
         isDraft: post.isDraft ?? false,
         createdBy: post.by,

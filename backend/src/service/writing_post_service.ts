@@ -2,6 +2,8 @@ import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingPost as DatabaseWritingPost } from "@/src/database/schema.ts";
+import type { PostDocument } from "@/src/document/document_schema.ts";
+import { documentToPlainText } from "@/src/document/document_text.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -21,6 +23,9 @@ export type Post =
     | "editedAt"
     | "editedBy"
   >
+  // Not picked from the table, where the column is `unknown` by design — see the `typeMapping`
+  // note in `database/.kysely-codegenrc.ts`. This is the type that says what is in there.
+  & { document: PostDocument }
   // Both null once that account is deleted, because the columns are ON DELETE SET NULL.
   & { createdByUsername: string | null; editedByUsername: string | null };
 
@@ -46,6 +51,10 @@ function postWithAuthorById(
     .leftJoin("user", "user.id", "writingPost.createdBy")
     .select([
       ...SELECTED_COLUMNS,
+      // Cast rather than selected plainly: the column's generated type is `unknown`, and
+      // `DOCUMENT_SCHEMA` is what says what may be in there.
+      (eb) =>
+        eb.ref("writingPost.document").$castTo<PostDocument>().as("document"),
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
@@ -61,14 +70,23 @@ function postWithAuthorById(
 async function insertPost(
   writingGroupId: string,
   threadId: string,
-  text: string,
+  document: PostDocument,
   isDraft: boolean,
   createdBy: string,
 ): Promise<Post> {
   return await db.transaction().execute(async (transaction) => {
     const { id } = await transaction
       .insertInto("writingPost")
-      .values({ writingThreadId: threadId, text, isDraft, createdBy })
+      // `text` is derived here rather than accepted, so it cannot disagree with the document.
+      .values({
+        writingThreadId: threadId,
+        // An object, not a string: `JSON.stringify` here would store a jsonb *string* rather
+        // than a document.
+        document,
+        text: documentToPlainText(document),
+        isDraft,
+        createdBy,
+      })
       .returning(["id"])
       .executeTakeFirstOrThrow();
 
@@ -116,6 +134,10 @@ function postsWithAuthor(
     .leftJoin("user", "user.id", "writingPost.createdBy")
     .select([
       ...SELECTED_COLUMNS,
+      // Cast rather than selected plainly: the column's generated type is `unknown`, and
+      // `DOCUMENT_SCHEMA` is what says what may be in there.
+      (eb) =>
+        eb.ref("writingPost.document").$castTo<PostDocument>().as("document"),
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
@@ -173,18 +195,26 @@ function listPosts(
  */
 async function updatePost(
   postId: string,
-  changes: { text?: string; isDraft?: boolean },
+  changes: { document?: PostDocument; isDraft?: boolean },
   wasDraft: boolean,
   context: { writingGroupId: string; writingThreadId: string; actorId: string },
 ): Promise<Post | undefined> {
+  const { document, ...rest } = changes;
   const isPublishing = wasDraft && changes.isDraft === false;
-  const isEditingPublished = !wasDraft && changes.text !== undefined;
+  const isEditingPublished = !wasDraft && document !== undefined;
 
   return await db.transaction().execute(async (transaction) => {
     const updated = await transaction
       .updateTable("writingPost")
       .set({
-        ...changes,
+        ...rest,
+        // Both columns move together, or the projection would describe a body it no longer has.
+        ...(document !== undefined
+          ? {
+            document,
+            text: documentToPlainText(document),
+          }
+          : {}),
         // A post is born when it is published, not when its draft was first autosaved: a
         // piece drafted over three days would otherwise appear dated three days ago and sort
         // into the middle of the thread it belongs at the end of.

@@ -15,8 +15,12 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-/** Only the corner of OpenAPI this reads. Request bodies are inline — there are no $refs. */
-type Bound = { minLength?: number; maxLength?: number }
+/**
+ * Only the corner of OpenAPI this reads. Request-body properties are inline except where a schema
+ * is registered as a component — the post document is, because it is described once and referred
+ * to from both routes — so a `$ref` has to be followed to find the bound behind it.
+ */
+type Bound = { minLength?: number; maxLength?: number; $ref?: string }
 
 type Operation = {
   operationId?: string
@@ -25,7 +29,10 @@ type Operation = {
   }
 }
 
-type OpenApiDocument = { paths: Record<string, Record<string, Operation | undefined>> }
+type OpenApiDocument = {
+  paths: Record<string, Record<string, Operation | undefined>>
+  components?: { schemas?: Record<string, Bound> }
+}
 
 const here = import.meta.dirname
 const SPECIFICATION = resolve(here, '../../backend/open-api.json')
@@ -33,11 +40,19 @@ const OUTPUT = resolve(here, '../src/api/textLimit.ts')
 
 const specification = JSON.parse(readFileSync(SPECIFICATION, 'utf8')) as OpenApiDocument
 
+/** A `$ref` only ever points into `components.schemas` here, and never at another `$ref`. */
+function resolveReference(definition: Bound): Bound {
+  if (definition.$ref === undefined) return definition
+  const name = definition.$ref.replace('#/components/schemas/', '')
+  return specification.components?.schemas?.[name] ?? {}
+}
+
 function boundsOf(operation: Operation): Record<string, Bound> {
   const schema = operation.requestBody?.content?.['application/json']?.schema
   const bounds: Record<string, Bound> = {}
 
-  for (const [property, definition] of Object.entries(schema?.properties ?? {})) {
+  for (const [property, reference] of Object.entries(schema?.properties ?? {})) {
+    const definition = resolveReference(reference)
     const bound: Bound = {}
     if (typeof definition.minLength === 'number') bound.minLength = definition.minLength
     if (typeof definition.maxLength === 'number') bound.maxLength = definition.maxLength

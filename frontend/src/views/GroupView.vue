@@ -44,7 +44,7 @@ const group = computed<GetGroup200 | undefined>(() =>
   groupData.value?.status === 200 ? groupData.value.data : undefined,
 )
 
-/** As the paragraphs its author typed, the same as a post and a story idea's synopsis. */
+/** As the paragraphs its author typed, like a story idea's synopsis. A post is a document. */
 const synopsis = computed<string[]>(() => paragraphs(group.value?.synopsis ?? ''))
 
 // Every thread, newest activity first — the order is the endpoint's now, not a parameter.

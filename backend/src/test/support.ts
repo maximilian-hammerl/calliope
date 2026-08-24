@@ -8,6 +8,8 @@ import app from "@/src/app.ts";
 import { db } from "@/src/database/client.ts";
 import { redis } from "@/src/redis/client.ts";
 import { RATE_LIMIT_KEY_PREFIX } from "@/src/middleware/rate_limit.ts";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
+import type { PostDocument } from "@/src/document/document_schema.ts";
 
 /**
  * Registers a user, confirms their address, and returns the session cookie.
@@ -134,4 +136,15 @@ export async function clearRateLimits(): Promise<void> {
   if (keys.length > 0) {
     await redis.del(...keys);
   }
+}
+
+/**
+ * A post body from prose. Posts are stored as documents now, and a test that says what it writes
+ * reads better than one carrying a node tree — the projection it asserts on comes back as `text`.
+ */
+export function postBody(
+  text: string,
+  rest: { isDraft?: boolean } = {},
+): { document: PostDocument; isDraft?: boolean } {
+  return { document: plainTextToDocument(text), ...rest };
 }
