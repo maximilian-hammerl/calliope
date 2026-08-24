@@ -258,6 +258,17 @@ written: it is bound to the member's draft, which the database allows exactly on
 so borrowing it would put a half-written post at risk in order to fix a typo. Saving is disabled
 until something actually changes, so the action cannot claim work it did not do.
 
+**The field it becomes is a raised surface and one hairline** — `--paper-0`, 1px
+`--border-default`, the control radius — because without them an edited post is indistinguishable
+from the posts above and below it: same ground, no outline, only a toolbar appearing to say anything
+happened. It was a plain textarea once, which had that chrome for free.
+
+**Its padding is cancelled by an equal negative margin**, so the field bleeds outward and the prose
+does not move by even a pixel when Bearbeiten is clicked. The margin covers the padding *and* the
+1px border, which is why both are bracketed values; change one and the other changes with it, or the
+words start jumping. The bleed is smaller on a phone (11px against 15px) because the gutter is only
+18px there, and a field 3px from the screen edge reads as a mistake.
+
 **An edit says who made it, but only when that is somebody else.** „· bearbeitet" for an author
 changing their own post, „· bearbeitet von nachtschreiber" where somebody administering the group
 changed a member's. Naming the author beside their own name is noise; naming an administrator is

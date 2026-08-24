@@ -17,7 +17,16 @@ import { DOCUMENT_EXTENSIONS } from '@/lib/document/extensions'
 import { sameDocument } from '@/lib/document/sameDocument'
 import LinkDialog from '@/components/thread/LinkDialog.vue'
 
-const props = defineProps<{ document: PostDocument; disabled?: boolean }>()
+const props = defineProps<{
+  document: PostDocument
+  disabled?: boolean
+  /**
+   * Draw the editor as a field. The composer needs none — it already sits on its own raised bar,
+   * and a box inside a box is what the design system spends hairlines to avoid — but a post edited
+   * in place has nothing to distinguish it from the posts around it.
+   */
+  framed?: boolean
+}>()
 
 const emit = defineEmits<{
   'update:document': [PostDocument]
@@ -231,7 +240,23 @@ function apply(tool: Tool) {
 </script>
 
 <template>
-  <div>
+  <!--
+    Framed: a raised surface and one hairline, which is how the design system draws an active
+    control. Each negative margin cancels its padding *and* the 1px border — 11px against 10px,
+    15px against 14px — which is why they are bracketed: the prose stays exactly where it was being
+    read, because clicking Bearbeiten must not move the words.
+
+    The frame therefore bleeds outward, and on a phone the gutter is only 18px, so it bleeds less
+    there: 11px leaves a 7px margin to the screen edge where 15px would leave 3px and read as a
+    mistake. Change a padding here and its margin changes with it, or the words start moving.
+  -->
+  <div
+    :class="
+      framed
+        ? '-mx-[11px] -my-[11px] rounded-lg border border-line-4 bg-paper-0 px-2.5 py-2.5 md:-mx-[15px] md:px-3.5'
+        : undefined
+    "
+  >
     <EditorContent :editor="editor" />
 
     <!-- Scrolls rather than wrapping or hiding: formatting has to be reachable on a phone, and a

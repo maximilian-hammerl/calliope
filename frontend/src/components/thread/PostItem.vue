@@ -106,6 +106,7 @@ const meta = computed<string>(() => {
         v-model:document="draft"
         v-model:text="draftText"
         :disabled="saving"
+        framed
       />
 
       <Alert v-if="error" variant="destructive" role="alert">
