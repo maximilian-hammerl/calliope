@@ -38,9 +38,8 @@ const api = new OpenAPIHono({
       message: issue.message,
     }));
 
-    // Logged *here* rather than in the request middleware, which never sees this: returning a
-    // response is not throwing, so `onError` does not fire. Seven of these in the production log
-    // said only `400`, and finding out which field was wrong took reproducing the request by hand.
+    // Here rather than in the request middleware, which never sees this: returning a response is
+    // not throwing, so `onError` does not fire and the log would say `400` and nothing more.
     logger.warn("Invalid request", {
       method: c.req.method,
       path: c.req.path,
@@ -68,9 +67,8 @@ const app = new OpenAPIHono();
 
 app.use(structuredLogger({
   createLogger: () => logger,
-  // One line per request, not two. A separate "incoming" line carried the path and the completed
-  // one carried the status, and with no id tying them together they could not be read back as a
-  // pair under concurrent traffic — which left a 400 naming no route at all.
+  // One line per request, not two: nothing tied an "incoming" line to its "completed" one, so a
+  // status could not be read back to the route that produced it.
   onResponse: (requestLogger, c, elapsed) => {
     const request = {
       method: c.req.method,
@@ -79,11 +77,10 @@ app.use(structuredLogger({
       durationMs: Math.round(elapsed),
     };
 
-    // The container polls this every ten seconds, so at `info` it would be 8,640 lines a day
-    // burying everything the log exists to show. Only the *healthy* answer drops to `debug`: a
-    // 503 here is the container about to be restarted, which is exactly what you want to read.
+    // Polled every ten seconds, so `info` would be 8,640 lines a day. `trace`, not `debug`: the
+    // deployed instance runs as `testing`. A 503 still logs — that is a restart about to happen.
     if (c.req.path === "/api/health" && c.res.status === STATUS_CODE.OK) {
-      requestLogger.debug("Request", request);
+      requestLogger.trace("Request", request);
       return;
     }
 
@@ -96,9 +93,8 @@ app.use(structuredLogger({
       durationMs: Math.round(elapsed),
     };
 
-    // An HTTPException is how Hono and its middleware report an expected refusal — 401, 413, 429.
-    // A warning without a stack, because there is no bug to find and one per unauthenticated
-    // request would bury the errors that matter.
+    // How Hono reports an expected refusal — 401, 413, 429. No stack: there is no bug to find,
+    // and one per unauthenticated request would bury the errors that matter.
     if (error instanceof HTTPException) {
       requestLogger.warn("Request refused", {
         ...request,
@@ -145,8 +141,8 @@ app.onError((error, c) => {
     );
   }
 
-  // Anything else is a bug or an outage. The request middleware has already recorded it with its
-  // stack, so this only decides what the client is told — which is never the detail.
+  // Anything else is a bug or an outage. The request middleware has already logged it with its
+  // stack, so this only decides what the client is told.
   return c.json(
     { error: "Internal server error" } satisfies ErrorResponse,
     STATUS_CODE.InternalServerError,

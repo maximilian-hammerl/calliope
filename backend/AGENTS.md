@@ -341,10 +341,12 @@ it supplies the elapsed time and puts the logger on the context.
 - **JSON lines in every environment.** `JSON.stringify(new Error("boom"))` is `{}`, so an error is
   spelled out field by field in `describeError` — and a formatter that differed between
   development and production would hide exactly that.
-- **`debug` in development and testing, `info` in staging and production**, from `ENVIRONMENT`. A
-  *healthy* `/api/health` drops to `debug` for the same reason: the container polls it every ten
-  seconds, which at `info` is 8,640 lines a day burying everything the log is for. A 503 there
-  still logs, because that is the container about to be restarted.
+- **The level comes from `ENVIRONMENT`**, three tiers: `trace` in development, `debug` on the
+  deployed testing instance, `info` in staging and production. A *healthy* `/api/health` is logged
+  at `trace`, so it is visible only locally — the container polls it every ten seconds, which is
+  8,640 lines a day burying everything the log is for. `debug` was not low enough, because the
+  instance we actually debug against runs as `testing`. A 503 there still logs at `info`, since
+  that is the container about to be restarted.
 - **An expected refusal is a warning, a bug is an error.** `HTTPException` is how Hono reports the
   first, and it gets no stack — one per unauthenticated request would bury the second. Nothing
   throws one today, so that branch is classification rather than a tested path.

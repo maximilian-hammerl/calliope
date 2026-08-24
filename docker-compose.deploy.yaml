@@ -1,9 +1,18 @@
 name: calliope
 
+# `docker compose logs` reads a file Docker writes, not the process, and json-file is unbounded
+# by default. 50 MB is about eighteen days of the backend, which produces the most by far.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    logging: *logging
 
     # 443/udp carries HTTP/3. Port 80 is what Let's Encrypt redirects from and validates on.
     ports:
@@ -56,6 +65,7 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
+    logging: *logging
 
     environment:
       # The backend reads this at boot and refuses to start without it, which is the point:
@@ -117,6 +127,7 @@ services:
   db:
     image: postgres:18
     restart: unless-stopped
+    logging: *logging
 
     # 128 MB is the built-in default on an 8 GB host; cache hit rate beats every other knob.
     command: postgres -c shared_buffers=1GB
@@ -142,6 +153,7 @@ services:
   redis:
     image: redis:8
     restart: unless-stopped
+    logging: *logging
 
     volumes:
       - redis-data:/data

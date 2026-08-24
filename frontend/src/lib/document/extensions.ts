@@ -76,9 +76,7 @@ export const DOCUMENT_EXTENSIONS = [
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   // No control makes these yet, but the schema accepts them, so the editor must be able to hold
   // them — see the note above.
-  // Only a relative `src`, the one kind the schema accepts. A pasted external image otherwise
-  // refused the whole post on save — and an unsaveable post cannot be autosaved either, so the
-  // composer stayed jammed until the paste was deleted.
+  // A relative `src` only: an external one is refused on save, which jams the composer.
   Image.configure({ HTMLAttributes: { class: 'max-w-full rounded-lg' } }).extend({
     parseHTML: () => [{ tag: 'img[src^="/"]' }],
   }),
