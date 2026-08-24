@@ -59,6 +59,10 @@ change a link in that chain, regenerate the ones downstream.
 - **A Caddyfile-only change needs `--force-recreate caddy`.** `up -d` compares the service
   definition, which a changed bind-mounted file does not alter, so Caddy keeps serving the
   previous configuration while the deploy reports success.
-- **Both compose files use the project name `calliope`.** `docker compose down -v` from a
-  copy of the repository will therefore remove the volumes of your running dev stack; pass
-  `-p` something else when testing the deployed stack locally.
+- **Only the deploy file pins the project name.** `docker compose -f docker-compose.deploy.yaml
+  down -v` from a *copy* of the repository therefore removes your dev stack's volumes; pass `-p`
+  something else. `docker-compose.yaml` takes the directory's name, so a second checkout is
+  isolated for free.
+- **A second checkout needs only its ports moved**, all of them variables defaulting to the
+  single-checkout value — see `.env.example`. The Vite proxy target is the one that matters:
+  without it a second frontend quietly proxies into the first checkout's database.

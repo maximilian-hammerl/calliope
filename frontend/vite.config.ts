@@ -1,13 +1,20 @@
 import { fileURLToPath, URL } from 'node:url'
 
 import type { Plugin } from 'vite'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
-/** Where `deno task dev` serves the backend; `deno serve` defaults to port 8000. */
-const BACKEND_URL = 'http://localhost:8000'
+/**
+ * From the repository's own `.env`, so one file describes one checkout. The proxy target is the
+ * one that matters: without it a second checkout proxies into the first one's database.
+ */
+const rootEnvironment = loadEnv('', fileURLToPath(new URL('..', import.meta.url)), '')
+
+const BACKEND_PORT = Number(rootEnvironment.BACKEND_PORT ?? 8000)
+const FRONTEND_PORT = Number(rootEnvironment.FRONTEND_PORT ?? 5173)
+const BACKEND_URL = `http://localhost:${BACKEND_PORT}`
 
 /**
  * Assigning back into `process.env` rather than only using the constant is deliberate: Vite
@@ -69,6 +76,10 @@ export default defineConfig({
     },
   },
   server: {
+    // Strict: drifting onto a free port is how proxying into the wrong backend goes unnoticed.
+    port: FRONTEND_PORT,
+    strictPort: true,
+
     // Keeps development same-origin, exactly like production behind Caddy: the generated
     // client can use relative URLs, no CORS preflight happens, and the httpOnly session
     // cookie is sent without any credentials configuration. The backend serves everything
