@@ -1,4 +1,7 @@
-import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
+import {
+  getOptionalEnvVariable,
+  getRequiredEnvVariable,
+} from "@/src/util/env.ts";
 import { retry } from "@std/async/retry";
 
 /**
