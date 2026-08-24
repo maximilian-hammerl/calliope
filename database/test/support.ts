@@ -138,9 +138,22 @@ export async function insertPost(
   } = {},
 ): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
-    `INSERT INTO public.writing_post (writing_thread_id, text, is_draft, created_by)
-     VALUES ($1, 'Ein Absatz.', $2, $3) RETURNING id`,
-    [threadId, isDraft, authorId],
+    // `document` is the body; `text` is the projection the server derives from it. These tests
+    // are about triggers rather than content, so both say the same one paragraph.
+    `INSERT INTO public.writing_post (writing_thread_id, document, text, is_draft, created_by)
+     VALUES ($1, $2, 'Ein Absatz.', $3, $4) RETURNING id`,
+    [
+      threadId,
+      JSON.stringify({
+        type: "doc",
+        content: [{
+          type: "paragraph",
+          content: [{ type: "text", text: "Ein Absatz." }],
+        }],
+      }),
+      isDraft,
+      authorId,
+    ],
   );
   return firstRow(rows).id;
 }

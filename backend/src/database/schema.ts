@@ -257,6 +257,7 @@ export interface WritingGroupNextStep {
 export interface WritingPost {
   createdAt: Generated<string>;
   createdBy: string | null;
+  document: unknown;
   editedAt: string | null;
   editedBy: string | null;
   id: Generated<string>;
@@ -579,6 +580,7 @@ export const WRITING_GROUP_NEXT_STEP_SCHEMA = z.object({
 export const WRITING_POST_SCHEMA = z.object({
   id: z.uuidv7(),
   writingThreadId: z.uuidv7(),
+  document: z.unknown(),
   text: z.string(),
   isDraft: z.boolean(),
   createdBy: z.uuidv7().nullable(),

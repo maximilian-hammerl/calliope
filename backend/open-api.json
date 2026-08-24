@@ -60,7 +60,568 @@
       "description": "Finding groups, threads and members by name in one request"
     }
   ],
-  "components": { "schemas": {}, "parameters": {} },
+  "components": {
+    "schemas": {
+      "PostDocument": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["doc"] },
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentNode" },
+            "minItems": 1
+          }
+        },
+        "required": ["type", "content"],
+        "additionalProperties": false,
+        "maxLength": 100000
+      },
+      "DocumentNode": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["text"] },
+              "text": { "type": "string", "minLength": 1 },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["bold"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["italic"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["underline"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["strike"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["code"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["link"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "maxLength": 2000,
+                              "format": "uri"
+                            },
+                            "target": {
+                              "type": ["string", "null"],
+                              "enum": ["_blank", "_self", null]
+                            },
+                            "rel": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "class": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "title": {
+                              "type": ["string", "null"],
+                              "maxLength": 500
+                            }
+                          },
+                          "required": ["href"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["textStyle"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "color": {
+                              "type": ["string", "null"],
+                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                            },
+                            "backgroundColor": {
+                              "type": ["string", "null"],
+                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                            },
+                            "fontFamily": {
+                              "type": ["string", "null"],
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "pattern": "^[\\w\\s,'\"-]+$/u"
+                            },
+                            "fontSize": {
+                              "type": ["string", "null"],
+                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%)$"
+                            },
+                            "lineHeight": {
+                              "type": ["string", "null"],
+                              "pattern": "^\\d(\\.\\d+)?$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "maxItems": 20
+              }
+            },
+            "required": ["type", "text"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["paragraph"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "textAlign": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["heading"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "level": { "type": "integer", "minimum": 1, "maximum": 6 },
+                  "textAlign": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "required": ["level"],
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type", "attrs"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["bulletList"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["orderedList"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "type": {
+                    "type": ["string", "null"],
+                    "enum": ["1", "a", "A", "i", "I", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["listItem"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["blockquote"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["codeBlock"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": ["string", "null"],
+                    "maxLength": 100,
+                    "pattern": "^[\\w\\s-]*$/u"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["horizontalRule"] }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["hardBreak"] },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["bold"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["italic"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["underline"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["strike"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["code"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["link"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "maxLength": 2000,
+                              "format": "uri"
+                            },
+                            "target": {
+                              "type": ["string", "null"],
+                              "enum": ["_blank", "_self", null]
+                            },
+                            "rel": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "class": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "title": {
+                              "type": ["string", "null"],
+                              "maxLength": 500
+                            }
+                          },
+                          "required": ["href"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["textStyle"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "color": {
+                              "type": ["string", "null"],
+                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                            },
+                            "backgroundColor": {
+                              "type": ["string", "null"],
+                              "pattern": "^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$/i"
+                            },
+                            "fontFamily": {
+                              "type": ["string", "null"],
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "pattern": "^[\\w\\s,'\"-]+$/u"
+                            },
+                            "fontSize": {
+                              "type": ["string", "null"],
+                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%)$"
+                            },
+                            "lineHeight": {
+                              "type": ["string", "null"],
+                              "pattern": "^\\d(\\.\\d+)?$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "maxItems": 20
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["image"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "src": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "pattern": "^\\/[\\w\\-./]*$/u"
+                  },
+                  "alt": { "type": ["string", "null"], "maxLength": 1000 },
+                  "title": { "type": ["string", "null"], "maxLength": 500 },
+                  "width": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "height": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 10000
+                  }
+                },
+                "required": ["src"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "attrs"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["table"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["tableRow"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["tableHeader"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "colspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "rowspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "colwidth": {
+                    "type": ["array", "null"],
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000
+                    },
+                    "maxItems": 100
+                  },
+                  "align": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["tableCell"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "colspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "rowspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "colwidth": {
+                    "type": ["array", "null"],
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000
+                    },
+                    "maxItems": 100
+                  },
+                  "align": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "parameters": {}
+  },
   "paths": {
     "/api/auth/register": {
       "post": {
@@ -8965,14 +9526,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100000
-                  },
-                  "isDraft": { "type": "boolean", "default": false }
+                  "isDraft": { "type": "boolean", "default": false },
+                  "document": { "$ref": "#/components/schemas/PostDocument" }
                 },
-                "required": ["text"]
+                "required": ["document"]
               }
             }
           }
@@ -8987,6 +9544,7 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": { "$ref": "#/components/schemas/PostDocument" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -9008,6 +9566,7 @@
                   "required": [
                     "id",
                     "writingThreadId",
+                    "document",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -9299,6 +9858,9 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "document": {
+                            "$ref": "#/components/schemas/PostDocument"
+                          },
                           "text": { "type": "string" },
                           "isDraft": { "type": "boolean" },
                           "createdBy": {
@@ -9323,6 +9885,7 @@
                         "required": [
                           "id",
                           "writingThreadId",
+                          "document",
                           "text",
                           "isDraft",
                           "createdBy",
@@ -9582,6 +10145,7 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": { "$ref": "#/components/schemas/PostDocument" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -9603,6 +10167,7 @@
                   "required": [
                     "id",
                     "writingThreadId",
+                    "document",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -9853,11 +10418,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100000
-                  },
+                  "document": { "$ref": "#/components/schemas/PostDocument" },
                   "isDraft": { "type": "boolean" }
                 }
               }
@@ -9874,6 +10435,7 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": { "$ref": "#/components/schemas/PostDocument" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -9895,6 +10457,7 @@
                   "required": [
                     "id",
                     "writingThreadId",
+                    "document",
                     "text",
                     "isDraft",
                     "createdBy",

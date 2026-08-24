@@ -1,5 +1,10 @@
 import { db } from "@/src/database/client.ts";
-import { createGroup, deleteUsers, request } from "@/src/test/support.ts";
+import {
+  createGroup,
+  deleteUsers,
+  postBody,
+  request,
+} from "@/src/test/support.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 
 /**
@@ -115,7 +120,7 @@ export async function aPostBy(cookie: string, reportedText: string) {
     "POST",
     `/api/groups/${group.id}/threads/${thread.id}/posts`,
     cookie,
-    { text: reportedText },
+    postBody(reportedText),
   )).json();
   return { group, thread, post };
 }

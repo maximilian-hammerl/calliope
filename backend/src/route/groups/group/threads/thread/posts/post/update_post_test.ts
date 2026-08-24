@@ -5,6 +5,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -29,10 +30,12 @@ async function draftByWriter() {
     },
   )).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
-  const draft = await (await request("POST", posts, writerCookie, {
-    text: "Entwurf",
-    isDraft: true,
-  })).json();
+  const draft = await (await request(
+    "POST",
+    posts,
+    writerCookie,
+    postBody("Entwurf", { isDraft: true }),
+  )).json();
 
   return { adminCookie, writerCookie, group, posts, draft };
 }
@@ -77,10 +80,12 @@ Deno.test("PATCH …/posts/{postId} does not mark an autosaved draft as edited",
   const { writerCookie, posts, draft } = await draftByWriter();
 
   // Every keystroke in the composer is one of these. None of them is an edit.
-  const saved =
-    await (await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
-      text: "Weiter geschrieben.",
-    })).json();
+  const saved = await (await request(
+    "PATCH",
+    `${posts}/${draft.id}`,
+    writerCookie,
+    postBody("Weiter geschrieben."),
+  )).json();
 
   assertEquals(saved.editedAt, null);
 });
@@ -99,7 +104,7 @@ Deno.test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
     "PATCH",
     `${posts}/${draft.id}`,
     writerCookie,
-    { text: "Doch anders." },
+    postBody("Doch anders."),
   )).json();
 
   // Publication must not have blunted the signal that actually means "edited".
@@ -118,7 +123,7 @@ Deno.test("PATCH …/posts/{postId} records who edited, not only when", async ()
     "PATCH",
     `${posts}/${draft.id}`,
     writerCookie,
-    { text: "Doch anders." },
+    postBody("Doch anders."),
   )).json();
 
   assertEquals(edited.editedByUsername, writer);
@@ -135,7 +140,7 @@ Deno.test("PATCH …/posts/{postId} names the administrator who edited another's
     "PATCH",
     `${posts}/${draft.id}`,
     adminCookie,
-    { text: "Von der Verwaltung geändert." },
+    postBody("Von der Verwaltung geändert."),
   )).json();
 
   // The whole point of the column: the author and the editor are different people, and a
@@ -161,17 +166,18 @@ Deno.test("PATCH …/posts/{postId} leaves the editor unnamed until something is
 Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {
   const { adminCookie, writerCookie, group, posts } = await draftByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
-  const published = await (await request("POST", posts, writerCookie, {
-    text: "Veröffentlicht",
-  })).json();
+  const published = await (await request(
+    "POST",
+    posts,
+    writerCookie,
+    postBody("Veröffentlicht"),
+  )).json();
 
   const response = await request(
     "PATCH",
     `${posts}/${published.id}`,
     otherCookie,
-    {
-      text: "Übernommen",
-    },
+    postBody("Übernommen"),
   );
 
   assertEquals(response.status, STATUS_CODE.Forbidden);

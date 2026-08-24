@@ -698,6 +698,29 @@ Threads stay tabs — a horizontally scrolling strip under the group title, neve
 composer is a one-line bar that expands on focus, collapsed by default. Prose stays 17px — never
 shrink the reading size. Every target is at least 44px (`--tap-min`).
 
+**The formatting toolbar is text, not a row of icons.** It sits *below* the writing, in the
+footer the inert placeholder already occupied, and its controls are short labels styled to show
+what they do — a bold **B**, an italic *I*, an underlined U, a struck-through S, `H2` and `H3`,
+Liste, 1. Liste, „“, Code in mono, Link. That follows the rule that an icon accompanies a label
+rather than replacing it, and it is what the placeholder was always going to become.
+
+**Alignment is the one exception**, and only because four spelled-out words are longer than the
+toolbar the rest of the controls fit in: `AlignLeft`, `AlignCenter`, `AlignRight`, `AlignJustify`
+as glyphs, each carrying the German word as its accessible name. Any further control that cannot
+be labelled needs the same argument made out loud, or it is a row of icons by drift.
+
+An active control is `--paper-0` with a 1px `--border-default`, the same treatment an active rail
+row gets; an inactive one is borderless and `--ink-5`. **The row scrolls sideways in its own
+container** rather than wrapping or hiding below `sm` — formatting has to be reachable on a phone,
+and a second row would push the writing off a short screen. Every control is 44px on a phone.
+
+**The composer's prose is 17px**, like everything else a member reads. It was 16.5px while it was
+a textarea, which was the reading size quietly shrinking by half a pixel; the editor renders at
+`prose-post`, so what is being written now matches what it will look like.
+
+„Vorschau" is **gone** rather than disabled: a WYSIWYG editor previews itself, and a control that
+does nothing does not ship. The copy stays specified above for whenever it means something again.
+
 **Both rails hold group context, split by what a member does with it.** The left rail is
 reference: the story's own facts, its files, who is in it — what a member checks while writing.
 The right rail is action: the next steps, and the story's status with the control that changes

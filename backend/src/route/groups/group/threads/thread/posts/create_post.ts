@@ -19,16 +19,19 @@ import {
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import { documentToPlainText } from "@/src/document/document_text.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
   threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
+// `text` is not here on purpose: it is derived from the document by the server.
 const CREATE_POST_BODY = WRITING_POST_SCHEMA
-  .pick({ text: true, isDraft: true })
+  .pick({ isDraft: true })
   .extend({
-    text: WRITING_POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
+    document: DOCUMENT_SCHEMA,
     // Published unless the author says otherwise.
     isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
   });
@@ -70,8 +73,20 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const { groupId, threadId } = c.req.valid("param");
-    const { text, isDraft } = c.req.valid("json");
+    const { document, isDraft } = c.req.valid("json");
     const user = c.get("user");
+
+    // The bound is on the prose, not the serialisation — see `document_schema.ts`. Only here,
+    // because only here is the text extracted.
+    const text = documentToPlainText(document);
+    if (text.length === 0 || text.length > TEXT_LIMIT.postText) {
+      return c.json(
+        {
+          error: `A post holds between 1 and ${TEXT_LIMIT.postText} characters`,
+        },
+        STATUS_CODE.BadRequest,
+      );
+    }
 
     const role = await WritingGroupService.selectRoleForUser(user, groupId);
     if (role === undefined) {
@@ -93,7 +108,7 @@ export default new OpenAPIHono().openapi(
     const post = await WritingPostService.insertPost(
       groupId,
       threadId,
-      text,
+      document,
       isDraft,
       user.id,
     );
