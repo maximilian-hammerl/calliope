@@ -5,7 +5,6 @@
     "version": "0.1.0",
     "description": "The API of Calliope, a community of private writing groups."
   },
-  "servers": [{ "url": "http://localhost:5173" }],
   "tags": [
     {
       "name": "operations",

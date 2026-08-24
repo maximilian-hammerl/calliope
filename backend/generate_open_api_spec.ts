@@ -11,6 +11,9 @@ if (import.meta.main) {
 
   spec.openapi = "3.2.0";
 
+  // Depends on settings in .env and would change for every local project.
+  delete spec.servers;
+
   await Deno.writeTextFile(OPEN_API_SPEC_PATH, JSON.stringify(spec));
   console.log("Saved successfully");
 
