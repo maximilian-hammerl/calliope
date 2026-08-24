@@ -83,4 +83,22 @@ describe('DOCUMENT_EXTENSIONS', () => {
 
     expect(JSON.stringify(roundTrip(stored))).toContain('/api/files/karte.png')
   })
+
+  it('imports no image a paste brings from somewhere else', () => {
+    // Content given as a string is parsed as HTML, which is the path a paste takes. An absolute
+    // `src` is what the schema refuses, and a document it refuses cannot be autosaved either — so
+    // one pasted picture jammed the composer until the paste was deleted. That is a real report.
+    const editor = new Editor({
+      extensions: DOCUMENT_EXTENSIONS,
+      content: '<p>Davor</p><img src="https://elsewhere.example/bild.png"><p>Danach</p>',
+    })
+    const json = JSON.stringify(editor.getJSON())
+    editor.destroy()
+
+    expect(json).not.toContain('elsewhere.example')
+    // The prose around it survives, which is the whole point of dropping the image rather than
+    // letting the post fail.
+    expect(json).toContain('Davor')
+    expect(json).toContain('Danach')
+  })
 })

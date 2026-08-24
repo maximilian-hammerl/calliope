@@ -36,8 +36,7 @@ import { Underline } from '@tiptap/extension-underline'
  * the prose around it too. A control a member does not have is a missing button; a node type the
  * editor cannot hold is a lost post. `__tests__/extensions.spec.ts` holds that line.
  *
- * The one cost of loading `Image` before #31: a pasted external image carries an absolute `src`,
- * which the schema refuses on save. A validation error on an edge case, against losing a post.
+ * Loading `Image` before #31 has one cost, and it is paid at the parse rule below rather than here.
  *
  * The alignment types are the two block nodes that have the attribute in the schema. Adding a
  * third here without adding it there produces documents the API rejects.
@@ -77,7 +76,12 @@ export const DOCUMENT_EXTENSIONS = [
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   // No control makes these yet, but the schema accepts them, so the editor must be able to hold
   // them — see the note above.
-  Image.configure({ HTMLAttributes: { class: 'max-w-full rounded-lg' } }),
+  // Only a relative `src`, the one kind the schema accepts. A pasted external image otherwise
+  // refused the whole post on save — and an unsaveable post cannot be autosaved either, so the
+  // composer stayed jammed until the paste was deleted.
+  Image.configure({ HTMLAttributes: { class: 'max-w-full rounded-lg' } }).extend({
+    parseHTML: () => [{ tag: 'img[src^="/"]' }],
+  }),
   Table.configure({ HTMLAttributes: { class: 'w-full border-collapse text-note' } }),
   TableRow,
   TableHeader.configure({

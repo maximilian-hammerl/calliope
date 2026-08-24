@@ -1,12 +1,13 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { structuredLogger } from "@hono/structured-logger";
 import { STATUS_CODE } from "@std/http/status";
 import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { methodNotAllowed } from "hono/method-not-allowed";
 import { bodyLimit } from "hono/body-limit";
 import corsOptions from "./cors_options.ts";
+import { describeError, logger } from "@/src/logging.ts";
 import openApiSpecification from "./open_api_specification.ts";
 import rateLimit from "./middleware/rate_limit.ts";
 import { REQUEST_BODY_LIMIT_BYTES } from "./text_limit.ts";
@@ -32,14 +33,22 @@ const api = new OpenAPIHono({
       return;
     }
 
+    const issues = result.error.issues.map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message,
+    }));
+
+    // Logged *here* rather than in the request middleware, which never sees this: returning a
+    // response is not throwing, so `onError` does not fire. Seven of these in the production log
+    // said only `400`, and finding out which field was wrong took reproducing the request by hand.
+    logger.warn("Invalid request", {
+      method: c.req.method,
+      path: c.req.path,
+      issues,
+    });
+
     return c.json(
-      {
-        error: "Invalid request",
-        issues: result.error.issues.map((issue) => ({
-          path: issue.path.join("."),
-          message: issue.message,
-        })),
-      } satisfies ErrorResponse,
+      { error: "Invalid request", issues } satisfies ErrorResponse,
       STATUS_CODE.BadRequest,
     );
   },
@@ -57,7 +66,45 @@ const api = new OpenAPIHono({
 
 const app = new OpenAPIHono();
 
-app.use(logger());
+app.use(structuredLogger({
+  createLogger: () => logger,
+  // One line per request, not two. A separate "incoming" line carried the path and the completed
+  // one carried the status, and with no id tying them together they could not be read back as a
+  // pair under concurrent traffic — which left a 400 naming no route at all.
+  onResponse: (requestLogger, c, elapsed) => {
+    requestLogger.info("Request", {
+      method: c.req.method,
+      path: c.req.path,
+      status: c.res.status,
+      durationMs: Math.round(elapsed),
+    });
+  },
+  onError: (requestLogger, error, c, elapsed) => {
+    const request = {
+      method: c.req.method,
+      path: c.req.path,
+      durationMs: Math.round(elapsed),
+    };
+
+    // An HTTPException is how Hono and its middleware report an expected refusal — 401, 413, 429.
+    // A warning without a stack, because there is no bug to find and one per unauthenticated
+    // request would bury the errors that matter.
+    if (error instanceof HTTPException) {
+      requestLogger.warn("Request refused", {
+        ...request,
+        status: error.status,
+        reason: error.message,
+      });
+      return;
+    }
+
+    requestLogger.error("Request failed", {
+      ...request,
+      status: STATUS_CODE.InternalServerError,
+      ...describeError(error),
+    });
+  },
+}));
 // Before anything reads the body, so an oversized one is refused rather than buffered.
 app.use(
   bodyLimit({
@@ -88,9 +135,8 @@ app.onError((error, c) => {
     );
   }
 
-  // Anything else is a bug or an outage. Log it, but never show it to the client.
-  console.error(error);
-
+  // Anything else is a bug or an outage. The request middleware has already recorded it with its
+  // stack, so this only decides what the client is told — which is never the detail.
   return c.json(
     { error: "Internal server error" } satisfies ErrorResponse,
     STATUS_CODE.InternalServerError,
