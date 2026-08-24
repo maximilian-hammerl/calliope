@@ -3611,7 +3611,8 @@
                     "invitedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
-                    }
+                    },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -3633,7 +3634,8 @@
                     "createdByUsername",
                     "status",
                     "role",
-                    "invitedAt"
+                    "invitedAt",
+                    "isFavourite"
                   ]
                 }
               }
@@ -3859,6 +3861,11 @@
                     "enum": ["joined", "invited", "none", "any"],
                     "default": "joined",
                     "description": "Which groups relative to the caller: ones they have joined, ones they have been invited to, public ones they are not in, or everything they may see."
+                  },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
                   }
                 }
               }
@@ -3937,7 +3944,8 @@
                           "invitedAt": {
                             "type": ["string", "null"],
                             "format": "date-time"
-                          }
+                          },
+                          "isFavourite": { "type": "boolean" }
                         },
                         "required": [
                           "id",
@@ -3959,7 +3967,8 @@
                           "createdByUsername",
                           "status",
                           "role",
-                          "invitedAt"
+                          "invitedAt",
+                          "isFavourite"
                         ]
                       }
                     }
@@ -4223,7 +4232,8 @@
                     "invitedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
-                    }
+                    },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -4245,7 +4255,8 @@
                     "createdByUsername",
                     "status",
                     "role",
-                    "invitedAt"
+                    "invitedAt",
+                    "isFavourite"
                   ]
                 }
               }
@@ -4606,7 +4617,8 @@
                     "invitedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
-                    }
+                    },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -4628,7 +4640,8 @@
                     "createdByUsername",
                     "status",
                     "role",
-                    "invitedAt"
+                    "invitedAt",
+                    "isFavourite"
                   ]
                 }
               }
@@ -10705,6 +10718,11 @@
                     "enum": ["read", "unread", "any"],
                     "default": "any"
                   },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
+                  },
                   "language": {
                     "type": "string",
                     "enum": ["english", "german"]
@@ -10775,7 +10793,8 @@
                             "format": "date-time"
                           },
                           "createdByUsername": { "type": "string" },
-                          "isRead": { "type": "boolean" }
+                          "isRead": { "type": "boolean" },
+                          "isFavourite": { "type": "boolean" }
                         },
                         "required": [
                           "id",
@@ -10796,7 +10815,8 @@
                           "createdBy",
                           "createdAt",
                           "createdByUsername",
-                          "isRead"
+                          "isRead",
+                          "isFavourite"
                         ]
                       }
                     }
@@ -11102,7 +11122,8 @@
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "createdByUsername": { "type": "string" },
-                    "isRead": { "type": "boolean" }
+                    "isRead": { "type": "boolean" },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -11123,7 +11144,8 @@
                     "createdBy",
                     "createdAt",
                     "createdByUsername",
-                    "isRead"
+                    "isRead",
+                    "isFavourite"
                   ]
                 }
               }
@@ -11378,7 +11400,8 @@
                           "format": "date-time"
                         },
                         "createdByUsername": { "type": "string" },
-                        "isRead": { "type": "boolean" }
+                        "isRead": { "type": "boolean" },
+                        "isFavourite": { "type": "boolean" }
                       },
                       "required": [
                         "id",
@@ -11399,7 +11422,8 @@
                         "createdBy",
                         "createdAt",
                         "createdByUsername",
-                        "isRead"
+                        "isRead",
+                        "isFavourite"
                       ]
                     },
                     "storyIdea": {
@@ -11447,7 +11471,8 @@
                           "format": "date-time"
                         },
                         "createdByUsername": { "type": "string" },
-                        "isRead": { "type": "boolean" }
+                        "isRead": { "type": "boolean" },
+                        "isFavourite": { "type": "boolean" }
                       },
                       "required": [
                         "id",
@@ -11468,7 +11493,8 @@
                         "createdBy",
                         "createdAt",
                         "createdByUsername",
-                        "isRead"
+                        "isRead",
+                        "isFavourite"
                       ]
                     },
                     "next": {
@@ -11516,7 +11542,8 @@
                           "format": "date-time"
                         },
                         "createdByUsername": { "type": "string" },
-                        "isRead": { "type": "boolean" }
+                        "isRead": { "type": "boolean" },
+                        "isFavourite": { "type": "boolean" }
                       },
                       "required": [
                         "id",
@@ -11537,7 +11564,8 @@
                         "createdBy",
                         "createdAt",
                         "createdByUsername",
-                        "isRead"
+                        "isRead",
+                        "isFavourite"
                       ]
                     },
                     "total": { "type": "integer", "minimum": 0 }
@@ -11810,7 +11838,8 @@
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "createdByUsername": { "type": "string" },
-                    "isRead": { "type": "boolean" }
+                    "isRead": { "type": "boolean" },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -11831,7 +11860,8 @@
                     "createdBy",
                     "createdAt",
                     "createdByUsername",
-                    "isRead"
+                    "isRead",
+                    "isFavourite"
                   ]
                 }
               }
@@ -12170,7 +12200,8 @@
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "createdByUsername": { "type": "string" },
-                    "isRead": { "type": "boolean" }
+                    "isRead": { "type": "boolean" },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -12191,7 +12222,8 @@
                     "createdBy",
                     "createdAt",
                     "createdByUsername",
-                    "isRead"
+                    "isRead",
+                    "isFavourite"
                   ]
                 }
               }
@@ -19455,7 +19487,8 @@
                               "invitedAt": {
                                 "type": ["string", "null"],
                                 "format": "date-time"
-                              }
+                              },
+                              "isFavourite": { "type": "boolean" }
                             },
                             "required": [
                               "id",
@@ -19477,7 +19510,8 @@
                               "createdByUsername",
                               "status",
                               "role",
-                              "invitedAt"
+                              "invitedAt",
+                              "isFavourite"
                             ]
                           }
                         }
@@ -19585,7 +19619,8 @@
                                 "format": "date-time"
                               },
                               "createdByUsername": { "type": "string" },
-                              "isRead": { "type": "boolean" }
+                              "isRead": { "type": "boolean" },
+                              "isFavourite": { "type": "boolean" }
                             },
                             "required": [
                               "id",
@@ -19606,7 +19641,8 @@
                               "createdBy",
                               "createdAt",
                               "createdByUsername",
-                              "isRead"
+                              "isRead",
+                              "isFavourite"
                             ]
                           }
                         }

@@ -50,7 +50,7 @@ export default new OpenAPIHono().openapi(
     const user = c.get("user");
     const { ideaId } = c.req.valid("param");
 
-    const idea = await StoryIdeaService.selectStoryIdea(ideaId, user.id);
+    const idea = await StoryIdeaService.selectStoryIdeaGate(ideaId);
     if (idea === undefined) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }

@@ -56,10 +56,7 @@ export default new OpenAPIHono().openapi(
       return c.json({ ok: true } as const, STATUS_CODE.OK);
     }
 
-    const exists = await StoryIdeaService.selectStoryIdea(
-      ideaId,
-      c.get("user").id,
-    );
+    const exists = await StoryIdeaService.selectStoryIdeaGate(ideaId);
     return exists === undefined
       ? c.json({ error: "Not found" }, STATUS_CODE.NotFound)
       : c.json({ error: "Not yours to remove" }, STATUS_CODE.Forbidden);

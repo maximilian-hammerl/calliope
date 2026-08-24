@@ -204,19 +204,6 @@ function visibleToUser(user: User) {
     )
     // Left as well: an account that has been deleted leaves the group behind with no author.
     .leftJoin("user", "user.id", "writingGroup.createdBy")
-    // And again for the reader's own favourite, bound to their id so no query here can see
-    // another member's.
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.writing_group}`,
-            "=",
-            "writingGroup.id",
-          )
-          .on("favourite.userId", "=", user.id),
-    )
     .where((eb) =>
       eb.or([
         eb("writingGroup.visibility", "=", "public"),
@@ -246,12 +233,61 @@ const OWN_MEMBERSHIP_COLUMNS = [
 const favouriteColumn = (eb: ExpressionBuilder<DB, "favourite">) =>
   eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE);
 
-/** Returns nothing when the group does not exist or is private and not the user's. */
+/**
+ * Whether the member may see the group, and their own standing in it. **Not the whole row**, and
+ * that is the point: sixteen of the seventeen callers use this as an authorisation gate and most
+ * of them only test it for `undefined`, while a group carries a synopsis of up to eight thousand
+ * characters and four tag arrays. Fetching those to answer a yes/no question is what this stopped.
+ *
+ * `title` is here because it is small and because it is the excerpt `resolveVisibleTarget` needs
+ * for a reported group.
+ *
+ * The one caller that renders a group asks `selectWritingGroupForReader` instead. Both are built
+ * on `visibleToUser`, so the *rule* is written once and only the projection differs.
+ */
+export type VisibleWritingGroupGate = {
+  id: string;
+  title: string;
+  visibility: WritingGroupVisibility;
+  createdBy: string | null;
+  status: UserInWritingGroupStatus | null;
+  role: UserInWritingGroupRole | null;
+};
+
 async function selectVisibleWritingGroup(
+  user: User,
+  writingGroupId: string,
+): Promise<VisibleWritingGroupGate | undefined> {
+  return await visibleToUser(user)
+    .select([
+      "writingGroup.id",
+      "writingGroup.title",
+      "writingGroup.visibility",
+      "writingGroup.createdBy",
+      "userInWritingGroup.status",
+      "userInWritingGroup.role",
+    ])
+    .where("writingGroup.id", "=", writingGroupId)
+    .executeTakeFirst();
+}
+
+/** The whole group as this reader sees it, favourite included — for the page that renders one. */
+async function selectWritingGroupForReader(
   user: User,
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
+    .leftJoin(
+      "favourite",
+      (join) =>
+        join
+          .onRef(
+            `favourite.${FAVOURITE_COLUMN.writing_group}`,
+            "=",
+            "writingGroup.id",
+          )
+          .on("favourite.userId", "=", user.id),
+    )
     .select((eb) => [
       ...SELECTED_COLUMNS,
       AUTHOR_COLUMN,
@@ -271,6 +307,17 @@ function listVisibleWritingGroups(
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
     visibleToUser(user)
+      .leftJoin(
+        "favourite",
+        (join) =>
+          join
+            .onRef(
+              `favourite.${FAVOURITE_COLUMN.writing_group}`,
+              "=",
+              "writingGroup.id",
+            )
+            .on("favourite.userId", "=", user.id),
+      )
       .select((eb) => [
         ...SELECTED_COLUMNS,
         AUTHOR_COLUMN,
@@ -426,6 +473,7 @@ async function updateWritingGroup(
 export const WritingGroupService = {
   insertWritingGroup,
   selectVisibleWritingGroup,
+  selectWritingGroupForReader,
   listVisibleWritingGroups,
   selectRoleForUser,
   updateWritingGroup,

@@ -281,6 +281,38 @@ function listStoryIdeas(
     firstDescending: IS_FAVOURITE,
   });
 }
+/**
+ * Whether the idea exists and who wrote it — which is all five of the callers that use this as a
+ * gate need, and none of them needs the prose. An idea carries a teaser and a synopsis running to
+ * ten thousand characters between them, and it takes no reader join at all: whether *this* member
+ * has read or favourited it has nothing to do with whether they may act on it.
+ *
+ * `title` is here because it is small and because it is the excerpt `resolveVisibleTarget` needs
+ * for a reported idea. The page that renders an idea asks `selectStoryIdea` instead.
+ */
+export type StoryIdeaGate = {
+  id: string;
+  title: string;
+  createdBy: string;
+  status: StoryIdeaStatus;
+};
+
+async function selectStoryIdeaGate(
+  ideaId: string,
+): Promise<StoryIdeaGate | undefined> {
+  return await db
+    .selectFrom("storyIdea")
+    .select([
+      "storyIdea.id",
+      "storyIdea.title",
+      "storyIdea.createdBy",
+      "storyIdea.status",
+    ])
+    .where("storyIdea.id", "=", ideaId)
+    .executeTakeFirst();
+}
+
+/** The whole idea as this reader sees it, read state and favourite included. */
 async function selectStoryIdea(
   ideaId: string,
   readerId: string,
@@ -464,6 +496,7 @@ export const StoryIdeaService = {
   listStoryIdeas,
   selectCarousel,
   selectStoryIdea,
+  selectStoryIdeaGate,
   markRead,
   clearRead,
   insertStoryIdea,

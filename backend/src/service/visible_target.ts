@@ -143,7 +143,7 @@ export async function resolveVisibleTarget(
     }
 
     case "story_idea": {
-      const idea = await StoryIdeaService.selectStoryIdea(targetId, user.id);
+      const idea = await StoryIdeaService.selectStoryIdeaGate(targetId);
       return idea === undefined
         ? undefined
         : { excerpt: excerpt(idea.title), authorId: idea.createdBy };
