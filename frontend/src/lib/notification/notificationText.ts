@@ -48,8 +48,7 @@ export function notificationText(notification: ListNotifications200ResultsItem):
       // Both names: somebody in several groups cannot place a thread title on its own.
       return `${actor} hat in „${notification.writingThreadTitle}“ in „${notification.writingGroupTitle}“ geschrieben.`
     case 'invited_to_chat_group':
-      // „zum Chat“ rather than the group wording: the two invitations are different things
-      // and land in different places.
+      // The two invitations are different things and land in different places.
       return `${actor} hat dich zum Chat „${notification.chatGroupTitle}“ eingeladen.`
     default:
       return assertUnreachable(notification)
@@ -57,7 +56,7 @@ export function notificationText(notification: ListNotifications200ResultsItem):
 }
 
 /**
- * Where the notification takes you. Not a route in every case: a chat lives in the Nachrichten
+ * Where the notification takes you. Not a route in every case: a chat lives in the Chats
  * dialog rather than at a URL, so this is a verdict the caller acts on rather than something
  * that can be handed to `RouterLink`.
  */

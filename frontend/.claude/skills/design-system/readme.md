@@ -96,7 +96,7 @@ and in UI copy alike.
 Title Case and never ALL CAPS — with the single exception of the mono rail labels
 ("ÜBER DIE GRUPPE", "GRUPPEN-KONTEXT"), where the caps are a typographic device.
 
-**A "＋" action is the bare noun.** "＋ Thread", "＋ Gruppe", "＋ Schritt", "＋ Unterhaltung" —
+**A "＋" action is the bare noun.** "＋ Thread", "＋ Gruppe", "＋ Schritt", "＋ Chat" —
 never "＋ Gruppe gründen". The plus carries the verb; the full phrase is the title of the dialog
 it opens and the button's `aria-label`, so a screen reader loses nothing. Everywhere else the verb
 is written out. In a strip the action takes a transparent segment of the rule, which is what
@@ -145,7 +145,7 @@ because `sm:max-w-[440px]` copied into ten files is how every form ended up the 
 confirmation. A confirmation stays narrow: its constraint is the measure of its prose, and
 widening it reads worse. A field-heavy form takes 760 so its fields pair two to a row, which is
 what actually fixes "awkward to work in" — width without pairing just makes a tall dialog wide.
-Only Nachrichten is a workspace, because it is two panes rather than a form.
+Only Chats is a workspace, because it is two panes rather than a form.
 
 **Width for the frame, measure for the prose.** They are not the same number. The messages in a
 960px dialog ran to ninety-five characters until the list was capped at 520px: the pane and the
@@ -296,6 +296,13 @@ change a role or edit afterwards; and as the **last member** it is the one irrev
 the group and everything written in it go with you, so that variant alone takes the destructive
 button.
 
+**A chat is left from its header.** A conversation has no members list, so its two verbs sit
+where its other controls do: „Verlassen" beside Einladen and Melden, and „Ablehnen" beside
+Beitreten while an invitation is unanswered. Both are one call, as they are for a group, and the
+confirmation keeps the group's shape — what you wrote stays, and only the last person out gets
+the destructive variant. But *last* counts anybody still deciding: an unanswered invitation is a
+membership row, so a conversation outlives the last member who actually joined it.
+
 **A role is edited where it is read.** Each row of the members list carries a select showing
 that member's role, saving on change rather than behind a save button — the same shape as the
 story status in the rail. The trailing controls sit in one block with the longest action's width
@@ -351,7 +358,7 @@ destination shows its icon beside the label in both bars (16px inline on the top
 above the label on the bottom), so the two bars read as the same three places. The
 menus exist on the phone too, rising above the bottom bar; that is an experiment, revisited if
 it reads badly in use.
-Anything belonging to one member lives behind their avatar: Mitteilungen, Nachrichten,
+Anything belonging to one member lives behind their avatar: Mitteilungen, Chats,
 Einstellungen, Abmelden. That split is also what keeps the bar from growing: two long German
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
 have pushed harder.
@@ -370,18 +377,26 @@ still chooses visibility and can change anything before confirming. The group di
 the same story fields as the idea dialog, Sprache included, so the copy has nowhere to lose
 information. The idea stays open afterwards; closing it is the author's own act.
 
-**„Unterhaltung beginnen" is one action with one name.** On a story idea it invites the
+**„Chat beginnen" is one action with one name.** On a story idea it invites the
 author; on a public group's page it invites the administrators. Both are the same gesture — a
 person asking people, through a chat invitation the other side must accept — so the label never
 varies. It renders as the visitor's one solid button, in the same slot the owner's own controls
 occupy: the two never meet.
 
 **„Mitteilungen", not „Benachrichtigungen".** The shorter word is the one German interfaces use
-for this (it is Apple's), and it leaves „Nachrichten" free for private messages later.
+for this (it is Apple's), and it keeps the notifications apart from the Chats beside them.
+
+**One word for the thing: „Chat".** It was three — the dialog said „Nachrichten", its list said
+„Unterhaltung", the notification said „Chat" — for one feature, which is three chances to read
+them as three features. „Chat" is the word members arrive with, and it was already the one in the
+invitation sentence. „Nachricht" keeps its own job: a Chat is the place, a Nachricht is what you
+write in it, and the moderation queue names both because it acts on each. The gender goes with
+the word — *der* Chat where it was *die* Unterhaltung, so „Verlässt du ihn, wird er gelöscht".
 
 **Personal things open where you are.** Mitteilungen is a dialog, not a page: somebody halfway
-through a long post who wants to answer something should not lose the page they are on. The
-same will hold for Nachrichten. A dialog is right while the content is a single list; the
+through a long post who wants to answer something should not lose the page they are on. Chats
+stay a dialog for a stronger version of the same reason — talking about the thread you are
+reading is the ordinary case, and a page would take you off it. A dialog is right while the content is a single list; the
 moment it needs the categories the requirements describe, it has outgrown one.
 
 **One mark, not a number, and never both.** An unread notification puts a 7px `--oak` dot on
@@ -718,7 +733,7 @@ never matched the hairline weight and changed shape from platform to platform.
 | `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
 | — | `Pencil` | edit an existing thing ("Gruppe bearbeiten", "Umbenennen") |
 | — | `Trash2` | delete a thing for good ("Löschen") |
-| — | `MessageCircle` | start a conversation ("Unterhaltung beginnen") |
+| — | `MessageCircle` | start a chat ("Chat beginnen") |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px

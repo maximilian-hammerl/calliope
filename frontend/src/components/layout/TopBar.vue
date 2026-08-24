@@ -22,7 +22,7 @@ import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import SearchField from '@/components/search/SearchField.vue'
 import { requestedChatId } from '@/lib/chat/openChatDialog'
 import NotificationsDialog from '@/components/notification/NotificationsDialog.vue'
-import MessagesDialog from '@/components/chat/MessagesDialog.vue'
+import ChatsDialog from '@/components/chat/ChatsDialog.vue'
 import SettingsDialog from '@/components/settings/SettingsDialog.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
 import {
@@ -63,7 +63,7 @@ watch(searchOpen, async (isOpen) => {
 })
 
 const showingNotifications = ref<boolean>(false)
-const showingMessages = ref<boolean>(false)
+const showingChats = ref<boolean>(false)
 /** Set when a chat invitation was followed out of the notifications dialog. */
 const startChatAt = ref<string | undefined>(undefined)
 
@@ -73,7 +73,7 @@ const startChatAt = ref<string | undefined>(undefined)
  */
 function openChat(chatGroupId: string) {
   startChatAt.value = chatGroupId
-  showingMessages.value = true
+  showingChats.value = true
 }
 
 // Pages request a chat through this ref when they start a conversation; see openChatDialog.ts.
@@ -217,7 +217,7 @@ async function signOut() {
                   {{ unread }} neu
                 </span>
               </DropdownMenuItem>
-              <DropdownMenuItem @select="showingMessages = true">Nachrichten</DropdownMenuItem>
+              <DropdownMenuItem @select="showingChats = true">Chats</DropdownMenuItem>
               <DropdownMenuItem @select="showingSettings = true">Einstellungen</DropdownMenuItem>
             </DropdownMenuGroup>
 
@@ -261,6 +261,6 @@ async function signOut() {
   </header>
 
   <NotificationsDialog v-model:open="showingNotifications" @open-chat="openChat" />
-  <MessagesDialog v-model:open="showingMessages" :start-at="startChatAt" />
+  <ChatsDialog v-model:open="showingChats" :start-at="startChatAt" />
   <SettingsDialog v-model:open="showingSettings" />
 </template>

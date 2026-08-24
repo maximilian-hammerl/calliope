@@ -2,18 +2,15 @@
 import { computed, ref, watch } from 'vue'
 import { Plus } from '@lucide/vue'
 import { useQueryClient } from '@tanstack/vue-query'
-import {
-  getListChatsQueryKey,
-  useAcceptChatInvitation,
-  useCreateChat,
-  useListChats,
-} from '@/api/chats/chats'
+import { getListChatsQueryKey, useCreateChat, useListChats } from '@/api/chats/chats'
 import type { ListChats200ResultsItem, ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { useChatStream } from '@/composables/useChatStream'
+import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
 import ChatConversation from '@/components/chat/ChatConversation.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 
 const open = defineModel<boolean>('open', { required: true })
 /** Set when a chat invitation was followed from the notifications dialog. */
@@ -39,6 +37,21 @@ const selectedId = ref<string | undefined>(undefined)
 const selected = computed<ListChats200ResultsItem | undefined>(() =>
   chats.value.find((chat) => chat.id === selectedId.value),
 )
+
+/**
+ * A selection has to name something in the list. Leaving a chat, declining an invitation or
+ * being removed from one takes it away underneath the pane, which would otherwise sit blank:
+ * nothing to render, and not empty enough to offer the prompt.
+ */
+watch([chats, selected], () => {
+  if (
+    data.value?.status === 200 &&
+    selectedId.value !== undefined &&
+    selected.value === undefined
+  ) {
+    selectedId.value = undefined
+  }
+})
 
 /** Messages the stream delivered since the conversation last fetched, keyed by chat. */
 const liveByChat = ref<Record<string, ListMessages200ResultsItem[]>>({})
@@ -74,7 +87,17 @@ watch(
 const creating = ref<boolean>(false)
 const newTitle = ref<string>('')
 const { mutateAsync: createChat, isPending: isCreating } = useCreateChat()
-const { mutateAsync: acceptInvitation } = useAcceptChatInvitation()
+
+// Answering an invitation needs a chat to answer about, and only the selected one is ever
+// answered — an unselected invitation shows no controls.
+const {
+  accept,
+  decline,
+  isAccepting,
+  isDeclining,
+  isBusy: isAnswering,
+  error: answerError,
+} = useOwnChatMembership(() => selectedId.value ?? '')
 
 async function create() {
   const title = newTitle.value.trim()
@@ -92,9 +115,11 @@ async function create() {
   }
 }
 
-async function accept(chatGroupId: string) {
-  await acceptInvitation({ chatId: chatGroupId }).catch(() => undefined)
-  await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
+/** Declining takes the invitation off the list, so nothing is left to keep selected. */
+async function declineInvitation() {
+  if (await decline()) {
+    selectedId.value = undefined
+  }
 }
 
 /** An invitation is visible but not yet a conversation, so it cannot be opened. */
@@ -105,9 +130,9 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
   <Dialog v-model:open="open">
     <DialogScrollContent class="sm:max-w-dialog-workspace">
       <DialogHeader>
-        <DialogTitle>Nachrichten</DialogTitle>
+        <DialogTitle>Chats</DialogTitle>
         <DialogDescription>
-          Unterhaltungen mit anderen Mitgliedern, unabhängig von einer Gruppe.
+          Chats mit anderen Mitgliedern, unabhängig von einer Gruppe.
         </DialogDescription>
       </DialogHeader>
 
@@ -127,7 +152,7 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
             @click="creating = !creating"
           >
             <Plus :size="14" :stroke-width="1.5" />
-            Unterhaltung
+            Chat
           </button>
 
           <form v-if="creating" class="mb-2 flex gap-2" @submit.prevent="create">
@@ -142,7 +167,7 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
           </form>
 
           <p v-if="chats.length === 0" class="py-[7px] text-[12.5px] text-ink-5">
-            Noch keine Unterhaltungen.
+            Noch keine Chats.
           </p>
 
           <button
@@ -179,17 +204,38 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
             class="mb-2 flex min-h-11 items-center self-start text-[12.5px] text-ink-5 md:hidden"
             @click="selectedId = undefined"
           >
-            ← Alle Unterhaltungen
+            ← Alle Chats
           </button>
 
           <p v-if="selectedId === undefined" class="text-body text-ink-4">
-            Wähle links eine Unterhaltung.
+            Wähle links einen Chat.
           </p>
 
           <template v-else-if="selected">
             <div v-if="selectedIsInvitation" class="text-body text-ink-4">
               <p>Du bist zu „{{ selected.title }}“ eingeladen.</p>
-              <Button size="sm" class="mt-4" @click="accept(selected.id)">Beitreten</Button>
+
+              <Alert v-if="answerError" variant="destructive" role="alert" class="mt-4">
+                <AlertDescription>{{ answerError }}</AlertDescription>
+              </Alert>
+
+              <!-- The pair a group invitation offers, in the same order and at the same
+                   weights: turning one down is as ordinary an answer as taking it. -->
+              <div class="mt-4 flex items-center gap-2">
+                <Button size="sm" :disabled="isAnswering" @click="accept">
+                  <Spinner v-if="isAccepting" />
+                  Beitreten
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :disabled="isAnswering"
+                  @click="declineInvitation"
+                >
+                  <Spinner v-if="isDeclining" />
+                  Ablehnen
+                </Button>
+              </div>
             </div>
             <ChatConversation
               v-else

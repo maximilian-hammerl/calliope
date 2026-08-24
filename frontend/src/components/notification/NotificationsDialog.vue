@@ -25,7 +25,7 @@ const emit = defineEmits<{ openChat: [chatGroupId: string] }>()
 const router = useRouter()
 
 /**
- * Chats have no URL — they live in the Nachrichten dialog — so this either navigates or asks
+ * Chats have no URL — they live in the Chats dialog — so this either navigates or asks
  * the top bar, which owns both dialogs, to open the other one.
  */
 function follow(notification: ListNotifications200ResultsItem) {
@@ -126,7 +126,7 @@ watch(notifications, async (loaded) => {
           :class="index === 0 ? 'border-t' : ''"
         >
           <!-- A button rather than a link, because not every notification leads to a URL: a
-               chat opens the Nachrichten dialog instead. Closing on the way out is the point
+               chat opens the Chats dialog instead. Closing on the way out is the point
                either way — you land on the thing it is about, from wherever you were. -->
           <button
             type="button"

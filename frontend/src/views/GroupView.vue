@@ -182,7 +182,7 @@ async function askIntoGroup() {
             @click="askIntoGroup"
           >
             <MessageCircle :stroke-width="1.5" />
-            Unterhaltung beginnen
+            Chat beginnen
           </Button>
 
           <!-- After the group's own action rather than beside it: reporting a group is rare and

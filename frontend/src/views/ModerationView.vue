@@ -90,7 +90,7 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
   writing_thread: 'Thread',
   writing_post: 'Beitrag',
   story_idea: 'Storyidee',
-  chat_group: 'Unterhaltung',
+  chat_group: 'Chat',
   chat_message: 'Nachricht',
   user: 'Mitglied',
 }

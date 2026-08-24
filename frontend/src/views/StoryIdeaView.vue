@@ -164,7 +164,7 @@ async function remove() {
                 @click="askAboutIdea(idea.id)"
               >
                 <MessageCircle :stroke-width="1.5" />
-                Unterhaltung beginnen
+                Chat beginnen
               </Button>
             </template>
           </template>

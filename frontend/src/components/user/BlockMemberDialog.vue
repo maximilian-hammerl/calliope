@@ -51,7 +51,7 @@ async function confirm() {
       <DialogHeader>
         <DialogTitle>{{ props.username }} blockieren?</DialogTitle>
         <DialogDescription>
-          Ihr könnt euch danach nicht mehr einladen — in keine Gruppe und in keine Unterhaltung.
+          Ihr könnt euch danach nicht mehr einladen — in keine Gruppe und in keinen Chat.
         </DialogDescription>
       </DialogHeader>
 
@@ -62,8 +62,8 @@ async function confirm() {
 
         <p>Offene Einladungen zwischen euch werden zurückgezogen.</p>
         <p>
-          Gruppen und Unterhaltungen, in denen ihr beide schon seid, bleiben bestehen — die kannst
-          du selbst verlassen. Geschriebenes bleibt stehen.
+          Gruppen und Chats, in denen ihr beide schon seid, bleiben bestehen — die kannst du selbst
+          verlassen. Geschriebenes bleibt stehen.
         </p>
         <p>Du kannst die Blockierung jederzeit in den Einstellungen aufheben.</p>
       </div>

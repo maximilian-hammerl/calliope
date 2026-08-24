@@ -41,8 +41,7 @@ defineEmits<{ confirmed: [] }>()
         </Alert>
 
         <p>
-          Das lässt sich nicht zurückholen. Unterhaltungen, die daraus entstanden sind, bleiben
-          bestehen.
+          Das lässt sich nicht zurückholen. Chats, die daraus entstanden sind, bleiben bestehen.
         </p>
       </div>
 
