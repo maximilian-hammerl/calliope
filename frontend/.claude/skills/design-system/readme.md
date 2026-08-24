@@ -265,6 +265,15 @@ the entire disclosure, because the alternative is a member finding their words a
 nothing to say anybody else was there. A post edited by an account since deleted falls back to
 plain „· bearbeitet" — there is no longer anybody to name.
 
+**Quoted writing is set as writing, and every text is named where it is said.** In the report
+queue the reported content sits behind a `--line-4` rule in the reading serif, and the reason
+follows in the interface sans as „X meldet: …" — the two differed by one ink step before, which
+is nothing, and an operator who reads them the wrong way round acts on the reporter's words as if
+the reported member had written them. Attribution belongs beside each text rather than pooled in
+a line beneath both: pooling is what left neither with an owner. The serif runs at the row size
+here rather than the reading 17px — this is a three-line quotation in a list, not a reading
+surface. The rule is a hairline and never `--oak`, which already means *selected*.
+
 **A confirmation names whose writing it is, when it is not yours.** „Beitrag von X löschen?" and
 „Du löschst, was jemand anderes geschrieben hat" where somebody administering a group removes a
 member's post; plain „Beitrag löschen?" for your own, and no name where the author's account is

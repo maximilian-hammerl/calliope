@@ -301,6 +301,43 @@ Deno.test("reporting your own account is refused", async () => {
   );
 });
 
+Deno.test("reporting your own writing is refused, whatever kind it is", async () => {
+  const authorCookie = await registerUser(author);
+
+  const group = await createGroup(authorCookie, "Eigene Gruppe", "public");
+  const created = await thread(authorCookie, group.id, "Eigener Thread");
+  const written = await post(authorCookie, group.id, created.id, "Eigener Text.");
+
+  // One check covers every kind because each resolves an author, so all three go through the
+  // same refusal rather than three copies of it.
+  for (const [targetType, targetId] of [
+    ["writing_group", group.id],
+    ["writing_thread", created.id],
+    ["writing_post", written.id],
+  ] as const) {
+    assertEquals(
+      (await report(authorCookie, targetType, targetId)).status,
+      STATUS_CODE.Forbidden,
+      `${targetType} should not be reportable by its own author`,
+    );
+  }
+});
+
+Deno.test("somebody else's writing in the same group is still reportable", async () => {
+  const authorCookie = await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+
+  const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
+  const created = await thread(authorCookie, group.id, "Ein Thread");
+  const written = await post(authorCookie, group.id, created.id, "Etwas Übles.");
+
+  // The refusal must not have been widened into "anything in a group you wrote in".
+  assertEquals(
+    (await report(reporterCookie, "writing_post", written.id)).status,
+    STATUS_CODE.OK,
+  );
+});
+
 Deno.test("POST /api/reports needs a session", async () => {
   const response = await request("POST", "/api/reports", "", {
     targetType: "user",

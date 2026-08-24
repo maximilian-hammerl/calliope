@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     tags: [REPORTS_TAG],
     summary: "Report something to the operators",
     description:
-      "Files a report about a writing group, thread or post, a story idea, a chat or one of its messages, or a member. Only something the reporter can already see may be reported, and anything else answers 404 — so a report cannot be used to find out whether something exists. What the reported thing said is copied into the report by the server, so the report is still readable to an operator after the content is deleted. Reporting the same thing again while the first report is still open rewrites its category and reason rather than filing a second.",
+      "Files a report about a writing group, thread or post, a story idea, a chat or one of its messages, or a member. Only something the reporter can already see may be reported, and anything else answers 404 — so a report cannot be used to find out whether something exists. Reporting one's own account or one's own writing answers 403. What the reported thing said is copied into the report by the server, so the report is still readable to an operator after the content is deleted. Reporting the same thing again while the first report is still open rewrites its category and reason rather than filing a second.",
     operationId: "createReport",
     middleware: authenticated,
     request: {
@@ -72,6 +72,11 @@ export default new OpenAPIHono().openapi(
       case "own_account":
         return c.json(
           { error: "You cannot report your own account" },
+          STATUS_CODE.Forbidden,
+        );
+      case "own_content":
+        return c.json(
+          { error: "You cannot report your own content" },
           STATUS_CODE.Forbidden,
         );
       case undefined:

@@ -167,28 +167,35 @@ const TARGET_LABELS: Record<ListReports200ResultsItem['targetType'], string> = {
                 </CalliopeBadge>
               </div>
 
-              <!-- What the thing said when it was reported, which is what makes a report about
-                   deleted content still judgeable. -->
-              <p class="mt-1.5 line-clamp-3 max-w-[60ch] text-row text-ink-3">
-                {{ report.targetExcerpt }}
-              </p>
+              <!-- Quoted, in the reading serif behind a rule: it is the writing under review,
+                   and an operator must never read it as the reporter's words. -->
+              <div class="mt-2 max-w-[60ch] border-l border-line-4 pl-3">
+                <p class="line-clamp-3 font-serif text-row text-ink-2">
+                  {{ report.targetExcerpt }}
+                </p>
+                <p class="mt-1 text-control text-ink-5">
+                  <template v-if="report.authorUsername">
+                    von
+                    <RouterLink
+                      :to="{ name: 'member', params: { userId: report.authorId } }"
+                      class="underline-offset-[6px] hover:underline"
+                    >
+                      {{ report.authorUsername }}
+                    </RouterLink>
+                  </template>
+                  <template v-else>von einem gelöschten Konto</template>
+                </p>
+              </div>
 
-              <p class="mt-1.5 max-w-[60ch] text-row text-ink-4">
+              <!-- Named where it is said, rather than pooled in a line below both texts. -->
+              <p class="mt-2.5 max-w-[60ch] text-row text-ink-4">
+                <span class="text-ink-5">
+                  {{ report.reporterUsername ?? 'Ein gelöschtes Konto' }} meldet:
+                </span>
                 {{ report.reason }}
               </p>
 
-              <p class="mt-2 text-[12.5px] leading-[1.6] text-ink-5">
-                <template v-if="report.authorUsername">
-                  von
-                  <RouterLink
-                    :to="{ name: 'member', params: { userId: report.authorId } }"
-                    class="underline-offset-[6px] hover:underline"
-                  >
-                    {{ report.authorUsername }}
-                  </RouterLink>
-                </template>
-                <template v-else>von einem gelöschten Konto</template>
-                · gemeldet von {{ report.reporterUsername ?? 'einem gelöschten Konto' }} ·
+              <p class="mt-2 text-control text-ink-5">
                 {{ formatActivityTime(report.createdAt) }}
               </p>
 

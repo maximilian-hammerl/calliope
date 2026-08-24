@@ -173,7 +173,7 @@ async function resolveTarget(
   }
 }
 
-export type ReportRefusal = "not_found" | "own_account";
+export type ReportRefusal = "not_found" | "own_account" | "own_content";
 
 async function insertReport(
   user: User,
@@ -190,6 +190,12 @@ async function insertReport(
 
   if (target === undefined) {
     return "not_found";
+  }
+
+  // Once here rather than per target type: every branch resolves an author, and the interface
+  // already hides the action on one's own writing.
+  if (target.authorId !== null && target.authorId === user.id) {
+    return "own_content";
   }
 
   // Reporting the same thing again rewrites the reason rather than being refused: half a
