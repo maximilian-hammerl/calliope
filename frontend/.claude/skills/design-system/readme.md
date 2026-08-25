@@ -796,10 +796,25 @@ what they do — a bold **B**, an italic *I*, an underlined U, a struck-through 
 Liste, 1. Liste, „“, Code in mono, Link. That follows the rule that an icon accompanies a label
 rather than replacing it, and it is what the placeholder was always going to become.
 
-**Alignment is the one exception**, and only because four spelled-out words are longer than the
-toolbar the rest of the controls fit in: `AlignLeft`, `AlignCenter`, `AlignRight`, `AlignJustify`
-as glyphs, each carrying the German word as its accessible name. Any further control that cannot
-be labelled needs the same argument made out loud, or it is a row of icons by drift.
+**The composer's toolbar is three menus** — Absatz, Zeichen, Einfügen — and nothing else. Twenty-one
+controls do not fit one strip, and a menu affords the whole German word, so the strip's `B`/`I`
+abbreviations and the icon-only alignment exception both went with the regrouping. There is now no
+control in the toolbar itself that carries an icon in place of a label; the bubble below is the one
+exception. Any further one needs that argument made out loud, or it is a row of icons by drift.
+
+**A selection shows a bubble**: the four character marks as icons over the selected text, placed
+*below* it because a phone puts its own selection menu above, and never closer to the screen edge
+than the gutter. **It is the one place an icon replaces a label rather than accompanying it**, and
+the argument is the one the alignment row used to make: the surface floats over the prose it is
+about, so it has to stay small enough not to cover it. Each icon carries the German word as its
+accessible name. Everywhere else — the three menus included — an icon sits *in front of* its label,
+which is what ties a bubble action to its menu entry.
+
+It is a hairline on `--paper-0`, not a floating card: nothing at rest casts a shadow, and a bubble is
+at rest whenever it is visible. It is the fast path and never the complete one — a mark can also be
+set on a collapsed cursor, which no bubble can serve, so the Zeichen menu holds everything the
+bubble does. Which four are in it is a judgement about what people reach for, not a category:
+`Code` is deliberately out.
 
 An active control is `--paper-0` with a 1px `--border-default`, the same treatment an active rail
 row gets; an inactive one is borderless and `--ink-5`. **The row scrolls sideways in its own
@@ -861,6 +876,15 @@ never matched the hairline weight and changed shape from platform to platform.
 | `×` | `X` | delete a step (plain, never red — a step is re-creatable in seconds) |
 | `⌕` | `Search` | search |
 | `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
+| — | `Bold` `Italic` `Underline` `Strikethrough` | the four character marks, in the Zeichen menu and alone in the bubble |
+| — | `Code` | inline code (Zeichen menu only, never the bubble) |
+| — | `Heading2` `Heading3` | Überschrift and Zwischenüberschrift |
+| — | `List` `ListOrdered` | Liste and Nummerierte Liste |
+| — | `Quote` | Zitat |
+| — | `AlignLeft` `AlignCenter` `AlignRight` `AlignJustify` | the four alignments, now labelled words in a menu |
+| — | `Link` | insert or edit a link |
+| — | `Minus` | Trennlinie, which is what a horizontal rule looks like |
+| — | `RemoveFormatting` | Formatierung entfernen |
 | — | `Pencil` | edit an existing thing ("Gruppe bearbeiten", "Umbenennen") |
 | — | `Trash2` | delete a thing for good ("Löschen") |
 | — | `MessageCircle` | start a chat ("Chat beginnen") |

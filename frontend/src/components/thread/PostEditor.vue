@@ -3,19 +3,50 @@
  * The composer's editor. Tiptap over the vocabulary in `lib/document/extensions.ts`, which is the
  * same list the conformance fixture is built on, so what a member can type is what the API accepts.
  *
- * The toolbar keeps the text-label idiom the inert placeholder established (`B`, `I`, „“, Liste)
- * rather than a row of bare icons, because the design system asks that an icon accompany a label
- * rather than replace it. Alignment is the one exception and says why below.
+ * The toolbar is three menus and nothing else. Twenty-one controls do not fit one strip — see #81
+ * — and a menu affords the whole German word, so the strip's abbreviations and the icon-only
+ * alignment exception both went with the regrouping.
  */
 import type { Component } from 'vue'
-import { ref, watch } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 import type { ChainedCommands, Editor } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight } from '@lucide/vue'
+import { BubbleMenuPlugin } from '@tiptap/extension-bubble-menu'
+import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  ChevronDown,
+  Code,
+  Heading2,
+  Heading3,
+  Italic,
+  Link,
+  List,
+  ListOrdered,
+  Minus,
+  Quote,
+  RemoveFormatting,
+  Strikethrough,
+  Underline,
+} from '@lucide/vue'
 import type { PostDocument } from '@/api/models'
 import { DOCUMENT_EXTENSIONS } from '@/lib/document/extensions'
+import { hasRemovableMarks, REMOVABLE_MARKS } from '@/lib/document/removableMarks'
 import { sameDocument } from '@/lib/document/sameDocument'
 import LinkDialog from '@/components/thread/LinkDialog.vue'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const props = defineProps<{
   document: PostDocument
@@ -91,130 +122,163 @@ defineExpose({ focus: () => editor.value?.commands.focus() })
  * Alignment sits in the same list with an icon instead of a label; `separatorBefore` is what
  * puts the hairline in front of it.
  */
-type Tool = {
+/** A control that is on or off. `active` is a predicate because `isActive` is overloaded. */
+type Toggle = {
   title: string
-  /** A short label, styled to show what it does — or an icon where no label is short enough. */
-  label?: string
-  icon?: Component
-  labelClass?: string
-  /** Whether the control is on. A predicate, because `isActive` is overloaded and
-   *  `Parameters<…>` would resolve to only one of its signatures. */
+  icon: Component
   active: (editor: Editor) => boolean
   apply: (chain: ChainedCommands) => ChainedCommands
-  separatorBefore?: boolean
+  /**
+   * Also offered in the selection bubble. Which of them are is a judgement about what people reach
+   * for on a selection, not a category — `Durchgestrichen` is in and `Code` is out. Do not "tidy"
+   * it into symmetry.
+   */
+  inBubble?: true
 }
 
-const TOOLS: readonly Tool[] = [
+const CHARACTER: readonly Toggle[] = [
   {
     title: 'Fett',
-    label: 'B',
-    labelClass: 'font-semibold',
+    icon: Bold,
+    inBubble: true,
     active: (e) => e.isActive('bold'),
     apply: (c) => c.toggleBold(),
   },
   {
     title: 'Kursiv',
-    label: 'I',
-    labelClass: 'italic',
+    icon: Italic,
+    inBubble: true,
     active: (e) => e.isActive('italic'),
     apply: (c) => c.toggleItalic(),
   },
   {
     title: 'Unterstrichen',
-    label: 'U',
-    labelClass: 'underline',
+    icon: Underline,
+    inBubble: true,
     active: (e) => e.isActive('underline'),
     apply: (c) => c.toggleUnderline(),
   },
   {
     title: 'Durchgestrichen',
-    label: 'S',
-    labelClass: 'line-through',
+    icon: Strikethrough,
+    inBubble: true,
     active: (e) => e.isActive('strike'),
     apply: (c) => c.toggleStrike(),
   },
+  { title: 'Code', icon: Code, active: (e) => e.isActive('code'), apply: (c) => c.toggleCode() },
+]
+
+const BUBBLE = CHARACTER.filter((toggle) => toggle.inBubble === true)
+
+const PARAGRAPH: readonly Toggle[] = [
   {
     title: 'Überschrift',
-    label: 'H2',
+    icon: Heading2,
     active: (e) => e.isActive('heading', { level: 2 }),
     apply: (c) => c.toggleHeading({ level: 2 }),
   },
   {
     title: 'Zwischenüberschrift',
-    label: 'H3',
+    icon: Heading3,
     active: (e) => e.isActive('heading', { level: 3 }),
     apply: (c) => c.toggleHeading({ level: 3 }),
   },
   {
     title: 'Liste',
-    label: 'Liste',
+    icon: List,
     active: (e) => e.isActive('bulletList'),
     apply: (c) => c.toggleBulletList(),
   },
   {
     title: 'Nummerierte Liste',
-    label: '1. Liste',
+    icon: ListOrdered,
     active: (e) => e.isActive('orderedList'),
     apply: (c) => c.toggleOrderedList(),
   },
   {
     title: 'Zitat',
-    label: '\u201e\u201c',
+    icon: Quote,
     active: (e) => e.isActive('blockquote'),
     apply: (c) => c.toggleBlockquote(),
   },
-  {
-    title: 'Code',
-    label: 'Code',
-    labelClass: 'font-mono',
-    active: (e) => e.isActive('code'),
-    apply: (c) => c.toggleCode(),
-  },
-  // The one place an icon carries no label: four alignments spelled out would be longer than the
-  // toolbar the rest of the controls fit in. The accessible name is the German word.
-  {
-    title: 'Linksbündig',
-    icon: AlignLeft,
-    active: (e) => e.isActive({ textAlign: 'left' }),
-    apply: (c) => c.setTextAlign('left'),
-    separatorBefore: true,
-  },
-  {
-    title: 'Zentriert',
-    icon: AlignCenter,
-    active: (e) => e.isActive({ textAlign: 'center' }),
-    apply: (c) => c.setTextAlign('center'),
-  },
-  {
-    title: 'Rechtsbündig',
-    icon: AlignRight,
-    active: (e) => e.isActive({ textAlign: 'right' }),
-    apply: (c) => c.setTextAlign('right'),
-  },
-  {
-    title: 'Blocksatz',
-    icon: AlignJustify,
-    active: (e) => e.isActive({ textAlign: 'justify' }),
-    apply: (c) => c.setTextAlign('justify'),
-  },
 ]
 
-function isActive(tool: Tool): boolean {
+/** One of four rather than four toggles, which is what a radio group is for. */
+const ALIGNMENTS = [
+  { title: 'Linksbündig', value: 'left', icon: AlignLeft },
+  { title: 'Zentriert', value: 'center', icon: AlignCenter },
+  { title: 'Rechtsbündig', value: 'right', icon: AlignRight },
+  { title: 'Blocksatz', value: 'justify', icon: AlignJustify },
+] as const
+
+function isActive(toggle: Toggle): boolean {
   const instance = editor.value
-  return instance !== undefined && tool.active(instance)
+  return instance !== undefined && toggle.active(instance)
+}
+
+function currentAlignment(): string | undefined {
+  const instance = editor.value
+  if (instance === undefined) return undefined
+  return ALIGNMENTS.find((alignment) => instance.isActive({ textAlign: alignment.value }))?.value
+}
+
+function setAlignment(value: unknown) {
+  if (typeof value === 'string') editor.value?.chain().focus().setTextAlign(value).run()
+}
+
+function insertRule() {
+  editor.value?.chain().focus().setHorizontalRule().run()
 }
 
 /**
- * Whether the selection carries styling. A paste is the only way to get any today, so an enabled
- * control is also how a member finds out their paste brought some with it.
+ * The bubble's element has to exist before the plugin can be given it, and `useEditor` builds the
+ * editor in `onMounted` — so this waits for the editor rather than for a hook order.
  */
+const bubble = useTemplateRef<HTMLElement>('bubble')
+
+// Tiptap's editor ref re-triggers on every transaction, so the watcher fires far more than once.
+let bubbleRegistered = false
+
+watch(
+  editor,
+  (instance) => {
+    const element = bubble.value
+    if (bubbleRegistered || instance === undefined || element === null) return
+    bubbleRegistered = true
+    instance.registerPlugin(
+      BubbleMenuPlugin({
+        editor: instance,
+        element,
+        pluginKey: 'postEditorBubble',
+        options: {
+          // Below the selection, not the library's default of above: a phone puts its own
+          // selection menu above the text, and the two would cover each other.
+          placement: 'bottom',
+          // Never closer to the edge than the phone gutter, or it reads as a mistake.
+          shift: { padding: 18 },
+        },
+      }),
+    )
+  },
+  // `post`, or this runs before the render that assigns the template ref and the element is null —
+  // which leaves the bubble sitting open under the editor with nothing selected.
+  { flush: 'post' },
+)
+
 function hasStyling(): boolean {
-  return editor.value?.isActive('textStyle') ?? false
+  const instance = editor.value
+  return instance !== undefined && hasRemovableMarks(instance.state)
 }
 
-/** Clears the five `textStyle` attributes and nothing else — bold, italic and links survive. */
 function removeStyling() {
-  editor.value?.chain().focus().unsetMark('textStyle', { extendEmptyMarkRange: true }).run()
+  const instance = editor.value
+  if (instance === undefined) return
+
+  let chain = instance.chain().focus()
+  for (const mark of REMOVABLE_MARKS) {
+    chain = chain.unsetMark(mark, { extendEmptyMarkRange: true })
+  }
+  chain.run()
 }
 
 const linkDialogOpen = ref<boolean>(false)
@@ -245,10 +309,10 @@ function removeLink() {
   editor.value?.chain().focus().extendMarkRange('link').unsetLink().run()
 }
 
-function apply(tool: Tool) {
+function apply(toggle: Toggle) {
   const instance = editor.value
   if (instance === undefined) return
-  tool.apply(instance.chain().focus()).run()
+  toggle.apply(instance.chain().focus()).run()
 }
 </script>
 
@@ -276,60 +340,118 @@ function apply(tool: Tool) {
          second row would push the writing off a short screen. -->
     <div
       v-if="editor"
-      class="mt-1.5 -mx-1 flex items-center gap-0.5 overflow-x-auto border-t border-line-1 px-1 pt-[11px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      class="mt-1.5 -mx-1 flex items-center gap-0.5 border-t border-line-1 px-1 pt-[11px]"
     >
-      <template v-for="tool in TOOLS" :key="tool.title">
-        <span v-if="tool.separatorBefore" class="mx-1 h-4 w-px shrink-0 bg-line-3" />
-
-        <button
-          type="button"
-          :title="tool.title"
-          :aria-label="tool.title"
-          :aria-pressed="isActive(tool)"
-          class="flex min-h-11 shrink-0 items-center rounded-lg border px-2 text-[12.5px] md:min-h-8"
-          :class="[
-            tool.labelClass,
-            isActive(tool)
-              ? 'border-line-4 bg-paper-0 text-ink-1'
-              : 'border-transparent text-ink-5 hover:text-ink-2',
-          ]"
-          @click="apply(tool)"
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          class="flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 text-[12.5px] text-ink-5 hover:text-ink-2 data-[state=open]:border-line-4 data-[state=open]:bg-paper-0 data-[state=open]:text-ink-1 md:min-h-8"
         >
-          <component :is="tool.icon" v-if="tool.icon" :size="14" :stroke-width="1.5" />
-          <template v-else>{{ tool.label }}</template>
-        </button>
-      </template>
+          Absatz
+          <ChevronDown :size="14" :stroke-width="1.5" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top">
+          <DropdownMenuCheckboxItem
+            v-for="toggle in PARAGRAPH"
+            :key="toggle.title"
+            :model-value="isActive(toggle)"
+            @update:model-value="apply(toggle)"
+          >
+            <component :is="toggle.icon" :size="16" :stroke-width="1.5" aria-hidden="true" />
+            {{ toggle.title }}
+          </DropdownMenuCheckboxItem>
 
-      <!-- Not in `TOOLS`: it opens a dialog for the address, so it is not a chainable toggle. -->
+          <DropdownMenuSeparator />
+
+          <DropdownMenuRadioGroup
+            :model-value="currentAlignment()"
+            @update:model-value="setAlignment"
+          >
+            <DropdownMenuRadioItem
+              v-for="alignment in ALIGNMENTS"
+              :key="alignment.value"
+              :value="alignment.value"
+            >
+              <component :is="alignment.icon" :size="16" :stroke-width="1.5" aria-hidden="true" />
+              {{ alignment.title }}
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          class="flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 text-[12.5px] text-ink-5 hover:text-ink-2 data-[state=open]:border-line-4 data-[state=open]:bg-paper-0 data-[state=open]:text-ink-1 md:min-h-8"
+        >
+          Zeichen
+          <ChevronDown :size="14" :stroke-width="1.5" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top">
+          <DropdownMenuCheckboxItem
+            v-for="toggle in CHARACTER"
+            :key="toggle.title"
+            :model-value="isActive(toggle)"
+            @update:model-value="apply(toggle)"
+          >
+            <component :is="toggle.icon" :size="16" :stroke-width="1.5" aria-hidden="true" />
+            {{ toggle.title }}
+          </DropdownMenuCheckboxItem>
+
+          <DropdownMenuSeparator />
+
+          <!-- #81 adds the five pickers above this line. -->
+          <DropdownMenuItem :disabled="!hasStyling()" @select="removeStyling()">
+            <component :is="RemoveFormatting" :size="16" :stroke-width="1.5" aria-hidden="true" />
+            Formatierung entfernen
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          class="flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-transparent px-2 text-[12.5px] text-ink-5 hover:text-ink-2 data-[state=open]:border-line-4 data-[state=open]:bg-paper-0 data-[state=open]:text-ink-1 md:min-h-8"
+        >
+          Einfügen
+          <ChevronDown :size="14" :stroke-width="1.5" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top">
+          <DropdownMenuItem @select="openLinkDialog()">
+            <component :is="Link" :size="16" :stroke-width="1.5" aria-hidden="true" />
+            Link
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="insertRule()">
+            <component :is="Minus" :size="16" :stroke-width="1.5" aria-hidden="true" />
+            Trennlinie
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+
+    <!--
+      Shown by the plugin only while text is selected, which is why it is the fast path and not the
+      complete one: a mark can also be set on a collapsed cursor, and that case has no bubble, so
+      `Zeichen` above has to hold everything this does. A hairline on paper rather than a floating
+      card — nothing at rest casts a shadow, and this is at rest whenever it is visible.
+    -->
+    <div
+      ref="bubble"
+      class="invisible absolute flex items-center gap-0.5 rounded-lg border border-line-4 bg-paper-0 px-1 py-1"
+    >
       <button
+        v-for="toggle in BUBBLE"
+        :key="toggle.title"
         type="button"
-        title="Link"
-        aria-label="Link"
-        :aria-pressed="editor.isActive('link')"
-        class="flex min-h-11 shrink-0 items-center rounded-lg border px-2 text-[12.5px] md:min-h-8"
+        :title="toggle.title"
+        :aria-label="toggle.title"
+        :aria-pressed="isActive(toggle)"
+        class="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded border px-2 text-[12.5px] md:min-h-8 md:min-w-9"
         :class="
-          editor.isActive('link')
-            ? 'border-line-4 bg-paper-0 text-ink-1'
+          isActive(toggle)
+            ? 'border-line-4 bg-paper-2 text-ink-1'
             : 'border-transparent text-ink-5 hover:text-ink-2'
         "
-        @click="openLinkDialog()"
+        @click="apply(toggle)"
       >
-        Link
-      </button>
-
-      <!-- Also not in `TOOLS`: an action rather than a state, so it takes `disabled` rather than
-           the `aria-pressed` every toggle above carries. -->
-      <span class="mx-1 h-4 w-px shrink-0 bg-line-3" />
-
-      <button
-        type="button"
-        title="Formatierung entfernen"
-        aria-label="Formatierung entfernen"
-        :disabled="!hasStyling()"
-        class="flex min-h-11 shrink-0 items-center rounded-lg border border-transparent px-2 text-[12.5px] text-ink-5 hover:text-ink-2 disabled:text-ink-6 disabled:hover:text-ink-6 md:min-h-8"
-        @click="removeStyling()"
-      >
-        Formatierung entfernen
+        <component :is="toggle.icon" :size="16" :stroke-width="1.5" aria-hidden="true" />
       </button>
     </div>
 

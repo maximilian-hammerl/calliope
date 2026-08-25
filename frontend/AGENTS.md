@@ -110,7 +110,10 @@ After any `add`:
 
 ```bash
 git diff src/assets/main.css   # expect no change; restore the font import if there is one
-grep -rc shadow-xs src/components/ui/                                                  # expect 0 everywhere
+# Every shadow, not only shadow-xs: `shadow-md` on the menu and select panels survived a
+# year of this check because it only ever looked for one class name. Dialog keeps its own.
+grep -rl 'shadow-' src/components/ui/ | grep -v dialog                                 # expect no output
+grep -rl 'rounded-md' src/components/ui/dropdown-menu/ src/components/ui/select/        # expect no output
 grep -c border-line-5 src/components/ui/button/index.ts                                # expect 1
 grep -c secondary src/components/ui/button/index.ts                                    # expect 0
 grep -c rounded-md src/components/ui/button/index.ts src/components/ui/input/Input.vue src/components/ui/textarea/Textarea.vue src/components/ui/select/SelectTrigger.vue  # expect 0
