@@ -36,6 +36,12 @@ Each project carries its own conventions; read the one you are working in:
   The two differ: in the backend it points at the project root, in the frontend at `src/`.
 - Run `validate:check` in whichever project you changed before considering anything done.
 
+## The issue tracker
+
+Work is tracked as GitHub issues, and **a milestone means accepted**: `status: proposed` and a
+milestone are mutually exclusive, because the label is what says a thing has not been decided yet.
+Putting an issue into `v1` or `v2` is that decision, so the label comes off in the same edit.
+
 ## How the pieces fit
 
 The backend serves everything under `/api`, and Caddy serves the built frontend from the same
