@@ -59,8 +59,16 @@ export async function resolveVisibleTarget(
   targetType: ReportTargetType,
   targetId: string,
   options: { withExcerpt?: boolean } = {},
-): Promise<VisibleTargetWithExcerpt | undefined> {
+): Promise<(VisibleTarget & { excerpt?: string }) | undefined> {
   const withExcerpt = options.withExcerpt ?? false;
+
+  /**
+   * No `excerpt` key at all when nobody asked for one. Returning `excerpt: ""` typed it away behind
+   * the overload while leaving an empty string on the object — which reads as "it said nothing"
+   * to anything that logs or serialises the result.
+   */
+  const seen = (authorId: string | null, text: () => string) =>
+    withExcerpt ? { authorId, excerpt: excerpt(text()) } : { authorId };
 
   switch (targetType) {
     case "writing_group": {
@@ -70,7 +78,7 @@ export async function resolveVisibleTarget(
       );
       return group === undefined
         ? undefined
-        : { excerpt: excerpt(group.title), authorId: group.createdBy };
+        : seen(group.createdBy, () => group.title);
     }
 
     case "writing_thread": {
@@ -90,7 +98,7 @@ export async function resolveVisibleTarget(
       );
       return group === undefined
         ? undefined
-        : { excerpt: excerpt(thread.title), authorId: thread.createdBy };
+        : seen(thread.createdBy, () => thread.title);
     }
 
     case "writing_post": {
@@ -125,21 +133,21 @@ export async function resolveVisibleTarget(
       );
       return group === undefined
         ? undefined
-        : { excerpt: excerpt(post.text ?? ""), authorId: post.createdBy };
+        : seen(post.createdBy, () => post.text ?? "");
     }
 
     case "story_idea": {
       const idea = await StoryIdeaService.selectStoryIdeaGate(targetId);
       return idea === undefined
         ? undefined
-        : { excerpt: excerpt(idea.title), authorId: idea.createdBy };
+        : seen(idea.createdBy, () => idea.title);
     }
 
     case "chat_group": {
       const chat = await ChatGroupService.selectChatGroup(user, targetId);
       return chat === undefined
         ? undefined
-        : { excerpt: excerpt(chat.title ?? ""), authorId: chat.createdBy };
+        : seen(chat.createdBy, () => chat.title ?? "");
     }
 
     case "chat_message": {
@@ -159,7 +167,7 @@ export async function resolveVisibleTarget(
       );
       return chat === undefined
         ? undefined
-        : { excerpt: excerpt(message.text), authorId: message.createdBy };
+        : seen(message.createdBy, () => message.text);
     }
 
     case "user": {
@@ -167,7 +175,7 @@ export async function resolveVisibleTarget(
       // The reported account answers for itself.
       return profile === undefined
         ? undefined
-        : { excerpt: excerpt(profile.username), authorId: profile.id };
+        : seen(profile.id, () => profile.username);
     }
 
     default:

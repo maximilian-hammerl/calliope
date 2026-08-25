@@ -87,8 +87,7 @@ export default new OpenAPIHono().openapi(
         limit,
         offset: 0,
         // Most recently active first: the closest thing to relevance without ranking.
-        sortAttribute: "writingGroup.lastActivityAt",
-        sortOrder: "desc",
+        sort: [{ attribute: "writingGroup.lastActivityAt", order: "desc" }],
         // Search looks everywhere the reader may look, which is what the default narrows.
         membership: "any",
         // Search ranks by relevance to the term, not by what the reader keeps.
@@ -98,8 +97,7 @@ export default new OpenAPIHono().openapi(
         search,
         limit,
         offset: 0,
-        sortAttribute: "writingThread.lastActivityAt",
-        sortOrder: "desc",
+        sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
       }),
       StoryIdeaService.listStoryIdeas({
         search,
@@ -107,8 +105,7 @@ export default new OpenAPIHono().openapi(
         offset: 0,
         readerId: user.id,
         // Newest first, as the board sorts: an idea has no activity to be recent by.
-        sortAttribute: "storyIdea.createdAt",
-        sortOrder: "desc",
+        sort: [{ attribute: "storyIdea.createdAt", order: "desc" }],
         // Unlike the board, neither the reader's own ideas nor closed ones are held back —
         // somebody searching for an idea wants the one they mean, and both carry a label.
         status: "any",
@@ -121,8 +118,7 @@ export default new OpenAPIHono().openapi(
         search,
         limit,
         offset: 0,
-        sortAttribute: "user.username",
-        sortOrder: "asc",
+        sort: [{ attribute: "user.username", order: "asc" }],
         hiddenUserIds: blockedIds,
       }),
     ]);

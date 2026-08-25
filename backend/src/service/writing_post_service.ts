@@ -11,9 +11,8 @@ import {
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
 import {
-  FAVOURITE_COLUMN,
   type FavouriteFilter,
-  IS_FAVOURITE,
+  withFavourite,
 } from "@/src/service/favourite_target.ts";
 
 export type Post =
@@ -59,22 +58,11 @@ function postWithAuthorById(
   return executor
     .selectFrom("writingPost")
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    // The acting member's own favourite: writing or editing a post changes nothing about whether
-    // they keep it, and the response carries the flag like every other post does.
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.writing_post}`,
-            "=",
-            "writingPost.id",
-          )
-          .on("favourite.userId", "=", viewerId),
+    .$call((builder) =>
+      withFavourite(builder, "writing_post", "writingPost.id", viewerId)
     )
     .select((eb) => [
       ...SELECTED_COLUMNS,
-      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
       // Cast rather than selected plainly: the column's generated type is `unknown`, and
       // `DOCUMENT_SCHEMA` is what says what may be in there.
       eb.ref("writingPost.document").$castTo<PostDocument>().as("document"),
@@ -155,21 +143,11 @@ function postsWithAuthor(
 ) {
   return readableBy(viewerId, executor)
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    // The reader's own favourite, bound to their id so no query here can see another member's.
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.writing_post}`,
-            "=",
-            "writingPost.id",
-          )
-          .on("favourite.userId", "=", viewerId),
+    .$call((builder) =>
+      withFavourite(builder, "writing_post", "writingPost.id", viewerId)
     )
     .select((eb) => [
       ...SELECTED_COLUMNS,
-      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
       // Cast rather than selected plainly: the column's generated type is `unknown`, and
       // `DOCUMENT_SCHEMA` is what says what may be in there.
       eb.ref("writingPost.document").$castTo<PostDocument>().as("document"),

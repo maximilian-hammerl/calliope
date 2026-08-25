@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -80,7 +81,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { author, ...query } = c.req.valid("json");
+    const { author, ...query } = listQuery(c.req.valid("json"));
     const page = await StoryIdeaService.listStoryIdeas({
       ...query,
       readerId: c.get("user").id,

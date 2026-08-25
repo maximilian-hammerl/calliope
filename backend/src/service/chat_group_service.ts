@@ -13,9 +13,9 @@ import {
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
 import {
-  FAVOURITE_COLUMN,
   type FavouriteFilter,
-  IS_FAVOURITE,
+  FAVOURITES_FIRST,
+  withFavourite,
 } from "@/src/service/favourite_target.ts";
 
 export type ChatGroup =
@@ -67,16 +67,8 @@ function chatsOf(user: User) {
 function chatsWithDetail(user: User) {
   return chatsOf(user)
     .leftJoin("user", "user.id", "chatGroup.createdBy")
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.chat_group}`,
-            "=",
-            "chatGroup.id",
-          )
-          .on("favourite.userId", "=", user.id),
+    .$call((builder) =>
+      withFavourite(builder, "chat_group", "chatGroup.id", user.id)
     )
     .select((eb) => [
       ...SELECTED_COLUMNS,
@@ -110,7 +102,6 @@ function chatsWithDetail(user: User) {
           .select((inner) => inner.fn.countAll<number>().as("count")),
         eb.lit(0),
       ).as("unreadMessages"),
-      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
     ]);
 }
 
@@ -134,8 +125,7 @@ function listChatGroups(
         (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
       ),
     query,
-    // Favourites first, whatever the reader sorted by.
-    { firstDescending: IS_FAVOURITE },
+    FAVOURITES_FIRST,
   );
 }
 

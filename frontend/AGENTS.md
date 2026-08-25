@@ -490,10 +490,11 @@ a call site; it was copied by hand once already.
   still take their label from `favouriteToggle()`, and carry the 44px rule themselves.
 - **`FilterStrip` on every list that shows a favouritable kind**, the idea board included on „Meine
   Storyideen", where the read and status filters are hidden: your own ideas cannot be unread.
-- **Four marks on `CalliopeBadge`'s `mark` variant** — `FavouriteMark`, `ReadMark`, `ClosedMark`,
-  `VisibilityMark` — so a glyph chip keeps the border, radius and 21px height of the words beside
-  it. Only `VisibilityMark` renders for both its states. Page headings keep the word, which is what
-  teaches the mark.
+- **`StateMark` owns the chrome; the four marks own an icon and a label.** The 13px size, the
+  `mark` variant and the accessible name live in one place — these are the only icons here that are
+  not `aria-hidden`, which is the part worth forgetting. `FavouriteMark`, `ReadMark`, `ClosedMark`
+  and `VisibilityMark` are three lines each; only the last renders for both its states. Page
+  headings keep the word, which is what teaches the mark.
 - **A mark is 25px where the word was 60**, which is why it exists: as a word it pushed the chats
   rail's unread count onto a second line, and the ten-tab strip and search popover could not carry
   it at all.

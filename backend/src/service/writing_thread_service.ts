@@ -3,10 +3,7 @@ import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
-import {
-  FAVOURITE_COLUMN,
-  IS_FAVOURITE,
-} from "@/src/service/favourite_target.ts";
+import { IS_FAVOURITE, withFavourite } from "@/src/service/favourite_target.ts";
 import {
   type ListQuery,
   type ListResults,
@@ -73,19 +70,8 @@ function threadsWithAuthor(executor: typeof db | Transaction = db) {
  */
 function threadsForReader(readerId: string) {
   return threadsWithAuthor()
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.writing_thread}`,
-            "=",
-            "writingThread.id",
-          )
-          .on("favourite.userId", "=", readerId),
-    )
-    .select((eb) =>
-      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE)
+    .$call((builder) =>
+      withFavourite(builder, "writing_thread", "writingThread.id", readerId)
     );
 }
 

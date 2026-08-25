@@ -13,9 +13,9 @@ import {
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
 import {
-  FAVOURITE_COLUMN,
   type FavouriteFilter,
-  IS_FAVOURITE,
+  FAVOURITES_FIRST,
+  withFavourite,
 } from "@/src/service/favourite_target.ts";
 
 export type StoryIdea =
@@ -145,18 +145,8 @@ function withAuthor(readerId: string) {
           .onRef("storyIdeaReader.storyIdeaId", "=", "storyIdea.id")
           .on("storyIdeaReader.userId", "=", readerId),
     )
-    // And the reader's own favourite, which since the split is a separate fact from having read
-    // it: favouriting an unread idea leaves it unread.
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.story_idea}`,
-            "=",
-            "storyIdea.id",
-          )
-          .on("favourite.userId", "=", readerId),
+    .$call((builder) =>
+      withFavourite(builder, "story_idea", "storyIdea.id", readerId)
     )
     .select((eb) => [
       ...SELECTED_COLUMNS,
@@ -166,7 +156,6 @@ function withAuthor(readerId: string) {
       eb("storyIdeaReader.userId", "is not", null).$castTo<boolean>().as(
         "isRead",
       ),
-      eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE),
     ]);
 }
 
@@ -275,11 +264,7 @@ function filtered(query: StoryIdeaFilters) {
 function listStoryIdeas(
   query: ListQuery & StoryIdeaFilters,
 ): Promise<ListResults<StoryIdea>> {
-  // Favourites first, whatever the reader sorted by — a term before the sort rather than one of
-  // its options.
-  return listResultsWithCount(filtered(query), query, {
-    firstDescending: IS_FAVOURITE,
-  });
+  return listResultsWithCount(filtered(query), query, FAVOURITES_FIRST);
 }
 /**
  * Whether the idea exists and who wrote it — which is all five of the callers that use this as a
@@ -449,8 +434,7 @@ async function selectCarousel(
     ...set,
     limit: 1,
     offset: 0,
-    sortAttribute: "storyIdea.id",
-    sortOrder: "desc",
+    sort: [{ attribute: "storyIdea.id", order: "desc" }],
   });
 
   // Read state is ignored for the anchor alone: marking the idea on screen as read must not

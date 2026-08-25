@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { NOTIFICATION_RESPONSE } from "@/src/http/response_schema.ts";
 import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -61,7 +62,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const user = c.get("user");
     const page = await NotificationService.listNotifications(user.id, {
-      ...c.req.valid("json"),
+      ...listQuery(c.req.valid("json")),
       hiddenActorIds: await BlockService.selectBlockedIds(user.id),
     });
 

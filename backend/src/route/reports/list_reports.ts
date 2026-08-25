@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
 import { REPORT_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
@@ -98,7 +99,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await ReportService.listReports(c.req.valid("json"));
+    const page = await ReportService.listReports(
+      listQuery(c.req.valid("json")),
+    );
     return c.json(page, STATUS_CODE.OK);
   },
 );

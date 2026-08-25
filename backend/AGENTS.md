@@ -64,10 +64,10 @@ uuid, not which entry is wrong.
 `BEFORE UPDATE` trigger overwrites any value a fixture writes, and the cascade from inserting posts
 stamps every row with the seeding moment. All 19 threads and all 3 chats therefore share one
 timestamp and the 17 groups share two, so „Gruppen entdecken" pages 13 public groups over a tie of
-9 — a boundary with no defined order, which is the same trap the post and story-idea timestamps
-were staggered to avoid. Those two are staggered, and they are where a favourite visibly moves
-something. Fixing the rest means disabling a trigger for the seed; the deeper fix is a unique
-tiebreak in `listResultsWithCount`, which has none.
+9. Paging over that tie is stable regardless — `listResultsWithCount` ends every list with `id` —
+but a *favourite* still cannot be seen to move a group, thread or chat, because everything around
+it ties. Posts and story ideas are staggered, and they are where the ordering shows. Spreading the
+rest means disabling a trigger for the seed.
 
 **The fixtures live in `seed/`, one file per kind**, with `seed.ts` keeping the guard, the
 cleanup and the order: `accounts.ts`, `writing_groups.ts`, `story_ideas.ts`, `chats.ts`,
@@ -276,6 +276,14 @@ validation entirely and the schema's defaults never apply.
 
 `sortAttribute` must be an enum derived from the table's own columns, because its value
 reaches `dynamic.ref`. An unchecked value there is an injection.
+
+**The wire carries one attribute and one order; `ListQuery` carries a list of terms.** Nothing has
+asked to sort by two things, so the request keeps the pair, and routes pass the body through
+`listQuery()` — the one place the two shapes meet. `listResultsWithCount` then orders by whatever
+an endpoint puts first, the member's own choice, and **`id` last**. That final term is why paging is
+safe: without it a list ordered on a repeated value has no defined order at a page boundary, so one
+row can appear on two pages and another on none. Every list selects `id`, and Postgres resolves a
+bare name against output columns first, so it needs no qualifying.
 
 Where an endpoint sorts by a *joined* table's column — `QUERY /groups` takes `invitedAt`, which
 belongs to `user_in_writing_group` and not to the group — the `.keyof().extract()` form cannot
@@ -730,16 +738,22 @@ argument that makes `ReportDialog` one component for seven kinds.
 - **`favourite` carries no `target_type` column**, unlike `report`, whose references are `SET NULL`
   and so leave a row naming nothing. These cascade, so the kind is readable off the data and
   survives only as request vocabulary: `FAVOURITE_COLUMN` maps it to the column to write.
-- **`favourite_target.ts` is a leaf module.** Importing its constants from `favourite_service`
-  closed a circle, and TypeScript answers that with `any` — a join column was unchecked rather than
-  an error, which nothing about it looked like.
+- **`favourite_target.ts` imports nothing from `service/`**, and says so at the top. Every service
+  that joins `favourite` imports it while `favourite_service` reaches them back through
+  `visible_target`, so an import this way closes a cycle — which TypeScript answers with `any`,
+  leaving a join column unchecked rather than erroring. Deno's lint has no cycle rule.
+- **`withFavourite()` is the only place the join is written.** Its
+  `.on("favourite.userId", "=", readerId)` is what scopes a favourite to the member reading; spread
+  over five services it was eight copies, any of which could have lost that line and reported
+  everybody's favourites as the reader's own. The helper is generic over the builder, so Kysely
+  cannot resolve its references and they are asserted inside — the price of writing it once.
 - **Setting one is visibility-checked, clearing one is not.** A member who has lost access to
   something they favourited must still be able to remove the mark. `resolveVisibleTarget` is shared
   with reporting, so the rules cannot drift. Favouriting your own thing is allowed.
-- **Ordering is one term, `ListOrdering.firstDescending`**, passed by the endpoint and never by a
-  request, which keeps it out of `dynamic.ref`'s injection surface. Posts do **not** pass it: a
-  thread is read in the order it was written. The thread strip writes its own, not being a list
-  endpoint.
+- **Favourites-first is a `SortTerm`**, `FAVOURITES_FIRST`, handed to `listResultsWithCount` as a
+  variadic argument ahead of the request's own. It never comes from a request, which keeps it out
+  of `dynamic.ref`'s injection surface. Posts do **not** pass it: a thread is read in the order it
+  was written. The thread strip writes its own, not being a list endpoint.
 
 **One rule, two projections.** Joining `favourite` into the group's visibility check would have put
 it on all seventeen callers, sixteen of which only ask yes or no — so `selectVisibleWritingGroup` is

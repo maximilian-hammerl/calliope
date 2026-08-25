@@ -1,8 +1,7 @@
-import type { ExpressionBuilder, Selectable } from "kysely";
+import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
-  DB,
   StoryLanguage,
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
@@ -19,9 +18,9 @@ import {
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
 import {
-  FAVOURITE_COLUMN,
   type FavouriteFilter,
-  IS_FAVOURITE,
+  FAVOURITES_FIRST,
+  withFavourite,
 } from "@/src/service/favourite_target.ts";
 
 export type WritingGroup =
@@ -226,14 +225,6 @@ const OWN_MEMBERSHIP_COLUMNS = [
 ] as const;
 
 /**
- * The reader's own favourite as a flag rather than the row. `$castTo` because `IS NOT NULL`
- * already *is* a boolean in Postgres and only Kysely's type needs correcting — the same reason
- * `report`'s `targetExists` needs it.
- */
-const favouriteColumn = (eb: ExpressionBuilder<DB, "favourite">) =>
-  eb("favourite.id", "is not", null).$castTo<boolean>().as(IS_FAVOURITE);
-
-/**
  * Whether the member may see the group, and their own standing in it — **not** the whole row.
  * Sixteen of the seventeen callers use this as a gate, and a group carries a synopsis of up to
  * eight thousand characters. `selectWritingGroupForReader` is the full read; both build on
@@ -271,22 +262,13 @@ async function selectWritingGroupForReader(
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(
-            `favourite.${FAVOURITE_COLUMN.writing_group}`,
-            "=",
-            "writingGroup.id",
-          )
-          .on("favourite.userId", "=", user.id),
+    .$call((builder) =>
+      withFavourite(builder, "writing_group", "writingGroup.id", user.id)
     )
-    .select((eb) => [
+    .select([
       ...SELECTED_COLUMNS,
       AUTHOR_COLUMN,
       ...OWN_MEMBERSHIP_COLUMNS,
-      favouriteColumn(eb),
     ])
     .where("writingGroup.id", "=", writingGroupId)
     .executeTakeFirst();
@@ -301,22 +283,13 @@ function listVisibleWritingGroups(
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
     visibleToUser(user)
-      .leftJoin(
-        "favourite",
-        (join) =>
-          join
-            .onRef(
-              `favourite.${FAVOURITE_COLUMN.writing_group}`,
-              "=",
-              "writingGroup.id",
-            )
-            .on("favourite.userId", "=", user.id),
+      .$call((builder) =>
+        withFavourite(builder, "writing_group", "writingGroup.id", user.id)
       )
-      .select((eb) => [
+      .select([
         ...SELECTED_COLUMNS,
         AUTHOR_COLUMN,
         ...OWN_MEMBERSHIP_COLUMNS,
-        favouriteColumn(eb),
       ])
       // Only the reader's own favourites, which narrows like every other filter here.
       .$if(
@@ -362,9 +335,7 @@ function listVisibleWritingGroups(
           ),
       ),
     query,
-    // Favourites first, whatever the reader sorted by. A first term rather than a sort option:
-    // it is not one of the ways to order a list, it is what comes before them.
-    { firstDescending: IS_FAVOURITE },
+    FAVOURITES_FIRST,
   );
 }
 
@@ -442,22 +413,13 @@ async function updateWritingGroup(
             .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
             .on("userInWritingGroup.userId", "=", changedBy),
       )
-      .leftJoin(
-        "favourite",
-        (join) =>
-          join
-            .onRef(
-              `favourite.${FAVOURITE_COLUMN.writing_group}`,
-              "=",
-              "writingGroup.id",
-            )
-            .on("favourite.userId", "=", changedBy),
+      .$call((builder) =>
+        withFavourite(builder, "writing_group", "writingGroup.id", changedBy)
       )
-      .select((eb) => [
+      .select([
         ...SELECTED_COLUMNS,
         AUTHOR_COLUMN,
         ...OWN_MEMBERSHIP_COLUMNS,
-        favouriteColumn(eb),
       ])
       .where("writingGroup.id", "=", updated.id)
       .executeTakeFirstOrThrow();

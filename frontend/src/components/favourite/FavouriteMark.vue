@@ -5,16 +5,9 @@
  * thing *to*, so a star there would mark the things that are **not** favourites.
  */
 import { Star } from '@lucide/vue'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-
-/** Named rather than hidden: unlike the icons inside a button, nothing beside this says it. */
-const LABEL = 'Favorit'
+import StateMark from '@/components/common/StateMark.vue'
 </script>
 
 <template>
-  <!-- On a span, because `title` on an `<svg>` is not a tooltip — SVG reads a `<title>` child
-       instead. Hover is desktop-only, so the accessible name is what carries it on a phone. -->
-  <CalliopeBadge variant="mark" :title="LABEL" :aria-label="LABEL" role="img" class="shrink-0">
-    <Star :size="13" :stroke-width="1.5" aria-hidden="true" />
-  </CalliopeBadge>
+  <StateMark :icon="Star" label="Favorit" />
 </template>

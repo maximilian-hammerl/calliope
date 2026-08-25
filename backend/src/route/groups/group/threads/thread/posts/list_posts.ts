@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -102,7 +103,7 @@ export default new OpenAPIHono().openapi(
     const page = await WritingPostService.listPosts(
       threadId,
       user.id,
-      c.req.valid("json"),
+      listQuery(c.req.valid("json")),
     );
 
     return c.json(page, STATUS_CODE.OK);
