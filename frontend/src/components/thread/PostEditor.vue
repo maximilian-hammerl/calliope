@@ -204,6 +204,19 @@ function isActive(tool: Tool): boolean {
   return instance !== undefined && tool.active(instance)
 }
 
+/**
+ * Whether the selection carries styling. A paste is the only way to get any today, so an enabled
+ * control is also how a member finds out their paste brought some with it.
+ */
+function hasStyling(): boolean {
+  return editor.value?.isActive('textStyle') ?? false
+}
+
+/** Clears the five `textStyle` attributes and nothing else — bold, italic and links survive. */
+function removeStyling() {
+  editor.value?.chain().focus().unsetMark('textStyle', { extendEmptyMarkRange: true }).run()
+}
+
 const linkDialogOpen = ref<boolean>(false)
 
 /**
@@ -302,6 +315,21 @@ function apply(tool: Tool) {
         @click="openLinkDialog()"
       >
         Link
+      </button>
+
+      <!-- Also not in `TOOLS`: an action rather than a state, so it takes `disabled` rather than
+           the `aria-pressed` every toggle above carries. -->
+      <span class="mx-1 h-4 w-px shrink-0 bg-line-3" />
+
+      <button
+        type="button"
+        title="Formatierung entfernen"
+        aria-label="Formatierung entfernen"
+        :disabled="!hasStyling()"
+        class="flex min-h-11 shrink-0 items-center rounded-lg border border-transparent px-2 text-[12.5px] text-ink-5 hover:text-ink-2 disabled:text-ink-6 disabled:hover:text-ink-6 md:min-h-8"
+        @click="removeStyling()"
+      >
+        Formatierung entfernen
       </button>
     </div>
 
