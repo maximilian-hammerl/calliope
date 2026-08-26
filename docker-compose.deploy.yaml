@@ -64,6 +64,10 @@ services:
   backend:
     build:
       context: ./backend
+      # So the image creates the mount point with the runtime user's ownership; a volume Docker
+      # creates on its own belongs to root and refuses the first upload.
+      args:
+        FILE_STORAGE_PATH: ${FILE_STORAGE_PATH:?set FILE_STORAGE_PATH in .env}
     restart: unless-stopped
     logging: *logging
 

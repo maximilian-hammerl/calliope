@@ -19,9 +19,20 @@ RUN deno task type-check
 # Every module resolved and cached now, so the runtime never reaches the network.
 RUN deno cache main.ts
 
+# Where uploads go. Passed by compose from FILE_STORAGE_PATH, so the mount point and the variable
+# the backend reads cannot drift apart.
+ARG FILE_STORAGE_PATH=/data/files
+
+# Created *and owned by the runtime user here*, because Docker copies an image directory's ownership
+# into a named volume when it first creates one — and a volume it creates itself is root's, which a
+# nonroot process cannot write to. This is the whole fix for `os error 13` on the first upload.
+RUN mkdir -p "$FILE_STORAGE_PATH" && chown -R 65532:65532 "$(dirname "$FILE_STORAGE_PATH")"
+
 # cc, not static: Deno needs glibc and libgcc, and a native addon needs libstdc++.
 # Carries CA certificates.
 FROM gcr.io/distroless/cc-debian12:nonroot
+
+ARG FILE_STORAGE_PATH=/data/files
 
 # The image no longer carries one compiled executable. `deno compile` cannot load a native
 # addon — `sharp` fails with `Could not load the "sharp" module` — and the measurement behind
@@ -31,6 +42,7 @@ ENV DENO_DIR=/deno-dir
 COPY --link --from=build /usr/bin/deno /usr/bin/deno
 COPY --link --from=build /deno-dir /deno-dir
 COPY --link --from=build /app /app
+COPY --link --from=build --chown=65532:65532 "$FILE_STORAGE_PATH" "$FILE_STORAGE_PATH"
 
 WORKDIR /app
 
