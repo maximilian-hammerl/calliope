@@ -1,5 +1,7 @@
 import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
+import { withAvatar } from "@/src/query/user_avatar.ts";
+import { withAvatarUrl } from "@/src/http/avatar_url.ts";
 import type { UserInChatGroup as DatabaseUserInChatGroup } from "@/src/database/schema.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import {
@@ -14,7 +16,7 @@ export type UserInChatGroup =
     "userId" | "chatGroupId" | "status" | "invitedAt" | "joinedAt"
   >
   // Never null: the membership is cascade-deleted with its user.
-  & { username: string };
+  & { username: string; avatarUrl: string | null };
 
 const SELECTED_COLUMNS = [
   "userInChatGroup.userId",
@@ -28,14 +30,15 @@ function membersWithUsername(executor: typeof db | Transaction = db) {
   return executor
     .selectFrom("userInChatGroup")
     .innerJoin("user", "user.id", "userInChatGroup.userId")
-    .select([...SELECTED_COLUMNS, "user.username"]);
+    .select([...SELECTED_COLUMNS, "user.username"])
+    .$call((builder) => withAvatar(builder, "user.id"));
 }
 
-function listMembers(
+async function listMembers(
   chatGroupId: string,
   query: ListQuery,
 ): Promise<ListResults<UserInChatGroup>> {
-  return listResultsWithCount(
+  const found = await listResultsWithCount(
     membersWithUsername().where(
       "userInChatGroup.chatGroupId",
       "=",
@@ -43,16 +46,20 @@ function listMembers(
     ),
     query,
   );
+
+  return { ...found, results: found.results.map(withAvatarUrl) };
 }
 
 async function selectMembership(
   chatGroupId: string,
   userId: string,
 ): Promise<UserInChatGroup | undefined> {
-  return await membersWithUsername()
+  const row = await membersWithUsername()
     .where("userInChatGroup.chatGroupId", "=", chatGroupId)
     .where("userInChatGroup.userId", "=", userId)
     .executeTakeFirst();
+
+  return row === undefined ? undefined : withAvatarUrl(row);
 }
 
 /**
@@ -86,10 +93,12 @@ async function insertInvitation(
       actorId: invitedBy,
     });
 
-    return await membersWithUsername(transaction)
-      .where("userInChatGroup.chatGroupId", "=", chatGroupId)
-      .where("userInChatGroup.userId", "=", userId)
-      .executeTakeFirstOrThrow();
+    return withAvatarUrl(
+      await membersWithUsername(transaction)
+        .where("userInChatGroup.chatGroupId", "=", chatGroupId)
+        .where("userInChatGroup.userId", "=", userId)
+        .executeTakeFirstOrThrow(),
+    );
   });
 }
 

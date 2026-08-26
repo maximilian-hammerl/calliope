@@ -108,7 +108,7 @@ async function allowContactAgain() {
         <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
              squeezed the name into an ellipsis, which is the one thing this page must show. -->
         <div class="flex flex-wrap items-center gap-4">
-          <UserAvatar :username="member.username" size="lg" />
+          <UserAvatar :username="member.username" :avatar-url="member.avatarUrl" size="lg" />
 
           <div class="flex min-w-0 flex-col gap-1">
             <h1 class="truncate text-h1">{{ member.username }}</h1>

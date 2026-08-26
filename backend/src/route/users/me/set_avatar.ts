@@ -7,7 +7,7 @@ import {
   USER_AVATAR_SCHEMA,
 } from "@/src/database/schema.ts";
 import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
-import { avatarUrl } from "@/src/service/user_avatar_service.ts";
+import { avatarUrl } from "@/src/http/avatar_url.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import {
   BAD_REQUEST_RESPONSE,

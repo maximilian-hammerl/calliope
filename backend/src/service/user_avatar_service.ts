@@ -10,14 +10,6 @@ export type Avatar = {
   credit: string | null;
 };
 
-/**
- * The server names its own URLs, so no client builds this path. Moving the route then breaks
- * compilation here rather than every avatar in the interface.
- */
-export function avatarUrl(fileId: string): string {
-  return `/api/avatars/${fileId}`;
-}
-
 export type SetAvatarResult =
   | { kind: "set"; fileId: string }
   | { kind: "not_an_image" };

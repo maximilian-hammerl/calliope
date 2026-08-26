@@ -254,7 +254,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
           :to="{ name: 'member', params: { userId: membership.userId } }"
           class="group flex min-h-11 min-w-0 items-center gap-3"
         >
-          <UserAvatar :username="membership.username" />
+          <UserAvatar :username="membership.username" :avatar-url="membership.avatarUrl" />
 
           <span class="flex min-w-0 flex-col">
             <span class="flex flex-wrap items-baseline gap-x-3">

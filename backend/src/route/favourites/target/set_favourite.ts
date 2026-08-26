@@ -3,7 +3,7 @@ import { STATUS_CODE } from "@std/http/status";
 import { FAVOURITES_TAG } from "@/src/open_api_specification.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { FavouriteService } from "@/src/service/favourite_service.ts";
-import { FAVOURITE_TARGET_TYPES } from "@/src/service/favourite_target.ts";
+import { FAVOURITE_TARGET_TYPES } from "@/src/query/favourite.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,

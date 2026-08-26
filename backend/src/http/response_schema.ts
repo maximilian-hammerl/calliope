@@ -73,10 +73,18 @@ export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
     editedByUsername: z.string().nullable(),
   });
 
+/**
+ * A path, resolved against this API's own origin — never absolute, so it cannot point at another
+ * host and needs no `HOST_URL` to be right. Null where a member has set no picture, which is most
+ * of them; the interface shows their initial instead.
+ */
+export const AVATAR_URL = z.string().nullable();
+
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   /** Null for a group's founder, and once the inviter's account is gone. */
   invitedByUsername: z.string().nullable(),
   username: z.string(),
+  avatarUrl: AVATAR_URL,
 });
 
 /**
@@ -102,7 +110,9 @@ export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA
     completedByUsername: z.string().nullable(),
   });
 
-export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
+export const USER_RESPONSE = USER_SCHEMA
+  .pick({ id: true, username: true })
+  .extend({ avatarUrl: AVATAR_URL });
 
 /**
  * One of a member's own sessions. `lastUsedAt` is derived rather than stored: every request
@@ -168,6 +178,7 @@ export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   // Whether the *reader* has blocked them, which is the reader's own information. Never
   // whether they have blocked the reader: that would be the disclosure a neutral 403 avoids.
   isBlocked: z.boolean(),
+  avatarUrl: AVATAR_URL,
   // Present only for an operator, and absent for everybody else rather than false: a ban is
   // the platform acting, and telling one member that another was banned is not this page's
   // business. Operators need it because the control that bans must also be able to lift.
@@ -272,7 +283,7 @@ export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA
     invitedAt: true,
     joinedAt: true,
   })
-  .extend({ username: z.string() });
+  .extend({ username: z.string(), avatarUrl: AVATAR_URL });
 
 /**
  * A thread found by a search carries the title of its group. A result that can come from

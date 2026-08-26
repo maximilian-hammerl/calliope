@@ -3,10 +3,20 @@
  * Nothing here is required and nothing is hidden, so the description says who can read it
  * before anybody writes a word.
  */
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useForm } from '@tanstack/vue-form'
-import { useUpdateOwnProfile } from '@/api/users/users'
-import type { GetUser200 } from '@/api/models'
+import { useDeleteAvatar, useSetAvatar, useUpdateOwnProfile } from '@/api/users/users'
+import type { GetUser200, SetAvatarBodyOrigin } from '@/api/models'
+import { ApiError } from '@/lib/api/apiFetch'
+import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
+import { queryClient } from '@/lib/api/queryClient'
+import AvatarPicker from '@/components/user/AvatarPicker.vue'
+import {
+  AVATAR_NEEDS_CREDIT,
+  AVATAR_NOT_AN_IMAGE,
+  AVATAR_TOO_LARGE,
+  OWN_WORK,
+} from '@/lib/format/avatar'
 import { failureMessage } from '@/lib/format/failure'
 import { formatCount } from '@/lib/format/formatNumber'
 import { focusFirstInvalid, parsed, proseSchema } from '@/lib/validation/fieldSchemas'
@@ -16,6 +26,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import FormTextField from '@/components/common/FormTextField.vue'
 import { FieldGroup } from '@/components/ui/field'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import {
   Dialog,
   DialogContent,
@@ -29,6 +45,73 @@ import { Spinner } from '@/components/ui/spinner'
 const open = defineModel<boolean>('open', { required: true })
 const props = defineProps<{ profile: GetUser200 }>()
 const emit = defineEmits<{ saved: [] }>()
+
+/**
+ * The picture saves on its own rather than joining the profile form: it is a multipart body where
+ * that one is a JSON patch of changed fields, and its declaration has nothing to do with the rest.
+ */
+const chosenFile = ref<File | undefined>(undefined)
+const origin = ref<SetAvatarBodyOrigin>(OWN_WORK)
+const credit = ref<string>('')
+const confirmed = ref<boolean>(false)
+const pictureError = ref<string | undefined>(undefined)
+
+const setAvatar = useSetAvatar()
+const removeAvatar = useDeleteAvatar()
+const savingPicture = computed<boolean>(
+  () => setAvatar.isPending.value || removeAvatar.isPending.value,
+)
+
+/** Every refusal the route can answer, said in words a member can act on. */
+function pictureFailure(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 413) return AVATAR_TOO_LARGE
+    if (error.status === 422) return AVATAR_NOT_AN_IMAGE
+    if (error.status === 400) return AVATAR_NEEDS_CREDIT
+  }
+  return failureMessage(error, 'Das Bild ließ sich nicht speichern.')
+}
+
+/**
+ * The profile *and* the current user: the top bar reads its own picture from `/auth/me`, so
+ * refreshing only the profile leaves the old face in the corner until a reload.
+ */
+async function refreshEverywhere(): Promise<void> {
+  await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
+  emit('saved')
+}
+
+async function savePicture(): Promise<void> {
+  pictureError.value = undefined
+  if (chosenFile.value === undefined) return
+
+  try {
+    await setAvatar.mutateAsync({
+      data: {
+        image: chosenFile.value,
+        origin: origin.value,
+        credit: origin.value === OWN_WORK ? undefined : credit.value,
+        confirmed: 'true',
+      },
+    })
+    chosenFile.value = undefined
+    confirmed.value = false
+    credit.value = ''
+    await refreshEverywhere()
+  } catch (error) {
+    pictureError.value = pictureFailure(error)
+  }
+}
+
+async function removePicture(): Promise<void> {
+  pictureError.value = undefined
+  try {
+    await removeAvatar.mutateAsync()
+    await refreshEverywhere()
+  } catch (error) {
+    pictureError.value = pictureFailure(error)
+  }
+}
 
 const limit = (key: ProfileFieldKey) => formatCount(PROFILE_LIMIT[key].maxLength)
 
@@ -141,41 +224,91 @@ watch(
         </DialogDescription>
       </DialogHeader>
 
-      <form
-        ref="formElement"
-        class="flex flex-col gap-5"
-        novalidate
-        @submit.prevent="profileForm.handleSubmit()"
-      >
-        <Alert v-if="formError" variant="destructive" role="alert">
-          <AlertDescription>{{ formError }}</AlertDescription>
-        </Alert>
+      <!-- One accordion, like the settings dialog: each half owns its own save, and only one is
+           open, so two primary buttons never compete for the same glance. -->
+      <Accordion type="single" collapsible class="w-full" default-value="angaben">
+        <AccordionItem value="bild">
+          <AccordionTrigger>Bild</AccordionTrigger>
+          <AccordionContent class="flex min-w-0 flex-col gap-4">
+            <Alert v-if="pictureError" variant="destructive" role="alert">
+              <AlertDescription>{{ pictureError }}</AlertDescription>
+            </Alert>
 
-        <FieldGroup>
-          <profileForm.Field
-            v-for="field in PROFILE_FIELDS"
-            :key="field.key"
-            :name="field.key"
-            :validators="{ onSubmit: SCHEMAS[field.key] }"
-          >
-            <template v-slot="{ field: api }">
-              <FormTextField :field="api" :label="field.label" optional multiline rows="3">
-                <template #description>{{ field.description }}</template>
-              </FormTextField>
-            </template>
-          </profileForm.Field>
-        </FieldGroup>
+            <AvatarPicker
+              v-model:file="chosenFile"
+              v-model:origin="origin"
+              v-model:credit="credit"
+              v-model:confirmed="confirmed"
+              :username="props.profile.username"
+              :current-url="props.profile.avatarUrl"
+              :disabled="savingPicture"
+            />
 
-        <DialogFooter>
-          <Button type="button" variant="outline" :disabled="isPending" @click="open = false">
-            Abbrechen
-          </Button>
-          <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" />
-            Änderungen speichern
-          </Button>
-        </DialogFooter>
-      </form>
+            <div class="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                :disabled="chosenFile === undefined || !confirmed || savingPicture"
+                @click="savePicture"
+              >
+                <Spinner v-if="setAvatar.isPending.value" />
+                Bild speichern
+              </Button>
+
+              <Button
+                v-if="props.profile.avatarUrl"
+                type="button"
+                variant="outline"
+                :disabled="savingPicture"
+                @click="removePicture"
+              >
+                <Spinner v-if="removeAvatar.isPending.value" />
+                Bild entfernen
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="angaben">
+          <AccordionTrigger>Angaben</AccordionTrigger>
+          <AccordionContent>
+            <form
+              ref="formElement"
+              class="flex flex-col gap-5"
+              novalidate
+              @submit.prevent="profileForm.handleSubmit()"
+            >
+              <Alert v-if="formError" variant="destructive" role="alert">
+                <AlertDescription>{{ formError }}</AlertDescription>
+              </Alert>
+
+              <FieldGroup>
+                <profileForm.Field
+                  v-for="field in PROFILE_FIELDS"
+                  :key="field.key"
+                  :name="field.key"
+                  :validators="{ onSubmit: SCHEMAS[field.key] }"
+                >
+                  <template v-slot="{ field: api }">
+                    <FormTextField :field="api" :label="field.label" optional multiline rows="3">
+                      <template #description>{{ field.description }}</template>
+                    </FormTextField>
+                  </template>
+                </profileForm.Field>
+              </FieldGroup>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" :disabled="isPending" @click="open = false">
+                  Abbrechen
+                </Button>
+                <Button type="submit" :disabled="isPending">
+                  <Spinner v-if="isPending" />
+                  Änderungen speichern
+                </Button>
+              </DialogFooter>
+            </form>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </DialogContent>
   </Dialog>
 </template>

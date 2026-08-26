@@ -3,7 +3,7 @@ import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
-import { IS_FAVOURITE, withFavourite } from "@/src/service/favourite_target.ts";
+import { IS_FAVOURITE, withFavourite } from "@/src/query/favourite.ts";
 import {
   type ListQuery,
   type ListResults,

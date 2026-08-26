@@ -67,6 +67,15 @@ single chevron, which is what the icon table asks for.
 The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
 above is not hypothetical.
 
+`AvatarImage` carries **`object-cover`**, which shadcn leaves off: an `<img>` defaults to `fill`,
+so a portrait photograph is stretched into the square rather than cropped to it. The upload
+centre-crops identically, which is what lets a preview of a chosen file show what will be stored.
+
+`radio-group` and `checkbox` were patched together and belong together: both take the
+`border-line-5` hairline, both fill with oak when chosen, neither casts a shadow, and the 44px
+phone target is the wrapping label's rather than the 16px box's — a dot that size is not a tap
+target, and making it one would look like a mistake.
+
 `pagination` needed four of the same kind: the current page is an underline rather than a filled
 chip, the numbers and the two arrows carry the 44px phone target, „Zurück" and „Weiter" replace
 shadcn's English **and** its `hidden sm:block`. Hiding them buys nothing: measured at 320, 375 and
@@ -140,6 +149,12 @@ grep -c 'role="group"' src/components/ui/field/Field.vue                        
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
 grep -c aria-hidden src/components/ui/accordion/AccordionTrigger.vue                    # expect 2
+# The radio and the checkbox share the hairline and the oak, so they read as one family.
+grep -c border-line-5 src/components/ui/radio-group/RadioGroupItem.vue src/components/ui/checkbox/Checkbox.vue  # expect 1 each
+grep -c 'data-\[state=checked\]:bg-oak' src/components/ui/checkbox/Checkbox.vue         # expect 1
+grep -c fill-oak src/components/ui/radio-group/RadioGroupItem.vue                       # expect 1
+# Without this an avatar stretches a portrait photograph instead of cropping it.
+grep -c object-cover src/components/ui/avatar/AvatarImage.vue                           # expect 1
 grep -c 'border-b-2' src/components/ui/pagination/PaginationItem.vue                   # expect 1
 grep -c min-h-11 src/components/ui/pagination/PaginationItem.vue src/components/ui/pagination/PaginationPrevious.vue src/components/ui/pagination/PaginationNext.vue  # expect 1 each
 grep -rc 'hidden sm:block' src/components/ui/pagination/                               # expect 0
@@ -489,6 +504,32 @@ A literal id is fine where a second instance is impossible — a routed view, a 
 once inside one dialog. That is why `login` and `password` may repeat across the sign-in views.
 Nothing in `src/` looks an id up (`getElementById`, a `#` selector, a fragment), so no id here has
 to be guessable — which is what makes the generated ones free.
+
+## A member's picture
+
+**`UserAvatar` takes an optional `avatarUrl` and falls back to the initial.** The fallback is a
+sibling of `AvatarImage` rather than a `v-else`, because reka falls back on a *load failure* too —
+so a file the sweep has collected shows a letter instead of a broken frame. Nothing builds the path:
+the server sends it, so moving the route breaks compilation in one backend function rather than
+every picture in the interface.
+
+**The picture saves on its own, inside `ProfileDialog` but outside its form.** It is a multipart
+body where the profile is a JSON patch of changed fields, and joining them would let one failure
+discard the other's work.
+
+**Saving or removing invalidates the current user as well as the profile.** The top bar reads its
+own picture from `/auth/me`, so refreshing only the profile leaves the old face in the corner until
+a reload — which is what happened before this line existed.
+
+**The preview is the picture, not its filename.** Round, `object-cover`, at profile size — and
+because the server centre-crops to a square, that is an honest preview of what will be stored, which
+is most of what a crop step would have bought. shadcn's `Attachment` was considered and is the wrong
+shape here: it is presentational only, with no file input at all, and shows metadata where the thing
+itself is available. It would suit #31 and #95, which are lists of files.
+
+**The declaration appears only once a file is chosen**, and the credit line only when the picture is
+not the member's own. Asking everybody for a source is what turns a declaration into a field people
+type „meins" into — see #29 on Yooco's required fields.
 
 ## Filters
 

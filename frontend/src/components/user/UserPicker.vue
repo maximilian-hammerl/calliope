@@ -4,8 +4,7 @@ import { Check } from '@lucide/vue'
 import { useListUsers } from '@/api/users/users'
 import type { ListUsers200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { userInitial } from '@/lib/format/formatUser'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -197,11 +196,7 @@ defineExpose({ reset })
             @click="pick(user)"
             @mousemove="activeIndex = index"
           >
-            <Avatar class="size-7 shrink-0">
-              <AvatarFallback class="text-[11.5px]">
-                {{ userInitial(user.username) }}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar :username="user.username" :avatar-url="user.avatarUrl" />
             <span class="min-w-0 truncate">{{ user.username }}</span>
             <Check
               v-if="selected?.id === user.id"

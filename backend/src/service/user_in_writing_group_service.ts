@@ -1,5 +1,7 @@
 import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
+import { withAvatar } from "@/src/query/user_avatar.ts";
+import { withAvatarUrl } from "@/src/http/avatar_url.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
   UserInWritingGroup as DatabaseUserInWritingGroup,
@@ -21,7 +23,8 @@ export type UserInWritingGroup =
   // Never null: the membership is cascade-deleted with its user.
   & { username: string }
   // Null for a founder, and once the inviter's account is gone.
-  & { invitedByUsername: string | null };
+  & { invitedByUsername: string | null }
+  & { avatarUrl: string | null };
 
 const SELECTED_COLUMNS = [
   "userInWritingGroup.userId",
@@ -62,7 +65,8 @@ function membershipsWithUsername(executor: typeof db | Transaction = db) {
         .select("inviter.username")
         .whereRef("inviter.id", "=", "userInWritingGroup.invitedBy")
         .as("invitedByUsername")
-    );
+    )
+    .$call((builder) => withAvatar(builder, "user.id"));
 }
 
 /**
@@ -115,8 +119,10 @@ async function insertInvitation(
       actorId: invitedBy,
     });
 
-    return await membershipWithUsername(writingGroupId, userId, transaction)
-      .executeTakeFirstOrThrow();
+    return withAvatarUrl(
+      await membershipWithUsername(writingGroupId, userId, transaction)
+        .executeTakeFirstOrThrow(),
+    );
   });
 }
 
@@ -139,8 +145,10 @@ async function selectMembership(
   writingGroupId: string,
   userId: string,
 ): Promise<UserInWritingGroup | undefined> {
-  return await membershipWithUsername(writingGroupId, userId)
+  const row = await membershipWithUsername(writingGroupId, userId)
     .executeTakeFirst();
+
+  return row === undefined ? undefined : withAvatarUrl(row);
 }
 
 /**
@@ -151,13 +159,15 @@ async function selectMembership(
  * of them. Groups are a handful of people, so there is nothing to page — and if that ever stops
  * being true, this is the place to revisit.
  */
-function selectMemberships(
+async function selectMemberships(
   writingGroupId: string,
 ): Promise<Array<UserInWritingGroup>> {
-  return membershipsWithUsername()
+  const rows = await membershipsWithUsername()
     .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
     .orderBy("user.username", "asc")
     .execute();
+
+  return rows.map(withAvatarUrl);
 }
 
 /** Returns nothing when there is no such membership. Authorisation is the caller's job. */
@@ -186,8 +196,10 @@ async function updateRole(
       actorId: changedBy,
     });
 
-    return await membershipWithUsername(writingGroupId, userId, transaction)
-      .executeTakeFirstOrThrow();
+    return withAvatarUrl(
+      await membershipWithUsername(writingGroupId, userId, transaction)
+        .executeTakeFirstOrThrow(),
+    );
   });
 }
 
@@ -219,8 +231,10 @@ async function acceptInvitation(
       },
     );
 
-    return await membershipWithUsername(writingGroupId, userId, transaction)
-      .executeTakeFirstOrThrow();
+    return withAvatarUrl(
+      await membershipWithUsername(writingGroupId, userId, transaction)
+        .executeTakeFirstOrThrow(),
+    );
   });
 }
 

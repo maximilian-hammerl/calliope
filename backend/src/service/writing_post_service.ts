@@ -10,10 +10,7 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
-import {
-  type FavouriteFilter,
-  withFavourite,
-} from "@/src/service/favourite_target.ts";
+import { type FavouriteFilter, withFavourite } from "@/src/query/favourite.ts";
 
 export type Post =
   & Pick<

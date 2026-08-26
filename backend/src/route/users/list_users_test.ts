@@ -60,7 +60,7 @@ Deno.test("QUERY /api/users ignores case", async () => {
   assertEquals(found.username, findable);
 });
 
-Deno.test("QUERY /api/users returns the id and username only", async () => {
+Deno.test("QUERY /api/users returns a name, a picture and nothing else", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
 
@@ -70,7 +70,7 @@ Deno.test("QUERY /api/users returns the id and username only", async () => {
   // fails this instead of quietly joining the response.
   const [found] = page.results;
   assertExists(found);
-  assertEquals(Object.keys(found).sort(), ["id", "username"]);
+  assertEquals(Object.keys(found).sort(), ["avatarUrl", "id", "username"]);
 });
 
 Deno.test("QUERY /api/users treats a wildcard as a literal character", async () => {

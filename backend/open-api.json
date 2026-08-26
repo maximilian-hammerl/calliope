@@ -1211,6 +1211,7 @@
                       "type": ["string", "null"],
                       "enum": ["administrator", "moderator", null]
                     },
+                    "avatarUrl": { "type": ["string", "null"] },
                     "unreadNotifications": { "type": "integer" }
                   },
                   "required": [
@@ -1219,6 +1220,7 @@
                     "emailAddress",
                     "emailAddressVerifiedAt",
                     "platformRole",
+                    "avatarUrl",
                     "unreadNotifications"
                   ]
                 }
@@ -5855,7 +5857,8 @@
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "invitedByUsername": { "type": ["string", "null"] },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -5867,7 +5870,8 @@
                     "invitedBy",
                     "createdAt",
                     "invitedByUsername",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -6164,7 +6168,8 @@
                             "format": "date-time"
                           },
                           "invitedByUsername": { "type": ["string", "null"] },
-                          "username": { "type": "string" }
+                          "username": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
                         },
                         "required": [
                           "userId",
@@ -6176,7 +6181,8 @@
                           "invitedBy",
                           "createdAt",
                           "invitedByUsername",
-                          "username"
+                          "username",
+                          "avatarUrl"
                         ]
                       }
                     }
@@ -6439,7 +6445,8 @@
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "invitedByUsername": { "type": ["string", "null"] },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -6451,7 +6458,8 @@
                     "invitedBy",
                     "createdAt",
                     "invitedByUsername",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -6762,7 +6770,8 @@
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "invitedByUsername": { "type": ["string", "null"] },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -6774,7 +6783,8 @@
                     "invitedBy",
                     "createdAt",
                     "invitedByUsername",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -16284,9 +16294,10 @@
                         "type": "object",
                         "properties": {
                           "id": { "type": "string", "format": "uuid" },
-                          "username": { "type": "string" }
+                          "username": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
                         },
-                        "required": ["id", "username"]
+                        "required": ["id", "username", "avatarUrl"]
                       }
                     }
                   },
@@ -16532,6 +16543,7 @@
                     "writingBoundaries": { "type": ["string", "null"] },
                     "genres": { "type": ["string", "null"] },
                     "isBlocked": { "type": "boolean" },
+                    "avatarUrl": { "type": ["string", "null"] },
                     "isBanned": { "type": "boolean" }
                   },
                   "required": [
@@ -16545,7 +16557,8 @@
                     "coWriterExpectations",
                     "writingBoundaries",
                     "genres",
-                    "isBlocked"
+                    "isBlocked",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -17238,6 +17251,7 @@
                     "writingBoundaries": { "type": ["string", "null"] },
                     "genres": { "type": ["string", "null"] },
                     "isBlocked": { "type": "boolean" },
+                    "avatarUrl": { "type": ["string", "null"] },
                     "isBanned": { "type": "boolean" }
                   },
                   "required": [
@@ -17251,7 +17265,8 @@
                     "coWriterExpectations",
                     "writingBoundaries",
                     "genres",
-                    "isBlocked"
+                    "isBlocked",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -19413,7 +19428,8 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -19421,7 +19437,8 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -19737,7 +19754,8 @@
                             "type": ["string", "null"],
                             "format": "date-time"
                           },
-                          "username": { "type": "string" }
+                          "username": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
                         },
                         "required": [
                           "userId",
@@ -19745,7 +19763,8 @@
                           "status",
                           "invitedAt",
                           "joinedAt",
-                          "username"
+                          "username",
+                          "avatarUrl"
                         ]
                       }
                     }
@@ -19997,7 +20016,8 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -20005,7 +20025,8 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -21434,9 +21455,10 @@
                             "type": "object",
                             "properties": {
                               "id": { "type": "string", "format": "uuid" },
-                              "username": { "type": "string" }
+                              "username": { "type": "string" },
+                              "avatarUrl": { "type": ["string", "null"] }
                             },
-                            "required": ["id", "username"]
+                            "required": ["id", "username", "avatarUrl"]
                           }
                         }
                       },

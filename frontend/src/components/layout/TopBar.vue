@@ -169,7 +169,7 @@ async function signOut() {
               "
             >
               <span class="relative">
-                <UserAvatar :username="props.user.username" />
+                <UserAvatar :username="props.user.username" :avatar-url="props.user.avatarUrl" />
                 <!-- A mark, not a number. "7 neu" sitting in the bar tells you how far behind
                    you are, which is the pressure the research warned about; this only says
                    that something happened. The count is named on the menu item. -->

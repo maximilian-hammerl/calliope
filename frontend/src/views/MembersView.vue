@@ -110,7 +110,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
               :to="{ name: 'member', params: { userId: member.id } }"
               class="flex min-h-[44px] items-center gap-3 py-2 hover:bg-paper-2"
             >
-              <UserAvatar :username="member.username" />
+              <UserAvatar :username="member.username" :avatar-url="member.avatarUrl" />
               <span class="min-w-0 truncate text-[13.5px] text-ink-2">
                 {{ member.username }}
               </span>

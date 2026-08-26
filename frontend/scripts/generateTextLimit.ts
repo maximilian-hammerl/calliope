@@ -92,9 +92,16 @@ function collectBounds(
   }
 }
 
+/**
+ * Every content type, not only JSON. The avatar upload is `multipart/form-data`, and reading one
+ * type meant its text field silently had no bound here — which is the failure this file exists to
+ * prevent, in the one shape that had not come up before.
+ */
 function boundsOf(operation: Operation, operationId: string): Record<string, Bound> {
   const bounds: Record<string, Bound> = {}
-  collectBounds(operation.requestBody?.content?.['application/json']?.schema, operationId, bounds)
+  for (const { schema } of Object.values(operation.requestBody?.content ?? {})) {
+    collectBounds(schema, operationId, bounds)
+  }
   return bounds
 }
 

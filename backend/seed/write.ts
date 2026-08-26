@@ -14,8 +14,8 @@ import { BLOCKS } from "@/seed/blocks.ts";
 import { REPORTS } from "@/seed/reports.ts";
 import { FAVOURITES } from "@/seed/favourites.ts";
 import { notificationId } from "@/seed/ids.ts";
-import { FAVOURITE_COLUMN } from "@/src/service/favourite_target.ts";
-import type { FavouriteTargetType } from "@/src/service/favourite_target.ts";
+import { FAVOURITE_COLUMN } from "@/src/query/favourite.ts";
+import type { FavouriteTargetType } from "@/src/query/favourite.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 
 /**

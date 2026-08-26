@@ -112,6 +112,8 @@ changes, `write.ts` changes with it.
 
 `route/` mirrors the URL and is not reorganised — see below. Everything else is grouped by what
 it is: `http/` (response helpers and their schemas), `list/` (the shared list convention),
+`query/` (helpers that take a query builder and return one, and the column maps they need — no
+authorisation, no side effects, nothing that decides anything),
 `operations/` (liveness, matching the `OPERATIONS_TAG` the spec already uses), `event/`
 (in-process fan-out for SSE, infrastructure like `database/` and `redis/` rather than a
 service), `mail/` (the SMTP transport and the messages themselves, infrastructure for the
@@ -791,7 +793,7 @@ argument that makes `ReportDialog` one component for seven kinds.
 - **`favourite` carries no `target_type` column**, unlike `report`, whose references are `SET NULL`
   and so leave a row naming nothing. These cascade, so the kind is readable off the data and
   survives only as request vocabulary: `FAVOURITE_COLUMN` maps it to the column to write.
-- **`favourite_target.ts` imports nothing from `service/`**, and says so at the top. Every service
+- **`query/favourite.ts` imports nothing from `service/`**, and says so at the top. Every service
   that joins `favourite` imports it while `favourite_service` reaches them back through
   `visible_target`, so an import this way closes a cycle — which TypeScript answers with `any`,
   leaving a join column unchecked rather than erroring. Deno's lint has no cycle rule.

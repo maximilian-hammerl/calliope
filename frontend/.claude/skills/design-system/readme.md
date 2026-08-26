@@ -947,7 +947,12 @@ Import each icon under one name — a `PencilIcon` beside a `Pencil` is one file
 two decisions.
 
 Unchanged: file types stay mono text (`PNG` `MD` `JPG`), never a file icon. Avatars are
-initials in `--text-avatar` on `--surface-avatar`, never generated images. **No emoji** — the round-1 emoji
+**a member's own photograph where they have set one, and their initial otherwise** — initials in
+`--text-avatar` on `--surface-avatar`, never a *generated* image. The initial is also the fallback
+when a picture fails to load, so a missing file degrades to a letter rather than a broken frame.
+A picture appears everywhere an initial does, at every size, because a partial rollout leaves a
+member unable to tell where their picture counts. **Never animated**: motion is almost none by
+policy, and the upload flattens an animated file rather than storing one. **No emoji** — the round-1 emoji
 reactions were removed on explicit feedback.
 
 The prototype components under `components/` and `ui_kits/` still render the unicode marks;

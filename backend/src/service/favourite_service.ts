@@ -4,11 +4,11 @@ import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
 import {
   FAVOURITE_COLUMN,
   type FavouriteTargetType,
-} from "@/src/service/favourite_target.ts";
+} from "@/src/query/favourite.ts";
 
 /**
  * One member marking one thing to come back to, across all five kinds that have one. The union and
- * the column map live in `favourite_target.ts`, which imports nothing that imports this.
+ * the column map live in `query/favourite.ts`, which imports nothing that imports this.
  */
 
 /** Every reference the unique index keys on, which is what `ON CONFLICT` has to name. */

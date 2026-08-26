@@ -16,7 +16,7 @@ import {
   type FavouriteFilter,
   FAVOURITES_FIRST,
   withFavourite,
-} from "@/src/service/favourite_target.ts";
+} from "@/src/query/favourite.ts";
 
 export type ChatGroup =
   & Pick<
