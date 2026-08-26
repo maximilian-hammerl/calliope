@@ -80,6 +80,19 @@ export default defineConfig({
     port: FRONTEND_PORT,
     strictPort: true,
 
+    /**
+     * The one production CSP directive that development can mirror, and the one worth mirroring:
+     * an image blocked by policy is invisible until somebody deploys. `blob:` is the upload
+     * preview; `data:` is inline artwork; nothing third-party loads, which is the point.
+     *
+     * The rest of the policy cannot come along — HMR needs inline scripts, `eval` and a websocket,
+     * so `script-src` and `connect-src` would have to be loosened until they proved nothing. This
+     * header restricts images only, and is otherwise silent.
+     */
+    headers: {
+      'Content-Security-Policy': "img-src 'self' data: blob:",
+    },
+
     // Keeps development same-origin, exactly like production behind Caddy: the generated
     // client can use relative URLs, no CORS preflight happens, and the httpOnly session
     // cookie is sent without any credentials configuration. The backend serves everything

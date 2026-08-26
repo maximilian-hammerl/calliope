@@ -53,7 +53,11 @@
 			# `style-src` has to allow inline styles because the dropdown positions itself
 			# through the style attribute; scripts stay strict, which is the part that
 			# matters. The fonts are served from here, so no third party is named at all.
-			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+			#
+			# `blob:` is the upload preview: a chosen picture is shown through
+			# `URL.createObjectURL` before it is sent. A blob URL is minted by our own script
+			# and cannot name another host, so this keeps the no-third-party-images property.
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		}
 
 		# Everything under /assets carries a content hash in its name — scripts, styles and

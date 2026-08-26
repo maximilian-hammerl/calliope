@@ -290,6 +290,24 @@ image is distroless, so there is no shell or tar inside it to borrow.
 `docker compose exec -T` forwards stdin to the container, so any command in a script that
 does *not* read a dump needs `</dev/null` — otherwise it swallows the rest of the script.
 
+## The uploads volume belongs to the runtime user
+
+The backend runs as `nonroot` (uid 65532) and uploads go to a named volume. Docker copies an image
+directory's ownership into a volume **only when it first creates one**, which is why the image
+creates `FILE_STORAGE_PATH` and chowns it — without that, Docker makes the volume root's and the
+first upload fails with `Permission denied (os error 13)`.
+
+A volume that already exists predates that, so it is still root's. Repair it once, with the backend
+stopped:
+
+```bash
+docker compose -f docker-compose.deploy.yaml stop backend
+docker run --rm --volume calliope_file-data:/data busybox:1.37 chown -R 65532:65532 /data
+docker compose -f docker-compose.deploy.yaml start backend
+```
+
+Nothing is lost — it changes ownership, not contents.
+
 ## Known gaps
 
 - **The dumps never leave the server.** They cover mistakes in the data, not the loss of
