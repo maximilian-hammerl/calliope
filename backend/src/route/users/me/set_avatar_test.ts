@@ -58,7 +58,8 @@ Deno.test("a member sets a picture and it is served back", async () => {
   assertEquals(served.headers.get("content-type"), "image/webp");
   assertEquals(
     served.headers.get("cache-control"),
-    "private, max-age=31536000, immutable",
+    // Short on purpose: this is how long a *withdrawn* picture can linger in a cache.
+    "private, max-age=3600, immutable",
   );
 
   const { format } = await sharp(new Uint8Array(await served.arrayBuffer()))

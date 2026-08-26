@@ -12,10 +12,18 @@ import {
 } from "@/src/http/response.ts";
 
 /**
- * A year, immutable, because the id is new on every upload: a changed picture is a changed
- * address, so nothing here ever needs revalidating and no stale face survives a change.
+ * An hour, not a year — and the reason is *removal*, not change. A new upload gets a new
+ * id, so a changed picture is a changed address and no cache can show a stale one. What `max-age`
+ * governs is how long a picture that has been **taken down** keeps appearing to somebody who
+ * already has it: the server stops serving it at once, but no header reaches a cache that already
+ * holds the bytes. A year of that is wrong for a member who removed their own face, and wrong for
+ * an operator removing an offensive one under #62.
+ *
+ * The cost is one re-fetch per avatar per window, and a measured photograph is 2–4 KB at this size,
+ * so the window was chosen for how long a withdrawal may linger rather than for traffic.
+ * `immutable` still spares a revalidation inside the window, including on reload.
  */
-const CACHE_CONTROL = "private, max-age=31536000, immutable";
+const CACHE_CONTROL = "private, max-age=3600, immutable";
 
 export default new OpenAPIHono().openapi(
   createRoute({
