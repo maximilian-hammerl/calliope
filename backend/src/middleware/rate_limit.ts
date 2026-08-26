@@ -38,7 +38,7 @@ export const WRITE_REQUESTS_PER_WINDOW = 250;
 const READ_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD", "QUERY"]);
 
 function isRead(c: Context): boolean {
-  return READ_METHODS.has(c.req.method)
+  return READ_METHODS.has(c.req.method);
 }
 
 function budget(
