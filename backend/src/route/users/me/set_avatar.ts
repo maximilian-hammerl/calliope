@@ -8,7 +8,7 @@ import {
 } from "@/src/database/schema.ts";
 import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
 import { avatarUrl } from "@/src/http/avatar_url.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT, UPLOAD_BODY_LIMIT_BYTES } from "@/src/text_limit.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -22,7 +22,13 @@ import {
  * photograph by a third to travel through a shape it does not fit.
  */
 const SET_AVATAR_BODY = z.object({
-  image: z.instanceof(File).openapi({ type: "string", format: "binary" }),
+  // `maxLength` on a binary string is its size in bytes, so the interface generates the same
+  // number the body limit enforces rather than restating it.
+  image: z.instanceof(File).openapi({
+    type: "string",
+    format: "binary",
+    maxLength: UPLOAD_BODY_LIMIT_BYTES,
+  }),
   origin: AVATAR_ORIGIN_SCHEMA,
   // Multipart carries no types: everything arrives as a string.
   credit: USER_AVATAR_SCHEMA.shape.credit.unwrap().max(TEXT_LIMIT.avatarCredit)

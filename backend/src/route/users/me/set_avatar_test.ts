@@ -137,10 +137,10 @@ Deno.test("removing it leaves nothing to serve", async () => {
   });
   assertEquals(again.status, STATUS_CODE.OK);
 
-  // The bytes outlive the row on purpose — the sweep collects them, not the delete.
+  // The file is still on disk for the sweep to collect, but nothing serves it any more.
   assertEquals(
     (await app.request(avatarUrl, { headers: { cookie } })).status,
-    STATUS_CODE.OK,
+    STATUS_CODE.NotFound,
   );
 });
 

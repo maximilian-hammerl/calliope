@@ -6,7 +6,7 @@
  * filename — and because the server centre-crops to a square, `object-cover` in a round frame is an
  * honest preview of what will be stored. That is most of what a crop step would have bought.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Camera } from '@lucide/vue'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -16,7 +16,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { userInitial } from '@/lib/format/formatUser'
 import { formatBytes } from '@/lib/format/formatNumber'
-import { AVATAR_ORIGIN_LABELS, AVATAR_ORIGINS, OWN_WORK } from '@/lib/format/avatar'
+import {
+  AVATAR_ORIGIN_LABELS,
+  AVATAR_ORIGINS,
+  AVATAR_TOO_LARGE,
+  OWN_WORK,
+} from '@/lib/format/avatar'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import type { SetAvatarBodyOrigin } from '@/api/models'
 
@@ -31,19 +36,42 @@ const confirmed = defineModel<boolean>('confirmed', { required: true })
 const ACCEPT = 'image/jpeg,image/png,image/webp'
 
 const chosenUrl = ref<string | undefined>(undefined)
+const tooLarge = ref<string | undefined>(undefined)
 
-watch(file, (chosen) => {
+function forgetPreview(): void {
   if (chosenUrl.value !== undefined) {
     URL.revokeObjectURL(chosenUrl.value)
+    chosenUrl.value = undefined
   }
+}
+
+watch(file, (chosen) => {
+  forgetPreview()
   chosenUrl.value = chosen === undefined ? undefined : URL.createObjectURL(chosen)
 })
 
+// Or a picture chosen and then abandoned is held for as long as the page lives.
+onBeforeUnmount(forgetPreview)
+
 const previewUrl = computed<string | null>(() => chosenUrl.value ?? props.currentUrl)
 
+/**
+ * Refused here rather than after the upload: the size is known before anything is sent, and a
+ * phone should not spend four megabytes of somebody's data to be told no.
+ */
 function choose(event: Event): void {
   const input = event.target as HTMLInputElement
-  file.value = input.files?.[0]
+  const chosen = input.files?.[0]
+
+  if (chosen !== undefined && chosen.size > TEXT_LIMIT.setAvatar.image.maxLength) {
+    tooLarge.value = AVATAR_TOO_LARGE
+    file.value = undefined
+    input.value = ''
+    return
+  }
+
+  tooLarge.value = undefined
+  file.value = chosen
 }
 </script>
 
@@ -79,7 +107,10 @@ function choose(event: Event): void {
         <p v-if="file" class="line-clamp-2 break-all text-note text-ink-5">
           {{ file.name }} · {{ formatBytes(file.size) }}
         </p>
-        <p v-else class="text-note text-ink-5">JPEG, PNG oder WebP, bis zu 4 MB.</p>
+        <p v-else-if="tooLarge" class="text-note text-destructive" role="alert">{{ tooLarge }}</p>
+        <p v-else class="text-note text-ink-5">
+          JPEG, PNG oder WebP, bis zu {{ formatBytes(TEXT_LIMIT.setAvatar.image.maxLength) }}.
+        </p>
       </div>
     </div>
 

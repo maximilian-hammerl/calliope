@@ -16784,7 +16784,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "image": { "type": "string", "format": "binary" },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "maxLength": 4194304
+                  },
                   "origin": {
                     "type": "string",
                     "enum": [

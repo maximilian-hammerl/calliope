@@ -81,6 +81,14 @@ async function refreshEverywhere(): Promise<void> {
   emit('saved')
 }
 
+/** One state after either act, so the block never says two things at once. */
+function resetPicture(): void {
+  chosenFile.value = undefined
+  origin.value = OWN_WORK
+  credit.value = ''
+  confirmed.value = false
+}
+
 async function savePicture(): Promise<void> {
   pictureError.value = undefined
   if (chosenFile.value === undefined) return
@@ -94,9 +102,7 @@ async function savePicture(): Promise<void> {
         confirmed: 'true',
       },
     })
-    chosenFile.value = undefined
-    confirmed.value = false
-    credit.value = ''
+    resetPicture()
     await refreshEverywhere()
   } catch (error) {
     pictureError.value = pictureFailure(error)
@@ -107,6 +113,9 @@ async function removePicture(): Promise<void> {
   pictureError.value = undefined
   try {
     await removeAvatar.mutateAsync()
+    // Also clears a pending choice: „entfernen" means no picture, so leaving one selected and
+    // waiting to be saved says the opposite.
+    resetPicture()
     await refreshEverywhere()
   } catch (error) {
     pictureError.value = pictureFailure(error)

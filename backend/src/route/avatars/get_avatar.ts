@@ -3,6 +3,7 @@ import { STATUS_CODE } from "@std/http/status";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { FileStore } from "@/src/storage/file_store.ts";
+import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -48,6 +49,13 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const { fileId } = c.req.valid("param");
+
+    // The row, not the file: the bytes outlive it so a restore cannot break, but a picture somebody
+    // has removed — or that went with a deleted account — must stop being served at once.
+    if (!await UserAvatarService.isInUse(fileId)) {
+      return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
+    }
+
     const bytes = await FileStore.read(fileId);
 
     if (bytes === undefined) {

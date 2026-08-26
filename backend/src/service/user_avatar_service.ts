@@ -64,6 +64,20 @@ async function setAvatar(
   return { kind: "set", fileId };
 }
 
+/**
+ * Whether any member still has this picture. The bytes outlive the row by design — the sweep
+ * collects them, so a restore cannot produce a broken image — but they must stop being *served*
+ * the moment somebody removes their picture or deletes their account.
+ */
+async function isInUse(fileId: string): Promise<boolean> {
+  const row = await db
+    .selectFrom("userAvatar")
+    .select("fileId")
+    .where("fileId", "=", fileId)
+    .executeTakeFirst();
+  return row !== undefined;
+}
+
 async function deleteAvatar(userId: string): Promise<boolean> {
   const result = await db
     .deleteFrom("userAvatar")
@@ -73,9 +87,12 @@ async function deleteAvatar(userId: string): Promise<boolean> {
 }
 
 /**
- * Longer than the backups are kept, because restoring a retained dump brings back rows whose files
- * have to still exist — and a younger file may be an upload whose row is not committed yet. In
- * hours, because an `Instant` has no calendar to count days against.
+ * **One day longer than `RETENTION_DAYS` in `deployment/backup.sh`**, and that relationship is the
+ * whole point: restoring a retained dump brings back rows whose files have to still exist. Raise
+ * the backup retention and this has to follow, or a restore produces broken pictures.
+ *
+ * A younger file may also be an upload whose row is not committed yet. In hours, because an
+ * `Instant` has no calendar to count days against.
  */
 const UNREFERENCED_GRACE = Temporal.Duration.from({ hours: 15 * 24 });
 
@@ -121,6 +138,7 @@ async function sweepUnreferencedFiles(): Promise<number> {
 
 export const UserAvatarService = {
   selectAvatar,
+  isInUse,
   setAvatar,
   deleteAvatar,
   sweepUnreferencedFiles,

@@ -42,13 +42,19 @@ trap 'rm -f "$target.partial" "$files.partial"' EXIT
 # Straight off the host: this unit already runs as root on the VPS, so there is nothing a
 # container would add. The path comes from Docker rather than being assumed, so moving its
 # data-root does not silently back up an empty directory.
-volume_path="$(docker volume inspect --format '{{.Mountpoint}}' "$FILE_VOLUME")"
-tar -cz -C "$volume_path" . >"$files.partial"
+#
+# Absent before the stack has ever been started, which is a server with no uploads rather than a
+# failed backup — so it is reported and skipped instead of failing the unit and alarming.
+if volume_path="$(docker volume inspect --format '{{.Mountpoint}}' "$FILE_VOLUME" 2>/dev/null)"; then
+	tar -cz -C "$volume_path" . >"$files.partial"
 
-mv "$files.partial" "$files"
-chmod 600 "$files"
+	mv "$files.partial" "$files"
+	chmod 600 "$files"
 
-echo "wrote $files ($(du -h "$files" | cut -f1))"
+	echo "wrote $files ($(du -h "$files" | cut -f1))"
+else
+	echo "no $FILE_VOLUME volume yet; skipped the file archive"
+fi
 
 # Pruned only after the new backup exists, never before.
 find "$BACKUP_DIRECTORY" -name 'calliope-*.dump' -type f -mtime "+$RETENTION_DAYS" -print -delete
