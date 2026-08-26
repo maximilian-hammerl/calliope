@@ -7,6 +7,13 @@ import { Buffer } from "node:buffer";
 
 import type { ColumnType } from "kysely";
 
+export type AvatarOrigin =
+  | "licence"
+  | "other"
+  | "own_work"
+  | "permission"
+  | "public_domain";
+
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
@@ -184,6 +191,14 @@ export interface User {
   username: string;
 }
 
+export interface UserAvatar {
+  createdAt: Generated<string>;
+  credit: string | null;
+  fileId: Generated<string>;
+  origin: AvatarOrigin;
+  userId: string;
+}
+
 export interface UserBlock {
   blockedId: string;
   blockerId: string;
@@ -292,6 +307,7 @@ export interface DB {
   storyIdea: StoryIdea;
   storyIdeaReader: StoryIdeaReader;
   user: User;
+  userAvatar: UserAvatar;
   userBlock: UserBlock;
   userInChatGroup: UserInChatGroup;
   userInWritingGroup: UserInWritingGroup;
@@ -410,6 +426,15 @@ export const REPORT_CATEGORIES = [
 ] as const;
 export const REPORT_CATEGORY_SCHEMA = z.enum(REPORT_CATEGORIES);
 
+export const AVATAR_ORIGINS = [
+  "licence",
+  "other",
+  "own_work",
+  "permission",
+  "public_domain",
+] as const;
+export const AVATAR_ORIGIN_SCHEMA = z.enum(AVATAR_ORIGINS);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -513,6 +538,14 @@ export const USER_SCHEMA = z.object({
   bannedAt: z.iso.datetime({ offset: true }).nullable(),
   bannedBy: z.uuidv7().nullable(),
   banReason: z.string().nullable(),
+});
+
+export const USER_AVATAR_SCHEMA = z.object({
+  userId: z.uuidv7(),
+  fileId: z.uuidv7(),
+  origin: AVATAR_ORIGIN_SCHEMA,
+  credit: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_BLOCK_SCHEMA = z.object({

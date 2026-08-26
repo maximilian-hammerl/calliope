@@ -1,0 +1,135 @@
+import { generate as uuidv7 } from "@std/uuid/v7";
+import { db } from "@/src/database/client.ts";
+import type { AvatarOrigin } from "@/src/database/schema.ts";
+import { toAvatar } from "@/src/image/avatar_image.ts";
+import { FileStore } from "@/src/storage/file_store.ts";
+
+export type Avatar = {
+  fileId: string;
+  origin: AvatarOrigin;
+  credit: string | null;
+};
+
+/**
+ * The server names its own URLs, so no client builds this path. Moving the route then breaks
+ * compilation here rather than every avatar in the interface.
+ */
+export function avatarUrl(fileId: string): string {
+  return `/api/avatars/${fileId}`;
+}
+
+export type SetAvatarResult =
+  | { kind: "set"; fileId: string }
+  | { kind: "not_an_image" };
+
+async function selectAvatar(userId: string): Promise<Avatar | undefined> {
+  return await db
+    .selectFrom("userAvatar")
+    .select(["fileId", "origin", "credit"])
+    .where("userId", "=", userId)
+    .executeTakeFirst();
+}
+
+/**
+ * The bytes are written before the row, so a failure between the two leaves a file nothing points
+ * at — which the sweep collects. The other order would leave a row pointing at nothing, which is a
+ * broken picture on every page that member appears on.
+ *
+ * The previous file is not deleted here: see the sweep.
+ */
+async function setAvatar(
+  userId: string,
+  bytes: Uint8Array,
+  declaration: { origin: AvatarOrigin; credit: string | null },
+): Promise<SetAvatarResult> {
+  const image = await toAvatar(bytes);
+  if (image === undefined) {
+    return { kind: "not_an_image" };
+  }
+
+  // v7 like every other id here, and like the column's own default.
+  const fileId = uuidv7();
+  await FileStore.write(fileId, image);
+
+  await db
+    .insertInto("userAvatar")
+    .values({
+      userId,
+      fileId,
+      origin: declaration.origin,
+      credit: declaration.credit,
+    })
+    .onConflict((conflict) =>
+      conflict.column("userId").doUpdateSet({
+        fileId,
+        origin: declaration.origin,
+        credit: declaration.credit,
+        createdAt: new Date().toISOString(),
+      })
+    )
+    .execute();
+
+  return { kind: "set", fileId };
+}
+
+async function deleteAvatar(userId: string): Promise<boolean> {
+  const result = await db
+    .deleteFrom("userAvatar")
+    .where("userId", "=", userId)
+    .executeTakeFirst();
+  return result.numDeletedRows > 0n;
+}
+
+/**
+ * Longer than the backups are kept, because restoring a retained dump brings back rows whose files
+ * have to still exist — and a younger file may be an upload whose row is not committed yet. In
+ * hours, because an `Instant` has no calendar to count days against.
+ */
+const UNREFERENCED_GRACE = Temporal.Duration.from({ hours: 15 * 24 });
+
+/** Files the database no longer names. Never deleted inline — see the note on `setAvatar`. */
+async function sweepUnreferencedFiles(): Promise<number> {
+  const onDisk = await FileStore.listFileIds();
+  if (onDisk.length === 0) {
+    return 0;
+  }
+
+  const referenced = new Set(
+    (await db.selectFrom("userAvatar").select("fileId").execute()).map((row) =>
+      row.fileId
+    ),
+  );
+
+  const deleteBefore = Temporal.Now.instant().subtract(UNREFERENCED_GRACE);
+  let deleted = 0;
+
+  for (const fileId of onDisk) {
+    if (referenced.has(fileId)) {
+      continue;
+    }
+
+    // Sequential on purpose: this runs in the background over a whole directory, and there is
+    // nothing to gain from opening every file at once.
+    // deno-lint-ignore no-await-in-loop
+    const changedAt = await FileStore.modifiedAt(fileId);
+    if (
+      changedAt === undefined ||
+      Temporal.Instant.compare(changedAt, deleteBefore) > 0
+    ) {
+      continue;
+    }
+
+    // deno-lint-ignore no-await-in-loop -- as above
+    await FileStore.remove(fileId);
+    deleted += 1;
+  }
+
+  return deleted;
+}
+
+export const UserAvatarService = {
+  selectAvatar,
+  setAvatar,
+  deleteAvatar,
+  sweepUnreferencedFiles,
+};

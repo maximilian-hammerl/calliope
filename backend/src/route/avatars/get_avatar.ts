@@ -1,0 +1,69 @@
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { STATUS_CODE } from "@std/http/status";
+import { USERS_TAG } from "@/src/open_api_specification.ts";
+import authenticated from "@/src/middleware/authenticated.ts";
+import { FileStore } from "@/src/storage/file_store.ts";
+import {
+  BAD_REQUEST_RESPONSE,
+  COMMON_RESPONSES,
+  ERROR_RESPONSE,
+  jsonContent,
+} from "@/src/http/response.ts";
+
+/**
+ * A year, immutable, because the id is new on every upload: a changed picture is a changed
+ * address, so nothing here ever needs revalidating and no stale face survives a change.
+ */
+const CACHE_CONTROL = "private, max-age=31536000, immutable";
+
+export default new OpenAPIHono().openapi(
+  createRoute({
+    method: "get",
+    path: "/",
+    tags: [USERS_TAG],
+    summary: "Read a picture",
+    description:
+      "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached for a year.",
+    operationId: "getAvatar",
+    middleware: authenticated,
+    request: { params: z.object({ fileId: z.uuidv7() }) },
+    responses: {
+      [STATUS_CODE.OK]: {
+        description: "The picture",
+        content: {
+          "image/webp": { schema: z.string().openapi({ format: "binary" }) },
+        },
+      },
+      [STATUS_CODE.Unauthorized]: {
+        description: "No valid session",
+        content: jsonContent(ERROR_RESPONSE),
+      },
+      [STATUS_CODE.NotFound]: {
+        description: "No such picture",
+        content: jsonContent(ERROR_RESPONSE),
+      },
+      ...BAD_REQUEST_RESPONSE,
+      ...COMMON_RESPONSES,
+    },
+  }),
+  async (c) => {
+    const { fileId } = c.req.valid("param");
+    const bytes = await FileStore.read(fileId);
+
+    if (bytes === undefined) {
+      return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
+    }
+
+    // `c.body` rather than `c.json`, which is why this route's success has no JSON schema. The
+    // buffer, not the view: Hono's typed overloads take an `ArrayBuffer`.
+    const body = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    ) as ArrayBuffer;
+
+    return c.body(body, STATUS_CODE.OK, {
+      "content-type": "image/webp",
+      "cache-control": CACHE_CONTROL,
+    });
+  },
+);

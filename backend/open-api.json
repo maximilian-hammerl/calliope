@@ -16473,6 +16473,453 @@
         }
       }
     },
+    "/api/users/me/avatar": {
+      "put": {
+        "tags": ["users"],
+        "summary": "Set the member's own picture",
+        "description": "Replaces whatever picture the member had. The image is re-encoded to one square WebP, which is also what strips its metadata; the original is never stored. `confirmed` is the member's declaration that they may use the picture, and `credit` says where it came from unless it is their own work.",
+        "operationId": "setAvatar",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": { "type": "string", "format": "binary" },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "licence",
+                      "other",
+                      "own_work",
+                      "permission",
+                      "public_domain"
+                    ]
+                  },
+                  "credit": { "type": "string", "maxLength": 4000 },
+                  "confirmed": { "type": "string", "enum": ["true"] }
+                },
+                "required": ["image", "origin", "confirmed"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The picture is set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "avatarUrl": { "type": "string" } },
+                  "required": ["avatarUrl"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a picture in a format we accept",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["users"],
+        "summary": "Remove the member's own picture",
+        "description": "The member falls back to their initials. Idempotent: removing a picture that is not there is the same answer. The stored file is collected later rather than deleted here, so restoring a backup cannot produce a broken picture.",
+        "operationId": "deleteAvatar",
+        "responses": {
+          "200": {
+            "description": "There is no picture",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/{userId}": {
       "get": {
         "tags": ["users"],
@@ -17108,6 +17555,207 @@
           },
           "404": {
             "description": "No such account, or it is not banned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/avatars/{fileId}": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Read a picture",
+        "description": "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached for a year.",
+        "operationId": "getAvatar",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "fileId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The picture",
+            "content": {
+              "image/webp": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such picture",
             "content": {
               "application/json": {
                 "schema": {

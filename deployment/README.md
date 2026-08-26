@@ -249,6 +249,8 @@ journalctl -u calliope-backup.service -n 20
 ```
 
 Dumps land in `/var/backups/calliope` as `pg_dump` custom-format archives, kept for 14 days.
+Beside each one is `calliope-<timestamp>-files.tar.gz`, the uploaded files, which no dump covers.
+The dump is taken first, so the archive is a superset of what the rows reference.
 
 ### Restoring
 
@@ -271,13 +273,27 @@ docker compose -f docker-compose.deploy.yaml exec -T db \
 	< /var/backups/calliope/calliope-<timestamp>.dump
 ```
 
+Restoring the files, into the volume the backend mounts:
+
+```bash
+docker compose -f docker-compose.deploy.yaml stop backend
+tar -xz \
+	-C "$(docker volume inspect --format '{{.Mountpoint}}' calliope_file-data)" \
+	< /var/backups/calliope/calliope-<timestamp>-files.tar.gz
+docker compose -f docker-compose.deploy.yaml start backend
+```
+
+The backend is stopped first, because extracting under a running one can restore a file the
+sweep has just decided is unreferenced. Both halves work on the volume's own path — the backend
+image is distroless, so there is no shell or tar inside it to borrow.
+
 `docker compose exec -T` forwards stdin to the container, so any command in a script that
 does *not* read a dump needs `</dev/null` — otherwise it swallows the rest of the script.
 
 ## Known gaps
 
 - **The dumps never leave the server.** They cover mistakes in the data, not the loss of
-  the machine. Offsite copies, encrypted, are still to be set up.
+  the machine. Offsite copies, encrypted, are still to be set up — now for both halves.
 - **Bounces are read by a person**, not by the application — see above.
 - **Mail still in flight is lost on restart.** Sends are deliberately not awaited by the
   request that triggered them, and nothing drains them on shutdown; a member caught by a

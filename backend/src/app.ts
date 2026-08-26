@@ -10,7 +10,10 @@ import corsOptions from "./cors_options.ts";
 import { describeError, logger } from "@/src/logging.ts";
 import openApiSpecification from "./open_api_specification.ts";
 import { readRateLimit, writeRateLimit } from "./middleware/rate_limit.ts";
-import { REQUEST_BODY_LIMIT_BYTES } from "./text_limit.ts";
+import {
+  REQUEST_BODY_LIMIT_BYTES,
+  UPLOAD_BODY_LIMIT_BYTES,
+} from "./text_limit.ts";
 import { type ErrorResponse } from "@/src/http/response.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
@@ -23,6 +26,7 @@ import blocks from "@/src/route/blocks.ts";
 import reports from "@/src/route/reports.ts";
 import favourites from "@/src/route/favourites.ts";
 import users from "./route/users.ts";
+import avatars from "./route/avatars.ts";
 
 // Everything the API serves, without the prefix it is mounted under. Keeping the prefix out
 // of here means a resource is added in one place and cannot be mounted at the wrong depth.
@@ -61,6 +65,7 @@ const api = new OpenAPIHono({
   .route("/reports", reports)
   .route("/favourites", favourites)
   .route("/users", users)
+  .route("/avatars", avatars)
   .route("/notifications", notifications)
   .route("/chats", chats)
   .route("/search", search);
@@ -114,15 +119,21 @@ app.use(structuredLogger({
   },
 }));
 // Before anything reads the body, so an oversized one is refused rather than buffered.
-app.use(
+//
+// The limit is chosen here rather than declared on the upload route, because this middleware runs
+// first and refuses before route middleware is reached — a larger limit written on the route never
+// executes at all.
+app.use((c, next) =>
   bodyLimit({
-    maxSize: REQUEST_BODY_LIMIT_BYTES,
+    maxSize: c.req.path.endsWith("/avatar") && c.req.method === "PUT"
+      ? UPLOAD_BODY_LIMIT_BYTES
+      : REQUEST_BODY_LIMIT_BYTES,
     onError: (c) =>
       c.json(
         { error: "Request body too large" } satisfies ErrorResponse,
         STATUS_CODE.ContentTooLarge,
       ),
-  }),
+  })(c, next)
 );
 app.use(secureHeaders());
 app.use(cors(corsOptions));

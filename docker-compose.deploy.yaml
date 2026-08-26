@@ -89,6 +89,12 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME:?set SMTP_USERNAME in .env}
       SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD in .env}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?set MAIL_FROM_ADDRESS in .env}
+      FILE_STORAGE_PATH: ${FILE_STORAGE_PATH:?set FILE_STORAGE_PATH in .env}
+
+    # Uploaded files. A volume rather than the image, so a deploy does not take them with it, and
+    # the one thing here `pg_dump` does not cover — the backup tars it, see deployment/backup.sh.
+    volumes:
+      - file-data:${FILE_STORAGE_PATH}
 
     depends_on:
       db:
@@ -101,7 +107,7 @@ services:
     # /api/health reports 503 when a database is unreachable, so the container restarts rather
     # than serving errors. The binary asks itself: distroless has no shell for CMD-SHELL.
     healthcheck:
-      test: ["CMD", "/calliope", "--health-check"]
+      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--permission-set=default", "main.ts", "--health-check"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -166,6 +172,7 @@ services:
 
 volumes:
   db-data:
+  file-data:
   redis-data:
   caddy-data:
   caddy-config:

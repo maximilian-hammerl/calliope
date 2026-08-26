@@ -348,6 +348,35 @@ a default would sit in a public repository forever.
 Component names (`CalliopeBadge`, `CalliopeLogo`) are identifiers, not branding, and stay. So do
 the systemd units, the compose project and the database name.
 
+## What the runtime is, and why it changed
+
+The image runs on `gcr.io/distroless/cc-debian12:nonroot` — no shell, no package manager, so a
+dependency can never be a binary invoked through `Deno.Command` unless that binary and its shared
+libraries are copied in by hand. That part is unchanged and is worth keeping.
+
+It used to `deno compile` to a single executable, chosen for somewhat lower resource use rather
+than as an architectural commitment. **#94 moves it to `deno run`**, because a compiled binary
+cannot load a native addon: `sharp` works perfectly under `deno run` and then fails with
+`Could not load the "sharp" module using the … runtime`. Measured against the wasm alternative,
+compiling cost 34 ms per image and 81 MB of resident memory — far more than it saved. The
+benchmark is in #94.
+
+Three things follow, and the middle one is a genuine cost:
+
+- **The image carries Deno, the source and `node_modules`** instead of one executable, and
+  `deno.jsonc` sets `"nodeModulesDir": "auto"`. Distroless still works — verified by building it,
+  including that it runs under `--network none`, so nothing is fetched at startup.
+- **The permission set is explicit and now includes `--allow-ffi` and `--allow-sys`**, where the
+  compiled binary baked `--permission-set=default`. FFI on the API process is a real widening of
+  what a compromise reaches. It bought a 3.6× faster image path on a small VPS; if a future
+  dependency asks for another broad permission, weigh it the same way rather than by precedent.
+- **Anything with a native addon has to be tried against the actual runtime**, not only
+  `deno task dev` — that is how this was found, and under `deno compile` it would have shipped
+  green and failed in the container.
+
+Neither decision is sacred. Both are cost/benefit, and both were re-decided once already on
+measurement; re-decide them the same way rather than contorting a dependency around them.
+
 ## What the log says
 
 `src/logging.ts` configures LogTape once and exports the one logger. Only `main.ts` calls
