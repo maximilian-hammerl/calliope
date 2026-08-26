@@ -9,7 +9,8 @@ import type {
   WritingGroupStoryStatus,
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
-import { emptyToNull, normaliseTags } from "@/src/util/story_tags.ts";
+import { normaliseTags } from "@/src/util/story_tags.ts";
+import { emptyToNull } from "@/src/util/optional_text.ts";
 import type { User } from "./user_service.ts";
 import {
   type ListQuery,

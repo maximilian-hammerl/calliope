@@ -1,4 +1,5 @@
 import { userId } from "@/seed/ids.ts";
+import type { ProfileColumn } from "@/src/service/user_service.ts";
 
 /**
  * Handles rather than first names: members of a writing community pick a pen name far more
@@ -53,7 +54,9 @@ export const PROFILES = {
     postLength: "Kurz, drei bis fünf Sätze. Dafür oft.",
     writingFrequency: "Fast täglich, meistens nachts.",
   },
-} as const satisfies Partial<Record<keyof typeof USER, Record<string, string>>>;
+} as const satisfies Partial<
+  Record<keyof typeof USER, Partial<Record<ProfileColumn, string>>>
+>;
 
 /** Everyone but `unverified`, whose address is deliberately left unconfirmed. */
 export const VERIFIED_USERNAMES =

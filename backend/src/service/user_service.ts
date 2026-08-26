@@ -1,6 +1,6 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
-import { emptyToNull } from "@/src/util/story_tags.ts";
+import { emptyToNull } from "@/src/util/optional_text.ts";
 import { hashPassword, verifyPassword } from "@/src/util/password.ts";
 import { generateToken, hashToken } from "@/src/util/token.ts";
 import type { SessionProvenance } from "@/src/util/session_provenance.ts";

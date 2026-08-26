@@ -6,7 +6,8 @@ import type {
   StoryIdeaStatus,
   StoryLanguage,
 } from "@/src/database/schema.ts";
-import { emptyToNull, normaliseTags } from "@/src/util/story_tags.ts";
+import { normaliseTags } from "@/src/util/story_tags.ts";
+import { emptyToNull } from "@/src/util/optional_text.ts";
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
 import {
   listResultsWithCount,
@@ -457,11 +458,16 @@ async function selectCarousel(
   }
 
   const [previous, next] = await Promise.all([
+    // Nothing precedes the newest, so an unanchored walk does not ask. Asking would read a
+    // second statement's snapshot, where an idea posted since is suddenly the previous one —
+    // which made the carousel's opening step nondeterministic.
     // Newest first, so the previous idea is the nearest one *above* this id.
-    filtered({ ...set, newerThanId: storyIdea.id })
-      .orderBy("storyIdea.id", "asc")
-      .limit(1)
-      .executeTakeFirst(),
+    anchorId === undefined
+      ? undefined
+      : filtered({ ...set, newerThanId: storyIdea.id })
+        .orderBy("storyIdea.id", "asc")
+        .limit(1)
+        .executeTakeFirst(),
     filtered({ ...set, olderThanId: storyIdea.id })
       .orderBy("storyIdea.id", "desc")
       .limit(1)

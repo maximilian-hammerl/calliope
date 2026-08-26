@@ -75,18 +75,29 @@ const EMPTY = Object.fromEntries(PROFILE_FIELDS.map((field) => [field.key, '']))
   string
 >
 
+/** What the dialog was opened with, so a save carries only the fields that actually changed. */
+const opened = ref<Record<ProfileFieldKey, string>>({ ...EMPTY })
+
 const profileForm = useForm({
   defaultValues: { ...EMPTY },
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
     formError.value = undefined
 
-    const values = Object.fromEntries(
-      PROFILE_FIELDS.map((field) => [
-        field.key,
-        blank(parsed(SCHEMAS[field.key], value[field.key])),
-      ]),
-    ) as Record<ProfileFieldKey, string | null>
+    // Sending every field would overwrite whatever was edited elsewhere in the meantime, and
+    // sending nothing is a 400 — so an unchanged profile just closes.
+    const values: Partial<Record<ProfileFieldKey, string | null>> = {}
+    for (const field of PROFILE_FIELDS) {
+      const text = parsed(SCHEMAS[field.key], value[field.key])
+      if (text !== opened.value[field.key]) {
+        values[field.key] = blank(text)
+      }
+    }
+
+    if (Object.keys(values).length === 0) {
+      open.value = false
+      return
+    }
 
     try {
       await updateProfile({ data: values })
@@ -109,7 +120,9 @@ watch(
     }
     formError.value = undefined
     for (const field of PROFILE_FIELDS) {
-      profileForm.setFieldValue(field.key, props.profile[field.key] ?? '')
+      const stored = props.profile[field.key] ?? ''
+      opened.value[field.key] = stored
+      profileForm.setFieldValue(field.key, stored)
     }
   },
   { immediate: true },
