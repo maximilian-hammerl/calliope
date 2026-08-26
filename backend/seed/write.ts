@@ -4,6 +4,7 @@ import { PLATFORM_ROLES, USER, VERIFIED_USERNAMES } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
+import type { ChatFixture } from "@/seed/chats.ts";
 import { BLOCKS } from "@/seed/blocks.ts";
 import { REPORTS } from "@/seed/reports.ts";
 import { FAVOURITES } from "@/seed/favourites.ts";
@@ -123,7 +124,33 @@ function assertBlocksHaveNoPendingInvitation(): void {
 
 /** `stepsBack` five-minute steps before now, so fixture order and chronology agree. */
 function postedAt(stepsBack: number): string {
-  return Temporal.Now.instant().subtract({ minutes: stepsBack * 5 }).toString();
+  return postedAtMinutes(stepsBack * 5);
+}
+
+/** The same in minutes, for a chat's runs, which are shorter than one step. */
+function postedAtMinutes(minutesBack: number): string {
+  return Temporal.Now.instant().subtract({ minutes: minutesBack }).toString();
+}
+
+/**
+ * How far back each of a chat's messages was written, newest last. One step between remarks,
+ * one minute where the fixture marks a message as continuing the one before it — a step apart
+ * is exactly the grouping window, and each row reads the clock afresh, so a full step always
+ * lands a hair outside it.
+ */
+function chatMessageMinutes(
+  chat: ChatFixture,
+  newestMinutesBack: number,
+): number[] {
+  const minutes: number[] = [];
+  let back = newestMinutesBack;
+
+  for (let index = chat.messages.length - 1; index >= 0; index--) {
+    minutes[index] = back;
+    back += chat.messages[index]?.continues === true ? 1 : 5;
+  }
+
+  return minutes;
 }
 
 /**
@@ -282,20 +309,22 @@ async function writeChats(): Promise<void> {
   ).execute();
 
   await db.insertInto("chatMessage").values(
-    CHATS.flatMap((chat, chatIndex) =>
-      chat.messages.map((message, index) => ({
+    CHATS.flatMap((chat, chatIndex) => {
+      // Same reason as a thread's posts: the chat list is ordered by last activity, and one
+      // insert statement would give every chat the same one.
+      const minutes = chatMessageMinutes(
+        chat,
+        newestPostOfThread(chatIndex, CHATS.length) * 5,
+      );
+
+      return chat.messages.map((message, index) => ({
         id: message.id,
         chatGroupId: chat.id,
         text: message.text,
         createdBy: message.by,
-        // Same reason as a thread's posts: the chat list is ordered by last activity, and one
-        // insert statement would give every chat the same one.
-        createdAt: postedAt(
-          newestPostOfThread(chatIndex, CHATS.length) +
-            (chat.messages.length - 1 - index),
-        ),
-      }))
-    ),
+        createdAt: postedAtMinutes(minutes[index] ?? 0),
+      }));
+    }),
   ).execute();
 }
 

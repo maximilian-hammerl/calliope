@@ -160,6 +160,16 @@ behind an explicit "Ältere Nachrichten" rather than on scroll, because this lis
 a message arrives, and prepending compensates the scroll offset by exactly the height added, so
 the line somebody was reading stays under their eyes.
 
+**Consecutive lines from one person are one block.** A chat is remarks rather than posts, and
+somebody firing off three of them wrote them once: the name and the time head the run, not every
+line in it. A run breaks after five minutes, because one header carries one time and „vor 12
+Minuten" must not stand over something said an hour later; it never spans a deleted account,
+because every one of those reads „Gelöschtes Konto" and joining two would put one member's words
+under another's name. The spacing then needs three steps rather than two — „Melden" 6px under the
+message it reports, a run's own lines 14px apart, a new speaker 24px. With two it is ambiguous
+which message the button belongs to, since the name that used to start every block is now only on
+the first.
+
 **A list's order is explained by what its rows show.** Sort by a column the row displays, or
 the sequence reads as random. Meine Gruppen is ordered by last activity and each row says
 "zuletzt vor …"; Einladungen by when the invitation arrived and each row says "eingeladen vor
