@@ -178,17 +178,24 @@ export interface StoryIdeaReader {
 }
 
 export interface User {
+  aboutMe: string | null;
   bannedAt: string | null;
   bannedBy: string | null;
   banReason: string | null;
+  coWriterExpectations: string | null;
   createdAt: Generated<string>;
   emailAddress: string;
   emailAddressVerifiedAt: string | null;
+  genres: string | null;
   hashedPassword: string;
   id: Generated<string>;
   platformRole: PlatformRole | null;
+  postLength: string | null;
   updatedAt: Generated<string>;
   username: string;
+  writingBoundaries: string | null;
+  writingFrequency: string | null;
+  writingStyle: string | null;
 }
 
 export interface UserAvatar {
@@ -538,6 +545,13 @@ export const USER_SCHEMA = z.object({
   bannedAt: z.iso.datetime({ offset: true }).nullable(),
   bannedBy: z.uuidv7().nullable(),
   banReason: z.string().nullable(),
+  aboutMe: z.string().nullable(),
+  writingStyle: z.string().nullable(),
+  postLength: z.string().nullable(),
+  writingFrequency: z.string().nullable(),
+  coWriterExpectations: z.string().nullable(),
+  writingBoundaries: z.string().nullable(),
+  genres: z.string().nullable(),
 });
 
 export const USER_AVATAR_SCHEMA = z.object({

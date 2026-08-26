@@ -128,6 +128,28 @@ follows: it appears many times in a long form and it is reassurance, not instruc
 asterisks — they are a convention people misread, and a glyph carrying meaning is exactly what
 the iconography rule excludes.
 
+**A form whose every field is optional still marks every one of them.** Silence means required,
+so a profile of seven unmarked fields would claim seven obligations — and this is the form where
+that misreading costs most, since Yooco's mandatory fields are exactly what got filled with
+nonsense. The sentence above the form says the same thing once in prose; the markers are what a
+member reading only the field they are standing in still sees.
+
+**A form that publishes what somebody writes says who will read it, before they write.** Above
+the profile fields, not beside the save button: both halves, who can see it and who cannot —
+„alle Mitglieder mit einem Konto … außerhalb von Calliope ist nichts davon sichtbar" — and then
+what it is for, because a field somebody understands is a field they answer properly. This is
+what stands in place of a per-field visibility setting, so it carries that weight rather than
+being helper text.
+
+**A profile is edited from the profile, not from Einstellungen.** „Profil bearbeiten" sits on
+your own page as „Gruppe bearbeiten" sits on a group's — Einstellungen is the account, and a
+profile is content other members read.
+
+**A profile shows what was answered and nothing else.** No label over an empty value: a field
+left blank is a question somebody chose not to answer, and a bare label reads as the page having
+failed to load. A profile with nothing in it says so in one sentence — and on your own, says
+where to fill it in.
+
 **A select is marked only when one of its options is "Keine Angabe".** Then blank is a real
 choice and the rule above applies. A select whose default is an answer — Sichtbarkeit is Privat,
 Sprache is Deutsch — is answered rather than skipped, and marking it optional would invite
@@ -458,8 +480,9 @@ destination shows its icon beside the label in both bars (16px inline on the top
 above the label on the bottom), so the two bars read as the same three places. The
 menus exist on the phone too, rising above the bottom bar; that is an experiment, revisited if
 it reads badly in use.
-Anything belonging to one member lives behind their avatar: Mitteilungen, Chats,
-Einstellungen, Abmelden. That split is also what keeps the bar from growing: two long German
+Anything belonging to one member lives behind their avatar: Mein Profil, Mitteilungen, Chats,
+Einstellungen, Abmelden. Mein Profil is the one that navigates rather than opening a dialog,
+because the profile is a page strangers read too. That split is also what keeps the bar from growing: two long German
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
 have pushed harder.
 

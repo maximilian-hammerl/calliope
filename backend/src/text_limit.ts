@@ -53,6 +53,10 @@ export const TEXT_LIMIT = {
   reportReason: 2_000,
   /** What an operator decided about a report, beside the outcome. Same room as the reason it answers. */
   reportClosingNote: 2_000,
+  /** One answer each on a profile: how somebody writes, how often, what they will not write. */
+  profileDetail: 500,
+  /** The one profile field that invites prose rather than an answer. */
+  profileAboutMe: 2_000,
   /**
    * Where a picture came from. Generous on purpose: a licence clause pasted whole, or a long URL,
    * is exactly what somebody doing this properly will have, and truncating an attribution is the

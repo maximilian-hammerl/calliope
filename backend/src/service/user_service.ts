@@ -1,5 +1,6 @@
 import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
+import { emptyToNull } from "@/src/util/optional_text.ts";
 import { hashPassword, verifyPassword } from "@/src/util/password.ts";
 import { generateToken, hashToken } from "@/src/util/token.ts";
 import type { SessionProvenance } from "@/src/util/session_provenance.ts";
@@ -31,9 +32,22 @@ export type User = Pick<
 /** What one member may see of another. Deliberately narrower than {@link User}. */
 export type PublicUser = Pick<Selectable<DatabaseUser>, "id" | "username">;
 
+/** One list, so the select, the update and the response cannot drift apart. */
+export const PROFILE_COLUMNS = [
+  "aboutMe",
+  "writingStyle",
+  "postLength",
+  "writingFrequency",
+  "coWriterExpectations",
+  "writingBoundaries",
+  "genres",
+] as const;
+
+export type ProfileColumn = (typeof PROFILE_COLUMNS)[number];
+
 export type UserProfile = Pick<
   Selectable<DatabaseUser>,
-  "id" | "username" | "createdAt"
+  "id" | "username" | "createdAt" | ProfileColumn
 >;
 
 export type UserSession =
@@ -319,8 +333,35 @@ async function selectUserProfile(
 ): Promise<UserProfile | undefined> {
   return await db
     .selectFrom("user")
-    .select(["id", "username", "createdAt"])
+    .select(["id", "username", "createdAt", ...PROFILE_COLUMNS])
     .where("id", "=", userId)
+    .executeTakeFirst();
+}
+
+/** Absent means unchanged, blank means cleared — a member can empty what they filled in. */
+async function updateProfile(
+  userId: string,
+  changes: Partial<Record<ProfileColumn, string | null>>,
+): Promise<UserProfile | undefined> {
+  const row: Partial<Record<ProfileColumn, string | null>> = {};
+
+  for (const column of PROFILE_COLUMNS) {
+    const value = changes[column];
+    if (value !== undefined) {
+      row[column] = emptyToNull(value);
+    }
+  }
+
+  // Postgres will not take an update with nothing to set.
+  if (Object.keys(row).length === 0) {
+    return await selectUserProfile(userId);
+  }
+
+  return await db
+    .updateTable("user")
+    .set(row)
+    .where("id", "=", userId)
+    .returning(["id", "username", "createdAt", ...PROFILE_COLUMNS])
     .executeTakeFirst();
 }
 
@@ -328,6 +369,7 @@ export const UserService = {
   insertUser,
   listUsers,
   selectUserProfile,
+  updateProfile,
   selectUser,
   insertSessionForUser,
   selectSessionsForUser,

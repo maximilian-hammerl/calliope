@@ -16473,6 +16473,291 @@
         }
       }
     },
+    "/api/users/me": {
+      "patch": {
+        "tags": ["users"],
+        "summary": "Update the current member's profile",
+        "description": "Every field is optional and none is ever required. An omitted field is left alone; an empty one is cleared. What a profile holds is readable by every member, so a field a member does not want read is one they leave empty.",
+        "operationId": "updateOwnProfile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "aboutMe": { "type": ["string", "null"], "maxLength": 2000 },
+                  "writingStyle": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "postLength": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "writingFrequency": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "coWriterExpectations": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "writingBoundaries": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "genres": { "type": ["string", "null"], "maxLength": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The profile as it now stands",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "username": { "type": "string" },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "aboutMe": { "type": ["string", "null"] },
+                    "writingStyle": { "type": ["string", "null"] },
+                    "postLength": { "type": ["string", "null"] },
+                    "writingFrequency": { "type": ["string", "null"] },
+                    "coWriterExpectations": { "type": ["string", "null"] },
+                    "writingBoundaries": { "type": ["string", "null"] },
+                    "genres": { "type": ["string", "null"] },
+                    "isBlocked": { "type": "boolean" },
+                    "isBanned": { "type": "boolean" }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "createdAt",
+                    "aboutMe",
+                    "writingStyle",
+                    "postLength",
+                    "writingFrequency",
+                    "coWriterExpectations",
+                    "writingBoundaries",
+                    "genres",
+                    "isBlocked"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account no longer exists — it was deleted between this request being authenticated and the update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me/avatar": {
       "put": {
         "tags": ["users"],
@@ -16945,10 +17230,29 @@
                     "id": { "type": "string", "format": "uuid" },
                     "username": { "type": "string" },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "aboutMe": { "type": ["string", "null"] },
+                    "writingStyle": { "type": ["string", "null"] },
+                    "postLength": { "type": ["string", "null"] },
+                    "writingFrequency": { "type": ["string", "null"] },
+                    "coWriterExpectations": { "type": ["string", "null"] },
+                    "writingBoundaries": { "type": ["string", "null"] },
+                    "genres": { "type": ["string", "null"] },
                     "isBlocked": { "type": "boolean" },
                     "isBanned": { "type": "boolean" }
                   },
-                  "required": ["id", "username", "createdAt", "isBlocked"]
+                  "required": [
+                    "id",
+                    "username",
+                    "createdAt",
+                    "aboutMe",
+                    "writingStyle",
+                    "postLength",
+                    "writingFrequency",
+                    "coWriterExpectations",
+                    "writingBoundaries",
+                    "genres",
+                    "isBlocked"
+                  ]
                 }
               }
             }

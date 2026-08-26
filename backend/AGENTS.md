@@ -239,6 +239,10 @@ ideas the member has not read and did not write, no blocked authors — so there
 - **One filter chain, shared.** `filtered()` in `story_idea_service.ts` is what both
   `listStoryIdeas` and the carousel build on. A neighbour the carousel offers but the board would
   hide is an idea nobody can reach twice, so the two cannot be allowed to drift apart.
+- **Unanchored, there is no previous.** The endpoint chose the newest of the set, so nothing
+  precedes it and no second statement is asked. Asking read another snapshot, in which an idea
+  posted meanwhile was suddenly the previous one — which is what made the opening step's
+  backward arrow intermittently live, and the carousel test flaky.
 - **The anchor ignores read state, and only that.** Marking the idea on screen as read must not
   invalidate the URL the member is sitting on. Everything else still holds, so their own idea, a
   closed one, or one whose author they have blocked answers 404.

@@ -57,7 +57,7 @@ the inside, but still no caretaker.
 
 | Area             | State                                                                                                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
+| Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. A profile answers how somebody writes (#29): seven optional free-text fields, readable by every member and by nobody without an account. |
 | Writing groups   | Member-created, private/public, invitations with acceptance, roles, group discussions, next steps. **No** files, **no** way for a member to leave (#26) and **no** way to change a role once given (#27). |
 | Favourites       | One mechanism over groups, threads, posts, story ideas and chats (#73): a private mark that floats the thing to the top of its list — except among posts, where a thread keeps its reading order and the mark drives the filter instead. Every list that shows a favouritable kind offers the filter. |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Starting a conversation ("Unterhaltung beginnen") opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
@@ -123,6 +123,17 @@ These are decisions, not omissions, and each is recorded where it was made:
 - **No undo after an address change completes.** The window is the hour before, during which the
   old address can cancel. A real undo needs a longer-lived token and a policy for what
   reverting means.
+- **Profile fields carry no visibility setting (§10, §18).** §10 asks for four levels and calls
+  for granular privacy; §18 lists "configurable profile visibility" among its required items.
+  Neither is built, deliberately. Nothing here is readable without an account — every endpoint
+  but `health` and the auth flows carries `authenticated` — and the fields exist to be read by a
+  stranger who has not written with you yet, which is the one audience a group-scoped level hides
+  them from. Every field is optional, so what a member does not want read is a field they leave
+  empty, and a setting on an optional field is a second lever for the same thing. A sentence
+  beside the fields, saying who can read them, is what replaces it. §10's fourth level,
+  "everyone", would be a new capability rather than a restriction lifted: §23 separates
+  community-visible from published and nothing is published yet — and if that step is ever built,
+  profile fields stay behind the account wall.
 
 ## Specified but unbuilt in the interface
 
@@ -156,14 +167,31 @@ Nothing stops the last administrator being removed, leaving, or deleting their a
 leaves a group nobody can administer. Small, understood, and it gets worse with every group
 created — a trigger beside the one that removes an empty group closes all three paths at once.
 
-### 2. Profile fields
+### 2. Profile fields — built
 
-The overview and profile pages exist but answer only "who" — the interviews want them to answer
-whether a person would suit you to write with, which needs bio, genres, writing interests and what someone
-is currently writing, plus a visibility setting for that block. Two constraints were decided
-when the pages were built: **no statistics, ever** — profile-view counts and the like only
-create pressure —
-and **nothing mandatory** — Yooco's required fields got filled with nonsense.
+A profile now answers whether somebody would suit you to write with (#29), not only who they
+are. Seven fields on `user`, every one optional, every one free text and every one about writing:
+Über mich, Bevorzugte Schreibweise, Bevorzugte Beitragslänge, Bevorzugte Schreibhäufigkeit,
+Erwartungen an Mitschreibende, NO-GOs beim Schreiben, Lieblingsgenres. Edited from the member's
+own page, which is also where they are read and which shows only what was answered.
+
+**Preferences rather than measurements**, which is how Yooco words its own („Bevorzugte
+Schreibweise"): what somebody wants is what decides whether two people suit each other. An age or
+a form of address is deliberately *not* a field — `about_me` accommodates anybody who wants to say
+it, while a column would ask the question of everyone, which is what §18 warns against.
+
+**The list is not §10's, and that is the finding.** §12 and §17, the two interview sections that
+asked directly, are unanswered; §4.4 to §4.8 answer it sideways and more usefully, naming
+**writing style, post length and writing frequency** both as what members look for and as what
+ends a collaboration — none of which §10 lists. Three exported Rollenspielhimmel profiles fill
+exactly those, plus expectations, NO-GOs and genres, on all three, and „Über mich" on two.
+
+Prose rather than the story metadata's controlled values, because a profile is *read* about one
+person rather than filtered — 29 to 244 characters on those profiles, no two members alike. Three
+constraints held: **no statistics, ever**; **nothing mandatory**; and **no visibility setting**,
+recorded above.
+
+What is left is an avatar, which §10 lists and nothing here supplies.
 
 ### 3. Story ideas — built, follow-ups included
 

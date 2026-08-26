@@ -187,6 +187,11 @@ async function signOut() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem as-child>
+                <RouterLink :to="{ name: 'member', params: { userId: props.user.id } }">
+                  Mein Profil
+                </RouterLink>
+              </DropdownMenuItem>
               <DropdownMenuItem @select="showingNotifications = true">
                 Mitteilungen
                 <!-- A number always gets a noun: a bare badge was tested and misread. -->
