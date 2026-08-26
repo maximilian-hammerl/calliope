@@ -18,6 +18,7 @@ import { failureMessage } from '@/lib/format/failure'
 import {
   emailAddressSchema,
   focusFirstInvalid,
+  parsed,
   passwordSchema,
 } from '@/lib/validation/fieldSchemas'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -59,7 +60,9 @@ const form = useForm({
     requestedFor.value = undefined
 
     try {
-      await requestChange({ data: { emailAddress: value.emailAddress, password: value.password } })
+      await requestChange({
+        data: { emailAddress: parsed(NEW_ADDRESS, value.emailAddress), password: value.password },
+      })
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 401) {
@@ -76,7 +79,7 @@ const form = useForm({
     }
 
     await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
-    requestedFor.value = value.emailAddress
+    requestedFor.value = parsed(NEW_ADDRESS, value.emailAddress)
     form.reset()
   },
 })

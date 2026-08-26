@@ -9,7 +9,12 @@ import { failureMessage } from '@/lib/format/failure'
 // From the generated client, so renaming the code in the backend breaks compilation
 // here rather than quietly turning the message back into a generic failure.
 import { LoginUser403Code } from '@/api/models'
-import { focusFirstInvalid, loginSchema, passwordSchema } from '@/lib/validation/fieldSchemas'
+import {
+  focusFirstInvalid,
+  loginSchema,
+  parsed,
+  passwordSchema,
+} from '@/lib/validation/fieldSchemas'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
@@ -44,7 +49,7 @@ const form = useForm({
     formError.value = undefined
 
     try {
-      await signIn({ data: { login: value.login, password: value.password } })
+      await signIn({ data: { login: parsed(LOGIN, value.login), password: value.password } })
     } catch (error) {
       if (error instanceof ApiError) {
         // A rejected sign-in is an expected answer rather than a fault, and it cannot be

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ApiError } from '@/lib/api/apiFetch'
-import { rateLimitMessage } from '@/lib/format/rateLimit'
 import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
+import { failureMessage } from '@/lib/format/failure'
+import { firstMessage, postSchema } from '@/lib/validation/fieldSchemas'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import {
@@ -42,7 +42,6 @@ import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { emptyDocument } from '@/lib/document/emptyDocument'
-import { formatCount } from '@/lib/format/formatNumber'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
@@ -223,8 +222,11 @@ async function confirmDeleteThread() {
   deletionError.value = undefined
   try {
     await deleteThread({ groupId: groupId.value, threadId: threadId.value })
-  } catch {
-    deletionError.value = 'Der Thread konnte nicht gelöscht werden. Versuche es noch einmal.'
+  } catch (error) {
+    deletionError.value = failureMessage(
+      error,
+      'Der Thread konnte nicht gelöscht werden. Versuche es noch einmal.',
+    )
     return
   }
 
@@ -257,6 +259,11 @@ const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost()
  */
 const { mutateAsync: savePost, isPending: savingPost } = useUpdatePost()
 
+// The two operations carry their own bounds; an empty edit is a mistake, an empty composer is
+// just a composer nobody has typed in yet.
+const NEW_POST = postSchema(TEXT_LIMIT.createPost.document)
+const EDITED_POST = postSchema(TEXT_LIMIT.updatePost.document, 'Ein Beitrag braucht Text.')
+
 const editingPostId = ref<string | undefined>(undefined)
 const editError = ref<string | undefined>(undefined)
 
@@ -271,18 +278,12 @@ function stopEditing() {
 }
 
 async function saveEdit(postId: string, document: PostDocument, text: string) {
-  const trimmed = text.trim()
   editError.value = undefined
-
-  if (trimmed.length === 0) {
-    editError.value = 'Ein Beitrag braucht Text.'
-    return
-  }
 
   // Checked here rather than with `maxlength`, for the reason the composer states: prose that
   // stops dead mid-word is worse than being told why.
-  if (trimmed.length > TEXT_LIMIT.updatePost.document.maxLength) {
-    editError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.updatePost.document.maxLength)} Zeichen haben.`
+  editError.value = firstMessage(EDITED_POST.safeParse(text))
+  if (editError.value !== undefined) {
     return
   }
 
@@ -293,8 +294,11 @@ async function saveEdit(postId: string, document: PostDocument, text: string) {
       postId,
       data: { document },
     })
-  } catch {
-    editError.value = 'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.'
+  } catch (error) {
+    editError.value = failureMessage(
+      error,
+      'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.',
+    )
     return
   }
 
@@ -324,8 +328,11 @@ async function confirmDeletePost() {
 
   try {
     await removePost({ groupId: groupId.value, threadId: threadId.value, postId: post.id })
-  } catch {
-    deletePostError.value = 'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.'
+  } catch (error) {
+    deletePostError.value = failureMessage(
+      error,
+      'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.',
+    )
     return
   }
 
@@ -348,15 +355,14 @@ const {
 
 async function submit() {
   sendError.value = undefined
-  const text = draftText.value.trim()
-  if (text.length === 0) {
+  if (draftText.value.trim().length === 0) {
     return
   }
 
   // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word
   // with no explanation is worse than being told why, and the draft is kept either way.
-  if (text.length > TEXT_LIMIT.createPost.document.maxLength) {
-    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.document.maxLength)} Zeichen haben.`
+  sendError.value = firstMessage(NEW_POST.safeParse(draftText.value))
+  if (sendError.value !== undefined) {
     return
   }
 
@@ -379,12 +385,11 @@ async function submit() {
       })
     }
   } catch (error) {
-    // „Versuche es noch einmal" is the wrong advice under a rate limit, and the one thing that
-    // makes it worse. The draft is kept either way, which is what the clearing below guarantees.
-    sendError.value =
-      error instanceof ApiError && error.status === 429
-        ? rateLimitMessage(error.retryAfterSeconds)
-        : 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
+    // The draft is kept either way, which is what the clearing below guarantees.
+    sendError.value = failureMessage(
+      error,
+      'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.',
+    )
     return
   }
 

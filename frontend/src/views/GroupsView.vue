@@ -223,5 +223,5 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <GroupDialog v-model:open="creating" @saved="openGroup" />
+  <GroupDialog v-model:open="creating" @created="openGroup" />
 </template>

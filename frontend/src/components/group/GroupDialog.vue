@@ -9,6 +9,7 @@
  * story idea supplied the values. The two props are alternatives; `group` wins if both arrive.
  */
 import { computed, ref, watch } from 'vue'
+import { useForm } from '@tanstack/vue-form'
 import { useQueryClient } from '@tanstack/vue-query'
 import {
   getGetGroupQueryKey,
@@ -22,6 +23,8 @@ import StoryMetadataFields from '@/components/group/StoryMetadataFields.vue'
 import type { StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
 import { fromTags, toTags } from '@/lib/format/storyTags'
 import { formatCount } from '@/lib/format/formatNumber'
+import { failureMessage } from '@/lib/format/failure'
+import { focusFirstInvalid, parsed, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -33,10 +36,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import FormTextField from '@/components/common/FormTextField.vue'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
 
 /** What a story idea hands over when a group is founded from it. */
 export type GroupInitialValues = {
@@ -56,18 +58,18 @@ const open = defineModel<boolean>('open', { required: true })
 const props = defineProps<{ group?: GetGroup200; initial?: GroupInitialValues }>()
 
 /**
- * The id of the group that was saved. Emitted rather than navigated to: where to go afterwards
+ * The id of the group that was founded. Emitted rather than navigated to: where to go afterwards
  * is the caller's business — the groups list opens the new group, the group's own page stays.
+ *
+ * Only on founding, as `ThreadDialog` does. An edit has nothing to go to, and an event named for
+ * saving would invite a caller to navigate after one.
  */
-const emit = defineEmits<{ saved: [groupId: string] }>()
+const emit = defineEmits<{ created: [groupId: string] }>()
 
 const queryClient = useQueryClient()
 
 const editing = computed<boolean>(() => props.group !== undefined)
 
-const title = ref<string>('')
-const subtitle = ref<string>('')
-const synopsis = ref<string>('')
 const visibility = ref<'private' | 'public'>('private')
 
 const emptyMetadata = (): StoryMetadata => ({
@@ -86,7 +88,6 @@ const metadata = ref<StoryMetadata>(emptyMetadata())
 /** The form holds comma-separated text; the API takes arrays and nulls. */
 function metadataForApi() {
   return {
-    subtitle: blank(subtitle.value),
     storyStatus: metadata.value.storyStatus,
     genres: toTags(metadata.value.genres),
     subgenres: toTags(metadata.value.subgenres),
@@ -104,21 +105,73 @@ const blank = (value: string) => (value.trim().length === 0 ? null : value.trim(
 
 const LIMIT = TEXT_LIMIT.createGroup
 
-const titleError = ref<string | undefined>(undefined)
-const synopsisError = ref<string | undefined>(undefined)
+const TITLE = titleSchema(LIMIT.title, 'Gib deiner Gruppe einen Titel.')
+const SYNOPSIS = proseSchema(
+  LIMIT.synopsis,
+  `Die Beschreibung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`,
+)
+
 const formError = ref<string | undefined>(undefined)
+const formElement = ref<HTMLFormElement | null>(null)
 
 const { mutateAsync: createGroup, isPending: isCreating } = useCreateGroup()
 const { mutateAsync: updateGroup, isPending: isUpdating } = useUpdateGroup()
 const isPending = computed<boolean>(() => isCreating.value || isUpdating.value)
+
+const form = useForm({
+  defaultValues: { title: '', subtitle: '', synopsis: '' },
+  onSubmitInvalid: () => focusFirstInvalid(formElement.value),
+  onSubmit: async ({ value }) => {
+    formError.value = undefined
+
+    const values = {
+      title: parsed(TITLE, value.title),
+      subtitle: blank(value.subtitle),
+      synopsis: parsed(SYNOPSIS, value.synopsis),
+      visibility: visibility.value,
+      ...metadataForApi(),
+    }
+
+    let createdId: string | undefined
+    try {
+      if (props.group !== undefined) {
+        await updateGroup({ groupId: props.group.id, data: values })
+      } else {
+        const created = await createGroup({ data: values })
+        // 201 is the only documented success and `apiFetch` throws on the rest, so this narrows
+        // rather than handles: no id, no event — the group is founded either way.
+        createdId = created.status === 201 ? created.data.id : undefined
+      }
+    } catch (error) {
+      formError.value = failureMessage(
+        error,
+        editing.value
+          ? 'Die Änderungen konnten nicht gespeichert werden. Versuche es noch einmal.'
+          : 'Die Gruppe konnte nicht gegründet werden. Versuche es noch einmal.',
+      )
+      return
+    }
+
+    // The list shows the title and the privacy badge, so it goes stale with either operation.
+    await Promise.all([
+      queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
+      ...(props.group === undefined
+        ? []
+        : [queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) })]),
+    ])
+
+    open.value = false
+    if (createdId !== undefined) {
+      emit('created', createdId)
+    }
+  },
+})
 
 /**
  * Filled on opening rather than at setup, so a second visit shows what the group says now
  * instead of what it said when the page was first rendered.
  */
 watch(open, (isOpen) => {
-  titleError.value = undefined
-  synopsisError.value = undefined
   formError.value = undefined
 
   if (!isOpen) {
@@ -127,17 +180,17 @@ watch(open, (isOpen) => {
 
   const source = props.group ?? props.initial
   if (source === undefined) {
-    title.value = ''
-    subtitle.value = ''
-    synopsis.value = ''
+    form.reset()
     visibility.value = 'private'
     metadata.value = emptyMetadata()
     return
   }
 
-  title.value = source.title
-  subtitle.value = source.subtitle ?? ''
-  synopsis.value = source.synopsis
+  form.reset({
+    title: source.title,
+    subtitle: source.subtitle ?? '',
+    synopsis: source.synopsis,
+  })
   // An idea has no visibility or status of its own: founding from one starts where a new group
   // starts, and the author decides both before confirming.
   visibility.value = props.group?.visibility ?? 'private'
@@ -152,59 +205,6 @@ watch(open, (isOpen) => {
     language: source.language,
   }
 })
-
-async function submit() {
-  titleError.value = undefined
-  synopsisError.value = undefined
-  formError.value = undefined
-
-  if (title.value.trim().length === 0) {
-    titleError.value = 'Gib deiner Gruppe einen Titel.'
-    return
-  }
-
-  if (synopsis.value.trim().length > LIMIT.synopsis.maxLength) {
-    synopsisError.value = `Die Beschreibung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`
-    return
-  }
-
-  const values = {
-    title: title.value.trim(),
-    synopsis: synopsis.value.trim(),
-    visibility: visibility.value,
-    ...metadataForApi(),
-  }
-
-  let savedId: string
-  try {
-    if (props.group !== undefined) {
-      await updateGroup({ groupId: props.group.id, data: values })
-      savedId = props.group.id
-    } else {
-      const created = await createGroup({ data: values })
-      if (created.status !== 201) {
-        return
-      }
-      savedId = created.data.id
-    }
-  } catch {
-    formError.value = editing.value
-      ? 'Die Änderungen konnten nicht gespeichert werden. Versuche es noch einmal.'
-      : 'Die Gruppe konnte nicht gegründet werden. Versuche es noch einmal.'
-    return
-  }
-
-  // The list shows the title and the privacy badge, so it goes stale with either operation.
-  await Promise.all([
-    queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
-    ...(props.group === undefined
-      ? []
-      : [queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) })]),
-  ])
-
-  open.value = false
-  emit('saved', savedId)
-}
 </script>
 
 <template>
@@ -223,49 +223,56 @@ async function submit() {
         </DialogDescription>
       </DialogHeader>
 
-      <form class="flex flex-col gap-5" novalidate @submit.prevent="submit">
+      <form
+        ref="formElement"
+        class="flex flex-col gap-5"
+        novalidate
+        @submit.prevent="form.handleSubmit()"
+      >
         <Alert v-if="formError" variant="destructive" role="alert">
           <AlertDescription>{{ formError }}</AlertDescription>
         </Alert>
 
         <FieldGroup>
-          <Field :data-invalid="titleError !== undefined ? true : undefined">
-            <FieldLabel for="group-title">Titel</FieldLabel>
-            <Input
-              id="group-title"
-              v-model="title"
-              name="title"
-              :maxlength="LIMIT.title.maxLength"
-              placeholder="z. B. Der Erinnerungsmarkt"
-              required
-              :aria-invalid="titleError !== undefined ? true : undefined"
-            />
-            <FieldError :errors="[titleError]" />
-          </Field>
+          <form.Field name="title" :validators="{ onSubmit: TITLE }">
+            <template v-slot="{ field }">
+              <FormTextField
+                id="group-title"
+                :field="field"
+                label="Titel"
+                :maxlength="LIMIT.title.maxLength"
+                placeholder="z. B. Der Erinnerungsmarkt"
+                required
+              />
+            </template>
+          </form.Field>
 
-          <Field>
-            <FieldLabel optional for="group-subtitle">Untertitel</FieldLabel>
-            <Input
-              id="group-subtitle"
-              v-model="subtitle"
-              name="subtitle"
-              :maxlength="LIMIT.subtitle.maxLength"
-              placeholder="z. B. Was du vergisst, gehört jemand anderem"
-            />
-          </Field>
+          <form.Field name="subtitle">
+            <template v-slot="{ field }">
+              <FormTextField
+                id="group-subtitle"
+                :field="field"
+                label="Untertitel"
+                optional
+                :maxlength="LIMIT.subtitle.maxLength"
+                placeholder="z. B. Was du vergisst, gehört jemand anderem"
+              />
+            </template>
+          </form.Field>
 
-          <Field :data-invalid="synopsisError !== undefined ? true : undefined">
-            <FieldLabel optional for="group-synopsis">Worum geht es?</FieldLabel>
-            <Textarea
-              id="group-synopsis"
-              v-model="synopsis"
-              name="synopsis"
-              rows="3"
-              placeholder="z. B. Ein Markt, der nur nach Einbruch der Dunkelheit öffnet."
-              :aria-invalid="synopsisError !== undefined ? true : undefined"
-            />
-            <FieldError :errors="[synopsisError]" />
-          </Field>
+          <form.Field name="synopsis" :validators="{ onSubmit: SYNOPSIS }">
+            <template v-slot="{ field }">
+              <FormTextField
+                id="group-synopsis"
+                :field="field"
+                label="Worum geht es?"
+                optional
+                multiline
+                rows="3"
+                placeholder="z. B. Ein Markt, der nur nach Einbruch der Dunkelheit öffnet."
+              />
+            </template>
+          </form.Field>
 
           <Field>
             <FieldLabel for="group-visibility">Sichtbarkeit</FieldLabel>

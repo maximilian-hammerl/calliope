@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Plus } from '@lucide/vue'
+import { useForm } from '@tanstack/vue-form'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListChatsQueryKey, useCreateChat, useListChats } from '@/api/chats/chats'
 import type { ListChats200ResultsItem, ListMessages200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatActivityTime } from '@/lib/format/formatTime'
+import { failureMessage } from '@/lib/format/failure'
+import { focusFirstInvalid, parsed, titleSchema } from '@/lib/validation/fieldSchemas'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
 import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
@@ -22,7 +25,7 @@ import {
   DialogScrollContent,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import FormTextField from '@/components/common/FormTextField.vue'
 import { Spinner } from '@/components/ui/spinner'
 
 const open = defineModel<boolean>('open', { required: true })
@@ -99,8 +102,11 @@ watch(
 )
 
 const creating = ref<boolean>(false)
-const newTitle = ref<string>('')
+const createError = ref<string | undefined>(undefined)
+const createFormElement = ref<HTMLFormElement | null>(null)
 const { mutateAsync: createChat, isPending: isCreating } = useCreateChat()
+
+const CHAT_TITLE = titleSchema(TEXT_LIMIT.createChat.title, 'Gib dem Chat einen Titel.')
 
 // Answering an invitation needs a chat to answer about, and only the selected one is ever
 // answered — an unselected invitation shows no controls.
@@ -113,21 +119,37 @@ const {
   error: answerError,
 } = useOwnChatMembership(() => selectedId.value ?? '')
 
-async function create() {
-  const title = newTitle.value.trim()
-  if (title.length === 0) {
-    return
-  }
+const createForm = useForm({
+  defaultValues: { title: '' },
+  onSubmitInvalid: () => focusFirstInvalid(createFormElement.value),
+  onSubmit: async ({ value }) => {
+    createError.value = undefined
 
-  const created = await createChat({ data: { title } }).catch(() => undefined)
-  newTitle.value = ''
-  creating.value = false
-  await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
+    let created
+    try {
+      created = await createChat({ data: { title: parsed(CHAT_TITLE, value.title) } })
+    } catch (error) {
+      createError.value = failureMessage(
+        error,
+        'Der Chat konnte nicht angelegt werden. Versuche es noch einmal.',
+      )
+      return
+    }
 
-  if (created?.status === 201) {
-    selectedId.value = created.data.id
-  }
-}
+    creating.value = false
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
+
+    if (created.status === 201) {
+      selectedId.value = created.data.id
+    }
+  },
+})
+
+// Closing the row throws the attempt away, so reopening it does not start on an old error.
+watch(creating, () => {
+  createError.value = undefined
+  createForm.reset()
+})
 
 /** Declining takes the invitation off the list, so nothing is left to keep selected. */
 async function declineInvitation() {
@@ -172,15 +194,37 @@ const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 
           <!-- Favourites float to the top of this list already; this narrows it to them. -->
           <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
 
-          <form v-if="creating" class="mb-2 flex gap-2" @submit.prevent="create">
-            <Input
-              v-model="newTitle"
-              class="h-9"
-              name="title"
-              placeholder="z. B. Planung"
-              :maxlength="TEXT_LIMIT.createChat.title.maxLength"
-            />
-            <Button type="submit" size="sm" :disabled="isCreating">Anlegen</Button>
+          <form
+            v-if="creating"
+            ref="createFormElement"
+            class="mb-2 flex flex-col gap-2"
+            novalidate
+            @submit.prevent="createForm.handleSubmit()"
+          >
+            <!-- `items-start` keeps the button on the input's line when the error grows the
+                 column below it, and the label is hidden so that line is the column's top. -->
+            <div class="flex items-start gap-2">
+              <div class="min-w-0 flex-1">
+                <createForm.Field name="title" :validators="{ onSubmit: CHAT_TITLE }">
+                  <template v-slot="{ field }">
+                    <FormTextField
+                      id="chat-title"
+                      :field="field"
+                      label="Titel"
+                      label-hidden
+                      class="h-9"
+                      placeholder="z. B. Planung"
+                      :maxlength="TEXT_LIMIT.createChat.title.maxLength"
+                    />
+                  </template>
+                </createForm.Field>
+              </div>
+              <Button type="submit" size="sm" :disabled="isCreating">Anlegen</Button>
+            </div>
+
+            <Alert v-if="createError" variant="destructive" role="alert">
+              <AlertDescription>{{ createError }}</AlertDescription>
+            </Alert>
           </form>
 
           <p v-if="chats.length === 0" class="py-[7px] text-[12.5px] text-ink-5">

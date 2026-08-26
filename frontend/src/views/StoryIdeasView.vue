@@ -229,5 +229,5 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <StoryIdeaDialog v-model:open="creating" @saved="openIdea" />
+  <StoryIdeaDialog v-model:open="creating" @created="openIdea" />
 </template>

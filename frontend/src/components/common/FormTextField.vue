@@ -12,12 +12,12 @@
  * of whichever form rendered it.
  */
 import { computed, useId } from 'vue'
-import { firstError } from '@/lib/validation/fieldSchemas'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 // Or every passed-through attribute lands twice: once on the Field wrapper by Vue's own
-// inheritance and once on the Input below.
+// inheritance and once on the control below.
 defineOptions({ inheritAttrs: false })
 
 type FieldApi = {
@@ -29,6 +29,15 @@ type FieldApi = {
 const props = defineProps<{
   field: FieldApi
   label: string
+  // These three are declared props rather than attributes, or they land on the control too.
+  optional?: boolean
+  /**
+   * For the one field whose own control already names it — the chat row, revealed by a „+ Chat"
+   * button. Hidden, not dropped: it still answers what the input is for.
+   */
+  labelHidden?: boolean
+  /** Prose rather than a line: the same field, wired the same way, with `rows` as an attribute. */
+  multiline?: boolean
   /**
    * Only where something outside this component has to name the input. Left off, it generates its
    * own — a field cannot collide with the same field in another form, and nobody has to invent a
@@ -44,6 +53,15 @@ const invalid = computed<true | undefined>(() =>
   props.field.state.meta.errors.length > 0 ? true : undefined,
 )
 
+/**
+ * Only the first. Zod collects *every* failing check and keeps them in declaration order, so the
+ * schemas are written in the order a member should read them — and this shows the first of them.
+ * Nothing unwraps the issues: `FieldError` reads `.message` off them already.
+ */
+const shown = computed<Array<{ message: string | undefined }>>(
+  () => props.field.state.meta.errors.slice(0, 1) as Array<{ message: string | undefined }>,
+)
+
 /** Only referenced while there is an error to read, or a screen reader announces an empty node. */
 const describedBy = computed<string | undefined>(() =>
   invalid.value === true ? `${fieldId.value}-error` : undefined,
@@ -52,8 +70,11 @@ const describedBy = computed<string | undefined>(() =>
 
 <template>
   <Field :data-invalid="invalid">
-    <FieldLabel :for="fieldId">{{ label }}</FieldLabel>
-    <Input
+    <FieldLabel :for="fieldId" :optional="optional" :class="labelHidden ? 'sr-only' : undefined">
+      {{ label }}
+    </FieldLabel>
+    <component
+      :is="multiline ? Textarea : Input"
       :id="fieldId"
       :name="field.name"
       :model-value="field.state.value"
@@ -65,6 +86,6 @@ const describedBy = computed<string | undefined>(() =>
     <FieldDescription v-if="$slots.description">
       <slot name="description" />
     </FieldDescription>
-    <FieldError :id="`${fieldId}-error`" :errors="firstError(field.state.meta.errors)" />
+    <FieldError :id="`${fieldId}-error`" :errors="shown" />
   </Field>
 </template>

@@ -643,7 +643,8 @@ duplicated with it — „Das Passwort darf höchstens 256 Zeichen lang sein." w
 times.
 
 - **A field's rules live once, in `lib/validation/fieldSchemas.ts`.** `usernameSchema`,
-  `emailAddressSchema`, `passwordSchema`, `loginSchema`. Each takes the **calling operation's own**
+  `emailAddressSchema`, `passwordSchema`, `loginSchema`, `titleSchema`, `proseSchema`,
+  `httpUrlSchema`. Each takes the **calling operation's own**
   bound from `TEXT_LIMIT` — never one operation's numbers used for another — and the wording for an
   *empty* field, because that names what is being asked for: „Wähle ein Passwort" when registering,
   „Gib dein aktuelles Passwort ein" when confirming who you are. The length and format wording is
@@ -663,6 +664,9 @@ times.
   per field that was sixty-four repetitions and a hand-made id on each one. It generates that id
   now — `id` is a prop only for the rare case of something outside naming the input — so nothing
   has to invent a unique word per call site, which is what `settingsCurrentPassword` was.
+  Prose uses the same wrapper with `multiline`, and the chat row with `label-hidden` — a field
+  that swaps its control or hides its label is still one field, and wiring it by hand is how
+  `aria-describedby` goes missing.
 - **A failed submit moves focus to the first marked field**, through `onSubmitInvalid` and
   `focusFirstInvalid()`. Otherwise focus stays on the button that was just pressed.
 - **A 400 is schema drift, not a field problem.** Since the client enforces every rule the API

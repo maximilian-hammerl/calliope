@@ -76,6 +76,68 @@ export function loginSchema(bound: LengthBound, missing: string) {
 }
 
 /**
+ * A name for something: a group, a thread, an idea, a conversation. Required, and bounded by the
+ * input's own `maxlength` — the `max` here is the backstop for a value that arrives another way.
+ */
+export function titleSchema(bound: LengthBound, missing: string) {
+  return z
+    .string()
+    .trim()
+    .min(1, missing)
+    .max(
+      bound.maxLength,
+      `Der Titel darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`,
+    )
+}
+
+/**
+ * Long text — a synopsis, a teaser, a description. **`tooLong` is a parameter** because these are
+ * the fields whose names a member reads back („Die kurze Fassung", „Die ausführliche Fassung"), and
+ * because prose carries no `maxlength`: the bound is said at the moment it matters rather than by
+ * typing that stops dead mid-word, which is what the research asked for.
+ *
+ * Leaving `missing` out makes the field optional, which is what a group's description is.
+ */
+export function proseSchema(bound: LengthBound, tooLong: string, missing?: string) {
+  const bounded = z.string().trim()
+  return missing === undefined
+    ? bounded.max(bound.maxLength, tooLong)
+    : bounded.min(1, missing).max(bound.maxLength, tooLong)
+}
+
+/**
+ * A post's body. Its own factory rather than a `proseSchema` call, because the wording is the same
+ * in the composer and in the in-place editor and was written out twice.
+ */
+export function postSchema(bound: LengthBound, missing?: string) {
+  return proseSchema(
+    bound,
+    `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(bound.maxLength)} Zeichen haben.`,
+    missing,
+  )
+}
+
+/**
+ * A link a reader will follow, so the scheme is checked rather than assumed — the same two schemes
+ * the backend's `HREF` allows. Two refusals rather than one: not being a URL at all and being the
+ * wrong kind of URL are different mistakes, and the first is by far the more common.
+ */
+export function httpUrlSchema(missing: string) {
+  return z
+    .string()
+    .trim()
+    .min(1, missing)
+    .refine(
+      (value) => URL.canParse(value),
+      'Das ist keine vollständige Adresse. Sie muss mit https:// oder http:// beginnen.',
+    )
+    .refine(
+      (value) => !URL.canParse(value) || ['http:', 'https:'].includes(new URL(value).protocol),
+      'Nur Adressen mit https:// oder http:// sind möglich.',
+    )
+}
+
+/**
  * A repeated password, checked in the order a member reads it: empty is missing before it is
  * different. **Only the repeat is marked** — the password itself is not wrong, the second field
  * disagrees with it.
@@ -89,26 +151,32 @@ export function passwordRepeatMessage(
   repeat: string,
   password: string,
 ): string | undefined {
-  const parsed = schema.safeParse(repeat)
-  if (!parsed.success) {
-    return parsed.error.issues[0]?.message
+  const failed = firstMessage(schema.safeParse(repeat))
+  if (failed !== undefined) {
+    return failed
   }
   return repeat === password ? undefined : PASSWORDS_DIFFER
 }
 
 /**
- * Which of a field's reported errors to show: the first.
+ * The value a schema made of the input, for the submit that sends it. **TanStack Form does not
+ * preserve a Standard Schema's output** — `onSubmit` always receives the input — so `.trim()`
+ * decides what is *accepted*, never what is sent, and „ Titel " went out with its spaces until
+ * this existed. Parsing in `onSubmit` is what their submission-handling guide prescribes; it
+ * cannot throw, because `onSubmit` runs only once every field validated.
  *
- * Zod collects every failing check and keeps them in declaration order, so an empty username fails
- * both `min(1)` and `min(3)` — showing all of them would stack two corrections under one input,
- * where the wording is written so that the first already says everything. The order of the rules is
- * the order a member reads them.
- *
- * Nothing here unwraps the issue objects: `FieldError` already reads `.message` off them and
- * de-duplicates, so repeating that would be two copies of one job.
+ * Not for `passwordSchema`, which transforms nothing on purpose: a space belongs to a password.
  */
-export function firstError(errors: readonly unknown[]): Array<{ message: string | undefined }> {
-  return errors.slice(0, 1) as Array<{ message: string | undefined }>
+export function parsed<T extends z.ZodType>(schema: T, value: unknown): z.output<T> {
+  return schema.parse(value) as z.output<T>
+}
+
+/**
+ * The message a schema would show, for the two places that validate without a form: the composer
+ * and the in-place post editor are Tiptap, not fields, and have one error line each.
+ */
+export function firstMessage(result: { success: boolean; error?: z.ZodError }): string | undefined {
+  return result.error?.issues[0]?.message
 }
 
 /**

@@ -14,7 +14,7 @@ import { TEXT_LIMIT } from '@/api/textLimit'
 import { queryClient } from '@/lib/api/queryClient'
 import { ApiError } from '@/lib/api/apiFetch'
 import { failureMessage } from '@/lib/format/failure'
-import { emailAddressSchema, focusFirstInvalid } from '@/lib/validation/fieldSchemas'
+import { emailAddressSchema, focusFirstInvalid, parsed } from '@/lib/validation/fieldSchemas'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
@@ -73,7 +73,7 @@ const form = useForm({
     formError.value = undefined
 
     try {
-      await changeAddress({ data: { emailAddress: value.emailAddress } })
+      await changeAddress({ data: { emailAddress: parsed(NEW_ADDRESS, value.emailAddress) } })
     } catch (error) {
       if (error instanceof ApiError) {
         // Unlike a 400, this one is worth saying on the field: it is about the address typed, and

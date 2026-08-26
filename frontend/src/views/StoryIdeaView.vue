@@ -152,6 +152,6 @@ async function remove() {
     v-if="idea"
     v-model:open="foundingGroup"
     :initial="groupInitialValues"
-    @saved="openGroup"
+    @created="openGroup"
   />
 </template>

@@ -5,7 +5,7 @@ import { useRequestPasswordReset } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { ApiError } from '@/lib/api/apiFetch'
 import { failureMessage } from '@/lib/format/failure'
-import { focusFirstInvalid, loginSchema } from '@/lib/validation/fieldSchemas'
+import { focusFirstInvalid, loginSchema, parsed } from '@/lib/validation/fieldSchemas'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
@@ -35,7 +35,7 @@ const form = useForm({
     formError.value = undefined
 
     try {
-      await requestReset({ data: { login: value.login } })
+      await requestReset({ data: { login: parsed(LOGIN, value.login) } })
     } catch (error) {
       if (error instanceof ApiError) {
       }

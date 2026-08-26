@@ -9,6 +9,7 @@ import { failureMessage } from '@/lib/format/failure'
 import {
   emailAddressSchema,
   focusFirstInvalid,
+  parsed,
   passwordRepeatMessage,
   passwordSchema,
   usernameSchema,
@@ -55,8 +56,8 @@ const form = useForm({
     try {
       await signUp({
         data: {
-          username: value.username,
-          emailAddress: value.emailAddress,
+          username: parsed(USERNAME, value.username),
+          emailAddress: parsed(EMAIL_ADDRESS, value.emailAddress),
           password: value.password,
         },
       })
