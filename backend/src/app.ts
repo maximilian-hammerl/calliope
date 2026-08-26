@@ -9,7 +9,7 @@ import { bodyLimit } from "hono/body-limit";
 import corsOptions from "./cors_options.ts";
 import { describeError, logger } from "@/src/logging.ts";
 import openApiSpecification from "./open_api_specification.ts";
-import rateLimit from "./middleware/rate_limit.ts";
+import { readRateLimit, writeRateLimit } from "./middleware/rate_limit.ts";
 import { REQUEST_BODY_LIMIT_BYTES } from "./text_limit.ts";
 import { type ErrorResponse } from "@/src/http/response.ts";
 import auth from "./route/auth.ts";
@@ -127,7 +127,9 @@ app.use(
 app.use(secureHeaders());
 app.use(cors(corsOptions));
 app.use(methodNotAllowed({ app }));
-app.use(rateLimit);
+// Two budgets, split by method; each skips what the other counts.
+app.use(readRateLimit);
+app.use(writeRateLimit);
 
 // The one place the prefix is written. Caddy routes `/api/*` here and the Vite dev proxy
 // mirrors it, so both stay a single rule.

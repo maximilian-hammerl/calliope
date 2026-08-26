@@ -380,6 +380,26 @@ it supplies the elapsed time and puts the logger on the context.
 
 `logging_test.ts` pins the first two against a capturing sink, both checked by breaking them.
 
+## Two rate-limit budgets, split by method
+
+`GET`, `HEAD` and `QUERY` count against one budget and everything else against another, keyed by
+address and fifteen minutes wide. One budget meant an afternoon of reading left a member unable to
+save a draft — and the two are independent precisely so that cannot happen. Anything not named a
+read counts as a write, so a method added later is limited more tightly rather than not at all.
+
+**Both numbers come from measurement, and the writing one is the surprise.** A thread page costs
+eleven reads, so 500 is about forty-five page loads — and the key is the address, so a household
+divides it. Writing looks rare until the composer is counted: autosave is a `PATCH` on a
+two-second debounce with a ten-second ceiling, which is ninety saves in a window of steady writing
+and past two hundred in bursts. A tight write budget would stop the composer saving, which for a
+writing platform is the one failure that matters, so writes get 250 rather than the sixty that
+"writes are rare" would suggest.
+
+Each limiter skips what the other counts, so a request only ever touches one — which is also what
+keeps the draft-7 `RateLimit` headers coherent, since the skipped one sets none. The **scope
+travels in the 429 body** rather than being inferred from the limit in the header, because the
+client says something different for each and a number changing must not silently reclassify.
+
 ## Never raw SQL without asking
 
 Kysely's builder is checked; a template string is not. `sql\`nov()\`` compiles, ships, and

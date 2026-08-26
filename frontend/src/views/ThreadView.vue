@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { ApiError } from '@/lib/api/apiFetch'
+import { rateLimitMessage } from '@/lib/format/rateLimit'
 import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { useGetGroup } from '@/api/groups/groups'
@@ -376,8 +378,13 @@ async function submit() {
         data: { document: draft.value },
       })
     }
-  } catch {
-    sendError.value = 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
+  } catch (error) {
+    // „Versuche es noch einmal" is the wrong advice under a rate limit, and the one thing that
+    // makes it worse. The draft is kept either way, which is what the clearing below guarantees.
+    sendError.value =
+      error instanceof ApiError && error.status === 429
+        ? rateLimitMessage(error.retryAfterSeconds)
+        : 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
     return
   }
 

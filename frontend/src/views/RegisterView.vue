@@ -5,6 +5,7 @@ import { useRegisterUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { ApiError } from '@/lib/api/apiFetch'
+import { rateLimitMessage } from '@/lib/format/rateLimit'
 import type { FieldMessages } from '@/lib/validation/fieldMessage'
 import { fieldMessage, PASSWORDS_DIFFER } from '@/lib/validation/fieldMessage'
 import { forgetCurrentUser } from '@/lib/auth/session'
@@ -147,7 +148,7 @@ async function submit() {
         return
       }
       if (error.status === 429) {
-        formError.value = 'Zu viele Versuche. Versuche es in einigen Minuten noch einmal.'
+        formError.value = rateLimitMessage(error.retryAfterSeconds)
         return
       }
     }

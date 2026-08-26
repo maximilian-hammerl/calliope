@@ -436,6 +436,37 @@ conventions when you do it — `cn()` for class merging, a `data-slot` attribute
 HTMLAttributes['class']` as a prop — so the result does not read as foreign. Let reka position
 its own floating content; an `absolute` of our own fights it and sends the popover off-screen.
 
+## A status the whole interface must react to belongs in `queryClient`
+
+Two of them do. 502/504 and a rejected fetch set `backendReachable`; a **429** sets
+`rateLimitedUntil`. `App.vue` renders `ConnectionLost` or `RateLimited` from those, and neither is
+a call site's problem: while either holds, *every* request is failing, so a message beside one
+control would leave the rest of the interface failing in silence. A 401 is the third, and reaches
+the router through `setSessionLostHandler`. Everything else stays local, because it means something
+local — 400 field issues, 403 banned, 409 conflicts.
+
+Three things about the rate limit in particular:
+
+- **There are two budgets, so the notice says two different things.** The backend counts reads and
+  writes separately, and the 429 body carries which one refused — so a spent write budget reads
+  „Du kannst weiterlesen, aber gerade nichts speichern" over a page that genuinely still works,
+  while a spent read budget is the one that takes the screen. Claiming the server is not answering
+  while it answers every read would be a lie told over a working interface.
+- **The wait comes from `Retry-After`.** The limiter runs `standardHeaders: "draft-7"` and the
+  header counts down within the window rather than restating its length, so the notice says „in 4
+  Minuten" instead of „später". `apiFetch` carries it on `ApiError`; it discarded the headers
+  entirely before.
+- **`RateLimited` does not probe, where `ConnectionLost` does.** Retrying is what caused this
+  state. It counts down, offers its one button only once the window has passed, and the first
+  answer after that clears it through `onSuccess`.
+- **It sizes itself as the connection notice does, and that is also the fix for the navigation.** A
+  limited member who reloads gets no session answer, so `AppLayout` renders no bars —
+  `<TopBar v-if="user">` cannot tell a failed check from a signed-out one. Covering the screen says
+  what happened rather than leaving them on a shell with no way off it.
+
+**The wording lives in `lib/format/rateLimit.ts`.** Four sign-in views wrote their own sentence
+before this and two had already drifted apart.
+
 ## An error a composable produces must have a renderer
 
 Every `use*` that catches a failure and turns it into a German sentence — `useFavourite`,

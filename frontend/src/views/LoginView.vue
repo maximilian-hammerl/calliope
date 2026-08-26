@@ -5,6 +5,7 @@ import { useLoginUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { formatCount } from '@/lib/format/formatNumber'
 import { ApiError } from '@/lib/api/apiFetch'
+import { rateLimitMessage } from '@/lib/format/rateLimit'
 // From the generated client, so renaming the code in the backend breaks compilation
 // here rather than quietly turning the message back into a generic failure.
 import { LoginUser403Code } from '@/api/models'
@@ -130,7 +131,7 @@ async function submit() {
         return
       }
       if (error.status === 429) {
-        formError.value = 'Zu viele Anmeldeversuche. Versuche es in einigen Minuten noch einmal.'
+        formError.value = rateLimitMessage(error.retryAfterSeconds)
         return
       }
     }

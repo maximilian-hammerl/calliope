@@ -787,9 +787,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1006,9 +1007,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1144,9 +1146,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1302,9 +1305,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1458,9 +1462,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1644,9 +1649,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1823,9 +1829,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1961,9 +1968,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2175,9 +2183,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2423,9 +2432,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2631,9 +2641,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2810,9 +2821,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2995,9 +3007,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3174,9 +3187,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3402,9 +3416,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3598,9 +3613,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3831,9 +3847,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -4050,9 +4067,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -4402,9 +4420,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -4739,9 +4758,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -5052,9 +5072,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -5437,9 +5458,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -5728,9 +5750,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6046,9 +6069,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6329,9 +6353,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6628,9 +6653,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6921,9 +6947,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7158,9 +7185,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7433,9 +7461,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7708,9 +7737,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7988,9 +8018,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8225,9 +8256,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8500,9 +8532,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8770,9 +8803,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9033,9 +9067,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9312,9 +9347,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9549,9 +9585,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9838,9 +9875,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10168,9 +10206,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10448,9 +10487,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10740,9 +10780,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10983,9 +11024,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -11181,9 +11223,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -11612,9 +11655,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -11937,9 +11981,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -12390,9 +12435,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -12682,9 +12728,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13044,9 +13091,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13274,9 +13322,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13536,9 +13585,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13769,9 +13819,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14000,9 +14051,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14244,9 +14296,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14481,9 +14534,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14714,9 +14768,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14986,9 +15041,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -15359,9 +15415,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -15665,9 +15722,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -15913,9 +15971,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16130,9 +16189,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16373,9 +16433,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16612,9 +16673,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16892,9 +16954,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -17123,9 +17186,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -17623,9 +17687,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -17790,9 +17855,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18029,9 +18095,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18304,9 +18371,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18603,9 +18671,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18901,9 +18970,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -19127,9 +19197,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -19331,9 +19402,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -19613,9 +19685,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -19878,9 +19951,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -20082,9 +20156,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -20559,9 +20634,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }

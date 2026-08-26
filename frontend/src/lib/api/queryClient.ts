@@ -1,5 +1,5 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/vue-query'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
 import { LoginUser401Code } from '@/api/models'
 import { ApiError } from './apiFetch'
@@ -34,6 +34,62 @@ function isUnreachable(error: unknown): boolean {
     return GATEWAY_FAILURE_STATUSES.has(error.status)
   }
   return error instanceof TypeError
+}
+
+export type RateLimitScope = 'read' | 'write'
+
+/**
+ * When each rate-limit budget lifts, as epoch milliseconds. Global for the reason
+ * `backendReachable` is: a 429 is not one call site's problem, so a message beside one control
+ * would leave the rest of the interface failing silently.
+ *
+ * **Two of them, because the backend has two.** Reads and writes are counted separately, so a
+ * member who has spent one has not necessarily spent the other — and the two mean different
+ * things: reads exhausted is an interface that cannot load anything, writes exhausted is one that
+ * still reads perfectly and cannot save. Saying "the server is not answering" for the second would
+ * be a lie told over a working page.
+ *
+ * Set from `Retry-After`, which the limiter sends and which counts down honestly. Without the
+ * header there is still a limit to report, just no wait to name.
+ */
+export const rateLimitedUntil = ref<Partial<Record<RateLimitScope, number>>>({})
+
+/** A limit reported without a wait, so the banner can still say what happened. */
+const RATE_LIMIT_FALLBACK_MS = 60_000
+
+function noteRateLimit(error: unknown): void {
+  if (!(error instanceof ApiError) || error.status !== 429) {
+    return
+  }
+
+  // The body says which budget refused it. Reading it off the request's own method would give the
+  // same answer for a query or a mutation, but not for the draft's direct calls.
+  const scope: RateLimitScope = error.body.scope ?? 'read'
+
+  const until =
+    Date.now() +
+    (error.retryAfterSeconds === undefined
+      ? RATE_LIMIT_FALLBACK_MS
+      : error.retryAfterSeconds * 1000)
+
+  // The furthest answer wins: two requests refused a minute apart report different waits, and the
+  // later one is the one that has to pass.
+  const known = rateLimitedUntil.value[scope]
+  if (known === undefined || until > known) {
+    rateLimitedUntil.value = { ...rateLimitedUntil.value, [scope]: until }
+  }
+}
+
+/** Whether either budget is spent, which is what decides that the notice is on screen at all. */
+export const rateLimited = computed<boolean>(
+  () => rateLimitedUntil.value.read !== undefined || rateLimitedUntil.value.write !== undefined,
+)
+
+/** A budget is spent until something it governs succeeds again. */
+function clearRateLimit(scope: RateLimitScope): void {
+  if (rateLimitedUntil.value[scope] !== undefined) {
+    rateLimitedUntil.value = { ...rateLimitedUntil.value, [scope]: undefined }
+  }
 }
 
 /**
@@ -97,6 +153,7 @@ function isExpected(error: ApiError, key: readonly unknown[] | undefined): boole
 
 function handleError(error: unknown, key: readonly unknown[] | undefined): void {
   backendReachable.value = !isUnreachable(error)
+  noteRateLimit(error)
 
   if (error instanceof ApiError && error.status === 401 && !isExpected(error, key)) {
     onSessionLost?.()
@@ -110,9 +167,10 @@ function handleError(error: unknown, key: readonly unknown[] | undefined): void 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => handleError(error, query.queryKey),
-    // Any answer at all means the API is back, which is what clears the connection notice.
+    // Any answer at all means the API is back, and that it is answering this client again.
     onSuccess: () => {
       backendReachable.value = true
+      clearRateLimit('read')
     },
   }),
   mutationCache: new MutationCache({
@@ -120,6 +178,7 @@ export const queryClient = new QueryClient({
       handleError(error, mutation.options.mutationKey),
     onSuccess: () => {
       backendReachable.value = true
+      clearRateLimit('write')
     },
   }),
   defaultOptions: {

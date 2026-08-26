@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { failureMessage } from '@/lib/format/failure'
 import { useClearFavourite, useSetFavourite } from '@/api/favourites/favourites'
 import type { SetFavouriteTargetType } from '@/components/favourite/targetType'
 
@@ -27,8 +28,8 @@ export function useFavourite() {
       } else {
         await clear({ targetType, targetId })
       }
-    } catch {
-      favouriteError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    } catch (error) {
+      favouriteError.value = failureMessage(error)
       return false
     } finally {
       savingFavourite.value = false

@@ -1,4 +1,5 @@
 import type { ComputedRef, Ref } from 'vue'
+import { rateLimitedUntil } from '@/lib/api/queryClient'
 import { computed, ref, toValue, watch } from 'vue'
 import { useEventListener, watchDebounced } from '@vueuse/core'
 import type { PostDocument } from '@/api/models'
@@ -85,6 +86,15 @@ export function useDraft(
     const current = document.value
     if (storedDocument !== undefined && sameDocument(current, storedDocument)) return
     if (text.value.trim().length > TEXT_LIMIT.createPost.document.maxLength) return
+
+    // Nothing to gain from asking while the write budget is spent, and every keystroke would ask
+    // again — a save is a `PATCH`, so it is that budget and not the reading one. `failed` stays
+    // set, so the composer keeps saying the draft is unsaved, which it is.
+    const writesLimitedUntil = rateLimitedUntil.value.write
+    if (writesLimitedUntil !== undefined && writesLimitedUntil > Date.now()) {
+      failed.value = true
+      return
+    }
 
     saving.value = true
     failed.value = false

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import ConnectionLost from '@/components/common/ConnectionLost.vue'
-import { backendReachable } from '@/lib/api/queryClient'
+import RateLimited from '@/components/common/RateLimited.vue'
+import { backendReachable, rateLimited } from '@/lib/api/queryClient'
 </script>
 
 <template>
@@ -12,4 +13,8 @@ import { backendReachable } from '@/lib/api/queryClient'
        mounts only while the API is unreachable, which is also what starts and stops the
        retrying it does. -->
   <ConnectionLost v-if="!backendReachable" />
+
+  <!-- Never both: unreachable is the more urgent of the two and says everything this would.
+       A limit is only worth reporting while the server is answering at all. -->
+  <RateLimited v-else-if="rateLimited" />
 </template>

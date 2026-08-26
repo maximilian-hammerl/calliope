@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { failureMessage } from '@/lib/format/failure'
 import {
   useClearStoryIdeaRead,
   useMarkStoryIdeaRead,
@@ -51,8 +52,8 @@ export function useStoryIdeaActions() {
       }
       await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
       openChatDialog(created.data.id)
-    } catch {
-      conversationError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    } catch (error) {
+      conversationError.value = failureMessage(error)
     }
   }
 
