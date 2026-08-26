@@ -146,9 +146,11 @@ function operatorAt(report: Report, at: string): string {
         Was Mitglieder gemeldet haben, das Älteste zuerst.
       </p>
 
+      <!-- Each names itself: these carry no visible label, and a value like „Offen" says nothing
+           about what it selects once the trigger is read on its own. -->
       <div class="mt-6 flex flex-wrap items-center gap-3">
         <Select :model-value="status" @update:model-value="(value) => (status = value as Status)">
-          <SelectTrigger class="w-[160px] text-[12.5px]">
+          <SelectTrigger aria-label="Status" class="w-[160px] text-[12.5px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -162,7 +164,7 @@ function operatorAt(report: Report, at: string): string {
           :model-value="category"
           @update:model-value="(value) => (category = value as Category | 'all')"
         >
-          <SelectTrigger class="w-[220px] text-[12.5px]">
+          <SelectTrigger aria-label="Grund" class="w-[220px] text-[12.5px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -184,7 +186,7 @@ function operatorAt(report: Report, at: string): string {
           :model-value="outcome"
           @update:model-value="(value) => (outcome = value as Outcome | 'all')"
         >
-          <SelectTrigger class="w-[220px] text-[12.5px]">
+          <SelectTrigger aria-label="Ergebnis" class="w-[220px] text-[12.5px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

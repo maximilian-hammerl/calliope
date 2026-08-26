@@ -16,6 +16,7 @@ import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import { usePagedList } from '@/composables/usePagedList'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import FilterStrips from '@/components/common/FilterStrips.vue'
 import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -159,10 +160,7 @@ const creating = ref<boolean>(false)
       </p>
 
       <!-- One grid for both strips, so the labels share a column and the strips align. -->
-      <div
-        v-if="hasLoaded"
-        class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
-      >
+      <FilterStrips v-if="hasLoaded" class="mb-6">
         <!-- Neither reading nor status says anything on one's own ideas, so those two are the
              discovery board's; the favourite belongs to both. -->
         <template v-if="!mine">
@@ -174,7 +172,7 @@ const creating = ref<boolean>(false)
           <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
         </template>
         <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
-      </div>
+      </FilterStrips>
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="ideas-search">Suche</FieldLabel>

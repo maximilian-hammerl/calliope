@@ -120,11 +120,12 @@ const creating = ref<boolean>(false)
 
       <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
            them. -->
-      <div
-        class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
-      >
-        <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
-      </div>
+      <FilterStrip
+        v-model="favourite"
+        label="Favoriten"
+        :options="FAVOURITE_FILTERS"
+        class="mb-6"
+      />
 
       <Field class="mb-7 max-w-[380px]">
         <FieldLabel for="discover-search">Suche</FieldLabel>

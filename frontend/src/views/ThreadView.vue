@@ -440,9 +440,7 @@ async function submit() {
 
           <!-- The filter the header's own comment has been waiting on. It sits under the header
                rather than in it, beside the order toggle and the page strip it belongs with. -->
-          <div class="mb-5">
-            <FilterStrip v-model="postFilter" label="Beiträge" :options="POST_FILTERS" />
-          </div>
+          <FilterStrip v-model="postFilter" label="Beiträge" :options="POST_FILTERS" class="mb-5" />
 
           <p v-if="posts.length === 0" class="text-body text-ink-4">
             Noch keine Beiträge in „{{ thread.title }}“.

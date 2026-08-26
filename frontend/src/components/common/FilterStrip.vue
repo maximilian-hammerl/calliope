@@ -7,15 +7,19 @@
  *
  * Never the solid button level: that is the one primary act of a screen, and a filter is not it.
  *
- * **The parent must be `md:grid md:grid-cols-[max-content_1fr]`, even for a single strip.**
- * `md:contents` dissolves this wrapper, so the label and the options become the parent's own
- * children: in that grid they line up in two columns, with every label column as wide as the
- * longest. In a plain block they stack instead, and nothing says so — the groups and discovery
- * pages drifted that way for months because one strip felt like it did not need a grid.
+ * **It lays out its own label**, beside the options from `md` up and above them below it. It used
+ * to require the parent to be a two-column grid, which is a rule a call site cannot see: the
+ * groups and discovery pages drifted for months, and the thread's filter never had it at all.
  *
- * Below `md` the wrapper stays a box, which is what keeps a label nearer its own strip than the
- * one above — measured at 4px to both before this, so the grouping read as ambiguous.
+ * Inside a `FilterStrips` it dissolves into that grid instead (`md:contents`), so a run of strips
+ * shares one label column and their options line up. Alone, it opens a two-column grid of its own.
+ *
+ * Below `md` the wrapper stays a box either way, which is what keeps a label nearer its own strip
+ * than the one above — measured at 4px to both before this, so the grouping read as ambiguous.
  */
+import { computed, inject } from 'vue'
+import { FILTER_STRIP_GROUP } from './filterStripGroup'
+
 const model = defineModel<Value>({ required: true })
 
 const props = defineProps<{
@@ -29,10 +33,23 @@ const props = defineProps<{
 }>()
 
 const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
+
+const inGroup = inject(FILTER_STRIP_GROUP, false)
+
+/**
+ * A hidden label occupies no column — it is out of flow — so a grid would only indent the options
+ * by the column gap.
+ */
+const layout = computed<string>(() => {
+  if (props.hideLabel) {
+    return inGroup ? 'md:col-span-2' : ''
+  }
+  return inGroup ? 'md:contents' : 'md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4'
+})
 </script>
 
 <template>
-  <div class="flex flex-col md:contents">
+  <div class="flex flex-col" :class="layout">
     <span :id="id" :class="hideLabel ? 'sr-only' : 'text-[12.5px] text-ink-5 md:pb-[11px]'">{{
       label
     }}</span>

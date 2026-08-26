@@ -230,9 +230,11 @@ supplying its own `total` and page size would be free to supply a different pair
 `v-model:page` works because the composable's `page` is writable, its setter being `goToPage`.
 
 Reka widens the run near either end — page 1 of 30 is `1 2 3 4 5 … 30` where the hand-written strip
-gave `1 2 … 30`. It still wraps to two rows at 375px, the same as before, so the widening is kept. A view supplies the page size, the total, and
-whatever else it keeps in the query — the thread's order toggle calls `navigate` so switching
-order and returning to page one are *one* push rather than two history entries.
+gave `1 2 … 30`. It still wraps to two rows at 375px, the same as before, so the widening is kept.
+
+A view supplies the page size and the total, plus whatever else it keeps in the query — the
+thread's order toggle calls `navigate` so switching order and returning to page one are *one* push
+rather than two history entries.
 
 **Call it before the query it pages.** A request body needs `offset` while vue-query is building
 the key, and the total it needs comes back from that same query, so one of the two consts is
@@ -461,6 +463,19 @@ dependency, and reka is what all forty-odd `ui/` components already stand on. Ma
 conventions when you do it — `cn()` for class merging, a `data-slot` attribute, `class?:
 HTMLAttributes['class']` as a prop — so the result does not read as foreign. Let reka position
 its own floating content; an `absolute` of our own fights it and sends the popover off-screen.
+
+## Filters
+
+**`FilterStrip` lays out its own label** — beside the options from `md` up, above them below it.
+It used to require its parent to be `md:grid md:grid-cols-[max-content_1fr]`, which is a rule the
+call site cannot see and three of the five got wrong: the groups and discovery pages drifted for
+months, and the thread's filter and the chats dialog's never had the grid at all, so their labels
+sat above the strip on every desktop. A layout a component needs belongs inside it.
+
+**`FilterStrips` wraps two or more**, and exists only for the shared label column that keeps their
+options starting at the same place; separate grids would each size their own label and step
+raggedly to the right. A single strip needs nothing around it. Which of the two a strip is in
+reaches it by `provide`/`inject`, so neither the caller nor the strip has to be told twice.
 
 ## A status the whole interface must react to belongs in `queryClient`
 
