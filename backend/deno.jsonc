@@ -70,8 +70,8 @@
       "net": true,
       // ioredis
       "read": true,
-      // nodemailer
-      "sys": ["networkInterfaces", "hostname"],
+      // networkInterfaces, hostname for nodemailer; cpus for sharp
+      "sys": ["networkInterfaces", "hostname", "cpus"],
       // uploaded files, and nothing else
       "write": ["./.file-storage", "/data/files"]
     }
