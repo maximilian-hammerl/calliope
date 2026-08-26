@@ -65,6 +65,12 @@ const emit = defineEmits<{
   'update:text': [string]
 }>()
 
+/**
+ * Bumped whenever the selection moves, and read by everything that marks itself from it. Tiptap 3's
+ * `useEditor` assigns its ref once and never again, so a selection change alone re-renders nothing.
+ */
+const selectionRevision = ref<number>(0)
+
 const editor = useEditor({
   content: props.document,
   extensions: DOCUMENT_EXTENSIONS,
@@ -82,6 +88,12 @@ const editor = useEditor({
       role: 'textbox',
       'aria-multiline': 'true',
     },
+  },
+  // Tiptap 3's `useEditor` assigns its ref once and never again, so the only thing that re-renders
+  // this component is a prop change — which a *selection* never causes. Everything that marks
+  // itself from the selection (the toggles, the alignment, the bubble) needs this to change with it.
+  onSelectionUpdate: () => {
+    selectionRevision.value += 1
   },
   onUpdate: ({ editor: instance }) => {
     emit('update:document', instance.getJSON() as PostDocument)
@@ -212,11 +224,13 @@ const ALIGNMENTS = [
 ] as const
 
 function isActive(toggle: Toggle): boolean {
+  void selectionRevision.value
   const instance = editor.value
   return instance !== undefined && toggle.active(instance)
 }
 
 function currentAlignment(): string | undefined {
+  void selectionRevision.value
   const instance = editor.value
   if (instance === undefined) return undefined
   return ALIGNMENTS.find((alignment) => instance.isActive({ textAlign: alignment.value }))?.value
@@ -266,6 +280,7 @@ watch(
 )
 
 function hasStyling(): boolean {
+  void selectionRevision.value
   const instance = editor.value
   return instance !== undefined && hasRemovableMarks(instance.state)
 }

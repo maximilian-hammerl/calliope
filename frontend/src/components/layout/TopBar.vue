@@ -2,11 +2,9 @@
 import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu'
 import { APP_NAME } from '@/lib/branding'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
@@ -129,30 +127,9 @@ async function signOut() {
                 : 'border-transparent'
             "
           >
-            <template v-if="destination.children">
-              <NavigationMenuTrigger class="gap-1.5">
-                <component :is="destination.icon" :size="16" :stroke-width="1.5" />
-                {{ destination.label }}
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul class="flex w-56 flex-col p-1">
-                  <li v-for="child in destination.children" :key="child.name">
-                    <NavigationMenuLink as-child>
-                      <RouterLink
-                        :to="{ name: child.name }"
-                        class="flex min-h-11 items-center rounded-sm px-3 text-[13px] text-ink-2 hover:bg-accent md:min-h-9"
-                      >
-                        {{ child.label }}
-                      </RouterLink>
-                    </NavigationMenuLink>
-                  </li>
-                </ul>
-              </NavigationMenuContent>
-            </template>
-
             <!-- flex-row on the wrapper: its generated flex-col wins over the link's own
                  classes by stylesheet order, but loses in the wrapper's tailwind-merge. -->
-            <NavigationMenuLink v-else as-child class="flex-row">
+            <NavigationMenuLink as-child class="flex-row">
               <RouterLink
                 :to="{ name: destination.name }"
                 class="flex h-full items-center gap-1.5 px-1 text-nav whitespace-nowrap text-ink-5 hover:text-ink-1"

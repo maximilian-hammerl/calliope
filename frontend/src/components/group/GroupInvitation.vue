@@ -50,7 +50,7 @@ async function onDecline() {
     return
   }
   // A declined private group stops being readable, so staying here would show the error page.
-  void router.push({ name: 'groups' })
+  void router.push({ name: 'myGroups' })
 }
 </script>
 

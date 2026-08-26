@@ -9,6 +9,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import { Button } from '@/components/ui/button'
+import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
 
 const {
   track,
@@ -79,7 +80,11 @@ function reportIdea(idea: { id: string; title: string }) {
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <h1 class="mb-2 text-h1 text-ink-1">Story-Karussell</h1>
+      <h1 class="mb-2 text-h1 text-ink-1">Storyideen</h1>
+
+      <div class="mb-2">
+        <StoryIdeasViewStrip />
+      </div>
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         Offene Ideen, die du noch nicht gelesen hast — eine nach der anderen.
       </p>

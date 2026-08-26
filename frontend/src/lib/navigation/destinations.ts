@@ -1,40 +1,36 @@
 import { BookOpen, Lightbulb, Users } from '@lucide/vue'
 import type { RouteRecordName } from 'vue-router'
 
-type Child = { name: string; label: string }
-
 /**
  * The primary destinations, shared by the top bar and the bottom bar so the two cannot
  * disagree about which one a page belongs to — they did once, over `/groups/discover`.
  *
- * A destination with `children` opens a menu naming its pages — each by the page's own title,
- * because a destination is named the same everywhere. One without navigates directly.
+ * **Every destination navigates**, which `name` being required is what enforces. There used to be
+ * an optional `children` that opened a menu instead, and members reported it as a click they
+ * should not have to make: every resource here has one view people open far more often than the
+ * rest, so the bar goes straight there and the alternatives are a strip on the page itself. The
+ * menu shape is in the history if it is ever genuinely wanted back.
  */
 export const DESTINATIONS: ReadonlyArray<{
   label: string
   icon: typeof BookOpen
+  name: string
   belongsTo: readonly string[]
-  name?: string
-  children?: readonly Child[]
 }> = [
   {
     label: 'Gruppen',
     icon: BookOpen,
-    belongsTo: ['groups', 'group', 'thread', 'discover'],
-    children: [
-      { name: 'groups', label: 'Meine Gruppen' },
-      { name: 'discover', label: 'Gruppen entdecken' },
-    ],
+    name: 'myGroups',
+    // `discover` stays here so the bar still marks Gruppen while discovery is open, even though
+    // the bar no longer navigates there.
+    belongsTo: ['myGroups', 'group', 'thread', 'discoverGroups'],
   },
   {
     label: 'Storyideen',
     icon: Lightbulb,
-    belongsTo: ['storyIdeas', 'storyIdeasMine', 'storyIdea', 'storyIdeasCarousel'],
-    children: [
-      { name: 'storyIdeasMine', label: 'Meine Storyideen' },
-      { name: 'storyIdeas', label: 'Storyideen entdecken' },
-      { name: 'storyIdeasCarousel', label: 'Story-Karussell' },
-    ],
+    // The carousel, not a list: reading through unread ideas is what members come here to do.
+    name: 'storyIdeasCarousel',
+    belongsTo: ['discoverStoryIdeas', 'myStoryIdeas', 'storyIdea', 'storyIdeasCarousel'],
   },
   {
     label: 'Mitglieder',

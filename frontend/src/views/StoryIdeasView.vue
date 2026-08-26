@@ -16,6 +16,7 @@ import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import { usePagedList } from '@/composables/usePagedList'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
@@ -125,9 +126,8 @@ const creating = ref<boolean>(false)
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">
-          {{ props.mine ? 'Meine Storyideen' : 'Storyideen entdecken' }}
-        </h1>
+        <!-- The heading names the resource; the strip below names the view. -->
+        <h1 class="text-h1 text-ink-1">Storyideen</h1>
 
         <div class="ml-auto">
           <Button
@@ -140,6 +140,10 @@ const creating = ref<boolean>(false)
             Storyidee
           </Button>
         </div>
+      </div>
+
+      <div class="mb-2">
+        <StoryIdeasViewStrip />
       </div>
 
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">

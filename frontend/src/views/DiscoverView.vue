@@ -5,6 +5,7 @@ import { watchDebounced } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { Plus } from '@lucide/vue'
@@ -100,7 +101,7 @@ const creating = ref<boolean>(false)
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">Gruppen entdecken</h1>
+        <h1 class="text-h1 text-ink-1">Gruppen</h1>
         <div class="ml-auto">
           <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
             <Plus :stroke-width="1.5" />
@@ -108,6 +109,10 @@ const creating = ref<boolean>(false)
           </Button>
         </div>
       </div>
+      <div class="mb-2">
+        <GroupsViewStrip />
+      </div>
+
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
         sobald dich jemand einlädt.
@@ -115,7 +120,9 @@ const creating = ref<boolean>(false)
 
       <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
            them. -->
-      <div class="mb-6">
+      <div
+        class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
+      >
         <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
       </div>
 

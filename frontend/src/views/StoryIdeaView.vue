@@ -94,7 +94,7 @@ async function remove() {
 
   await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListStoryIdeasQueryKey()) })
   deleting.value = false
-  await router.push({ name: 'storyIdeasMine' })
+  await router.push({ name: 'myStoryIdeas' })
 }
 </script>
 

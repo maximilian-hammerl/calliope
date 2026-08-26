@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { useListGroups } from '@/api/groups/groups'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
@@ -135,10 +136,12 @@ const creating = ref<boolean>(false)
         </div>
       </section>
 
-      <!-- Both actions sit on the heading line. Discovery used to be a text link below the
-           list, where testers missed it and a member with many groups never reached it. -->
+      <!-- The heading names the resource and the strip below names the view, the way a group's
+           title sits above its thread tabs. Both saying "Meine Gruppen" would be one thing twice.
+           Discovery used to be a text link below the list, where testers missed it and a member
+           with many groups never reached it — hence the strip, and hence its position. -->
       <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">Meine Gruppen</h1>
+        <h1 class="text-h1 text-ink-1">Gruppen</h1>
 
         <div class="ml-auto">
           <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
@@ -148,13 +151,19 @@ const creating = ref<boolean>(false)
         </div>
       </div>
 
+      <div class="mb-2">
+        <GroupsViewStrip />
+      </div>
+
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
       </p>
 
       <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
            them. -->
-      <div class="mb-6">
+      <div
+        class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
+      >
         <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
       </div>
 

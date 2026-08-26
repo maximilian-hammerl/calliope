@@ -94,7 +94,7 @@ const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => 
 const router = useRouter()
 
 function goToGroups() {
-  void router.push({ name: 'groups' })
+  void router.push({ name: 'myGroups' })
 }
 
 const creatingThread = ref<boolean>(false)
@@ -105,7 +105,7 @@ function openThread(threadId: string) {
 
 /** A private group answers 404 to a non-member, so staying here would show an error. */
 function leaveGroupPage() {
-  void router.push({ name: 'groups' })
+  void router.push({ name: 'myGroups' })
 }
 
 const reportingGroup = ref<boolean>(false)

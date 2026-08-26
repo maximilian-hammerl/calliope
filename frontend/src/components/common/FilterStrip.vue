@@ -7,16 +7,25 @@
  *
  * Never the solid button level: that is the one primary act of a screen, and a filter is not it.
  *
- * `md:contents` dissolves the wrapper into the parent's grid, so every label sits in a column
- * as wide as the longest of them and the strips line up. Below `md` the wrapper stays a box,
- * which is what keeps a label nearer its own strip than the one above — measured at 4px to
- * both before this, so the grouping read as ambiguous.
+ * **The parent must be `md:grid md:grid-cols-[max-content_1fr]`, even for a single strip.**
+ * `md:contents` dissolves this wrapper, so the label and the options become the parent's own
+ * children: in that grid they line up in two columns, with every label column as wide as the
+ * longest. In a plain block they stack instead, and nothing says so — the groups and discovery
+ * pages drifted that way for months because one strip felt like it did not need a grid.
+ *
+ * Below `md` the wrapper stays a box, which is what keeps a label nearer its own strip than the
+ * one above — measured at 4px to both before this, so the grouping read as ambiguous.
  */
 const model = defineModel<Value>({ required: true })
 
 const props = defineProps<{
   label: string
   options: ReadonlyArray<{ value: Value; label: string }>
+  /**
+   * Draw the label for screen readers only. For a strip that chooses a *view* the heading above it
+   * already says what it is about, and the word is one too many — but the group still needs a name.
+   */
+  hideLabel?: boolean
 }>()
 
 const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
@@ -24,7 +33,9 @@ const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
 
 <template>
   <div class="flex flex-col md:contents">
-    <span :id="id" class="text-[12.5px] text-ink-5 md:pb-[11px]">{{ label }}</span>
+    <span :id="id" :class="hideLabel ? 'sr-only' : 'text-[12.5px] text-ink-5 md:pb-[11px]'">{{
+      label
+    }}</span>
 
     <div role="group" :aria-labelledby="id" class="flex min-w-0 items-end gap-5 overflow-x-auto">
       <button

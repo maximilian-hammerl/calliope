@@ -124,6 +124,7 @@ grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue           
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
 grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
 grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
+grep -c 'role="group"' src/components/ui/field/Field.vue                               # expect 0
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
 grep -c aria-hidden src/components/ui/accordion/AccordionTrigger.vue                    # expect 2

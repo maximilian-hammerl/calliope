@@ -11,16 +11,19 @@ export const routes: Array<RouteRecordRaw> = [
     name: 'home',
     component: () => import('../views/HomeView.vue'),
   },
-  {
-    path: '/groups',
-    name: 'groups',
-    component: () => import('../views/GroupsView.vue'),
-  },
-  // Before the dynamic route only for reading order — vue-router ranks a static segment
+  // The bare resource goes where the bar goes, which is the same rule for both resources below.
+  // Without it the path renders nothing: there is no catch-all.
+  { path: '/groups', redirect: { name: 'myGroups' } },
+  // Literals before the parameter only for reading order — vue-router ranks a static segment
   // above a parameter regardless of where it is declared.
   {
+    path: '/groups/mine',
+    name: 'myGroups',
+    component: () => import('../views/GroupsView.vue'),
+  },
+  {
     path: '/groups/discover',
-    name: 'discover',
+    name: 'discoverGroups',
     component: () => import('../views/DiscoverView.vue'),
   },
   {
@@ -33,20 +36,20 @@ export const routes: Array<RouteRecordRaw> = [
     name: 'thread',
     component: () => import('../views/ThreadView.vue'),
   },
-  {
-    path: '/story-ideas',
-    name: 'storyIdeas',
-    component: () => import('../views/StoryIdeasView.vue'),
-  },
-  // Literal before the parameter, or `mine` would be read as an idea's id.
+  // As above: the bare path follows the bar, which for ideas is the carousel rather than a list.
+  { path: '/story-ideas', redirect: { name: 'storyIdeasCarousel' } },
   {
     path: '/story-ideas/mine',
-    name: 'storyIdeasMine',
+    name: 'myStoryIdeas',
     component: () => import('../views/StoryIdeasView.vue'),
     props: { mine: true },
   },
-  // Also before the parameter, and the id is optional: opening the carousel without one starts
-  // at the newest unread idea.
+  {
+    path: '/story-ideas/discover',
+    name: 'discoverStoryIdeas',
+    component: () => import('../views/StoryIdeasView.vue'),
+  },
+  // The id is optional: opening the carousel without one starts at the newest unread idea.
   {
     path: '/story-ideas/carousel/:ideaId?',
     name: 'storyIdeasCarousel',
