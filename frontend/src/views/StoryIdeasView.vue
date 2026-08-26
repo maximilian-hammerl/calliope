@@ -85,7 +85,10 @@ watchDebounced(
 
 // Before the query: the request needs `offset` while its key is built, and the total it pages
 // over comes back from that same query, so the composable reads the total lazily.
-const { page, offset, pageCount, goToPage } = usePagedList(IDEAS_PER_PAGE, () => totalResults.value)
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
+  IDEAS_PER_PAGE,
+  () => totalResults.value,
+)
 
 // A search or a filter narrows the board, so whatever page was open is about a different set.
 watch([settled, readerState, status, favourite], () => goToPage(1))
@@ -217,7 +220,7 @@ const creating = ref<boolean>(false)
       </div>
 
       <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Ideen werden geladen …</p>

@@ -44,7 +44,7 @@ watchDebounced(
  * Public groups this member is not in. `none` is what makes it discovery rather than a second
  * copy of Meine Gruppen — a group they already belong to is not something to find.
  */
-const { page, offset, pageCount, goToPage } = usePagedList(
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   GROUPS_PER_PAGE,
   () => totalResults.value,
 )
@@ -162,7 +162,7 @@ const creating = ref<boolean>(false)
       </div>
 
       <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>

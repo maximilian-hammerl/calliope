@@ -42,7 +42,7 @@ watchDebounced(
 
 // The default is the groups this member has joined; being allowed to read a public group is
 // not the same as belonging to it, and this page is called Meine Gruppen.
-const { page, offset, pageCount, goToPage } = usePagedList(
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   GROUPS_PER_PAGE,
   () => totalResults.value,
 )
@@ -208,7 +208,7 @@ const creating = ref<boolean>(false)
       </div>
 
       <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>

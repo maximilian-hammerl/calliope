@@ -32,7 +32,10 @@ watchDebounced(
   { debounce: 300 },
 )
 
-const { page, offset, pageCount, goToPage } = usePagedList(PAGE_SIZE, () => totalResults.value)
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
+  PAGE_SIZE,
+  () => totalResults.value,
+)
 
 // A search narrows the directory, so whatever page was open is about different people.
 watch(settled, () => goToPage(1))
@@ -119,7 +122,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
              reachable now, so pointing at the search field instead of offering it would be
              an apology for a list that no longer stops. -->
         <div v-if="pageCount > 1" class="mt-5 border-t border-line-2 pt-3">
-          <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+          <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
         </div>
       </template>
 
