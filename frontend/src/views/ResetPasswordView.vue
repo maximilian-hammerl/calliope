@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useForm } from '@tanstack/vue-form'
 import { useRoute } from 'vue-router'
 import { useResetPassword } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatCount } from '@/lib/format/formatNumber'
 import { ApiError } from '@/lib/api/apiFetch'
-import { rateLimitMessage } from '@/lib/format/rateLimit'
-import type { FieldMessages } from '@/lib/validation/fieldMessage'
-import { fieldMessage, PASSWORDS_DIFFER } from '@/lib/validation/fieldMessage'
+import { failureMessage } from '@/lib/format/failure'
+import {
+  focusFirstInvalid,
+  passwordRepeatMessage,
+  passwordSchema,
+} from '@/lib/validation/fieldSchemas'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import FormTextField from '@/components/common/FormTextField.vue'
+import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-
-type FieldName = 'password' | 'passwordConfirmation'
 
 const route = useRoute()
 
@@ -28,96 +29,53 @@ const token = typeof route.query.token === 'string' ? route.query.token : undefi
  */
 const status = ref<'form' | 'done' | 'expired'>(token === undefined ? 'expired' : 'form')
 
-const password = ref<string>('')
-const passwordConfirmation = ref<string>('')
-
-const fieldErrors = ref<Partial<Record<FieldName, string>>>({})
 const formError = ref<string | undefined>(undefined)
 
 const { mutateAsync: setPassword, isPending } = useResetPassword()
 
 const LIMIT = TEXT_LIMIT.resetPassword
 
-const FIELD_NAMES = ['password', 'passwordConfirmation'] as const
-
-const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {
-  password: {
-    missing: 'Gib ein neues Passwort ein.',
-    malformed: 'Gib ein neues Passwort ein.',
-    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
-  },
-  passwordConfirmation: {
-    missing: 'Wiederhole dein neues Passwort.',
-    malformed: 'Wiederhole dein neues Passwort.',
-    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
-  },
-}
+// Rules and wording from `lib/validation/fieldSchemas`; only the empty-field wording is this
+// form's own, because it names what is being asked for.
+const PASSWORD = passwordSchema(LIMIT.password, 'Gib ein neues Passwort ein.')
+const REPEAT = passwordSchema(LIMIT.password, 'Wiederhole dein neues Passwort.')
 
 const formElement = ref<HTMLFormElement | null>(null)
 
-function validate(): boolean {
-  const form = formElement.value
-  if (form === null) {
-    return false
-  }
+const form = useForm({
+  defaultValues: { password: '', passwordConfirmation: '' },
+  // Focus follows the first thing that is wrong; without it focus stays on the button.
+  onSubmitInvalid: () => focusFirstInvalid(formElement.value),
+  onSubmit: async ({ value }) => {
+    formError.value = undefined
 
-  const errors: Partial<Record<FieldName, string>> = {}
-
-  for (const name of FIELD_NAMES) {
-    const input = form.elements.namedItem(name)
-    if (input instanceof HTMLInputElement && !input.validity.valid) {
-      errors[name] = fieldMessage(FIELD_MESSAGES[name], input.validity)
+    if (token === undefined) {
+      return
     }
-  }
 
-  // After the native rules, so an empty repeat reads as missing rather than as not matching.
-  // Only the repeat is marked: the password itself is not wrong, the second field disagrees.
-  if (errors.passwordConfirmation === undefined && passwordConfirmation.value !== password.value) {
-    errors.passwordConfirmation = PASSWORDS_DIFFER
-  }
-
-  fieldErrors.value = errors
-  return Object.keys(errors).length === 0
-}
-
-async function submit() {
-  formError.value = undefined
-
-  if (token === undefined || !validate()) {
-    return
-  }
-
-  try {
-    // Not trimmed: a password may legitimately begin or end with a space.
-    await setPassword({ data: { token, password: password.value } })
-  } catch (error) {
-    if (error instanceof ApiError) {
-      // The one answer the API gives for spent, expired and unknown alike.
-      if (error.status === 410) {
-        status.value = 'expired'
-        return
+    try {
+      // Not trimmed: a password may legitimately begin or end with a space.
+      await setPassword({ data: { token, password: value.password } })
+    } catch (error) {
+      if (error instanceof ApiError) {
+        // The one answer the API gives for spent, expired and unknown alike.
+        if (error.status === 410) {
+          status.value = 'expired'
+          return
+        }
       }
-      if (error.status === 400) {
-        fieldErrors.value = { password: FIELD_MESSAGES.password.malformed }
-        return
-      }
-      if (error.status === 429) {
-        formError.value = rateLimitMessage(error.retryAfterSeconds)
-        return
-      }
+      formError.value = failureMessage(error)
+      return
     }
-    formError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
-  }
 
-  // Every session ended with the reset, including this browser's if it had one. The guard
-  // reads the session from the cache, so the stale answer has to go or it would send a
-  // signed-in visitor home instead of to the sign-in page.
-  forgetCurrentUser()
-  password.value = ''
-  passwordConfirmation.value = ''
-  status.value = 'done'
-}
+    // Every session ended with the reset, including this browser's if it had one. The guard
+    // reads the session from the cache, so the stale answer has to go or it would send a
+    // signed-in visitor home instead of to the sign-in page.
+    forgetCurrentUser()
+    form.reset()
+    status.value = 'done'
+  },
+})
 </script>
 
 <template>
@@ -170,44 +128,44 @@ async function submit() {
           ref="formElement"
           class="mt-7 flex flex-col gap-5"
           novalidate
-          @submit.prevent="submit"
+          @submit.prevent="form.handleSubmit()"
         >
           <Alert v-if="formError" variant="destructive" role="alert">
             <AlertDescription>{{ formError }}</AlertDescription>
           </Alert>
 
           <FieldGroup>
-            <Field :data-invalid="fieldErrors.password !== undefined ? true : undefined">
-              <FieldLabel for="password">Neues Passwort</FieldLabel>
-              <Input
-                id="password"
-                v-model="password"
-                name="password"
-                type="password"
-                :maxlength="LIMIT.password.maxLength"
-                autocomplete="new-password"
-                required
-                :aria-invalid="fieldErrors.password !== undefined ? true : undefined"
-              />
-              <FieldError :errors="[fieldErrors.password]" />
-            </Field>
+            <form.Field name="password" :validators="{ onSubmit: PASSWORD }">
+              <template v-slot="{ field }">
+                <FormTextField
+                  :field="field"
+                  id="password"
+                  label="Neues Passwort"
+                  type="password"
+                  :maxlength="LIMIT.password.maxLength"
+                  autocomplete="new-password"
+                />
+              </template>
+            </form.Field>
 
-            <Field
-              :data-invalid="fieldErrors.passwordConfirmation !== undefined ? true : undefined"
+            <form.Field
+              name="passwordConfirmation"
+              :validators="{
+                onSubmit: ({ value, fieldApi }) =>
+                  passwordRepeatMessage(REPEAT, value, fieldApi.form.getFieldValue('password')),
+              }"
             >
-              <FieldLabel for="passwordConfirmation">Neues Passwort wiederholen</FieldLabel>
-              <Input
-                id="passwordConfirmation"
-                v-model="passwordConfirmation"
-                name="passwordConfirmation"
-                type="password"
-                :maxlength="LIMIT.password.maxLength"
-                autocomplete="new-password"
-                required
-                :aria-invalid="fieldErrors.passwordConfirmation !== undefined ? true : undefined"
-              />
-              <FieldError :errors="[fieldErrors.passwordConfirmation]" />
-            </Field>
+              <template v-slot="{ field }">
+                <FormTextField
+                  :field="field"
+                  id="passwordConfirmation"
+                  label="Neues Passwort wiederholen"
+                  type="password"
+                  :maxlength="LIMIT.password.maxLength"
+                  autocomplete="new-password"
+                />
+              </template>
+            </form.Field>
           </FieldGroup>
 
           <Button type="submit" :disabled="isPending">

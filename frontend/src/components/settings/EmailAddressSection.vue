@@ -5,21 +5,25 @@
  */
 import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
 import { computed, ref } from 'vue'
+import { useForm } from '@tanstack/vue-form'
 import {
   getGetCurrentUserQueryKey,
   useGetCurrentUser,
   useRequestEmailAddressChange,
 } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatCount } from '@/lib/format/formatNumber'
 import { queryClient } from '@/lib/api/queryClient'
 import { ApiError } from '@/lib/api/apiFetch'
-import type { FieldMessages } from '@/lib/validation/fieldMessage'
-import { fieldMessage } from '@/lib/validation/fieldMessage'
+import { failureMessage } from '@/lib/format/failure'
+import {
+  emailAddressSchema,
+  focusFirstInvalid,
+  passwordSchema,
+} from '@/lib/validation/fieldSchemas'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import FormTextField from '@/components/common/FormTextField.vue'
+import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 
 const { data: currentUser } = useGetCurrentUser()
@@ -29,87 +33,53 @@ const currentAddress = computed<string>(() =>
 
 const { mutateAsync: requestChange, isPending } = useRequestEmailAddressChange()
 
-type FieldName = 'emailAddress' | 'password'
-
-const newAddress = ref<string>('')
-const password = ref<string>('')
-const fieldErrors = ref<Partial<Record<FieldName, string>>>({})
 const formError = ref<string | undefined>(undefined)
 const requestedFor = ref<string | undefined>(undefined)
 
 const LIMIT = TEXT_LIMIT.requestEmailAddressChange
-const FIELD_NAMES = ['emailAddress', 'password'] as const
+const NEW_ADDRESS = emailAddressSchema(LIMIT.emailAddress, 'Gib eine E-Mail-Adresse ein.')
+const PASSWORD = passwordSchema(LIMIT.password, 'Gib dein aktuelles Passwort ein.')
 
-const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {
-  emailAddress: {
-    missing: 'Gib eine E-Mail-Adresse ein.',
-    malformed: 'Das sieht nicht nach einer E-Mail-Adresse aus.',
-    tooLong: `Die E-Mail-Adresse darf höchstens ${formatCount(LIMIT.emailAddress.maxLength)} Zeichen lang sein.`,
-  },
-  password: {
-    missing: 'Gib dein aktuelles Passwort ein.',
-    malformed: 'Gib dein aktuelles Passwort ein.',
-    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
-  },
+/** Both of these are about what was typed, so each is said on its own field. */
+function setFieldError(field: 'emailAddress' | 'password', message: string) {
+  form.setFieldMeta(field, (meta) => ({
+    ...meta,
+    errorMap: { ...meta.errorMap, onServer: message },
+  }))
 }
 
 const formElement = ref<HTMLFormElement | null>(null)
 
-function validate(): boolean {
-  const form = formElement.value
-  if (form === null) {
-    return false
-  }
+const form = useForm({
+  defaultValues: { emailAddress: '', password: '' },
+  // Focus follows the first thing that is wrong; without it focus stays on the button.
+  onSubmitInvalid: () => focusFirstInvalid(formElement.value),
+  onSubmit: async ({ value }) => {
+    formError.value = undefined
+    requestedFor.value = undefined
 
-  const errors: Partial<Record<FieldName, string>> = {}
-
-  for (const name of FIELD_NAMES) {
-    const input = form.elements.namedItem(name)
-    if (input instanceof HTMLInputElement && !input.validity.valid) {
-      errors[name] = fieldMessage(FIELD_MESSAGES[name], input.validity)
+    try {
+      await requestChange({ data: { emailAddress: value.emailAddress, password: value.password } })
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.status === 401) {
+          setFieldError('password', 'Das Passwort ist nicht korrekt.')
+          return
+        }
+        if (error.status === 409) {
+          setFieldError('emailAddress', 'Diese E-Mail-Adresse wird bereits verwendet.')
+          return
+        }
+      }
+      formError.value = failureMessage(error)
+      return
     }
-  }
 
-  fieldErrors.value = errors
-  return Object.keys(errors).length === 0
-}
-
-async function submit() {
-  formError.value = undefined
-  requestedFor.value = undefined
-
-  if (!validate()) {
-    return
-  }
-
-  const requested = newAddress.value.trim()
-
-  try {
-    await requestChange({ data: { emailAddress: requested, password: password.value } })
-  } catch (error) {
-    if (error instanceof ApiError) {
-      if (error.status === 401) {
-        fieldErrors.value = { password: 'Das Passwort ist nicht korrekt.' }
-        return
-      }
-      if (error.status === 409) {
-        fieldErrors.value = { emailAddress: 'Diese E-Mail-Adresse wird bereits verwendet.' }
-        return
-      }
-      if (error.status === 400) {
-        fieldErrors.value = { emailAddress: FIELD_MESSAGES.emailAddress.malformed }
-        return
-      }
-    }
-    formError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
-  }
-
-  await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
-  requestedFor.value = requested
-  newAddress.value = ''
-  password.value = ''
-}
+    await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
+    requestedFor.value = value.emailAddress
+    form.reset()
+  },
+})
 </script>
 
 <template>
@@ -126,43 +96,44 @@ async function submit() {
     <MailedLinkNote class="mb-4 text-[13px]" />
   </template>
 
-  <form ref="formElement" class="flex flex-col gap-4" novalidate @submit.prevent="submit">
+  <form
+    ref="formElement"
+    class="flex flex-col gap-4"
+    novalidate
+    @submit.prevent="form.handleSubmit()"
+  >
     <Alert v-if="formError" variant="destructive" role="alert">
       <AlertDescription>{{ formError }}</AlertDescription>
     </Alert>
 
     <FieldGroup>
-      <Field :data-invalid="fieldErrors.emailAddress !== undefined ? true : undefined">
-        <FieldLabel for="newEmailAddress">Neue E-Mail-Adresse</FieldLabel>
-        <Input
-          id="newEmailAddress"
-          v-model="newAddress"
-          name="emailAddress"
-          type="email"
-          :maxlength="LIMIT.emailAddress.maxLength"
-          autocomplete="email"
-          autocapitalize="none"
-          spellcheck="false"
-          required
-          :aria-invalid="fieldErrors.emailAddress !== undefined ? true : undefined"
-        />
-        <FieldError :errors="[fieldErrors.emailAddress]" />
-      </Field>
+      <form.Field name="emailAddress" :validators="{ onSubmit: NEW_ADDRESS }">
+        <template v-slot="{ field }">
+          <FormTextField
+            :field="field"
+            id="newEmailAddress"
+            label="Neue E-Mail-Adresse"
+            type="email"
+            :maxlength="LIMIT.emailAddress.maxLength"
+            autocomplete="email"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </template>
+      </form.Field>
 
-      <Field :data-invalid="fieldErrors.password !== undefined ? true : undefined">
-        <FieldLabel for="currentPassword">Aktuelles Passwort</FieldLabel>
-        <Input
-          id="currentPassword"
-          v-model="password"
-          name="password"
-          type="password"
-          :maxlength="LIMIT.password.maxLength"
-          autocomplete="current-password"
-          required
-          :aria-invalid="fieldErrors.password !== undefined ? true : undefined"
-        />
-        <FieldError :errors="[fieldErrors.password]" />
-      </Field>
+      <form.Field name="password" :validators="{ onSubmit: PASSWORD }">
+        <template v-slot="{ field }">
+          <FormTextField
+            :field="field"
+            id="currentPassword"
+            label="Aktuelles Passwort"
+            type="password"
+            :maxlength="LIMIT.password.maxLength"
+            autocomplete="current-password"
+          />
+        </template>
+      </form.Field>
     </FieldGroup>
 
     <Button type="submit" :disabled="isPending">

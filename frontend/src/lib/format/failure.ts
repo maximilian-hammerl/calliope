@@ -6,12 +6,24 @@ import { rateLimitMessage } from '@/lib/format/rateLimit'
  * es später" is wrong under a rate limit — later is a number the server has already told us, and
  * trying again is what caused it — so that one case names the wait instead.
  *
+ * A **400 is the schema drift case**: every form validates through the same rules the API enforces,
+ * so a refusal on the shape means the deployed client and server disagree. Reloading is the only
+ * thing a member can do about it, and six forms each said so in their own copy of the sentence.
+ *
+ * `fallback` is for the controls that name what failed — „Die Anmeldung ist gerade nicht möglich".
+ * Without one it is the generic sentence, which is what most of them want.
+ *
  * The global notice says the same thing at the same moment, deliberately: it explains the whole
  * interface, this explains the control that was pressed.
  */
-export function failureMessage(error: unknown): string {
-  if (error instanceof ApiError && error.status === 429) {
-    return rateLimitMessage(error.retryAfterSeconds)
+export function failureMessage(error: unknown, fallback?: string): string {
+  if (error instanceof ApiError) {
+    if (error.status === 429) {
+      return rateLimitMessage(error.retryAfterSeconds)
+    }
+    if (error.status === 400) {
+      return 'Die Angaben sind nicht gültig. Lade die Seite neu und versuche es noch einmal.'
+    }
   }
-  return 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+  return fallback ?? 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
 }

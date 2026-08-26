@@ -608,10 +608,44 @@ so syntax stripping cannot handle (`enum`, `namespace`, parameter properties) fa
 check rather than the run. The numbers originate in
 `backend/src/text_limit.ts`.
 
-Short fields — names, titles, addresses, a search term — bind them straight to `minlength` and
-`maxlength`, and let `fieldMessage()` in `lib/fieldMessage.ts` phrase what the browser found
-wrong. It exists because the fallback wording was actively misleading: an over-long username
-used to report "Gib einen Benutzernamen ein." beside the name just typed.
+## Forms are Zod schemas over TanStack Form
+
+Every form uses `useForm` from `@tanstack/vue-form` with **field-level validators**, which is the
+documented Vue pattern and the one that lets a rule be shared. Validation used to read the inputs'
+own `ValidityState` and look the wording up; that was eight copies of one loop and the wording was
+duplicated with it — „Das Passwort darf höchstens 256 Zeichen lang sein." was written out seven
+times.
+
+- **A field's rules live once, in `lib/validation/fieldSchemas.ts`.** `usernameSchema`,
+  `emailAddressSchema`, `passwordSchema`, `loginSchema`. Each takes the **calling operation's own**
+  bound from `TEXT_LIMIT` — never one operation's numbers used for another — and the wording for an
+  *empty* field, because that names what is being asked for: „Wähle ein Passwort" when registering,
+  „Gib dein aktuelles Passwort ein" when confirming who you are. The length and format wording is
+  the same everywhere and is declared in the factory.
+- **Rules are written in the order a member should read them.** Zod collects *every* failing check
+  and keeps them in declaration order, and `firstError()` shows the first — so `.min(1, missing)`
+  before `.min(3, tooShort)` is what makes an empty username say "enter one" rather than "needs
+  three characters". That order is the interface's, not an implementation detail.
+- **The email rule is the backend's rule.** `z.regexes.html5Email`, the same constant
+  `EMAIL_ADDRESS_SCHEMA` uses, so the form and the API cannot disagree about what an address is.
+  `type="email"` stays on the input for the keyboard it summons on a phone, not for validation.
+- **`maxlength` stays on the input** because it stops the typing; the schema cannot. Everything
+  else about the constraint lives in the schema.
+- **One field is one `FormTextField`** (`components/common/FormTextField.vue`). It carries
+  `aria-invalid`, `data-invalid`, the change handler, the error, and — the part easy to forget —
+  **`aria-describedby`**, without which a field says *that* it is wrong and never *why*. Written
+  per field that was sixty-four repetitions and a hand-made id on each one.
+- **A failed submit moves focus to the first marked field**, through `onSubmitInvalid` and
+  `focusFirstInvalid()`. Otherwise focus stays on the button that was just pressed.
+- **A 400 is schema drift, not a field problem.** Since the client enforces every rule the API
+  does, a refusal on the shape means the deployed two disagree — so `failureMessage()` says to
+  reload, and no form maps server issues onto fields any more. It never used the server's message
+  anyway: it took the field from `issue.path` and showed that field's generic wording. A **401 or
+  409 is different** and stays on the field it is about, set through `setFieldMeta`.
+
+Prefer `failureMessage(error)` over a hand-written fallback: it already answers 429 with the wait
+the server named and 400 with the reload sentence. Pass a second argument only where the control
+names what failed („Die Anmeldung ist gerade nicht möglich").
 
 **Prose fields take no `maxlength`.** A group description and a post body are checked on submit
 instead, and the draft is left untouched. Typing that stops dead mid-word with no explanation is
