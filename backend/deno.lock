@@ -17,11 +17,11 @@
     "jsr:@std/net@^1.0.6": "1.0.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
     "jsr:@std/streams@^1.1.2": "1.1.2",
-    "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.2",
-    "npm:@hono/zod-openapi@1.6.0": "1.6.0_hono@4.13.2_zod@4.4.3",
+    "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.3",
+    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.3_zod@4.4.3",
     "npm:@types/nodemailer@8.0.1": "8.0.1",
-    "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.2_unstorage@1.17.5__ioredis@5.11.1_ioredis@5.11.1",
-    "npm:hono@4.13.2": "4.13.2",
+    "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.3",
+    "npm:hono@4.13.3": "4.13.3",
     "npm:ioredis@6.0.0": "6.0.0",
     "npm:kysely-postgres-js@3.0.0": "3.0.0_kysely@0.29.5_postgres@3.4.9",
     "npm:kysely@0.29.5": "0.29.5",
@@ -105,14 +105,14 @@
         "zod"
       ]
     },
-    "@hono/structured-logger@1.0.0_hono@4.13.2": {
+    "@hono/structured-logger@1.0.0_hono@4.13.3": {
       "integrity": "sha512-MozQvH7oFsi/Pc/0sK6ai7cYpDX81t4UnrxgOo/MslfC7lPFnRcvayVkY3g1Wi/cX6dFmtLhZoGALOfdvAIDgA==",
       "dependencies": [
         "hono"
       ]
     },
-    "@hono/zod-openapi@1.6.0_hono@4.13.2_zod@4.4.3": {
-      "integrity": "sha512-42HXUBIaGmQh+hZGLw3Hy5piOreIXgnBnUSs55mtn2gnW/xWtU9nQwEUtRRCk5to8Vm2XbfO0J83eUCwCf5eTg==",
+    "@hono/zod-openapi@1.6.1_hono@4.13.3_zod@4.4.3": {
+      "integrity": "sha512-z1xS3FZxl4bBkU3kMIsQsLtsqxPTha5XZCsDEPMSZ6+3RRBQI7KED1GeoDpq2WueXCacsNIjcB0MtCnEHY7ahQ==",
       "dependencies": [
         "@asteasolutions/zod-to-openapi",
         "@hono/zod-validator",
@@ -121,7 +121,7 @@
         "zod"
       ]
     },
-    "@hono/zod-validator@0.9.0_hono@4.13.2_zod@4.4.3": {
+    "@hono/zod-validator@0.9.0_hono@4.13.3_zod@4.4.3": {
       "integrity": "sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==",
       "dependencies": [
         "hono",
@@ -200,7 +200,7 @@
         "uncrypto"
       ]
     },
-    "hono-rate-limiter@0.5.3_hono@4.13.2_unstorage@1.17.5__ioredis@5.11.1_ioredis@5.11.1": {
+    "hono-rate-limiter@0.5.3_hono@4.13.3": {
       "integrity": "sha512-M0DxbVMpPELEzLi0AJg1XyBHLGJXz7GySjsPoK+gc5YeeBsdGDGe+2RvVuCAv8ydINiwlbxqYMNxUEyYfRji/A==",
       "dependencies": [
         "hono",
@@ -210,8 +210,8 @@
         "unstorage"
       ]
     },
-    "hono@4.13.2": {
-      "integrity": "sha512-JydRilDRkYBQMt9qR9U92mXxmbGqsqSn/IKOrh4e7/gEbn+0zSr8igTu0obwJoNGN4sez28DIql7FBHWydoJpA=="
+    "hono@4.13.3": {
+      "integrity": "sha512-r8AO2mYHoLxSHkgafNeC/BXyb2vWRxD3jem4Ts+ptav8oTG5FIRifAjuJEmZI4bSvvc2ns0GxmIYiZnHqN3mMw=="
     },
     "ioredis@5.11.1": {
       "integrity": "sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A==",
@@ -349,10 +349,10 @@
       "jsr:@std/async@1.5.0",
       "jsr:@std/http@1.1.3",
       "npm:@hono/structured-logger@1.0.0",
-      "npm:@hono/zod-openapi@1.6.0",
+      "npm:@hono/zod-openapi@1.6.1",
       "npm:@types/nodemailer@8.0.1",
       "npm:hono-rate-limiter@0.5.3",
-      "npm:hono@4.13.2",
+      "npm:hono@4.13.3",
       "npm:ioredis@6.0.0",
       "npm:kysely-postgres-js@3.0.0",
       "npm:kysely@0.29.5",
