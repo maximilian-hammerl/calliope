@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { Check } from '@lucide/vue'
 import { useListUsers } from '@/api/users/users'
 import type { ListUsers200ResultsItem } from '@/api/models'
@@ -19,7 +19,6 @@ const props = withDefaults(
   defineProps<{
     /** Ids to leave out, normally whoever is already a member. */
     excludeIds: string[]
-    inputId: string
     label?: string
     placeholder?: string
     disabled?: boolean
@@ -28,6 +27,9 @@ const props = withDefaults(
   }>(),
   { label: undefined, placeholder: 'z. B. mira', disabled: false, active: true },
 )
+
+/** Its own, so two pickers can share a screen — the caller used to have to name them. */
+const inputId = useId()
 
 /** The committed pick. Left unbound by callers that act on `pick` immediately. */
 const selected = defineModel<ListUsers200ResultsItem | undefined>({ default: undefined })
@@ -76,7 +78,7 @@ watch(trimmedTerm, () => {
 })
 
 function optionId(user: ListUsers200ResultsItem): string {
-  return `${props.inputId}-option-${user.id}`
+  return `${inputId}-option-${user.id}`
 }
 
 const activeOptionId = computed<string | undefined>(() => {

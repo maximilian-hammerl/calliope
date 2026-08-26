@@ -4,7 +4,7 @@
  * what I saw, and here is why. The kind and the id go to the API; the copy of what was reported
  * is made by the server, so nothing here decides what the operators will read.
  */
-import { ref, watch } from 'vue'
+import { ref, useId, watch } from 'vue'
 import { useCreateReport } from '@/api/reports/reports'
 import type { CreateReportBody, CreateReportBodyTargetType } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
@@ -31,6 +31,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 
 const open = defineModel<boolean>('open', { required: true })
+/**
+ * Per instance, because two of these are in the DOM at once: `ThreadView` and `ChatConversation`
+ * each mount one for the post or message and one for the thread or chat, and reka *keeps* a closed
+ * dialog's content — `data-state="closed"`, hidden. With a fixed id both carried `reportCategory`,
+ * and every `<label for>` resolved to the first match, which is the closed one.
+ */
+const categoryId = useId()
+const reasonId = useId()
+
 const props = defineProps<{
   targetType: CreateReportBodyTargetType
   targetId: string
@@ -105,9 +114,9 @@ async function confirm() {
 
         <FieldGroup>
           <Field>
-            <FieldLabel for="reportCategory">Worum geht es?</FieldLabel>
+            <FieldLabel :for="categoryId">Worum geht es?</FieldLabel>
             <Select v-model="category">
-              <SelectTrigger id="reportCategory" class="w-full">
+              <SelectTrigger :id="categoryId" class="w-full">
                 <SelectValue placeholder="Bitte auswählen" />
               </SelectTrigger>
               <SelectContent>
@@ -123,9 +132,9 @@ async function confirm() {
           </Field>
 
           <Field>
-            <FieldLabel for="reportReason">Was ist passiert?</FieldLabel>
+            <FieldLabel :for="reasonId">Was ist passiert?</FieldLabel>
             <Textarea
-              id="reportReason"
+              :id="reasonId"
               v-model="reason"
               name="reportReason"
               rows="4"

@@ -11,7 +11,7 @@
  * `FieldApi` carries eleven parameters, and naming them here would tie this component to the shape
  * of whichever form rendered it.
  */
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 import { firstError } from '@/lib/validation/fieldSchemas'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -29,9 +29,16 @@ type FieldApi = {
 const props = defineProps<{
   field: FieldApi
   label: string
-  /** The input's `id`, which the label points at and the error derives its own id from. */
-  id: string
+  /**
+   * Only where something outside this component has to name the input. Left off, it generates its
+   * own — a field cannot collide with the same field in another form, and nobody has to invent a
+   * unique word per call site the way `settingsCurrentPassword` had to.
+   */
+  id?: string
 }>()
+
+const generatedId = useId()
+const fieldId = computed<string>(() => props.id ?? generatedId)
 
 const invalid = computed<true | undefined>(() =>
   props.field.state.meta.errors.length > 0 ? true : undefined,
@@ -39,15 +46,15 @@ const invalid = computed<true | undefined>(() =>
 
 /** Only referenced while there is an error to read, or a screen reader announces an empty node. */
 const describedBy = computed<string | undefined>(() =>
-  invalid.value === true ? `${props.id}-error` : undefined,
+  invalid.value === true ? `${fieldId.value}-error` : undefined,
 )
 </script>
 
 <template>
   <Field :data-invalid="invalid">
-    <FieldLabel :for="id">{{ label }}</FieldLabel>
+    <FieldLabel :for="fieldId">{{ label }}</FieldLabel>
     <Input
-      :id="id"
+      :id="fieldId"
       :name="field.name"
       :model-value="field.state.value"
       :aria-invalid="invalid"
@@ -58,6 +65,6 @@ const describedBy = computed<string | undefined>(() =>
     <FieldDescription v-if="$slots.description">
       <slot name="description" />
     </FieldDescription>
-    <FieldError :id="`${id}-error`" :errors="firstError(field.state.meta.errors)" />
+    <FieldError :id="`${fieldId}-error`" :errors="firstError(field.state.meta.errors)" />
   </Field>
 </template>

@@ -109,7 +109,6 @@ const form = useForm({
             <template v-slot="{ field }">
               <FormTextField
                 :field="field"
-                id="username"
                 label="Benutzername"
                 :minlength="LIMIT.username.minLength"
                 :maxlength="LIMIT.username.maxLength"
@@ -132,7 +131,6 @@ const form = useForm({
             <template v-slot="{ field }">
               <FormTextField
                 :field="field"
-                id="emailAddress"
                 label="E-Mail-Adresse"
                 :maxlength="LIMIT.emailAddress.maxLength"
                 type="email"
@@ -152,7 +150,6 @@ const form = useForm({
             <template v-slot="{ field }">
               <FormTextField
                 :field="field"
-                id="password"
                 label="Passwort"
                 :maxlength="LIMIT.password.maxLength"
                 type="password"
@@ -171,7 +168,6 @@ const form = useForm({
             <template v-slot="{ field }">
               <FormTextField
                 :field="field"
-                id="passwordConfirmation"
                 label="Passwort wiederholen"
                 :maxlength="LIMIT.password.maxLength"
                 type="password"

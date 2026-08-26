@@ -145,6 +145,8 @@ grep -c min-h-11 src/components/ui/pagination/PaginationItem.vue src/components/
 grep -rc 'hidden sm:block' src/components/ui/pagination/                               # expect 0
 ls src/components/ui/pagination/PaginationFirst.vue src/components/ui/pagination/PaginationLast.vue  # expect neither to exist
 grep -c 'sr-only">Schließen' src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 1 each
+# Without this the dialog root renders id="", which is invalid — see the ids section.
+grep -c 'id: contentId' src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 1 each
 # Every icon in ui/ is hidden or named — Spinner is the only named one. Expect no output.
 grep -rL 'aria-hidden\|aria-label' $(grep -rl '@lucide/vue' src/components/ui/ --include='*.vue')
 ```
@@ -464,6 +466,30 @@ conventions when you do it — `cn()` for class merging, a `data-slot` attribute
 HTMLAttributes['class']` as a prop — so the result does not read as foreign. Let reka position
 its own floating content; an `absolute` of our own fights it and sends the popover off-screen.
 
+## An id belongs to the instance, not to the label
+
+`useId()` wherever a component can be on screen more than once — which is most components, since
+a dialog can open over the page that already renders one. `FilterStrip` derived its id from its
+label, so the chats dialog's „Favoriten" and the groups list's behind it shared one, and the
+dialog's `aria-labelledby` named its group from the element outside the modal, which `aria-modal`
+hides from the tree. Nothing about that is visible on screen.
+
+`UserPicker` and `FormTextField` had the other shape of the same problem: the id arrived as a
+**prop**, so uniqueness was the caller's job to remember across every call site. Both generate
+their own now — `UserPicker`'s prop is gone, and `FormTextField`'s is optional, for the rare case
+of something outside the component naming the input.
+
+**A closed dialog keeps its content**, `data-state="closed"` and hidden, unless the call site also
+gates it with `v-if`. So `ReportDialog`'s fixed `reportCategory` really was duplicated — `ThreadView`
+mounts one for the post and one for the thread, and once each had been opened both sets of fields
+were in the page, with every `<label for>` resolving to the first match: the hidden one. Do not
+assume a dialog that is shut is gone.
+
+A literal id is fine where a second instance is impossible — a routed view, a section that exists
+once inside one dialog. That is why `login` and `password` may repeat across the sign-in views.
+Nothing in `src/` looks an id up (`getElementById`, a `#` selector, a fragment), so no id here has
+to be guessable — which is what makes the generated ones free.
+
 ## Filters
 
 **`FilterStrip` lays out its own label** — beside the options from `md` up, above them below it.
@@ -634,7 +660,9 @@ times.
 - **One field is one `FormTextField`** (`components/common/FormTextField.vue`). It carries
   `aria-invalid`, `data-invalid`, the change handler, the error, and — the part easy to forget —
   **`aria-describedby`**, without which a field says *that* it is wrong and never *why*. Written
-  per field that was sixty-four repetitions and a hand-made id on each one.
+  per field that was sixty-four repetitions and a hand-made id on each one. It generates that id
+  now — `id` is a prop only for the rare case of something outside naming the input — so nothing
+  has to invent a unique word per call site, which is what `settingsCurrentPassword` was.
 - **A failed submit moves focus to the first marked field**, through `onSubmitInvalid` and
   `focusFirstInvalid()`. Otherwise focus stays on the button that was just pressed.
 - **A 400 is schema drift, not a field problem.** Since the client enforces every rule the API

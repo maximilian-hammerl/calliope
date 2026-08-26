@@ -104,7 +104,6 @@ const form = useForm({
             <template v-slot="{ field }">
               <FormTextField
                 :field="field"
-                id="login"
                 label="Benutzername oder E-Mail-Adresse"
                 :maxlength="LIMIT.login.maxLength"
                 autocomplete="username"
@@ -118,7 +117,6 @@ const form = useForm({
             <template v-slot="{ field }">
               <FormTextField
                 :field="field"
-                id="password"
                 label="Passwort"
                 type="password"
                 :maxlength="LIMIT.password.maxLength"

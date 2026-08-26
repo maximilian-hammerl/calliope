@@ -104,7 +104,6 @@ function startOver() {
               <template v-slot="{ field }">
                 <FormTextField
                   :field="field"
-                  id="login"
                   label="Benutzername oder E-Mail-Adresse"
                   :maxlength="LIMIT.login.maxLength"
                   autocomplete="username"

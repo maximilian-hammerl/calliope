@@ -68,13 +68,7 @@ async function invite(user: ListUsers200ResultsItem) {
       </Alert>
 
       <!-- No v-model: a pick here is the invitation, so nothing stays selected afterwards. -->
-      <UserPicker
-        ref="picker"
-        input-id="chat-invite-search"
-        :exclude-ids="memberIds"
-        :disabled="isPending"
-        @pick="invite"
-      />
+      <UserPicker ref="picker" :exclude-ids="memberIds" :disabled="isPending" @pick="invite" />
     </div>
   </div>
 </template>

@@ -8,8 +8,10 @@ import {
   DialogContent,
   DialogOverlay,
   DialogPortal,
+  injectDialogRootContext,
   useForwardPropsEmits,
 } from 'reka-ui'
+import { useId } from 'vue'
 import { cn } from '@/lib/utils'
 
 defineOptions({
@@ -22,6 +24,16 @@ const emits = defineEmits<DialogContentEmits>()
 const delegatedProps = reactiveOmit(props, 'class')
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+/**
+ * reka fills its `contentId` in only when a `DialogTrigger` rendered — the trigger is what
+ * generates it, for its own `aria-controls` — and every dialog here opens from `v-model:open`
+ * instead, which left the content with `id=""`, invalid HTML. Deferring to reka's when there is
+ * one keeps a trigger's `aria-controls` pointing at something.
+ */
+const rootContext = injectDialogRootContext()
+const generatedId = useId()
+const contentId = rootContext.contentId || generatedId
 </script>
 
 <template>
@@ -36,7 +48,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
             props.class,
           )
         "
-        v-bind="{ ...$attrs, ...forwarded }"
+        v-bind="{ id: contentId, ...$attrs, ...forwarded }"
         @pointer-down-outside="
           (event) => {
             const originalEvent = event.detail.originalEvent

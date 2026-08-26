@@ -84,7 +84,6 @@ const passwordForm = useForm({
         <template v-slot="{ field }">
           <FormTextField
             :field="field"
-            id="settingsCurrentPassword"
             label="Aktuelles Passwort"
             type="password"
             :maxlength="PASSWORD_LIMIT.currentPassword.maxLength"
@@ -97,7 +96,6 @@ const passwordForm = useForm({
         <template v-slot="{ field }">
           <FormTextField
             :field="field"
-            id="settingsNewPassword"
             label="Neues Passwort"
             type="password"
             :maxlength="PASSWORD_LIMIT.newPassword.maxLength"
@@ -116,7 +114,6 @@ const passwordForm = useForm({
         <template v-slot="{ field }">
           <FormTextField
             :field="field"
-            id="settingsNewPasswordRepeat"
             label="Neues Passwort wiederholen"
             type="password"
             :maxlength="PASSWORD_LIMIT.newPassword.maxLength"

@@ -139,7 +139,6 @@ const form = useForm({
               <template v-slot="{ field }">
                 <FormTextField
                   :field="field"
-                  id="password"
                   label="Neues Passwort"
                   type="password"
                   :maxlength="LIMIT.password.maxLength"
@@ -158,7 +157,6 @@ const form = useForm({
               <template v-slot="{ field }">
                 <FormTextField
                   :field="field"
-                  id="passwordConfirmation"
                   label="Neues Passwort wiederholen"
                   type="password"
                   :maxlength="LIMIT.password.maxLength"

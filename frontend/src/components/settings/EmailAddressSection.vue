@@ -111,7 +111,6 @@ const form = useForm({
         <template v-slot="{ field }">
           <FormTextField
             :field="field"
-            id="newEmailAddress"
             label="Neue E-Mail-Adresse"
             type="email"
             :maxlength="LIMIT.emailAddress.maxLength"
@@ -126,7 +125,6 @@ const form = useForm({
         <template v-slot="{ field }">
           <FormTextField
             :field="field"
-            id="currentPassword"
             label="Aktuelles Passwort"
             type="password"
             :maxlength="LIMIT.password.maxLength"

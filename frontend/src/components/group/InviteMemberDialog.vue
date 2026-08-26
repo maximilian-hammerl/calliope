@@ -89,7 +89,6 @@ async function submit() {
         <UserPicker
           ref="picker"
           v-model="selected"
-          input-id="invite-search"
           label="Benutzername"
           :exclude-ids="memberIds"
           :active="open"

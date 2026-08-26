@@ -17,7 +17,7 @@
  * Below `md` the wrapper stays a box either way, which is what keeps a label nearer its own strip
  * than the one above — measured at 4px to both before this, so the grouping read as ambiguous.
  */
-import { computed, inject } from 'vue'
+import { computed, inject, useId } from 'vue'
 import { FILTER_STRIP_GROUP } from './filterStripGroup'
 
 const model = defineModel<Value>({ required: true })
@@ -32,7 +32,12 @@ const props = defineProps<{
   hideLabel?: boolean
 }>()
 
-const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
+/**
+ * Per instance, not from the label: two strips with the same word collided on the one screen that
+ * shows both — the chats dialog's „Favoriten" over the groups list's — and the dialog's
+ * `aria-labelledby` then named it from the label behind the modal, which `aria-modal` hides.
+ */
+const id = useId()
 
 const inGroup = inject(FILTER_STRIP_GROUP, false)
 
