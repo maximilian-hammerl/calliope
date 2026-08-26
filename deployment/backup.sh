@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-# Dumps the database to local disk. Run by calliope-backup.timer, or by hand with
-# `systemctl start calliope-backup.service`.
-#
-# These dumps live on the same disk as the database, so they protect against mistakes in
-# the data rather than against losing the server. Getting them off the machine is a
-# separate, still missing, step.
+# Dumps the database and archives the uploads. Run by calliope-backup.timer, or by hand with
+# `systemctl start calliope-backup.service`. Same disk, so this covers mistakes, not a lost server.
 set -euo pipefail
 
 COMPOSE_FILE=/opt/calliope/docker-compose.deploy.yaml
@@ -33,18 +29,13 @@ chmod 600 "$target"
 
 echo "wrote $target ($(du -h "$target" | cut -f1))"
 
-# Uploaded files, which the dump does not cover. **After** the dump, deliberately: the rows are
-# frozen first, so the archive is a superset of what they reference. A file with no row is
-# collected by the backend's sweep; a row with no file is a broken picture.
+# After the dump, deliberately: the rows are frozen first, so the archive is a superset of what
+# they reference. A file with no row is swept; a row with no file is a broken picture.
 files="${target%.dump}-files.tar.gz"
 trap 'rm -f "$target.partial" "$files.partial"' EXIT
 
-# Straight off the host: this unit already runs as root on the VPS, so there is nothing a
-# container would add. The path comes from Docker rather than being assumed, so moving its
-# data-root does not silently back up an empty directory.
-#
-# Absent before the stack has ever been started, which is a server with no uploads rather than a
-# failed backup — so it is reported and skipped instead of failing the unit and alarming.
+# Straight off the host, which this unit already has as root. The path comes from Docker so a moved
+# data-root cannot silently archive nothing, and a missing volume means no uploads, not a failure.
 if volume_path="$(docker volume inspect --format '{{.Mountpoint}}' "$FILE_VOLUME" 2>/dev/null)"; then
 	tar -cz -C "$volume_path" . >"$files.partial"
 

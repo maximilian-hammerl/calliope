@@ -1,10 +1,6 @@
 import sharp from "sharp";
 
-/**
- * librsvg is compiled into libvips, so an SVG renders unless the loader is turned off. The
- * allowlist below refuses it too; this is the second lock, because a format never decoded is one
- * more parser never fed hostile bytes.
- */
+/** The allowlist below refuses SVG too; this is the second lock, and never decodes it at all. */
 sharp.block({ operation: ["VipsForeignLoadSvg"] });
 
 /** One stored size: `UserAvatar` renders at 28px and 48px, which this covers at 2×. */

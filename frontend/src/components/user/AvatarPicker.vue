@@ -1,10 +1,7 @@
 <script setup lang="ts">
 /**
- * Choosing a picture: the file, and the declaration that comes with it.
- *
- * The preview is the picture itself, round and at the size a profile shows it, rather than a
- * filename — and because the server centre-crops to a square, `object-cover` in a round frame is an
- * honest preview of what will be stored. That is most of what a crop step would have bought.
+ * Choosing a picture, and the declaration that comes with it. The preview is the picture itself:
+ * the server centre-crops the same way, so it shows what will actually be stored.
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Camera } from '@lucide/vue'

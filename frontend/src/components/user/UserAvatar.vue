@@ -6,11 +6,8 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 /**
- * A member's picture, or their initial where there is none — which is most of them.
- *
- * `AvatarImage` yields to `AvatarFallback` when the source is absent *or* fails to load, so a
- * file that has gone missing shows the initial rather than a broken image. That is the whole
- * reason the fallback is a sibling rather than a `v-else`.
+ * A picture, or the initial. The fallback is a sibling rather than a `v-else` because reka swaps
+ * to it when the source *fails to load*, so a missing file shows a letter, not a broken frame.
  */
 const props = withDefaults(
   defineProps<{

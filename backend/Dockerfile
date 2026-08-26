@@ -23,9 +23,8 @@ RUN deno cache main.ts
 # the backend reads cannot drift apart.
 ARG FILE_STORAGE_PATH=/data/files
 
-# Created *and owned by the runtime user here*, because Docker copies an image directory's ownership
-# into a named volume when it first creates one — and a volume it creates itself is root's, which a
-# nonroot process cannot write to. This is the whole fix for `os error 13` on the first upload.
+# Owned by the runtime user here: Docker copies an image directory's ownership into a volume it
+# first creates, and one it invents is root's, which `nonroot` cannot write to.
 RUN mkdir -p "$FILE_STORAGE_PATH" && chown -R 65532:65532 "$(dirname "$FILE_STORAGE_PATH")"
 
 # cc, not static: Deno needs glibc and libgcc, and a native addon needs libstdc++.

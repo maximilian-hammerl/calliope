@@ -23,11 +23,8 @@ async function selectAvatar(userId: string): Promise<Avatar | undefined> {
 }
 
 /**
- * The bytes are written before the row, so a failure between the two leaves a file nothing points
- * at — which the sweep collects. The other order would leave a row pointing at nothing, which is a
- * broken picture on every page that member appears on.
- *
- * The previous file is not deleted here: see the sweep.
+ * Bytes before the row: a failure between them leaves an orphan the sweep collects, where the other
+ * order leaves a broken picture. The previous file is left to the sweep too.
  */
 async function setAvatar(
   userId: string,
@@ -64,11 +61,7 @@ async function setAvatar(
   return { kind: "set", fileId };
 }
 
-/**
- * Whether any member still has this picture. The bytes outlive the row by design — the sweep
- * collects them, so a restore cannot produce a broken image — but they must stop being *served*
- * the moment somebody removes their picture or deletes their account.
- */
+/** The bytes outlive the row so a restore cannot break; being *served* must not. */
 async function isInUse(fileId: string): Promise<boolean> {
   const row = await db
     .selectFrom("userAvatar")
@@ -87,12 +80,8 @@ async function deleteAvatar(userId: string): Promise<boolean> {
 }
 
 /**
- * **One day longer than `RETENTION_DAYS` in `deployment/backup.sh`**, and that relationship is the
- * whole point: restoring a retained dump brings back rows whose files have to still exist. Raise
- * the backup retention and this has to follow, or a restore produces broken pictures.
- *
- * A younger file may also be an upload whose row is not committed yet. In hours, because an
- * `Instant` has no calendar to count days against.
+ * One day longer than `RETENTION_DAYS` in `deployment/backup.sh`, so a restored dump cannot name a
+ * swept file. Raise that and this has to follow. Hours, because an `Instant` has no calendar.
  */
 const UNREFERENCED_GRACE = Temporal.Duration.from({ hours: 15 * 24 });
 
@@ -117,9 +106,7 @@ async function sweepUnreferencedFiles(): Promise<number> {
       continue;
     }
 
-    // Sequential on purpose: this runs in the background over a whole directory, and there is
-    // nothing to gain from opening every file at once.
-    // deno-lint-ignore no-await-in-loop
+    // deno-lint-ignore no-await-in-loop -- a background pass, so nothing to gain from parallelism
     const changedAt = await FileStore.modifiedAt(fileId);
     if (
       changedAt === undefined ||

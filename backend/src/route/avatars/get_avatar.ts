@@ -12,16 +12,8 @@ import {
 } from "@/src/http/response.ts";
 
 /**
- * An hour, not a year — and the reason is *removal*, not change. A new upload gets a new
- * id, so a changed picture is a changed address and no cache can show a stale one. What `max-age`
- * governs is how long a picture that has been **taken down** keeps appearing to somebody who
- * already has it: the server stops serving it at once, but no header reaches a cache that already
- * holds the bytes. A year of that is wrong for a member who removed their own face, and wrong for
- * an operator removing an offensive one under #62.
- *
- * The cost is one re-fetch per avatar per window, and a measured photograph is 2–4 KB at this size,
- * so the window was chosen for how long a withdrawal may linger rather than for traffic.
- * `immutable` still spares a revalidation inside the window, including on reload.
+ * An hour rather than a year: a new upload is a new address, so this only governs how long a
+ * *withdrawn* picture keeps showing to somebody whose cache already holds it. See #94.
  */
 const CACHE_CONTROL = "private, max-age=3600, immutable";
 

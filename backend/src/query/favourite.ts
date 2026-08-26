@@ -3,12 +3,8 @@ import type { DB, Favourite } from "@/src/database/schema.ts";
 import type { SortTerm } from "@/src/list/list_endpoint_query.ts";
 
 /**
- * **Import nothing from `service/` here.** Every service that joins `favourite` imports this, and
- * `favourite_service` reaches them back through `visible_target` — so an import in this direction
- * closes a cycle, and TypeScript answers a cycle with `any` rather than an error: the join column
- * silently stops being checked. Nothing enforces this; Deno's lint has no cycle rule.
- *
- * What a favourite can name, where each kind's id goes, and how to join one.
+ * **Import nothing from `service/` here.** Services import this and reach back through
+ * `visible_target`, and TypeScript answers a cycle with `any` — the join column stops being checked.
  */
 export const FAVOURITE_TARGET_TYPES = [
   "writing_group",
@@ -21,9 +17,8 @@ export const FAVOURITE_TARGET_TYPES = [
 export type FavouriteTargetType = (typeof FAVOURITE_TARGET_TYPES)[number];
 
 /**
- * The column each kind's id goes in. `satisfies` is what makes adding a kind a compile error
- * naming it rather than a row nothing can find, and typing the values as `keyof Favourite` means
- * a renamed column fails here rather than at run time.
+ * Where each kind's id goes. `satisfies` makes an added kind a compile error naming it, and a
+ * renamed column fail here rather than at run time.
  */
 export const FAVOURITE_COLUMN = {
   writing_group: "writingGroupId",
@@ -33,11 +28,7 @@ export const FAVOURITE_COLUMN = {
   chat_group: "chatGroupId",
 } as const satisfies Record<FavouriteTargetType, keyof Favourite>;
 
-/**
- * The alias every list selects the flag under, and the one `listResultsWithCount` orders by to
- * float favourites to the top. One constant, because the two have to agree and nothing else would
- * notice if they stopped.
- */
+/** One constant, because the select alias and the sort term have to agree and nothing checks. */
 export const IS_FAVOURITE = "isFavourite";
 
 /** Ahead of whatever a list is sorted by — `true` sorts above `false`, so descending. */
@@ -47,16 +38,8 @@ export const FAVOURITES_FIRST: SortTerm = {
 };
 
 /**
- * The reader's own favourite, joined and selected as `isFavourite`.
- *
- * One place, because `.on("favourite.userId", "=", readerId)` is what scopes a favourite to the
- * member reading: written out per service, a copy that lost it would report everybody's favourites
- * as the reader's own, on a list that draws a star. It was written out eight times before this.
- */
-/**
- * The same map as a qualified reference, which is what `onRef` takes. Derived rather than written
- * out again, so the two cannot disagree: a template literal built inline widens to `string` and
- * Kysely refuses it.
+ * The same map qualified, which is what `onRef` takes. Derived so the two cannot disagree; an
+ * inline template literal widens to `string` and Kysely refuses it.
  */
 const FAVOURITE_REFERENCE = Object.fromEntries(
   FAVOURITE_TARGET_TYPES.map((kind) => [
@@ -67,15 +50,18 @@ const FAVOURITE_REFERENCE = Object.fromEntries(
   [Kind in FavouriteTargetType]: `favourite.${typeof FAVOURITE_COLUMN[Kind]}`;
 };
 
+/**
+ * The reader's own favourite, as `isFavourite`. One place, because `.on("favourite.userId", …)` is
+ * what scopes it: a copy that lost that line would report everybody's favourites as the reader's.
+ */
 export function withFavourite<TB extends keyof DB, Output>(
   queryBuilder: SelectQueryBuilder<DB, TB, Output>,
   kind: FavouriteTargetType,
   targetId: AnyColumnWithTable<DB, TB>,
   readerId: string,
 ) {
-  // Kysely cannot resolve a reference against a table set it has not seen yet, so a helper generic
-  // over the builder has to assert them. The casts are the price of writing the join once; every
-  // call site stays checked, and the reader scoping cannot be left out of one.
+  // Kysely cannot resolve a reference against a table set it has not seen, so a helper generic over
+  // the builder must assert them. The casts are the price of writing the join once.
   return queryBuilder
     .leftJoin(
       "favourite",
@@ -92,8 +78,7 @@ export function withFavourite<TB extends keyof DB, Output>(
 }
 
 /**
- * `only` narrows a list to the reader's own favourites. An enum rather than a boolean, matching
- * `status` and `readerState` beside it: a list that grows a third case then has somewhere to put
- * it without changing shape.
+ * `only` narrows a list to the reader's favourites. An enum rather than a boolean, like `status`
+ * beside it, so a third case has somewhere to go.
  */
 export type FavouriteFilter = "only" | "any";

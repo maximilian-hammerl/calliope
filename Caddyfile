@@ -7,28 +7,16 @@
 	# change here and no route can be forgotten.
 	handle /api/* {
 		reverse_proxy backend:8000 {
-			# The chat stream is an endless text/event-stream. Caddy buffers responses by
-			# default, which would hold every message until the connection closed — that is,
-			# forever. This works locally without it and delivers nothing in production, so it
-			# is the one setting here that cannot be verified before deploying.
+			# Caddy buffers by default, which holds an endless text/event-stream forever.
+			# Works locally without it, so this is unverifiable before deploying.
 			flush_interval -1
 
-			# Hold a request for a few seconds while the backend container is being replaced,
-			# instead of answering 502 the instant it is not listening. A deploy is usually
-			# over well inside this, so most members never see the outage at all.
-			#
-			# Only a failed dial is retried — the request never reached the backend, so there
-			# is nothing to duplicate. Verified: a POST issued across a restart created exactly
-			# one row, and a QUERY had its JSON body replayed intact.
-			#
-			# This does nothing when Caddy itself is down, which is why the interface handles
-			# an unreachable API as well.
+			# Holds a request across a backend restart rather than answering 502; only a failed
+			# dial is retried. Nothing when Caddy itself is down, which the interface handles.
 			lb_try_duration 5s
 
-			# The rate limiter buckets by the first entry of X-Forwarded-For, so this has to
-			# replace whatever the client sent rather than append to it. Caddy's default
-			# already does, but a limiter that can be side-stepped by a header is not
-			# something to leave resting on a default.
+			# The limiter buckets by the first X-Forwarded-For entry, so this must replace
+			# what the client sent, not append. Caddy's default does; not left to it.
 			header_up X-Forwarded-For {remote_host}
 		}
 	}
@@ -38,10 +26,8 @@
 	handle {
 		root * /srv
 
-		# The backend sets its own headers through Hono's secureHeaders, which never runs
-		# for these static files — without this the document that loads all the JavaScript
-		# would be the only unprotected response. Kept in step with that middleware's
-		# defaults, plus a policy it does not set.
+		# `secureHeaders` never runs for static files, so without this the document loading all
+		# the JavaScript would be the only unprotected response. Kept in step with it.
 		header {
 			Strict-Transport-Security "max-age=15552000; includeSubDomains"
 			X-Content-Type-Options nosniff
@@ -50,19 +36,13 @@
 			Cross-Origin-Opener-Policy same-origin
 			Cross-Origin-Resource-Policy same-origin
 
-			# `style-src` has to allow inline styles because the dropdown positions itself
-			# through the style attribute; scripts stay strict, which is the part that
-			# matters. The fonts are served from here, so no third party is named at all.
-			#
-			# `blob:` is the upload preview: a chosen picture is shown through
-			# `URL.createObjectURL` before it is sent. A blob URL is minted by our own script
-			# and cannot name another host, so this keeps the no-third-party-images property.
+			# Inline styles because the dropdown positions itself through the attribute;
+			# scripts stay strict. `blob:` is the upload preview. No third party is named.
 			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		}
 
-		# Everything under /assets carries a content hash in its name — scripts, styles and
-		# fonts alike — so a given name can never change meaning and a year is safe. The
-		# entry point itself stays uncached, which is what lets a deploy take effect.
+		# Everything under /assets is content-hashed, so a name cannot change meaning and a
+		# year is safe. The entry point stays uncached, which is what lets a deploy land.
 		@fingerprinted path /assets/*
 		header @fingerprinted Cache-Control "public, max-age=31536000, immutable"
 
