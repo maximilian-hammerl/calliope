@@ -1,6 +1,11 @@
 import { db } from "@/src/database/client.ts";
 import { hashPassword } from "@/src/util/password.ts";
-import { PLATFORM_ROLES, USER, VERIFIED_USERNAMES } from "@/seed/accounts.ts";
+import {
+  PLATFORM_ROLES,
+  PROFILES,
+  USER,
+  VERIFIED_USERNAMES,
+} from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
@@ -188,6 +193,9 @@ async function writeAccounts(): Promise<void> {
       // meant for working on everything else.
       emailAddressVerifiedAt: Temporal.Now.instant().toString(),
       platformRole: PLATFORM_ROLES[name as keyof typeof PLATFORM_ROLES] ?? null,
+      // Spread, so an account without a profile keeps every column null rather than empty
+      // strings — null is what "not answered" means, and the page reads it that way.
+      ...(PROFILES[name as keyof typeof PROFILES] ?? {}),
     })),
   ).execute();
 

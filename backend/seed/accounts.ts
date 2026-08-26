@@ -27,6 +27,34 @@ export const PLATFORM_ROLES = {
   kommafehler: "moderator",
 } as const satisfies Partial<Record<keyof typeof USER, string>>;
 
+/**
+ * Two of the nine, so the page can be seen filled, half-filled and empty. Most members answer
+ * nothing, and a fixture where everybody answered everything would never show that.
+ */
+export const PROFILES = {
+  tintenfleck: {
+    aboutMe:
+      "Schreibe seit ungefähr zehn Jahren, meistens abends und fast immer zu lang.\n\nAm liebsten Geschichten, in denen wenig passiert und trotzdem alles kippt.",
+    writingStyle:
+      "Dritte Person, begrenzt, Vergangenheit. Viel Dialog, wenig Beschreibung.",
+    postLength:
+      "Zwei bis vier Absätze. Wenn eine Szene trägt, auch mal doppelt so viel.",
+    writingFrequency:
+      "Zwei- bis dreimal pro Woche, abends. Am Wochenende meistens gar nicht.",
+    coWriterExpectations:
+      "Sag mir, wenn dir etwas nicht passt, statt langsamer zu antworten. Tempo ist mir weniger wichtig als Verlässlichkeit.",
+    writingBoundaries:
+      "Nichts Explizites, keine sexualisierte Gewalt. Gewalt sonst gerne, wenn sie etwas erzählt.",
+    genres:
+      "Historisch, Mystery, alles Leise. Fantasy nur, wenn die Regeln stimmen.",
+  },
+  nachtschreiber: {
+    writingStyle: "Erste Person, Gegenwart. Ich schreibe nah an einer Figur.",
+    postLength: "Kurz, drei bis fünf Sätze. Dafür oft.",
+    writingFrequency: "Fast täglich, meistens nachts.",
+  },
+} as const satisfies Partial<Record<keyof typeof USER, Record<string, string>>>;
+
 /** Everyone but `unverified`, whose address is deliberately left unconfirmed. */
 export const VERIFIED_USERNAMES =
   (Object.keys(USER) as Array<keyof typeof USER>)

@@ -149,11 +149,21 @@ export const STORY_IDEA_CAROUSEL_RESPONSE = z.object({
   total: z.number().int().nonnegative(),
 });
 
-/** Separate from `USER_RESPONSE` so the picker and search keep sending two fields. */
+/**
+ * Separate from `USER_RESPONSE` so the picker and search keep sending two fields. The profile
+ * goes to every member: there is no visibility setting, only the choice to leave a field empty.
+ */
 export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   id: true,
   username: true,
   createdAt: true,
+  aboutMe: true,
+  writingStyle: true,
+  postLength: true,
+  writingFrequency: true,
+  coWriterExpectations: true,
+  writingBoundaries: true,
+  genres: true,
 }).extend({
   // Whether the *reader* has blocked them, which is the reader's own information. Never
   // whether they have blocked the reader: that would be the disclosure a neutral 403 avoids.
