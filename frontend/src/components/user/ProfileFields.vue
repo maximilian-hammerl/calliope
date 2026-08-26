@@ -16,7 +16,7 @@ const answered = computed(() => answeredFields(props.profile))
     <div
       v-for="field in answered"
       :key="field.key"
-      class="max-w-[60ch] border-t border-line-3 py-5 first:pt-0"
+      class="max-w-[60ch] border-t border-line-3 py-5"
     >
       <dt class="text-[12.5px] font-semibold text-ink-3">{{ field.label }}</dt>
       <!-- As typed: some of these answers are written as a list of lines. -->
