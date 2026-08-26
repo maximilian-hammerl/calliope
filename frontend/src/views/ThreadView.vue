@@ -129,7 +129,7 @@ const postCount = computed<number | undefined>(() =>
   postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
 )
 
-const { page, offset, pageCount, goToPage, navigate } = usePagedList(
+const { page, offset, total, itemsPerPage, pageCount, goToPage, navigate } = usePagedList(
   POSTS_PER_PAGE,
   () => postCount.value,
 )
@@ -483,7 +483,7 @@ async function submit() {
           <!-- Below the posts as well as in the strip above: this is where somebody is when
                they finish a page, and where the composer already has them. -->
           <div v-if="pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-            <ListPagination :page="page" :page-count="pageCount" @go="goToPage($event)" />
+            <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
           </div>
         </div>
       </div>

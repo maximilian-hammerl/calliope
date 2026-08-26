@@ -43,7 +43,10 @@ const outcome = ref<Outcome | 'all'>('all')
 
 // Declared before the query it pages, and reading the total through a getter, because the
 // total comes back from that same query — see the composable's own note.
-const { page, offset, pageCount, goToPage } = usePagedList(PAGE_SIZE, () => total.value)
+const { page, offset, total, itemsPerPage, goToPage } = usePagedList(
+  PAGE_SIZE,
+  () => totalResults.value,
+)
 
 const body = computed<ListReportsBody>(() => ({
   limit: PAGE_SIZE,
@@ -62,7 +65,7 @@ const { data, isPending } = useListReports(body)
 const reports = computed<Report[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
 )
-const total = computed<number>(() =>
+const totalResults = computed<number>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : 0,
 )
 
@@ -201,7 +204,7 @@ function operatorAt(report: Report, at: string): string {
 
       <template v-else>
         <p class="mt-6 text-[12.5px] text-ink-5">
-          {{ pluralize(total, 'Meldung', 'Meldungen') }}
+          {{ pluralize(totalResults, 'Meldung', 'Meldungen') }}
         </p>
 
         <ul class="mt-2 flex flex-col">
@@ -303,7 +306,7 @@ function operatorAt(report: Report, at: string): string {
           </li>
         </ul>
 
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </template>
 
       <CloseReportDialog

@@ -29,19 +29,31 @@ export function usePagedList(
 
   const pageInMemory = ref<number>(1)
 
-  const page = computed<number>(() => {
-    if (parameter === false) {
-      return pageInMemory.value
-    }
-    const asked = Number(route.query[parameter])
-    return Number.isInteger(asked) && asked >= 1 ? asked : 1
+  /** Writable so a view can bind it with `v-model:page`; the setter is `goToPage`. */
+  const page = computed<number>({
+    get() {
+      if (parameter === false) {
+        return pageInMemory.value
+      }
+      const asked = Number(route.query[parameter])
+      return Number.isInteger(asked) && asked >= 1 ? asked : 1
+    },
+    set(next) {
+      goToPage(next)
+    },
   })
 
   const offset = computed<number>(() => (page.value - 1) * pageSize)
 
-  const pageCount = computed<number>(() =>
-    Math.max(1, Math.ceil((toValue(totalResults) ?? 0) / pageSize)),
-  )
+  /**
+   * `ListPagination` takes these two rather than a page count, because reka does. Returning them
+   * from here is what keeps them the same numbers the `offset` above was computed from — a view
+   * passing its own would be free to pass a different page size and quietly page twice.
+   */
+  const total = computed<number>(() => toValue(totalResults) ?? 0)
+  const itemsPerPage = pageSize
+
+  const pageCount = computed<number>(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
   /**
    * Merges into the query rather than replacing it, so a list's page and whatever else a view
@@ -67,12 +79,12 @@ export function usePagedList(
    * every page change, which looks exactly like a dead button.
    */
   onMounted(() => {
-    watch([() => toValue(totalResults), pageCount, page], ([total, pages, current]) => {
-      if (total !== undefined && current > pages) {
+    watch([() => toValue(totalResults), pageCount, page], ([known, pages, current]) => {
+      if (known !== undefined && current > pages) {
         goToPage(pages)
       }
     })
   })
 
-  return { page, offset, pageCount, goToPage, navigate }
+  return { page, offset, total, itemsPerPage, pageCount, goToPage, navigate }
 }

@@ -67,6 +67,14 @@ single chevron, which is what the icon table asks for.
 The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
 above is not hypothetical.
 
+`pagination` needed four of the same kind: the current page is an underline rather than a filled
+chip, the numbers and the two arrows carry the 44px phone target, „Zurück" and „Weiter" replace
+shadcn's English **and** its `hidden sm:block`. Hiding them buys nothing: measured at 320, 375 and
+414px, at six pages and at thirty, the strip is two rows and 92px either way — the 44px numbers
+are what wrap it, not the words. `PaginationFirst` and `PaginationLast` are deleted: `showEdges`
+draws the first and last *numbers*, so nothing rendered them, and they would have sat in `ui/`
+failing the icon check below.
+
 **Every icon shadcn hardcodes is `aria-hidden`**, because not one of them says anything the
 markup around it has not said already: the chevrons in `AccordionTrigger` (both), `SelectTrigger`,
 the two `SelectScroll*Button`s, `DropdownMenuSubTrigger` and `NavigationMenuTrigger` are
@@ -104,12 +112,16 @@ else on the page. They accompany a label rather than replacing it.
 
 `npx shadcn-vue@latest add …` rewrites `src/assets/main.css` on **every** run: it replaces the
 font import with its own, dropping Newsreader and IBM Plex Mono, and appends a duplicate
-`@layer base` block. It also offers to overwrite components you have already patched.
+`@layer base` block. It also puts a `^` back on every dependency it touches — `@lucide/vue`,
+`@vueuse/core` and `reka-ui` were already installed and pinned, and it re-ranged all three — and
+offers to overwrite components you have already patched.
 
 After any `add`:
 
 ```bash
 git diff src/assets/main.css   # expect no change; restore the font import if there is one
+# The CLI re-ranges pinned dependencies. `engines.node` is the one legitimate range.
+grep '"\^' package.json | grep -v '"node"'                                            # expect no output
 # Every shadow, not only shadow-xs: `shadow-md` on the menu and select panels survived a
 # year of this check because it only ever looked for one class name. Dialog keeps its own.
 grep -rl 'shadow-' src/components/ui/ | grep -v dialog                                 # expect no output
@@ -128,6 +140,10 @@ grep -c 'role="group"' src/components/ui/field/Field.vue                        
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
 grep -c aria-hidden src/components/ui/accordion/AccordionTrigger.vue                    # expect 2
+grep -c 'border-b-2' src/components/ui/pagination/PaginationItem.vue                   # expect 1
+grep -c min-h-11 src/components/ui/pagination/PaginationItem.vue src/components/ui/pagination/PaginationPrevious.vue src/components/ui/pagination/PaginationNext.vue  # expect 1 each
+grep -rc 'hidden sm:block' src/components/ui/pagination/                               # expect 0
+ls src/components/ui/pagination/PaginationFirst.vue src/components/ui/pagination/PaginationLast.vue  # expect neither to exist
 grep -c 'sr-only">Schließen' src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 1 each
 # Every icon in ui/ is hidden or named — Spinner is the only named one. Expect no output.
 grep -rL 'aria-hidden\|aria-label' $(grep -rl '@lucide/vue' src/components/ui/ --include='*.vue')
@@ -204,7 +220,17 @@ trap.
 
 **Numbered paging is `usePagedList` plus `ListPagination`**, not written again per view. The
 composable owns the page number in the URL, the offset, the page count and the correction of an
-out-of-range page; the component draws the strip. A view supplies the page size, the total, and
+out-of-range page; the component draws the strip — as a thin wrapper over reka's `Pagination`,
+whose `siblingCount` and `showEdges` replaced a hand-written run of page numbers.
+
+**Its props are reka's — `page`, `total`, `itemsPerPage`** — rather than a vocabulary of our own
+left over from the component it replaced. The composable returns all three, and a view passes them
+straight through: they are then the same numbers the `offset` was computed from, where a view
+supplying its own `total` and page size would be free to supply a different pair and page twice.
+`v-model:page` works because the composable's `page` is writable, its setter being `goToPage`.
+
+Reka widens the run near either end — page 1 of 30 is `1 2 3 4 5 … 30` where the hand-written strip
+gave `1 2 … 30`. It still wraps to two rows at 375px, the same as before, so the widening is kept. A view supplies the page size, the total, and
 whatever else it keeps in the query — the thread's order toggle calls `navigate` so switching
 order and returning to page one are *one* push rather than two history entries.
 
