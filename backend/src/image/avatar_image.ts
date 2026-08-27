@@ -27,6 +27,9 @@ export async function toAvatar(
     }
 
     const webp = await image
+      // Before the resize, and not optional: a phone stores a rotated photograph as-shot plus an
+      // EXIF tag, and re-encoding drops the tag — so without this the picture comes out turned.
+      .rotate()
       .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover" })
       .webp({ quality: 82 })
       .toBuffer();

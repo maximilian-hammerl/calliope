@@ -86,3 +86,47 @@ Deno.test("metadata does not survive", async () => {
   const result = await toAvatar(withExif);
   assertEquals((await sharp(result).metadata()).exif, undefined);
 });
+
+/**
+ * A phone stores a rotated photograph as-shot plus an EXIF tag, and re-encoding drops the tag — so
+ * without `.rotate()` the picture arrives turned a quarter.
+ */
+Deno.test("a picture is turned the way its EXIF says", async () => {
+  const half = (colour: string) =>
+    sharp({
+      create: { width: 200, height: 200, channels: 3, background: colour },
+    }).png()
+      .toBuffer();
+
+  // Wide, red beside blue, tagged "display me rotated 90° clockwise" — so red belongs on top.
+  const wide = await sharp({
+    create: { width: 400, height: 200, channels: 3, background: "#000000" },
+  })
+    .composite([
+      { input: await half("#ff0000"), left: 0, top: 0 },
+      { input: await half("#0000ff"), left: 200, top: 0 },
+    ])
+    .withMetadata({ orientation: 6 })
+    .jpeg()
+    .toBuffer();
+
+  const result = await toAvatar(new Uint8Array(wide));
+  const { data, info } = await sharp(result).raw().toBuffer({
+    resolveWithObject: true,
+  });
+
+  const redness = (from: number, to: number) => {
+    let red = 0, blue = 0;
+    for (let y = from; y < to; y++) {
+      for (let x = 0; x < info.width; x++) {
+        const at = (y * info.width + x) * info.channels;
+        red += data[at] ?? 0;
+        blue += data[at + 2] ?? 0;
+      }
+    }
+    return red > blue;
+  };
+
+  assertEquals(redness(0, 80), true, "the top should be red");
+  assertEquals(redness(112, info.height), false, "the bottom should be blue");
+});
