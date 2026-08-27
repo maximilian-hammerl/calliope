@@ -4,6 +4,7 @@
  * reka's dialog rather than `ui/dialog` because a sheet rises from the bottom edge and fills
  * the width, where that component centres and zooms.
  */
+import { useId } from 'vue'
 import { X } from '@lucide/vue'
 import {
   DialogClose,
@@ -16,6 +17,9 @@ import {
 } from 'reka-ui'
 
 const open = defineModel<boolean>('open', { required: true })
+
+// reka only fills the content's id in for a `DialogTrigger`, and this opens from `open`.
+const contentId = useId()
 </script>
 
 <template>
@@ -24,6 +28,7 @@ const open = defineModel<boolean>('open', { required: true })
       <DialogOverlay class="fixed inset-0 z-50 bg-ink-1/40" />
 
       <DialogContent
+        :id="contentId"
         data-slot="context-sheet"
         class="fixed inset-x-0 bottom-0 z-50 flex max-h-[85svh] flex-col gap-5 overflow-y-auto rounded-t-lg border-t border-line-3 bg-paper-2 px-gutter pt-4 pb-8 shadow-[0_-2px_16px_rgba(43,38,32,0.14)] data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom"
       >

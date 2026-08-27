@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -6,6 +7,7 @@ import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import {
+  FAVOURITE_FILTER,
   listQuerySchema,
   listResponseSchema,
 } from "@/src/list/list_endpoint.ts";
@@ -33,7 +35,7 @@ const STATUS_FILTER = z.enum(["open", "closed", "any"]).default("open");
  * decision, and an endpoint that hid read ideas unless asked would surprise every other caller.
  */
 const READER_STATE_FILTER = z
-  .enum(["read", "marked", "unread", "any"])
+  .enum(["read", "unread", "any"])
   .default("any");
 
 const LIST_STORY_IDEAS_BODY = listQuerySchema(
@@ -41,6 +43,7 @@ const LIST_STORY_IDEAS_BODY = listQuerySchema(
   {
     status: STATUS_FILTER,
     readerState: READER_STATE_FILTER,
+    favourite: FAVOURITE_FILTER,
     language: STORY_IDEA_SCHEMA.shape.language.optional(),
     // The board is discovery, so `others` is the default: like a public group the reader is
     // already in, their own idea is not something to find.
@@ -78,7 +81,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { author, ...query } = c.req.valid("json");
+    const { author, ...query } = listQuery(c.req.valid("json"));
     const page = await StoryIdeaService.listStoryIdeas({
       ...query,
       readerId: c.get("user").id,

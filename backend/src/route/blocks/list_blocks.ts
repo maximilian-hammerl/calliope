@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -60,7 +61,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const page = await BlockService.listBlocks(
       c.get("user").id,
-      c.req.valid("json"),
+      listQuery(c.req.valid("json")),
     );
     return c.json(page, STATUS_CODE.OK);
   },

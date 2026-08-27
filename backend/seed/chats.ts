@@ -8,12 +8,23 @@ export type ChatFixture = {
   /** Creator. Also has to appear in `members` as joined; `write.ts` checks. */
   by: string;
   members: Array<{ user: string; status?: UserInChatGroupStatus }>;
-  messages: Array<{ id: string; by: string; text: string }>;
+  messages: Array<{
+    id: string;
+    by: string;
+    text: string;
+    /**
+     * A minute after the message before it rather than the usual five, so the two fall inside
+     * the window the conversation groups by and share one name and time. Only says something
+     * when the message before it is by the same person.
+     */
+    continues?: true;
+  }>;
 };
 
 /**
  * Three chats: a pair, a group of four, and one nobody has accepted yet — so the unread count,
- * a busier thread and the invited state are all reachable without arranging them by hand.
+ * a busier thread, a run of two remarks from one person and the invited state are all reachable
+ * without arranging them by hand.
  */
 export const CHATS: ChatFixture[] = [
   {
@@ -74,6 +85,12 @@ export const CHATS: ChatFixture[] = [
         id: messageId(7),
         by: USER.federkiel,
         text: "Perfekt. Lesezeichen habe ich gerade eingeladen.",
+      },
+      {
+        id: messageId(9),
+        by: USER.federkiel,
+        text: "Die Karte hänge ich morgen dazu.",
+        continues: true,
       },
     ],
   },

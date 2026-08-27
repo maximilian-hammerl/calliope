@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
 import { REPORT_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
@@ -30,6 +31,11 @@ const LIST_REPORTS_BODY = listQuerySchema(
     status: REPORT_SCHEMA.shape.status.optional(),
     category: REPORT_SCHEMA.shape.category.optional(),
     targetType: REPORT_SCHEMA.shape.targetType.optional(),
+    // How it was closed, which is the filter that replaced asking for `resolved` or `dismissed`:
+    // those two were one enum's worth of detail collapsed into a status, and the outcome says it
+    // properly. Unwrapped because the column is nullable and an absent filter is not a request
+    // for reports with no outcome.
+    closingOutcome: REPORT_SCHEMA.shape.closingOutcome.unwrap().optional(),
   },
   "asc",
 );
@@ -42,8 +48,15 @@ const REPORT_RESPONSE = REPORT_SCHEMA.pick({
   reason: true,
   status: true,
   createdAt: true,
+  inProgressAt: true,
   closedAt: true,
+  closingOutcome: true,
+  closingNote: true,
 }).extend({
+  // Whoever is dealing with it, which on a closed report is whoever closed it. Null for a report
+  // nobody has taken, and also for one whose operator has since deleted their account — the move
+  // still happened, so the timestamp stays and only the name goes.
+  operatorUsername: USER_SCHEMA.shape.username.nullable(),
   // Null once the reporter's account is gone; the report itself stays.
   reporterUsername: USER_SCHEMA.shape.username.nullable(),
   // Who is answerable for the reported thing, which is what an operator acts on — and which
@@ -86,7 +99,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await ReportService.listReports(c.req.valid("json"));
+    const page = await ReportService.listReports(
+      listQuery(c.req.valid("json")),
+    );
     return c.json(page, STATUS_CODE.OK);
   },
 );

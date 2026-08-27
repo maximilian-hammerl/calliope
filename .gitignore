@@ -6,4 +6,9 @@
 # Local scratch notes; never commit
 abc
 abc.*
+node_modules/
+
+# Uploaded files in development; the deployed one is a Docker volume.
+.file-storage/
+
 .DS_Store

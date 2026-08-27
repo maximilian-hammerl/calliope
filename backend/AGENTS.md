@@ -52,6 +52,23 @@ timestamps are **stamped from fixture position**, five minutes apart, because on
 statement shares a single `now()` — a column full of ties has no defined sort order, and paging
 over it repeats rows across pages.
 
+**Favourites are seeded across all five kinds** (`seed/favourites.ts`), because every filter in
+the interface is otherwise an empty list on a fresh checkout and the flag is never true anywhere.
+Three posts spread through the 105-post thread are the ones that earn the fixture: coming back to
+marked passages across six pages is what the post filter is *for*, and `write.ts` asserts every
+favourite names an id the fixture actually holds — an FK violation reports the constraint and a
+uuid, not which entry is wrong.
+
+**It cannot demonstrate the ordering on three of the five.** Groups, threads and chats sort by
+`last_activity_at`, which the seed does not spread and *cannot*: the column is the database's, a
+`BEFORE UPDATE` trigger overwrites any value a fixture writes, and the cascade from inserting posts
+stamps every row with the seeding moment. All 19 threads and all 3 chats therefore share one
+timestamp and the 17 groups share two, so „Gruppen entdecken" pages 13 public groups over a tie of
+9. Paging over that tie is stable regardless — `listResultsWithCount` ends every list with `id` —
+but a *favourite* still cannot be seen to move a group, thread or chat, because everything around
+it ties. Posts and story ideas are staggered, and they are where the ordering shows. Spreading the
+rest means disabling a trigger for the seed.
+
 **The fixtures live in `seed/`, one file per kind**, with `seed.ts` keeping the guard, the
 cleanup and the order: `accounts.ts`, `writing_groups.ts`, `story_ideas.ts`, `chats.ts`,
 `ids.ts` and `write.ts`. A group's members, threads, posts and steps are nested in its own
@@ -95,6 +112,8 @@ changes, `write.ts` changes with it.
 
 `route/` mirrors the URL and is not reorganised — see below. Everything else is grouped by what
 it is: `http/` (response helpers and their schemas), `list/` (the shared list convention),
+`query/` (helpers that take a query builder and return one, and the column maps they need — no
+authorisation, no side effects, nothing that decides anything),
 `operations/` (liveness, matching the `OPERATIONS_TAG` the spec already uses), `event/`
 (in-process fan-out for SSE, infrastructure like `database/` and `redis/` rather than a
 service), `mail/` (the SMTP transport and the messages themselves, infrastructure for the
@@ -102,8 +121,8 @@ same reason), `service/`, `util/`, `middleware/`, `database/`, `redis/`, `test/`
 and helpers, never imported by anything that ships).
 
 A few files stay at `src/`'s root deliberately: `app.ts` composes everything, `text_limit.ts`
-is domain constants read across layers, and `open_api_specification.ts`, `cron.ts` and
-`cors_options.ts` are app-wide configuration.
+is domain constants read across layers, and `open_api_specification.ts`, `cron.ts`,
+`cors_options.ts` and `logging.ts` are app-wide configuration.
 
 `service/` is flat on purpose. Grouping it by domain would give `service/writing/writing_group_service.ts`
 — the word twice — so it would also mean dropping the prefixes, turning a move into renaming
@@ -222,6 +241,10 @@ ideas the member has not read and did not write, no blocked authors — so there
 - **One filter chain, shared.** `filtered()` in `story_idea_service.ts` is what both
   `listStoryIdeas` and the carousel build on. A neighbour the carousel offers but the board would
   hide is an idea nobody can reach twice, so the two cannot be allowed to drift apart.
+- **Unanchored, there is no previous.** The endpoint chose the newest of the set, so nothing
+  precedes it and no second statement is asked. Asking read another snapshot, in which an idea
+  posted meanwhile was suddenly the previous one — which is what made the opening step's
+  backward arrow intermittently live, and the carousel test flaky.
 - **The anchor ignores read state, and only that.** Marking the idea on screen as read must not
   invalidate the URL the member is sitting on. Everything else still holds, so their own idea, a
   closed one, or one whose author they have blocked answers 404.
@@ -259,6 +282,14 @@ validation entirely and the schema's defaults never apply.
 
 `sortAttribute` must be an enum derived from the table's own columns, because its value
 reaches `dynamic.ref`. An unchecked value there is an injection.
+
+**The wire carries one attribute and one order; `ListQuery` carries a list of terms.** Nothing has
+asked to sort by two things, so the request keeps the pair, and routes pass the body through
+`listQuery()` — the one place the two shapes meet. `listResultsWithCount` then orders by whatever
+an endpoint puts first, the member's own choice, and **`id` last**. That final term is why paging is
+safe: without it a list ordered on a repeated value has no defined order at a page boundary, so one
+row can appear on two pages and another on none. Every list selects `id`, and Postgres resolves a
+bare name against output columns first, so it needs no qualifying.
 
 Where an endpoint sorts by a *joined* table's column — `QUERY /groups` takes `invitedAt`, which
 belongs to `user_in_writing_group` and not to the group — the `.keyof().extract()` form cannot
@@ -322,6 +353,87 @@ a default would sit in a public repository forever.
 
 Component names (`CalliopeBadge`, `CalliopeLogo`) are identifiers, not branding, and stay. So do
 the systemd units, the compose project and the database name.
+
+## What the runtime is, and why it changed
+
+The image runs on `gcr.io/distroless/cc-debian12:nonroot` — no shell, no package manager, so a
+dependency can never be a binary invoked through `Deno.Command` unless that binary and its shared
+libraries are copied in by hand. That part is unchanged and is worth keeping.
+
+It used to `deno compile` to a single executable, chosen for somewhat lower resource use rather
+than as an architectural commitment. **#94 moves it to `deno run`**, because a compiled binary
+cannot load a native addon: `sharp` works perfectly under `deno run` and then fails with
+`Could not load the "sharp" module using the … runtime`. Measured against the wasm alternative,
+compiling cost 34 ms per image and 81 MB of resident memory — far more than it saved. The
+benchmark is in #94.
+
+Three things follow, and the middle one is a genuine cost:
+
+- **The image carries Deno, the source and `node_modules`** instead of one executable, and
+  `deno.jsonc` sets `"nodeModulesDir": "auto"`. Distroless still works — verified by building it,
+  including that it runs under `--network none`, so nothing is fetched at startup.
+- **The permission set is explicit and now includes `--allow-ffi` and `--allow-sys`**, where the
+  compiled binary baked `--permission-set=default`. FFI on the API process is a real widening of
+  what a compromise reaches. It bought a 3.6× faster image path on a small VPS; if a future
+  dependency asks for another broad permission, weigh it the same way rather than by precedent.
+- **Anything with a native addon has to be tried against the actual runtime**, not only
+  `deno task dev` — that is how this was found, and under `deno compile` it would have shipped
+  green and failed in the container.
+
+Neither decision is sacred. Both are cost/benefit, and both were re-decided once already on
+measurement; re-decide them the same way rather than contorting a dependency around them.
+
+## What the log says
+
+`src/logging.ts` configures LogTape once and exports the one logger. Only `main.ts` calls
+`configureLogging()`, which is why the test suite is silent. Requests are logged by
+`@hono/structured-logger` in `app.ts` — eighteen lines with no runtime dependencies, kept because
+it supplies the elapsed time and puts the logger on the context.
+
+- **One line per request**, carrying method, path, status and duration. It was two — an incoming
+  line with the path and a completed line with the status — and with nothing tying them together,
+  a 400 in the production log named no route at all. That is what turned a member's jammed
+  composer into a morning of work.
+- **A refusal is logged where it is produced, in the `defaultHook`.** That hook *returns* a
+  response rather than throwing, so the request middleware's `onError` never sees it: a validation
+  failure logged only by the middleware says `400` and nothing more. The line carries the same
+  mapped `{path, message}` issues the client is sent, so no value a member typed reaches the log.
+- **JSON lines in every environment.** `JSON.stringify(new Error("boom"))` is `{}`, so an error is
+  spelled out field by field in `describeError` — and a formatter that differed between
+  development and production would hide exactly that.
+- **The level comes from `ENVIRONMENT`**, three tiers: `trace` in development, `debug` on the
+  deployed testing instance, `info` in staging and production. A *healthy* `/api/health` is logged
+  at `trace`, so it is visible only locally — the container polls it every ten seconds, which is
+  8,640 lines a day burying everything the log is for. `debug` was not low enough, because the
+  instance we actually debug against runs as `testing`. A 503 there still logs at `info`, since
+  that is the container about to be restarted.
+- **An expected refusal is a warning, a bug is an error.** `HTTPException` is how Hono reports the
+  first, and it gets no stack — one per unauthenticated request would bury the second. Nothing
+  throws one today, so that branch is classification rather than a tested path.
+- **LogTape's meta logger is pinned to `warning`**, or it prints a paragraph about itself at every
+  boot, at the top of every `docker compose logs`.
+
+`logging_test.ts` pins the first two against a capturing sink, both checked by breaking them.
+
+## Two rate-limit budgets, split by method
+
+`GET`, `HEAD` and `QUERY` count against one budget and everything else against another, keyed by
+address and fifteen minutes wide. One budget meant an afternoon of reading left a member unable to
+save a draft — and the two are independent precisely so that cannot happen. Anything not named a
+read counts as a write, so a method added later is limited more tightly rather than not at all.
+
+**Both numbers come from measurement, and the writing one is the surprise.** A thread page costs
+eleven reads, so 500 is about forty-five page loads — and the key is the address, so a household
+divides it. Writing looks rare until the composer is counted: autosave is a `PATCH` on a
+two-second debounce with a ten-second ceiling, which is ninety saves in a window of steady writing
+and past two hundred in bursts. A tight write budget would stop the composer saving, which for a
+writing platform is the one failure that matters, so writes get 250 rather than the sixty that
+"writes are rare" would suggest.
+
+Each limiter skips what the other counts, so a request only ever touches one — which is also what
+keeps the draft-7 `RateLimit` headers coherent, since the skipped one sets none. The **scope
+travels in the 429 body** rather than being inferred from the limit in the header, because the
+client says something different for each and a number changing must not silently reclassify.
 
 ## Never raw SQL without asking
 
@@ -671,6 +783,89 @@ produce, and the assertion was checked by introducing it on purpose.
 
 `GET /users/{userId}` carries `isBlocked`, which is only ever *the reader's own* block. Whether
 somebody blocked the reader is exactly the disclosure the neutral 403 avoids.
+
+## Favourites
+
+One mark over five kinds, private to the member who set it. `PUT`/`DELETE
+/favourites/{targetType}/{targetId}` is the whole API — one pair of routes rather than five, the
+argument that makes `ReportDialog` one component for seven kinds.
+
+- **`favourite` carries no `target_type` column**, unlike `report`, whose references are `SET NULL`
+  and so leave a row naming nothing. These cascade, so the kind is readable off the data and
+  survives only as request vocabulary: `FAVOURITE_COLUMN` maps it to the column to write.
+- **`query/favourite.ts` imports nothing from `service/`**, and says so at the top. Every service
+  that joins `favourite` imports it while `favourite_service` reaches them back through
+  `visible_target`, so an import this way closes a cycle — which TypeScript answers with `any`,
+  leaving a join column unchecked rather than erroring. Deno's lint has no cycle rule.
+- **`withFavourite()` is the only place the join is written.** Its
+  `.on("favourite.userId", "=", readerId)` is what scopes a favourite to the member reading; spread
+  over five services it was eight copies, any of which could have lost that line and reported
+  everybody's favourites as the reader's own. The helper is generic over the builder, so Kysely
+  cannot resolve its references and they are asserted inside — the price of writing it once.
+- **Setting one is visibility-checked, clearing one is not.** A member who has lost access to
+  something they favourited must still be able to remove the mark. `resolveVisibleTarget` is shared
+  with reporting, so the rules cannot drift. Favouriting your own thing is allowed.
+- **Favourites-first is a `SortTerm`**, `FAVOURITES_FIRST`, handed to `listResultsWithCount` as a
+  variadic argument ahead of the request's own. It never comes from a request, which keeps it out
+  of `dynamic.ref`'s injection surface. Posts do **not** pass it: a thread is read in the order it
+  was written. The thread strip writes its own, not being a list endpoint.
+
+**One rule, two projections.** Joining `favourite` into the group's visibility check would have put
+it on all seventeen callers, sixteen of which only ask yes or no — so `selectVisibleWritingGroup` is
+a lean gate and `selectWritingGroupForReader` the full read, both on the same base builder.
+`selectStoryIdeaGate` and `ChatGroupGate` exist for the same reason; the chat one mattered most,
+having run a correlated `COUNT` over `chatMessage` on every message sent. Narrowing a selector makes
+the compiler name each caller that needed the wide one.
+
+## The report lifecycle
+
+A report is `open`, `in_progress` or `closed`, and `PATCH /reports/{reportId}` is the one route that
+moves it. There are two moves — taking one and closing it — and **no reopening**: a closing is
+final. The body is a discriminated union on the destination, so the document itself says that a
+closing carries an outcome and a note and that taking one does not; it reaches the generated client
+as a `oneOf`, where building a closing without an outcome is a type error. A `refine` would enforce
+the same rule invisibly, since it survives into neither the document nor the client.
+
+`resolved` and `dismissed` used to be two closings. They are one now, and `report_outcome` says
+which kind it was far more precisely — `content_removed`, `no_violation`, `duplicate` and six
+others. A closing carries an outcome *and* a note, for the reason a member's report carries a
+category and a reason: the enum is what the queue filters on, the prose is what the next operator
+reads.
+
+**There is no table beside the report, because the lifecycle only goes forward.** An earlier version
+of this had one, on the argument that a mutable status cannot be audited — true, but only while
+reopening exists to send a status backwards over a closing. Without it every move is written once
+and nothing is ever overwritten, so the row *is* the record §16 asks for: who has it, when they took
+it, when they closed it, with what outcome and note.
+
+- **`status` is a generated column** over `in_progress_at` and `closed_at`, so it cannot disagree
+  with them, and `kysely-codegen` types it `Generated<ReportStatus>` so nothing can try to write it.
+  The timestamps are the truth; the column exists because the queue filters and indexes on one
+  three-valued token, and spelled out by hand that filter is three predicates where forgetting
+  `closed_at IS NULL` in the middle one silently includes every closed report that was ever taken.
+- **A CHECK on this table cannot reference it.** `report_closed_has_an_outcome` is written against
+  `closed_at`, not against `status`, for that reason — and so is the unique index's predicate, since
+  a partial index cannot carry a generated column either.
+- **There is no `opened_at`.** `created_at` already is it: a report is open from the moment it
+  exists, and a report with neither timestamp set is one nobody has touched.
+- **Taking a report somebody already holds is allowed** and hands it over. The state means "somebody
+  has this, move on", not a lock — a claim nobody could take over would strand a report the day its
+  holder stopped reading the queue. The cost, accepted: only the last holder is recorded.
+- **Only the holder may close it**, which is what stops two operators judging one case; the loser
+  gets a 409. `operator_id` is `ON DELETE SET NULL`, so a report whose holder deleted their account
+  is held by nobody and anybody may close it — that is the whole of the escape hatch, and it falls
+  out of the reference rather than being written.
+- **Closing sets `operator_id` either way**, so closing one straight from the queue still records
+  who did it while leaving `in_progress_at` null — honest, because nobody took it.
+
+**The category is part of the one-report-per-member index key**, which is the line between
+correcting a report and making a second claim. Without it a member who reported a post as harassment
+and then noticed it was also plagiarism had the first claim silently overwritten. Two consequences,
+and the second has bitten three times: the predicate is `closed_at IS NULL` rather than a status, or
+taking a report would drop it out of the index and let the same member file it again; and
+`insertReport`'s `ON CONFLICT` clause has to restate that predicate *the same way*, because any
+disagreement makes Postgres answer "no unique or exclusion constraint matching the ON CONFLICT
+specification" for every report anybody files.
 
 ## Paths in mailed links must exist in the frontend
 

@@ -7,24 +7,57 @@
  *
  * Never the solid button level: that is the one primary act of a screen, and a filter is not it.
  *
- * `md:contents` dissolves the wrapper into the parent's grid, so every label sits in a column
- * as wide as the longest of them and the strips line up. Below `md` the wrapper stays a box,
- * which is what keeps a label nearer its own strip than the one above — measured at 4px to
- * both before this, so the grouping read as ambiguous.
+ * **It lays out its own label**, beside the options from `md` up and above them below it. It used
+ * to require the parent to be a two-column grid, which is a rule a call site cannot see: the
+ * groups and discovery pages drifted for months, and the thread's filter never had it at all.
+ *
+ * Inside a `FilterStrips` it dissolves into that grid instead (`md:contents`), so a run of strips
+ * shares one label column and their options line up. Alone, it opens a two-column grid of its own.
+ *
+ * Below `md` the wrapper stays a box either way, which is what keeps a label nearer its own strip
+ * than the one above — measured at 4px to both before this, so the grouping read as ambiguous.
  */
+import { computed, inject, useId } from 'vue'
+import { FILTER_STRIP_GROUP } from './filterStripGroup'
+
 const model = defineModel<Value>({ required: true })
 
 const props = defineProps<{
   label: string
   options: ReadonlyArray<{ value: Value; label: string }>
+  /**
+   * Draw the label for screen readers only. For a strip that chooses a *view* the heading above it
+   * already says what it is about, and the word is one too many — but the group still needs a name.
+   */
+  hideLabel?: boolean
 }>()
 
-const id = `filter-strip-${props.label.replaceAll(/\s+/gu, '-').toLowerCase()}`
+/**
+ * Per instance, not from the label: two strips with the same word collided on the one screen that
+ * shows both — the chats dialog's „Favoriten" over the groups list's — and the dialog's
+ * `aria-labelledby` then named it from the label behind the modal, which `aria-modal` hides.
+ */
+const id = useId()
+
+const inGroup = inject(FILTER_STRIP_GROUP, false)
+
+/**
+ * A hidden label occupies no column — it is out of flow — so a grid would only indent the options
+ * by the column gap.
+ */
+const layout = computed<string>(() => {
+  if (props.hideLabel) {
+    return inGroup ? 'md:col-span-2' : ''
+  }
+  return inGroup ? 'md:contents' : 'md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4'
+})
 </script>
 
 <template>
-  <div class="flex flex-col md:contents">
-    <span :id="id" class="text-[12.5px] text-ink-5 md:pb-[11px]">{{ label }}</span>
+  <div class="flex flex-col" :class="layout">
+    <span :id="id" :class="hideLabel ? 'sr-only' : 'text-[12.5px] text-ink-5 md:pb-[11px]'">{{
+      label
+    }}</span>
 
     <div role="group" :aria-labelledby="id" class="flex min-w-0 items-end gap-5 overflow-x-auto">
       <button

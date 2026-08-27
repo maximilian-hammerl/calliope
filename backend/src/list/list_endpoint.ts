@@ -6,6 +6,16 @@ export const SORT_ORDER = z.enum(["asc", "desc"]);
 export type SortOrder = z.infer<typeof SORT_ORDER>;
 
 /**
+ * Narrowing a list to the reader's own favourites, which four of them take. Here rather than at
+ * each route so no two of them can drift apart, and `any` by default because a list that hid
+ * everything unfavourited unless asked would surprise every caller.
+ *
+ * An enum rather than a boolean, matching `status` and `readerState` beside it: a list that grows
+ * a third case then has somewhere to put it without changing shape.
+ */
+export const FAVOURITE_FILTER = z.enum(["only", "any"]).default("any");
+
+/**
  * Body schema shared by every list endpoint: paging, sorting and whatever filters the
  * endpoint adds. List endpoints use the QUERY method (RFC 10008), so this arrives as JSON
  * and the values are already typed — no coercion, and no empty-string edge cases.

@@ -49,7 +49,7 @@ const PER_PAGE = 20
 
 // Kept in memory rather than the address: a dialog is not what a URL describes, and the page
 // of the list behind it uses the same key.
-const { page, offset, pageCount, goToPage } = usePagedList(
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   PER_PAGE,
   () => totalResults.value,
   false,
@@ -161,7 +161,7 @@ watch(notifications, async (loaded) => {
       </ul>
 
       <div v-if="hasLoaded && pageCount > 1" class="mt-3 border-t border-line-2 pt-2">
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Wird geladen …</p>

@@ -128,6 +128,28 @@ follows: it appears many times in a long form and it is reassurance, not instruc
 asterisks — they are a convention people misread, and a glyph carrying meaning is exactly what
 the iconography rule excludes.
 
+**A form whose every field is optional still marks every one of them.** Silence means required,
+so a profile of seven unmarked fields would claim seven obligations — and this is the form where
+that misreading costs most, since Yooco's mandatory fields are exactly what got filled with
+nonsense. The sentence above the form says the same thing once in prose; the markers are what a
+member reading only the field they are standing in still sees.
+
+**A form that publishes what somebody writes says who will read it, before they write.** Above
+the profile fields, not beside the save button: both halves, who can see it and who cannot —
+„alle Mitglieder mit einem Konto … außerhalb von Calliope ist nichts davon sichtbar" — and then
+what it is for, because a field somebody understands is a field they answer properly. This is
+what stands in place of a per-field visibility setting, so it carries that weight rather than
+being helper text.
+
+**A profile is edited from the profile, not from Einstellungen.** „Profil bearbeiten" sits on
+your own page as „Gruppe bearbeiten" sits on a group's — Einstellungen is the account, and a
+profile is content other members read.
+
+**A profile shows what was answered and nothing else.** No label over an empty value: a field
+left blank is a question somebody chose not to answer, and a bare label reads as the page having
+failed to load. A profile with nothing in it says so in one sentence — and on your own, says
+where to fill it in.
+
 **A select is marked only when one of its options is "Keine Angabe".** Then blank is a real
 choice and the rule above applies. A select whose default is an answer — Sichtbarkeit is Privat,
 Sprache is Deutsch — is answered rather than skipped, and marking it optional would invite
@@ -159,6 +181,16 @@ the conversation until it ran off the screen and took the composer with it. Olde
 behind an explicit "Ältere Nachrichten" rather than on scroll, because this list also moves when
 a message arrives, and prepending compensates the scroll offset by exactly the height added, so
 the line somebody was reading stays under their eyes.
+
+**Consecutive lines from one person are one block.** A chat is remarks rather than posts, and
+somebody firing off three of them wrote them once: the name and the time head the run, not every
+line in it. A run breaks after five minutes, because one header carries one time and „vor 12
+Minuten" must not stand over something said an hour later; it never spans a deleted account,
+because every one of those reads „Gelöschtes Konto" and joining two would put one member's words
+under another's name. The spacing then needs three steps rather than two — „Melden" 6px under the
+message it reports, a run's own lines 14px apart, a new speaker 24px. With two it is ambiguous
+which message the button belongs to, since the name that used to start every block is now only on
+the first.
 
 **A list's order is explained by what its rows show.** Sort by a column the row displays, or
 the sequence reads as random. Meine Gruppen is ordered by last activity and each row says
@@ -194,8 +226,8 @@ heading, not a paraphrase of it. Two names for one place reads as two places.
 pushed right with `ml-auto`, wrapping onto their own line when the width runs out. "Mitglieder ·
 3 Mitglieder · [＋ Mitglied einladen]" is the pattern; Meine Gruppen follows it.
 
-**Verbs are what the member does, not what the system does.** "Weiterschreiben", not "Neuer
-Beitrag". "Merken", not "Zu Lesezeichen hinzufügen". "Gruppe gründen", not "Gruppe erstellen" —
+**Verbs are what the member does, not what the system does.** „Weiterschreiben", not „Neuer
+Beitrag". „Melden", not „Meldung einreichen". „Gruppe gründen", not „Gruppe erstellen" —
 founding a group is a social act.
 
 **When we mail a link, say what to expect of it.** One sentence, the same everywhere
@@ -227,23 +259,93 @@ Schritte anlegen"): a deliberate exception to hiding what one cannot do, so a re
 group plans here. Completed steps stay under „Erledigt (N)" until someone deletes them.
 
 **A member's own state on somebody else's thing is never shown to its owner.** A story idea
-carries "Gelesen" or "Gemerkt" for the member reading it and nothing for its author: "four
-members read your idea" is the statistic the research rejected. Saving something for later is
+carries „Gelesen" or „Favorit" for the member reading it and nothing for its author: "four
+members read your idea" is the statistic the research rejected. Saving something for later is a
+private act, and a count of who has done it turns the board into a scoreboard — the same finding
+arrived at from the other side.
+
 **A username is permanent, and registration says so.** "Ändern lässt er sich später nicht", in
 the field's own description — the one moment the choice can still be made differently. Members
 asked for it to work this way: somebody with a bad reputation must not be able to reappear under
 a new name, so this is a protection rather than a missing feature, and it is never apologised for
 in the copy. Renaming is not planned (#54).
 
-**"Merken"** everywhere — never "Favorit", which names a feeling rather than an intention and
-promises a permanence the author can end by closing the idea.
+**„Favorit"** everywhere — the word this document used to forbid, and the reversal is the point.
+„Merken" was right while the mark existed only on a story idea, where it means noted for later.
+The mark now spans groups, threads, posts, ideas and chats, and „gemerkt" says something untrue
+about a group you already belong to or a conversation you are in — you are not planning to get to
+those. „Favorit" is about what you come back to, which is exactly what the mark now does: it
+floats the thing to the top of its list. The old objection stands and is outweighed rather than
+answered — an author can still close an idea somebody favourited, and its page and badge survive
+that, so the mark never breaks.
 
-**A state toggle is labelled with the state, not the act.** "Gelesen" and "Gemerkt", and
-"Nicht gelesen" and "Nicht gemerkt" once set — never "Als gelesen markieren" and its undo,
-which were wider than most story ideas' own titles on a phone and pushed the one solid action
-onto a second row. The long phrasing survives as the button's `title`, which is also where
-the fact that clicking it again undoes it belongs. `readerStateToggles()` in
-`lib/format/storyIdea.ts` is the one place either wording lives.
+**A state toggle is labelled with the state, not the act.** „Gelesen" and „Favorit", and „Nicht
+gelesen" and „Kein Favorit" once set — never „Als gelesen markieren" and its undo, which were
+wider than most story ideas' own titles on a phone and pushed the one solid action onto a second
+row. The long phrasing survives as the button's `title`, which is also where the fact that
+clicking it again undoes it belongs. `readToggle()` in `lib/format/storyIdea.ts` and
+`favouriteToggle()` in `lib/format/favourite.ts` are the one place either wording lives, and the
+two sit side by side on an idea precisely because they are built the same way.
+
+**A favourite floats its thing to the top, except among prose.** Groups, threads, ideas and chats
+put favourites first whatever the list is sorted by — that is what the mark is *for*, and a member
+in twenty groups should not have to search for the four they open daily. A post does not: a thread
+is read in the order it was written, and hoisting a marked passage would put the end of a chapter
+above its beginning. What a favourite earns a post is the thread's own „Favoriten" filter, offered
+on every list that shows a favouritable kind so the surfaces cannot drift apart.
+
+**The button says the word, the row shows the mark.** „Favorit" and „Kein Favorit" stay words on
+a button, because a button names the state it will move the thing *to* — a star there would sit on
+the things that are **not** favourites, a few pixels from a star meaning they are, and a mark
+cannot point forward and describe the present at once. On a row, where nothing points anywhere,
+`Star` is the mark and `BookCheck` is „Gelesen". Both carry `aria-label` **and** `title`, so the
+word is a hover away on a desktop and always there for a screen reader; nothing else in the
+interface is icon-only, which is why these two are named rather than `aria-hidden`.
+
+**A list row states what it is and what you did with it, as marks.** A list sorted favourites-first
+otherwise gives no sign of where they stop, which only looks fine while the filter is on. The
+thing's own state comes first and the reader's after it: lock then star on a group, closed then
+read then favourite on an idea.
+
+**A mark is one-sided or two-sided, and which one is a decision.** „Favorit", „Gelesen" and
+„Geschlossen" are a mark *or nothing* — their absence says nothing worth a chip, and an open idea
+is the board's resting state. Visibility is two-sided: a group is always private or public, and
+`LockOpen` is there so „öffentlich" is read rather than inferred from a missing lock.
+
+**The lock pair is shipped as an open question, not as a finding.** `Lock` and `LockOpen` differ
+only by where the shackle sits, which is a fine distinction at 13px, and visibility is the fact
+whose misreading costs the most — a private group taken for a public one is somebody writing to a
+room they think is smaller than it is. Three ways round it were tried and are all worse: filling
+either lock makes a solid body that stops reading as a lock, and `Globe` for public claims the
+internet when „öffentlich" here means the community. So it goes out as the pair and **the thing to
+watch for is a member reporting they misjudged who could read a group**; the fix, if it comes, is
+the word, which costs 92px and nothing else. Two mitigations are already in place: the group's own
+page keeps the word, and that is the screen somebody is on when they are about to write.
+
+**Which words survive: the ones a member is deciding on.** „Von dir" and „Mitglied" stay words,
+because the row's marks are facts about the thing while those two say what the reader may *do* with
+it — and neither has a glyph anybody would guess. A `User` icon means *a person*, not *you*, and
+the Lucide marks that do say authorship all collide with `Pencil`, which already means edit.
+
+And a **page heading keeps the word** where a row takes the mark: „Privat" on the group's own
+page, „Offen" or „Geschlossen" on the idea's. That is not an inconsistency, it is how the mark is taught — you meet the word on
+the thing's own page and the chip in the list means it from then on.
+
+The mark **is a badge**, with a glyph where the word goes: same border, same 3px radius, same 21px
+height, `align-bottom` because a box holding no text has its baseline at its own bottom edge and
+sat 2px high without it. A `mark` variant of `CalliopeBadge` owns all of that, so a chip cannot
+drift from the chips beside it. It costs 25px against about 60 for the word, which is what lets the
+tab strip, the chats rail and the search popover carry it at all — as a word it pushed a chat's
+unread count onto a second line and made that row 22px taller than its neighbours.
+
+**Nothing is filled.** A filled `Star` was tried and read as a different weight of thing on a page
+where nothing else is filled. Fill was then tried on `Lock` and on `LockOpen`, to tell two
+near-identical glyphs apart, and failed in both directions for a different reason: a filled body
+stops reading as a lock. Fill is not the tool for separating two marks.
+
+Marks measured against the words they replace: „PRIVAT" 92px and „GESCHLOSSEN" 99px — the two
+widest chips in the interface — against 25px each. A search result that is closed and your own
+spent 168px of a 414px row on chips before this.
 
 **A thing its owner has ended stays readable, and says so.** A closed story idea keeps its
 page and its badge, and the action it can no longer take is **disabled rather than hidden** —
@@ -257,6 +359,17 @@ already has. The composer is not available for this even though it is the other 
 written: it is bound to the member's draft, which the database allows exactly one of per thread,
 so borrowing it would put a half-written post at risk in order to fix a typo. Saving is disabled
 until something actually changes, so the action cannot claim work it did not do.
+
+**The field it becomes is a raised surface and one hairline** — `--paper-0`, 1px
+`--border-default`, the control radius — because without them an edited post is indistinguishable
+from the posts above and below it: same ground, no outline, only a toolbar appearing to say anything
+happened. It was a plain textarea once, which had that chrome for free.
+
+**Its padding is cancelled by an equal negative margin**, so the field bleeds outward and the prose
+does not move by even a pixel when Bearbeiten is clicked. The margin covers the padding *and* the
+1px border, which is why both are bracketed values; change one and the other changes with it, or the
+words start jumping. The bleed is smaller on a phone (11px against 15px) because the gutter is only
+18px there, and a field 3px from the screen edge reads as a mistake.
 
 **An edit says who made it, but only when that is somebody else.** „· bearbeitet" for an author
 changing their own post, „· bearbeitet von nachtschreiber" where somebody administering the group
@@ -367,8 +480,9 @@ destination shows its icon beside the label in both bars (16px inline on the top
 above the label on the bottom), so the two bars read as the same three places. The
 menus exist on the phone too, rising above the bottom bar; that is an experiment, revisited if
 it reads badly in use.
-Anything belonging to one member lives behind their avatar: Mitteilungen, Chats,
-Einstellungen, Abmelden. That split is also what keeps the bar from growing: two long German
+Anything belonging to one member lives behind their avatar: Mein Profil, Mitteilungen, Chats,
+Einstellungen, Abmelden. Mein Profil is the one that navigates rather than opening a dialog,
+because the profile is a page strangers read too. That split is also what keeps the bar from growing: two long German
 nav words plus the lockup do not fit a 375px phone, and every future personal feature would
 have pushed harder.
 
@@ -464,7 +578,7 @@ copy below stays specified — it is what the buttons will say when they work (#
 but nothing renders it until it does something.
 
 **Copy examples to reuse verbatim:** Weiterschreiben · Beitrag senden · Vorschau · Antworten ·
-Zitieren · Merken · Melden · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
+Zitieren · Favorit · Kein Favorit · Melden · Anmerkung schreiben · Mitglied einladen · Gruppe gründen · Thread ·
 Schritt · Alle Beiträge · Nächste Schritte · Story-Status · Dateien & Bilder · Suche ·
 Editor einklappen · Editor ausklappen · Gruppen-Kontext · Gruppe bearbeiten ·
 Änderungen speichern · Entfernen · Einladung zurückziehen.
@@ -595,6 +709,17 @@ whole screen, or one row of it? Without that test the treatment tracked whoever 
 the block toggle was Quiet in its one branch and Plain in the other, and a single story-idea
 header carried four different levels side by side.
 
+That header did it again the day it grew a fourth button: „Favorit" Plain, „Gelesen" Quiet,
+„Melden" Plain, „Chat beginnen" Solid — alternating, and every one of them an act on the idea the
+page is about. **The test would have caught it, so what changed is that the test is now hard to
+skip**: `FavouriteToggle` no longer takes a level, because it only ever sits on a thing's own page,
+and its prop had been set to Plain at all three call sites. A control that appears at one altitude
+should not offer a level at all.
+
+„Melden" is Quiet for the same reason, on every page that carries it. Reporting *should* recede,
+and **placement** is what does that — it sits last, after the ordinary actions — not a quieter
+level. A level says what an act is on; how often anybody wants it is a matter of where it goes.
+
 **One implementation per level, and it lives in the Button component.** Quiet is
 `variant="outline"`, carrying the fill *and* the border; there is no second bordered variant,
 because `secondary` existed as Quiet with its border missing and drifted into the same jobs.
@@ -698,6 +823,44 @@ Threads stay tabs — a horizontally scrolling strip under the group title, neve
 composer is a one-line bar that expands on focus, collapsed by default. Prose stays 17px — never
 shrink the reading size. Every target is at least 44px (`--tap-min`).
 
+**The formatting toolbar is text, not a row of icons.** It sits *below* the writing, in the
+footer the inert placeholder already occupied, and its controls are short labels styled to show
+what they do — a bold **B**, an italic *I*, an underlined U, a struck-through S, `H2` and `H3`,
+Liste, 1. Liste, „“, Code in mono, Link. That follows the rule that an icon accompanies a label
+rather than replacing it, and it is what the placeholder was always going to become.
+
+**The composer's toolbar is three menus** — Absatz, Zeichen, Einfügen — and nothing else. Twenty-one
+controls do not fit one strip, and a menu affords the whole German word, so the strip's `B`/`I`
+abbreviations and the icon-only alignment exception both went with the regrouping. There is now no
+control in the toolbar itself that carries an icon in place of a label; the bubble below is the one
+exception. Any further one needs that argument made out loud, or it is a row of icons by drift.
+
+**A selection shows a bubble**: the four character marks as icons over the selected text, placed
+*below* it because a phone puts its own selection menu above, and never closer to the screen edge
+than the gutter. **It is the one place an icon replaces a label rather than accompanying it**, and
+the argument is the one the alignment row used to make: the surface floats over the prose it is
+about, so it has to stay small enough not to cover it. Each icon carries the German word as its
+accessible name. Everywhere else — the three menus included — an icon sits *in front of* its label,
+which is what ties a bubble action to its menu entry.
+
+It is a hairline on `--paper-0`, not a floating card: nothing at rest casts a shadow, and a bubble is
+at rest whenever it is visible. It is the fast path and never the complete one — a mark can also be
+set on a collapsed cursor, which no bubble can serve, so the Zeichen menu holds everything the
+bubble does. Which four are in it is a judgement about what people reach for, not a category:
+`Code` is deliberately out.
+
+An active control is `--paper-0` with a 1px `--border-default`, the same treatment an active rail
+row gets; an inactive one is borderless and `--ink-5`. **The row scrolls sideways in its own
+container** rather than wrapping or hiding below `sm` — formatting has to be reachable on a phone,
+and a second row would push the writing off a short screen. Every control is 44px on a phone.
+
+**The composer's prose is 17px**, like everything else a member reads. It was 16.5px while it was
+a textarea, which was the reading size quietly shrinking by half a pixel; the editor renders at
+`prose-post`, so what is being written now matches what it will look like.
+
+„Vorschau" is **gone** rather than disabled: a WYSIWYG editor previews itself, and a control that
+does nothing does not ship. The copy stays specified above for whenever it means something again.
+
 **Both rails hold group context, split by what a member does with it.** The left rail is
 reference: the story's own facts, its files, who is in it — what a member checks while writing.
 The right rail is action: the next steps, and the story's status with the control that changes
@@ -746,9 +909,22 @@ never matched the hairline weight and changed shape from platform to platform.
 | `×` | `X` | delete a step (plain, never red — a step is re-creatable in seconds) |
 | `⌕` | `Search` | search |
 | `⠿` | `GripVertical` | drag handle (only if drag-reorder ships) |
+| — | `Bold` `Italic` `Underline` `Strikethrough` | the four character marks, in the Zeichen menu and alone in the bubble |
+| — | `Code` | inline code (Zeichen menu only, never the bubble) |
+| — | `Heading2` `Heading3` | Überschrift and Zwischenüberschrift |
+| — | `List` `ListOrdered` | Liste and Nummerierte Liste |
+| — | `Quote` | Zitat |
+| — | `AlignLeft` `AlignCenter` `AlignRight` `AlignJustify` | the four alignments, now labelled words in a menu |
+| — | `Link` | insert or edit a link |
+| — | `Minus` | Trennlinie, which is what a horizontal rule looks like |
+| — | `RemoveFormatting` | Formatierung entfernen |
 | — | `Pencil` | edit an existing thing ("Gruppe bearbeiten", "Umbenennen") |
 | — | `Trash2` | delete a thing for good ("Löschen") |
 | — | `MessageCircle` | start a chat ("Chat beginnen") |
+| — | `Star` | a row's „Favorit" mark — never on the toggle, which keeps its word |
+| — | `BookCheck` | a row's „Gelesen" mark. Closed, not `BookOpenCheck`: an open book reads as *being* read, and its page curves plus the check are dense at 13px |
+| — | `Lock` `LockOpen` | a row's „Privat" / „Öffentlich" mark, both always shown — see the open question above |
+| — | `CircleCheckBig` | a row's „Geschlossen" mark for a story idea. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px
@@ -762,14 +938,21 @@ nothing to name — the rail's collapse chevron, the tab strip's scroll arrows, 
 which carry an `aria-label` instead. No *act* is ever icon-only.
 
 **One act, one mark, wherever it appears.** `Plus` adds, `Pencil` edits, `Trash2` deletes for
-good, so a member who has learned one has learned it for every object. Two things take no mark on
+good, so a member who has learned one has learned it for every object. `BookCheck` beside
+`SquareCheck` is not the exception it looks like: a check means *done* in both, and the noun in
+front of it says done with what — a step, or a reading. Two things take no mark on
 purpose: „Entfernen", because removing somebody from a group that survives is a different act
 from destroying a thing, and a dialog's confirm button, whose title has already named the act.
 Import each icon under one name — a `PencilIcon` beside a `Pencil` is one file twice and reads as
 two decisions.
 
 Unchanged: file types stay mono text (`PNG` `MD` `JPG`), never a file icon. Avatars are
-initials in `--text-avatar` on `--surface-avatar`, never generated images. **No emoji** — the round-1 emoji
+**a member's own photograph where they have set one, and their initial otherwise** — initials in
+`--text-avatar` on `--surface-avatar`, never a *generated* image. The initial is also the fallback
+when a picture fails to load, so a missing file degrades to a letter rather than a broken frame.
+A picture appears everywhere an initial does, at every size, because a partial rollout leaves a
+member unable to tell where their picture counts. **Never animated**: motion is almost none by
+policy, and the upload flattens an animated file rather than storing one. **No emoji** — the round-1 emoji
 reactions were removed on explicit feedback.
 
 The prototype components under `components/` and `ui_kits/` still render the unicode marks;

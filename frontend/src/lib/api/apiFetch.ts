@@ -8,6 +8,8 @@ export type ApiErrorBody = {
   issues?: { path: string; message: string }[]
   /** Set only where a client has to act on the reason. See `queryClient`'s 401 handling. */
   code?: string
+  /** Which of the two rate-limit budgets refused it, on a 429 and nowhere else. */
+  scope?: 'read' | 'write'
 }
 
 /**
@@ -19,10 +21,22 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly body: ApiErrorBody,
+    /**
+     * Seconds until the request may be repeated, from `Retry-After`. Only the rate limiter sends
+     * it — `standardHeaders: "draft-7"` — and it counts down within the window rather than
+     * restating its length, so it can be shown as a real wait.
+     */
+    readonly retryAfterSeconds?: number,
   ) {
     super(body.error ?? `Request failed with status ${status}`)
     this.name = 'ApiError'
   }
+}
+
+/** Only a positive whole number of seconds is usable; the header is also allowed to be a date. */
+function readRetryAfter(headers: Headers): number | undefined {
+  const value = Number(headers.get('Retry-After'))
+  return Number.isFinite(value) && value > 0 ? Math.ceil(value) : undefined
 }
 
 /** The shape Orval's generated functions expect back from the mutator. */
@@ -42,7 +56,7 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const data: unknown = body ? JSON.parse(body) : {}
 
   if (!response.ok) {
-    throw new ApiError(response.status, data as ApiErrorBody)
+    throw new ApiError(response.status, data as ApiErrorBody, readRetryAfter(response.headers))
   }
 
   return { data, status: response.status, headers: response.headers } as ApiResponse as T

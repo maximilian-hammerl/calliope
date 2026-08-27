@@ -54,7 +54,8 @@ async function change(next: GetGroup200StoryStatus) {
       :disabled="isPending"
       @update:model-value="(value) => change(value as GetGroup200StoryStatus)"
     >
-      <SelectTrigger class="w-full text-[12.5px]">
+      <!-- „Story-Status" is the rail block's heading, which nothing associates with the control. -->
+      <SelectTrigger aria-label="Story-Status" class="w-full text-[12.5px]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

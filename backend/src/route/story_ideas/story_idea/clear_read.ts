@@ -7,6 +7,7 @@ import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
+  FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
@@ -17,12 +18,12 @@ const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
 export default new OpenAPIHono().openapi(
   createRoute({
     method: "delete",
-    path: "/reader-state",
+    path: "/read",
     tags: [STORY_IDEAS_TAG],
     summary: "Set an idea back to unread",
     description:
-      "Removes the member's own state. Answers the same way whether a state was there or not, because unread is the absence of one.",
-    operationId: "clearReaderState",
+      "Puts an idea back to unread. Answers the same way whether it was read or not, because unread is the absence of the record.",
+    operationId: "clearStoryIdeaRead",
     middleware: authenticated,
     request: { params: IDEA_PARAMS },
     responses: {
@@ -38,6 +39,7 @@ export default new OpenAPIHono().openapi(
         description: "No such idea",
         content: jsonContent(ERROR_RESPONSE),
       },
+      ...FORBIDDEN_RESPONSE,
       ...BAD_REQUEST_RESPONSE,
       ...COMMON_RESPONSES,
     },
@@ -46,12 +48,12 @@ export default new OpenAPIHono().openapi(
     const user = c.get("user");
     const { ideaId } = c.req.valid("param");
 
-    const idea = await StoryIdeaService.selectStoryIdea(ideaId, user.id);
+    const idea = await StoryIdeaService.selectStoryIdeaGate(ideaId);
     if (idea === undefined) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    await StoryIdeaService.clearReaderState(ideaId, user.id);
+    await StoryIdeaService.clearRead(ideaId, user.id);
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

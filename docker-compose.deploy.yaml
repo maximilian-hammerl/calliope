@@ -1,9 +1,18 @@
 name: calliope
 
+# `docker compose logs` reads a file Docker writes, not the process, and json-file is unbounded
+# by default. 50 MB is about eighteen days of the backend, which produces the most by far.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    logging: *logging
 
     # 443/udp carries HTTP/3. Port 80 is what Let's Encrypt redirects from and validates on.
     ports:
@@ -55,7 +64,12 @@ services:
   backend:
     build:
       context: ./backend
+      # So the image creates the mount point with the runtime user's ownership; a volume Docker
+      # creates on its own belongs to root and refuses the first upload.
+      args:
+        FILE_STORAGE_PATH: ${FILE_STORAGE_PATH:?set FILE_STORAGE_PATH in .env}
     restart: unless-stopped
+    logging: *logging
 
     environment:
       # The backend reads this at boot and refuses to start without it, which is the point:
@@ -79,6 +93,12 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME:?set SMTP_USERNAME in .env}
       SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD in .env}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?set MAIL_FROM_ADDRESS in .env}
+      FILE_STORAGE_PATH: ${FILE_STORAGE_PATH:?set FILE_STORAGE_PATH in .env}
+
+    # Uploaded files. A volume rather than the image, so a deploy does not take them with it, and
+    # the one thing here `pg_dump` does not cover — the backup tars it, see deployment/backup.sh.
+    volumes:
+      - file-data:${FILE_STORAGE_PATH}
 
     depends_on:
       db:
@@ -91,7 +111,7 @@ services:
     # /api/health reports 503 when a database is unreachable, so the container restarts rather
     # than serving errors. The binary asks itself: distroless has no shell for CMD-SHELL.
     healthcheck:
-      test: ["CMD", "/calliope", "--health-check"]
+      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--permission-set=default", "main.ts", "--health-check"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -117,6 +137,7 @@ services:
   db:
     image: postgres:18
     restart: unless-stopped
+    logging: *logging
 
     # 128 MB is the built-in default on an 8 GB host; cache hit rate beats every other knob.
     command: postgres -c shared_buffers=1GB
@@ -142,6 +163,7 @@ services:
   redis:
     image: redis:8
     restart: unless-stopped
+    logging: *logging
 
     volumes:
       - redis-data:/data
@@ -154,6 +176,7 @@ services:
 
 volumes:
   db-data:
+  file-data:
   redis-data:
   caddy-data:
   caddy-config:

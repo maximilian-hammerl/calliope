@@ -6,6 +6,7 @@ import {
   createGroup,
   deleteUsers,
   getUserId,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -14,6 +15,13 @@ import {
 const reporter = "report-test-reporter";
 const author = "report-test-author";
 const outsider = "report-test-outsider";
+
+/**
+ * Its own text too, not only its own accounts. One test below finds its report by the excerpt, and
+ * while three files all reported a post saying "Etwas Übles." it could pick up a neighbour's row
+ * and then fail on it.
+ */
+const REPORTED_TEXT = "Etwas Übles (create).";
 
 Deno.test.beforeEach(clearRateLimits);
 
@@ -77,7 +85,7 @@ async function post(
     "POST",
     `/api/groups/${groupId}/threads/${threadId}/posts`,
     cookie,
-    { text },
+    postBody(text),
   );
   assertEquals(response.status, STATUS_CODE.Created);
   return await response.json();
@@ -106,7 +114,7 @@ Deno.test("POST /api/reports copies what was reported into the report", async ()
     authorCookie,
     group.id,
     created.id,
-    "Etwas Übles.",
+    REPORTED_TEXT,
   );
 
   assertEquals(
@@ -118,7 +126,7 @@ Deno.test("POST /api/reports copies what was reported into the report", async ()
   assertExists(stored);
   // The excerpt is the point: the queue has to stay readable after the post is deleted, and it
   // has to be the server's copy rather than one the reporter composed.
-  assertEquals(stored.targetExcerpt, "Etwas Übles.");
+  assertEquals(stored.targetExcerpt, REPORTED_TEXT);
   assertEquals(stored.reason, "Beleidigend");
   assertEquals(stored.category, "harassment");
   assertEquals(stored.status, "open");
@@ -134,7 +142,7 @@ Deno.test("a report survives the post it is about", async () => {
     authorCookie,
     group.id,
     created.id,
-    "Etwas Übles.",
+    REPORTED_TEXT,
   );
   await report(reporterCookie, "writing_post", written.id);
 
@@ -152,7 +160,7 @@ Deno.test("a report survives the post it is about", async () => {
   const stored = await db
     .selectFrom("report")
     .selectAll()
-    .where("targetExcerpt", "=", "Etwas Übles.")
+    .where("targetExcerpt", "=", REPORTED_TEXT)
     .executeTakeFirst();
 
   assertExists(stored, "the report went with the post");
@@ -179,7 +187,7 @@ Deno.test("what the reporter cannot see cannot be reported", async () => {
   );
 });
 
-Deno.test("reporting the same thing again rewrites the reason", async () => {
+Deno.test("reporting the same thing under the same category rewrites the reason", async () => {
   await registerUser(author);
   const reporterCookie = await registerUser(reporter);
   const authorId = await getUserId(author);
@@ -190,13 +198,8 @@ Deno.test("reporting the same thing again rewrites the reason", async () => {
     STATUS_CODE.OK,
   );
   assertEquals(
-    (await report(
-      reporterCookie,
-      "user",
-      authorId,
-      "Beleidigend, mehrfach.",
-      "hate",
-    )).status,
+    (await report(reporterCookie, "user", authorId, "Beleidigend, mehrfach."))
+      .status,
     STATUS_CODE.OK,
   );
 
@@ -209,8 +212,44 @@ Deno.test("reporting the same thing again rewrites the reason", async () => {
   // One report, and it says what the reporter meant to say.
   assertEquals(stored.length, 1);
   assertEquals(stored[0]?.reason, "Beleidigend, mehrfach.");
-  // The category is corrected too: the same hurry produces both mistakes.
-  assertEquals(stored[0]?.category, "hate");
+});
+
+Deno.test("reporting the same thing under another category is a second claim", async () => {
+  await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+  const authorId = await getUserId(author);
+
+  assertEquals(
+    (await report(reporterCookie, "user", authorId, "Beleidigend"))
+      .status,
+    STATUS_CODE.OK,
+  );
+  assertEquals(
+    (await report(
+      reporterCookie,
+      "user",
+      authorId,
+      "Und abgeschrieben.",
+      "plagiarism",
+    ))
+      .status,
+    STATUS_CODE.OK,
+  );
+
+  const stored = await db
+    .selectFrom("report")
+    .selectAll()
+    .where("reportedUserId", "=", authorId)
+    .execute();
+
+  // Two rows, because a different category is a different claim rather than a correction. The
+  // category is in the index key for exactly this: while it was not, noticing a second thing
+  // wrong overwrote the first report and lost it.
+  assertEquals(stored.length, 2);
+  assertEquals(
+    stored.map((row) => row.category).toSorted(),
+    ["harassment", "plagiarism"],
+  );
 });
 
 Deno.test("re-reporting keeps the excerpt from when it was first reported", async () => {
@@ -223,7 +262,7 @@ Deno.test("re-reporting keeps the excerpt from when it was first reported", asyn
     authorCookie,
     group.id,
     created.id,
-    "Etwas Übles.",
+    REPORTED_TEXT,
   );
 
   await report(reporterCookie, "writing_post", written.id, "Kurz");
@@ -234,7 +273,7 @@ Deno.test("re-reporting keeps the excerpt from when it was first reported", asyn
       "PATCH",
       `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
       authorCookie,
-      { text: "Harmlos." },
+      postBody("Harmlos."),
     )).status,
     STATUS_CODE.OK,
   );
@@ -244,7 +283,7 @@ Deno.test("re-reporting keeps the excerpt from when it was first reported", asyn
   assertExists(stored);
   assertEquals(stored.reason, "Ausführlicher");
   // Editing what was reported must not let the author overwrite the evidence.
-  assertEquals(stored.targetExcerpt, "Etwas Übles.");
+  assertEquals(stored.targetExcerpt, REPORTED_TEXT);
 });
 
 Deno.test("a second member reporting the same thing is its own report", async () => {
@@ -341,7 +380,7 @@ Deno.test("somebody else's writing in the same group is still reportable", async
     authorCookie,
     group.id,
     created.id,
-    "Etwas Übles.",
+    REPORTED_TEXT,
   );
 
   // The refusal must not have been widened into "anything in a group you wrote in".

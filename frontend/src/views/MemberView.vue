@@ -8,6 +8,7 @@ import { useUnblockMember } from '@/api/blocks/blocks'
 import { GetCurrentUser200PlatformRole } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
 import type { GetUser200 } from '@/api/models'
+import { Pencil } from '@lucide/vue'
 import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -15,6 +16,9 @@ import BanMemberDialog from '@/components/user/BanMemberDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
+import ProfileFields from '@/components/user/ProfileFields.vue'
+import ProfileDialog from '@/components/user/ProfileDialog.vue'
+import { answeredFields } from '@/lib/profile/profileFields'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -68,6 +72,12 @@ async function liftTheBan() {
   await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
 }
 
+const editingProfile = ref<boolean>(false)
+
+async function refreshProfile() {
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
+}
+
 const reporting = ref<boolean>(false)
 const blocking = ref<boolean>(false)
 const blockError = ref<string | undefined>(undefined)
@@ -98,7 +108,7 @@ async function allowContactAgain() {
         <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
              squeezed the name into an ellipsis, which is the one thing this page must show. -->
         <div class="flex flex-wrap items-center gap-4">
-          <UserAvatar :username="member.username" size="lg" />
+          <UserAvatar :username="member.username" :avatar-url="member.avatarUrl" size="lg" />
 
           <div class="flex min-w-0 flex-col gap-1">
             <h1 class="truncate text-h1">{{ member.username }}</h1>
@@ -107,7 +117,14 @@ async function allowContactAgain() {
             </p>
           </div>
 
-          <div v-if="!isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
+          <div v-if="isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
+            <Button variant="outline" size="sm" @click="editingProfile = true">
+              <Pencil :stroke-width="1.5" />
+              Profil bearbeiten
+            </Button>
+          </div>
+
+          <div v-else class="w-full sm:ml-auto sm:w-auto">
             <Button
               v-if="member.isBlocked"
               variant="outline"
@@ -122,7 +139,8 @@ async function allowContactAgain() {
             <Button v-else variant="outline" size="sm" @click="blocking = true">
               Blockieren
             </Button>
-            <Button variant="ghost" size="sm" @click="reporting = true">Melden</Button>
+            <!-- Quiet beside Blockieren: both act on the member the page is about. -->
+            <Button variant="outline" size="sm" @click="reporting = true">Melden</Button>
           </div>
 
           <!-- Its own group, after the member-facing one: blocking is what any member may do
@@ -162,10 +180,19 @@ async function allowContactAgain() {
           Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
         </p>
 
-        <!-- Said outright rather than left as blank space: an empty page reads as an error. -->
-        <p class="mt-8 max-w-[60ch] border-t border-line-3 pt-6 text-note text-ink-5">
-          {{ member.username }} hat noch nichts über sich erzählt. Steckbriefe für Mitglieder —
-          Genres, woran jemand schreibt, was jemand sucht — kommen noch.
+        <ProfileFields :profile="member" />
+
+        <!-- Said outright rather than left as blank space: an empty page reads as an error.
+             Their own profile says where to fill it in; somebody else's cannot. -->
+        <p
+          v-if="answeredFields(member).length === 0"
+          class="mt-8 max-w-[60ch] border-t border-line-3 pt-6 text-note text-ink-5"
+        >
+          <template v-if="isOwnProfile">
+            Du hast noch nichts über dich erzählt. Erzähl, wie du schreibst — danach sehen andere,
+            ob ihr zusammenpasst.
+          </template>
+          <template v-else> {{ member.username }} hat noch nichts über sich erzählt. </template>
         </p>
       </template>
 
@@ -183,6 +210,13 @@ async function allowContactAgain() {
         </p>
       </template>
     </div>
+
+    <ProfileDialog
+      v-if="member"
+      v-model:open="editingProfile"
+      :profile="member"
+      @saved="refreshProfile"
+    />
 
     <BlockMemberDialog
       v-if="member"

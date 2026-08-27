@@ -1,11 +1,22 @@
 import { db } from "@/src/database/client.ts";
 import { hashPassword } from "@/src/util/password.ts";
-import { PLATFORM_ROLES, USER, VERIFIED_USERNAMES } from "@/seed/accounts.ts";
+import {
+  PLATFORM_ROLES,
+  PROFILES,
+  USER,
+  VERIFIED_USERNAMES,
+} from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
+import type { ChatFixture } from "@/seed/chats.ts";
 import { BLOCKS } from "@/seed/blocks.ts";
+import { REPORTS } from "@/seed/reports.ts";
+import { FAVOURITES } from "@/seed/favourites.ts";
 import { notificationId } from "@/seed/ids.ts";
+import { FAVOURITE_COLUMN } from "@/src/query/favourite.ts";
+import type { FavouriteTargetType } from "@/src/query/favourite.ts";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
 
 /**
  * The ids are written by hand, so two of them can be the same by accident — a notification
@@ -25,6 +36,8 @@ function assertDistinctIds(): void {
     ]),
     ...STORY_IDEAS.map((idea) => idea.id),
     ...CHATS.flatMap((chat) => [chat.id, ...chat.messages.map((m) => m.id)]),
+    ...REPORTS.map((report) => report.id),
+    ...FAVOURITES.map((favourite) => favourite.id),
   ];
 
   const seen = new Set(ids);
@@ -50,6 +63,35 @@ function assertFoundersAdminister(): void {
     const creator = chat.members.find((member) => member.user === chat.by);
     if (creator === undefined || creator.status === "invited") {
       throw new Error(`${chat.title}: the creator has not joined`);
+    }
+  }
+}
+
+/**
+ * A favourite naming an id no fixture holds fails as a foreign key violation, which reports the
+ * constraint and the uuid and not which entry is wrong. `postId(305)` is one past the end of the
+ * long thread and looks perfectly reasonable in the source.
+ */
+function assertFavouritesNameSomething(): void {
+  const known = {
+    writing_group: new Set(GROUPS.map((group) => group.id)),
+    writing_thread: new Set(
+      GROUPS.flatMap((group) => (group.threads ?? []).map((t) => t.id)),
+    ),
+    writing_post: new Set(
+      GROUPS.flatMap((group) =>
+        (group.threads ?? []).flatMap((t) => t.posts.map((post) => post.id))
+      ),
+    ),
+    story_idea: new Set(STORY_IDEAS.map((idea) => idea.id)),
+    chat_group: new Set(CHATS.map((chat) => chat.id)),
+  } as const satisfies Record<FavouriteTargetType, ReadonlySet<string>>;
+
+  for (const favourite of FAVOURITES) {
+    if (!known[favourite.targetType].has(favourite.targetId)) {
+      throw new Error(
+        `${favourite.user} favourites a ${favourite.targetType} that the fixture does not hold: ${favourite.targetId}`,
+      );
     }
   }
 }
@@ -87,7 +129,33 @@ function assertBlocksHaveNoPendingInvitation(): void {
 
 /** `stepsBack` five-minute steps before now, so fixture order and chronology agree. */
 function postedAt(stepsBack: number): string {
-  return Temporal.Now.instant().subtract({ minutes: stepsBack * 5 }).toString();
+  return postedAtMinutes(stepsBack * 5);
+}
+
+/** The same in minutes, for a chat's runs, which are shorter than one step. */
+function postedAtMinutes(minutesBack: number): string {
+  return Temporal.Now.instant().subtract({ minutes: minutesBack }).toString();
+}
+
+/**
+ * How far back each of a chat's messages was written, newest last. One step between remarks,
+ * one minute where the fixture marks a message as continuing the one before it — a step apart
+ * is exactly the grouping window, and each row reads the clock afresh, so a full step always
+ * lands a hair outside it.
+ */
+function chatMessageMinutes(
+  chat: ChatFixture,
+  newestMinutesBack: number,
+): number[] {
+  const minutes: number[] = [];
+  let back = newestMinutesBack;
+
+  for (let index = chat.messages.length - 1; index >= 0; index--) {
+    minutes[index] = back;
+    back += chat.messages[index]?.continues === true ? 1 : 5;
+  }
+
+  return minutes;
 }
 
 /**
@@ -125,6 +193,9 @@ async function writeAccounts(): Promise<void> {
       // meant for working on everything else.
       emailAddressVerifiedAt: Temporal.Now.instant().toString(),
       platformRole: PLATFORM_ROLES[name as keyof typeof PLATFORM_ROLES] ?? null,
+      // Spread, so an account without a profile keeps every column null rather than empty
+      // strings — null is what "not answered" means, and the page reads it that way.
+      ...(PROFILES[name as keyof typeof PROFILES] ?? {}),
     })),
   ).execute();
 
@@ -195,6 +266,7 @@ async function writeGroups(): Promise<void> {
       thread.posts.map((post, index) => ({
         id: post.id,
         writingThreadId: thread.id,
+        document: plainTextToDocument(post.text),
         text: post.text,
         isDraft: post.isDraft ?? false,
         createdBy: post.by,
@@ -245,20 +317,22 @@ async function writeChats(): Promise<void> {
   ).execute();
 
   await db.insertInto("chatMessage").values(
-    CHATS.flatMap((chat, chatIndex) =>
-      chat.messages.map((message, index) => ({
+    CHATS.flatMap((chat, chatIndex) => {
+      // Same reason as a thread's posts: the chat list is ordered by last activity, and one
+      // insert statement would give every chat the same one.
+      const minutes = chatMessageMinutes(
+        chat,
+        newestPostOfThread(chatIndex, CHATS.length) * 5,
+      );
+
+      return chat.messages.map((message, index) => ({
         id: message.id,
         chatGroupId: chat.id,
         text: message.text,
         createdBy: message.by,
-        // Same reason as a thread's posts: the chat list is ordered by last activity, and one
-        // insert statement would give every chat the same one.
-        createdAt: postedAt(
-          newestPostOfThread(chatIndex, CHATS.length) +
-            (chat.messages.length - 1 - index),
-        ),
-      }))
-    ),
+        createdAt: postedAtMinutes(minutes[index] ?? 0),
+      }));
+    }),
   ).execute();
 }
 
@@ -329,10 +403,94 @@ async function writeNotifications(): Promise<void> {
 }
 
 /** In dependency order, which is the reason this lives in one place. */
+/** The column a report's target id goes in, which `report_target_matches_type` also enforces. */
+const REPORT_TARGET_COLUMN = {
+  writing_group: "reportedWritingGroupId",
+  writing_thread: "reportedWritingThreadId",
+  writing_post: "reportedWritingPostId",
+  story_idea: "reportedStoryIdeaId",
+  chat_group: "reportedChatGroupId",
+  chat_message: "reportedChatMessageId",
+  user: "reportedUserId",
+} as const;
+
+/** Three hours apart and oldest first, so the queue's oldest-first sort has something to sort. */
+const HOURS_BETWEEN_REPORTS = 3;
+
+function reportedAt(index: number, total: number): Temporal.Instant {
+  return Temporal.Now.instant().subtract({
+    hours: (total - index) * HOURS_BETWEEN_REPORTS,
+  });
+}
+
+/**
+ * One insert, because the lifecycle is columns on the report rather than rows beside it. The
+ * timestamps are what a state *is* here: `status` is generated from them, so a fixture cannot
+ * state a status its own timestamps contradict.
+ */
+async function writeReports(): Promise<void> {
+  await db.insertInto("report").values(
+    REPORTS.map((report, index) => {
+      const at = reportedAt(index, REPORTS.length);
+      const progress = report.progress;
+      const closing = progress !== undefined && "outcome" in progress
+        ? progress
+        : undefined;
+
+      return {
+        id: report.id,
+        reporterId: report.reporter,
+        targetType: report.targetType,
+        // Null for a deleted target, which is the state SET NULL leaves behind and the one the
+        // queue's "Gelöscht" badge is for.
+        ...(report.targetId === null
+          ? {}
+          : { [REPORT_TARGET_COLUMN[report.targetType]]: report.targetId }),
+        reportedAuthorId: report.author,
+        targetExcerpt: report.excerpt,
+        category: report.category,
+        reason: report.reason,
+        createdAt: at.toString(),
+        operatorId: progress?.operator ?? null,
+        // Twenty minutes after it was filed, and the closing twenty after that, so both sit inside
+        // the three hours before the next report and read in the order they happened.
+        inProgressAt: progress?.taken === true
+          ? at.add({ minutes: 20 }).toString()
+          : null,
+        closedAt: closing === undefined
+          ? null
+          : at.add({ minutes: 40 }).toString(),
+        closingOutcome: closing?.outcome ?? null,
+        closingNote: closing?.note ?? null,
+      };
+    }),
+  ).execute();
+}
+
+/**
+ * One row per favourite, with the kind written into the column it belongs in rather than beside
+ * it: `favourite` has no `target_type`, so `FAVOURITE_COLUMN` is shared with the services rather
+ * than restated here — a second copy is what would drift.
+ *
+ * Nothing cleans these up. Every reference cascades, including the member's, so deleting the
+ * seeded accounts takes the favourites with them; `report` needs its own delete only because its
+ * references are SET NULL.
+ */
+async function writeFavourites(): Promise<void> {
+  await db.insertInto("favourite").values(
+    FAVOURITES.map((favourite) => ({
+      id: favourite.id,
+      userId: favourite.user,
+      ...{ [FAVOURITE_COLUMN[favourite.targetType]]: favourite.targetId },
+    })),
+  ).execute();
+}
+
 export async function writeFixtures(): Promise<void> {
   assertDistinctIds();
   assertFoundersAdminister();
   assertBlocksHaveNoPendingInvitation();
+  assertFavouritesNameSomething();
 
   await writeAccounts();
   await writeBlocks();
@@ -340,4 +498,7 @@ export async function writeFixtures(): Promise<void> {
   await writeChats();
   await writeStoryIdeas();
   await writeNotifications();
+  await writeFavourites();
+  // Last, because a report points at a post, an idea or an account that has to exist first.
+  await writeReports();
 }

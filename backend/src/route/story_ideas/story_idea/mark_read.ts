@@ -10,34 +10,24 @@ import {
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
-import {
-  STORY_IDEA_READER_SCHEMA,
-  STORY_IDEA_SCHEMA,
-} from "@/src/database/schema.ts";
+import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
 
 const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
-
-const SET_READER_STATE_BODY = z.object({
-  state: STORY_IDEA_READER_SCHEMA.shape.state,
-});
 
 export default new OpenAPIHono().openapi(
   createRoute({
     method: "put",
-    path: "/reader-state",
+    path: "/read",
     tags: [STORY_IDEAS_TAG],
-    summary: "Mark an idea as read, or worth coming back to",
+    summary: "Mark an idea as read",
     description:
-      "The member's own state on somebody else's idea. Idempotent: setting it again overwrites what was there. Unread is the absence of a state, so clearing it is a DELETE.",
-    operationId: "setReaderState",
+      "The member's own record of having read somebody else's idea, and nothing more: keeping one to come back to is a favourite, which covers all five kinds. Idempotent, and it takes no body — read is the presence of the record, so unread is a DELETE.",
+    operationId: "markStoryIdeaRead",
     middleware: authenticated,
-    request: {
-      params: IDEA_PARAMS,
-      body: { required: true, content: jsonContent(SET_READER_STATE_BODY) },
-    },
+    request: { params: IDEA_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
-        description: "The state was set",
+        description: "The idea is marked read",
         content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
@@ -59,18 +49,17 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const user = c.get("user");
     const { ideaId } = c.req.valid("param");
-    const { state } = c.req.valid("json");
 
-    const idea = await StoryIdeaService.selectStoryIdea(ideaId, user.id);
+    const idea = await StoryIdeaService.selectStoryIdeaGate(ideaId);
     if (idea === undefined) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
-    // A state on one's own idea would never be shown: discovery never lists it back.
+    // Having read one's own idea would never be shown: discovery never lists it back.
     if (idea.createdBy === user.id) {
       return c.json({ error: "Your own idea" }, STATUS_CODE.Forbidden);
     }
 
-    await StoryIdeaService.setReaderState(ideaId, user.id, state);
+    await StoryIdeaService.markRead(ideaId, user.id);
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

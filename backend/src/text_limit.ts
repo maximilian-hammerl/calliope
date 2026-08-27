@@ -51,6 +51,18 @@ export const TEXT_LIMIT = {
   banReason: 2_000,
   /** Why a member is reporting something. Room to explain, not to write an essay. */
   reportReason: 2_000,
+  /** What an operator decided about a report, beside the outcome. Same room as the reason it answers. */
+  reportClosingNote: 2_000,
+  /** One answer each on a profile: how somebody writes, how often, what they will not write. */
+  profileDetail: 500,
+  /** The one profile field that invites prose rather than an answer. */
+  profileAboutMe: 2_000,
+  /**
+   * Where a picture came from. Generous on purpose: a licence clause pasted whole, or a long URL,
+   * is exactly what somebody doing this properly will have, and truncating an attribution is the
+   * one thing this field must not do.
+   */
+  avatarCredit: 4_000,
 } as const;
 
 /**
@@ -59,6 +71,12 @@ export const TEXT_LIMIT = {
  * all. Comfortably above the largest legitimate request, which is a full-length post.
  */
 export const REQUEST_BODY_LIMIT_BYTES = 1_048_576;
+
+/**
+ * A photograph straight off a phone, before it is re-encoded to something small. Applied by path in
+ * `app.ts`: a limit declared on the route itself never runs, because the global one refuses first.
+ */
+export const UPLOAD_BODY_LIMIT_BYTES = 4 * 1_048_576;
 
 /**
  * How many entries a list of labels may hold. Bounded for the same reason the text is: a

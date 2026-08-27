@@ -5,6 +5,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -37,7 +38,7 @@ Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts names the author"
     "POST",
     `/api/groups/${group.id}/threads/${created.id}/posts`,
     adminCookie,
-    { text: "Es war einmal" },
+    postBody("Es war einmal"),
   );
 
   const post = await response.json();
@@ -53,7 +54,7 @@ Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts writes a publishe
     "POST",
     `/api/groups/${group.id}/threads/${created.id}/posts`,
     adminCookie,
-    { text: "Es war einmal" },
+    postBody("Es war einmal"),
   );
 
   assertEquals(response.status, STATUS_CODE.Created);
@@ -71,7 +72,7 @@ Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts refuses a reader"
     "POST",
     `/api/groups/${group.id}/threads/${created.id}/posts`,
     readerCookie,
-    { text: "Nein" },
+    postBody("Nein"),
   );
 
   assertEquals(response.status, STATUS_CODE.Forbidden);

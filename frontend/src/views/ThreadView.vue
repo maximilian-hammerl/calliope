@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
+import { failureMessage } from '@/lib/format/failure'
+import { firstMessage, postSchema } from '@/lib/validation/fieldSchemas'
 import { useGetGroup } from '@/api/groups/groups'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import {
+  getGetThreadQueryKey,
   getListThreadsQueryKey,
   useDeleteThread,
   useGetThread,
@@ -24,6 +27,7 @@ import type {
   ListMemberships200ResultsItem,
   ListPosts200ResultsItem,
   ListThreads200ResultsItem,
+  PostDocument,
 } from '@/api/models'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
@@ -37,8 +41,10 @@ import PostItem from '@/components/thread/PostItem.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatCount } from '@/lib/format/formatNumber'
+import { emptyDocument } from '@/lib/document/emptyDocument'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
+import FilterStrip from '@/components/common/FilterStrip.vue'
 import { useDraft } from '@/composables/useDraft'
 import { useSteps } from '@/composables/useSteps'
 import { usePagedList } from '@/composables/usePagedList'
@@ -75,6 +81,24 @@ const group = computed<GetGroup200 | undefined>(() =>
 )
 
 const { data: threadData, isPending, isError } = useGetThread(groupId, threadId)
+
+/**
+ * The thread's own query and the strip it sits in — the strip orders favourites first, so it has
+ * to be refetched or the tab stays where it was.
+ */
+/** The page of posts this one is on, which carries the flag the row draws. */
+async function refreshPosts() {
+  await queryClient.invalidateQueries({
+    queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
+  })
+}
+
+async function refreshThread() {
+  await queryClient.invalidateQueries({
+    queryKey: getGetThreadQueryKey(groupId.value, threadId.value),
+  })
+  await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(groupId.value) })
+}
 const thread = computed<GetThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
 )
@@ -104,7 +128,7 @@ const postCount = computed<number | undefined>(() =>
   postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
 )
 
-const { page, offset, pageCount, goToPage, navigate } = usePagedList(
+const { page, offset, total, itemsPerPage, pageCount, goToPage, navigate } = usePagedList(
   POSTS_PER_PAGE,
   () => postCount.value,
 )
@@ -114,11 +138,30 @@ function showOrder(next: 'oldest' | 'newest') {
   navigate({ order: next === 'oldest' ? undefined : next, page: undefined })
 }
 
+/**
+ * The post filter the design system specifies ("Alle Beiträge"), which was absent rather than
+ * disabled while neither of its options existed. Favourites is the first of the two; annotations
+ * (#38) are the other.
+ *
+ * A filter, never a reordering: a thread reads in the order it was written, so a favourited post
+ * stays where it is and this narrows to them instead.
+ */
+const postFilter = ref<'any' | 'only'>('any')
+
+const POST_FILTERS = [
+  { value: 'any', label: 'Alle Beiträge' },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
+] as const
+
+// A filter is about a different set, so whatever page was open is about something else.
+watch(postFilter, () => goToPage(1))
+
 const postsQuery = computed(() => ({
   limit: POSTS_PER_PAGE,
   offset: offset.value,
   sortAttribute: 'createdAt' as const,
   sortOrder: order.value === 'newest' ? ('desc' as const) : ('asc' as const),
+  favourite: postFilter.value,
 }))
 
 const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
@@ -179,8 +222,11 @@ async function confirmDeleteThread() {
   deletionError.value = undefined
   try {
     await deleteThread({ groupId: groupId.value, threadId: threadId.value })
-  } catch {
-    deletionError.value = 'Der Thread konnte nicht gelöscht werden. Versuche es noch einmal.'
+  } catch (error) {
+    deletionError.value = failureMessage(
+      error,
+      'Der Thread konnte nicht gelöscht werden. Versuche es noch einmal.',
+    )
     return
   }
 
@@ -194,7 +240,9 @@ const mayAdminister = computed<boolean>(
   () => group.value?.status === 'joined' && group.value.role === 'administrator',
 )
 
-const draft = ref<string>('')
+/** The composer holds a document; `draftText` is its prose, which the editor supplies. */
+const draft = ref<PostDocument>(emptyDocument())
+const draftText = ref<string>('')
 const sendError = ref<string | undefined>(undefined)
 function goToGroup() {
   void router.push({ name: 'group', params: { groupId: groupId.value } })
@@ -211,6 +259,11 @@ const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost()
  */
 const { mutateAsync: savePost, isPending: savingPost } = useUpdatePost()
 
+// The two operations carry their own bounds; an empty edit is a mistake, an empty composer is
+// just a composer nobody has typed in yet.
+const NEW_POST = postSchema(TEXT_LIMIT.createPost.document)
+const EDITED_POST = postSchema(TEXT_LIMIT.updatePost.document, 'Ein Beitrag braucht Text.')
+
 const editingPostId = ref<string | undefined>(undefined)
 const editError = ref<string | undefined>(undefined)
 
@@ -224,19 +277,13 @@ function stopEditing() {
   editingPostId.value = undefined
 }
 
-async function saveEdit(postId: string, text: string) {
-  const trimmed = text.trim()
+async function saveEdit(postId: string, document: PostDocument, text: string) {
   editError.value = undefined
-
-  if (trimmed.length === 0) {
-    editError.value = 'Ein Beitrag braucht Text.'
-    return
-  }
 
   // Checked here rather than with `maxlength`, for the reason the composer states: prose that
   // stops dead mid-word is worse than being told why.
-  if (trimmed.length > TEXT_LIMIT.updatePost.text.maxLength) {
-    editError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.updatePost.text.maxLength)} Zeichen haben.`
+  editError.value = firstMessage(EDITED_POST.safeParse(text))
+  if (editError.value !== undefined) {
     return
   }
 
@@ -245,10 +292,13 @@ async function saveEdit(postId: string, text: string) {
       groupId: groupId.value,
       threadId: threadId.value,
       postId,
-      data: { text: trimmed },
+      data: { document },
     })
-  } catch {
-    editError.value = 'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.'
+  } catch (error) {
+    editError.value = failureMessage(
+      error,
+      'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.',
+    )
     return
   }
 
@@ -278,8 +328,11 @@ async function confirmDeletePost() {
 
   try {
     await removePost({ groupId: groupId.value, threadId: threadId.value, postId: post.id })
-  } catch {
-    deletePostError.value = 'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.'
+  } catch (error) {
+    deletePostError.value = failureMessage(
+      error,
+      'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.',
+    )
     return
   }
 
@@ -294,19 +347,22 @@ async function confirmDeletePost() {
 
 // Owns the composer's text between visits: loads any existing draft into it, saves as it is
 // written, and lets go of the row once it has been published.
-const { status: draftStatus, draftId, forget: forgetDraft } = useDraft(groupId, threadId, draft)
+const {
+  status: draftStatus,
+  draftId,
+  forget: forgetDraft,
+} = useDraft(groupId, threadId, draft, draftText)
 
 async function submit() {
   sendError.value = undefined
-  const text = draft.value.trim()
-  if (text.length === 0) {
+  if (draftText.value.trim().length === 0) {
     return
   }
 
   // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word
   // with no explanation is worse than being told why, and the draft is kept either way.
-  if (text.length > TEXT_LIMIT.createPost.text.maxLength) {
-    sendError.value = `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(TEXT_LIMIT.createPost.text.maxLength)} Zeichen haben.`
+  sendError.value = firstMessage(NEW_POST.safeParse(draftText.value))
+  if (sendError.value !== undefined) {
     return
   }
 
@@ -318,19 +374,28 @@ async function submit() {
         groupId: groupId.value,
         threadId: threadId.value,
         postId: draftId.value,
-        data: { text, isDraft: false },
+        data: { document: draft.value, isDraft: false },
       })
       forgetDraft()
     } else {
-      await createPost({ groupId: groupId.value, threadId: threadId.value, data: { text } })
+      await createPost({
+        groupId: groupId.value,
+        threadId: threadId.value,
+        data: { document: draft.value },
+      })
     }
-  } catch {
-    sendError.value = 'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.'
+  } catch (error) {
+    // The draft is kept either way, which is what the clearing below guarantees.
+    sendError.value = failureMessage(
+      error,
+      'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.',
+    )
     return
   }
 
   // Only cleared once the post is really stored, so nothing a member wrote is lost.
-  draft.value = ''
+  draft.value = emptyDocument()
+  draftText.value = ''
 
   // Every page, not the one being shown: the new post changes the count, and with it which
   // page anything sits on. The exact key would also miss, since it carries this page's body.
@@ -370,10 +435,17 @@ async function submit() {
             :post-count="postCount"
             :last-activity-at="thread.lastActivityAt"
             :may-modify="mayModifyThread"
+            :thread-id="thread.id"
+            :is-favourite="thread.isFavourite"
             @rename="renamingThread = true"
             @delete="deletingThread = true"
             @report="reportingThread = true"
+            @favourite-changed="refreshThread"
           />
+
+          <!-- The filter the header's own comment has been waiting on. It sits under the header
+               rather than in it, beside the order toggle and the page strip it belongs with. -->
+          <FilterStrip v-model="postFilter" label="Beiträge" :options="POST_FILTERS" class="mb-5" />
 
           <p v-if="posts.length === 0" class="text-body text-ink-4">
             Noch keine Beiträge in „{{ thread.title }}“.
@@ -404,16 +476,17 @@ async function submit() {
             :saving="savingPost && editingPostId === post.id"
             :error="editingPostId === post.id ? editError : undefined"
             @report="reportedPost = post"
+            @favourite-changed="refreshPosts"
             @edit="startEditing(post.id)"
             @cancel="stopEditing"
-            @save="saveEdit(post.id, $event)"
+            @save="(document, text) => saveEdit(post.id, document, text)"
             @delete="deletingPost = post"
           />
 
           <!-- Below the posts as well as in the strip above: this is where somebody is when
                they finish a page, and where the composer already has them. -->
           <div v-if="pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-            <ListPagination :page="page" :page-count="pageCount" @go="goToPage($event)" />
+            <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
           </div>
         </div>
       </div>
@@ -432,6 +505,7 @@ async function submit() {
       <PostComposer
         v-if="mayWrite"
         v-model="draft"
+        v-model:text="draftText"
         :sending="sending || publishing"
         :draft-status="draftStatus"
         @submit="submit"

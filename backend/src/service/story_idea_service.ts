@@ -3,16 +3,21 @@ import { db } from "@/src/database/client.ts";
 import type {
   StoryIdea as DatabaseStoryIdea,
   StoryIdeaPartySize,
-  StoryIdeaReaderState,
   StoryIdeaStatus,
   StoryLanguage,
 } from "@/src/database/schema.ts";
-import { emptyToNull, normaliseTags } from "@/src/util/story_tags.ts";
+import { normaliseTags } from "@/src/util/story_tags.ts";
+import { emptyToNull } from "@/src/util/optional_text.ts";
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
 import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import {
+  type FavouriteFilter,
+  FAVOURITES_FIRST,
+  withFavourite,
+} from "@/src/query/favourite.ts";
 
 export type StoryIdea =
   & Pick<
@@ -39,13 +44,18 @@ export type StoryIdea =
   & { createdByUsername: string }
   // The reading member's own state, null while unread. Never anybody else's: what a member
   // has read is theirs, and a count of readers is the statistic the research rejected.
-  & { readerState: StoryIdeaReaderState | null };
+  & {
+    isRead: boolean;
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
+  };
 
 /** The board's default is `open`: what is still worth answering. */
 export type StatusFilter = StoryIdeaStatus | "any";
 
 /** `unread` is the absence of a row, which is why it is not a value of the enum itself. */
-export type ReaderStateFilter = StoryIdeaReaderState | "unread" | "any";
+/** `marked` was a third value here until favouriting became its own thing across five kinds. */
+export type ReaderStateFilter = "read" | "unread" | "any";
 
 const SELECTED_COLUMNS = [
   "storyIdea.id",
@@ -122,8 +132,8 @@ function toRow(values: Partial<StoryIdeaValues>) {
 }
 
 /**
- * Left join on the reader, so an unread idea still comes back — with `readerState` null. The
- * join is bound to one member's id: no query here can see another member's state.
+ * Left join on the reader, so an unread idea still comes back — with `isRead` false. The join is
+ * bound to one member's id: no query here can see another member's state.
  */
 function withAuthor(readerId: string) {
   return db
@@ -136,10 +146,17 @@ function withAuthor(readerId: string) {
           .onRef("storyIdeaReader.storyIdeaId", "=", "storyIdea.id")
           .on("storyIdeaReader.userId", "=", readerId),
     )
-    .select([
+    .$call((builder) =>
+      withFavourite(builder, "story_idea", "storyIdea.id", readerId)
+    )
+    .select((eb) => [
       ...SELECTED_COLUMNS,
       "user.username as createdByUsername",
-      "storyIdeaReader.state as readerState",
+      // `$castTo` for the reason `report`'s `targetExists` needs it: `IS NOT NULL` already *is*
+      // a boolean in Postgres, and only Kysely's type needs correcting.
+      eb("storyIdeaReader.userId", "is not", null).$castTo<boolean>().as(
+        "isRead",
+      ),
     ]);
 }
 
@@ -147,6 +164,7 @@ export type StoryIdeaFilters = {
   /** Whose state to report, and to filter by. Always the requesting member. */
   readerId: string;
   readerState: ReaderStateFilter;
+  favourite: FavouriteFilter;
   status: StatusFilter;
   language?: StoryLanguage;
   /** Only the reader's own ideas — the view that manages, not the one that browses. */
@@ -204,19 +222,20 @@ function filtered(query: StoryIdeaFilters) {
     .$if(query.language !== undefined, (queryBuilder) =>
       // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
       queryBuilder.where("storyIdea.language", "=", query.language!))
-    // Unread is the missing row, so it filters on the join rather than on a value.
+    // Unread is the missing row, so both directions filter on the join rather than on a value.
     .$if(
       query.readerState === "unread",
-      (queryBuilder) => queryBuilder.where("storyIdeaReader.state", "is", null),
+      (queryBuilder) =>
+        queryBuilder.where("storyIdeaReader.userId", "is", null),
     )
     .$if(
-      query.readerState === "read" || query.readerState === "marked",
+      query.readerState === "read",
       (queryBuilder) =>
-        queryBuilder.where(
-          "storyIdeaReader.state",
-          "=",
-          query.readerState as StoryIdeaReaderState,
-        ),
+        queryBuilder.where("storyIdeaReader.userId", "is not", null),
+    )
+    .$if(
+      query.favourite === "only",
+      (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
     )
     .$if(
       query.search !== undefined,
@@ -246,8 +265,40 @@ function filtered(query: StoryIdeaFilters) {
 function listStoryIdeas(
   query: ListQuery & StoryIdeaFilters,
 ): Promise<ListResults<StoryIdea>> {
-  return listResultsWithCount(filtered(query), query);
+  return listResultsWithCount(filtered(query), query, FAVOURITES_FIRST);
 }
+/**
+ * Whether the idea exists and who wrote it — which is all five of the callers that use this as a
+ * gate need, and none of them needs the prose. An idea carries a teaser and a synopsis running to
+ * ten thousand characters between them, and it takes no reader join at all: whether *this* member
+ * has read or favourited it has nothing to do with whether they may act on it.
+ *
+ * `title` is here because it is small and because it is the excerpt `resolveVisibleTarget` needs
+ * for a reported idea. The page that renders an idea asks `selectStoryIdea` instead.
+ */
+export type StoryIdeaGate = {
+  id: string;
+  title: string;
+  createdBy: string;
+  status: StoryIdeaStatus;
+};
+
+async function selectStoryIdeaGate(
+  ideaId: string,
+): Promise<StoryIdeaGate | undefined> {
+  return await db
+    .selectFrom("storyIdea")
+    .select([
+      "storyIdea.id",
+      "storyIdea.title",
+      "storyIdea.createdBy",
+      "storyIdea.status",
+    ])
+    .where("storyIdea.id", "=", ideaId)
+    .executeTakeFirst();
+}
+
+/** The whole idea as this reader sees it, read state and favourite included. */
 async function selectStoryIdea(
   ideaId: string,
   readerId: string,
@@ -320,24 +371,20 @@ async function deleteStoryIdea(
  * Upsert, because a member setting a state twice is not an error: the second one wins and the
  * first row is simply overwritten.
  */
-async function setReaderState(
-  ideaId: string,
-  userId: string,
-  state: StoryIdeaReaderState,
-): Promise<void> {
+async function markRead(ideaId: string, userId: string): Promise<void> {
   await db
     .insertInto("storyIdeaReader")
-    .values({ storyIdeaId: ideaId, userId, state })
+    .values({ storyIdeaId: ideaId, userId })
+    // A row is the whole of the fact, so a second click has nothing to overwrite — but it must
+    // not fail either, and marking read is the one action that fires without being asked for.
     .onConflict((conflict) =>
-      conflict
-        .columns(["storyIdeaId", "userId"])
-        .doUpdateSet({ state })
+      conflict.columns(["storyIdeaId", "userId"]).doNothing()
     )
     .execute();
 }
 
-/** Back to unread, which is the absence of a row rather than a third value. */
-async function clearReaderState(
+/** Back to unread, which is the absence of a row rather than a value. */
+async function clearRead(
   ideaId: string,
   userId: string,
 ): Promise<void> {
@@ -379,6 +426,7 @@ async function selectCarousel(
     excludeCreatedBy: readerId,
     status: "open" as const,
     readerState: "unread" as const,
+    favourite: "any" as const,
   };
 
   // Counts the whole set, and its single row is where a carousel opened without an anchor
@@ -387,8 +435,7 @@ async function selectCarousel(
     ...set,
     limit: 1,
     offset: 0,
-    sortAttribute: "storyIdea.id",
-    sortOrder: "desc",
+    sort: [{ attribute: "storyIdea.id", order: "desc" }],
   });
 
   // Read state is ignored for the anchor alone: marking the idea on screen as read must not
@@ -396,6 +443,7 @@ async function selectCarousel(
   const anchor = anchorId === undefined ? undefined : await filtered({
     ...set,
     readerState: "any",
+    favourite: "any",
     id: anchorId,
   }).executeTakeFirst();
 
@@ -410,11 +458,16 @@ async function selectCarousel(
   }
 
   const [previous, next] = await Promise.all([
+    // Nothing precedes the newest, so an unanchored walk does not ask. Asking would read a
+    // second statement's snapshot, where an idea posted since is suddenly the previous one —
+    // which made the carousel's opening step nondeterministic.
     // Newest first, so the previous idea is the nearest one *above* this id.
-    filtered({ ...set, newerThanId: storyIdea.id })
-      .orderBy("storyIdea.id", "asc")
-      .limit(1)
-      .executeTakeFirst(),
+    anchorId === undefined
+      ? undefined
+      : filtered({ ...set, newerThanId: storyIdea.id })
+        .orderBy("storyIdea.id", "asc")
+        .limit(1)
+        .executeTakeFirst(),
     filtered({ ...set, olderThanId: storyIdea.id })
       .orderBy("storyIdea.id", "desc")
       .limit(1)
@@ -433,8 +486,9 @@ export const StoryIdeaService = {
   listStoryIdeas,
   selectCarousel,
   selectStoryIdea,
-  setReaderState,
-  clearReaderState,
+  selectStoryIdeaGate,
+  markRead,
+  clearRead,
   insertStoryIdea,
   updateStoryIdea,
   deleteStoryIdea,

@@ -18,6 +18,8 @@ import {
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import { documentToPlainText } from "@/src/document/document_text.ts";
 
 const POST_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -26,16 +28,15 @@ const POST_PARAMS = z.object({
 });
 
 // Setting isDraft to false is how a draft gets published.
-const UPDATE_POST_BODY = WRITING_POST_SCHEMA
-  .pick({ text: true, isDraft: true })
-  .extend({
-    text: WRITING_POST_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.postText),
-  })
-  .partial()
-  .refine(
-    (changes) => Object.values(changes).some((value) => value !== undefined),
-    { message: "Provide at least one field to update" },
-  );
+// `text` is derived from the document by the server, so it is not accepted here either.
+//
+const UPDATE_POST_BODY = z.object({
+  document: DOCUMENT_SCHEMA.optional(),
+  isDraft: WRITING_POST_SCHEMA.shape.isDraft.optional(),
+}).refine(
+  (changes) => Object.values(changes).some((value) => value !== undefined),
+  { message: "Provide at least one field to update" },
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -85,6 +86,20 @@ export default new OpenAPIHono().openapi(
     const post = await WritingPostService.selectPost(threadId, postId, user.id);
     if (post === undefined) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
+    }
+
+    // The bound is on the prose, not the serialisation — see `document_schema.ts`.
+    if (changes.document !== undefined) {
+      const text = documentToPlainText(changes.document);
+      if (text.length === 0 || text.length > TEXT_LIMIT.postText) {
+        return c.json(
+          {
+            error:
+              `A post holds between 1 and ${TEXT_LIMIT.postText} characters`,
+          },
+          STATUS_CODE.BadRequest,
+        );
+      }
     }
 
     if (!mayModify(role, post.createdBy, user.id)) {

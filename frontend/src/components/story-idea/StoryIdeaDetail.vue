@@ -4,8 +4,17 @@ import type { GetStoryIdea200 } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { paragraphs } from '@/lib/format/formatText'
 import { tagLine } from '@/lib/format/storyTags'
-import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
+import {
+  IDEA_STATUS_LABELS,
+  LANGUAGE_LABELS,
+  PARTY_SIZE_LABELS,
+  readToggle,
+} from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
+import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
+import { Button } from '@/components/ui/button'
+import { MessageCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
 
 const props = withDefaults(
   defineProps<{
@@ -17,6 +26,30 @@ const props = withDefaults(
   }>(),
   { heading: 'h1', own: false },
 )
+
+/**
+ * The actions live here rather than in a slot, and the slot is gone rather than left as an override:
+ * both callers filled it themselves and drifted, and a seam left open is the one that gets used.
+ *
+ * What a caller still decides is what to refetch, which genuinely differs, so those are emits. The
+ * dialogs stay with the callers too — the carousel keys its report dialog by id.
+ */
+const emit = defineEmits<{
+  readChanged: [isRead: boolean]
+  favouriteChanged: [isFavourite: boolean]
+  report: []
+  edit: []
+  remove: []
+  foundGroup: []
+}>()
+
+const { savingRead, changeRead, startingConversation, conversationError, askAboutIdea } =
+  useStoryIdeaActions()
+
+async function markRead(isRead: boolean) {
+  await changeRead(props.idea.id, isRead)
+  emit('readChanged', isRead)
+}
 
 /** The long version, as the paragraphs its author typed. */
 const synopsis = computed<string[]>(() => paragraphs(props.idea.synopsis))
@@ -54,7 +87,64 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
     </component>
 
     <div class="ml-auto flex flex-wrap items-center gap-2">
-      <slot name="actions" />
+      <!-- Outside the author/visitor split, because favouriting one's own idea is allowed:
+           keeping your own thing at the top of your own list is ordinary. -->
+      <FavouriteToggle
+        target-type="story_idea"
+        :target-id="idea.id"
+        :is-favourite="idea.isFavourite"
+        @changed="(isFavourite) => emit('favouriteChanged', isFavourite)"
+      />
+
+      <template v-if="own">
+        <Button variant="outline" size="sm" @click="emit('foundGroup')">
+          <Plus :stroke-width="1.5" />
+          Gruppe gründen
+        </Button>
+        <Button variant="outline" size="sm" @click="emit('edit')">
+          <Pencil :stroke-width="1.5" />
+          Bearbeiten
+        </Button>
+        <Button variant="outline" size="sm" @click="emit('remove')">
+          <Trash2 :stroke-width="1.5" />
+          Löschen
+        </Button>
+      </template>
+
+      <template v-else>
+        <!-- Choosing the state an idea already has clears it, which is why the label names the
+             state rather than the act. -->
+        <Button
+          v-for="toggle in [readToggle(idea.isRead)]"
+          :key="toggle.title"
+          variant="outline"
+          size="sm"
+          :title="toggle.title"
+          :disabled="savingRead"
+          @click="markRead(toggle.next)"
+        >
+          {{ toggle.label }}
+        </Button>
+        <!-- Quiet like its neighbours: a level says what an act is on, and this is on the idea.
+             Placement is what keeps reporting from competing. -->
+        <Button variant="outline" size="sm" @click="emit('report')">Melden</Button>
+        <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and a member
+             who kept the idea should see why they cannot write. Inert in the carousel, whose set
+             is open ideas only — but the rule belongs to the idea, not to the page. -->
+        <Button
+          size="sm"
+          :disabled="startingConversation || idea.status === 'closed'"
+          :title="
+            idea.status === 'closed'
+              ? 'Diese Storyidee ist geschlossen und kann nicht mehr beantwortet werden'
+              : undefined
+          "
+          @click="askAboutIdea(idea.id)"
+        >
+          <MessageCircle :stroke-width="1.5" />
+          Chat beginnen
+        </Button>
+      </template>
     </div>
   </div>
 
@@ -67,7 +157,9 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
     {{ idea.subtitle }}
   </p>
 
-  <slot name="notices" />
+  <p v-if="conversationError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+    {{ conversationError }}
+  </p>
 
   <div class="mt-2 text-[12.5px] text-ink-5">
     von

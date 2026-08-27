@@ -67,6 +67,23 @@ single chevron, which is what the icon table asks for.
 The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
 above is not hypothetical.
 
+`AvatarImage` carries **`object-cover`**, which shadcn leaves off: an `<img>` defaults to `fill`,
+so a portrait photograph is stretched into the square rather than cropped to it. The upload
+centre-crops identically, which is what lets a preview of a chosen file show what will be stored.
+
+`radio-group` and `checkbox` were patched together and belong together: both take the
+`border-line-5` hairline, both fill with oak when chosen, neither casts a shadow, and the 44px
+phone target is the wrapping label's rather than the 16px box's — a dot that size is not a tap
+target, and making it one would look like a mistake.
+
+`pagination` needed four of the same kind: the current page is an underline rather than a filled
+chip, the numbers and the two arrows carry the 44px phone target, „Zurück" and „Weiter" replace
+shadcn's English **and** its `hidden sm:block`. Hiding them buys nothing: measured at 320, 375 and
+414px, at six pages and at thirty, the strip is two rows and 92px either way — the 44px numbers
+are what wrap it, not the words. `PaginationFirst` and `PaginationLast` are deleted: `showEdges`
+draws the first and last *numbers*, so nothing rendered them, and they would have sat in `ui/`
+failing the icon check below.
+
 **Every icon shadcn hardcodes is `aria-hidden`**, because not one of them says anything the
 markup around it has not said already: the chevrons in `AccordionTrigger` (both), `SelectTrigger`,
 the two `SelectScroll*Button`s, `DropdownMenuSubTrigger` and `NavigationMenuTrigger` are
@@ -104,13 +121,20 @@ else on the page. They accompany a label rather than replacing it.
 
 `npx shadcn-vue@latest add …` rewrites `src/assets/main.css` on **every** run: it replaces the
 font import with its own, dropping Newsreader and IBM Plex Mono, and appends a duplicate
-`@layer base` block. It also offers to overwrite components you have already patched.
+`@layer base` block. It also puts a `^` back on every dependency it touches — `@lucide/vue`,
+`@vueuse/core` and `reka-ui` were already installed and pinned, and it re-ranged all three — and
+offers to overwrite components you have already patched.
 
 After any `add`:
 
 ```bash
 git diff src/assets/main.css   # expect no change; restore the font import if there is one
-grep -rc shadow-xs src/components/ui/                                                  # expect 0 everywhere
+# The CLI re-ranges pinned dependencies. `engines.node` is the one legitimate range.
+grep '"\^' package.json | grep -v '"node"'                                            # expect no output
+# Every shadow, not only shadow-xs: `shadow-md` on the menu and select panels survived a
+# year of this check because it only ever looked for one class name. Dialog keeps its own.
+grep -rl 'shadow-' src/components/ui/ | grep -v dialog                                 # expect no output
+grep -rl 'rounded-md' src/components/ui/dropdown-menu/ src/components/ui/select/        # expect no output
 grep -c border-line-5 src/components/ui/button/index.ts                                # expect 1
 grep -c secondary src/components/ui/button/index.ts                                    # expect 0
 grep -c rounded-md src/components/ui/button/index.ts src/components/ui/input/Input.vue src/components/ui/textarea/Textarea.vue src/components/ui/select/SelectTrigger.vue  # expect 0
@@ -121,10 +145,23 @@ grep -c min-h-11 src/components/ui/dropdown-menu/DropdownMenuItem.vue           
 grep -c 'max-h-\[calc(100svh' src/components/ui/dialog/DialogContent.vue                # expect 1
 grep -c max-w-lg src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 0
 grep -c 'optional?: boolean' src/components/ui/field/FieldLabel.vue                    # expect 1
+grep -c 'role="group"' src/components/ui/field/Field.vue                               # expect 0
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
 grep -c aria-hidden src/components/ui/accordion/AccordionTrigger.vue                    # expect 2
+# The radio and the checkbox share the hairline and the oak, so they read as one family.
+grep -c border-line-5 src/components/ui/radio-group/RadioGroupItem.vue src/components/ui/checkbox/Checkbox.vue  # expect 1 each
+grep -c 'data-\[state=checked\]:bg-oak' src/components/ui/checkbox/Checkbox.vue         # expect 1
+grep -c fill-oak src/components/ui/radio-group/RadioGroupItem.vue                       # expect 1
+# Without this an avatar stretches a portrait photograph instead of cropping it.
+grep -c object-cover src/components/ui/avatar/AvatarImage.vue                           # expect 1
+grep -c 'border-b-2' src/components/ui/pagination/PaginationItem.vue                   # expect 1
+grep -c min-h-11 src/components/ui/pagination/PaginationItem.vue src/components/ui/pagination/PaginationPrevious.vue src/components/ui/pagination/PaginationNext.vue  # expect 1 each
+grep -rc 'hidden sm:block' src/components/ui/pagination/                               # expect 0
+ls src/components/ui/pagination/PaginationFirst.vue src/components/ui/pagination/PaginationLast.vue  # expect neither to exist
 grep -c 'sr-only">Schließen' src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 1 each
+# Without this the dialog root renders id="", which is invalid — see the ids section.
+grep -c 'id: contentId' src/components/ui/dialog/DialogContent.vue src/components/ui/dialog/DialogScrollContent.vue  # expect 1 each
 # Every icon in ui/ is hidden or named — Spinner is the only named one. Expect no output.
 grep -rL 'aria-hidden\|aria-label' $(grep -rl '@lucide/vue' src/components/ui/ --include='*.vue')
 ```
@@ -169,7 +206,7 @@ Three things about the generated code:
   query in `orval.config.ts` under `override.operations`. A new list endpoint needs the same
   entry.
 - **The client resolves for every status and never throws**, which would make vue-query treat
-  a 401 as a success. `src/lib/apiFetch.ts` is the mutator that throws `ApiError` instead. It
+  a 401 as a success. `src/lib/api/apiFetch.ts` is the mutator that throws `ApiError` instead. It
   lives outside `src/api/` because that directory is generated.
 - **Every operation gets its own copy of each response model** (`LoginUser401`,
   `GetCurrentUser429`, …) and there is no shared error type, which is why `ApiErrorBody` is
@@ -200,9 +237,21 @@ trap.
 
 **Numbered paging is `usePagedList` plus `ListPagination`**, not written again per view. The
 composable owns the page number in the URL, the offset, the page count and the correction of an
-out-of-range page; the component draws the strip. A view supplies the page size, the total, and
-whatever else it keeps in the query — the thread's order toggle calls `navigate` so switching
-order and returning to page one are *one* push rather than two history entries.
+out-of-range page; the component draws the strip — as a thin wrapper over reka's `Pagination`,
+whose `siblingCount` and `showEdges` replaced a hand-written run of page numbers.
+
+**Its props are reka's — `page`, `total`, `itemsPerPage`** — rather than a vocabulary of our own
+left over from the component it replaced. The composable returns all three, and a view passes them
+straight through: they are then the same numbers the `offset` was computed from, where a view
+supplying its own `total` and page size would be free to supply a different pair and page twice.
+`v-model:page` works because the composable's `page` is writable, its setter being `goToPage`.
+
+Reka widens the run near either end — page 1 of 30 is `1 2 3 4 5 … 30` where the hand-written strip
+gave `1 2 … 30`. It still wraps to two rows at 375px, the same as before, so the widening is kept.
+
+A view supplies the page size and the total, plus whatever else it keeps in the query — the
+thread's order toggle calls `navigate` so switching order and returning to page one are *one* push
+rather than two history entries.
 
 **Call it before the query it pages.** A request body needs `offset` while vue-query is building
 the key, and the total it needs comes back from that same query, so one of the two consts is
@@ -314,9 +363,15 @@ The brand is there because **"iOS" identifies nothing to a member who knows Appl
 also why `deviceType` is translated ("Handy", "Tablet") while the brand is printed as it comes.
 A kind with no German word is left off rather than guessed at.
 
-Routes need a session unless marked `meta: { guestOnly: true }`, which also bounces a
-signed-in visitor away. A page that should be readable by everyone would need a flag of its
-own.
+**A route says who may open it with one `meta.access` value**, never a set of booleans: separate
+flags let a route claim to be both guests-only and open to everyone, which means nothing and which
+nothing would catch. `member` (the default when omitted, so a forgotten route locks rather than
+leaks), `guest` which bounces a signed-in visitor away, `operator`, and `anyone` for a page that
+must be readable either way — the mailed-link landing pages, and anything legal. The guard
+switches over it with `assertUnreachable`, so a fifth kind cannot be added without handling it.
+
+Verification is orthogonal: `access` asks whether there is a session, and the unverified-address
+redirect asks what state that session's account is in.
 
 The dev server proxies `/api` to `http://localhost:8000`, which keeps development
 same-origin exactly like production behind Caddy: relative URLs, no CORS, and the cookie sent
@@ -357,6 +412,10 @@ were mistaken for bugs in it, and each was fine in a real browser:
   `scroll-behavior`, and the latter swallows a plain `scrollLeft` assignment with it.
 - **CSS animations freeze at their first keyframe** while the pane is hidden, so a measured
   rect can be mid-animation: read computed styles instead, or measure at rest.
+- **Floating content will not close while the pane is hidden.** A reka `Select` opens, shows the
+  right options, and then swallows every attempt to pick one — pointer, `Escape` and keyboard
+  alike — so the trigger reports a value the component never received. `tabs_select` to front the
+  pane first and it behaves; a selection that "does not take" is the pane, not the component.
 
 So verify structure and position there — is the element in the DOM, did `scrollLeft` change, is
 the target 44px — and treat "the animation did not play" or "the event did not fire" as unproven
@@ -422,6 +481,124 @@ conventions when you do it — `cn()` for class merging, a `data-slot` attribute
 HTMLAttributes['class']` as a prop — so the result does not read as foreign. Let reka position
 its own floating content; an `absolute` of our own fights it and sends the popover off-screen.
 
+## An id belongs to the instance, not to the label
+
+`useId()` wherever a component can be on screen more than once — which is most components, since
+a dialog can open over the page that already renders one. `FilterStrip` derived its id from its
+label, so the chats dialog's „Favoriten" and the groups list's behind it shared one, and the
+dialog's `aria-labelledby` named its group from the element outside the modal, which `aria-modal`
+hides from the tree. Nothing about that is visible on screen.
+
+`UserPicker` and `FormTextField` had the other shape of the same problem: the id arrived as a
+**prop**, so uniqueness was the caller's job to remember across every call site. Both generate
+their own now — `UserPicker`'s prop is gone, and `FormTextField`'s is optional, for the rare case
+of something outside the component naming the input.
+
+**A closed dialog keeps its content**, `data-state="closed"` and hidden, unless the call site also
+gates it with `v-if`. So `ReportDialog`'s fixed `reportCategory` really was duplicated — `ThreadView`
+mounts one for the post and one for the thread, and once each had been opened both sets of fields
+were in the page, with every `<label for>` resolving to the first match: the hidden one. Do not
+assume a dialog that is shut is gone.
+
+A literal id is fine where a second instance is impossible — a routed view, a section that exists
+once inside one dialog. That is why `login` and `password` may repeat across the sign-in views.
+Nothing in `src/` looks an id up (`getElementById`, a `#` selector, a fragment), so no id here has
+to be guessable — which is what makes the generated ones free.
+
+## A member's picture
+
+**`UserAvatar` takes an optional `avatarUrl` and falls back to the initial.** The fallback is a
+sibling of `AvatarImage` rather than a `v-else`, because reka falls back on a *load failure* too —
+so a file the sweep has collected shows a letter instead of a broken frame. Nothing builds the path:
+the server sends it, so moving the route breaks compilation in one backend function rather than
+every picture in the interface.
+
+**The picture saves on its own, inside `ProfileDialog` but outside its form.** It is a multipart
+body where the profile is a JSON patch of changed fields, and joining them would let one failure
+discard the other's work.
+
+**Saving or removing invalidates the current user as well as the profile.** The top bar reads its
+own picture from `/auth/me`, so refreshing only the profile leaves the old face in the corner until
+a reload — which is what happened before this line existed.
+
+**The preview is the picture, not its filename.** Round, `object-cover`, at profile size — and
+because the server centre-crops to a square, that is an honest preview of what will be stored, which
+is most of what a crop step would have bought. shadcn's `Attachment` was considered and is the wrong
+shape here: it is presentational only, with no file input at all, and shows metadata where the thing
+itself is available. It would suit #31 and #95, which are lists of files.
+
+**The declaration appears only once a file is chosen**, and the credit line only when the picture is
+not the member's own. Asking everybody for a source is what turns a declaration into a field people
+type „meins" into — see #29 on Yooco's required fields.
+
+## Filters
+
+**`FilterStrip` lays out its own label** — beside the options from `md` up, above them below it.
+It used to require its parent to be `md:grid md:grid-cols-[max-content_1fr]`, which is a rule the
+call site cannot see and three of the five got wrong: the groups and discovery pages drifted for
+months, and the thread's filter and the chats dialog's never had the grid at all, so their labels
+sat above the strip on every desktop. A layout a component needs belongs inside it.
+
+**`FilterStrips` wraps two or more**, and exists only for the shared label column that keeps their
+options starting at the same place; separate grids would each size their own label and step
+raggedly to the right. A single strip needs nothing around it. Which of the two a strip is in
+reaches it by `provide`/`inject`, so neither the caller nor the strip has to be told twice.
+
+## A status the whole interface must react to belongs in `queryClient`
+
+Two of them do. 502/504 and a rejected fetch set `backendReachable`; a **429** sets
+`rateLimitedUntil`. `App.vue` renders `ConnectionLost` or `RateLimited` from those, and neither is
+a call site's problem: while either holds, *every* request is failing, so a message beside one
+control would leave the rest of the interface failing in silence. A 401 is the third, and reaches
+the router through `setSessionLostHandler`. Everything else stays local, because it means something
+local — 400 field issues, 403 banned, 409 conflicts.
+
+Three things about the rate limit in particular:
+
+- **There are two budgets, so the notice says two different things.** The backend counts reads and
+  writes separately, and the 429 body carries which one refused — so a spent write budget reads
+  „Du kannst weiterlesen, aber gerade nichts speichern" over a page that genuinely still works,
+  while a spent read budget is the one that takes the screen. Claiming the server is not answering
+  while it answers every read would be a lie told over a working interface.
+- **The wait comes from `Retry-After`.** The limiter runs `standardHeaders: "draft-7"` and the
+  header counts down within the window rather than restating its length, so the notice says „in 4
+  Minuten" instead of „später". `apiFetch` carries it on `ApiError`; it discarded the headers
+  entirely before.
+- **`RateLimited` does not probe, where `ConnectionLost` does.** Retrying is what caused this
+  state. It counts down, offers its one button only once the window has passed, and the first
+  answer after that clears it through `onSuccess`.
+- **It sizes itself as the connection notice does, and that is also the fix for the navigation.** A
+  limited member who reloads gets no session answer, so `AppLayout` renders no bars —
+  `<TopBar v-if="user">` cannot tell a failed check from a signed-out one. Covering the screen says
+  what happened rather than leaving them on a shell with no way off it.
+
+**The wording lives in `lib/format/rateLimit.ts`.** Four sign-in views wrote their own sentence
+before this and two had already drifted apart.
+
+## An error a composable produces must have a renderer
+
+Every `use*` that catches a failure and turns it into a German sentence — `useFavourite`,
+`useStoryIdeaActions`, the settings forms — is producing something for a member to read. If no
+component reads it, the failure is silent: the control re-enables, nothing changes, and it looks
+like a dead button rather than a request that did not go through.
+
+`useFavourite` shipped exactly that way. `favouriteError` was set on every failure and destructured
+by none of its five call sites, so an offline member, a 429 from the limiter, or a 404 from a group
+that went private in another tab all produced nothing at all on screen.
+
+Two shapes, and which one to use depends on where the control sits:
+
+- **A component used in more than one layout renders its own**, because delegating is what let this
+  one go unshown. `FavouriteToggle` wraps its button and the message in an `inline-flex` box, which
+  stays a single flex item in a row of buttons.
+- **A form or a section uses `Alert variant="destructive"`** with `role="alert"`, which is what the
+  settings sections, the dialogs and the composer already do. In a compact row a plain
+  `text-destructive` paragraph with `role="alert"` is the quieter version — `StepList` and the
+  story idea's `conversationError` both take that shape.
+
+Whichever it is, the message is written once in the composable rather than at each call site, so
+the wording cannot drift between the surfaces that share it.
+
 ## Exhaustive switches
 
 `lib/assertUnreachable.ts` in the `default` branch of any `switch` over a union. It is a
@@ -443,6 +620,40 @@ page, and a list nobody is looking at is not worth fetching.
 Personal features are dialogs opened from the avatar menu rather than routes, so they do not
 take a member off the page they are on.
 
+## Favourites
+
+One mark over five kinds. The wording lives in `lib/format/favourite.ts` — never write „Favorit" at
+a call site; it was copied by hand once already.
+
+- **`FavouriteToggle` emits its success and shows its own failure.** What to refetch belongs to the
+  caller and differs; the message is the same sentence everywhere, and delegating it is how it went
+  unshown. It renders inside an `inline-flex` box, so it stays one flex item in a row of buttons.
+- **A post's row and the chat header use a raw button**, because those rows are text actions on one
+  baseline rather than buttons — the same exception this file makes for rail strips and tabs. They
+  still take their label from `favouriteToggle()`, and carry the 44px rule themselves.
+- **`FilterStrip` on every list that shows a favouritable kind**, the idea board included on „Meine
+  Storyideen", where the read and status filters are hidden: your own ideas cannot be unread.
+- **`StateMark` owns the chrome; the four marks own an icon and a label.** The 13px size, the
+  `mark` variant and the accessible name live in one place — these are the only icons here that are
+  not `aria-hidden`, which is the part worth forgetting. `FavouriteMark`, `ReadMark`, `ClosedMark`
+  and `VisibilityMark` are three lines each; only the last renders for both its states. Page
+  headings keep the word, which is what teaches the mark.
+- **A mark is 25px where the word was 60**, which is why it exists: as a word it pushed the chats
+  rail's unread count onto a second line, and the ten-tab strip and search popover could not carry
+  it at all.
+- **Marks are named, not hidden**: `aria-label` *and* `title`, since nothing else here is icon-only
+  and hover is desktop-only.
+- **`VisibilityMark` ships as an open question.** `Lock` and `LockOpen` are a shackle apart at 13px
+  on the fact whose misreading costs most; the design system records what else was tried and what
+  feedback would settle it.
+- **`StoryIdeaDetail` renders the actions and has no slots.** Its two callers filled `#actions`
+  themselves and drifted — a slot is where two callers disagree, so it is deleted rather than left
+  as an override. What they still decide is emitted: the page refetches the idea, the carousel
+  updates its slide via `setReadLocally` / `setFavouriteLocally` and invalidates only the board.
+  Only *reading* moves an idea in or out of that set, so the favourite's version adjusts no total.
+- **`lib/format/group.ts` holds both group vocabularies.** `MEMBERSHIP_LABELS` is for the search
+  popover, which reaches past the groups the reader belongs to with nothing else saying so.
+
 ## Length limits
 
 Never write a bound as a literal. `src/api/textLimit.ts` is generated from
@@ -451,6 +662,12 @@ Never write a bound as a literal. `src/api/textLimit.ts` is generated from
 `TEXT_LIMIT.registerUser.username.maxLength`. It lives in the gitignored `src/api/`, so it is
 rebuilt from the document every time and cannot go stale.
 
+**A union request body keeps its bounds in the branches.** `moveReport`'s is a `oneOf`, and the
+generator reads every branch as well as the top level: reading only the top produced no bounds at
+all for such an operation, silently, which is the one failure this file exists to prevent. A
+property in more than one branch has to agree with itself — `note` is in both the reopening and the
+closing — and branches that disagreed would make the number here a guess, so that throws instead.
+
 The generator is TypeScript run by Node's own type stripping — `node scripts/…​.ts`, no build
 step and no runner. Stripping erases types without checking them, so `tsconfig.node.json`
 includes `scripts/**/*` to put the file under `vue-tsc --build`, and sets `erasableSyntaxOnly`
@@ -458,10 +675,50 @@ so syntax stripping cannot handle (`enum`, `namespace`, parameter properties) fa
 check rather than the run. The numbers originate in
 `backend/src/text_limit.ts`.
 
-Short fields — names, titles, addresses, a search term — bind them straight to `minlength` and
-`maxlength`, and let `fieldMessage()` in `lib/fieldMessage.ts` phrase what the browser found
-wrong. It exists because the fallback wording was actively misleading: an over-long username
-used to report "Gib einen Benutzernamen ein." beside the name just typed.
+## Forms are Zod schemas over TanStack Form
+
+Every form uses `useForm` from `@tanstack/vue-form` with **field-level validators**, which is the
+documented Vue pattern and the one that lets a rule be shared. Validation used to read the inputs'
+own `ValidityState` and look the wording up; that was eight copies of one loop and the wording was
+duplicated with it — „Das Passwort darf höchstens 256 Zeichen lang sein." was written out seven
+times.
+
+- **A field's rules live once, in `lib/validation/fieldSchemas.ts`.** `usernameSchema`,
+  `emailAddressSchema`, `passwordSchema`, `loginSchema`, `titleSchema`, `proseSchema`,
+  `httpUrlSchema`. Each takes the **calling operation's own**
+  bound from `TEXT_LIMIT` — never one operation's numbers used for another — and the wording for an
+  *empty* field, because that names what is being asked for: „Wähle ein Passwort" when registering,
+  „Gib dein aktuelles Passwort ein" when confirming who you are. The length and format wording is
+  the same everywhere and is declared in the factory.
+- **Rules are written in the order a member should read them.** Zod collects *every* failing check
+  and keeps them in declaration order, and `firstError()` shows the first — so `.min(1, missing)`
+  before `.min(3, tooShort)` is what makes an empty username say "enter one" rather than "needs
+  three characters". That order is the interface's, not an implementation detail.
+- **The email rule is the backend's rule.** `z.regexes.html5Email`, the same constant
+  `EMAIL_ADDRESS_SCHEMA` uses, so the form and the API cannot disagree about what an address is.
+  `type="email"` stays on the input for the keyboard it summons on a phone, not for validation.
+- **`maxlength` stays on the input** because it stops the typing; the schema cannot. Everything
+  else about the constraint lives in the schema.
+- **One field is one `FormTextField`** (`components/common/FormTextField.vue`). It carries
+  `aria-invalid`, `data-invalid`, the change handler, the error, and — the part easy to forget —
+  **`aria-describedby`**, without which a field says *that* it is wrong and never *why*. Written
+  per field that was sixty-four repetitions and a hand-made id on each one. It generates that id
+  now — `id` is a prop only for the rare case of something outside naming the input — so nothing
+  has to invent a unique word per call site, which is what `settingsCurrentPassword` was.
+  Prose uses the same wrapper with `multiline`, and the chat row with `label-hidden` — a field
+  that swaps its control or hides its label is still one field, and wiring it by hand is how
+  `aria-describedby` goes missing.
+- **A failed submit moves focus to the first marked field**, through `onSubmitInvalid` and
+  `focusFirstInvalid()`. Otherwise focus stays on the button that was just pressed.
+- **A 400 is schema drift, not a field problem.** Since the client enforces every rule the API
+  does, a refusal on the shape means the deployed two disagree — so `failureMessage()` says to
+  reload, and no form maps server issues onto fields any more. It never used the server's message
+  anyway: it took the field from `issue.path` and showed that field's generic wording. A **401 or
+  409 is different** and stays on the field it is about, set through `setFieldMeta`.
+
+Prefer `failureMessage(error)` over a hand-written fallback: it already answers 429 with the wait
+the server named and 400 with the reload sentence. Pass a second argument only where the control
+names what failed („Die Anmeldung ist gerade nicht möglich").
 
 **Prose fields take no `maxlength`.** A group description and a post body are checked on submit
 instead, and the draft is left untouched. Typing that stops dead mid-word with no explanation is

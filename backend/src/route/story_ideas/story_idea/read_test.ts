@@ -20,11 +20,11 @@ const third = "story-idea-reader-third";
 Deno.test.beforeEach(() => clearRateLimits());
 Deno.test.afterEach(() => deleteUsers([author, bystander, third]));
 
-const setState = (cookie: string, ideaId: string, state: string) =>
-  request("PUT", `/api/story-ideas/${ideaId}/reader-state`, cookie, { state });
+const markRead = (cookie: string, ideaId: string) =>
+  request("PUT", `/api/story-ideas/${ideaId}/read`, cookie, undefined);
 
 const clearState = (cookie: string, ideaId: string) =>
-  request("DELETE", `/api/story-ideas/${ideaId}/reader-state`, cookie);
+  request("DELETE", `/api/story-ideas/${ideaId}/read`, cookie);
 
 async function ideaFrom(cookie: string, title: string) {
   const response = await createIdea(cookie, { title });
@@ -32,53 +32,53 @@ async function ideaFrom(cookie: string, title: string) {
   return await response.json();
 }
 
-Deno.test("PUT reader-state marks an idea read, and the reader sees its own state", async () => {
+Deno.test("PUT read marks an idea read, and the reader sees its own state", async () => {
   const authorCookie = await registerUser(author);
   const readerCookie = await registerUser(bystander);
   const idea = await ideaFrom(authorCookie, "Zu lesen");
 
   const before = await (await listIdeas(readerCookie, {})).json();
   assertEquals(
-    before.results.find((i: { id: string }) => i.id === idea.id).readerState,
-    null,
+    before.results.find((i: { id: string }) => i.id === idea.id).isRead,
+    false,
   );
 
   assertEquals(
-    (await setState(readerCookie, idea.id, "read")).status,
+    (await markRead(readerCookie, idea.id)).status,
     STATUS_CODE.OK,
   );
 
   const after = await (await listIdeas(readerCookie, {})).json();
   assertEquals(
-    after.results.find((i: { id: string }) => i.id === idea.id).readerState,
-    "read",
+    after.results.find((i: { id: string }) => i.id === idea.id).isRead,
+    true,
   );
 });
 
-Deno.test("PUT reader-state overwrites, so marking twice is not an error", async () => {
+Deno.test("PUT read twice is not an error", async () => {
   const authorCookie = await registerUser(author);
   const readerCookie = await registerUser(bystander);
   const idea = await ideaFrom(authorCookie, "Zweimal");
 
-  await setState(readerCookie, idea.id, "read");
+  await markRead(readerCookie, idea.id);
   assertEquals(
-    (await setState(readerCookie, idea.id, "marked")).status,
+    (await markRead(readerCookie, idea.id)).status,
     STATUS_CODE.OK,
   );
 
   const page = await (await listIdeas(readerCookie, {})).json();
   assertEquals(
-    page.results.find((i: { id: string }) => i.id === idea.id).readerState,
-    "marked",
+    page.results.find((i: { id: string }) => i.id === idea.id).isRead,
+    true,
   );
 });
 
-Deno.test("DELETE reader-state puts the idea back to unread", async () => {
+Deno.test("DELETE read puts the idea back to unread", async () => {
   const authorCookie = await registerUser(author);
   const readerCookie = await registerUser(bystander);
   const idea = await ideaFrom(authorCookie, "Wieder ungelesen");
 
-  await setState(readerCookie, idea.id, "marked");
+  await markRead(readerCookie, idea.id);
   assertEquals(
     (await clearState(readerCookie, idea.id)).status,
     STATUS_CODE.OK,
@@ -86,8 +86,8 @@ Deno.test("DELETE reader-state puts the idea back to unread", async () => {
 
   const page = await (await listIdeas(readerCookie, {})).json();
   assertEquals(
-    page.results.find((i: { id: string }) => i.id === idea.id).readerState,
-    null,
+    page.results.find((i: { id: string }) => i.id === idea.id).isRead,
+    false,
   );
 
   // Answers the same way with nothing to remove: unread is the absence of a row.
@@ -97,15 +97,15 @@ Deno.test("DELETE reader-state puts the idea back to unread", async () => {
   );
 });
 
-Deno.test("the board filters by the reader's own state", async () => {
+Deno.test("the board filters by whether the reader has read it", async () => {
   const authorCookie = await registerUser(author);
   const readerCookie = await registerUser(bystander);
-  const read = await ideaFrom(authorCookie, "Gelesen");
-  const marked = await ideaFrom(authorCookie, "Gemerkt");
+  const first = await ideaFrom(authorCookie, "Gelesen eins");
+  const second = await ideaFrom(authorCookie, "Gelesen zwei");
   const untouched = await ideaFrom(authorCookie, "Ungelesen");
 
-  await setState(readerCookie, read.id, "read");
-  await setState(readerCookie, marked.id, "marked");
+  await markRead(readerCookie, first.id);
+  await markRead(readerCookie, second.id);
 
   const titles = async (readerState: string) => {
     const page = await (await listIdeas(readerCookie, { readerState })).json();
@@ -114,16 +114,18 @@ Deno.test("the board filters by the reader's own state", async () => {
 
   const unreadTitles = await titles("unread");
   assertEquals(unreadTitles.includes("Ungelesen"), true);
-  assertEquals(unreadTitles.includes("Gelesen"), false);
-  assertEquals(unreadTitles.includes("Gemerkt"), false);
+  assertEquals(unreadTitles.includes("Gelesen eins"), false);
+  assertEquals(unreadTitles.includes("Gelesen zwei"), false);
 
-  assertEquals((await titles("read")).includes("Gelesen"), true);
-  assertEquals((await titles("read")).includes("Gemerkt"), false);
-  assertEquals((await titles("marked")).includes("Gemerkt"), true);
+  // Both, and this is the half the old single column got wrong: while `marked` and `read` shared
+  // one column, asking for `read` hid everything the member had marked.
+  const readTitles = await titles("read");
+  assertEquals(readTitles.includes("Gelesen eins"), true);
+  assertEquals(readTitles.includes("Gelesen zwei"), true);
 
   // Nothing about the idea itself changed, so it is still there without a filter.
   const all = await titles("any");
-  for (const title of ["Gelesen", "Gemerkt", "Ungelesen"]) {
+  for (const title of ["Gelesen eins", "Gelesen zwei", "Ungelesen"]) {
     assertEquals(
       all.includes(title),
       true,
@@ -139,60 +141,59 @@ Deno.test("one member's state is never visible to another, nor to the author", a
   const otherCookie = await registerUser(third);
   const idea = await ideaFrom(authorCookie, "Nur meine Sache");
 
-  await setState(readerCookie, idea.id, "marked");
+  await markRead(readerCookie, idea.id);
 
   // The whole privacy rule of the feature: "four members read your idea" is exactly the
   // statistic the research rejected, so nobody else's state is readable anywhere.
   const forOther = await (await listIdeas(otherCookie, {})).json();
   assertEquals(
-    forOther.results.find((i: { id: string }) => i.id === idea.id).readerState,
-    null,
+    forOther.results.find((i: { id: string }) => i.id === idea.id).isRead,
+    false,
   );
 
   const forAuthor = await (await listIdeas(authorCookie, { author: "mine" }))
     .json();
   assertEquals(
-    forAuthor.results.find((i: { id: string }) => i.id === idea.id).readerState,
-    null,
+    forAuthor.results.find((i: { id: string }) => i.id === idea.id).isRead,
+    false,
   );
 });
 
-Deno.test("PUT reader-state refuses the reader's own idea", async () => {
+Deno.test("PUT read refuses the reader's own idea", async () => {
   const authorCookie = await registerUser(author);
   const idea = await ideaFrom(authorCookie, "Meine eigene");
 
   // Discovery never lists a member their own idea, so a state on it could never be shown.
   assertEquals(
-    (await setState(authorCookie, idea.id, "read")).status,
+    (await markRead(authorCookie, idea.id)).status,
     STATUS_CODE.Forbidden,
   );
 });
 
-Deno.test("a closed idea can still be marked, and keeps the mark", async () => {
+Deno.test("a closed idea can still be marked read, and keeps it", async () => {
   const authorCookie = await registerUser(author);
   const readerCookie = await registerUser(bystander);
   const idea = await ideaFrom(authorCookie, "Bald geschlossen");
 
-  await setState(readerCookie, idea.id, "marked");
+  await markRead(readerCookie, idea.id);
   await patchIdea(authorCookie, idea.id, { status: "closed" });
 
   // The mark belongs to the member, the status to the author: closing must not prune the pile.
   const page = await (await listIdeas(readerCookie, {
-    readerState: "marked",
+    readerState: "read",
     status: "any",
   })).json();
   const found = page.results.find((i: { id: string }) => i.id === idea.id);
-  assertEquals(found.readerState, "marked");
+  assertEquals(found.isRead, true);
   assertEquals(found.status, "closed");
 });
 
-Deno.test("PUT reader-state answers 404 for an idea that does not exist", async () => {
+Deno.test("PUT read answers 404 for an idea that does not exist", async () => {
   const readerCookie = await registerUser(bystander);
 
-  const response = await setState(
+  const response = await markRead(
     readerCookie,
     "01a00000-0000-7000-8000-00000000ffff",
-    "read",
   );
 
   assertEquals(response.status, STATUS_CODE.NotFound);

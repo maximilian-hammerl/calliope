@@ -3,9 +3,13 @@ import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import type { Search200 } from '@/api/models'
 import { pluralize } from '@/lib/format/formatText'
-import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
 import { cn } from '@/lib/utils'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
+import { MEMBERSHIP_LABELS } from '@/lib/format/group'
+import VisibilityMark from '@/components/group/VisibilityMark.vue'
+import ClosedMark from '@/components/story-idea/ClosedMark.vue'
+import ReadMark from '@/components/story-idea/ReadMark.vue'
 import { useGetCurrentUser } from '@/api/auth/auth'
 
 const { data: userData } = useGetCurrentUser()
@@ -33,6 +37,11 @@ const sections = computed(() =>
     { key: 'users', heading: 'Mitglieder', section: props.results?.users },
   ].filter((entry) => (entry.section?.results.length ?? 0) > 0),
 )
+
+/** Null for a group the reader has not joined, which takes no chip — see `MEMBERSHIP_LABELS`. */
+function membershipLabel(status: string | null): string | undefined {
+  return status === 'joined' || status === 'invited' ? MEMBERSHIP_LABELS[status] : undefined
+}
 
 const foundNothing = computed<boolean>(
   () => props.results !== undefined && !props.isSearching && sections.value.length === 0,
@@ -83,9 +92,13 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             class="flex min-h-[38px] items-center gap-2 px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
             <span class="truncate">{{ group.title }}</span>
-            <CalliopeBadge>
-              {{ group.visibility === 'private' ? 'Privat' : 'Öffentlich' }}
+            <VisibilityMark :visibility="group.visibility" />
+            <!-- Search reaches past the groups you belong to, and nothing else on the row says
+                 which side of that line a result is on. -->
+            <CalliopeBadge v-if="membershipLabel(group.status)" variant="tag">
+              {{ membershipLabel(group.status) }}
             </CalliopeBadge>
+            <FavouriteMark v-if="group.isFavourite" />
           </RouterLink>
         </template>
 
@@ -96,7 +109,10 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             :to="threadTarget(thread.writingGroupId, thread.id)"
             class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
           >
-            <span class="truncate text-[13px] text-ink-2">{{ thread.title }}</span>
+            <span class="flex items-center gap-2 text-[13px] text-ink-2">
+              <span class="truncate">{{ thread.title }}</span>
+              <FavouriteMark v-if="thread.isFavourite" />
+            </span>
             <!-- A result that can come from anywhere says where it came from. -->
             <span class="truncate text-[11.5px] text-ink-6">{{ thread.writingGroupTitle }}</span>
           </RouterLink>
@@ -112,10 +128,10 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             <span class="truncate">{{ idea.title }}</span>
             <!-- Unlike the board, this list holds closed ideas and the reader's own, so both
                  say so. Open and somebody else's are the resting state and say nothing. -->
-            <CalliopeBadge v-if="idea.status !== 'open'">
-              {{ IDEA_STATUS_LABELS[idea.status] }}
-            </CalliopeBadge>
+            <ClosedMark v-if="idea.status !== 'open'" />
             <CalliopeBadge v-if="idea.createdBy === currentUserId">Von dir</CalliopeBadge>
+            <ReadMark v-if="idea.isRead" />
+            <FavouriteMark v-if="idea.isFavourite" />
           </RouterLink>
         </template>
 

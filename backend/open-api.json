@@ -28,6 +28,10 @@
       "description": "Reporting something to the operators, with the reason it is being reported"
     },
     {
+      "name": "favourites",
+      "description": "A member's own favourites, across groups, threads, posts, story ideas and chats"
+    },
+    {
       "name": "memberships",
       "description": "Managing who belongs to a writing group, in which role, and their invitations"
     },
@@ -60,7 +64,572 @@
       "description": "Finding groups, threads and members by name in one request"
     }
   ],
-  "components": { "schemas": {}, "parameters": {} },
+  "components": {
+    "schemas": {
+      "PostDocument": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["doc"] },
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentNode" },
+            "minItems": 1
+          }
+        },
+        "required": ["type", "content"],
+        "additionalProperties": false,
+        "maxLength": 100000
+      },
+      "DocumentNode": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["text"] },
+              "text": { "type": "string", "minLength": 1 },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["bold"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["italic"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["underline"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["strike"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["code"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["link"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "maxLength": 2000,
+                              "format": "uri"
+                            },
+                            "target": {
+                              "type": ["string", "null"],
+                              "enum": ["_blank", "_self", null]
+                            },
+                            "rel": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "class": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "title": {
+                              "type": ["string", "null"],
+                              "maxLength": 500
+                            }
+                          },
+                          "required": ["href"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["textStyle"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "color": {
+                              "type": ["string", "null"],
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                            },
+                            "backgroundColor": {
+                              "type": ["string", "null"],
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                            },
+                            "fontFamily": {
+                              "type": ["string", "null"],
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$/u"
+                            },
+                            "fontSize": {
+                              "type": ["string", "null"],
+                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)$"
+                            },
+                            "lineHeight": {
+                              "type": ["string", "null"],
+                              "pattern": "^(normal|\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)?)$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "maxItems": 20
+              }
+            },
+            "required": ["type", "text"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["paragraph"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "textAlign": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["heading"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "level": { "type": "integer", "minimum": 1, "maximum": 6 },
+                  "textAlign": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "required": ["level"],
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type", "attrs"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["bulletList"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["orderedList"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "type": {
+                    "type": ["string", "null"],
+                    "enum": ["1", "a", "A", "i", "I", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["listItem"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["blockquote"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["codeBlock"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": ["string", "null"],
+                    "maxLength": 100,
+                    "pattern": "^[\\w\\s-]*$/u"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["horizontalRule"] }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["hardBreak"] },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["bold"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["italic"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["underline"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["strike"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["code"] }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["link"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "href": {
+                              "type": "string",
+                              "maxLength": 2000,
+                              "format": "uri"
+                            },
+                            "target": {
+                              "type": ["string", "null"],
+                              "enum": ["_blank", "_self", null]
+                            },
+                            "rel": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "class": {
+                              "type": ["string", "null"],
+                              "maxLength": 100,
+                              "pattern": "^[\\w\\s-]*$/u"
+                            },
+                            "title": {
+                              "type": ["string", "null"],
+                              "maxLength": 500
+                            }
+                          },
+                          "required": ["href"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["textStyle"] },
+                        "attrs": {
+                          "type": "object",
+                          "properties": {
+                            "color": {
+                              "type": ["string", "null"],
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                            },
+                            "backgroundColor": {
+                              "type": ["string", "null"],
+                              "maxLength": 60,
+                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                            },
+                            "fontFamily": {
+                              "type": ["string", "null"],
+                              "minLength": 1,
+                              "maxLength": 200,
+                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$/u"
+                            },
+                            "fontSize": {
+                              "type": ["string", "null"],
+                              "pattern": "^\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)$"
+                            },
+                            "lineHeight": {
+                              "type": ["string", "null"],
+                              "pattern": "^(normal|\\d{1,3}(\\.\\d+)?(px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)?)$"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["type", "attrs"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "maxItems": 20
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["image"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "src": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "pattern": "^\\/[\\w\\-./]*$/u"
+                  },
+                  "alt": { "type": ["string", "null"], "maxLength": 1000 },
+                  "title": { "type": ["string", "null"], "maxLength": 500 },
+                  "width": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "height": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 10000
+                  }
+                },
+                "required": ["src"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "attrs"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["table"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["tableRow"] },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["tableHeader"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "colspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "rowspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "colwidth": {
+                    "type": ["array", "null"],
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000
+                    },
+                    "maxItems": 100
+                  },
+                  "align": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["tableCell"] },
+              "attrs": {
+                "type": "object",
+                "properties": {
+                  "colspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "rowspan": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "colwidth": {
+                    "type": ["array", "null"],
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000
+                    },
+                    "maxItems": 100
+                  },
+                  "align": {
+                    "type": ["string", "null"],
+                    "enum": ["left", "center", "right", "justify", null]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "content": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/DocumentNode" }
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "parameters": {}
+  },
   "paths": {
     "/api/auth/register": {
       "post": {
@@ -218,9 +787,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -437,9 +1007,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -575,9 +1146,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -639,6 +1211,7 @@
                       "type": ["string", "null"],
                       "enum": ["administrator", "moderator", null]
                     },
+                    "avatarUrl": { "type": ["string", "null"] },
                     "unreadNotifications": { "type": "integer" }
                   },
                   "required": [
@@ -647,6 +1220,7 @@
                     "emailAddress",
                     "emailAddressVerifiedAt",
                     "platformRole",
+                    "avatarUrl",
                     "unreadNotifications"
                   ]
                 }
@@ -733,9 +1307,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -889,9 +1464,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1075,9 +1651,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1254,9 +1831,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1392,9 +1970,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1606,9 +2185,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -1745,6 +2325,35 @@
               }
             }
           },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
           "409": {
             "description": "Another account already uses this address",
             "content": {
@@ -1825,9 +2434,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2033,9 +2643,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2212,9 +2823,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2397,9 +3009,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2576,9 +3189,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -2804,9 +3418,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3000,9 +3615,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3233,9 +3849,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3372,6 +3989,35 @@
               }
             }
           },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
           "413": {
             "description": "Request body too large",
             "content": {
@@ -3423,9 +4069,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3607,7 +4254,8 @@
                     "invitedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
-                    }
+                    },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -3629,7 +4277,8 @@
                     "createdByUsername",
                     "status",
                     "role",
-                    "invitedAt"
+                    "invitedAt",
+                    "isFavourite"
                   ]
                 }
               }
@@ -3773,9 +4422,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -3855,6 +4505,11 @@
                     "enum": ["joined", "invited", "none", "any"],
                     "default": "joined",
                     "description": "Which groups relative to the caller: ones they have joined, ones they have been invited to, public ones they are not in, or everything they may see."
+                  },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
                   }
                 }
               }
@@ -3933,7 +4588,8 @@
                           "invitedAt": {
                             "type": ["string", "null"],
                             "format": "date-time"
-                          }
+                          },
+                          "isFavourite": { "type": "boolean" }
                         },
                         "required": [
                           "id",
@@ -3955,7 +4611,8 @@
                           "createdByUsername",
                           "status",
                           "role",
-                          "invitedAt"
+                          "invitedAt",
+                          "isFavourite"
                         ]
                       }
                     }
@@ -4103,9 +4760,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -4219,7 +4877,8 @@
                     "invitedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
-                    }
+                    },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -4241,7 +4900,8 @@
                     "createdByUsername",
                     "status",
                     "role",
-                    "invitedAt"
+                    "invitedAt",
+                    "isFavourite"
                   ]
                 }
               }
@@ -4414,9 +5074,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -4602,7 +5263,8 @@
                     "invitedAt": {
                       "type": ["string", "null"],
                       "format": "date-time"
-                    }
+                    },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -4624,7 +5286,8 @@
                     "createdByUsername",
                     "status",
                     "role",
-                    "invitedAt"
+                    "invitedAt",
+                    "isFavourite"
                   ]
                 }
               }
@@ -4797,9 +5460,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -4869,6 +5533,7 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isFavourite": { "type": "boolean" },
                     "status": {
                       "type": "string",
                       "enum": ["invited", "joined"]
@@ -4882,6 +5547,7 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
+                    "isFavourite",
                     "status",
                     "createdByUsername",
                     "unreadMessages"
@@ -5086,9 +5752,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -5190,7 +5857,8 @@
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "invitedByUsername": { "type": ["string", "null"] },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -5202,7 +5870,8 @@
                     "invitedBy",
                     "createdAt",
                     "invitedByUsername",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -5404,9 +6073,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -5498,7 +6168,8 @@
                             "format": "date-time"
                           },
                           "invitedByUsername": { "type": ["string", "null"] },
-                          "username": { "type": "string" }
+                          "username": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
                         },
                         "required": [
                           "userId",
@@ -5510,7 +6181,8 @@
                           "invitedBy",
                           "createdAt",
                           "invitedByUsername",
-                          "username"
+                          "username",
+                          "avatarUrl"
                         ]
                       }
                     }
@@ -5687,9 +6359,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -5772,7 +6445,8 @@
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "invitedByUsername": { "type": ["string", "null"] },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -5784,7 +6458,8 @@
                     "invitedBy",
                     "createdAt",
                     "invitedByUsername",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -5986,9 +6661,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6094,7 +6770,8 @@
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "invitedByUsername": { "type": ["string", "null"] },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -6106,7 +6783,8 @@
                     "invitedBy",
                     "createdAt",
                     "invitedByUsername",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -6279,9 +6957,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6516,9 +7195,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -6791,9 +7471,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7066,9 +7747,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7346,9 +8028,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7583,9 +8266,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7674,7 +8358,8 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -7683,7 +8368,8 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "isFavourite"
                   ]
                 }
               }
@@ -7856,9 +8542,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -7938,7 +8625,8 @@
                             "type": "string",
                             "format": "date-time"
                           },
-                          "createdByUsername": { "type": ["string", "null"] }
+                          "createdByUsername": { "type": ["string", "null"] },
+                          "isFavourite": { "type": "boolean" }
                         },
                         "required": [
                           "id",
@@ -7947,7 +8635,8 @@
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
-                          "createdByUsername"
+                          "createdByUsername",
+                          "isFavourite"
                         ]
                       }
                     }
@@ -8124,9 +8813,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8203,7 +8893,8 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -8212,7 +8903,8 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "isFavourite"
                   ]
                 }
               }
@@ -8385,9 +9077,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8480,7 +9173,8 @@
                       "type": "string",
                       "format": "date-time"
                     },
-                    "createdByUsername": { "type": ["string", "null"] }
+                    "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -8489,7 +9183,8 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
-                    "createdByUsername"
+                    "createdByUsername",
+                    "isFavourite"
                   ]
                 }
               }
@@ -8662,9 +9357,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8899,9 +9595,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -8965,14 +9662,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100000
-                  },
-                  "isDraft": { "type": "boolean", "default": false }
+                  "isDraft": { "type": "boolean", "default": false },
+                  "document": { "$ref": "#/components/schemas/PostDocument" }
                 },
-                "required": ["text"]
+                "required": ["document"]
               }
             }
           }
@@ -8987,6 +9680,7 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": { "$ref": "#/components/schemas/PostDocument" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -9003,11 +9697,13 @@
                       "format": "uuid"
                     },
                     "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" },
                     "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
                     "id",
                     "writingThreadId",
+                    "document",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -9015,6 +9711,7 @@
                     "editedAt",
                     "editedBy",
                     "createdByUsername",
+                    "isFavourite",
                     "editedByUsername"
                   ]
                 }
@@ -9188,9 +9885,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9274,6 +9972,11 @@
                     "enum": ["asc", "desc"],
                     "default": "asc"
                   },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
+                  },
                   "isDraft": { "type": "boolean", "default": false }
                 }
               }
@@ -9299,6 +10002,9 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "document": {
+                            "$ref": "#/components/schemas/PostDocument"
+                          },
                           "text": { "type": "string" },
                           "isDraft": { "type": "boolean" },
                           "createdBy": {
@@ -9318,11 +10024,13 @@
                             "format": "uuid"
                           },
                           "createdByUsername": { "type": ["string", "null"] },
+                          "isFavourite": { "type": "boolean" },
                           "editedByUsername": { "type": ["string", "null"] }
                         },
                         "required": [
                           "id",
                           "writingThreadId",
+                          "document",
                           "text",
                           "isDraft",
                           "createdBy",
@@ -9330,6 +10038,7 @@
                           "editedAt",
                           "editedBy",
                           "createdByUsername",
+                          "isFavourite",
                           "editedByUsername"
                         ]
                       }
@@ -9507,9 +10216,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9582,6 +10292,7 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": { "$ref": "#/components/schemas/PostDocument" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -9598,11 +10309,13 @@
                       "format": "uuid"
                     },
                     "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" },
                     "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
                     "id",
                     "writingThreadId",
+                    "document",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -9610,6 +10323,7 @@
                     "editedAt",
                     "editedBy",
                     "createdByUsername",
+                    "isFavourite",
                     "editedByUsername"
                   ]
                 }
@@ -9783,9 +10497,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -9853,11 +10568,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100000
-                  },
+                  "document": { "$ref": "#/components/schemas/PostDocument" },
                   "isDraft": { "type": "boolean" }
                 }
               }
@@ -9874,6 +10585,7 @@
                   "properties": {
                     "id": { "type": "string", "format": "uuid" },
                     "writingThreadId": { "type": "string", "format": "uuid" },
+                    "document": { "$ref": "#/components/schemas/PostDocument" },
                     "text": { "type": "string" },
                     "isDraft": { "type": "boolean" },
                     "createdBy": {
@@ -9890,11 +10602,13 @@
                       "format": "uuid"
                     },
                     "createdByUsername": { "type": ["string", "null"] },
+                    "isFavourite": { "type": "boolean" },
                     "editedByUsername": { "type": ["string", "null"] }
                   },
                   "required": [
                     "id",
                     "writingThreadId",
+                    "document",
                     "text",
                     "isDraft",
                     "createdBy",
@@ -9902,6 +10616,7 @@
                     "editedAt",
                     "editedBy",
                     "createdByUsername",
+                    "isFavourite",
                     "editedByUsername"
                   ]
                 }
@@ -10075,9 +10790,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10318,9 +11034,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10516,9 +11233,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -10698,7 +11416,12 @@
                   },
                   "readerState": {
                     "type": "string",
-                    "enum": ["read", "marked", "unread", "any"],
+                    "enum": ["read", "unread", "any"],
+                    "default": "any"
+                  },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
                     "default": "any"
                   },
                   "language": {
@@ -10771,10 +11494,8 @@
                             "format": "date-time"
                           },
                           "createdByUsername": { "type": "string" },
-                          "readerState": {
-                            "type": ["string", "null"],
-                            "enum": ["marked", "read", null]
-                          }
+                          "isRead": { "type": "boolean" },
+                          "isFavourite": { "type": "boolean" }
                         },
                         "required": [
                           "id",
@@ -10795,7 +11516,8 @@
                           "createdBy",
                           "createdAt",
                           "createdByUsername",
-                          "readerState"
+                          "isRead",
+                          "isFavourite"
                         ]
                       }
                     }
@@ -10943,9 +11665,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -11101,10 +11824,8 @@
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "createdByUsername": { "type": "string" },
-                    "readerState": {
-                      "type": ["string", "null"],
-                      "enum": ["marked", "read", null]
-                    }
+                    "isRead": { "type": "boolean" },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -11125,7 +11846,8 @@
                     "createdBy",
                     "createdAt",
                     "createdByUsername",
-                    "readerState"
+                    "isRead",
+                    "isFavourite"
                   ]
                 }
               }
@@ -11269,9 +11991,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -11380,10 +12103,8 @@
                           "format": "date-time"
                         },
                         "createdByUsername": { "type": "string" },
-                        "readerState": {
-                          "type": ["string", "null"],
-                          "enum": ["marked", "read", null]
-                        }
+                        "isRead": { "type": "boolean" },
+                        "isFavourite": { "type": "boolean" }
                       },
                       "required": [
                         "id",
@@ -11404,7 +12125,8 @@
                         "createdBy",
                         "createdAt",
                         "createdByUsername",
-                        "readerState"
+                        "isRead",
+                        "isFavourite"
                       ]
                     },
                     "storyIdea": {
@@ -11452,10 +12174,8 @@
                           "format": "date-time"
                         },
                         "createdByUsername": { "type": "string" },
-                        "readerState": {
-                          "type": ["string", "null"],
-                          "enum": ["marked", "read", null]
-                        }
+                        "isRead": { "type": "boolean" },
+                        "isFavourite": { "type": "boolean" }
                       },
                       "required": [
                         "id",
@@ -11476,7 +12196,8 @@
                         "createdBy",
                         "createdAt",
                         "createdByUsername",
-                        "readerState"
+                        "isRead",
+                        "isFavourite"
                       ]
                     },
                     "next": {
@@ -11524,10 +12245,8 @@
                           "format": "date-time"
                         },
                         "createdByUsername": { "type": "string" },
-                        "readerState": {
-                          "type": ["string", "null"],
-                          "enum": ["marked", "read", null]
-                        }
+                        "isRead": { "type": "boolean" },
+                        "isFavourite": { "type": "boolean" }
                       },
                       "required": [
                         "id",
@@ -11548,7 +12267,8 @@
                         "createdBy",
                         "createdAt",
                         "createdByUsername",
-                        "readerState"
+                        "isRead",
+                        "isFavourite"
                       ]
                     },
                     "total": { "type": "integer", "minimum": 0 }
@@ -11725,9 +12445,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -11821,10 +12542,8 @@
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "createdByUsername": { "type": "string" },
-                    "readerState": {
-                      "type": ["string", "null"],
-                      "enum": ["marked", "read", null]
-                    }
+                    "isRead": { "type": "boolean" },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -11845,7 +12564,8 @@
                     "createdBy",
                     "createdAt",
                     "createdByUsername",
-                    "readerState"
+                    "isRead",
+                    "isFavourite"
                   ]
                 }
               }
@@ -12018,9 +12738,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -12184,10 +12905,8 @@
                     "createdBy": { "type": "string", "format": "uuid" },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "createdByUsername": { "type": "string" },
-                    "readerState": {
-                      "type": ["string", "null"],
-                      "enum": ["marked", "read", null]
-                    }
+                    "isRead": { "type": "boolean" },
+                    "isFavourite": { "type": "boolean" }
                   },
                   "required": [
                     "id",
@@ -12208,7 +12927,8 @@
                     "createdBy",
                     "createdAt",
                     "createdByUsername",
-                    "readerState"
+                    "isRead",
+                    "isFavourite"
                   ]
                 }
               }
@@ -12381,9 +13101,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -12611,9 +13332,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -12683,6 +13405,7 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isFavourite": { "type": "boolean" },
                     "status": {
                       "type": "string",
                       "enum": ["invited", "joined"]
@@ -12696,6 +13419,7 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
+                    "isFavourite",
                     "status",
                     "createdByUsername",
                     "unreadMessages"
@@ -12871,9 +13595,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -12910,12 +13635,12 @@
         }
       }
     },
-    "/api/story-ideas/{ideaId}/reader-state": {
+    "/api/story-ideas/{ideaId}/read": {
       "put": {
         "tags": ["story-ideas"],
-        "summary": "Mark an idea as read, or worth coming back to",
-        "description": "The member's own state on somebody else's idea. Idempotent: setting it again overwrites what was there. Unread is the absence of a state, so clearing it is a DELETE.",
-        "operationId": "setReaderState",
+        "summary": "Mark an idea as read",
+        "description": "The member's own record of having read somebody else's idea, and nothing more: keeping one to come back to is a favourite, which covers all five kinds. Idempotent, and it takes no body — read is the presence of the record, so unread is a DELETE.",
+        "operationId": "markStoryIdeaRead",
         "parameters": [
           {
             "schema": { "type": "string", "format": "uuid" },
@@ -12924,23 +13649,9 @@
             "in": "path"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "state": { "type": "string", "enum": ["marked", "read"] }
-                },
-                "required": ["state"]
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "The state was set",
+            "description": "The idea is marked read",
             "content": {
               "application/json": {
                 "schema": {
@@ -13118,9 +13829,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13159,8 +13871,8 @@
       "delete": {
         "tags": ["story-ideas"],
         "summary": "Set an idea back to unread",
-        "description": "Removes the member's own state. Answers the same way whether a state was there or not, because unread is the absence of one.",
-        "operationId": "clearReaderState",
+        "description": "Puts an idea back to unread. Answers the same way whether it was read or not, because unread is the absence of the record.",
+        "operationId": "clearStoryIdeaRead",
         "parameters": [
           {
             "schema": { "type": "string", "format": "uuid" },
@@ -13213,6 +13925,35 @@
           },
           "401": {
             "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
             "content": {
               "application/json": {
                 "schema": {
@@ -13320,9 +14061,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13564,9 +14306,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -13801,9 +14544,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14034,9 +14778,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14306,9 +15051,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14380,7 +15126,7 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": ["dismissed", "open", "resolved"]
+                    "enum": ["closed", "in_progress", "open"]
                   },
                   "category": {
                     "type": "string",
@@ -14408,6 +15154,20 @@
                       "writing_group",
                       "writing_post",
                       "writing_thread"
+                    ]
+                  },
+                  "closingOutcome": {
+                    "type": "string",
+                    "enum": [
+                      "account_banned",
+                      "content_removed",
+                      "content_warning_added",
+                      "duplicate",
+                      "insufficient_information",
+                      "no_violation",
+                      "other",
+                      "target_gone",
+                      "warning_given"
                     ]
                   }
                 }
@@ -14462,16 +15222,37 @@
                           "reason": { "type": "string" },
                           "status": {
                             "type": "string",
-                            "enum": ["dismissed", "open", "resolved"]
+                            "enum": ["closed", "in_progress", "open"]
                           },
                           "createdAt": {
                             "type": "string",
+                            "format": "date-time"
+                          },
+                          "inProgressAt": {
+                            "type": ["string", "null"],
                             "format": "date-time"
                           },
                           "closedAt": {
                             "type": ["string", "null"],
                             "format": "date-time"
                           },
+                          "closingOutcome": {
+                            "type": ["string", "null"],
+                            "enum": [
+                              "account_banned",
+                              "content_removed",
+                              "content_warning_added",
+                              "duplicate",
+                              "insufficient_information",
+                              "no_violation",
+                              "other",
+                              "target_gone",
+                              "warning_given",
+                              null
+                            ]
+                          },
+                          "closingNote": { "type": ["string", "null"] },
+                          "operatorUsername": { "type": ["string", "null"] },
                           "reporterUsername": { "type": ["string", "null"] },
                           "authorId": {
                             "type": ["string", "null"],
@@ -14488,7 +15269,11 @@
                           "reason",
                           "status",
                           "createdAt",
+                          "inProgressAt",
                           "closedAt",
+                          "closingOutcome",
+                          "closingNote",
+                          "operatorUsername",
                           "reporterUsername",
                           "authorId",
                           "authorUsername",
@@ -14640,9 +15425,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14682,9 +15468,9 @@
     "/api/reports/{reportId}": {
       "patch": {
         "tags": ["reports"],
-        "summary": "Close a report as resolved or dismissed",
-        "description": "Records who closed it and when. `resolved` means something was done about it, `dismissed` means the report was not valid — the two are kept apart because which one an operator chose is the only signal about whether a member's reports are worth reading. Only an open report can be closed.",
-        "operationId": "closeReport",
+        "summary": "Take a report, or close it",
+        "description": "Takes a report so other operators know it is in hand, or closes it with an outcome and a note saying what was decided. Both are recorded on the report itself, and a closed report is final — there is no reopening. Taking one somebody else already has is allowed and hands it over, so a forgotten claim cannot strand a report; closing it is reserved to whoever holds it.",
+        "operationId": "moveReport",
         "parameters": [
           {
             "schema": { "type": "string", "format": "uuid" },
@@ -14698,21 +15484,48 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": ["dismissed", "resolved"]
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "string", "enum": ["in_progress"] }
+                    },
+                    "required": ["status"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "string", "enum": ["closed"] },
+                      "outcome": {
+                        "type": "string",
+                        "enum": [
+                          "account_banned",
+                          "content_removed",
+                          "content_warning_added",
+                          "duplicate",
+                          "insufficient_information",
+                          "no_violation",
+                          "other",
+                          "target_gone",
+                          "warning_given"
+                        ]
+                      },
+                      "note": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    },
+                    "required": ["status", "outcome", "note"]
                   }
-                },
-                "required": ["status"]
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The report is closed",
+            "description": "The report has moved",
             "content": {
               "application/json": {
                 "schema": {
@@ -14811,7 +15624,36 @@
             }
           },
           "404": {
-            "description": "No such report, or it is closed already",
+            "description": "No such report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The report is already closed, or another operator holds it and this is a closing. Refetching the queue shows the operator which of the two it was.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14890,9 +15732,477 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/favourites/{targetType}/{targetId}": {
+      "put": {
+        "tags": ["favourites"],
+        "summary": "Mark something as a favourite",
+        "description": "The member's own favourite, visible to nobody else, on a group, a thread, a post, a story idea or a chat. Idempotent: favouriting twice is the same as favouriting once. Answers 404 for anything the member cannot see, so this cannot be used to find out that something exists.",
+        "operationId": "setFavourite",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "writing_group",
+                "writing_thread",
+                "writing_post",
+                "story_idea",
+                "chat_group"
+              ]
+            },
+            "required": true,
+            "name": "targetType",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "targetId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "It is a favourite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such thing, or the member cannot see it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["favourites"],
+        "summary": "Stop something being a favourite",
+        "description": "Answers the same way whether it was a favourite or not, because absent is the state being asked for. Unlike marking one, this asks no visibility question: a group that has gone private since is exactly the favourite a member most wants rid of.",
+        "operationId": "clearFavourite",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "writing_group",
+                "writing_thread",
+                "writing_post",
+                "story_idea",
+                "chat_group"
+              ]
+            },
+            "required": true,
+            "name": "targetType",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "targetId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "It is not a favourite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -14984,9 +16294,10 @@
                         "type": "object",
                         "properties": {
                           "id": { "type": "string", "format": "uuid" },
-                          "username": { "type": "string" }
+                          "username": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
                         },
-                        "required": ["id", "username"]
+                        "required": ["id", "username", "avatarUrl"]
                       }
                     }
                   },
@@ -15133,9 +16444,748 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "patch": {
+        "tags": ["users"],
+        "summary": "Update the current member's profile",
+        "description": "Every field is optional and none is ever required. An omitted field is left alone; an empty one is cleared. What a profile holds is readable by every member, so a field a member does not want read is one they leave empty.",
+        "operationId": "updateOwnProfile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "aboutMe": { "type": ["string", "null"], "maxLength": 2000 },
+                  "writingStyle": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "postLength": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "writingFrequency": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "coWriterExpectations": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "writingBoundaries": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "genres": { "type": ["string", "null"], "maxLength": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The profile as it now stands",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "username": { "type": "string" },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "aboutMe": { "type": ["string", "null"] },
+                    "writingStyle": { "type": ["string", "null"] },
+                    "postLength": { "type": ["string", "null"] },
+                    "writingFrequency": { "type": ["string", "null"] },
+                    "coWriterExpectations": { "type": ["string", "null"] },
+                    "writingBoundaries": { "type": ["string", "null"] },
+                    "genres": { "type": ["string", "null"] },
+                    "isBlocked": { "type": "boolean" },
+                    "avatarUrl": { "type": ["string", "null"] },
+                    "isBanned": { "type": "boolean" }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "createdAt",
+                    "aboutMe",
+                    "writingStyle",
+                    "postLength",
+                    "writingFrequency",
+                    "coWriterExpectations",
+                    "writingBoundaries",
+                    "genres",
+                    "isBlocked",
+                    "avatarUrl"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account no longer exists — it was deleted between this request being authenticated and the update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/avatar": {
+      "put": {
+        "tags": ["users"],
+        "summary": "Set the member's own picture",
+        "description": "Replaces whatever picture the member had. The image is re-encoded to one square WebP, which is also what strips its metadata; the original is never stored. `confirmed` is the member's declaration that they may use the picture, and `credit` says where it came from unless it is their own work.",
+        "operationId": "setAvatar",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "maxLength": 4194304
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "licence",
+                      "other",
+                      "own_work",
+                      "permission",
+                      "public_domain"
+                    ]
+                  },
+                  "credit": { "type": "string", "maxLength": 4000 },
+                  "confirmed": { "type": "string", "enum": ["true"] }
+                },
+                "required": ["image", "origin", "confirmed"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The picture is set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "avatarUrl": { "type": "string" } },
+                  "required": ["avatarUrl"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a picture in a format we accept",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["users"],
+        "summary": "Remove the member's own picture",
+        "description": "The member falls back to their initials. Idempotent: removing a picture that is not there is the same answer. The stored file is collected later rather than deleted here, so restoring a backup cannot produce a broken picture.",
+        "operationId": "deleteAvatar",
+        "responses": {
+          "200": {
+            "description": "There is no picture",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean", "enum": [true] } },
+                  "required": ["ok"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email address not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -15197,10 +17247,31 @@
                     "id": { "type": "string", "format": "uuid" },
                     "username": { "type": "string" },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "aboutMe": { "type": ["string", "null"] },
+                    "writingStyle": { "type": ["string", "null"] },
+                    "postLength": { "type": ["string", "null"] },
+                    "writingFrequency": { "type": ["string", "null"] },
+                    "coWriterExpectations": { "type": ["string", "null"] },
+                    "writingBoundaries": { "type": ["string", "null"] },
+                    "genres": { "type": ["string", "null"] },
                     "isBlocked": { "type": "boolean" },
+                    "avatarUrl": { "type": ["string", "null"] },
                     "isBanned": { "type": "boolean" }
                   },
-                  "required": ["id", "username", "createdAt", "isBlocked"]
+                  "required": [
+                    "id",
+                    "username",
+                    "createdAt",
+                    "aboutMe",
+                    "writingStyle",
+                    "postLength",
+                    "writingFrequency",
+                    "coWriterExpectations",
+                    "writingBoundaries",
+                    "genres",
+                    "isBlocked",
+                    "avatarUrl"
+                  ]
                 }
               }
             }
@@ -15372,9 +17443,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -15652,9 +17724,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -15883,9 +17956,211 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
                     }
                   },
                   "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/avatars/{fileId}": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Read a picture",
+        "description": "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached for a year.",
+        "operationId": "getAvatar",
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "fileId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The picture",
+            "content": {
+              "image/webp": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such picture",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    }
+                  },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "message": { "type": "string" }
+                        },
+                        "required": ["path", "message"]
+                      }
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": ["invalid_credentials", "account_banned"]
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
+                  },
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16383,9 +18658,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16550,9 +18826,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16628,6 +18905,7 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isFavourite": { "type": "boolean" },
                     "status": {
                       "type": "string",
                       "enum": ["invited", "joined"]
@@ -16641,6 +18919,7 @@
                     "createdBy",
                     "createdAt",
                     "lastActivityAt",
+                    "isFavourite",
                     "status",
                     "createdByUsername",
                     "unreadMessages"
@@ -16787,9 +19066,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -16858,6 +19138,11 @@
                     "type": "string",
                     "enum": ["asc", "desc"],
                     "default": "desc"
+                  },
+                  "favourite": {
+                    "type": "string",
+                    "enum": ["only", "any"],
+                    "default": "any"
                   }
                 }
               }
@@ -16892,6 +19177,7 @@
                             "type": "string",
                             "format": "date-time"
                           },
+                          "isFavourite": { "type": "boolean" },
                           "status": {
                             "type": "string",
                             "enum": ["invited", "joined"]
@@ -16905,6 +19191,7 @@
                           "createdBy",
                           "createdAt",
                           "lastActivityAt",
+                          "isFavourite",
                           "status",
                           "createdByUsername",
                           "unreadMessages"
@@ -17055,9 +19342,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -17144,7 +19432,8 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -17152,7 +19441,8 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -17354,9 +19644,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -17467,7 +19758,8 @@
                             "type": ["string", "null"],
                             "format": "date-time"
                           },
-                          "username": { "type": "string" }
+                          "username": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
                         },
                         "required": [
                           "userId",
@@ -17475,7 +19767,8 @@
                           "status",
                           "invitedAt",
                           "joinedAt",
-                          "username"
+                          "username",
+                          "avatarUrl"
                         ]
                       }
                     }
@@ -17652,9 +19945,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -17726,7 +20020,8 @@
                       "type": ["string", "null"],
                       "format": "date-time"
                     },
-                    "username": { "type": "string" }
+                    "username": { "type": "string" },
+                    "avatarUrl": { "type": ["string", "null"] }
                   },
                   "required": [
                     "userId",
@@ -17734,7 +20029,8 @@
                     "status",
                     "invitedAt",
                     "joinedAt",
-                    "username"
+                    "username",
+                    "avatarUrl"
                   ]
                 }
               }
@@ -17878,9 +20174,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18082,9 +20379,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18364,9 +20662,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18629,9 +20928,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18833,9 +21133,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }
@@ -18984,7 +21285,8 @@
                               "invitedAt": {
                                 "type": ["string", "null"],
                                 "format": "date-time"
-                              }
+                              },
+                              "isFavourite": { "type": "boolean" }
                             },
                             "required": [
                               "id",
@@ -19006,7 +21308,8 @@
                               "createdByUsername",
                               "status",
                               "role",
-                              "invitedAt"
+                              "invitedAt",
+                              "isFavourite"
                             ]
                           }
                         }
@@ -19043,6 +21346,7 @@
                               "createdByUsername": {
                                 "type": ["string", "null"]
                               },
+                              "isFavourite": { "type": "boolean" },
                               "writingGroupTitle": { "type": "string" }
                             },
                             "required": [
@@ -19053,6 +21357,7 @@
                               "createdAt",
                               "lastActivityAt",
                               "createdByUsername",
+                              "isFavourite",
                               "writingGroupTitle"
                             ]
                           }
@@ -19114,10 +21419,8 @@
                                 "format": "date-time"
                               },
                               "createdByUsername": { "type": "string" },
-                              "readerState": {
-                                "type": ["string", "null"],
-                                "enum": ["marked", "read", null]
-                              }
+                              "isRead": { "type": "boolean" },
+                              "isFavourite": { "type": "boolean" }
                             },
                             "required": [
                               "id",
@@ -19138,7 +21441,8 @@
                               "createdBy",
                               "createdAt",
                               "createdByUsername",
-                              "readerState"
+                              "isRead",
+                              "isFavourite"
                             ]
                           }
                         }
@@ -19155,9 +21459,10 @@
                             "type": "object",
                             "properties": {
                               "id": { "type": "string", "format": "uuid" },
-                              "username": { "type": "string" }
+                              "username": { "type": "string" },
+                              "avatarUrl": { "type": ["string", "null"] }
                             },
-                            "required": ["id", "username"]
+                            "required": ["id", "username", "avatarUrl"]
                           }
                         }
                       },
@@ -19307,9 +21612,10 @@
                     "code": {
                       "type": "string",
                       "enum": ["invalid_credentials", "account_banned"]
-                    }
+                    },
+                    "scope": { "type": "string", "enum": ["read", "write"] }
                   },
-                  "required": ["error"]
+                  "required": ["error", "scope"]
                 }
               }
             }

@@ -20,6 +20,11 @@ const config: Config = {
   numericParser: "number",
   outFile: "../backend/src/database/schema.ts",
   typeMapping: {
+    // Kysely's own `Json` is a recursive union, and a recursive type in a route's response sends
+    // `@hono/zod-openapi`'s generics into TS2589, an error naming neither the column nor the
+    // route. `unknown` forces the reader to say what is in there, which a schema does anyway.
+    json: "unknown",
+    jsonb: "unknown",
     timestamp: "string",
     timestamptz: "string",
     date: "string",

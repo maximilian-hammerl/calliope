@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
+import { VISIBILITY_LABELS } from '@/lib/format/group'
 
 const props = defineProps<{
   title: string
@@ -11,9 +12,9 @@ const props = defineProps<{
   groupId?: string
 }>()
 
-const visibilityLabel = computed<string>(() =>
-  props.visibility === 'private' ? 'Privat' : 'Öffentlich',
-)
+/** The word, not the mark: on the group's own page this is the subject, and it is where a member
+ * meets the word that the lock in a list stands for. */
+const visibilityLabel = computed<string>(() => VISIBILITY_LABELS[props.visibility])
 </script>
 
 <template>

@@ -7,6 +7,13 @@ import { Buffer } from "node:buffer";
 
 import type { ColumnType } from "kysely";
 
+export type AvatarOrigin =
+  | "licence"
+  | "other"
+  | "own_work"
+  | "permission"
+  | "public_domain";
+
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
@@ -35,7 +42,18 @@ export type ReportCategory =
   | "spam"
   | "violence";
 
-export type ReportStatus = "dismissed" | "open" | "resolved";
+export type ReportOutcome =
+  | "account_banned"
+  | "content_removed"
+  | "content_warning_added"
+  | "duplicate"
+  | "insufficient_information"
+  | "no_violation"
+  | "other"
+  | "target_gone"
+  | "warning_given";
+
+export type ReportStatus = "closed" | "in_progress" | "open";
 
 export type ReportTargetType =
   | "chat_group"
@@ -47,8 +65,6 @@ export type ReportTargetType =
   | "writing_thread";
 
 export type StoryIdeaPartySize = "group" | "one_on_one";
-
-export type StoryIdeaReaderState = "marked" | "read";
 
 export type StoryIdeaStatus = "closed" | "open";
 
@@ -86,6 +102,17 @@ export interface ChatMessage {
   text: string;
 }
 
+export interface Favourite {
+  chatGroupId: string | null;
+  createdAt: Generated<string>;
+  id: Generated<string>;
+  storyIdeaId: string | null;
+  userId: string;
+  writingGroupId: string | null;
+  writingPostId: string | null;
+  writingThreadId: string | null;
+}
+
 export interface Notification {
   actorId: string | null;
   chatGroupId: string | null;
@@ -103,9 +130,12 @@ export interface Notification {
 export interface Report {
   category: ReportCategory;
   closedAt: string | null;
-  closedBy: string | null;
+  closingNote: string | null;
+  closingOutcome: ReportOutcome | null;
   createdAt: Generated<string>;
   id: Generated<string>;
+  inProgressAt: string | null;
+  operatorId: string | null;
   reason: string;
   reportedAuthorId: string | null;
   reportedChatGroupId: string | null;
@@ -143,23 +173,37 @@ export interface StoryIdea {
 
 export interface StoryIdeaReader {
   createdAt: Generated<string>;
-  state: StoryIdeaReaderState;
   storyIdeaId: string;
   userId: string;
 }
 
 export interface User {
+  aboutMe: string | null;
   bannedAt: string | null;
   bannedBy: string | null;
   banReason: string | null;
+  coWriterExpectations: string | null;
   createdAt: Generated<string>;
   emailAddress: string;
   emailAddressVerifiedAt: string | null;
+  genres: string | null;
   hashedPassword: string;
   id: Generated<string>;
   platformRole: PlatformRole | null;
+  postLength: string | null;
   updatedAt: Generated<string>;
   username: string;
+  writingBoundaries: string | null;
+  writingFrequency: string | null;
+  writingStyle: string | null;
+}
+
+export interface UserAvatar {
+  createdAt: Generated<string>;
+  credit: string | null;
+  fileId: Generated<string>;
+  origin: AvatarOrigin;
+  userId: string;
 }
 
 export interface UserBlock {
@@ -243,6 +287,7 @@ export interface WritingGroupNextStep {
 export interface WritingPost {
   createdAt: Generated<string>;
   createdBy: string | null;
+  document: unknown;
   editedAt: string | null;
   editedBy: string | null;
   id: Generated<string>;
@@ -263,11 +308,13 @@ export interface WritingThread {
 export interface DB {
   chatGroup: ChatGroup;
   chatMessage: ChatMessage;
+  favourite: Favourite;
   notification: Notification;
   report: Report;
   storyIdea: StoryIdea;
   storyIdeaReader: StoryIdeaReader;
   user: User;
+  userAvatar: UserAvatar;
   userBlock: UserBlock;
   userInChatGroup: UserInChatGroup;
   userInWritingGroup: UserInWritingGroup;
@@ -341,9 +388,6 @@ export const STORY_IDEA_STATUS_SCHEMA = z.enum(STORY_IDEA_STATUSES);
 export const STORY_IDEA_PARTY_SIZES = ["group", "one_on_one"] as const;
 export const STORY_IDEA_PARTY_SIZE_SCHEMA = z.enum(STORY_IDEA_PARTY_SIZES);
 
-export const STORY_IDEA_READER_STATES = ["marked", "read"] as const;
-export const STORY_IDEA_READER_STATE_SCHEMA = z.enum(STORY_IDEA_READER_STATES);
-
 export const PLATFORM_ROLES = ["administrator", "moderator"] as const;
 export const PLATFORM_ROLE_SCHEMA = z.enum(PLATFORM_ROLES);
 
@@ -358,8 +402,21 @@ export const REPORT_TARGET_TYPES = [
 ] as const;
 export const REPORT_TARGET_TYPE_SCHEMA = z.enum(REPORT_TARGET_TYPES);
 
-export const REPORT_STATUSES = ["dismissed", "open", "resolved"] as const;
+export const REPORT_STATUSES = ["closed", "in_progress", "open"] as const;
 export const REPORT_STATUS_SCHEMA = z.enum(REPORT_STATUSES);
+
+export const REPORT_OUTCOMES = [
+  "account_banned",
+  "content_removed",
+  "content_warning_added",
+  "duplicate",
+  "insufficient_information",
+  "no_violation",
+  "other",
+  "target_gone",
+  "warning_given",
+] as const;
+export const REPORT_OUTCOME_SCHEMA = z.enum(REPORT_OUTCOMES);
 
 export const REPORT_CATEGORIES = [
   "harassment",
@@ -376,6 +433,15 @@ export const REPORT_CATEGORIES = [
 ] as const;
 export const REPORT_CATEGORY_SCHEMA = z.enum(REPORT_CATEGORIES);
 
+export const AVATAR_ORIGINS = [
+  "licence",
+  "other",
+  "own_work",
+  "permission",
+  "public_domain",
+] as const;
+export const AVATAR_ORIGIN_SCHEMA = z.enum(AVATAR_ORIGINS);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -389,6 +455,17 @@ export const CHAT_MESSAGE_SCHEMA = z.object({
   chatGroupId: z.uuidv7(),
   text: z.string(),
   createdBy: z.uuidv7().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
+});
+
+export const FAVOURITE_SCHEMA = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+  writingGroupId: z.uuidv7().nullable(),
+  writingThreadId: z.uuidv7().nullable(),
+  writingPostId: z.uuidv7().nullable(),
+  storyIdeaId: z.uuidv7().nullable(),
+  chatGroupId: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
 
@@ -421,10 +498,13 @@ export const REPORT_SCHEMA = z.object({
   targetExcerpt: z.string(),
   category: REPORT_CATEGORY_SCHEMA,
   reason: z.string(),
-  status: REPORT_STATUS_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
+  operatorId: z.uuidv7().nullable(),
+  inProgressAt: z.iso.datetime({ offset: true }).nullable(),
   closedAt: z.iso.datetime({ offset: true }).nullable(),
-  closedBy: z.uuidv7().nullable(),
+  closingOutcome: REPORT_OUTCOME_SCHEMA.nullable(),
+  closingNote: z.string().nullable(),
+  status: REPORT_STATUS_SCHEMA,
 });
 
 export const STORY_IDEA_SCHEMA = z.object({
@@ -450,7 +530,6 @@ export const STORY_IDEA_SCHEMA = z.object({
 export const STORY_IDEA_READER_SCHEMA = z.object({
   storyIdeaId: z.uuidv7(),
   userId: z.uuidv7(),
-  state: STORY_IDEA_READER_STATE_SCHEMA,
   createdAt: z.iso.datetime({ offset: true }),
 });
 
@@ -466,6 +545,21 @@ export const USER_SCHEMA = z.object({
   bannedAt: z.iso.datetime({ offset: true }).nullable(),
   bannedBy: z.uuidv7().nullable(),
   banReason: z.string().nullable(),
+  aboutMe: z.string().nullable(),
+  writingStyle: z.string().nullable(),
+  postLength: z.string().nullable(),
+  writingFrequency: z.string().nullable(),
+  coWriterExpectations: z.string().nullable(),
+  writingBoundaries: z.string().nullable(),
+  genres: z.string().nullable(),
+});
+
+export const USER_AVATAR_SCHEMA = z.object({
+  userId: z.uuidv7(),
+  fileId: z.uuidv7(),
+  origin: AVATAR_ORIGIN_SCHEMA,
+  credit: z.string().nullable(),
+  createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const USER_BLOCK_SCHEMA = z.object({
@@ -549,6 +643,7 @@ export const WRITING_GROUP_NEXT_STEP_SCHEMA = z.object({
 export const WRITING_POST_SCHEMA = z.object({
   id: z.uuidv7(),
   writingThreadId: z.uuidv7(),
+  document: z.unknown(),
   text: z.string(),
   isDraft: z.boolean(),
   createdBy: z.uuidv7().nullable(),

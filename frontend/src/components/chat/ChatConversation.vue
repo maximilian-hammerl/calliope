@@ -7,6 +7,8 @@ import {
   useListChatMemberships,
   useReadChat,
 } from '@/api/chats/chats'
+import { favouriteToggle } from '@/lib/format/favourite'
+import { useFavourite } from '@/composables/useFavourite'
 import { useChatMessages } from '@/composables/useChatMessages'
 import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
 import { useGetCurrentUser } from '@/api/auth/auth'
@@ -26,7 +28,21 @@ const props = defineProps<{
   chatGroupId: string
   title: string
   live: ListMessages200ResultsItem[]
+  isFavourite?: boolean
 }>()
+
+const emit = defineEmits<{ favouriteChanged: [] }>()
+
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
+
+const favourite = computed(() => favouriteToggle(props.isFavourite ?? false))
+
+async function toggleFavourite() {
+  const { next } = favourite.value
+  if (await changeFavourite('chat_group', props.chatGroupId, next)) {
+    emit('favouriteChanged')
+  }
+}
 
 const { data: currentUserData } = useGetCurrentUser()
 const currentUserId = computed<string | undefined>(() =>
@@ -75,6 +91,34 @@ const messages = computed<ListMessages200ResultsItem[]>(() => {
   }
   return [...byId.values()].sort((one, other) => one.id.localeCompare(other.id))
 })
+
+/**
+ * How long a run may span. The name and the time are written once for the whole run, and
+ * `formatActivityTime` counts in minutes, so a wider window would let one header say something
+ * untrue about the lines under it.
+ */
+const RUN_WINDOW_MS = 5 * 60 * 1000
+
+/**
+ * Consecutive lines from one person keep a single name and time — somebody writing three short
+ * remarks in a row wrote them once, and repeating who and when on each is noise.
+ *
+ * A deleted account never starts a run with another: they all read "Gelöschtes Konto", so
+ * joining two would put one person's words under somebody else's name.
+ */
+const rows = computed<Array<{ message: ListMessages200ResultsItem; startsRun: boolean }>>(() =>
+  messages.value.map((message, index) => {
+    const previous = messages.value[index - 1]
+    return {
+      message,
+      startsRun:
+        previous === undefined ||
+        message.createdBy === null ||
+        previous.createdBy !== message.createdBy ||
+        Date.parse(message.createdAt) - Date.parse(previous.createdAt) > RUN_WINDOW_MS,
+    }
+  }),
+)
 
 const { data: membersData } = useListChatMemberships(() => props.chatGroupId, { limit: 50 })
 
@@ -219,6 +263,27 @@ async function submit() {
       <span class="text-[12.5px] text-ink-4">{{ participants }}</span>
       <div class="ml-auto flex items-center gap-4">
         <ChatInvite :chat-group-id="chatGroupId" :member-ids="memberIds" />
+        <!-- A raw button like the ones beside it: this row is text actions on one baseline, not
+             buttons. The wording still comes from `favouriteToggle`. -->
+        <button
+          type="button"
+          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          :title="favourite.title"
+          :disabled="savingFavourite"
+          @click="toggleFavourite"
+        >
+          {{ favourite.label }}
+        </button>
+
+        <!-- As in `PostItem`: a raw button says its own failure, because it is not the shared
+             component that carries one. -->
+        <span
+          v-if="favouriteError"
+          class="flex items-center text-[12.5px] text-destructive"
+          role="alert"
+        >
+          {{ favouriteError }}
+        </span>
         <button
           type="button"
           class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
@@ -256,27 +321,45 @@ async function submit() {
            to about ninety-five characters, half again the comfortable measure. In px rather
            than `ch`: this list inherits 16px while the messages are 13.5px, so a ch cap here
            measures the wrong text and comes out a third too wide. -->
-      <ul v-else-if="messages.length > 0" class="flex max-w-[520px] flex-col gap-3.5">
-        <li v-for="message in messages" :key="message.id">
-          <div class="flex items-baseline gap-2">
+      <!-- Spacing on the rows rather than a gap on the list, because the two are not the same
+           distance: a new speaker is a bigger break than the next line from the one talking.
+           Three steps, not two — "Melden" sits 6px under the message it reports, so a run's
+           own lines have to stand further apart than that or the button reads as belonging to
+           whichever message it happens to be nearer. -->
+      <ul v-else-if="rows.length > 0" class="flex max-w-[520px] flex-col">
+        <li
+          v-for="row in rows"
+          :key="row.message.id"
+          :class="row.startsRun ? 'mt-6 first:mt-0' : 'mt-3.5'"
+        >
+          <div v-if="row.startsRun" class="flex items-baseline gap-2">
             <span class="text-[12.5px] font-semibold text-ink-3">
-              {{ message.createdByUsername ?? 'Gelöschtes Konto' }}
+              {{ row.message.createdByUsername ?? 'Gelöschtes Konto' }}
             </span>
             <span class="text-[11.5px] text-ink-6">
-              {{ formatActivityTime(message.createdAt) }}
+              {{ formatActivityTime(row.message.createdAt) }}
             </span>
           </div>
-          <!-- Plain text, deliberately: a chat is remarks, not prose. -->
-          <p class="text-note whitespace-pre-wrap text-ink-2">
-            {{ message.text }}
-          </p>
+          <!-- Proximity is what tells a reader who wrote a continued line, and proximity is
+               nothing to a screen reader, so it still gets the name. Outside the paragraph:
+               the name is not part of what was written. -->
+          <span v-if="!row.startsRun" class="sr-only">
+            {{ row.message.createdByUsername ?? 'Gelöschtes Konto' }}:
+          </span>
+          <!-- Plain text, deliberately: a chat is remarks, not prose. The interpolation touches
+               both tags because `whitespace-pre-wrap` keeps whatever it is given, and on its own
+               line it was given this template's indentation — a space before every message. -->
+          <p class="text-note whitespace-pre-wrap text-ink-2">{{ row.message.text }}</p>
 
           <!-- The same row a post carries, at the same weight and in the same place. -->
-          <div v-if="mayReport(message)" class="mt-1.5 flex items-center text-[12px] text-ink-5">
+          <div
+            v-if="mayReport(row.message)"
+            class="mt-1.5 flex items-center text-[12px] text-ink-5"
+          >
             <button
               type="button"
               class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
-              @click="reportedMessage = message"
+              @click="reportedMessage = row.message"
             >
               Melden
             </button>

@@ -13,8 +13,11 @@ import { useListStoryIdeas } from '@/api/story-ideas/story-ideas'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import { usePagedList } from '@/composables/usePagedList'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import FilterStrips from '@/components/common/FilterStrips.vue'
+import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
@@ -37,7 +40,7 @@ const IDEAS_PER_PAGE = 10
  * Defaults to `unread`, which is what the filter is for — reading what has not been read.
  * The endpoint's own default is `any`, so no other caller inherits this choice.
  */
-const readerState = ref<'unread' | 'read' | 'marked' | 'any'>('unread')
+const readerState = ref<'unread' | 'read' | 'any'>('unread')
 
 /**
  * Explicit rather than inferred from the reading filter: a member who removes a mark from a
@@ -46,16 +49,26 @@ const readerState = ref<'unread' | 'read' | 'marked' | 'any'>('unread')
  */
 const status = ref<'open' | 'closed' | 'any'>('open')
 
+/**
+ * Offered on both boards, unlike the reading filter: a member's own ideas cannot be unread, but
+ * they can certainly be favourites.
+ */
+const favourite = ref<'any' | 'only'>('any')
+
 const STATUS_FILTERS = [
   { value: 'open', label: IDEA_STATUS_LABELS.open },
   { value: 'closed', label: IDEA_STATUS_LABELS.closed },
   { value: 'any', label: 'Alle' },
 ] as const
 
+const FAVOURITE_FILTERS = [
+  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
+] as const
+
 const READER_STATE_FILTERS = [
   { value: 'unread', label: 'Ungelesen' },
   { value: 'read', label: 'Gelesen' },
-  { value: 'marked', label: 'Gemerkt' },
   { value: 'any', label: 'Alle' },
 ] as const
 
@@ -73,10 +86,13 @@ watchDebounced(
 
 // Before the query: the request needs `offset` while its key is built, and the total it pages
 // over comes back from that same query, so the composable reads the total lazily.
-const { page, offset, pageCount, goToPage } = usePagedList(IDEAS_PER_PAGE, () => totalResults.value)
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
+  IDEAS_PER_PAGE,
+  () => totalResults.value,
+)
 
 // A search or a filter narrows the board, so whatever page was open is about a different set.
-watch([settled, readerState, status], () => goToPage(1))
+watch([settled, readerState, status, favourite], () => goToPage(1))
 
 const { data, isPending, isError } = useListStoryIdeas(
   () => ({
@@ -84,6 +100,7 @@ const { data, isPending, isError } = useListStoryIdeas(
     offset: offset.value,
     author: props.mine ? ('mine' as const) : ('others' as const),
     readerState: props.mine ? ('any' as const) : readerState.value,
+    favourite: favourite.value,
     status: props.mine ? undefined : status.value,
     search: settled.value === '' ? undefined : settled.value,
   }),
@@ -113,9 +130,8 @@ const creating = ref<boolean>(false)
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
       <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">
-          {{ props.mine ? 'Meine Storyideen' : 'Storyideen entdecken' }}
-        </h1>
+        <!-- The heading names the resource; the strip below names the view. -->
+        <h1 class="text-h1 text-ink-1">Storyideen</h1>
 
         <div class="ml-auto">
           <Button
@@ -130,6 +146,10 @@ const creating = ref<boolean>(false)
         </div>
       </div>
 
+      <div class="mb-2">
+        <StoryIdeasViewStrip />
+      </div>
+
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         <template v-if="props.mine">
           Deine Ideen, auch die abgeschlossenen. Ändere ihren Status, wenn sich etwas tut.
@@ -140,17 +160,19 @@ const creating = ref<boolean>(false)
       </p>
 
       <!-- One grid for both strips, so the labels share a column and the strips align. -->
-      <div
-        v-if="hasLoaded && !mine"
-        class="mb-6 flex flex-col gap-4 md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4 md:gap-y-1"
-      >
-        <FilterStrip
-          v-model="readerState"
-          label="Gelesen oder nicht"
-          :options="READER_STATE_FILTERS"
-        />
-        <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
-      </div>
+      <FilterStrips v-if="hasLoaded" class="mb-6">
+        <!-- Neither reading nor status says anything on one's own ideas, so those two are the
+             discovery board's; the favourite belongs to both. -->
+        <template v-if="!mine">
+          <FilterStrip
+            v-model="readerState"
+            label="Gelesen oder nicht"
+            :options="READER_STATE_FILTERS"
+          />
+          <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
+        </template>
+        <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
+      </FilterStrips>
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="ideas-search">Suche</FieldLabel>
@@ -176,8 +198,7 @@ const creating = ref<boolean>(false)
              default view avoids claiming why it is empty: nothing unread and nothing at all
              look the same from here, and only one of them would be true. -->
         <template v-else-if="readerState === 'unread' && status === 'open'">
-          Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ und „Gemerkt“ findest du, was du schon
-          kennst.
+          Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ findest du, was du schon kennst.
         </template>
         <template v-else-if="readerState !== 'any' || status !== 'any'">
           Keine Idee passt zu diesen Filtern.
@@ -197,7 +218,7 @@ const creating = ref<boolean>(false)
       </div>
 
       <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Ideen werden geladen …</p>
@@ -208,5 +229,5 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <StoryIdeaDialog v-model:open="creating" @saved="openIdea" />
+  <StoryIdeaDialog v-model:open="creating" @created="openIdea" />
 </template>

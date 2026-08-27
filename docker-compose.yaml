@@ -33,7 +33,7 @@ services:
 
   # Local mail capture
   mailpit:
-    image: axllent/mailpit:v1.30.7
+    image: axllent/mailpit:v1.31.0
     restart: always
 
     ports:

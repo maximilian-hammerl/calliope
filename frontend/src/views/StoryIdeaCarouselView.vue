@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { ArrowLeft, ArrowRight, MessageCircle } from '@lucide/vue'
+import { ArrowLeft, ArrowRight } from '@lucide/vue'
 import { getListStoryIdeasQueryKey } from '@/api/story-ideas/story-ideas'
-import type { GetStoryIdea200 } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { readerStateToggles } from '@/lib/format/storyIdea'
-import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
 import { useStoryIdeaCarousel } from '@/composables/useStoryIdeaCarousel'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
 import { Button } from '@/components/ui/button'
+import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
 
 const {
   track,
@@ -22,16 +21,9 @@ const {
   isPending,
   isError,
   goTo,
-  setReaderStateLocally,
+  setReadLocally,
+  setFavouriteLocally,
 } = useStoryIdeaCarousel()
-
-const {
-  savingReaderState,
-  changeReaderState,
-  startingConversation,
-  conversationError,
-  askAboutIdea,
-} = useStoryIdeaActions()
 
 /**
  * Whether the next change of `index` is a step the reader took, and so worth animating.
@@ -52,21 +44,47 @@ function step(by: number) {
 }
 
 /**
- * The slide keeps its own new state rather than the query refetching: a refetch would rebuild
- * the set around the reader and take the idea they are looking at out of it. The board is
- * invalidated instead, because that is where the change has to show.
+ * The change itself has already happened in `StoryIdeaDetail`; what is left is the part only this
+ * view can decide. The slide keeps its own new state rather than the query refetching, because a
+ * refetch would rebuild the set around the reader and take the idea they are looking at out of it.
+ * The board is invalidated instead, since that is where the change has to show.
  */
-async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
-  await changeReaderState(ideaId, state)
-  setReaderStateLocally(ideaId, state)
+async function markIdea(ideaId: string, isRead: boolean) {
+  setReadLocally(ideaId, isRead)
   await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+}
+
+/** The same rule as reading, minus the total: favouriting moves nothing in or out of the set. */
+async function favouriteChanged(ideaId: string, isFavourite: boolean) {
+  setFavouriteLocally(ideaId, isFavourite)
+  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+}
+
+/**
+ * Which idea is being reported, and whether the dialog is open — two refs rather than one.
+ * The carousel holds every slide at once, so the target cannot be a boolean on the slide; and the
+ * target cannot drive the dialog either, because clearing it would unmount the dialog mid-close
+ * and skip its exit animation. So the target is kept after closing and `reportingOpen` does the
+ * opening. `ReportDialog` resets its own form whenever `open` changes, so a second report starts
+ * clean whichever idea it is about.
+ */
+const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined)
+const reportingOpen = ref<boolean>(false)
+
+function reportIdea(idea: { id: string; title: string }) {
+  reportingIdea.value = { id: idea.id, title: idea.title }
+  reportingOpen.value = true
 }
 </script>
 
 <template>
   <AppLayout>
     <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <h1 class="mb-2 text-h1 text-ink-1">Story-Karussell</h1>
+      <h1 class="mb-2 text-h1 text-ink-1">Storyideen</h1>
+
+      <div class="mb-2">
+        <StoryIdeasViewStrip />
+      </div>
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         Offene Ideen, die du noch nicht gelesen hast — eine nach der anderen.
       </p>
@@ -133,40 +151,27 @@ async function markIdea(ideaId: string, state: GetStoryIdea200['readerState']) {
             :style="{ transform: `translateX(-${index * 100}%)` }"
           >
             <div v-for="idea in track" :key="idea.id" class="w-full shrink-0 grow-0">
-              <StoryIdeaDetail :idea="idea" heading="h2">
-                <template #actions>
-                  <!-- Choosing the state an idea already has clears it, which is why the label
-                       names the state rather than the act. -->
-                  <Button
-                    v-for="toggle in readerStateToggles(idea.readerState)"
-                    :key="toggle.title"
-                    variant="outline"
-                    size="sm"
-                    :title="toggle.title"
-                    :disabled="savingReaderState"
-                    @click="markIdea(idea.id, toggle.next)"
-                  >
-                    {{ toggle.label }}
-                  </Button>
-                  <Button size="sm" :disabled="startingConversation" @click="askAboutIdea(idea.id)">
-                    <MessageCircle :stroke-width="1.5" />
-                    Chat beginnen
-                  </Button>
-                </template>
-                <template #notices>
-                  <p
-                    v-if="conversationError"
-                    class="mt-3 text-[12.5px] text-destructive"
-                    role="alert"
-                  >
-                    {{ conversationError }}
-                  </p>
-                </template>
-              </StoryIdeaDetail>
+              <StoryIdeaDetail
+                :idea="idea"
+                heading="h2"
+                @read-changed="(isRead) => markIdea(idea.id, isRead)"
+                @favourite-changed="(isFavourite) => favouriteChanged(idea.id, isFavourite)"
+                @report="reportIdea(idea)"
+              />
             </div>
           </div>
         </div>
       </div>
     </div>
   </AppLayout>
+
+  <!-- One dialog for the whole track rather than one per slide: `reportingIdea` says which. The
+       `v-if` only holds until the first report; after that it stays mounted so it can close. -->
+  <ReportDialog
+    v-if="reportingIdea"
+    v-model:open="reportingOpen"
+    target-type="story_idea"
+    :target-id="reportingIdea.id"
+    :subject="reportingIdea.title"
+  />
 </template>

@@ -19,7 +19,19 @@ CREATE TABLE public.writing_post
     id                UUID PRIMARY KEY     DEFAULT uuidv7(),
     writing_thread_id UUID        NOT NULL REFERENCES public.writing_thread (id) ON UPDATE CASCADE ON DELETE CASCADE,
 
+    -- What the author wrote, as a Tiptap document: the ProseMirror node tree, stored as the
+    -- editor emits it. Never HTML — a stored `style="…"` would need a sanitiser that permits
+    -- inline CSS, and the vocabulary here is a closed allowlist that rejects instead.
+    document          JSONB       NOT NULL,
+
+    -- The prose of `document`, extracted and written by the server, never sent by the client —
+    -- the same rule `report.target_excerpt` follows, for the same reason.
+    --
+    -- It exists because three things read a post as text and none of them can read a tree:
+    -- `ILIKE` search, the report excerpt, and the length limit. Deriving it here keeps all
+    -- three working untouched, which is why the column keeps its old name.
     text              TEXT        NOT NULL,
+
     is_draft          BOOLEAN     NOT NULL,
 
     created_by        UUID        REFERENCES public.user (id) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -46,6 +58,9 @@ CREATE INDEX writing_thread_writing_group_id_idx ON public.writing_thread (writi
 CREATE INDEX writing_thread_created_by_idx ON public.writing_thread (created_by);
 CREATE INDEX writing_post_writing_thread_id_idx ON public.writing_post (writing_thread_id);
 CREATE INDEX writing_post_created_by_idx ON public.writing_post (created_by);
+-- Partial, unlike its neighbour above: most posts are never edited.
+CREATE INDEX writing_post_edited_by_idx
+    ON public.writing_post (edited_by) WHERE edited_by IS NOT NULL;
 
 -- The composer holds exactly one draft per thread, so two tabs cannot quietly leave a second
 -- one behind. Authors are compared as ids: a draft whose author was deleted has created_by

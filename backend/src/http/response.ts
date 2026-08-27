@@ -53,6 +53,20 @@ export const ERROR_RESPONSE = z.object({
 export type ErrorResponse = z.infer<typeof ERROR_RESPONSE>;
 
 /**
+ * Which budget refused the request. There are two, split by method, so a member who has spent one
+ * has not necessarily spent the other — and the interface says something different for each: reads
+ * exhausted means nothing works, writes exhausted means reading still does.
+ */
+export const RATE_LIMIT_SCOPE = z.enum(["read", "write"]);
+
+export type RateLimitScope = z.infer<typeof RATE_LIMIT_SCOPE>;
+
+/** The 429's own body: the shared error shape plus which budget it was. */
+export const RATE_LIMIT_RESPONSE = ERROR_RESPONSE.extend({
+  scope: RATE_LIMIT_SCOPE,
+});
+
+/**
  * The body for a wrong password — signing in, or re-authenticating with a valid session. Always
  * this constant: the frontend signs a member out on any 401 it cannot account for, so answering
  * one without the code closes their dialog and loses what they typed.
@@ -90,7 +104,7 @@ export const COMMON_RESPONSES = {
   },
   [STATUS_CODE.TooManyRequests]: {
     description: "Rate limit exceeded",
-    content: jsonContent(ERROR_RESPONSE),
+    content: jsonContent(RATE_LIMIT_RESPONSE),
   },
   [STATUS_CODE.InternalServerError]: {
     description: "Unexpected failure",

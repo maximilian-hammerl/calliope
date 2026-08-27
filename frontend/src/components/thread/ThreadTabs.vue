@@ -3,6 +3,7 @@ import { nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
 import { ChevronLeft, ChevronRight, Plus } from '@lucide/vue'
 import type { ListThreads200ResultsItem } from '@/api/models'
+import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
 
 const props = defineProps<{
   groupId: string
@@ -96,6 +97,7 @@ watch(
           "
         >
           {{ thread.title }}
+          <FavouriteMark v-if="thread.isFavourite" class="ml-1.5" />
         </RouterLink>
       </div>
 

@@ -42,6 +42,68 @@ Every `migrate:down` must actually reverse its `migrate:up`, including dropping 
 and trigger functions. Test the round trip against a throwaway database rather than the one
 you are working in.
 
+## `json` and `jsonb` generate as `unknown`
+
+`typeMapping` in `.kysely-codegenrc.ts` maps both to `unknown` rather than letting kysely-codegen
+emit its own `Json` type. That type is a recursive union, and a recursive type in a route's
+response exhausts TypeScript's instantiation budget: `@hono/zod-openapi` fails with **TS2589**,
+whose message names neither the column nor the route, and because the budget is global the route
+it lands on moves as unrelated code changes.
+
+`unknown` forces the reader to say what the column holds, which is what a Zod schema does anyway —
+`writing_post.document` is validated by `backend/src/document/document_schema.ts` and typed by its
+`PostDocument`. Selecting such a column takes a `$castTo<…>()`, which is the one line of ceremony
+this costs and the right place for the assertion to live.
+
+`columnOverrides` in the same file is the per-column escape hatch, for a column whose database
+type maps to no schema at all. Prefer `typeMapping` where the rule is about the *type*: an
+override has to be remembered for every future column, and a forgotten one fails confusingly.
+
+## A cascading foreign key needs an index of its own
+
+Postgres indexes the *referenced* side of a foreign key and nothing on the referencing side, so a
+delete scans the whole table once per deleted row to find what points at it. `ON DELETE SET NULL`
+counts too: the rows still have to be found before they can be nulled.
+
+Index every reference, **partial on `<column> IS NOT NULL`** — an equality lookup still uses it,
+since `col = $1` implies the predicate, so there is no judgement to make per column.
+
+**Read the constraints, not the columns.** `notification` looked like it needed five and needed
+three: two of its columns are halves of composites pointing at the *membership*, so those cascades
+search by `(recipient_id, …)` and an existing index leads them. `pg_get_constraintdef` says which.
+
+**A partial index only counts if its predicate is the column being present.** `report`'s
+`report_one_open_per_reporter_and_category_idx` leads with `reporter_id` and still cannot find a
+member's reports, because `reporter_id = $1` does not imply its `closed_at IS NULL`.
+
+Four things make the measurement lie, all hit here: a small table answers `Seq Scan` whatever
+exists, so fill a throwaway copy to a hundred thousand rows; `LIKE … INCLUDING ALL` copies the
+indexes, so the "before" case already has the one under test; `WHERE col = uuidv7()` is volatile
+and never uses an index; and plain `LIKE` needs `INCLUDING DEFAULTS` and `INCLUDING GENERATED`.
+
+This finds what is left, and is worth running after adding a table:
+
+```sql
+WITH fk AS (
+  SELECT c.conrelid::regclass::text AS tbl,
+         (SELECT a.attname FROM pg_attribute a
+           WHERE a.attrelid = c.conrelid AND a.attnum = c.conkey[1]) AS first_col
+  FROM pg_constraint c
+  WHERE c.contype = 'f' AND c.connamespace = 'public'::regnamespace
+), led AS (
+  SELECT i.indrelid::regclass::text AS tbl,
+         (SELECT a.attname FROM pg_attribute a
+           WHERE a.attrelid = i.indrelid AND a.attnum = i.indkey[0]) AS first_col
+  FROM pg_index i
+  WHERE i.indpred IS NULL OR pg_get_expr(i.indpred, i.indrelid) LIKE '%IS NOT NULL%'
+)
+SELECT fk.tbl, fk.first_col FROM fk
+WHERE NOT EXISTS (SELECT 1 FROM led WHERE led.tbl = fk.tbl AND led.first_col = fk.first_col)
+ORDER BY 1, 2;
+```
+
+It reports the FK's *first* column, which is the one an index has to lead with.
+
 ## No pgcrypto
 
 Passwords and session tokens are hashed in the backend, so nothing in the schema needs the

@@ -1,150 +1,86 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useForm } from '@tanstack/vue-form'
 import { useRoute, useRouter } from 'vue-router'
 import { useLoginUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatCount } from '@/lib/format/formatNumber'
 import { ApiError } from '@/lib/api/apiFetch'
+import { failureMessage } from '@/lib/format/failure'
 // From the generated client, so renaming the code in the backend breaks compilation
 // here rather than quietly turning the message back into a generic failure.
 import { LoginUser403Code } from '@/api/models'
-import type { FieldMessages } from '@/lib/validation/fieldMessage'
-import { fieldMessage } from '@/lib/validation/fieldMessage'
+import {
+  focusFirstInvalid,
+  loginSchema,
+  parsed,
+  passwordSchema,
+} from '@/lib/validation/fieldSchemas'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import FormTextField from '@/components/common/FormTextField.vue'
+import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-
-type FieldName = 'login' | 'password'
 
 const route = useRoute()
 const router = useRouter()
 
-const login = ref<string>('')
-const password = ref<string>('')
-
-const fieldErrors = ref<Partial<Record<FieldName, string>>>({})
 const formError = ref<string | undefined>(undefined)
 
 const { mutateAsync: signIn, isPending } = useLoginUser()
 
-const FIELD_NAMES = ['login', 'password'] as const
-
 /** The API's own bounds, so the form cannot disagree with what the server will accept. */
 const LIMIT = TEXT_LIMIT.loginUser
 
-/**
- * The inputs' own `required`, `pattern` and `maxlength` decide what counts as invalid; this
- * only decides how it is phrased. The API reports the same failures but words them in
- * English, so its issues are mapped onto these too.
- */
-const FIELD_MESSAGES: Record<FieldName, FieldMessages> = {
-  login: {
-    missing: 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.',
-    malformed: 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.',
-    tooLong: `Das darf höchstens ${formatCount(LIMIT.login.maxLength)} Zeichen lang sein.`,
-  },
-  password: {
-    missing: 'Gib dein Passwort ein.',
-    malformed: 'Gib dein Passwort ein.',
-    tooLong: `Das Passwort darf höchstens ${formatCount(LIMIT.password.maxLength)} Zeichen lang sein.`,
-  },
-}
+// Rules and wording from `lib/validation/fieldSchemas`; only the empty-field wording is this
+// form's own, because it names what is being asked for.
+const LOGIN = loginSchema(LIMIT.login, 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.')
+const PASSWORD = passwordSchema(LIMIT.password, 'Gib dein Passwort ein.')
 
 const formElement = ref<HTMLFormElement | null>(null)
 
-/**
- * Reads the constraints already declared on the inputs rather than restating them. The form
- * carries `novalidate` so the browser shows no bubbles of its own — those appear one at a
- * time, in the browser's language rather than the page's, and cannot be styled.
- */
-function validate(): boolean {
-  const form = formElement.value
-  if (form === null) {
-    return false
-  }
+const form = useForm({
+  defaultValues: { login: '', password: '' },
+  // Focus follows the first thing that is wrong; without it focus stays on the button.
+  onSubmitInvalid: () => focusFirstInvalid(formElement.value),
+  onSubmit: async ({ value }) => {
+    formError.value = undefined
 
-  const errors: Partial<Record<FieldName, string>> = {}
-
-  for (const name of FIELD_NAMES) {
-    const input = form.elements.namedItem(name)
-    if (input instanceof HTMLInputElement && !input.validity.valid) {
-      errors[name] = fieldMessage(FIELD_MESSAGES[name], input.validity)
+    try {
+      await signIn({ data: { login: parsed(LOGIN, value.login), password: value.password } })
+    } catch (error) {
+      if (error instanceof ApiError) {
+        // A rejected sign-in is an expected answer rather than a fault, and it cannot be
+        // attributed to one field, so it stays a plain statement above the form.
+        if (error.status === 401) {
+          formError.value = 'Benutzername, E-Mail-Adresse oder Passwort ist nicht korrekt.'
+          return
+        }
+        // Reached only with the right password, which is what makes saying so safe. Deliberately
+        // without the operator's recorded reason: that note is written for operators.
+        if (error.status === 403 && error.body.code === LoginUser403Code.account_banned) {
+          formError.value =
+            'Dieses Konto wurde gesperrt. Wende dich an uns, wenn du das für einen Fehler hältst.'
+          return
+        }
+      }
+      formError.value = failureMessage(
+        error,
+        'Die Anmeldung ist gerade nicht möglich. Versuche es später noch einmal.',
+      )
+      return
     }
-  }
 
-  fieldErrors.value = errors
-  return Object.keys(errors).length === 0
-}
+    // The guard reads the session from the cache, so the signed-out answer has to be dropped
+    // before navigating or it would send us straight back here.
+    forgetCurrentUser()
 
-/** Returns whether every reported issue belonged to a field that is shown. */
-function applyServerIssues(apiError: ApiError): boolean {
-  const issues = apiError.body.issues ?? []
-  if (issues.length === 0) {
-    return false
-  }
-
-  const errors: Partial<Record<FieldName, string>> = {}
-  for (const issue of issues) {
-    if (!(issue.path in FIELD_MESSAGES)) {
-      return false
-    }
-    const field = issue.path as FieldName
-    errors[field] = FIELD_MESSAGES[field].malformed
-  }
-
-  fieldErrors.value = errors
-  return true
-}
-
-async function submit() {
-  formError.value = undefined
-
-  if (!validate()) {
-    return
-  }
-
-  try {
-    // Only the identifier is trimmed: a password may legitimately begin or end with a space.
-    await signIn({ data: { login: login.value.trim(), password: password.value } })
-  } catch (error) {
-    if (error instanceof ApiError) {
-      // A rejected sign-in is an expected answer rather than a fault, and it cannot be
-      // attributed to one field, so it stays a plain statement above the form.
-      if (error.status === 401) {
-        formError.value = 'Benutzername, E-Mail-Adresse oder Passwort ist nicht korrekt.'
-        return
-      }
-      // Reached only with the right password, which is what makes saying so safe. Deliberately
-      // without the operator's recorded reason: that note is written for operators.
-      if (error.status === 403 && error.body.code === LoginUser403Code.account_banned) {
-        formError.value =
-          'Dieses Konto wurde gesperrt. Wende dich an uns, wenn du das für einen Fehler hältst.'
-        return
-      }
-      if (error.status === 400 && applyServerIssues(error)) {
-        return
-      }
-      if (error.status === 429) {
-        formError.value = 'Zu viele Anmeldeversuche. Versuche es in einigen Minuten noch einmal.'
-        return
-      }
-    }
-    formError.value = 'Die Anmeldung ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
-  }
-
-  // The guard reads the session from the cache, so the signed-out answer has to be dropped
-  // before navigating or it would send us straight back here.
-  forgetCurrentUser()
-
-  const redirect = route.query.redirect
-  await router.push(typeof redirect === 'string' ? redirect : { name: 'home' })
-}
+    const redirect = route.query.redirect
+    await router.push(typeof redirect === 'string' ? redirect : { name: 'home' })
+  },
+})
 </script>
 
 <template>
@@ -158,43 +94,41 @@ async function submit() {
 
       <EnvironmentNotice class="mt-6" about-passwords />
 
-      <form ref="formElement" class="mt-7 flex flex-col gap-5" novalidate @submit.prevent="submit">
+      <form
+        ref="formElement"
+        class="mt-7 flex flex-col gap-5"
+        novalidate
+        @submit.prevent="form.handleSubmit()"
+      >
         <Alert v-if="formError" variant="destructive" role="alert">
           <AlertDescription>{{ formError }}</AlertDescription>
         </Alert>
 
         <FieldGroup>
-          <Field :data-invalid="fieldErrors.login !== undefined ? true : undefined">
-            <FieldLabel for="login">Benutzername oder E-Mail-Adresse</FieldLabel>
-            <Input
-              id="login"
-              v-model="login"
-              name="login"
-              pattern=".*\S.*"
-              :maxlength="LIMIT.login.maxLength"
-              autocomplete="username"
-              autocapitalize="none"
-              spellcheck="false"
-              required
-              :aria-invalid="fieldErrors.login !== undefined ? true : undefined"
-            />
-            <FieldError :errors="[fieldErrors.login]" />
-          </Field>
+          <form.Field name="login" :validators="{ onSubmit: LOGIN }">
+            <template v-slot="{ field }">
+              <FormTextField
+                :field="field"
+                label="Benutzername oder E-Mail-Adresse"
+                :maxlength="LIMIT.login.maxLength"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+              />
+            </template>
+          </form.Field>
 
-          <Field :data-invalid="fieldErrors.password !== undefined ? true : undefined">
-            <FieldLabel for="password">Passwort</FieldLabel>
-            <Input
-              id="password"
-              v-model="password"
-              name="password"
-              type="password"
-              :maxlength="LIMIT.password.maxLength"
-              autocomplete="current-password"
-              required
-              :aria-invalid="fieldErrors.password !== undefined ? true : undefined"
-            />
-            <FieldError :errors="[fieldErrors.password]" />
-          </Field>
+          <form.Field name="password" :validators="{ onSubmit: PASSWORD }">
+            <template v-slot="{ field }">
+              <FormTextField
+                :field="field"
+                label="Passwort"
+                type="password"
+                :maxlength="LIMIT.password.maxLength"
+                autocomplete="current-password"
+              />
+            </template>
+          </form.Field>
         </FieldGroup>
 
         <Button type="submit" :disabled="isPending">

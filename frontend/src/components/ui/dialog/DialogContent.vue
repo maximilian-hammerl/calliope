@@ -3,7 +3,14 @@ import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { X } from '@lucide/vue'
 import { reactiveOmit } from '@vueuse/core'
-import { DialogClose, DialogContent, DialogPortal, useForwardPropsEmits } from 'reka-ui'
+import {
+  DialogClose,
+  DialogContent,
+  DialogPortal,
+  injectDialogRootContext,
+  useForwardPropsEmits,
+} from 'reka-ui'
+import { useId } from 'vue'
 import { cn } from '@/lib/utils'
 import DialogOverlay from './DialogOverlay.vue'
 
@@ -24,6 +31,16 @@ const emits = defineEmits<DialogContentEmits>()
 const delegatedProps = reactiveOmit(props, 'class')
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+/**
+ * reka fills its `contentId` in only when a `DialogTrigger` rendered — the trigger is what
+ * generates it, for its own `aria-controls` — and every dialog here opens from `v-model:open`
+ * instead, which left the content with `id=""`, invalid HTML. Deferring to reka's when there is
+ * one keeps a trigger's `aria-controls` pointing at something.
+ */
+const rootContext = injectDialogRootContext()
+const generatedId = useId()
+const contentId = rootContext.contentId || generatedId
 </script>
 
 <template>
@@ -31,7 +48,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     <DialogOverlay />
     <DialogContent
       data-slot="dialog-content"
-      v-bind="{ ...$attrs, ...forwarded }"
+      v-bind="{ id: contentId, ...$attrs, ...forwarded }"
       :class="
         cn(
           'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100svh-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-lg border p-6 shadow-lg duration-200',

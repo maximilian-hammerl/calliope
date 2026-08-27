@@ -3,7 +3,6 @@ import {
   CHAT_GROUP_SCHEMA,
   CHAT_MESSAGE_SCHEMA,
   NOTIFICATION_SCHEMA,
-  STORY_IDEA_READER_SCHEMA,
   STORY_IDEA_SCHEMA,
   USER_IN_CHAT_GROUP_SCHEMA,
   USER_IN_WRITING_GROUP_SCHEMA,
@@ -14,6 +13,7 @@ import {
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
 
 /**
  * What the API returns for each resource: the table's own columns plus the name behind the
@@ -44,16 +44,27 @@ const OWN_MEMBERSHIP = {
   invitedAt: USER_IN_WRITING_GROUP_SCHEMA.shape.invitedAt.nullable(),
 };
 
+/**
+ * The reader's own favourite, on every kind that has one. Extended in rather than picked from a
+ * table, because it is a fact about the reader and the thing rather than about the thing —
+ * `favourite` holds it, and nobody else's is ever visible here.
+ */
+export const OWN_FAVOURITE = { isFavourite: z.boolean() };
+
 export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
   .extend(CREATED_BY_USERNAME)
-  .extend(OWN_MEMBERSHIP);
+  .extend(OWN_MEMBERSHIP)
+  .extend(OWN_FAVOURITE);
 
-export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.extend(
-  CREATED_BY_USERNAME,
-);
+export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA
+  .extend(CREATED_BY_USERNAME)
+  .extend(OWN_FAVOURITE);
 
 export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
+  .extend(OWN_FAVOURITE)
   .extend({
+    // The generated column is `z.unknown()`, which would reach the client as `unknown`.
+    document: DOCUMENT_SCHEMA,
     /**
      * Who changed it, which is not implied by the row: `mayModify` lets the author or somebody
      * administering the group edit. Null when nothing has been edited, and null once that
@@ -62,10 +73,18 @@ export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
     editedByUsername: z.string().nullable(),
   });
 
+/**
+ * A path, resolved against this API's own origin — never absolute, so it cannot point at another
+ * host and needs no `HOST_URL` to be right. Null where a member has set no picture, which is most
+ * of them; the interface shows their initial instead.
+ */
+export const AVATAR_URL = z.string().nullable();
+
 export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   /** Null for a group's founder, and once the inviter's account is gone. */
   invitedByUsername: z.string().nullable(),
   username: z.string(),
+  avatarUrl: AVATAR_URL,
 });
 
 /**
@@ -91,7 +110,9 @@ export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA
     completedByUsername: z.string().nullable(),
   });
 
-export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true });
+export const USER_RESPONSE = USER_SCHEMA
+  .pick({ id: true, username: true })
+  .extend({ avatarUrl: AVATAR_URL });
 
 /**
  * One of a member's own sessions. `lastUsedAt` is derived rather than stored: every request
@@ -120,7 +141,10 @@ export const STORY_IDEA_RESPONSE = STORY_IDEA_SCHEMA.extend({
   createdByUsername: z.string(),
   // The requesting member's own state, null while unread. Never another member's: a count of
   // readers is exactly the statistic the research rejected.
-  readerState: STORY_IDEA_READER_SCHEMA.shape.state.nullable(),
+  // Read is the presence of a row, so it reaches the client as the fact it is rather than as
+  // a nullable enum. Favouriting is `isFavourite`, and no longer the same column.
+  isRead: z.boolean(),
+  ...OWN_FAVOURITE,
 });
 
 /**
@@ -135,15 +159,26 @@ export const STORY_IDEA_CAROUSEL_RESPONSE = z.object({
   total: z.number().int().nonnegative(),
 });
 
-/** Separate from `USER_RESPONSE` so the picker and search keep sending two fields. */
+/**
+ * Separate from `USER_RESPONSE` so the picker and search keep sending two fields. The profile
+ * goes to every member: there is no visibility setting, only the choice to leave a field empty.
+ */
 export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   id: true,
   username: true,
   createdAt: true,
+  aboutMe: true,
+  writingStyle: true,
+  postLength: true,
+  writingFrequency: true,
+  coWriterExpectations: true,
+  writingBoundaries: true,
+  genres: true,
 }).extend({
   // Whether the *reader* has blocked them, which is the reader's own information. Never
   // whether they have blocked the reader: that would be the disclosure a neutral 403 avoids.
   isBlocked: z.boolean(),
+  avatarUrl: AVATAR_URL,
   // Present only for an operator, and absent for everybody else rather than false: a ban is
   // the platform acting, and telling one member that another was banned is not this page's
   // business. Operators need it because the control that bans must also be able to lift.
@@ -229,6 +264,7 @@ export const NOTIFICATION_RESPONSE = z.discriminatedUnion("type", [
 
 /** A chat as its list entry: the group, its founder's name, and this member's unread count. */
 export const CHAT_GROUP_RESPONSE = CHAT_GROUP_SCHEMA.extend({
+  ...OWN_FAVOURITE,
   /** The reader's own standing in it, so the interface knows whether to show a conversation. */
   status: USER_IN_CHAT_GROUP_SCHEMA.shape.status,
   createdByUsername: z.string().nullable(),
@@ -247,13 +283,12 @@ export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA
     invitedAt: true,
     joinedAt: true,
   })
-  .extend({ username: z.string() });
+  .extend({ username: z.string(), avatarUrl: AVATAR_URL });
 
 /**
  * A thread found by a search carries the title of its group. A result that can come from
  * anywhere has to say where it came from — „Plot" alone is meaningless when it could be from
  * any group, which is the same reason a notification about a post names both.
  */
-export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE.extend({
-  writingGroupTitle: z.string(),
-});
+export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE
+  .extend({ writingGroupTitle: z.string() });

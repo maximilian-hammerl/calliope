@@ -6,6 +6,7 @@ import {
   clearRateLimits,
   createGroup,
   deleteUsers,
+  postBody,
   request,
 } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
@@ -73,7 +74,7 @@ Deno.test("POST /api/auth/account/deletion/confirm keeps the writing and drops t
     "POST",
     `/api/groups/${group.id}/threads/${threadId}/posts`,
     cookie,
-    { text: "Was geschrieben wurde, bleibt." },
+    postBody("Was geschrieben wurde, bleibt."),
   );
   assertEquals(post.status, STATUS_CODE.Created);
   const { id: postId } = await post.json();

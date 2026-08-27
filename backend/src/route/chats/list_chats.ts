@@ -1,10 +1,12 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import {
+  FAVOURITE_FILTER,
   listQuerySchema,
   listResponseSchema,
 } from "@/src/list/list_endpoint.ts";
@@ -25,7 +27,11 @@ const SORT_ATTRIBUTE = CHAT_GROUP_SCHEMA
   .default("lastActivityAt")
   .transform((attribute) => `chatGroup.${attribute}` as const);
 
-const LIST_CHATS_BODY = listQuerySchema(SORT_ATTRIBUTE, {}, "desc");
+const LIST_CHATS_BODY = listQuerySchema(
+  SORT_ATTRIBUTE,
+  { favourite: FAVOURITE_FILTER },
+  "desc",
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -58,7 +64,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const page = await ChatGroupService.listChatGroups(
       c.get("user"),
-      c.req.valid("json"),
+      listQuery(c.req.valid("json")),
     );
 
     return c.json(page, STATUS_CODE.OK);

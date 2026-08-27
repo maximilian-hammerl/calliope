@@ -65,7 +65,11 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const thread = await WritingThreadService.selectThread(groupId, threadId);
+    const thread = await WritingThreadService.selectThreadForReader(
+      groupId,
+      threadId,
+      c.get("user").id,
+    );
     if (thread === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

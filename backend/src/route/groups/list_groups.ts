@@ -1,10 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import {
+  FAVOURITE_FILTER,
   listQuerySchema,
   listResponseSchema,
 } from "@/src/list/list_endpoint.ts";
@@ -68,7 +70,7 @@ const MEMBERSHIP = z
 
 const LIST_GROUPS_BODY = listQuerySchema(
   SORT_ATTRIBUTE,
-  { membership: MEMBERSHIP },
+  { membership: MEMBERSHIP, favourite: FAVOURITE_FILTER },
   "desc",
 );
 
@@ -104,7 +106,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const page = await WritingGroupService.listVisibleWritingGroups(
       c.get("user"),
-      c.req.valid("json"),
+      listQuery(c.req.valid("json")),
     );
 
     return c.json(page, STATUS_CODE.OK);

@@ -15,17 +15,28 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-/** Only the corner of OpenAPI this reads. Request bodies are inline — there are no $refs. */
-type Bound = { minLength?: number; maxLength?: number }
+/**
+ * Only the corner of OpenAPI this reads. Request-body properties are inline except where a schema
+ * is registered as a component — the post document is, because it is described once and referred
+ * to from both routes — so a `$ref` has to be followed to find the bound behind it.
+ */
+type Bound = { minLength?: number; maxLength?: number; $ref?: string }
+
+type Schema = {
+  properties?: Record<string, Bound>
+  oneOf?: Schema[]
+  anyOf?: Schema[]
+}
 
 type Operation = {
   operationId?: string
-  requestBody?: {
-    content?: Record<string, { schema?: { properties?: Record<string, Bound> } }>
-  }
+  requestBody?: { content?: Record<string, { schema?: Schema }> }
 }
 
-type OpenApiDocument = { paths: Record<string, Record<string, Operation | undefined>> }
+type OpenApiDocument = {
+  paths: Record<string, Record<string, Operation | undefined>>
+  components?: { schemas?: Record<string, Bound> }
+}
 
 const here = import.meta.dirname
 const SPECIFICATION = resolve(here, '../../backend/open-api.json')
@@ -33,17 +44,64 @@ const OUTPUT = resolve(here, '../src/api/textLimit.ts')
 
 const specification = JSON.parse(readFileSync(SPECIFICATION, 'utf8')) as OpenApiDocument
 
-function boundsOf(operation: Operation): Record<string, Bound> {
-  const schema = operation.requestBody?.content?.['application/json']?.schema
-  const bounds: Record<string, Bound> = {}
+/** A `$ref` only ever points into `components.schemas` here, and never at another `$ref`. */
+function resolveReference(definition: Bound): Bound {
+  if (definition.$ref === undefined) return definition
+  const name = definition.$ref.replace('#/components/schemas/', '')
+  return specification.components?.schemas?.[name] ?? {}
+}
 
-  for (const [property, definition] of Object.entries(schema?.properties ?? {})) {
+/**
+ * Bounds from a schema and from every branch of a union, because a `oneOf` body keeps its
+ * properties inside the branches rather than at the top — `moveReport`'s does. Reading only the top
+ * level produced no bounds at all for such an operation, silently, which is the one failure this
+ * file exists to prevent.
+ *
+ * A property in more than one branch has to agree with itself. Branches that disagreed would make
+ * the number written here a guess about which one an input is for, so that fails loudly instead.
+ */
+function collectBounds(
+  schema: Schema | undefined,
+  operationId: string,
+  into: Record<string, Bound>,
+): void {
+  if (schema === undefined) return
+
+  for (const [property, reference] of Object.entries(schema.properties ?? {})) {
+    // Resolved first: a property may be a component reference rather than an inline schema, which
+    // is how `createPost`'s document carries its bound.
+    const definition = resolveReference(reference)
     const bound: Bound = {}
     if (typeof definition.minLength === 'number') bound.minLength = definition.minLength
     if (typeof definition.maxLength === 'number') bound.maxLength = definition.maxLength
-    if (Object.keys(bound).length > 0) bounds[property] = bound
+    if (Object.keys(bound).length === 0) continue
+
+    const existing = into[property]
+    if (existing !== undefined && JSON.stringify(existing) !== JSON.stringify(bound)) {
+      throw new Error(
+        `${operationId}.${property} is bounded two ways across the branches of its request body: ` +
+          `${JSON.stringify(existing)} and ${JSON.stringify(bound)}`,
+      )
+    }
+
+    into[property] = bound
   }
 
+  for (const branch of [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])]) {
+    collectBounds(branch, operationId, into)
+  }
+}
+
+/**
+ * Every content type, not only JSON. The avatar upload is `multipart/form-data`, and reading one
+ * type meant its text field silently had no bound here — which is the failure this file exists to
+ * prevent, in the one shape that had not come up before.
+ */
+function boundsOf(operation: Operation, operationId: string): Record<string, Bound> {
+  const bounds: Record<string, Bound> = {}
+  for (const { schema } of Object.values(operation.requestBody?.content ?? {})) {
+    collectBounds(schema, operationId, bounds)
+  }
   return bounds
 }
 
@@ -51,7 +109,7 @@ const operations: Record<string, Record<string, Bound>> = {}
 for (const methods of Object.values(specification.paths)) {
   for (const operation of Object.values(methods)) {
     if (operation?.operationId === undefined) continue
-    const bounds = boundsOf(operation)
+    const bounds = boundsOf(operation, operation.operationId)
     if (Object.keys(bounds).length > 0) operations[operation.operationId] = bounds
   }
 }

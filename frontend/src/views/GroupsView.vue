@@ -3,6 +3,9 @@ import { Plus } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useListGroups } from '@/api/groups/groups'
+import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
+import FilterStrip from '@/components/common/FilterStrip.vue'
+import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
@@ -39,12 +42,20 @@ watchDebounced(
 
 // The default is the groups this member has joined; being allowed to read a public group is
 // not the same as belonging to it, and this page is called Meine Gruppen.
-const { page, offset, pageCount, goToPage } = usePagedList(
+const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   GROUPS_PER_PAGE,
   () => totalResults.value,
 )
 // A search narrows the list, so whatever page was open is about a different set of groups.
-watch(settled, () => goToPage(1))
+/** Offered on every list that shows a favouritable kind, so none of them can drift apart. */
+const favourite = ref<'any' | 'only'>('any')
+
+const FAVOURITE_FILTERS = [
+  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
+  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
+] as const
+
+watch([settled, favourite], () => goToPage(1))
 
 const { data, isPending, isError } = useListGroups(
   () => ({
@@ -54,6 +65,7 @@ const { data, isPending, isError } = useListGroups(
     // Most recently written in first: people come back to continue a story, not to look one up
     // alphabetically — and the row already dates itself by this column.
     sortAttribute: 'lastActivityAt' as const,
+    favourite: favourite.value,
     sortOrder: 'desc' as const,
   }),
   // Keeps the page strip and the count on screen while the next page loads.
@@ -124,10 +136,12 @@ const creating = ref<boolean>(false)
         </div>
       </section>
 
-      <!-- Both actions sit on the heading line. Discovery used to be a text link below the
-           list, where testers missed it and a member with many groups never reached it. -->
+      <!-- The heading names the resource and the strip below names the view, the way a group's
+           title sits above its thread tabs. Both saying "Meine Gruppen" would be one thing twice.
+           Discovery used to be a text link below the list, where testers missed it and a member
+           with many groups never reached it — hence the strip, and hence its position. -->
       <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">Meine Gruppen</h1>
+        <h1 class="text-h1 text-ink-1">Gruppen</h1>
 
         <div class="ml-auto">
           <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
@@ -137,9 +151,22 @@ const creating = ref<boolean>(false)
         </div>
       </div>
 
+      <div class="mb-2">
+        <GroupsViewStrip />
+      </div>
+
       <p class="mb-6 max-w-[60ch] text-body text-ink-4">
         Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
       </p>
+
+      <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
+           them. -->
+      <FilterStrip
+        v-model="favourite"
+        label="Favoriten"
+        :options="FAVOURITE_FILTERS"
+        class="mb-6"
+      />
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="groups-search">Suche</FieldLabel>
@@ -182,7 +209,7 @@ const creating = ref<boolean>(false)
       </div>
 
       <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination :page="page" :page-count="pageCount" @go="goToPage" />
+        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
       </div>
 
       <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
@@ -196,5 +223,5 @@ const creating = ref<boolean>(false)
     </div>
   </AppLayout>
 
-  <GroupDialog v-model:open="creating" @saved="openGroup" />
+  <GroupDialog v-model:open="creating" @created="openGroup" />
 </template>

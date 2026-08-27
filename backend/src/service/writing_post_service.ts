@@ -2,12 +2,15 @@ import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingPost as DatabaseWritingPost } from "@/src/database/schema.ts";
+import type { PostDocument } from "@/src/document/document_schema.ts";
+import { documentToPlainText } from "@/src/document/document_text.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import { type FavouriteFilter, withFavourite } from "@/src/query/favourite.ts";
 
 export type Post =
   & Pick<
@@ -21,6 +24,13 @@ export type Post =
     | "editedAt"
     | "editedBy"
   >
+  // Not picked from the table, where the column is `unknown` by design — see the `typeMapping`
+  // note in `database/.kysely-codegenrc.ts`. This is the type that says what is in there.
+  & { document: PostDocument }
+  & {
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
+  }
   // Both null once that account is deleted, because the columns are ON DELETE SET NULL.
   & { createdByUsername: string | null; editedByUsername: string | null };
 
@@ -39,21 +49,27 @@ const SELECTED_COLUMNS = [
  * caller has already established that it may see the row. */
 function postWithAuthorById(
   postId: string,
+  viewerId: string,
   executor: typeof db | Transaction = db,
 ) {
   return executor
     .selectFrom("writingPost")
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .select([
+    .$call((builder) =>
+      withFavourite(builder, "writing_post", "writingPost.id", viewerId)
+    )
+    .select((eb) => [
       ...SELECTED_COLUMNS,
+      // Cast rather than selected plainly: the column's generated type is `unknown`, and
+      // `DOCUMENT_SCHEMA` is what says what may be in there.
+      eb.ref("writingPost.document").$castTo<PostDocument>().as("document"),
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
-      (eb) =>
-        eb.selectFrom("user as editor")
-          .select("editor.username")
-          .whereRef("editor.id", "=", "writingPost.editedBy")
-          .as("editedByUsername"),
+      eb.selectFrom("user as editor")
+        .select("editor.username")
+        .whereRef("editor.id", "=", "writingPost.editedBy")
+        .as("editedByUsername"),
     ])
     .where("writingPost.id", "=", postId);
 }
@@ -61,14 +77,23 @@ function postWithAuthorById(
 async function insertPost(
   writingGroupId: string,
   threadId: string,
-  text: string,
+  document: PostDocument,
   isDraft: boolean,
   createdBy: string,
 ): Promise<Post> {
   return await db.transaction().execute(async (transaction) => {
     const { id } = await transaction
       .insertInto("writingPost")
-      .values({ writingThreadId: threadId, text, isDraft, createdBy })
+      // `text` is derived here rather than accepted, so it cannot disagree with the document.
+      .values({
+        writingThreadId: threadId,
+        // An object, not a string: `JSON.stringify` here would store a jsonb *string* rather
+        // than a document.
+        document,
+        text: documentToPlainText(document),
+        isDraft,
+        createdBy,
+      })
       .returning(["id"])
       .executeTakeFirstOrThrow();
 
@@ -85,7 +110,8 @@ async function insertPost(
     }
 
     // Re-read rather than RETURNING, which cannot reach the joined author name.
-    return await postWithAuthorById(id, transaction).executeTakeFirstOrThrow();
+    return await postWithAuthorById(id, createdBy, transaction)
+      .executeTakeFirstOrThrow();
   });
 }
 
@@ -114,16 +140,21 @@ function postsWithAuthor(
 ) {
   return readableBy(viewerId, executor)
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .select([
+    .$call((builder) =>
+      withFavourite(builder, "writing_post", "writingPost.id", viewerId)
+    )
+    .select((eb) => [
       ...SELECTED_COLUMNS,
+      // Cast rather than selected plainly: the column's generated type is `unknown`, and
+      // `DOCUMENT_SCHEMA` is what says what may be in there.
+      eb.ref("writingPost.document").$castTo<PostDocument>().as("document"),
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
-      (eb) =>
-        eb.selectFrom("user as editor")
-          .select("editor.username")
-          .whereRef("editor.id", "=", "writingPost.editedBy")
-          .as("editedByUsername"),
+      eb.selectFrom("user as editor")
+        .select("editor.username")
+        .whereRef("editor.id", "=", "writingPost.editedBy")
+        .as("editedByUsername"),
     ]);
 }
 
@@ -142,12 +173,20 @@ async function selectPost(
 function listPosts(
   threadId: string,
   viewerId: string,
-  query: ListQuery & { isDraft: boolean },
+  query: ListQuery & { isDraft: boolean; favourite: FavouriteFilter },
 ): Promise<ListResults<Post>> {
+  // **No favourites-first ordering here, deliberately.** A thread is prose and reads in the order
+  // it was written, so hoisting a favourited post above the paragraph before it would break the
+  // reading. What a favourite earns a post is the thread's own filter, which is what #37 asked
+  // for before this issue absorbed it.
   return listResultsWithCount(
     postsWithAuthor(viewerId)
       .where("writingPost.writingThreadId", "=", threadId)
       .where("writingPost.isDraft", "=", query.isDraft)
+      .$if(
+        query.favourite === "only",
+        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      )
       // The body rather than a title: a post has none.
       .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where(
@@ -173,18 +212,26 @@ function listPosts(
  */
 async function updatePost(
   postId: string,
-  changes: { text?: string; isDraft?: boolean },
+  changes: { document?: PostDocument; isDraft?: boolean },
   wasDraft: boolean,
   context: { writingGroupId: string; writingThreadId: string; actorId: string },
 ): Promise<Post | undefined> {
+  const { document, ...rest } = changes;
   const isPublishing = wasDraft && changes.isDraft === false;
-  const isEditingPublished = !wasDraft && changes.text !== undefined;
+  const isEditingPublished = !wasDraft && document !== undefined;
 
   return await db.transaction().execute(async (transaction) => {
     const updated = await transaction
       .updateTable("writingPost")
       .set({
-        ...changes,
+        ...rest,
+        // Both columns move together, or the projection would describe a body it no longer has.
+        ...(document !== undefined
+          ? {
+            document,
+            text: documentToPlainText(document),
+          }
+          : {}),
         // A post is born when it is published, not when its draft was first autosaved: a
         // piece drafted over three days would otherwise appear dated three days ago and sort
         // into the middle of the thread it belongs at the end of.
@@ -219,7 +266,7 @@ async function updatePost(
       });
     }
 
-    return await postWithAuthorById(updated.id, transaction)
+    return await postWithAuthorById(updated.id, context.actorId, transaction)
       .executeTakeFirstOrThrow();
   });
 }

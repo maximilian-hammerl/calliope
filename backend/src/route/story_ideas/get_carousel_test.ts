@@ -62,17 +62,22 @@ async function walkableIdeas(cookie: string) {
 Deno.test("QUERY /api/story-ideas/carousel opens at the newest idea of the set", async () => {
   const cookie = await registerUser(author);
   const other = await registerUser(bystander);
-  await walkableIdeas(cookie);
+  const { newest } = await walkableIdeas(cookie);
 
   const response = await carousel(other);
   assertEquals(response.status, STATUS_CODE.OK);
 
   const step = await response.json();
-  // The newest is where the set ends on that side, whichever idea it happens to be.
-  assertEquals(step.previous, null);
   assertEquals(step.storyIdea === null, false);
-  assertGreaterOrEqual(step.total, 3);
-  // Three ideas exist, so something follows whatever the newest one is.
+  // Five of them are ours, and every one is in this reader's set.
+  assertGreaterOrEqual(step.total, 5);
+  // Bounded, not exact, for the reason the fixture gives: the set holds every other file's
+  // ideas too, so the newest of it cannot be older than the newest of ours.
+  assertGreaterOrEqual(step.storyIdea.id, newest.id);
+  // Unanchored, so the walk opened at the newest and nothing precedes it — by construction
+  // rather than by a second query, which is what stopped this being flaky.
+  assertEquals(step.previous, null);
+  // Five ideas exist, so something follows whatever the newest one is.
   assertEquals(step.next === null, false);
 });
 
@@ -107,7 +112,7 @@ Deno.test("QUERY /api/story-ideas/carousel carries whole ideas, not ids", async 
   assertEquals(typeof step.next.teaser, "string");
   assertEquals(typeof step.next.synopsis, "string");
   assertEquals(typeof step.next.createdByUsername, "string");
-  assertEquals(step.next.readerState, null);
+  assertEquals(step.next.isRead, false);
 });
 
 Deno.test("QUERY /api/story-ideas/carousel keeps an anchor the member has read", async () => {
@@ -117,7 +122,7 @@ Deno.test("QUERY /api/story-ideas/carousel keeps an anchor the member has read",
 
   const marking = await request(
     "PUT",
-    `/api/story-ideas/${middle.id}/reader-state`,
+    `/api/story-ideas/${middle.id}/read`,
     other,
     { state: "read" },
   );
@@ -127,7 +132,7 @@ Deno.test("QUERY /api/story-ideas/carousel keeps an anchor the member has read",
 
   // Marking the idea on screen as read must not invalidate the URL the member is sitting on.
   assertEquals(step.storyIdea.id, middle.id);
-  assertEquals(step.storyIdea.readerState, "read");
+  assertEquals(step.storyIdea.isRead, true);
 });
 
 Deno.test("QUERY /api/story-ideas/carousel refuses the member's own idea as an anchor", async () => {

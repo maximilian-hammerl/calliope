@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { USER_RESPONSE } from "@/src/http/response_schema.ts";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -60,7 +61,7 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const page = await UserService.listUsers({
-      ...c.req.valid("json"),
+      ...listQuery(c.req.valid("json")),
       hiddenUserIds: await BlockService.selectBlockedIds(c.get("user").id),
     });
 

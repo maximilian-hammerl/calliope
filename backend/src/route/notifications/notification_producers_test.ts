@@ -6,6 +6,7 @@ import {
   createGroup,
   deleteUsers,
   getUserId,
+  postBody,
   registerUser,
   request,
 } from "@/src/test/support.ts";
@@ -91,7 +92,7 @@ Deno.test("a published post tells the group but not its author", async () => {
     "POST",
     `/api/groups/${created.id}/threads/${thread.id}/posts`,
     writerCookie,
-    { text: "Die Laternen gingen aus." },
+    postBody("Die Laternen gingen aus."),
   );
 
   assertEquals(
@@ -114,10 +115,12 @@ Deno.test("a draft tells nobody until it is published", async () => {
   )).json();
   const posts = `/api/groups/${created.id}/threads/${thread.id}/posts`;
 
-  const draft = await (await request("POST", posts, writerCookie, {
-    text: "Noch nicht fertig.",
-    isDraft: true,
-  })).json();
+  const draft = await (await request(
+    "POST",
+    posts,
+    writerCookie,
+    postBody("Noch nicht fertig.", { isDraft: true }),
+  )).json();
 
   // Nobody can see it, so nobody is told about it.
   assertEquals(
@@ -144,13 +147,19 @@ Deno.test("editing a published post does not announce it again", async () => {
     { title: "Kapitel 1" },
   )).json();
   const posts = `/api/groups/${created.id}/threads/${thread.id}/posts`;
-  const post = await (await request("POST", posts, writerCookie, {
-    text: "Die Laternen gingen aus.",
-  })).json();
+  const post = await (await request(
+    "POST",
+    posts,
+    writerCookie,
+    postBody("Die Laternen gingen aus."),
+  )).json();
 
-  await request("PATCH", `${posts}/${post.id}`, writerCookie, {
-    text: "Doch anders.",
-  });
+  await request(
+    "PATCH",
+    `${posts}/${post.id}`,
+    writerCookie,
+    postBody("Doch anders."),
+  );
 
   assertEquals(
     ofType(await notificationsOf(adminCookie), "new_writing_post").length,

@@ -151,21 +151,28 @@ export function useStoryIdeaCarousel() {
    * endpoint is asked about *an idea*, so every key the walk has visited answers from cache with
    * the total it had then, and waiting for the next step left it frozen for the whole session.
    *
-   * Unread is the *absence* of a state, so "gemerkt" takes an idea out of this set as surely as
-   * "gelesen" does, and clearing either puts it back.
+   * Unread is the *absence* of a record, so marking one read takes it out of this set and
+   * clearing that puts it back.
    */
-  function setReaderStateLocally(ideaId: string, state: GetStoryIdea200['readerState']) {
-    const previous = track.value.find((idea) => idea.id === ideaId)?.readerState ?? null
+  function setReadLocally(ideaId: string, isRead: boolean) {
+    const previous = track.value.find((idea) => idea.id === ideaId)?.isRead ?? false
 
-    if (previous === null && state !== null) {
+    if (!previous && isRead) {
       total.value = Math.max(0, total.value - 1)
-    } else if (previous !== null && state === null) {
+    } else if (previous && !isRead) {
       total.value += 1
     }
 
-    track.value = track.value.map((idea) =>
-      idea.id === ideaId ? { ...idea, readerState: state } : idea,
-    )
+    track.value = track.value.map((idea) => (idea.id === ideaId ? { ...idea, isRead } : idea))
+  }
+
+  /**
+   * The favourite's counterpart, and simpler for a reason worth stating: favouriting does not move
+   * an idea in or out of this set — only reading does — so there is no total to adjust. The slide
+   * still has to be updated by hand, because refetching would rebuild the set around the reader.
+   */
+  function setFavouriteLocally(ideaId: string, isFavourite: boolean) {
+    track.value = track.value.map((idea) => (idea.id === ideaId ? { ...idea, isFavourite } : idea))
   }
 
   return {
@@ -181,6 +188,7 @@ export function useStoryIdeaCarousel() {
     goTo: (slide: number) => {
       index.value = clamp(slide)
     },
-    setReaderStateLocally,
+    setReadLocally,
+    setFavouriteLocally,
   }
 }

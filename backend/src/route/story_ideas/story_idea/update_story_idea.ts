@@ -74,10 +74,7 @@ export default new OpenAPIHono().openapi(
 
     // Everyone may see every idea, so unlike a private group the split is honest here:
     // an existing idea that did not update is somebody else's.
-    const exists = await StoryIdeaService.selectStoryIdea(
-      ideaId,
-      c.get("user").id,
-    );
+    const exists = await StoryIdeaService.selectStoryIdeaGate(ideaId);
     return exists === undefined
       ? c.json({ error: "Not found" }, STATUS_CODE.NotFound)
       : c.json({ error: "Not yours to change" }, STATUS_CODE.Forbidden);

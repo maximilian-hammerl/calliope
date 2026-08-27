@@ -11,8 +11,13 @@ const props = defineProps<{
 </script>
 
 <template>
+  <!--
+    shadcn gives this a `group` role. Every Field in this app wraps exactly one labelled control,
+    and a group is for a *set* of them — so it announced a group with no accessible name. Naming it
+    from the FieldLabel would be worse: a screen reader would read the same words twice, once for
+    the group and once for the input the label is already `for`. `data-slot` is what selectors use.
+  -->
   <div
-    role="group"
     data-slot="field"
     :data-orientation="orientation"
     :class="cn(fieldVariants({ orientation }), props.class)"

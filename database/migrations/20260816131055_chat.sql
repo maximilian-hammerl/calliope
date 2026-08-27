@@ -153,6 +153,10 @@ EXECUTE FUNCTION public.set_last_activity_at();
 ---
 
 CREATE INDEX chat_group_created_by_idx ON public.chat_group (created_by);
+-- Partial like the other reference indexes, though this column is set on all but the messages of
+-- deleted accounts.
+CREATE INDEX chat_message_created_by_idx
+    ON public.chat_message (created_by) WHERE created_by IS NOT NULL;
 -- The primary key leads with user_id, so listing a chat's members cannot use it.
 CREATE INDEX user_in_chat_group_chat_group_id_idx
     ON public.user_in_chat_group (chat_group_id);

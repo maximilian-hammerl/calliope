@@ -372,6 +372,9 @@ EXECUTE FUNCTION public.delete_writing_group_after_last_user_leaves();
 ---
 
 CREATE INDEX writing_group_created_by_idx ON public.writing_group (created_by);
+-- Partial: most memberships are joined rather than invited.
+CREATE INDEX user_in_writing_group_invited_by_idx
+    ON public.user_in_writing_group (invited_by) WHERE invited_by IS NOT NULL;
 -- The primary key leads with user_id, so listing a group's members cannot use it.
 CREATE INDEX user_in_writing_group_writing_group_id_idx
     ON public.user_in_writing_group (writing_group_id);

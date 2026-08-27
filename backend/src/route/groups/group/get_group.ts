@@ -47,7 +47,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { groupId } = c.req.valid("param");
 
-    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(
+    const writingGroup = await WritingGroupService.selectWritingGroupForReader(
       c.get("user"),
       groupId,
     );

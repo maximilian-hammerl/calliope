@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useForm } from '@tanstack/vue-form'
 import { useRouter } from 'vue-router'
 import {
   getGetCurrentUserQueryKey,
@@ -10,19 +11,18 @@ import {
 } from '@/api/auth/auth'
 import { Pencil, Trash2 } from '@lucide/vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatCount } from '@/lib/format/formatNumber'
 import { queryClient } from '@/lib/api/queryClient'
 import { ApiError } from '@/lib/api/apiFetch'
-import type { FieldMessages } from '@/lib/validation/fieldMessage'
-import { fieldMessage } from '@/lib/validation/fieldMessage'
+import { failureMessage } from '@/lib/format/failure'
+import { emailAddressSchema, focusFirstInvalid, parsed } from '@/lib/validation/fieldSchemas'
 import { forgetCurrentUser } from '@/lib/auth/session'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
 import DeleteAccountForm from '@/components/settings/DeleteAccountForm.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import FormTextField from '@/components/common/FormTextField.vue'
+import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 
 const router = useRouter()
@@ -44,81 +44,62 @@ const mode = ref<'choices' | 'correcting' | 'deleting'>('choices')
 
 const deletionRequested = ref<boolean>(false)
 const resent = ref<boolean>(false)
-const newAddress = ref<string>('')
-const fieldErrors = ref<{ emailAddress?: string }>({})
 const formError = ref<string | undefined>(undefined)
 
 const LIMIT = TEXT_LIMIT.changeEmailAddress
 
-const FIELD_MESSAGES: Record<'emailAddress', FieldMessages> = {
-  emailAddress: {
-    missing: 'Gib eine E-Mail-Adresse ein.',
-    malformed: 'Das sieht nicht nach einer E-Mail-Adresse aus.',
-    tooLong: `Die E-Mail-Adresse darf höchstens ${formatCount(LIMIT.emailAddress.maxLength)} Zeichen lang sein.`,
-  },
-}
-
-const formElement = ref<HTMLFormElement | null>(null)
+const NEW_ADDRESS = emailAddressSchema(LIMIT.emailAddress, 'Gib eine E-Mail-Adresse ein.')
 
 async function resendLink() {
   formError.value = undefined
 
   try {
     await resend()
-  } catch {
-    formError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
-  }
-
-  resent.value = true
-}
-
-function validate(): boolean {
-  const form = formElement.value
-  if (form === null) {
-    return false
-  }
-
-  const input = form.elements.namedItem('emailAddress')
-  if (input instanceof HTMLInputElement && !input.validity.valid) {
-    fieldErrors.value = { emailAddress: fieldMessage(FIELD_MESSAGES.emailAddress, input.validity) }
-    return false
-  }
-
-  fieldErrors.value = {}
-  return true
-}
-
-async function submitAddress() {
-  formError.value = undefined
-
-  if (!validate()) {
-    return
-  }
-
-  try {
-    await changeAddress({ data: { emailAddress: newAddress.value.trim() } })
   } catch (error) {
-    if (error instanceof ApiError) {
-      if (error.status === 409) {
-        fieldErrors.value = { emailAddress: 'Diese E-Mail-Adresse wird bereits verwendet.' }
-        return
-      }
-      if (error.status === 400) {
-        fieldErrors.value = { emailAddress: FIELD_MESSAGES.emailAddress.malformed }
-        return
-      }
-    }
-    formError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    formError.value = failureMessage(error)
     return
   }
 
-  // The heading shows the address, which the change just moved.
-  await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
-  mode.value = 'choices'
-  newAddress.value = ''
   resent.value = true
 }
+
+const formElement = ref<HTMLFormElement | null>(null)
+
+const form = useForm({
+  defaultValues: { emailAddress: '' },
+  // Focus follows the first thing that is wrong; without it focus stays on the button.
+  onSubmitInvalid: () => focusFirstInvalid(formElement.value),
+  onSubmit: async ({ value }) => {
+    formError.value = undefined
+
+    try {
+      await changeAddress({ data: { emailAddress: parsed(NEW_ADDRESS, value.emailAddress) } })
+    } catch (error) {
+      if (error instanceof ApiError) {
+        // Unlike a 400, this one is worth saying on the field: it is about the address typed, and
+        // no client rule could have known it.
+        if (error.status === 409) {
+          form.setFieldMeta('emailAddress', (meta) => ({
+            ...meta,
+            errorMap: {
+              ...meta.errorMap,
+              onServer: 'Diese E-Mail-Adresse wird bereits verwendet.',
+            },
+          }))
+          return
+        }
+      }
+      formError.value = failureMessage(error)
+      return
+    }
+
+    // The heading shows the address, which the change just moved.
+    await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
+    mode.value = 'choices'
+    form.reset()
+    resent.value = true
+  },
+})
 
 async function signOut() {
   await logOut().catch(() => undefined)
@@ -183,29 +164,26 @@ async function signOut() {
         because the link went somewhere its owner cannot read.
       -->
       <form
-        v-else-if="mode === 'correcting'"
         ref="formElement"
+        v-else-if="mode === 'correcting'"
         class="mt-7 flex flex-col gap-5"
         novalidate
-        @submit.prevent="submitAddress"
+        @submit.prevent="form.handleSubmit()"
       >
         <FieldGroup>
-          <Field :data-invalid="fieldErrors.emailAddress !== undefined ? true : undefined">
-            <FieldLabel for="emailAddress">Neue E-Mail-Adresse</FieldLabel>
-            <Input
-              id="emailAddress"
-              v-model="newAddress"
-              name="emailAddress"
-              type="email"
-              :maxlength="LIMIT.emailAddress.maxLength"
-              autocomplete="email"
-              autocapitalize="none"
-              spellcheck="false"
-              required
-              :aria-invalid="fieldErrors.emailAddress !== undefined ? true : undefined"
-            />
-            <FieldError :errors="[fieldErrors.emailAddress]" />
-          </Field>
+          <form.Field name="emailAddress" :validators="{ onSubmit: NEW_ADDRESS }">
+            <template v-slot="{ field }">
+              <FormTextField
+                :field="field"
+                label="Neue E-Mail-Adresse"
+                type="email"
+                :maxlength="LIMIT.emailAddress.maxLength"
+                autocomplete="email"
+                autocapitalize="none"
+                spellcheck="false"
+              />
+            </template>
+          </form.Field>
         </FieldGroup>
 
         <div class="flex flex-col gap-3">

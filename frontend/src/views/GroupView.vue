@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useGetGroup, useStartGroupConversation } from '@/api/groups/groups'
+import {
+  getGetGroupQueryKey,
+  getListGroupsQueryKey,
+  useGetGroup,
+  useStartGroupConversation,
+} from '@/api/groups/groups'
 import { getListChatsQueryKey } from '@/api/chats/chats'
 import { queryClient } from '@/lib/api/queryClient'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
@@ -20,6 +25,7 @@ import { MessageCircle, Pencil } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
+import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import GroupMembers from '@/components/group/GroupMembers.vue'
@@ -44,7 +50,13 @@ const group = computed<GetGroup200 | undefined>(() =>
   groupData.value?.status === 200 ? groupData.value.data : undefined,
 )
 
-/** As the paragraphs its author typed, the same as a post and a story idea's synopsis. */
+/** This page and the lists it is reached from, which both show the favourite. */
+async function refreshGroup() {
+  await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(groupId.value) })
+  await queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey()))
+}
+
+/** As the paragraphs its author typed, like a story idea's synopsis. A post is a document. */
 const synopsis = computed<string[]>(() => paragraphs(group.value?.synopsis ?? ''))
 
 // Every thread, newest activity first — the order is the endpoint's now, not a parameter.
@@ -82,7 +94,7 @@ const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => 
 const router = useRouter()
 
 function goToGroups() {
-  void router.push({ name: 'groups' })
+  void router.push({ name: 'myGroups' })
 }
 
 const creatingThread = ref<boolean>(false)
@@ -93,7 +105,7 @@ function openThread(threadId: string) {
 
 /** A private group answers 404 to a non-member, so staying here would show an error. */
 function leaveGroupPage() {
-  void router.push({ name: 'groups' })
+  void router.push({ name: 'myGroups' })
 }
 
 const reportingGroup = ref<boolean>(false)
@@ -189,9 +201,23 @@ async function askIntoGroup() {
             Chat beginnen
           </Button>
 
+          <!-- Beside the quiet actions rather than the group's own: keeping a group is the
+               reader's business, not something the page is asking them to do. Offered to members
+               and visitors alike, since favouriting one's own group is allowed. -->
+          <FavouriteToggle
+            v-if="group"
+            target-type="writing_group"
+            :target-id="group.id"
+            :is-favourite="group.isFavourite"
+            class="mt-7 ml-2"
+            @changed="refreshGroup"
+          />
+
           <!-- After the group's own action rather than beside it: reporting a group is rare and
-               should not sit level with the thing everybody came to do. -->
-          <Button variant="ghost" size="sm" class="mt-7 ml-2" @click="reportingGroup = true">
+               should not sit level with the thing everybody came to do. **Placement** is what does
+               that job — the level is Quiet like its neighbours, because a level says what an act
+               is on and this one is on the group. -->
+          <Button variant="outline" size="sm" class="mt-7 ml-2" @click="reportingGroup = true">
             Melden
           </Button>
 

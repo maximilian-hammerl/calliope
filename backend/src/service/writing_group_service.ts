@@ -9,7 +9,8 @@ import type {
   WritingGroupStoryStatus,
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
-import { emptyToNull, normaliseTags } from "@/src/util/story_tags.ts";
+import { normaliseTags } from "@/src/util/story_tags.ts";
+import { emptyToNull } from "@/src/util/optional_text.ts";
 import type { User } from "./user_service.ts";
 import {
   type ListQuery,
@@ -17,6 +18,11 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import {
+  type FavouriteFilter,
+  FAVOURITES_FIRST,
+  withFavourite,
+} from "@/src/query/favourite.ts";
 
 export type WritingGroup =
   & Pick<
@@ -46,6 +52,8 @@ export type WritingGroup =
     role: UserInWritingGroupRole | null;
     /** Null unless the reader was invited to this group; the invitations list dates rows by it. */
     invitedAt: string | null;
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
   };
 
 /**
@@ -173,6 +181,9 @@ async function insertWritingGroup(
       role: "administrator",
       // Nobody invited the founder, so there is no date to state.
       invitedAt: null,
+      // Founding a group does not favourite it: that is the member's own act, and one they can
+      // take the moment this returns.
+      isFavourite: false,
     };
   });
 }
@@ -214,24 +225,78 @@ const OWN_MEMBERSHIP_COLUMNS = [
   "userInWritingGroup.invitedAt",
 ] as const;
 
-/** Returns nothing when the group does not exist or is private and not the user's. */
+/**
+ * Whether the member may see the group, and their own standing in it — **not** the whole row.
+ * Sixteen of the seventeen callers use this as a gate, and a group carries a synopsis of up to
+ * eight thousand characters. `selectWritingGroupForReader` is the full read; both build on
+ * `visibleToUser`, so the rule is written once and only the projection differs.
+ */
+export type VisibleWritingGroupGate = {
+  id: string;
+  title: string;
+  visibility: WritingGroupVisibility;
+  createdBy: string | null;
+  status: UserInWritingGroupStatus | null;
+  role: UserInWritingGroupRole | null;
+};
+
 async function selectVisibleWritingGroup(
+  user: User,
+  writingGroupId: string,
+): Promise<VisibleWritingGroupGate | undefined> {
+  return await visibleToUser(user)
+    .select([
+      "writingGroup.id",
+      "writingGroup.title",
+      "writingGroup.visibility",
+      "writingGroup.createdBy",
+      "userInWritingGroup.status",
+      "userInWritingGroup.role",
+    ])
+    .where("writingGroup.id", "=", writingGroupId)
+    .executeTakeFirst();
+}
+
+/** The whole group as this reader sees it, favourite included — for the page that renders one. */
+async function selectWritingGroupForReader(
   user: User,
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
-    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+    .$call((builder) =>
+      withFavourite(builder, "writing_group", "writingGroup.id", user.id)
+    )
+    .select([
+      ...SELECTED_COLUMNS,
+      AUTHOR_COLUMN,
+      ...OWN_MEMBERSHIP_COLUMNS,
+    ])
     .where("writingGroup.id", "=", writingGroupId)
     .executeTakeFirst();
 }
 
 function listVisibleWritingGroups(
   user: User,
-  query: ListQuery & { membership: MembershipFilter },
+  query: ListQuery & {
+    membership: MembershipFilter;
+    favourite: FavouriteFilter;
+  },
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
     visibleToUser(user)
-      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+      .$call((builder) =>
+        withFavourite(builder, "writing_group", "writingGroup.id", user.id)
+      )
+      .select([
+        ...SELECTED_COLUMNS,
+        AUTHOR_COLUMN,
+        ...OWN_MEMBERSHIP_COLUMNS,
+      ])
+      // Only the reader's own favourites, which narrows like every other filter here.
+      .$if(
+        query.favourite === "only",
+        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      )
       // Narrows what visibleToUser allows; it never widens it, so a private group the reader
       // has nothing to do with stays out however this is set. One $if per value rather than
       // one clever one: the status literals then type themselves, and "any" is simply the
@@ -271,6 +336,7 @@ function listVisibleWritingGroups(
           ),
       ),
     query,
+    FAVOURITES_FIRST,
   );
 }
 
@@ -348,7 +414,14 @@ async function updateWritingGroup(
             .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
             .on("userInWritingGroup.userId", "=", changedBy),
       )
-      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
+      .$call((builder) =>
+        withFavourite(builder, "writing_group", "writingGroup.id", changedBy)
+      )
+      .select([
+        ...SELECTED_COLUMNS,
+        AUTHOR_COLUMN,
+        ...OWN_MEMBERSHIP_COLUMNS,
+      ])
       .where("writingGroup.id", "=", updated.id)
       .executeTakeFirstOrThrow();
   });
@@ -357,6 +430,7 @@ async function updateWritingGroup(
 export const WritingGroupService = {
   insertWritingGroup,
   selectVisibleWritingGroup,
+  selectWritingGroupForReader,
   listVisibleWritingGroups,
   selectRoleForUser,
   updateWritingGroup,

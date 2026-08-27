@@ -35,14 +35,21 @@ the reader their own ideas, a detail page, and a Meine-Storyideen view. With thr
 destinations the navigation was rebuilt around **menus in both bars** — Gruppen and Storyideen
 each open their two pages, Mitglieder stays a link, and every destination carries its icon.
 
+One mark now runs through the whole product: **Favoriten** (#73) on a group, a thread, a post, a
+story idea or a chat, private to the member who set it, floating what they marked to the top of
+every list that holds it — and deliberately not doing so among the posts of a thread, which is
+prose and reads in the order it was written. That subsumed the older per-kind bookmark (#37),
+which is why the word changed: „Merken" was right for a story idea alone and says nothing true
+about a group you are already in.
+
 Strangers can also now be refused: **blocking** stops contact in both directions, withdraws the
 invitations still open between the two, and takes the other member out of lists, search, the
 ideas board and notifications — while leaving shared groups, shared conversations and
 everything written alone. That was the gap between the board and announcing it to testers.
 
 What is still missing is most of what makes a **community** rather than a set of groups: no
-public forum, no administration, no files, no data export, and **no reporting** — a blocked
-member is handled privately, but nothing yet reaches a moderator. The product is usable by
+public forum, no files and no data export. Reporting now reaches somebody: a member can report
+any of seven kinds of thing, and an operator works the queue at `/moderation`. The product is usable by
 people who already know each other; for strangers it now opens a first door with a lock on
 the inside, but still no caretaker.
 
@@ -50,12 +57,13 @@ the inside, but still no caretaker.
 
 | Area             | State                                                                                                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. Profile exists but is thin: name and joined date. |
+| Accounts         | Registration, address verification, login, sessions, password reset, password change, address change, account deletion. A profile answers how somebody writes (#29): seven optional free-text fields, readable by every member and by nobody without an account. |
 | Writing groups   | Member-created, private/public, invitations with acceptance, roles, group discussions, next steps. **No** files, **no** way for a member to leave (#26) and **no** way to change a role once given (#27). |
+| Favourites       | One mechanism over groups, threads, posts, story ideas and chats (#73): a private mark that floats the thing to the top of its list — except among posts, where a thread keeps its reading order and the mark drives the filter instead. Every list that shows a favouritable kind offers the filter. |
 | Communication    | Group chat with live updates, in-app notifications, transactional email. Starting a conversation ("Unterhaltung beginnen") opens one from an idea or a public group; blocking refuses one. **No** open "message this member". |
 | Public forum     | Not started.                                                                                                                                                              |
 | Writing partners | Built as **Storyideen**: board, detail page, a carousel that walks the unread ideas, statuses, starting a conversation with the author ("Unterhaltung beginnen"), and founding a group from one's own idea ("Gruppe gründen"). |
-| Administration   | Not started. Blocking is built, but moderation, reports and a queue are not — see the roadmap.                                                                            |
+| Administration   | Partly built: platform roles (moderator, administrator), reporting of all seven target kinds, the operators' queue at `/moderation` with its lifecycle and an audit trail, and banning an account. **No** removing reported content (#62), operator view of a member (#46) or of a group (#47), and no settings screen. |
 | Privacy          | Account deletion is built; writing survives with the author nulled, empty groups go with the account. Blocking refuses contact. **No** data export, no GDPR configuration.  |
 
 Two Phase 2 items (§43) arrived early because they were cheap alongside the group work: group
@@ -115,6 +123,17 @@ These are decisions, not omissions, and each is recorded where it was made:
 - **No undo after an address change completes.** The window is the hour before, during which the
   old address can cancel. A real undo needs a longer-lived token and a policy for what
   reverting means.
+- **Profile fields carry no visibility setting (§10, §18).** §10 asks for four levels and calls
+  for granular privacy; §18 lists "configurable profile visibility" among its required items.
+  Neither is built, deliberately. Nothing here is readable without an account — every endpoint
+  but `health` and the auth flows carries `authenticated` — and the fields exist to be read by a
+  stranger who has not written with you yet, which is the one audience a group-scoped level hides
+  them from. Every field is optional, so what a member does not want read is a field they leave
+  empty, and a setting on an optional field is a second lever for the same thing. A sentence
+  beside the fields, saying who can read them, is what replaces it. §10's fourth level,
+  "everyone", would be a new capability rather than a restriction lifted: §23 separates
+  community-visible from published and nothing is published yet — and if that step is ever built,
+  profile fields stay behind the account wall.
 
 ## Specified but unbuilt in the interface
 
@@ -122,13 +141,13 @@ These are decisions, not omissions, and each is recorded where it was made:
   content. The story status and the next-steps checklist are real — steps are added inline, ticked off recording who completed them,
   and completed ones keep forever under a done-items disclosure ("Erledigt (N)") unless
   deleted by hand.
-- A post carries **no actions at all**. Quoting (#36), bookmarking (#37) and annotations (#38)
-  are specified in the design system's copy and not built, and the disabled buttons that stood
-  in for them are gone: a control that has never worked teaches a reader to stop looking. The
-  thread's **post filter** ("Alle Beiträge ▾") went earlier for the same reason — its only real
-  options are bookmarked and annotated posts. The design-system prototype keeps the
-  specification for all of them, including the finding that the filter is one menu rather than
-  a row of chips.
+- A post carries **one** action of its own: favouriting, which arrived with #73 and closed #37
+  along the way. **Quoting (#36)** and **annotations (#38)** are still specified in the design
+  system's copy and not built, and the disabled buttons that stood in for them are gone: a control
+  that has never worked teaches a reader to stop looking. The thread's **post filter** ("Alle
+  Beiträge") is back, with the one of its two real options that now exists — „Favoriten" — and
+  „Mit Anmerkungen" joins it with #38. The design-system prototype keeps the specification for the
+  rest, including the finding that the filter is one menu rather than a row of chips.
 
 ## Correctly absent
 
@@ -148,14 +167,31 @@ Nothing stops the last administrator being removed, leaving, or deleting their a
 leaves a group nobody can administer. Small, understood, and it gets worse with every group
 created — a trigger beside the one that removes an empty group closes all three paths at once.
 
-### 2. Profile fields
+### 2. Profile fields — built
 
-The overview and profile pages exist but answer only "who" — the interviews want them to answer
-whether a person would suit you to write with, which needs bio, genres, writing interests and what someone
-is currently writing, plus a visibility setting for that block. Two constraints were decided
-when the pages were built: **no statistics, ever** — profile-view counts and the like only
-create pressure —
-and **nothing mandatory** — Yooco's required fields got filled with nonsense.
+A profile now answers whether somebody would suit you to write with (#29), not only who they
+are. Seven fields on `user`, every one optional, every one free text and every one about writing:
+Über mich, Bevorzugte Schreibweise, Bevorzugte Beitragslänge, Bevorzugte Schreibhäufigkeit,
+Erwartungen an Mitschreibende, NO-GOs beim Schreiben, Lieblingsgenres. Edited from the member's
+own page, which is also where they are read and which shows only what was answered.
+
+**Preferences rather than measurements**, which is how Yooco words its own („Bevorzugte
+Schreibweise"): what somebody wants is what decides whether two people suit each other. An age or
+a form of address is deliberately *not* a field — `about_me` accommodates anybody who wants to say
+it, while a column would ask the question of everyone, which is what §18 warns against.
+
+**The list is not §10's, and that is the finding.** §12 and §17, the two interview sections that
+asked directly, are unanswered; §4.4 to §4.8 answer it sideways and more usefully, naming
+**writing style, post length and writing frequency** both as what members look for and as what
+ends a collaboration — none of which §10 lists. Three exported Rollenspielhimmel profiles fill
+exactly those, plus expectations, NO-GOs and genres, on all three, and „Über mich" on two.
+
+Prose rather than the story metadata's controlled values, because a profile is *read* about one
+person rather than filtered — 29 to 244 characters on those profiles, no two members alike. Three
+constraints held: **no statistics, ever**; **nothing mandatory**; and **no visibility setting**,
+recorded above.
+
+What is left is an avatar, which §10 lists and nothing here supplies.
 
 ### 3. Story ideas — built, follow-ups included
 
@@ -231,8 +267,25 @@ that cannot be run.
 
 ### 8. Administration (§42)
 
-Users, roles, moderation queue, reports, settings. Needed once strangers can reach each other
-at scale, which is to say once 7 exists.
+Roles, reporting, the queue and bans are built. What is left is the acting: **removing reported
+content** (#62) is the hole an operator meets most, since every content delete is gated on
+`mayModify` and no operator path exists; then an operator's view of a member (#46) and of a group
+(#47), transferring a group's administration (#49), and a settings screen. Needed in full once
+strangers reach each other at scale, which is to say once 7 exists.
+
+**The queue's lifecycle** is a report moving `open → in_progress → closed`, and a closing is final:
+there is no reopening. What that buys is that the lifecycle only goes forward, so the report itself
+is the record §16 asks for — who has it, when they took it, when they closed it, with what outcome
+and a mandatory note — rather than a log table beside it. `status` is a generated column over the
+two timestamps, so it cannot disagree with them. Taking a report somebody already holds hands it
+over, because a claim nobody could take over would strand a report the day its holder stopped
+reading the queue; closing it is reserved to whoever holds it. The outcome enum is what `resolved`
+and `dismissed` used to say between them, and says it finely enough to be worth reading a second
+time.
+
+**No undo for a mis-closing** is the accepted cost. The friction of an outcome and a written note
+makes one unlikely, and a closed report no longer blocks the same member reporting the thing again,
+so a live problem returns to the queue on its own. Adding reopening later is additive.
 
 ### Session revocation, unplaced
 

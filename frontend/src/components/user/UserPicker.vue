@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { Check } from '@lucide/vue'
 import { useListUsers } from '@/api/users/users'
 import type { ListUsers200ResultsItem } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import { userInitial } from '@/lib/format/formatUser'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import UserAvatar from '@/components/user/UserAvatar.vue'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -19,7 +18,6 @@ const props = withDefaults(
   defineProps<{
     /** Ids to leave out, normally whoever is already a member. */
     excludeIds: string[]
-    inputId: string
     label?: string
     placeholder?: string
     disabled?: boolean
@@ -28,6 +26,9 @@ const props = withDefaults(
   }>(),
   { label: undefined, placeholder: 'z. B. mira', disabled: false, active: true },
 )
+
+/** Its own, so two pickers can share a screen — the caller used to have to name them. */
+const inputId = useId()
 
 /** The committed pick. Left unbound by callers that act on `pick` immediately. */
 const selected = defineModel<ListUsers200ResultsItem | undefined>({ default: undefined })
@@ -76,7 +77,7 @@ watch(trimmedTerm, () => {
 })
 
 function optionId(user: ListUsers200ResultsItem): string {
-  return `${props.inputId}-option-${user.id}`
+  return `${inputId}-option-${user.id}`
 }
 
 const activeOptionId = computed<string | undefined>(() => {
@@ -195,11 +196,7 @@ defineExpose({ reset })
             @click="pick(user)"
             @mousemove="activeIndex = index"
           >
-            <Avatar class="size-7 shrink-0">
-              <AvatarFallback class="text-[11.5px]">
-                {{ userInitial(user.username) }}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar :username="user.username" :avatar-url="user.avatarUrl" />
             <span class="min-w-0 truncate">{{ user.username }}</span>
             <Check
               v-if="selected?.id === user.id"

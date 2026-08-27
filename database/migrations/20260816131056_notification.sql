@@ -114,6 +114,17 @@ CREATE INDEX notification_recipient_id_occurred_at_idx
 CREATE INDEX notification_unread_idx
     ON public.notification (recipient_id) WHERE read_at IS NULL;
 
+-- The three references nothing above leads with. `writing_group_id` and `chat_group_id` need
+-- none: each is half of a composite keyed on `recipient_id`, which the index above already leads.
+CREATE INDEX notification_actor_idx ON public.notification (actor_id)
+    WHERE actor_id IS NOT NULL;
+
+CREATE INDEX notification_writing_thread_idx ON public.notification (writing_thread_id)
+    WHERE writing_thread_id IS NOT NULL;
+
+CREATE INDEX notification_writing_post_idx ON public.notification (writing_post_id)
+    WHERE writing_post_id IS NOT NULL;
+
 -- migrate:down
 
 DROP TABLE public.notification;

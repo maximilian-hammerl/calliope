@@ -1,4 +1,5 @@
 import app from "@/src/app.ts";
+import { configureLogging } from "@/src/logging.ts";
 import { scheduleCronJobs } from "@/src/cron.ts";
 import { getAbortSignalForShutdown } from "@/src/util/abort_signal.ts";
 import { runHealthCheck } from "@/health_check.ts";
@@ -7,6 +8,8 @@ import { getOptionalEnvVariable } from "@/src/util/env.ts";
 import { grantRole, revokeRole } from "@/grant_role.ts";
 
 if (import.meta.main) {
+  await configureLogging();
+
   // Not from the environment: Docker sets HOSTNAME to the container id, and binding to
   // that leaves 127.0.0.1 unanswered.
   const HOSTNAME = "0.0.0.0";
