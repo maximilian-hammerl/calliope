@@ -1,8 +1,8 @@
 {
   "tasks": {
-    "dev": "DENO_TRACE_PERMISSIONS=1 deno run --watch --permission-set=default --env-file=../.env main.ts",
-    "run": "DENO_TRACE_PERMISSIONS=1 deno run --permission-set=default --env-file=../.env main.ts",
-    "test": "deno test --parallel --permission-set=default --env-file=../.env",
+    "dev": "DENO_TRACE_PERMISSIONS=1 deno run --watch --permission-set=calliope --env-file=../.env main.ts",
+    "run": "DENO_TRACE_PERMISSIONS=1 deno run --permission-set=calliope --env-file=../.env main.ts",
+    "test": "deno test --parallel --permission-set=calliope --env-file=../.env",
     "format:fix": "deno fmt",
     "format:check": "deno fmt --check",
     "lint:fix": "deno lint --fix",
@@ -10,12 +10,12 @@
     "type-check": "deno check .",
     "validate:fix": "deno task format:fix && deno task lint:fix && deno task type-check",
     "validate:check": "deno task format:check && deno task lint:check && deno task type-check",
-    "db:seed": "deno run --permission-set=default --env-file=../.env seed.ts",
+    "db:seed": "deno run --permission-set=calliope --env-file=../.env seed.ts",
     // Takes <username> <role>, or <username> alone for revoke:
     //   deno task grant-role nachtschreiber administrator
-    "grant-role": "deno run --permission-set=default --env-file=../.env main.ts --grant-role",
-    "revoke-role": "deno run --permission-set=default --env-file=../.env main.ts --revoke-role",
-    "open-api:generate": "deno run --permission-set=default --allow-write --env-file=../.env generate_open_api_spec.ts && deno fmt open-api.json",
+    "grant-role": "deno run --permission-set=calliope --env-file=../.env main.ts --grant-role",
+    "revoke-role": "deno run --permission-set=calliope --env-file=../.env main.ts --revoke-role",
+    "open-api:generate": "deno run --permission-set=calliope --allow-write --env-file=../.env generate_open_api_spec.ts && deno fmt open-api.json",
     "open-api:check": "deno task open-api:generate && test -z \"$(git status --porcelain open-api.json)\" && echo 'OpenAPI spec is up-to-date' || (echo 'OpenAPI spec is out-of-date, run: deno task open-api:generate' && exit 1)",
     "open-api:lint": "deno x --yes --unstable-detect-cjs npm:@stoplight/spectral-cli lint open-api.json --ruleset .spectral.yaml --fail-severity warn"
   },
@@ -63,17 +63,21 @@
   "nodeModulesDir": "auto",
   "unstable": ["cron"],
   "permissions": {
-    "default": {
+    "calliope": {
+      // Not a list of names: ioredis pulls in `debug`, which calls `Object.keys(process.env)`
+      // at import, and enumeration needs blanket access. The server does not start without it.
       "env": true,
-      // sharp's native addon; see the runtime section of AGENTS.md for what that widens
-      "ffi": true,
+      // sharp's native addon. The path carries sharp's version and platform, so it is the
+      // directory rather than the file.
+      "ffi": ["./node_modules"],
+      // Not a list: the SMTP relay differs per deployment, and every checkout moves its ports.
       "net": true,
-      // ioredis
-      "read": true,
+      // Upload directories
+      "read": ["./.file-storage", "/data/files"],
+      // Upload directories
+      "write": ["./.file-storage", "/data/files"],
       // networkInterfaces, hostname for nodemailer; cpus for sharp
-      "sys": ["networkInterfaces", "hostname", "cpus"],
-      // uploaded files, and nothing else
-      "write": ["./.file-storage", "/data/files"]
+      "sys": ["networkInterfaces", "hostname", "cpus"]
     }
   },
   "imports": {

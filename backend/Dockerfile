@@ -50,4 +50,4 @@ EXPOSE 8000
 # `--cached-only` so a missing module fails loudly here rather than by reaching the network
 # from production. Arguments appended by `compose run` — `--seed`, `--grant-role` — still land
 # on `main.ts`, because the entry point ends with it.
-ENTRYPOINT ["/usr/bin/deno", "run", "--cached-only", "--permission-set=default", "main.ts"]
+ENTRYPOINT ["/usr/bin/deno", "run", "--cached-only", "--permission-set=calliope", "main.ts"]
