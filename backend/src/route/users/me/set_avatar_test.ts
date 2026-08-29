@@ -6,6 +6,7 @@ import {
   clearRateLimits,
   deleteUsers,
   registerUser,
+  SAME_ORIGIN,
 } from "@/src/test/support.ts";
 
 const OWNER = "avatar-route-owner";
@@ -40,7 +41,7 @@ async function upload(
   form.append("confirmed", "true");
   return await app.request("/api/users/me/avatar", {
     method: "PUT",
-    headers: { cookie },
+    headers: { cookie, ...SAME_ORIGIN },
     body: form,
   });
 }
@@ -100,6 +101,7 @@ Deno.test("a picture without a session is refused, and so is reading one", async
   assertEquals(
     (await app.request("/api/users/me/avatar", {
       method: "PUT",
+      headers: SAME_ORIGIN,
       body: new FormData(),
     })).status,
     STATUS_CODE.Unauthorized,
@@ -127,14 +129,14 @@ Deno.test("removing it leaves nothing to serve", async () => {
 
   const removed = await app.request("/api/users/me/avatar", {
     method: "DELETE",
-    headers: { cookie },
+    headers: { cookie, ...SAME_ORIGIN },
   });
   assertEquals(removed.status, STATUS_CODE.OK);
 
   // Idempotent: the second one answers the same.
   const again = await app.request("/api/users/me/avatar", {
     method: "DELETE",
-    headers: { cookie },
+    headers: { cookie, ...SAME_ORIGIN },
   });
   assertEquals(again.status, STATUS_CODE.OK);
 

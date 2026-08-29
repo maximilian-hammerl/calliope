@@ -4,6 +4,7 @@ import {
   clearRateLimits,
   deleteUsers,
   registerUser,
+  SAME_ORIGIN,
 } from "@/src/test/support.ts";
 import app from "@/src/app.ts";
 import { sessionCookie } from "@/src/test/auth.ts";
@@ -87,7 +88,7 @@ Deno.test("DELETE /api/auth/sessions/others keeps the session asking and ends th
 
   const response = await app.request("/api/auth/sessions/others", {
     method: "DELETE",
-    headers: { cookie: desktop },
+    headers: { cookie: desktop, ...SAME_ORIGIN },
   });
   assertEquals(response.status, STATUS_CODE.OK);
 
@@ -111,7 +112,7 @@ Deno.test("DELETE /api/auth/sessions/{id} ends one session", async () => {
 
   const response = await app.request(`/api/auth/sessions/${other.id}`, {
     method: "DELETE",
-    headers: { cookie: desktop },
+    headers: { cookie: desktop, ...SAME_ORIGIN },
   });
   assertEquals(response.status, STATUS_CODE.OK);
 
@@ -131,7 +132,7 @@ Deno.test("DELETE /api/auth/sessions/{id} cannot reach another member's session"
   try {
     const response = await app.request(
       `/api/auth/sessions/${theirSessions.results[0].id}`,
-      { method: "DELETE", headers: { cookie: mine } },
+      { method: "DELETE", headers: { cookie: mine, ...SAME_ORIGIN } },
     );
 
     // 404, not 403: whether somebody else holds this id is not this member's business.

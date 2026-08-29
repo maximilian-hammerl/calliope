@@ -41,6 +41,9 @@ export async function registerUser(username: string): Promise<string> {
   return setCookie.split(";")[0] ?? setCookie;
 }
 
+/** `csrf()` refuses a write carrying neither a JSON content type nor the header a browser sets. */
+export const SAME_ORIGIN = { "sec-fetch-site": "same-origin" };
+
 export async function request(
   method: string,
   path: string,

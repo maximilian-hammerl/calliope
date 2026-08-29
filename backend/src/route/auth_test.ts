@@ -1,7 +1,11 @@
 import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
+import {
+  clearRateLimits,
+  deleteUsers,
+  SAME_ORIGIN,
+} from "@/src/test/support.ts";
 import { authFixture, password } from "@/src/test/auth.ts";
 import { UPLOAD_BODY_LIMIT_BYTES } from "@/src/text_limit.ts";
 
@@ -42,6 +46,7 @@ async function upload(bytes: number): Promise<Response> {
   form.append("confirmed", "true");
   return await app.request("/api/users/me/avatar", {
     method: "PUT",
+    headers: SAME_ORIGIN,
     body: form,
   });
 }
