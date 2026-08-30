@@ -87,6 +87,10 @@ services:
       DATABASE_URL: postgres://calliope:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/calliope?sslmode=disable
       REDIS_URL: redis://redis:6379
 
+      # The breach check's endpoint, stated rather than defaulted: reaching a third party
+      # is a decision a deployment makes.
+      PWNED_PASSWORDS_URL: ${PWNED_PASSWORDS_URL:?set PWNED_PASSWORDS_URL in .env}
+
       SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST in .env}
       SMTP_PORT: ${SMTP_PORT:?set SMTP_PORT in .env}
       SMTP_SECURE: ${SMTP_SECURE:?set SMTP_SECURE in .env}
@@ -111,7 +115,7 @@ services:
     # /api/health reports 503 when a database is unreachable, so the container restarts rather
     # than serving errors. The binary asks itself: distroless has no shell for CMD-SHELL.
     healthcheck:
-      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--permission-set=default", "main.ts", "--health-check"]
+      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--permission-set=calliope", "main.ts", "--health-check"]
       interval: 10s
       timeout: 5s
       retries: 5

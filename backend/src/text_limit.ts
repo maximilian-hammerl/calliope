@@ -102,4 +102,9 @@ export const TEXT_MINIMUM = {
    * allow.
    */
   search: 3,
+  /**
+   * The floor NIST and OWASP both name. **Only where a password is chosen** — registering,
+   * resetting, changing — never where one is proved, or a shorter existing one could not sign in.
+   */
+  password: 8,
 } as const;

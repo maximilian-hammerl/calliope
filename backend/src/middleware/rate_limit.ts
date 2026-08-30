@@ -3,6 +3,7 @@ import { clientAddress } from "@/src/util/client_address.ts";
 import { rateLimiter, RedisStore } from "hono-rate-limiter";
 import { rateLimiterRedisClient } from "@/src/redis/client.ts";
 import type { RateLimitScope } from "@/src/http/response.ts";
+import { isReadMethod } from "@/src/http/method.ts";
 
 /**
  * Liveness probes run far more often than the limit allows — one every three seconds
@@ -30,15 +31,8 @@ const WINDOW = Temporal.Duration.from({ minutes: 15 });
 export const READ_REQUESTS_PER_WINDOW = 500;
 export const WRITE_REQUESTS_PER_WINDOW = 250;
 
-/**
- * `QUERY` is a read despite carrying a body — it is what every list endpoint uses, and the whole
- * point of RFC 10008 is that it fetches rather than changes. Anything not named here counts as a
- * write, so a method added later is limited more tightly rather than not at all.
- */
-const READ_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD", "QUERY"]);
-
 function isRead(c: Context): boolean {
-  return READ_METHODS.has(c.req.method);
+  return isReadMethod(c.req.method);
 }
 
 function budget(

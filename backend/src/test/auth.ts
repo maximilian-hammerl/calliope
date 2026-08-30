@@ -2,6 +2,7 @@ import { assertExists } from "@std/assert";
 import app from "@/src/app.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
+import "@/src/test/breach_check.ts";
 
 /**
  * What the auth tests share. They cannot use `test/support.ts`'s `registerUser` and `request`,

@@ -16,6 +16,7 @@ import BanMemberDialog from '@/components/user/BanMemberDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
+import { platformRoleLabel } from '@/lib/format/platformRole'
 import ProfileFields from '@/components/user/ProfileFields.vue'
 import ProfileDialog from '@/components/user/ProfileDialog.vue'
 import { answeredFields } from '@/lib/profile/profileFields'
@@ -113,6 +114,9 @@ async function allowContactAgain() {
           <div class="flex min-w-0 flex-col gap-1">
             <h1 class="truncate text-h1">{{ member.username }}</h1>
             <p class="text-[12px] text-ink-6">
+              <template v-if="platformRoleLabel(member.platformRole)">
+                {{ platformRoleLabel(member.platformRole) }} ·
+              </template>
               Dabei seit {{ formatJoinedDate(member.createdAt) }}
             </p>
           </div>

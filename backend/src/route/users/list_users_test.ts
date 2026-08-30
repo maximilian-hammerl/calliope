@@ -1,5 +1,6 @@
 import { assertEquals, assertExists, assertFalse } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
+import { db } from "@/src/database/client.ts";
 import {
   clearRateLimits,
   deleteUsers,
@@ -17,7 +18,9 @@ Deno.test.beforeEach(clearRateLimits);
 Deno.test.afterEach(() => deleteUsers([searcher, findable, alsoFindable]));
 
 type Page = {
-  results: Array<{ id: string; username: string }>;
+  results: Array<
+    { id: string; username: string; platformRole: string | null }
+  >;
   totalResults: number;
 };
 
@@ -60,7 +63,7 @@ Deno.test("QUERY /api/users ignores case", async () => {
   assertEquals(found.username, findable);
 });
 
-Deno.test("QUERY /api/users returns a name, a picture and nothing else", async () => {
+Deno.test("QUERY /api/users returns a name, a picture, a role and nothing else", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
 
@@ -70,7 +73,12 @@ Deno.test("QUERY /api/users returns a name, a picture and nothing else", async (
   // fails this instead of quietly joining the response.
   const [found] = page.results;
   assertExists(found);
-  assertEquals(Object.keys(found).sort(), ["avatarUrl", "id", "username"]);
+  assertEquals(Object.keys(found).sort(), [
+    "avatarUrl",
+    "id",
+    "platformRole",
+    "username",
+  ]);
 });
 
 Deno.test("QUERY /api/users treats a wildcard as a literal character", async () => {
@@ -113,4 +121,27 @@ Deno.test("QUERY /api/users needs a session", async () => {
 
   assertEquals(response.status, STATUS_CODE.Unauthorized);
   assertFalse(response.headers.has("set-cookie"));
+});
+
+/** #101: without a role in the list, "ich bin Moderator" is a claim nobody can check. */
+Deno.test("QUERY /api/users carries the platform role, and null for an ordinary member", async () => {
+  const cookie = await registerUser(searcher);
+  await registerUser(findable);
+  await db
+    .updateTable("user")
+    .set({ platformRole: "moderator" })
+    .where("username", "=", findable)
+    .execute();
+
+  const page = await searchOk(cookie, { search: "quenya-one" });
+  const found = page.results.find((user) => user.username === findable);
+
+  assertExists(found);
+  assertEquals(found.platformRole, "moderator");
+
+  const ordinary = await searchOk(cookie, { search: "searcher" });
+  assertEquals(
+    ordinary.results.find((user) => user.username === searcher)?.platformRole,
+    null,
+  );
 });

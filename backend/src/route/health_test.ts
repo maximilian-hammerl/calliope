@@ -4,6 +4,7 @@ import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
 import { API_VERSION } from "@/src/open_api_specification.ts";
 import type { DatabaseHealth } from "@/src/operations/database_health.ts";
+import { SAME_ORIGIN } from "@/src/test/support.ts";
 
 Deno.test("GET /api/health reports a healthy application without a session", async () => {
   const response = await app.request("/api/health");
@@ -46,7 +47,10 @@ Deno.test("GET /api/health is not counted against the rate limit", async () => {
 });
 
 Deno.test("POST /api/health is rejected", async () => {
-  const response = await app.request("/api/health", { method: "POST" });
+  const response = await app.request("/api/health", {
+    method: "POST",
+    headers: SAME_ORIGIN,
+  });
 
   assertEquals(response.status, STATUS_CODE.MethodNotAllowed);
 });

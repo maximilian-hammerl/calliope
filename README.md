@@ -1,5 +1,10 @@
 # Calliope
 
+[![Validate](https://img.shields.io/github/actions/workflow/status/maximilian-hammerl/calliope/validate.yml?branch=main&label=validate)](https://github.com/maximilian-hammerl/calliope/actions/workflows/validate.yml)
+[![v1](https://img.shields.io/github/milestones/progress/maximilian-hammerl/calliope/1)](https://github.com/maximilian-hammerl/calliope/milestone/1)
+[![Last commit](https://img.shields.io/github/last-commit/maximilian-hammerl/calliope)](https://github.com/maximilian-hammerl/calliope/commits/main)
+[![License](https://img.shields.io/github/license/maximilian-hammerl/calliope)](LICENSE)
+
 A community for German-speaking writers: a public forum wrapped around many private, member-created writing groups.
 Members meet in the open, form a group, and write together in threads inside it.
 

@@ -98,7 +98,7 @@ const SAFE_TOKEN = unset(z.string().max(100).regex(/^[\w\s-]*$/u));
  *
  * Note the protocol is matched **without** its colon — `/^https?:$/` would reject every URL.
  */
-const HREF = z.url({ protocol: /^https?$/ }).max(2_000);
+const HREF = z.httpUrl().max(2_000);
 
 /** Relative only until #31 gives an image somewhere to live. */
 const IMAGE_SRC = z.string().max(2_000).regex(

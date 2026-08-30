@@ -373,7 +373,7 @@ Three things follow, and the middle one is a genuine cost:
   `deno.jsonc` sets `"nodeModulesDir": "auto"`. Distroless still works — verified by building it,
   including that it runs under `--network none`, so nothing is fetched at startup.
 - **The permission set is explicit and now includes `--allow-ffi` and `--allow-sys`**, where the
-  compiled binary baked `--permission-set=default`. FFI on the API process is a real widening of
+  compiled binary baked `--permission-set=calliope`. FFI on the API process is a real widening of
   what a compromise reaches. It bought a 3.6× faster image path on a small VPS; if a future
   dependency asks for another broad permission, weigh it the same way rather than by precedent.
 - **Anything with a native addon has to be tried against the actual runtime**, not only

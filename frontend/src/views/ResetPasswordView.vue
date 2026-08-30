@@ -5,7 +5,7 @@ import { useRoute } from 'vue-router'
 import { useResetPassword } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage } from '@/lib/format/failure'
+import { failureMessage, PASSWORD_BREACHED_MESSAGE } from '@/lib/format/failure'
 import {
   focusFirstInvalid,
   passwordRepeatMessage,
@@ -57,6 +57,13 @@ const form = useForm({
       // Not trimmed: a password may legitimately begin or end with a space.
       await setPassword({ data: { token, password: value.password } })
     } catch (error) {
+      if (error instanceof ApiError && error.body.code === 'password_breached') {
+        form.setFieldMeta('password', (meta) => ({
+          ...meta,
+          errorMap: { ...meta.errorMap, onServer: PASSWORD_BREACHED_MESSAGE },
+        }))
+        return
+      }
       if (error instanceof ApiError) {
         // The one answer the API gives for spent, expired and unknown alike.
         if (error.status === 410) {

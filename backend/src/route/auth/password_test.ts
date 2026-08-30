@@ -1,3 +1,5 @@
+import { assertSpyCall, stub } from "@std/testing/mock";
+import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
@@ -8,6 +10,8 @@ import {
   registerUser,
 } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
+import { TEXT_MINIMUM } from "@/src/text_limit.ts";
+import { PASSWORD_BREACHED } from "@/src/http/response.ts";
 import {
   deleteMailFor,
   tokenFromMail,
@@ -145,4 +149,45 @@ Deno.test("PATCH /api/auth/password is refused while the address is unverified",
     .execute();
 
   assertEquals((await changePassword(cookie)).status, STATUS_CODE.Forbidden);
+});
+
+/**
+ * The minimum is on the password being chosen, not on the one being proved: an account made
+ * before the rule can still re-authenticate to change away from a short password.
+ */
+Deno.test("PATCH /api/auth/password refuses a new password below the minimum", async () => {
+  const cookie = await signedIn();
+
+  const response = await changePassword(
+    cookie,
+    currentPassword,
+    "x".repeat(TEXT_MINIMUM.password - 1),
+  );
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const issues: { path: string }[] = (await response.json()).issues;
+  assertEquals(issues.some((issue) => issue.path === "newPassword"), true);
+  // Refused on the way in, so the old password still works.
+  assertEquals((await login(currentPassword)).status, STATUS_CODE.OK);
+});
+
+Deno.test("PATCH /api/auth/password refuses a new password from a known breach", async () => {
+  const cookie = await signedIn();
+
+  {
+    using isBreached = stub(
+      BreachedPasswordService,
+      "isBreached",
+      () => Promise.resolve(true),
+    );
+
+    const response = await changePassword(cookie, currentPassword, newPassword);
+
+    assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
+    assertEquals((await response.json()).code, PASSWORD_BREACHED);
+    // The new one is what is checked, never the one being proved.
+    assertSpyCall(isBreached, 0, { args: [newPassword] });
+  }
+
+  assertEquals((await login(currentPassword)).status, STATUS_CODE.OK);
 });

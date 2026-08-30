@@ -1,9 +1,10 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { structuredLogger } from "@hono/structured-logger";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE, STATUS_TEXT } from "@std/http/status";
 import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
+import { csrf } from "hono/csrf";
 import { methodNotAllowed } from "hono/method-not-allowed";
 import { bodyLimit } from "hono/body-limit";
 import corsOptions from "./cors_options.ts";
@@ -138,6 +139,9 @@ app.use((c, next) =>
 app.use(secureHeaders());
 app.use(cors(corsOptions));
 app.use(methodNotAllowed({ app }));
+// After `cors`, which answers preflights and returns: a preflight is cross-site by nature
+// and carries no content type, so this would otherwise refuse it as a forgery.
+app.use(csrf({ origin: corsOptions.origin }));
 // Two budgets, split by method; each skips what the other counts.
 app.use(readRateLimit);
 app.use(writeRateLimit);
@@ -146,12 +150,18 @@ app.use(writeRateLimit);
 // mirrors it, so both stay a single rule.
 app.route("/api", api);
 
+/** `STATUS_TEXT` is keyed by the codes it knows; Hono's status type includes ones it does not. */
+const STATUS_NAME: Record<number, string> = STATUS_TEXT;
+
 app.onError((error, c) => {
   // Hono and its middleware report expected failures as HTTPException, so those messages
   // are safe to pass on. Without this the response would be plain text.
   if (error instanceof HTTPException) {
     return c.json(
-      { error: error.message } satisfies ErrorResponse,
+      // `csrf()` throws carrying a response rather than a message, so an empty one needs a name.
+      {
+        error: error.message || STATUS_NAME[error.status] || "Error",
+      } satisfies ErrorResponse,
       error.status,
     );
   }
