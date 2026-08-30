@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import { useRegisterUser } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage } from '@/lib/format/failure'
+import { failureMessage, PASSWORD_BREACHED_MESSAGE } from '@/lib/format/failure'
 import {
   emailAddressSchema,
   focusFirstInvalid,
@@ -62,6 +62,13 @@ const form = useForm({
         },
       })
     } catch (error) {
+      if (error instanceof ApiError && error.body.code === 'password_breached') {
+        form.setFieldMeta('password', (meta) => ({
+          ...meta,
+          errorMap: { ...meta.errorMap, onServer: PASSWORD_BREACHED_MESSAGE },
+        }))
+        return
+      }
       if (error instanceof ApiError) {
         if (error.status === 409) {
           // Which of the two collided is not disclosed, so neither is named here.

@@ -16,6 +16,10 @@ import { rateLimitMessage } from '@/lib/format/rateLimit'
  * The global notice says the same thing at the same moment, deliberately: it explains the whole
  * interface, this explains the control that was pressed.
  */
+/** Said on the field: this password is *known*, which is not a judgement about the member. */
+export const PASSWORD_BREACHED_MESSAGE =
+  'Dieses Passwort steht in bekannten Datenlecks. Wähle bitte ein anderes.'
+
 export function failureMessage(error: unknown, fallback?: string): string {
   if (error instanceof ApiError) {
     if (error.status === 429) {

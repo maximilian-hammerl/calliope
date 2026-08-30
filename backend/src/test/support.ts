@@ -125,6 +125,13 @@ export async function deleteUsers(usernames: Array<string>): Promise<void> {
   await db.deleteFrom("user").where("username", "in", usernames).execute();
 }
 
+/**
+ * Nothing listens on port 1, so the breach check fails open and never reaches the network. Test
+ * files share one environment, so this is set once rather than per file.
+ */
+export const UNREACHABLE_BREACH_CHECK = "http://127.0.0.1:1";
+Deno.env.set("PWNED_PASSWORDS_URL", UNREACHABLE_BREACH_CHECK);
+
 /** Counters outlive the process, so the suite would eventually rate-limit itself. */
 /**
  * The limiter keys on the client address, so this leaves the middleware's own test alone: it

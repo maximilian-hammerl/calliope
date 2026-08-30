@@ -10,6 +10,9 @@ import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
  */
 export const password = "a-complex-password";
 
+// These tests do not import `support.ts`, so they set it themselves.
+Deno.env.set("PWNED_PASSWORDS_URL", "http://127.0.0.1:1");
+
 export function sendJson(
   method: string,
   path: string,

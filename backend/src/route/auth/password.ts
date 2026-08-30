@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
+import { isBreached } from "@/src/service/breached_password.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { PasswordChangeService } from "@/src/service/password_change_service.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
@@ -14,6 +15,7 @@ import {
   INVALID_CREDENTIALS_BODY,
   jsonContent,
   OK_RESPONSE,
+  PASSWORD_BREACHED_BODY,
 } from "@/src/http/response.ts";
 
 const CHANGE_PASSWORD_BODY = z.object({
@@ -40,6 +42,10 @@ export default new OpenAPIHono().openapi(
         description: "Password changed",
         content: jsonContent(OK_RESPONSE),
       },
+      [STATUS_CODE.UnprocessableEntity]: {
+        description: "The password appears in known breaches",
+        content: jsonContent(ERROR_RESPONSE),
+      },
       [STATUS_CODE.Unauthorized]: {
         description: "The current password is wrong",
         content: jsonContent(ERROR_RESPONSE),
@@ -58,6 +64,10 @@ export default new OpenAPIHono().openapi(
 
     if (session === undefined) {
       return c.json({ error: "Unauthorized" }, STATUS_CODE.Unauthorized);
+    }
+
+    if (await isBreached(newPassword)) {
+      return c.json(PASSWORD_BREACHED_BODY, STATUS_CODE.UnprocessableEntity);
     }
 
     const result = await PasswordChangeService.changePassword(

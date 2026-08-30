@@ -34,8 +34,15 @@ export const ACCOUNT_BANNED = "account_banned" as const;
  */
 export const ACCOUNT_BANNED_MESSAGE = "Account banned" as const;
 
+/** Its own code because the form says this on the password field, not as a form error. */
+export const PASSWORD_BREACHED = "password_breached" as const;
+
 /** Machine-readable reasons, for the few a client has to act on differently. */
-const ERROR_CODE = z.enum([INVALID_CREDENTIALS, ACCOUNT_BANNED]);
+const ERROR_CODE = z.enum([
+  INVALID_CREDENTIALS,
+  ACCOUNT_BANNED,
+  PASSWORD_BREACHED,
+]);
 
 /**
  * The single error shape for every failure the API reports. `issues` is only filled in for
@@ -91,6 +98,12 @@ export const INVALID_CREDENTIALS_BODY = {
 export const ACCOUNT_BANNED_BODY = {
   error: ACCOUNT_BANNED_MESSAGE,
   code: ACCOUNT_BANNED,
+} as const;
+
+/** A constant for the same reason as the two above: a helper widens the return type. */
+export const PASSWORD_BREACHED_BODY = {
+  error: "That password appears in known breaches",
+  code: PASSWORD_BREACHED,
 } as const;
 
 /**

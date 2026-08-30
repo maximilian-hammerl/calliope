@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
+import { isBreached } from "@/src/service/breached_password.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { sessionProvenance } from "@/src/util/session_provenance.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
@@ -14,6 +15,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
+  PASSWORD_BREACHED_BODY,
 } from "@/src/http/response.ts";
 
 const REGISTER_BODY = USER_SCHEMA
@@ -44,6 +46,10 @@ export default new OpenAPIHono().openapi(
         description: "User registered",
         content: jsonContent(OK_RESPONSE),
       },
+      [STATUS_CODE.UnprocessableEntity]: {
+        description: "The password appears in known breaches",
+        content: jsonContent(ERROR_RESPONSE),
+      },
       [STATUS_CODE.Conflict]: {
         description: "Username or email address already in use",
         content: jsonContent(ERROR_RESPONSE),
@@ -54,6 +60,10 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const { username, password, emailAddress } = c.req.valid("json");
+
+    if (await isBreached(password)) {
+      return c.json(PASSWORD_BREACHED_BODY, STATUS_CODE.UnprocessableEntity);
+    }
 
     const user = await UserService.insertUser(username, password, emailAddress);
 

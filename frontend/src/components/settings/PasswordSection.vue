@@ -8,7 +8,7 @@ import { useForm } from '@tanstack/vue-form'
 import { useChangePassword } from '@/api/auth/auth'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage } from '@/lib/format/failure'
+import { failureMessage, PASSWORD_BREACHED_MESSAGE } from '@/lib/format/failure'
 import {
   focusFirstInvalid,
   passwordRepeatMessage,
@@ -45,6 +45,13 @@ const passwordForm = useForm({
         data: { currentPassword: value.currentPassword, newPassword: value.newPassword },
       })
     } catch (error) {
+      if (error instanceof ApiError && error.body.code === 'password_breached') {
+        passwordForm.setFieldMeta('newPassword', (meta) => ({
+          ...meta,
+          errorMap: { ...meta.errorMap, onServer: PASSWORD_BREACHED_MESSAGE },
+        }))
+        return
+      }
       // An answer rather than a lost session, and about the password that was typed — so it is
       // said on that field.
       if (error instanceof ApiError && error.status === 401) {
