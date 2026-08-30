@@ -1,9 +1,12 @@
+import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
+import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { authFixture, password, postJson } from "@/src/test/auth.ts";
 import { TEXT_MINIMUM } from "@/src/text_limit.ts";
+import { PASSWORD_BREACHED } from "@/src/http/response.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("register");
@@ -129,4 +132,23 @@ Deno.test("POST /api/auth/register accepts a password exactly at the minimum", a
   });
 
   assertEquals(response.status, STATUS_CODE.OK);
+});
+
+Deno.test("POST /api/auth/register refuses a password from a known breach", async () => {
+  using isBreached = stub(
+    BreachedPasswordService,
+    "isBreached",
+    () => Promise.resolve(true),
+  );
+
+  const response = await postJson("/api/auth/register", {
+    username,
+    emailAddress,
+    password,
+  });
+
+  assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
+  assertEquals((await response.json()).code, PASSWORD_BREACHED);
+  assertSpyCall(isBreached, 0, { args: [password] });
+  assertSpyCalls(isBreached, 1);
 });

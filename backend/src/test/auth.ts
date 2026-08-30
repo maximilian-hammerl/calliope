@@ -2,6 +2,7 @@ import { assertExists } from "@std/assert";
 import app from "@/src/app.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
+import "@/src/test/breach_check.ts";
 
 /**
  * What the auth tests share. They cannot use `test/support.ts`'s `registerUser` and `request`,
@@ -9,9 +10,6 @@ import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
  * app by hand so a malformed body or a missing cookie can be exercised.
  */
 export const password = "a-complex-password";
-
-// These tests do not import `support.ts`, so they set it themselves.
-Deno.env.set("PWNED_PASSWORDS_URL", "http://127.0.0.1:1");
 
 export function sendJson(
   method: string,

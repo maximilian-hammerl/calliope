@@ -1,19 +1,17 @@
 import { createHash } from "node:crypto";
 import { APP_NAME } from "@/src/branding.ts";
-import { getOptionalEnvVariable } from "@/src/util/env.ts";
+import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { describeError, logger } from "@/src/logging.ts";
 
 /**
  * Whether a password is already in circulation, asked of Have I Been Pwned. Only the first five
  * characters of its SHA-1 go out; the other thirty-five are matched here.
+ *
+ * Required rather than defaulted, so reaching a third party is something a deployment states.
  */
-const DEFAULT_RANGE_URL = "https://api.pwnedpasswords.com/range";
+const PWNED_PASSWORDS_URL = getRequiredEnvVariable("PWNED_PASSWORDS_URL");
 
 const TIMEOUT = Temporal.Duration.from({ seconds: 2 });
-
-/** Read per call: a constant would be fixed at import, before a test could point it elsewhere. */
-const rangeUrl = () =>
-  getOptionalEnvVariable("PWNED_PASSWORDS_URL") ?? DEFAULT_RANGE_URL;
 
 /**
  * `SUFFIX:COUNT` per line, CRLF-delimited. `Add-Padding` mixes in entries counted zero, and
@@ -32,7 +30,7 @@ export function parseRange(body: string, suffix: string): boolean {
 /** `undefined` when the answer did not arrive: a service that is down must not stop anybody. */
 async function fetchRange(prefix: string): Promise<string | undefined> {
   try {
-    const response = await fetch(`${rangeUrl()}/${prefix}`, {
+    const response = await fetch(`${PWNED_PASSWORDS_URL}/${prefix}`, {
       headers: { "Add-Padding": "true", "User-Agent": APP_NAME },
       signal: AbortSignal.timeout(TIMEOUT.total("milliseconds")),
     });
@@ -50,10 +48,13 @@ async function fetchRange(prefix: string): Promise<string | undefined> {
   }
 }
 
-export async function isBreached(password: string): Promise<boolean> {
+async function isBreached(password: string): Promise<boolean> {
   const hash = createHash("sha1").update(password).digest("hex").toUpperCase();
   const body = await fetchRange(hash.slice(0, 5));
 
   // Parsed outside the `catch`, so a fault of ours is not reported as an outage.
   return body === undefined ? false : parseRange(body, hash.slice(5));
 }
+
+/** Reached through the object, so the routes' tests can replace the method. */
+export const BreachedPasswordService = { isBreached };

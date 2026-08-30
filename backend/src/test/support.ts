@@ -8,6 +8,7 @@ import app from "@/src/app.ts";
 import { db } from "@/src/database/client.ts";
 import { redis } from "@/src/redis/client.ts";
 import { RATE_LIMIT_KEY_PREFIX } from "@/src/middleware/rate_limit.ts";
+import "@/src/test/breach_check.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import type { PostDocument } from "@/src/document/document_schema.ts";
 
@@ -124,13 +125,6 @@ export async function deleteUsers(usernames: Array<string>): Promise<void> {
     .execute();
   await db.deleteFrom("user").where("username", "in", usernames).execute();
 }
-
-/**
- * Nothing listens on port 1, so the breach check fails open and never reaches the network. Test
- * files share one environment, so this is set once rather than per file.
- */
-export const UNREACHABLE_BREACH_CHECK = "http://127.0.0.1:1";
-Deno.env.set("PWNED_PASSWORDS_URL", UNREACHABLE_BREACH_CHECK);
 
 /** Counters outlive the process, so the suite would eventually rate-limit itself. */
 /**

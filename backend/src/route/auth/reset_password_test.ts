@@ -1,3 +1,5 @@
+import { assertSpyCall, stub } from "@std/testing/mock";
+import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
@@ -5,6 +7,7 @@ import { db } from "@/src/database/client.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
+import { PASSWORD_BREACHED } from "@/src/http/response.ts";
 import {
   authFixture,
   password,
@@ -143,4 +146,29 @@ Deno.test("POST /api/auth/reset-password rejects a malformed token", async () =>
 
   assertEquals(response.status, STATUS_CODE.Gone);
   assertEquals(await response.json(), { error: "The link is no longer valid" });
+});
+
+Deno.test("POST /api/auth/reset-password refuses a password from a known breach", async () => {
+  await registerAndDiscardVerificationMail();
+  const token = await requestResetToken();
+
+  {
+    using isBreached = stub(
+      BreachedPasswordService,
+      "isBreached",
+      () => Promise.resolve(true),
+    );
+
+    const response = await resetPassword(token, newPassword);
+
+    assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
+    assertEquals((await response.json()).code, PASSWORD_BREACHED);
+    assertSpyCall(isBreached, 0, { args: [newPassword] });
+  }
+
+  // Refused before the token was spent, so the link still works.
+  assertEquals(
+    (await resetPassword(token, newPassword)).status,
+    STATUS_CODE.OK,
+  );
 });

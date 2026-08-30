@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import { isBreached } from "@/src/service/breached_password.ts";
+import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { PasswordChangeService } from "@/src/service/password_change_service.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
@@ -66,7 +66,7 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Unauthorized" }, STATUS_CODE.Unauthorized);
     }
 
-    if (await isBreached(newPassword)) {
+    if (await BreachedPasswordService.isBreached(newPassword)) {
       return c.json(PASSWORD_BREACHED_BODY, STATUS_CODE.UnprocessableEntity);
     }
 
