@@ -1,5 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
+import { db } from "@/src/database/client.ts";
 import {
   clearRateLimits,
   deleteUsers,
@@ -69,4 +70,25 @@ Deno.test("GET /api/users/{userId} needs a session", async () => {
   );
 
   assertEquals(response.status, STATUS_CODE.Unauthorized);
+});
+
+/** #101: the profile is where somebody is looked up, so it is where the role has to be readable. */
+Deno.test("GET /api/users/{userId} carries the platform role, and null for an ordinary member", async () => {
+  const cookie = await registerUser(viewer);
+  await registerUser(subject);
+  const subjectId = await getUserId(subject);
+
+  const ordinary =
+    await (await request("GET", `/api/users/${subjectId}`, cookie)).json();
+  assertEquals(ordinary.platformRole, null);
+
+  await db
+    .updateTable("user")
+    .set({ platformRole: "administrator" })
+    .where("id", "=", subjectId)
+    .execute();
+
+  const promoted =
+    await (await request("GET", `/api/users/${subjectId}`, cookie)).json();
+  assertEquals(promoted.platformRole, "administrator");
 });

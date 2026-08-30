@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { generate as uuidv7 } from "@std/uuid/v7";
 import { db } from "@/src/database/client.ts";
 import { FileStore } from "@/src/storage/file_store.ts";
+import { toAvatar } from "@/src/image/avatar_image.ts";
 import { UserAvatarService } from "./user_avatar_service.ts";
 import {
   clearRateLimits,
@@ -54,19 +55,22 @@ Deno.test("a picture is stored, and its bytes are on disk", async () => {
   assertNotEquals(await FileStore.read(avatar.fileId), undefined);
 });
 
-Deno.test("what is not a picture is refused, and nothing is written", async () => {
+Deno.test("what is not a picture is refused before anything is written", async () => {
   const id = await userId("avatar-refused");
-  const before = (await FileStore.listFileIds()).length;
+  const notAnImage = new TextEncoder().encode("not an image");
 
-  const result = await UserAvatarService.setAvatar(
-    id,
-    new TextEncoder().encode("not an image"),
-    { origin: "own_work", credit: null },
-  );
+  // The refusal is `toAvatar`'s, and `setAvatar` returns on it before it names a file at all —
+  // which is *why* a rejected upload can leave no bytes behind. Asserted here rather than by
+  // counting the store, which the other test files write into while this one runs.
+  assertEquals(await toAvatar(notAnImage), undefined);
+
+  const result = await UserAvatarService.setAvatar(id, notAnImage, {
+    origin: "own_work",
+    credit: null,
+  });
 
   assertEquals(result.kind, "not_an_image");
   assertEquals(await UserAvatarService.selectAvatar(id), undefined);
-  assertEquals((await FileStore.listFileIds()).length, before);
 });
 
 /** Replacing leaves the old file for the sweep — deleting it inline would break a restore. */
@@ -134,8 +138,10 @@ Deno.test("the sweep deletes an orphan past the grace period", async () => {
 
   // Backdated rather than waited for. The sweep reads the file's own mtime, so this is the only
   // way to test the branch that deletes.
-  const longAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  await Deno.utime(`./.file-storage/${orphan}`, longAgo, longAgo);
+  // `utime` takes seconds or a `Date`, so the instant is converted only at that boundary.
+  const longAgo = Temporal.Now.instant().subtract({ hours: 30 * 24 });
+  const seconds = longAgo.epochMilliseconds / 1000;
+  await Deno.utime(`./.file-storage/${orphan}`, seconds, seconds);
 
   const deleted = await UserAvatarService.sweepUnreferencedFiles();
 
@@ -153,8 +159,9 @@ Deno.test("the sweep spares a referenced file whatever its age", async () => {
   const avatar = await UserAvatarService.selectAvatar(id);
   assertExists(avatar);
 
-  const longAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  await Deno.utime(`./.file-storage/${avatar.fileId}`, longAgo, longAgo);
+  const longAgo = Temporal.Now.instant().subtract({ hours: 30 * 24 });
+  const seconds = longAgo.epochMilliseconds / 1000;
+  await Deno.utime(`./.file-storage/${avatar.fileId}`, seconds, seconds);
 
   await UserAvatarService.sweepUnreferencedFiles();
   assertNotEquals(await FileStore.read(avatar.fileId), undefined);

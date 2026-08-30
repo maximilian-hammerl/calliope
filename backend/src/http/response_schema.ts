@@ -115,6 +115,14 @@ export const USER_RESPONSE = USER_SCHEMA
   .extend({ avatarUrl: AVATAR_URL });
 
 /**
+ * The members list, and nowhere else a person is merely mentioned. A role is a fact about
+ * somebody, not a decoration on every reference to them — see #101, which keeps it off post
+ * bylines and out of `USER_RESPONSE`, where the picker and search would inherit it.
+ */
+export const LISTED_MEMBER_RESPONSE = USER_RESPONSE
+  .extend({ platformRole: USER_SCHEMA.shape.platformRole });
+
+/**
  * One of a member's own sessions. `lastUsedAt` is derived rather than stored: every request
  * within the refresh interval pushes `expires_at` to now plus the lifetime, so subtracting the
  * lifetime gives the last use to within that interval.
@@ -167,6 +175,8 @@ export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   id: true,
   username: true,
   createdAt: true,
+  // Null is the ordinary member, which is most of them.
+  platformRole: true,
   aboutMe: true,
   writingStyle: true,
   postLength: true,

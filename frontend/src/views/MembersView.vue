@@ -10,6 +10,7 @@ import { usePagedList } from '@/composables/usePagedList'
 import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import UserAvatar from '@/components/user/UserAvatar.vue'
+import { platformRoleLabel } from '@/lib/format/platformRole'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -113,6 +114,12 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
               <UserAvatar :username="member.username" :avatar-url="member.avatarUrl" />
               <span class="min-w-0 truncate text-[13.5px] text-ink-2">
                 {{ member.username }}
+              </span>
+              <span
+                v-if="platformRoleLabel(member.platformRole)"
+                class="shrink-0 text-[12px] whitespace-nowrap text-ink-5"
+              >
+                {{ platformRoleLabel(member.platformRole) }}
               </span>
             </RouterLink>
           </li>

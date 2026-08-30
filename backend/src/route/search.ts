@@ -2,8 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
   FOUND_THREAD_RESPONSE,
   GROUP_RESPONSE,
+  LISTED_MEMBER_RESPONSE,
   STORY_IDEA_RESPONSE,
-  USER_RESPONSE,
 } from "@/src/http/response_schema.ts";
 import { SEARCH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -39,7 +39,7 @@ const SEARCH_RESPONSE = z.object({
   groups: listResponseSchema(GROUP_RESPONSE),
   threads: listResponseSchema(FOUND_THREAD_RESPONSE),
   storyIdeas: listResponseSchema(STORY_IDEA_RESPONSE),
-  users: listResponseSchema(USER_RESPONSE),
+  users: listResponseSchema(LISTED_MEMBER_RESPONSE),
 });
 
 export default new OpenAPIHono().openapi(

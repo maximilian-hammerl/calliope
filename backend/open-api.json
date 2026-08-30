@@ -17926,9 +17926,18 @@
                         "properties": {
                           "id": { "type": "string", "format": "uuid" },
                           "username": { "type": "string" },
-                          "avatarUrl": { "type": ["string", "null"] }
+                          "avatarUrl": { "type": ["string", "null"] },
+                          "platformRole": {
+                            "type": ["string", "null"],
+                            "enum": ["administrator", "moderator", null]
+                          }
                         },
-                        "required": ["id", "username", "avatarUrl"]
+                        "required": [
+                          "id",
+                          "username",
+                          "avatarUrl",
+                          "platformRole"
+                        ]
                       }
                     }
                   },
@@ -18190,6 +18199,10 @@
                     "id": { "type": "string", "format": "uuid" },
                     "username": { "type": "string" },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "platformRole": {
+                      "type": ["string", "null"],
+                      "enum": ["administrator", "moderator", null]
+                    },
                     "aboutMe": { "type": ["string", "null"] },
                     "writingStyle": { "type": ["string", "null"] },
                     "postLength": { "type": ["string", "null"] },
@@ -18205,6 +18218,7 @@
                     "id",
                     "username",
                     "createdAt",
+                    "platformRole",
                     "aboutMe",
                     "writingStyle",
                     "postLength",
@@ -18982,6 +18996,10 @@
                     "id": { "type": "string", "format": "uuid" },
                     "username": { "type": "string" },
                     "createdAt": { "type": "string", "format": "date-time" },
+                    "platformRole": {
+                      "type": ["string", "null"],
+                      "enum": ["administrator", "moderator", null]
+                    },
                     "aboutMe": { "type": ["string", "null"] },
                     "writingStyle": { "type": ["string", "null"] },
                     "postLength": { "type": ["string", "null"] },
@@ -18997,6 +19015,7 @@
                     "id",
                     "username",
                     "createdAt",
+                    "platformRole",
                     "aboutMe",
                     "writingStyle",
                     "postLength",
@@ -23587,9 +23606,18 @@
                             "properties": {
                               "id": { "type": "string", "format": "uuid" },
                               "username": { "type": "string" },
-                              "avatarUrl": { "type": ["string", "null"] }
+                              "avatarUrl": { "type": ["string", "null"] },
+                              "platformRole": {
+                                "type": ["string", "null"],
+                                "enum": ["administrator", "moderator", null]
+                              }
                             },
-                            "required": ["id", "username", "avatarUrl"]
+                            "required": [
+                              "id",
+                              "username",
+                              "avatarUrl",
+                              "platformRole"
+                            ]
                           }
                         }
                       },

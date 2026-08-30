@@ -11,6 +11,7 @@ import VisibilityMark from '@/components/group/VisibilityMark.vue'
 import ClosedMark from '@/components/story-idea/ClosedMark.vue'
 import ReadMark from '@/components/story-idea/ReadMark.vue'
 import { useGetCurrentUser } from '@/api/auth/auth'
+import { platformRoleLabel } from '@/lib/format/platformRole'
 
 const { data: userData } = useGetCurrentUser()
 const currentUserId = computed<string | undefined>(() =>
@@ -140,9 +141,15 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             v-for="user in results?.users.results"
             :key="user.id"
             :to="{ name: 'member', params: { userId: user.id } }"
-            class="flex min-h-[38px] items-center px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
+            class="flex min-h-[38px] items-center gap-2 px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
-            {{ user.username }}
+            <span class="truncate">{{ user.username }}</span>
+            <span
+              v-if="platformRoleLabel(user.platformRole)"
+              class="shrink-0 text-[12px] whitespace-nowrap text-ink-5"
+            >
+              {{ platformRoleLabel(user.platformRole) }}
+            </span>
           </RouterLink>
         </template>
 

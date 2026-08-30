@@ -33,7 +33,7 @@ export type User = Pick<
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
 export type PublicUser =
-  & Pick<Selectable<DatabaseUser>, "id" | "username">
+  & Pick<Selectable<DatabaseUser>, "id" | "username" | "platformRole">
   & { avatarUrl: string | null };
 
 /** One list, so the select, the update and the response cannot drift apart. */
@@ -52,7 +52,7 @@ export type ProfileColumn = (typeof PROFILE_COLUMNS)[number];
 export type UserProfile =
   & Pick<
     Selectable<DatabaseUser>,
-    "id" | "username" | "createdAt" | ProfileColumn
+    "id" | "username" | "createdAt" | "platformRole" | ProfileColumn
   >
   & { avatarUrl: string | null };
 
@@ -312,7 +312,7 @@ async function listUsers(
     withAvatar(
       db
         .selectFrom("user")
-        .select(["user.id", "user.username"]),
+        .select(["user.id", "user.username", "user.platformRole"]),
       "user.id",
     )
       // Banned accounts are not offered to anybody, the way a blocked one is not offered to the
@@ -355,6 +355,7 @@ async function selectUserProfile(
         "user.id",
         "user.username",
         "user.createdAt",
+        "user.platformRole",
         ...PROFILE_COLUMNS,
       ]),
     "user.id",

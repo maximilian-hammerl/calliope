@@ -53,7 +53,7 @@ async function setAvatar(
         fileId,
         origin: declaration.origin,
         credit: declaration.credit,
-        createdAt: new Date().toISOString(),
+        createdAt: Temporal.Now.instant().toString(),
       })
     )
     .execute();
