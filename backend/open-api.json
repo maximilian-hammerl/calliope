@@ -656,7 +656,7 @@
                   },
                   "password": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 8,
                     "maxLength": 256
                   }
                 },
@@ -1520,7 +1520,7 @@
                   "token": { "type": "string", "minLength": 1 },
                   "password": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 8,
                     "maxLength": 256
                   }
                 },
@@ -3909,7 +3909,7 @@
                   },
                   "newPassword": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 8,
                     "maxLength": 256
                   }
                 },

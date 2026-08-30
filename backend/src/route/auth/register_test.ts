@@ -3,6 +3,7 @@ import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { authFixture, password, postJson } from "@/src/test/auth.ts";
+import { TEXT_MINIMUM } from "@/src/text_limit.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("register");
@@ -103,4 +104,29 @@ Deno.test("POST /api/auth/register refuses a two-character username", async () =
   assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
     "username",
   ]);
+});
+
+Deno.test("POST /api/auth/register refuses a password below the minimum", async () => {
+  const response = await postJson("/api/auth/register", {
+    username,
+    emailAddress,
+    password: "x".repeat(TEXT_MINIMUM.password - 1),
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  assertEquals(
+    body.issues.some((issue: { path: string }) => issue.path === "password"),
+    true,
+  );
+});
+
+Deno.test("POST /api/auth/register accepts a password exactly at the minimum", async () => {
+  const response = await postJson("/api/auth/register", {
+    username,
+    emailAddress,
+    password: "x".repeat(TEXT_MINIMUM.password),
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
 });

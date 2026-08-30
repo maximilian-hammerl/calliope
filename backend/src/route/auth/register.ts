@@ -24,7 +24,7 @@ const REGISTER_BODY = USER_SCHEMA
       .max(TEXT_LIMIT.username),
     emailAddress: EMAIL_ADDRESS_SCHEMA,
     // Never stored as given, so it has no column of its own.
-    password: z.string().min(1).max(TEXT_LIMIT.password),
+    password: z.string().min(TEXT_MINIMUM.password).max(TEXT_LIMIT.password),
   });
 
 export default new OpenAPIHono().openapi(

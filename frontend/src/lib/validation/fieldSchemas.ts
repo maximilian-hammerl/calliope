@@ -55,11 +55,21 @@ export function emailAddressSchema(bound: LengthBound, missing: string) {
     .regex(z.regexes.html5Email, 'Das sieht nicht nach einer E-Mail-Adresse aus.')
 }
 
-/** Not trimmed: a space is a legitimate character in a password. */
-export function passwordSchema(bound: LengthBound, missing: string) {
+/**
+ * Not trimmed: a space is a legitimate character in a password.
+ *
+ * The minimum is the calling operation's own, so it applies where a password is *chosen* and not
+ * where one is proved — registering asks for eight, signing in asks for whatever the account
+ * already has. Nothing here decides that; the bound does.
+ */
+export function passwordSchema(bound: RangeBound, missing: string) {
   return z
     .string()
     .min(1, missing)
+    .min(
+      bound.minLength,
+      `Das Passwort braucht mindestens ${formatCount(bound.minLength)} Zeichen.`,
+    )
     .max(
       bound.maxLength,
       `Das Passwort darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`,

@@ -3,6 +3,8 @@ import { STATUS_CODE } from "@std/http/status";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { authFixture, password, postJson } from "@/src/test/auth.ts";
 import { INVALID_CREDENTIALS_MESSAGE } from "@/src/http/response.ts";
+import { UserService } from "@/src/service/user_service.ts";
+import { TEXT_MINIMUM } from "@/src/text_limit.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("login");
@@ -53,4 +55,29 @@ Deno.test("POST /api/auth/login rejects a wrong password", async () => {
     error: INVALID_CREDENTIALS_MESSAGE,
     code: "invalid_credentials",
   });
+});
+
+/**
+ * The minimum applies where a password is chosen, never where one is proved. An account made
+ * before the rule existed has to keep working — enforcing it here would lock its owner out, and
+ * the refusal would announce the rule to whoever typed it.
+ */
+Deno.test("an account whose password predates the minimum can still sign in", async () => {
+  const short = "x".repeat(TEXT_MINIMUM.password - 1);
+  const shortUsername = "login-short-password-user";
+  await deleteUsers([shortUsername]);
+  await UserService.insertUser(
+    shortUsername,
+    short,
+    `${shortUsername}@example.test`,
+  );
+
+  const response = await postJson("/api/auth/login", {
+    login: shortUsername,
+    password: short,
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  assertExists(response.headers.get("set-cookie"));
+  await deleteUsers([shortUsername]);
 });

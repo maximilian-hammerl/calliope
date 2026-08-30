@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { PasswordResetService } from "@/src/service/password_reset_service.ts";
@@ -16,7 +16,7 @@ const RESET_PASSWORD_BODY = z.object({
   token: z.string().min(1),
   // The bound register applies, so a password that could be signed up with can also be
   // returned to.
-  password: z.string().min(1).max(TEXT_LIMIT.password),
+  password: z.string().min(TEXT_MINIMUM.password).max(TEXT_LIMIT.password),
 });
 
 export default new OpenAPIHono().openapi(

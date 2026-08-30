@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -19,7 +19,7 @@ import {
 const CHANGE_PASSWORD_BODY = z.object({
   currentPassword: z.string().min(1).max(TEXT_LIMIT.password),
   // The bound register applies, so a password that could be signed up with can be moved to.
-  newPassword: z.string().min(1).max(TEXT_LIMIT.password),
+  newPassword: z.string().min(TEXT_MINIMUM.password).max(TEXT_LIMIT.password),
 });
 
 export default new OpenAPIHono().openapi(
