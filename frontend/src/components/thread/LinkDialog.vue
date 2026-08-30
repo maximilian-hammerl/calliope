@@ -19,7 +19,8 @@ import FormTextField from '@/components/common/FormTextField.vue'
  * are: an existing `href` means editing, and only then is removing offered.
  *
  * The scheme is checked here as well as by the API, so a member is told while the dialog is open
- * rather than when the post is sent. `mailto:` is refused deliberately — see #44.
+ * rather than when the post is sent. `mailto:` is refused deliberately by both: the allowlist is
+ * `HREF` in `backend/src/document/document_schema.ts`.
  */
 const props = defineProps<{ href?: string }>()
 const open = defineModel<boolean>('open', { required: true })
