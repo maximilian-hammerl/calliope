@@ -20,7 +20,7 @@
     "jsr:@std/uuid@1.0.9": "1.0.9",
     "jsr:@std/uuid@1.1.1": "1.1.1",
     "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.5",
-    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.5_zod@4.4.3",
+    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.5_zod@4.5.2",
     "npm:@types/nodemailer@8.0.1": "8.0.1",
     "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.5",
     "npm:hono@4.13.5": "4.13.5",
@@ -31,7 +31,7 @@
     "npm:openapi3-ts@4.6.1": "4.6.1",
     "npm:postgres@3.4.9": "3.4.9",
     "npm:sharp@0.35.4": "0.35.4",
-    "npm:zod@4.4.3": "4.4.3"
+    "npm:zod@4.5.2": "4.5.2"
   },
   "jsr": {
     "@logtape/logtape@2.3.2": {
@@ -107,7 +107,7 @@
     }
   },
   "npm": {
-    "@asteasolutions/zod-to-openapi@9.1.0_zod@4.4.3": {
+    "@asteasolutions/zod-to-openapi@9.1.0_zod@4.5.2": {
       "integrity": "sha512-pLMeRgRYS7/vZIgAAkOe2P6+XGTifR1MT9pqDoxZ11EmcJJ+DPmdPqLN8ZZF4U8R9KHCCQCS9c2wtuE8wSrfkw==",
       "dependencies": [
         "openapi3-ts",
@@ -126,7 +126,7 @@
         "hono"
       ]
     },
-    "@hono/zod-openapi@1.6.1_hono@4.13.5_zod@4.4.3": {
+    "@hono/zod-openapi@1.6.1_hono@4.13.5_zod@4.5.2": {
       "integrity": "sha512-z1xS3FZxl4bBkU3kMIsQsLtsqxPTha5XZCsDEPMSZ6+3RRBQI7KED1GeoDpq2WueXCacsNIjcB0MtCnEHY7ahQ==",
       "dependencies": [
         "@asteasolutions/zod-to-openapi",
@@ -136,7 +136,7 @@
         "zod"
       ]
     },
-    "@hono/zod-validator@0.9.0_hono@4.13.5_zod@4.4.3": {
+    "@hono/zod-validator@0.9.0_hono@4.13.5_zod@4.5.2": {
       "integrity": "sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==",
       "dependencies": [
         "hono",
@@ -566,8 +566,8 @@
       "integrity": "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==",
       "bin": true
     },
-    "zod@4.4.3": {
-      "integrity": "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="
+    "zod@4.5.2": {
+      "integrity": "sha512-XkYXCol10+ba/6F/cueWV+TezUeOqXW0hdeJt5CdXjTYeAgAQg5N03RQdJ80mhfFE72+pblvYMW4wy2Qp4Qbrg=="
     }
   },
   "workspace": {
@@ -589,7 +589,7 @@
       "npm:openapi3-ts@4.6.1",
       "npm:postgres@3.4.9",
       "npm:sharp@0.35.4",
-      "npm:zod@4.4.3"
+      "npm:zod@4.5.2"
     ]
   }
 }
