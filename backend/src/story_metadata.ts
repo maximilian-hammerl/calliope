@@ -127,3 +127,20 @@ export function subgenresOf(genre: StoryGenre): StorySubgenre[] {
     (subgenre) => SUBGENRE_GENRE[subgenre] === genre,
   );
 }
+
+/**
+ * The subgenres that sit under no chosen genre. Empty when the pair is coherent.
+ *
+ * The interface only ever offers the subgenres of a genre already picked, so it cannot produce
+ * one — but nothing else stopped a request from storing `romance` with `space_opera`, and such a
+ * group is then unreachable by the one filter that offers that subgenre: seeing the chip at all
+ * means having picked Science-Fiction, which the group does not carry.
+ */
+export function subgenresOutsideGenres(
+  genres: readonly StoryGenre[],
+  subgenres: readonly StorySubgenre[],
+): StorySubgenre[] {
+  const chosen = new Set<StoryGenre>(genres);
+
+  return subgenres.filter((subgenre) => !chosen.has(SUBGENRE_GENRE[subgenre]));
+}

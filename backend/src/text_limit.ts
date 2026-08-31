@@ -85,7 +85,16 @@ export const UPLOAD_BODY_LIMIT_BYTES = 4 * 1_048_576;
  * being readable long before it stops being valid.
  */
 export const LIST_LIMIT = {
+  /** How many a story may claim. Twelve genres is already more than a story has. */
   storyTags: 12,
+  /**
+   * How many a *filter* may ask for, which is a different question and was the same number for
+   * one release. A board offers sixteen genres and thirty-one tropes, so a member picking
+   * thirteen got a 400 — and the view drops its filters when the list fails to load, leaving
+   * nothing to click to undo it. A hundred is past the longest vocabulary (seventy-six
+   * subgenres): asking for more of a list than it holds is meaningless rather than harmful.
+   */
+  storyVocabularyFilter: 100,
 } as const;
 
 /**

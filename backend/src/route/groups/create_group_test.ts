@@ -159,3 +159,45 @@ Deno.test("POST /api/groups refuses more tags than a rail can show", async () =>
 
   assertEquals(response.status, STATUS_CODE.BadRequest);
 });
+
+/**
+ * A subgenre belongs to exactly one genre, and the board only ever offers the subgenres of a
+ * genre already picked — so a group carrying one it did not pick could never be found by the
+ * filter that offers it: seeing that chip means having picked the genre this group lacks.
+ */
+Deno.test("POST /api/groups refuses a subgenre from a genre it does not carry", async () => {
+  const cookie = await registerUser(username);
+
+  const response = await request("POST", "/api/groups", cookie, {
+    title: "Weltraumromanze",
+    synopsis: "d",
+    genres: ["romance"],
+    subgenres: ["space_opera"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  // The same shape a failed schema gives, though this rule is enforced below the schema: one kind
+  // of 400 for a client to read, naming the field and the value.
+  const body = await response.json();
+  assertEquals(body.error, "Invalid request");
+  assertEquals(body.issues, [
+    {
+      path: "subgenres",
+      message:
+        "space_opera belongs to science_fiction, which is not among the genres",
+    },
+  ]);
+});
+
+Deno.test("POST /api/groups takes a subgenre of a genre it does carry", async () => {
+  const cookie = await registerUser(username);
+
+  const response = await request("POST", "/api/groups", cookie, {
+    title: "Weltraumoper",
+    synopsis: "d",
+    genres: ["science_fiction", "romance"],
+    subgenres: ["space_opera", "contemporary_romance"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.Created);
+});

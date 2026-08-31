@@ -1,7 +1,7 @@
 import {
-  STORY_GENRES_SCHEMA,
-  STORY_SUBGENRES_SCHEMA,
-  STORY_TROPES_SCHEMA,
+  STORY_GENRES_FILTER,
+  STORY_SUBGENRES_FILTER,
+  STORY_TROPES_FILTER,
 } from "@/src/http/request_schema.ts";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { listQuery } from "@/src/list/list_endpoint_query.ts";
@@ -80,9 +80,9 @@ const LIST_GROUPS_BODY = listQuerySchema(
     favourite: FAVOURITE_FILTER,
     // The same schemas the create bodies use, so what may be chosen and what may be filtered
     // by cannot drift apart. Absent means "not asked" — an untouched filter never empties a board.
-    genres: STORY_GENRES_SCHEMA,
-    subgenres: STORY_SUBGENRES_SCHEMA,
-    tropes: STORY_TROPES_SCHEMA,
+    genres: STORY_GENRES_FILTER,
+    subgenres: STORY_SUBGENRES_FILTER,
+    tropes: STORY_TROPES_FILTER,
   },
   "desc",
 );

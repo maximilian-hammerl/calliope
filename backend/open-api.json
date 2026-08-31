@@ -5374,7 +5374,7 @@
                         "western"
                       ]
                     },
-                    "maxItems": 12,
+                    "maxItems": 100,
                     "uniqueItems": true
                   },
                   "subgenres": {
@@ -5460,7 +5460,7 @@
                         "world_war"
                       ]
                     },
-                    "maxItems": 12,
+                    "maxItems": 100,
                     "uniqueItems": true
                   },
                   "tropes": {
@@ -5501,7 +5501,7 @@
                         "villain_to_hero"
                       ]
                     },
-                    "maxItems": 12,
+                    "maxItems": 100,
                     "uniqueItems": true
                   }
                 }
@@ -13790,7 +13790,7 @@
                         "western"
                       ]
                     },
-                    "maxItems": 12,
+                    "maxItems": 100,
                     "uniqueItems": true
                   },
                   "subgenres": {
@@ -13876,7 +13876,7 @@
                         "world_war"
                       ]
                     },
-                    "maxItems": 12,
+                    "maxItems": 100,
                     "uniqueItems": true
                   },
                   "tropes": {
@@ -13917,7 +13917,7 @@
                         "villain_to_hero"
                       ]
                     },
-                    "maxItems": 12,
+                    "maxItems": 100,
                     "uniqueItems": true
                   }
                 }

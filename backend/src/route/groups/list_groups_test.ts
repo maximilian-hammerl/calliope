@@ -404,3 +404,63 @@ Deno.test("QUERY /api/groups refuses a genre that is not one", async () => {
 
   assertEquals(response.status, STATUS_CODE.BadRequest);
 });
+
+/**
+ * The bound a filter asks under is not the bound a story is tagged under. A board offers sixteen
+ * genres, so twelve — enough for any one group — refused what the interface itself put on screen,
+ * and the view drops its filters when a list fails: there was nothing left to click to undo it.
+ */
+Deno.test("QUERY /api/groups takes more genres than a single group may carry", async () => {
+  const cookie = await registerUser(owner);
+
+  const response = await request("QUERY", "/api/groups", cookie, {
+    limit: 10,
+    genres: [
+      "action",
+      "adventure",
+      "comedy",
+      "crime",
+      "drama",
+      "fantasy",
+      "historical",
+      "horror",
+      "literary",
+      "mystery",
+      "retelling",
+      "romance",
+      "science_fiction",
+      "slice_of_life",
+      "thriller",
+      "western",
+    ],
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
+});
+
+Deno.test("POST /api/groups still refuses more genres than a group may carry", async () => {
+  const cookie = await registerUser(owner);
+
+  // The create bound stays where it was: twelve genres is already more than a story has.
+  const response = await request("POST", "/api/groups", cookie, {
+    title: "Zu viele",
+    synopsis: "d",
+    genres: [
+      "action",
+      "adventure",
+      "comedy",
+      "crime",
+      "drama",
+      "fantasy",
+      "historical",
+      "horror",
+      "literary",
+      "mystery",
+      "retelling",
+      "romance",
+      "science_fiction",
+    ],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+});

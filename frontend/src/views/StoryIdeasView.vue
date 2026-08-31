@@ -107,8 +107,11 @@ const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
  */
 const filtersActive = computed<boolean>(
   () =>
-    readerState.value !== 'unread' ||
-    status.value !== 'open' ||
+    // Only what this view actually shows and sends. Both routes render this component, so the
+    // refs survive the navigation between them: a reading filter set on the discovery board was
+    // still counted on „Meine Ideen", where the strip is hidden and the query forces `any` — the
+    // reset button appeared with nothing marked anywhere and clearing it changed nothing.
+    (!props.mine && (readerState.value !== 'unread' || status.value !== 'open')) ||
     favourite.value !== 'any' ||
     narrowed.value,
 )
@@ -153,6 +156,13 @@ const ideas = computed<ListStoryIdeas200ResultsItem[]>(() =>
 
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
+/**
+ * The filters and the search outlast a failed request. They were gated on `hasLoaded` alone, so a
+ * refused list took them off the page with it — and since a filter is what refuses a list, that
+ * left nothing to click to undo it and no way back but a reload.
+ */
+const showsControls = computed<boolean>(() => hasLoaded.value || isError.value)
+
 const router = useRouter()
 
 function openIdea(ideaId: string) {
@@ -196,7 +206,7 @@ const creating = ref<boolean>(false)
       </p>
 
       <!-- One grid for both strips, so the labels share a column and the strips align. -->
-      <FilterStrips v-if="hasLoaded" class="mb-7">
+      <FilterStrips v-if="showsControls" class="mb-7">
         <!-- Neither reading nor status says anything on one's own ideas, so those two are the
              discovery board's; the favourite belongs to both. -->
         <template v-if="!mine">
@@ -223,7 +233,7 @@ const creating = ref<boolean>(false)
         <FilterReset :active="filtersActive" @reset="resetFilters" />
       </FilterStrips>
 
-      <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
+      <Field v-if="showsControls" class="mb-7 max-w-[380px]">
         <FieldLabel for="ideas-search">Suche</FieldLabel>
         <Input
           id="ideas-search"

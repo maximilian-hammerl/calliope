@@ -43,10 +43,10 @@ export const EMAIL_ADDRESS_SCHEMA = z.email({ pattern: z.regexes.html5Email })
  * JSON Schema word for this rule, so declaring it keeps the document honest. Drop either and the
  * two disagree — the specification would promise a rule nothing enforces, or hide one that bites.
  */
-const storyValues = <T extends z.ZodType>(value: T) =>
+const storyValues = <T extends z.ZodType>(value: T, max: number) =>
   z
     .array(value)
-    .max(LIST_LIMIT.storyTags)
+    .max(max)
     .superRefine((values, ctx) => {
       const seen = new Set<unknown>();
 
@@ -66,9 +66,24 @@ const storyValues = <T extends z.ZodType>(value: T) =>
     .meta({ uniqueItems: true })
     .optional();
 
-export const STORY_GENRES_SCHEMA = storyValues(STORY_GENRE_SCHEMA);
-export const STORY_SUBGENRES_SCHEMA = storyValues(STORY_SUBGENRE_SCHEMA);
-export const STORY_TROPES_SCHEMA = storyValues(STORY_TROPE_SCHEMA);
+const TAGS = LIST_LIMIT.storyTags;
+const FILTER = LIST_LIMIT.storyVocabularyFilter;
+
+export const STORY_GENRES_SCHEMA = storyValues(STORY_GENRE_SCHEMA, TAGS);
+export const STORY_SUBGENRES_SCHEMA = storyValues(STORY_SUBGENRE_SCHEMA, TAGS);
+export const STORY_TROPES_SCHEMA = storyValues(STORY_TROPE_SCHEMA, TAGS);
 export const STORY_CONTENT_WARNINGS_SCHEMA = storyValues(
   STORY_CONTENT_WARNING_SCHEMA,
+  TAGS,
 );
+
+/**
+ * The same values, bounded for asking rather than for claiming. A board's own vocabulary is
+ * longer than any one story's, so the create body's bound refuses filters the interface offers.
+ */
+export const STORY_GENRES_FILTER = storyValues(STORY_GENRE_SCHEMA, FILTER);
+export const STORY_SUBGENRES_FILTER = storyValues(
+  STORY_SUBGENRE_SCHEMA,
+  FILTER,
+);
+export const STORY_TROPES_FILTER = storyValues(STORY_TROPE_SCHEMA, FILTER);

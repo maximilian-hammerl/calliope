@@ -157,6 +157,16 @@ app.onError((error, c) => {
   // Hono and its middleware report expected failures as HTTPException, so those messages
   // are safe to pass on. Without this the response would be plain text.
   if (error instanceof HTTPException) {
+    // A refusal that built its own JSON body keeps it, so a rule enforced in a service can answer
+    // in the same `{error, issues}` shape as one enforced by a schema — `defaultHook` produces
+    // that shape and a client should not have to read two. `csrf()` also throws carrying a
+    // response, but not a JSON one, so it still falls through to the name below.
+    const carried = error.res;
+
+    if (carried?.headers.get("content-type")?.includes("application/json")) {
+      return carried;
+    }
+
     return c.json(
       // `csrf()` throws carrying a response rather than a message, so an empty one needs a name.
       {

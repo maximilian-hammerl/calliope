@@ -104,3 +104,44 @@ Deno.test("PATCH /api/groups/{groupId} leaves untouched fields alone", async () 
   assertEquals(updated.title, "Neuer Titel");
   assertEquals(updated.genres, ["fantasy"]);
 });
+
+/**
+ * Checked against the row the update produces rather than against the request: changing only the
+ * genres would otherwise leave whatever subgenres are stored sitting under none of them.
+ */
+Deno.test("PATCH /api/groups/{groupId} refuses genres that orphan the stored subgenres", async () => {
+  const cookie = await registerUser(owner);
+  const { id } = await createGroup(cookie, "private");
+
+  const set = await request("PATCH", `/api/groups/${id}`, cookie, {
+    genres: ["fantasy"],
+    subgenres: ["dark_fantasy"],
+  });
+  assertEquals(set.status, STATUS_CODE.OK);
+
+  // The subgenre is not in this request at all; it is already on the row.
+  const response = await request("PATCH", `/api/groups/${id}`, cookie, {
+    genres: ["western"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+
+  // And the group is untouched, so nothing was half-written.
+  const after = await (await request("PATCH", `/api/groups/${id}`, cookie, {
+    subtitle: "unverändert",
+  })).json();
+  assertEquals(after.genres, ["fantasy"]);
+  assertEquals(after.subgenres, ["dark_fantasy"]);
+});
+
+Deno.test("PATCH /api/groups/{groupId} takes genres and subgenres that agree", async () => {
+  const cookie = await registerUser(owner);
+  const { id } = await createGroup(cookie, "private");
+
+  const response = await request("PATCH", `/api/groups/${id}`, cookie, {
+    genres: ["western"],
+    subgenres: ["weird_western"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
+});

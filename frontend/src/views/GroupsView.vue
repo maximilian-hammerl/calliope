@@ -116,6 +116,13 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
 const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
 /**
+ * The filters and the search outlast a failed request. They were gated on `hasLoaded` alone, so a
+ * refused list took them off the page with it — and since a filter is what refuses a list, that
+ * left nothing to click to undo it and no way back but a reload.
+ */
+const showsControls = computed<boolean>(() => hasLoaded.value || isError.value)
+
+/**
  * Invitations are a separate ask, so they are a separate query rather than a filter over one
  * list — and the search below filters only the groups, never an invitation waiting on an answer.
  */
@@ -189,7 +196,7 @@ const creating = ref<boolean>(false)
       <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
            them. Two rows of filters now, which is what `FilterStrips` is for: the vocabulary
            shares the strip's label column instead of opening a second one beside it. -->
-      <FilterStrips v-if="hasLoaded" class="mb-7">
+      <FilterStrips v-if="showsControls" class="mb-7">
         <FilterStrip
           v-model="favourite"
           label="Favoriten"
@@ -200,7 +207,7 @@ const creating = ref<boolean>(false)
         <FilterReset :active="filtersActive" @reset="resetFilters" />
       </FilterStrips>
 
-      <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
+      <Field v-if="showsControls" class="mb-7 max-w-[380px]">
         <FieldLabel for="groups-search">Suche</FieldLabel>
         <Input
           id="groups-search"

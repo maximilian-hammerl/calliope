@@ -8,6 +8,7 @@ import type {
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
 import { emptyToNull } from "@/src/util/optional_text.ts";
+import { refuseOrphanedSubgenres } from "@/src/http/story_metadata_refusal.ts";
 import type { User } from "./user_service.ts";
 import {
   type ListQuery,
@@ -155,6 +156,8 @@ async function insertWritingGroup(
   creator: User,
   values: WritingGroupValues,
 ): Promise<WritingGroup> {
+  refuseOrphanedSubgenres(values.genres ?? [], values.subgenres ?? []);
+
   return await db.transaction().execute(async (transaction) => {
     const writingGroup = await transaction
       .insertInto("writingGroup")
@@ -379,13 +382,20 @@ async function updateWritingGroup(
     // about, and a request may well send the value it already has.
     const before = await transaction
       .selectFrom("writingGroup")
-      .select("visibility")
+      .select(["visibility", "genres", "subgenres"])
       .where("id", "=", writingGroupId)
       .executeTakeFirst();
 
     if (before === undefined) {
       return undefined;
     }
+
+    // Against the row this update produces, not against the request: changing only the genres
+    // would otherwise leave whatever subgenres are already stored sitting under none of them.
+    refuseOrphanedSubgenres(
+      changes.genres ?? before.genres,
+      changes.subgenres ?? before.subgenres,
+    );
 
     const updated = await transaction
       .updateTable("writingGroup")

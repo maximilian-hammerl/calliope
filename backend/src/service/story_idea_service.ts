@@ -6,6 +6,7 @@ import type {
   StoryLanguage,
 } from "@/src/database/schema.ts";
 import { emptyToNull } from "@/src/util/optional_text.ts";
+import { refuseOrphanedSubgenres } from "@/src/http/story_metadata_refusal.ts";
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
 import {
   listResultsWithCount,
@@ -322,6 +323,8 @@ async function insertStoryIdea(
   createdBy: string,
   values: StoryIdeaValues,
 ): Promise<StoryIdea> {
+  refuseOrphanedSubgenres(values.genres ?? [], values.subgenres ?? []);
+
   const { id } = await db
     .insertInto("storyIdea")
     // title and both texts restated so the type carries their presence; `toRow` describes a
@@ -348,6 +351,22 @@ async function updateStoryIdea(
   createdBy: string,
   values: Partial<StoryIdeaValues>,
 ): Promise<StoryIdea | undefined> {
+  // Scoped to the author like the update itself, so a stranger's idea cannot be reported on.
+  // Against the resulting row rather than the request: see `refuseOrphanedSubgenres`.
+  const before = await db
+    .selectFrom("storyIdea")
+    .select(["genres", "subgenres"])
+    .where("id", "=", ideaId)
+    .where("createdBy", "=", createdBy)
+    .executeTakeFirst();
+
+  if (before !== undefined) {
+    refuseOrphanedSubgenres(
+      values.genres ?? before.genres,
+      values.subgenres ?? before.subgenres,
+    );
+  }
+
   const updated = await db
     .updateTable("storyIdea")
     .set(toRow(values))
