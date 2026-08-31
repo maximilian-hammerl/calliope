@@ -351,29 +351,35 @@ async function updateStoryIdea(
   createdBy: string,
   values: Partial<StoryIdeaValues>,
 ): Promise<StoryIdea | undefined> {
-  // Scoped to the author like the update itself, so a stranger's idea cannot be reported on.
-  // Against the resulting row rather than the request: see `refuseOrphanedSubgenres`.
-  const before = await db
-    .selectFrom("storyIdea")
-    .select(["genres", "subgenres"])
-    .where("id", "=", ideaId)
-    .where("createdBy", "=", createdBy)
-    .executeTakeFirst();
+  // One transaction, as the group's update is: read apart from the write, two PATCHes racing can
+  // each see a state its own change is consistent with — one setting the genres, the other the
+  // subgenres — and both commit, leaving exactly the pair this refuses.
+  const updated = await db.transaction().execute(async (transaction) => {
+    // Scoped to the author like the update itself, so a stranger's idea cannot be reported on.
+    // Against the resulting row rather than the request: see `refuseOrphanedSubgenres`.
+    const before = await transaction
+      .selectFrom("storyIdea")
+      .select(["genres", "subgenres"])
+      .where("id", "=", ideaId)
+      .where("createdBy", "=", createdBy)
+      .forUpdate()
+      .executeTakeFirst();
 
-  if (before !== undefined) {
-    refuseOrphanedSubgenres(
-      values.genres ?? before.genres,
-      values.subgenres ?? before.subgenres,
-    );
-  }
+    if (before !== undefined) {
+      refuseOrphanedSubgenres(
+        values.genres ?? before.genres,
+        values.subgenres ?? before.subgenres,
+      );
+    }
 
-  const updated = await db
-    .updateTable("storyIdea")
-    .set(toRow(values))
-    .where("id", "=", ideaId)
-    .where("createdBy", "=", createdBy)
-    .returning("id")
-    .executeTakeFirst();
+    return await transaction
+      .updateTable("storyIdea")
+      .set(toRow(values))
+      .where("id", "=", ideaId)
+      .where("createdBy", "=", createdBy)
+      .returning("id")
+      .executeTakeFirst();
+  });
 
   if (updated === undefined) {
     return undefined;

@@ -94,8 +94,13 @@ describe('the vocabularies', () => {
  * it moves, this fails loudly, which is the point.
  */
 describe('the backend agrees about which genre a subgenre belongs to', () => {
-  // From the project root, which is where vitest runs.
-  const source = readFileSync(resolve('../backend/src/story_metadata.ts'), 'utf8')
+  // From this file rather than from the working directory: resolved against `process.cwd()` the
+  // guard only worked when vitest was started inside `frontend/`, and reported a missing file
+  // rather than drift when it was not.
+  const source = readFileSync(
+    resolve(import.meta.dirname, '../../../../../backend/src/story_metadata.ts'),
+    'utf8',
+  )
 
   const backend = new Map(
     [...source.matchAll(/^ {2}([a-z_]+): "([a-z_]+)",$/gmu)].map(([, sub, genre]) => [sub, genre]),
