@@ -399,7 +399,10 @@ async function updateWritingGroup(
 
     const updated = await transaction
       .updateTable("writingGroup")
-      .set(changes)
+      // Through `toRow` like the insert above, which it was not: an edit stored a padded title
+      // and a whitespace-only subtitle where founding a group trimmed both, and the group page
+      // then drew an empty row for a subtitle nobody wrote.
+      .set(toRow(changes))
       .where("id", "=", writingGroupId)
       .returning(["writingGroup.id"])
       .executeTakeFirst();

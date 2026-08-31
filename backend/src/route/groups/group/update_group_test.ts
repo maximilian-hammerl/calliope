@@ -145,3 +145,27 @@ Deno.test("PATCH /api/groups/{groupId} takes genres and subgenres that agree", a
 
   assertEquals(response.status, STATUS_CODE.OK);
 });
+
+/**
+ * An edit normalises what it stores, exactly as founding does. `toRow` says it is "the one place
+ * values become a row" — and for a while the update did not go through it, so a padded title and
+ * a whitespace-only subtitle survived a PATCH and the group page drew an empty row for the latter.
+ */
+Deno.test("PATCH /api/groups/{groupId} trims and empties what it stores", async () => {
+  const cookie = await registerUser(owner);
+  const { id } = await createGroup(cookie, "private");
+
+  const response = await request("PATCH", `/api/groups/${id}`, cookie, {
+    title: "  Nach dem Rand  ",
+    subtitle: "   ",
+    storyThemes: "   ",
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  const updated = await response.json();
+  assertEquals(updated.title, "Nach dem Rand");
+  // Whitespace is nothing written, and nothing written is null — a blank string is truthy and
+  // would render as a row with no value in it.
+  assertEquals(updated.subtitle, null);
+  assertEquals(updated.storyThemes, null);
+});
