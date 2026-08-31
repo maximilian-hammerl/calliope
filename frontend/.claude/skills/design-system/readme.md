@@ -783,6 +783,13 @@ in which direction. It is the only slide in the product, and it is the house 220
 like everything else — a transform on a track, behind `motion-safe:`, so somebody who asked for
 less motion gets none. A second sliding surface needs a reason of its own, not this precedent.
 
+**A filter is collapsible, and starts open.** Every filter on a list page is a disclosure: the
+label with a chevron, the options behind it. Open to begin with, because a filter nobody finds is
+the mistake discovery already made once — but a member who is not filtering can have the space
+back, which is worth most on a phone, where the filters otherwise fill the screen before the list
+begins. A shut section says how many values it holds, in darker ink than its own label; without
+that a filter can narrow a list while looking untouched.
+
 **Selection is a rule, never a box.** A 2px rule in `--oak` marks the current tab, the current
 bottom-bar item and the chosen option in a filter strip (`FilterStrip`); the inactive ones keep
 a lighter rule so they read as the same kind of thing. A filter is never the solid button

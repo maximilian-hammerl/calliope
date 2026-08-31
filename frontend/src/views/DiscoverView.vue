@@ -5,7 +5,9 @@ import { watchDebounced } from '@vueuse/core'
 import { useListGroups } from '@/api/groups/groups'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import FilterStrips from '@/components/common/FilterStrips.vue'
 import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
+import FilterReset from '@/components/common/FilterReset.vue'
 import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
 import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
 import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
@@ -64,6 +66,18 @@ const FAVOURITE_FILTERS = [
 const vocabulary = ref<StoryVocabularySelection>(emptySelection())
 
 const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
+
+/**
+ * Whether anything is narrowing the list, and how to stop it. Both are the view's because only
+ * the view knows every filter — the reset lived inside the vocabularies and cleared just those,
+ * leaving the strips beside it still set.
+ */
+const filtersActive = computed<boolean>(() => favourite.value !== 'any' || narrowed.value)
+
+function resetFilters() {
+  favourite.value = 'any'
+  vocabulary.value = emptySelection()
+}
 
 const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
 
@@ -132,15 +146,18 @@ const creating = ref<boolean>(false)
       </p>
 
       <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
-           them. -->
-      <FilterStrip
-        v-model="favourite"
-        label="Favoriten"
-        :options="FAVOURITE_FILTERS"
-        class="mb-3"
-      />
-
-      <StoryVocabularyFilters v-model="vocabulary" class="mb-7" />
+           them. Two rows of filters now, which is what `FilterStrips` is for: the vocabulary
+           shares the strip's label column instead of opening a second one beside it. -->
+      <FilterStrips class="mb-7">
+        <FilterStrip
+          v-model="favourite"
+          label="Favoriten"
+          :options="FAVOURITE_FILTERS"
+          default-value="any"
+        />
+        <StoryVocabularyFilters v-model="vocabulary" />
+        <FilterReset :active="filtersActive" @reset="resetFilters" />
+      </FilterStrips>
 
       <Field class="mb-7 max-w-[380px]">
         <FieldLabel for="discover-search">Suche</FieldLabel>

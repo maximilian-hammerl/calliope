@@ -7,24 +7,24 @@
  *
  * Never the solid button level: that is the one primary act of a screen, and a filter is not it.
  *
- * **It lays out its own label**, beside the options from `md` up and above them below it. It used
- * to require the parent to be a two-column grid, which is a rule a call site cannot see: the
- * groups and discovery pages drifted for months, and the thread's filter never had it at all.
- *
- * Inside a `FilterStrips` it dissolves into that grid instead (`md:contents`), so a run of strips
- * shares one label column and their options line up. Alone, it opens a two-column grid of its own.
- *
- * Below `md` the wrapper stays a box either way, which is what keeps a label nearer its own strip
- * than the one above — measured at 4px to both before this, so the grouping read as ambiguous.
+ * **`FilterSection` owns the label and the disclosure**, and the story vocabularies render
+ * through the same component — the label style drifted between the two while they were separate.
+ * Inside a `FilterStrips` the section dissolves into that grid so a run of filters shares one
+ * label column; alone it opens a two-column grid of its own.
  */
-import { computed, inject, useId } from 'vue'
-import { FILTER_STRIP_GROUP } from './filterStripGroup'
+import { computed } from 'vue'
+import FilterSection from './FilterSection.vue'
 
 const model = defineModel<Value>({ required: true })
 
 const props = defineProps<{
   label: string
   options: ReadonlyArray<{ value: Value; label: string }>
+  /**
+   * What the page opens with. Given it, the strip can say when it has been moved off it — a strip
+   * always has something selected, so "chosen" alone would mark every filter as narrowing.
+   */
+  defaultValue?: Value
   /**
    * Draw the label for screen readers only. For a strip that chooses a *view* the heading above it
    * already says what it is about, and the word is one too many — but the group still needs a name.
@@ -33,48 +33,39 @@ const props = defineProps<{
 }>()
 
 /**
- * Per instance, not from the label: two strips with the same word collided on the one screen that
- * shows both — the chats dialog's „Favoriten" over the groups list's — and the dialog's
- * `aria-labelledby` then named it from the label behind the modal, which `aria-modal` hides.
+ * A word rather than the chosen option's own label: „Offen oder geschlossen · Geschlossen" is
+ * wide, and the label column is shared, so every filter's options would shift as one of them
+ * changed. What matters when a section is shut is that it is narrowing at all.
  */
-const id = useId()
-
-const inGroup = inject(FILTER_STRIP_GROUP, false)
-
-/**
- * A hidden label occupies no column — it is out of flow — so a grid would only indent the options
- * by the column gap.
- */
-const layout = computed<string>(() => {
-  if (props.hideLabel) {
-    return inGroup ? 'md:col-span-2' : ''
-  }
-  return inGroup ? 'md:contents' : 'md:grid md:grid-cols-[max-content_1fr] md:items-end md:gap-x-4'
-})
+const chosen = computed<string | undefined>(() =>
+  props.defaultValue !== undefined && model.value !== props.defaultValue ? 'aktiv' : undefined,
+)
 </script>
 
 <template>
-  <div class="flex flex-col" :class="layout">
-    <span :id="id" :class="hideLabel ? 'sr-only' : 'text-[12.5px] text-ink-5 md:pb-[11px]'">{{
-      label
-    }}</span>
-
-    <div role="group" :aria-labelledby="id" class="flex min-w-0 items-end gap-5 overflow-x-auto">
-      <button
-        v-for="option in options"
-        :key="option.value"
-        type="button"
-        :aria-pressed="model === option.value"
-        class="flex min-h-11 flex-none items-end pb-[11px] text-nav whitespace-nowrap md:min-h-0"
-        :class="
-          model === option.value
-            ? 'border-b-2 border-oak font-medium text-ink-1'
-            : 'border-b-[1.5px] border-line-5 text-ink-5 hover:text-ink-2'
-        "
-        @click="model = option.value"
+  <FilterSection :label="label" :hide-label="hideLabel" :chosen="chosen">
+    <template #default="{ labelId }">
+      <div
+        role="group"
+        :aria-labelledby="labelId"
+        class="flex min-w-0 items-end gap-5 overflow-x-auto"
       >
-        {{ option.label }}
-      </button>
-    </div>
-  </div>
+        <button
+          v-for="option in options"
+          :key="option.value"
+          type="button"
+          :aria-pressed="model === option.value"
+          class="flex min-h-11 flex-none items-end pb-[11px] text-nav whitespace-nowrap md:min-h-0"
+          :class="
+            model === option.value
+              ? 'border-b-2 border-oak font-medium text-ink-1'
+              : 'border-b-[1.5px] border-line-5 text-ink-5 hover:text-ink-2'
+          "
+          @click="model = option.value"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </template>
+  </FilterSection>
 </template>

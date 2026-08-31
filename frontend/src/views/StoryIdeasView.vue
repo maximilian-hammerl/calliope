@@ -18,6 +18,7 @@ import { usePagedList } from '@/composables/usePagedList'
 import FilterStrip from '@/components/common/FilterStrip.vue'
 import FilterStrips from '@/components/common/FilterStrips.vue'
 import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
+import FilterReset from '@/components/common/FilterReset.vue'
 import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
 import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
 import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
@@ -99,6 +100,26 @@ const vocabulary = ref<StoryVocabularySelection>(emptySelection())
 
 const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
 
+/**
+ * Whether anything is narrowing the list, and how to stop it. Both are the view's because only
+ * the view knows every filter — the reset lived inside the vocabularies and cleared just those,
+ * leaving the strips beside it still set.
+ */
+const filtersActive = computed<boolean>(
+  () =>
+    readerState.value !== 'unread' ||
+    status.value !== 'open' ||
+    favourite.value !== 'any' ||
+    narrowed.value,
+)
+
+function resetFilters() {
+  readerState.value = 'unread'
+  status.value = 'open'
+  favourite.value = 'any'
+  vocabulary.value = emptySelection()
+}
+
 const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
 
 // A search or a filter narrows the board, so whatever page was open is about a different set.
@@ -175,7 +196,7 @@ const creating = ref<boolean>(false)
       </p>
 
       <!-- One grid for both strips, so the labels share a column and the strips align. -->
-      <FilterStrips v-if="hasLoaded" class="mb-3">
+      <FilterStrips v-if="hasLoaded" class="mb-7">
         <!-- Neither reading nor status says anything on one's own ideas, so those two are the
              discovery board's; the favourite belongs to both. -->
         <template v-if="!mine">
@@ -183,13 +204,24 @@ const creating = ref<boolean>(false)
             v-model="readerState"
             label="Gelesen oder nicht"
             :options="READER_STATE_FILTERS"
+            default-value="unread"
           />
-          <FilterStrip v-model="status" label="Offen oder geschlossen" :options="STATUS_FILTERS" />
+          <FilterStrip
+            v-model="status"
+            label="Offen oder geschlossen"
+            :options="STATUS_FILTERS"
+            default-value="open"
+          />
         </template>
-        <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
+        <FilterStrip
+          v-model="favourite"
+          label="Favoriten"
+          :options="FAVOURITE_FILTERS"
+          default-value="any"
+        />
+        <StoryVocabularyFilters v-model="vocabulary" />
+        <FilterReset :active="filtersActive" @reset="resetFilters" />
       </FilterStrips>
-
-      <StoryVocabularyFilters v-if="hasLoaded" v-model="vocabulary" class="mb-7" />
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="ideas-search">Suche</FieldLabel>

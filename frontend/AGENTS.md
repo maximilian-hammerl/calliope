@@ -533,6 +533,35 @@ type „meins" into — see #29 on Yooco's required fields.
 
 ## Filters
 
+**Every filter is a `FilterSection`** — its label, and its options behind a disclosure that starts
+open. `FilterStrip` and the story vocabularies both render through it, and they did not before:
+the label came out in the heading serif on one and the UI sans on the other, because reka wraps a
+trigger in an `h3` and the base layer sets headings in Newsreader. One implementation is what
+stops that recurring, so the overrides (`font-sans`, the explicit size) live there once.
+
+Two things it takes: `initiallyShut` for a section long enough that opening it costs the page —
+only the tropes, at thirty-one options and four rows — and `chosen`, a word shown beside the label
+in darker ink. „3 gewählt" for a vocabulary, „aktiv" for a strip, and nothing at all when the
+filter narrows nothing. A shut section has no other way to say it is still filtering, and a filter
+that hides while it filters is how somebody concludes the board is empty. A strip needs its
+`defaultValue` to know: something is always selected, so without it every strip would read as
+narrowing. It is a word rather than the chosen option's own label because the label column is
+shared — „Offen oder geschlossen · Geschlossen" would shift every other filter's options as it
+changed.
+
+A **hidden** label renders no disclosure at all: the two strips that use one are the view
+switchers, which are navigation rather than filters and would have nothing visible to click.
+
+**`FilterReset` belongs to the view, not to any one filter.** It lived inside the story
+vocabularies and cleared only those, leaving the strips beside it set and the list still narrowed
+after a member had asked for it not to be. The view says whether anything is active and what
+cleared means — the defaults are its own — while the component owns the wording and the placement.
+The search field is deliberately outside it: it is its own control, below the block, and clears
+itself.
+
+The open state is not remembered yet. Persisting it per member is what makes shut-by-default
+worth having on a phone, and is the next thing to do here.
+
 **`FilterStrip` lays out its own label** — beside the options from `md` up, above them below it.
 It used to require its parent to be `md:grid md:grid-cols-[max-content_1fr]`, which is a rule the
 call site cannot see and three of the five got wrong: the groups and discovery pages drifted for
