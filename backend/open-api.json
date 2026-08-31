@@ -647,7 +647,8 @@
                   "username": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 32
+                    "maxLength": 32,
+                    "pattern": "\\S"
                   },
                   "emailAddress": {
                     "type": "string",
@@ -4608,7 +4609,8 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
                   "synopsis": { "type": "string", "maxLength": 8000 },
@@ -5322,7 +5324,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -6525,7 +6528,8 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
                   "synopsis": { "type": "string", "maxLength": 8000 },
@@ -9185,7 +9189,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": { "type": "string", "minLength": 1, "maxLength": 200 }
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "pattern": "\\S"
+                  }
                 },
                 "required": ["text"]
               }
@@ -10372,7 +10381,8 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   }
                 },
                 "required": ["title"]
@@ -11271,7 +11281,8 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   }
                 },
                 "required": ["title"]
@@ -12169,7 +12180,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -13730,7 +13742,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -14401,18 +14414,21 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
                   "teaser": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 2000
+                    "maxLength": 2000,
+                    "pattern": "\\S"
                   },
                   "synopsis": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 8000
+                    "maxLength": 8000,
+                    "pattern": "\\S"
                   },
                   "tense": {
                     "type": ["string", "null"],
@@ -16600,18 +16616,21 @@
                   "title": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "subtitle": { "type": ["string", "null"], "maxLength": 120 },
                   "teaser": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 2000
+                    "maxLength": 2000,
+                    "pattern": "\\S"
                   },
                   "synopsis": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 8000
+                    "maxLength": 8000,
+                    "pattern": "\\S"
                   },
                   "tense": {
                     "type": ["string", "null"],
@@ -18412,7 +18431,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -19232,7 +19252,8 @@
                   "reason": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 2000
+                    "maxLength": 2000,
+                    "pattern": "\\S"
                   }
                 },
                 "required": ["targetType", "targetId", "category", "reason"]
@@ -19508,7 +19529,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -19934,7 +19956,8 @@
                       "note": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "pattern": "\\S"
                       }
                     },
                     "required": ["status", "outcome", "note"]
@@ -20766,7 +20789,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -22163,7 +22187,8 @@
                   "reason": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 2000
+                    "maxLength": 2000,
+                    "pattern": "\\S"
                   }
                 },
                 "required": ["reason"]
@@ -22959,7 +22984,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -23663,7 +23689,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "title": { "type": "string", "minLength": 1, "maxLength": 80 }
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80,
+                    "pattern": "\\S"
+                  }
                 },
                 "required": ["title"]
               }
@@ -23934,7 +23965,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -24576,7 +24608,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
@@ -25691,7 +25724,8 @@
                   "text": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 4000
+                    "maxLength": 4000,
+                    "pattern": "\\S"
                   }
                 },
                 "required": ["text"]
@@ -26209,7 +26243,8 @@
                   "search": {
                     "type": "string",
                     "minLength": 3,
-                    "maxLength": 120
+                    "maxLength": 120,
+                    "pattern": "\\S"
                   },
                   "limit": {
                     "type": "integer",

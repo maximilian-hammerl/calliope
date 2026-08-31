@@ -8,7 +8,7 @@ import { sessionProvenance } from "@/src/util/session_provenance.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
-import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
+import { EMAIL_ADDRESS_SCHEMA, notBlank } from "@/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -21,9 +21,13 @@ import {
 const REGISTER_BODY = USER_SCHEMA
   .pick({ username: true, emailAddress: true })
   .extend({
-    username: USER_SCHEMA.shape.username
-      .min(TEXT_MINIMUM.username)
-      .max(TEXT_LIMIT.username),
+    // A name is what everybody else sees; „   " is three characters and so passed the minimum,
+    // and a member registered under a name that renders as nothing anywhere it appears.
+    username: notBlank(
+      USER_SCHEMA.shape.username
+        .min(TEXT_MINIMUM.username)
+        .max(TEXT_LIMIT.username),
+    ),
     emailAddress: EMAIL_ADDRESS_SCHEMA,
     // Never stored as given, so it has no column of its own.
     password: z.string().min(TEXT_MINIMUM.password).max(TEXT_LIMIT.password),

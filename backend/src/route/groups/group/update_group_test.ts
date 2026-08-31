@@ -169,3 +169,23 @@ Deno.test("PATCH /api/groups/{groupId} trims and empties what it stores", async 
   assertEquals(updated.subtitle, null);
   assertEquals(updated.storyThemes, null);
 });
+
+/**
+ * `min(1)` counts characters, so „   " passed it and the service's own trim then stored an empty
+ * string: one edit could leave a group with no title at all. The browser never sends it — its
+ * `titleSchema` trims before checking — which is exactly why the API had to be asked directly.
+ */
+Deno.test("PATCH /api/groups/{groupId} refuses a title of only whitespace", async () => {
+  const cookie = await registerUser(owner);
+  const { id } = await createGroup(cookie, "private");
+
+  const response = await request("PATCH", `/api/groups/${id}`, cookie, {
+    title: "   ",
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+    "title",
+  ]);
+});

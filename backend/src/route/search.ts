@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import {
   FOUND_THREAD_RESPONSE,
   GROUP_RESPONSE,
@@ -31,7 +32,7 @@ import {
 const RESULTS_PER_SECTION = 5;
 
 const SEARCH_BODY = z.object({
-  search: z.string().min(TEXT_MINIMUM.search).max(TEXT_LIMIT.search),
+  search: notBlank(z.string().min(TEXT_MINIMUM.search).max(TEXT_LIMIT.search)),
   limit: z.number().int().min(1).max(20).default(RESULTS_PER_SECTION),
 });
 

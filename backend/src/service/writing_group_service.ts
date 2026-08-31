@@ -384,6 +384,10 @@ async function updateWritingGroup(
       .selectFrom("writingGroup")
       .select(["visibility", "genres", "subgenres"])
       .where("id", "=", writingGroupId)
+      // Locked, as the idea's update locks its own row: a transaction alone is not enough at
+      // READ COMMITTED, so two edits — one moving the genres, the other the subgenres — could
+      // each read a state its own change agreed with and both commit the pair this refuses.
+      .forUpdate()
       .executeTakeFirst();
 
     if (before === undefined) {

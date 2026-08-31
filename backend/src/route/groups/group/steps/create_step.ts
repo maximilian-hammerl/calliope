@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
@@ -23,8 +24,8 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 const CREATE_STEP_BODY = WRITING_GROUP_NEXT_STEP_SCHEMA
   .pick({ text: true })
   .extend({
-    text: WRITING_GROUP_NEXT_STEP_SCHEMA.shape.text.min(1).max(
-      TEXT_LIMIT.stepText,
+    text: notBlank(
+      WRITING_GROUP_NEXT_STEP_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.stepText),
     ),
   });
 

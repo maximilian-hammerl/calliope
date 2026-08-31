@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
@@ -23,7 +24,9 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 const CREATE_THREAD_BODY = WRITING_THREAD_SCHEMA
   .pick({ title: true })
   .extend({
-    title: WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
+    title: notBlank(
+      WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
+    ),
   });
 
 export default new OpenAPIHono().openapi(

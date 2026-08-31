@@ -13,6 +13,7 @@ import {
 } from "@/src/http/response.ts";
 import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 import {
+  notBlank,
   STORY_CONTENT_WARNINGS_SCHEMA,
   STORY_GENRES_SCHEMA,
   STORY_SUBGENRES_SCHEMA,
@@ -35,7 +36,9 @@ const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
   })
   .extend({
     // The column only requires text; an empty title is not useful.
-    title: WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
+    title: notBlank(
+      WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
+    ),
     subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
     synopsis: WRITING_GROUP_SCHEMA.shape.synopsis.max(TEXT_LIMIT.groupSynopsis),
     // Private unless asked otherwise, per the "private by default" principle.

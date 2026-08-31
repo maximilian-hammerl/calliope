@@ -14,6 +14,7 @@ import {
 } from "@/src/http/response.ts";
 import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
 import {
+  notBlank,
   STORY_CONTENT_WARNINGS_SCHEMA,
   STORY_GENRES_SCHEMA,
   STORY_SUBGENRES_SCHEMA,
@@ -39,13 +40,15 @@ export const STORY_IDEA_BODY = STORY_IDEA_SCHEMA
     // The title and both texts are required, and nothing else is: the metadata block is where
     // a mandatory field gets filled with nonsense. The two texts are the exception on purpose —
     // somebody unwilling to write a short version is not really asking to be answered.
-    title: STORY_IDEA_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.storyIdeaTitle),
-    subtitle: z.string().max(TEXT_LIMIT.storyIdeaSubtitle).nullish(),
-    teaser: STORY_IDEA_SCHEMA.shape.teaser.min(1).max(
-      TEXT_LIMIT.storyIdeaTeaser,
+    title: notBlank(
+      STORY_IDEA_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.storyIdeaTitle),
     ),
-    synopsis: STORY_IDEA_SCHEMA.shape.synopsis.min(1).max(
-      TEXT_LIMIT.storyIdeaSynopsis,
+    subtitle: z.string().max(TEXT_LIMIT.storyIdeaSubtitle).nullish(),
+    teaser: notBlank(
+      STORY_IDEA_SCHEMA.shape.teaser.min(1).max(TEXT_LIMIT.storyIdeaTeaser),
+    ),
+    synopsis: notBlank(
+      STORY_IDEA_SCHEMA.shape.synopsis.min(1).max(TEXT_LIMIT.storyIdeaSynopsis),
     ),
     language: STORY_IDEA_SCHEMA.shape.language.default("german"),
     lookingFor: DETAIL_SCHEMA,

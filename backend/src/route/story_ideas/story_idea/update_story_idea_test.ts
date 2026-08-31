@@ -53,3 +53,40 @@ Deno.test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async 
 
   assertEquals(response.status, STATUS_CODE.NotFound);
 });
+
+/**
+ * Against the row the update produces, not against the request: a PATCH that moves only the
+ * genres orphans whatever subgenres are already stored. The group's update is tested for this;
+ * the idea's was not, and the guard could have been dropped without a single test noticing.
+ */
+Deno.test("PATCH /api/story-ideas/{ideaId} refuses genres that orphan the stored subgenres", async () => {
+  const cookie = await registerUser(author);
+  const idea = await (await createIdea(cookie, {
+    genres: ["fantasy"],
+    subgenres: ["dark_fantasy"],
+  })).json();
+
+  // The subgenre is not in this request at all; it is already on the row.
+  const response = await patchIdea(cookie, idea.id, { genres: ["western"] });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+
+  // And the idea is untouched, so the transaction rolled back rather than half-writing.
+  const after =
+    await (await patchIdea(cookie, idea.id, { subtitle: "unverändert" }))
+      .json();
+  assertEquals(after.genres, ["fantasy"]);
+  assertEquals(after.subgenres, ["dark_fantasy"]);
+});
+
+Deno.test("PATCH /api/story-ideas/{ideaId} takes genres and subgenres that agree", async () => {
+  const cookie = await registerUser(author);
+  const idea = await (await createIdea(cookie)).json();
+
+  const response = await patchIdea(cookie, idea.id, {
+    genres: ["western"],
+    subgenres: ["weird_western"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.OK);
+});

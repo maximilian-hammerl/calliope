@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -14,7 +15,7 @@ import {
 } from "@/src/http/response.ts";
 
 const CREATE_CHAT_BODY = z.object({
-  title: z.string().min(1).max(TEXT_LIMIT.chatTitle),
+  title: notBlank(z.string().min(1).max(TEXT_LIMIT.chatTitle)),
 });
 
 export default new OpenAPIHono().openapi(

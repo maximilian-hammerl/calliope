@@ -43,10 +43,13 @@ Deno.test("POST /api/auth/register reports every schema violation", async () => 
   assertEquals(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
   assertEquals(body.error, "Invalid request");
-  // All three fields are reported, so validation is not short-circuited. Sorted, because
-  // the order follows the schema's keys and carries no meaning.
+  // All three fields are reported, so validation is not short-circuited. Distinct and sorted:
+  // the order follows the schema's keys and carries no meaning, and one field may fail more than
+  // one check — an empty username is both too short and blank.
   assertEquals(
-    body.issues.map((issue: { path: string }) => issue.path).toSorted(),
+    [
+      ...new Set(body.issues.map((issue: { path: string }) => issue.path)),
+    ].toSorted(),
     ["emailAddress", "password", "username"],
   );
 });

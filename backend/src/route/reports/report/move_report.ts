@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
 import { REPORT_OUTCOME_SCHEMA, REPORT_SCHEMA } from "@/src/database/schema.ts";
@@ -29,7 +30,7 @@ const MOVE_REPORT_BODY = z.discriminatedUnion("status", [
     outcome: REPORT_OUTCOME_SCHEMA,
     // Required, for the reason the reporter's own `reason` is required beside their category: an
     // outcome on its own loses the detail that decided the case.
-    note: z.string().min(1).max(TEXT_LIMIT.reportClosingNote),
+    note: notBlank(z.string().min(1).max(TEXT_LIMIT.reportClosingNote)),
   }),
 ]);
 

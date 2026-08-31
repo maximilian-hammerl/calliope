@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
@@ -17,7 +18,7 @@ import {
 const BAN_USER_BODY = z.object({
   // Recorded for the operators, never shown to the member: what they are told is one fixed
   // sentence, so a note written in haste cannot become the explanation somebody reads.
-  reason: z.string().min(1).max(TEXT_LIMIT.banReason),
+  reason: notBlank(z.string().min(1).max(TEXT_LIMIT.banReason)),
 });
 
 const PARAMS = z.object({ userId: USER_SCHEMA.shape.id });

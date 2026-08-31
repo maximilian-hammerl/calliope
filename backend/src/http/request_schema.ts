@@ -24,6 +24,19 @@ export const EMAIL_ADDRESS_SCHEMA = z.email({ pattern: z.regexes.html5Email })
   .toLowerCase();
 
 /**
+ * Text that has to say something. `min(1)` counts characters, so „   " passes it — and the service
+ * trims before storing, which turned a group's title into an empty string on the way through. The
+ * browser already refuses it: `titleSchema` trims *before* checking, so without this the API takes
+ * what the interface will not send.
+ *
+ * A pattern rather than a `.trim()` transform. Normalisation belongs in the service, where a
+ * caller cannot skip it, and a transform in a request schema reaches `open-api.json` as a shape
+ * the client cannot see — where `pattern` is a rule the document can state plainly.
+ */
+export const notBlank = <T extends z.ZodString>(schema: T) =>
+  schema.regex(/\S/, "Must not be only whitespace");
+
+/**
  * The story vocabularies — genres, subgenres, tropes, content warnings. Chosen from the database's
  * own enums rather than typed, which is what makes them filterable: „Enemies to Lovers" and
  * „enemies-to-lovers" were three tropes to a query and one to a reader.

@@ -201,3 +201,15 @@ Deno.test("POST /api/groups takes a subgenre of a genre it does carry", async ()
 
   assertEquals(response.status, STATUS_CODE.Created);
 });
+
+Deno.test("POST /api/groups refuses a title of only whitespace", async () => {
+  const cookie = await registerUser(username);
+
+  // Not merely stored blank: the service trims, so this used to found a group with no title.
+  const response = await request("POST", "/api/groups", cookie, {
+    title: "   ",
+    synopsis: "d",
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+});

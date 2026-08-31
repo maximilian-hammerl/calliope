@@ -59,3 +59,31 @@ Deno.test("POST /api/story-ideas refuses an empty title", async () => {
   const response = await createIdea(cookie, { title: "" });
   assertEquals(response.status, STATUS_CODE.BadRequest);
 });
+
+/**
+ * The same rule the group carries, tested here too: the guard lives in both services and only
+ * one of them was pinned — neutering the idea's changed nothing that the suite noticed.
+ */
+Deno.test("POST /api/story-ideas refuses a subgenre from a genre it does not carry", async () => {
+  const cookie = await registerUser(author);
+
+  const response = await createIdea(cookie, {
+    genres: ["romance"],
+    subgenres: ["space_opera"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+    "subgenres",
+  ]);
+});
+
+Deno.test("POST /api/story-ideas refuses a title of only whitespace", async () => {
+  const cookie = await registerUser(author);
+
+  // The service trims what it stores, so this used to publish an idea with no title.
+  const response = await createIdea(cookie, { title: "   " });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+});

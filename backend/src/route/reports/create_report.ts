@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notBlank } from "@/src/http/request_schema.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
 import { REPORT_SCHEMA } from "@/src/database/schema.ts";
@@ -21,7 +22,7 @@ const CREATE_REPORT_BODY = z.object({
   // Both, not either: the category is what the queue filters on, the reason is what decides
   // the case.
   category: REPORT_SCHEMA.shape.category,
-  reason: z.string().min(1).max(TEXT_LIMIT.reportReason),
+  reason: notBlank(z.string().min(1).max(TEXT_LIMIT.reportReason)),
 });
 
 export default new OpenAPIHono().openapi(
