@@ -8,7 +8,7 @@ import { useUnblockMember } from '@/api/blocks/blocks'
 import { GetCurrentUser200PlatformRole } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
 import type { GetUser200 } from '@/api/models'
-import { Pencil } from '@lucide/vue'
+import { Flag, Pencil, ShieldBan, ShieldCheck, UserCheck, UserX } from '@lucide/vue'
 import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -136,15 +136,20 @@ async function allowContactAgain() {
               :disabled="unblocking"
               @click="allowContactAgain"
             >
+              <UserCheck :stroke-width="1.5" aria-hidden="true" />
               Blockierung aufheben
             </Button>
             <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
                  where the consequences are spelled out. -->
             <Button v-else variant="outline" size="sm" @click="blocking = true">
+              <UserX :stroke-width="1.5" aria-hidden="true" />
               Blockieren
             </Button>
             <!-- Quiet beside Blockieren: both act on the member the page is about. -->
-            <Button variant="outline" size="sm" @click="reporting = true">Melden</Button>
+            <Button variant="outline" size="sm" @click="reporting = true">
+              <Flag :stroke-width="1.5" aria-hidden="true" />
+              Melden
+            </Button>
           </div>
 
           <!-- Its own group, after the member-facing one: blocking is what any member may do
@@ -158,9 +163,13 @@ async function allowContactAgain() {
               :disabled="liftingBan"
               @click="liftTheBan"
             >
+              <ShieldCheck :stroke-width="1.5" aria-hidden="true" />
               Sperre aufheben
             </Button>
+            <!-- A shield rather than the person the block pair draws: what separates these two
+                 rows is that this one is the platform acting, not a member. -->
             <Button v-else variant="outline" size="sm" @click="banning = true">
+              <ShieldBan :stroke-width="1.5" aria-hidden="true" />
               Konto sperren
             </Button>
           </div>

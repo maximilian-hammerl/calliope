@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Pencil, Trash2 } from '@lucide/vue'
+import { Flag, Pencil, Trash2 } from '@lucide/vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { Button } from '@/components/ui/button'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
@@ -59,7 +59,10 @@ const meta = computed<string>(() =>
 
       <!-- Outside the mayModify group: reporting is what somebody who may *not* change it does.
            Quiet like its neighbours — an act on the thread the page is about. -->
-      <Button variant="outline" size="sm" @click="$emit('report')">Melden</Button>
+      <Button variant="outline" size="sm" @click="$emit('report')">
+        <Flag :stroke-width="1.5" aria-hidden="true" />
+        Melden
+      </Button>
     </div>
 
     <div v-if="props.mayModify" class="flex shrink-0 items-center gap-2">

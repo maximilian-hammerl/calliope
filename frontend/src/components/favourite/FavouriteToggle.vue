@@ -46,6 +46,9 @@ async function change() {
       :disabled="savingFavourite"
       @click="change"
     >
+      <!-- From `favouriteToggle`, so the three controls cannot show different glyphs for one act.
+           Decorative — the label beside it already names the state. -->
+      <component :is="toggle.icon" :stroke-width="1.5" aria-hidden="true" />
       {{ toggle.label }}
     </Button>
 

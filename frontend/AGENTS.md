@@ -63,9 +63,10 @@ carries `bg-avatar text-avatar-foreground` because shadcn's `bg-muted` is the ra
 `DropdownMenuItem` and `DialogContent` carry the mobile rules below, `navigation-menu`'s
 trigger style drops shadcn's filled pills for the design system's underline-and-ink pattern,
 and `AccordionTrigger` shows `ChevronRight` shut and `ChevronDown` open instead of rotating a
-single chevron, which is what the icon table asks for.
-The `add` for it also re-inserted the googleapis.com font import into `main.css` — the check
-above is not hypothetical.
+single chevron, which is what the icon table asks for. The `add` for it also re-inserted the
+googleapis.com font import into `main.css` — the check above is not hypothetical.
+
+`popover/` is patched the same way: the control radius, and shadcn's `shadow-md` dropped.
 
 `AvatarImage` carries **`object-cover`**, which shadcn leaves off: an `<img>` defaults to `fill`,
 so a portrait photograph is stretched into the square rather than cropped to it. The upload
@@ -109,6 +110,11 @@ version. Its `readme.md` is the file to edit; the prototype components under `co
 the size *and* the line height, which is the point — writing the pair by hand is how 13.5px ended
 up with four different line heights.
 
+A new size goes in `FONT_SIZES` in `lib/utils.ts` as well as `theme.css`. tailwind-merge reads
+`text-*` and guesses — t-shirt size means size, anything else means colour — so an undeclared
+`text-note` is filed under colour, and `cn('text-note text-ink-5', …)` merges the two and drops
+the size. A test compares the two lists, because the failure is silent.
+
 **Spacing is Tailwind's scale**, which already covers the design system's 2px steps — `1.5` is
 6px, `3.5` is 14px. Two exceptions: `px-gutter` (18px, the phone gutter, paired with `md:px-10`),
 and a bracketed value like `pb-[11px]`, which means deliberately off the scale — an optical
@@ -118,6 +124,21 @@ Icons are **Lucide at `stroke-width="1.5"`** — Lucide's default of 2 is heavie
 else on the page. They accompany a label rather than replacing it.
 
 ## shadcn-vue: the CLI will undo things
+
+**Use the CLI anyway.** Everything below is a list of things it gets wrong, which makes it read
+like an argument for avoiding it. It is not. A shadcn component is what the CLI writes, and this
+project is committed to that: the alternative is hand-writing the file, and a hand-written copy
+is worse in the way that matters, because it is a copy of what you *remember* the component
+being. A replicated popover came out missing `inheritAttrs: false`, the `$attrs` spread, the
+root's `v-slot` forwarding and `max-w-(--reka-popover-content-available-width)` — four silent
+behaviour differences, against two house patches that the checklist reapplies in a minute. Run
+`add`, restore what the checklist names, reapply the patches. The damage is bounded and written
+down; the drift from copying by hand is neither.
+
+The same holds for reaching past a component to reka. That is right when what you are building
+is not the component — `SearchField` and `ContextSheet` both say so in a docblock, and both
+build something the generator does not ship. It is wrong when the thing you want *is* the
+component and the CLI is merely inconvenient.
 
 `npx shadcn-vue@latest add …` rewrites `src/assets/main.css` on **every** run: it replaces the
 font import with its own, dropping Newsreader and IBM Plex Mono, and appends a duplicate
@@ -134,7 +155,7 @@ grep '"\^' package.json | grep -v '"node"'                                      
 # Every shadow, not only shadow-xs: `shadow-md` on the menu and select panels survived a
 # year of this check because it only ever looked for one class name. Dialog keeps its own.
 grep -rl 'shadow-' src/components/ui/ | grep -v dialog                                 # expect no output
-grep -rl 'rounded-md' src/components/ui/dropdown-menu/ src/components/ui/select/        # expect no output
+grep -rl 'rounded-md' src/components/ui/dropdown-menu/ src/components/ui/select/ src/components/ui/popover/  # expect no output
 grep -c border-line-5 src/components/ui/button/index.ts                                # expect 1
 grep -c secondary src/components/ui/button/index.ts                                    # expect 0
 grep -c rounded-md src/components/ui/button/index.ts src/components/ui/input/Input.vue src/components/ui/textarea/Textarea.vue src/components/ui/select/SelectTrigger.vue  # expect 0

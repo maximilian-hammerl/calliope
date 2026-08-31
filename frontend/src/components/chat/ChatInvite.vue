@@ -54,11 +54,11 @@ async function invite(user: ListUsers200ResultsItem) {
   <div>
     <button
       type="button"
-      class="flex min-h-11 items-center gap-1 text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+      class="flex min-h-11 items-center gap-1.5 text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
       :aria-expanded="open"
       @click="open = !open"
     >
-      <Plus :size="14" :stroke-width="1.5" />
+      <Plus :size="14" :stroke-width="1.5" aria-hidden="true" />
       Einladen
     </button>
 

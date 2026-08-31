@@ -12,6 +12,7 @@ import {
   tropeLine,
 } from '@/lib/story/storyVocabulary'
 import {
+  IDEA_STATUS_ICONS,
   IDEA_STATUS_LABELS,
   LANGUAGE_LABELS,
   PARTY_SIZE_LABELS,
@@ -21,7 +22,7 @@ import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
 import { Button } from '@/components/ui/button'
-import { MessageCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { Flag, MessageCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
 
 const props = withDefaults(
   defineProps<{
@@ -99,7 +100,17 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
   <div class="flex flex-wrap items-baseline gap-3">
     <component :is="heading" class="text-h1 text-ink-1">
       {{ idea.title }}
-      <CalliopeBadge class="ml-3">{{ IDEA_STATUS_LABELS[idea.status] }}</CalliopeBadge>
+      <CalliopeBadge class="ml-3 inline-flex items-center gap-1.5">
+        <!-- Decorative: the word beside it is the accessible name already. This page is where
+             the word teaches the mark the row shows on its own. -->
+        <component
+          :is="IDEA_STATUS_ICONS[idea.status]"
+          :size="13"
+          :stroke-width="1.5"
+          aria-hidden="true"
+        />
+        {{ IDEA_STATUS_LABELS[idea.status] }}
+      </CalliopeBadge>
     </component>
 
     <div class="ml-auto flex flex-wrap items-center gap-2">
@@ -139,11 +150,17 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
           :disabled="savingRead"
           @click="markRead(toggle.next)"
         >
+          <!-- From `readToggle`, the same glyph `ReadMark` shows in a row. Decorative — the label
+               beside it already names the state. -->
+          <component :is="toggle.icon" :stroke-width="1.5" aria-hidden="true" />
           {{ toggle.label }}
         </Button>
         <!-- Quiet like its neighbours: a level says what an act is on, and this is on the idea.
              Placement is what keeps reporting from competing. -->
-        <Button variant="outline" size="sm" @click="emit('report')">Melden</Button>
+        <Button variant="outline" size="sm" @click="emit('report')">
+          <Flag :stroke-width="1.5" aria-hidden="true" />
+          Melden
+        </Button>
         <!-- Disabled rather than hidden on a closed idea: the endpoint answers 403, and a member
              who kept the idea should see why they cannot write. Inert in the carousel, whose set
              is open ideas only — but the rule belongs to the idea, not to the page. -->

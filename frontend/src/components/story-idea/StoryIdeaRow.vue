@@ -46,11 +46,11 @@ const story = computed<string>(() =>
         {{ idea.title }}
       </RouterLink>
       <!-- Open is the board's resting state and says nothing; the others are worth a mark. -->
-      <ClosedMark v-if="idea.status !== 'open'" class="ml-3" />
+      <ClosedMark v-if="idea.status !== 'open'" class="ml-3" interactive />
       <!-- The reader's own two states, as marks rather than words: the idea's own status keeps
            the badge, so the row reads as one fact about the idea and then what you did with it. -->
-      <ReadMark v-if="idea.isRead" class="ml-3" />
-      <FavouriteMark v-if="idea.isFavourite" class="ml-2" />
+      <ReadMark v-if="idea.isRead" class="ml-3" interactive />
+      <FavouriteMark v-if="idea.isFavourite" class="ml-3" interactive />
       <CalliopeBadge v-if="idea.language !== 'german'" class="ml-3">
         {{ LANGUAGE_LABELS[idea.language] }}
       </CalliopeBadge>

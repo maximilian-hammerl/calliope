@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { Flag, Pencil, Trash2 } from '@lucide/vue'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { favouriteToggle } from '@/lib/format/favourite'
 import { useFavourite } from '@/composables/useFavourite'
@@ -160,17 +161,19 @@ const meta = computed<string>(() => {
         <button
           v-if="mayModify"
           type="button"
-          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 hover:text-oak-deep md:min-h-0"
           @click="emit('edit')"
         >
+          <Pencil :size="14" :stroke-width="1.5" aria-hidden="true" />
           Bearbeiten
         </button>
         <button
           v-if="mayModify"
           type="button"
-          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 hover:text-oak-deep md:min-h-0"
           @click="emit('delete')"
         >
+          <Trash2 :size="14" :stroke-width="1.5" aria-hidden="true" />
           Löschen
         </button>
         <!-- A raw button rather than `FavouriteToggle`, because this row is text actions sharing
@@ -178,11 +181,12 @@ const meta = computed<string>(() => {
              wording still comes from `favouriteToggle`, so it cannot drift from the other four. -->
         <button
           type="button"
-          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 hover:text-oak-deep md:min-h-0"
           :title="favourite.title"
           :disabled="savingFavourite"
           @click="toggleFavourite"
         >
+          <component :is="favourite.icon" :size="14" :stroke-width="1.5" aria-hidden="true" />
           {{ favourite.label }}
         </button>
 
@@ -194,9 +198,10 @@ const meta = computed<string>(() => {
         <button
           v-if="mayReport"
           type="button"
-          class="flex min-h-11 items-center hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 hover:text-oak-deep md:min-h-0"
           @click="emit('report')"
         >
+          <Flag :size="14" :stroke-width="1.5" aria-hidden="true" />
           Melden
         </button>
       </template>

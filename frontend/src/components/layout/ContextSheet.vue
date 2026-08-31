@@ -1,8 +1,14 @@
 <script setup lang="ts">
 /**
- * The right rail as a bottom sheet, for the widths where the rail itself is not shown. Built on
- * reka's dialog rather than `ui/dialog` because a sheet rises from the bottom edge and fills
- * the width, where that component centres and zooms.
+ * The right rail as a bottom sheet, for the widths where the rail itself is not shown. Not
+ * `ui/dialog`, which centres and zooms.
+ *
+ * shadcn-vue does ship a `sheet`, and it was compared: nine files and a four-sided `cva`, of
+ * which this needs one side. Its bottom variant has no height cap and no `overflow`, so a tall
+ * sheet runs off the screen; its `gap-4` sits on a box that is not `flex`, so it does nothing;
+ * and its chrome — square corners, `bg-black/80`, an opacity-70 close — is overridden by every
+ * rule this file follows anyway. What would be left of the generated component is the four
+ * `DialogPortal` lines below. Reaching for reka here is the cheaper of the two.
  */
 import { useId } from 'vue'
 import { X } from '@lucide/vue'

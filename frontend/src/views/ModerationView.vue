@@ -219,7 +219,13 @@ function operatorAt(report: Report, at: string): string {
               <span class="text-[13.5px] text-ink-2">
                 {{ TARGET_LABELS[report.targetType] }}
               </span>
-              <CalliopeBadge>{{ REPORT_CATEGORY_LABELS[report.category] }}</CalliopeBadge>
+              <!-- A tag, not the uppercase label: these run to „Selbstverletzung oder Suizid",
+                   and uppercase German under tracking is the slowest thing to read on the page
+                   an operator scans by category. The two chips after it stay labels — they are
+                   one-word states of the report, not what it is about. -->
+              <CalliopeBadge variant="tag">
+                {{ REPORT_CATEGORY_LABELS[report.category] }}
+              </CalliopeBadge>
               <!-- Only when it is gone: still being there is the ordinary case and says
                    nothing worth a mark. -->
               <CalliopeBadge v-if="!report.targetExists">Gelöscht</CalliopeBadge>

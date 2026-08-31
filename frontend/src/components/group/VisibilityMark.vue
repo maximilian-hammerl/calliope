@@ -7,16 +7,16 @@
  * Open question: the two glyphs are a shackle apart at 13px on the fact whose misreading costs
  * most. The design system records what else was tried and what feedback would settle it.
  */
-import { Lock, LockOpen } from '@lucide/vue'
 import StateMark from '@/components/common/StateMark.vue'
-import { VISIBILITY_LABELS } from '@/lib/format/group'
+import { VISIBILITY_ICONS, VISIBILITY_LABELS } from '@/lib/format/group'
 
-const props = defineProps<{ visibility: 'private' | 'public' }>()
+const props = defineProps<{ visibility: 'private' | 'public'; interactive?: boolean }>()
 </script>
 
 <template>
   <StateMark
-    :icon="props.visibility === 'private' ? Lock : LockOpen"
+    :icon="VISIBILITY_ICONS[props.visibility]"
     :label="VISIBILITY_LABELS[props.visibility]"
+    :interactive="props.interactive"
   />
 </template>

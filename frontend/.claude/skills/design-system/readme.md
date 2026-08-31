@@ -331,6 +331,15 @@ And a **page heading keeps the word** where a row takes the mark: „Privat" on 
 page, „Offen" or „Geschlossen" on the idea's. That is not an inconsistency, it is how the mark is taught — you meet the word on
 the thing's own page and the chip in the list means it from then on.
 
+**A chip is uppercase when it is recognised and sentence case when it is read.** The uppercase
+mono `label` is for a one-word state — „Offen", „Englisch", „Gelöscht" — where the eye picks the
+shape out of a column without reading it. A phrase that has to be read takes the `tag` instead:
+the moderation queue's categories run to „Selbstverletzung oder Suizid", and uppercase German
+under 0.12em tracking is the slowest thing on the page an operator scans by category. Both stand
+21px, so a row holding one of each still reads as one thing; the tag's height comes out of its
+padding rather than `leading-none`, because sentence case has descenders and uppercase mono does
+not.
+
 The mark **is a badge**, with a glyph where the word goes: same border, same 3px radius, same 21px
 height, `align-bottom` because a box holding no text has its baseline at its own bottom edge and
 sat 2px high without it. A `mark` variant of `CalliopeBadge` owns all of that, so a chip cannot
@@ -928,16 +937,38 @@ never matched the hairline weight and changed shape from platform to platform.
 | — | `Pencil` | edit an existing thing ("Gruppe bearbeiten", "Umbenennen") |
 | — | `Trash2` | delete a thing for good ("Löschen") |
 | — | `MessageCircle` | start a chat ("Chat beginnen") |
-| — | `Star` | a row's „Favorit" mark — never on the toggle, which keeps its word |
-| — | `BookCheck` | a row's „Gelesen" mark. Closed, not `BookOpenCheck`: an open book reads as *being* read, and its page curves plus the check are dense at 13px |
-| — | `Lock` `LockOpen` | a row's „Privat" / „Öffentlich" mark, both always shown — see the open question above |
-| — | `CircleCheckBig` | a row's „Geschlossen" mark for a story idea. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking |
+| — | `Star` `StarOff` | „Favorit" — the row's mark, and on the toggle beside its word |
+| — | `Book` `BookCheck` | „Gelesen" — the row's mark, and on the toggle beside its word. Closed, not `BookOpenCheck`: an open book reads as *being* read, and its page curves plus the check are dense at 13px |
+| — | `Flag` | „Melden". Not a message shape: what gets reported is as often an idea, a group or a profile as it is a message |
+| — | `LogOut` | „Verlassen" — leaving a chat |
+| — | `UserX` `UserCheck` | „Blockieren" / „Blockierung aufheben" — one member acting on another |
+| — | `ShieldBan` `ShieldCheck` | „Konto sperren" / „Sperre aufheben". A shield, not the person the pair above draws: what separates the two rows is that this one is the platform acting |
+| — | `Send` | „Link erneut senden". The spinner takes its place while the link is on its way, so the button keeps its width |
+| — | `Lock` `LockOpen` | a row's „Privat" / „Öffentlich" mark, both always shown, and beside the word in the group's heading — see the open question above |
+| — | `Circle` `CircleCheckBig` | „Offen" / „Geschlossen" for a story idea — the row's mark, and beside the word on the idea's own page. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking. The ring and the check are the pair the step list draws as `Square` and `SquareCheck` |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px
 interface text — and let them inherit `currentColor` rather than carrying a colour. Inside a
 button the component does that sizing; a call site passing its own `size` is overriding a
 decision that belongs in one place.
+
+**A toggle's icon follows its word.** Both toggles name the state they will move to — „Gelesen"
+puts the thing in that state — so the icon names it too: `BookCheck` on „Gelesen", `Book` on
+„Nicht gelesen". The pair is fixed in `lib/format/`, beside the label, so the two cannot drift
+apart at one of the four call sites. This replaces an earlier rule that kept icons off the
+toggles: that was written when the choice was an icon *or* a word, and the word stays either way.
+
+**A state that is a word somewhere and a glyph elsewhere carries the glyph in both.** The word
+is what teaches the mark, so the page holding the word is exactly where the two must be seen
+together — that is the group heading for „Öffentlich", and the idea's own page for „Offen". Each
+pair lives in one map beside its labels, so a row and a heading cannot say the same state two
+ways.
+
+**A row of actions carries icons on all of them or on none.** The chat header read
+„＋ Einladen · ☆ Kein Favorit · Melden · Verlassen", and two bare words in a row of four look
+like the icons failed to load rather than like a choice. The one „Melden" that stays a word is
+the one under a chat message, which sits in a run of text rather than in a row.
 
 **Words still come first.** An icon accompanies a label, it does not replace one: the buttons
 read "Gruppe gründen" and "Thread", with the mark in front. The exception is movement that has

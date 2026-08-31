@@ -23,10 +23,10 @@ defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
       >
         {{ group.title }}
       </RouterLink>
-      <VisibilityMark :visibility="group.visibility" class="ml-3" />
+      <VisibilityMark :visibility="group.visibility" class="ml-3" interactive />
       <!-- After the group's own state, because this one is the reader's: the same order the
            story-idea row puts them in. -->
-      <FavouriteMark v-if="group.isFavourite" class="ml-3" />
+      <FavouriteMark v-if="group.isFavourite" class="ml-3" interactive />
     </div>
 
     <!-- The story's own line, between its name and what it is about. Darker and a step larger

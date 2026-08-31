@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Component } from 'vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import { VISIBILITY_LABELS } from '@/lib/format/group'
+import { VISIBILITY_ICONS, VISIBILITY_LABELS } from '@/lib/format/group'
 
 const props = defineProps<{
   title: string
@@ -12,9 +13,15 @@ const props = defineProps<{
   groupId?: string
 }>()
 
-/** The word, not the mark: on the group's own page this is the subject, and it is where a member
- * meets the word that the lock in a list stands for. */
+/**
+ * The word *and* the mark: on the group's own page this is the subject, and it is where a member
+ * meets the word the lock in a list stands for. The word alone was here for a while, which left
+ * the two never appearing together — so nothing said they were the same fact, and testers clicked
+ * the lock in a list to find out what it was.
+ */
 const visibilityLabel = computed<string>(() => VISIBILITY_LABELS[props.visibility])
+
+const visibilityIcon = computed<Component>(() => VISIBILITY_ICONS[props.visibility])
 </script>
 
 <template>
@@ -32,7 +39,11 @@ const visibilityLabel = computed<string>(() => VISIBILITY_LABELS[props.visibilit
           {{ title }}
         </RouterLink>
         <template v-else>{{ title }}</template>
-        <CalliopeBadge class="ml-3">{{ visibilityLabel }}</CalliopeBadge>
+        <CalliopeBadge class="ml-3 inline-flex items-center gap-1.5">
+          <!-- Decorative: the word beside it is the accessible name already. -->
+          <component :is="visibilityIcon" :size="13" :stroke-width="1.5" aria-hidden="true" />
+          {{ visibilityLabel }}
+        </CalliopeBadge>
       </h1>
     </div>
 

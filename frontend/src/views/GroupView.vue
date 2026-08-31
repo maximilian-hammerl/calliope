@@ -21,7 +21,7 @@ import type {
   ListMemberships200ResultsItem,
   ListThreads200ResultsItem,
 } from '@/api/models'
-import { MessageCircle, Pencil } from '@lucide/vue'
+import { Flag, MessageCircle, Pencil } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
@@ -218,6 +218,7 @@ async function askIntoGroup() {
                that job — the level is Quiet like its neighbours, because a level says what an act
                is on and this one is on the group. -->
           <Button variant="outline" size="sm" class="mt-7 ml-2" @click="reportingGroup = true">
+            <Flag :stroke-width="1.5" aria-hidden="true" />
             Melden
           </Button>
 

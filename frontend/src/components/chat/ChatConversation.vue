@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
+import { Flag, LogOut } from '@lucide/vue'
 import {
   getListChatsQueryKey,
   useCreateMessage,
@@ -267,11 +268,12 @@ async function submit() {
              buttons. The wording still comes from `favouriteToggle`. -->
         <button
           type="button"
-          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
           :title="favourite.title"
           :disabled="savingFavourite"
           @click="toggleFavourite"
         >
+          <component :is="favourite.icon" :size="14" :stroke-width="1.5" aria-hidden="true" />
           {{ favourite.label }}
         </button>
 
@@ -286,17 +288,19 @@ async function submit() {
         </span>
         <button
           type="button"
-          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
           @click="reportingChat = true"
         >
+          <Flag :size="14" :stroke-width="1.5" aria-hidden="true" />
           Melden
         </button>
         <button
           v-if="knowsWhoIsHere"
           type="button"
-          class="flex min-h-11 items-center text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
+          class="flex min-h-11 items-center gap-1.5 text-[12.5px] text-ink-5 hover:text-oak-deep md:min-h-0"
           @click="askingToLeave = true"
         >
+          <LogOut :size="14" :stroke-width="1.5" aria-hidden="true" />
           Verlassen
         </button>
       </div>

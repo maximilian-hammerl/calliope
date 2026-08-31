@@ -1,13 +1,18 @@
 <script setup lang="ts">
 /**
- * `CircleCheckBig` rather than a lock: a closed idea keeps its page and every word of it, so a lock
- * would say you cannot get in. The author has only stopped looking, which a check already says.
+ * The glyph and the word both come from `IDEA_STATUS_ICONS`, beside the labels, so this mark and
+ * the badge on the idea's own page cannot say the state two ways.
  */
-import { CircleCheckBig } from '@lucide/vue'
 import StateMark from '@/components/common/StateMark.vue'
-import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
+import { IDEA_STATUS_ICONS, IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
+
+defineProps<{ interactive?: boolean }>()
 </script>
 
 <template>
-  <StateMark :icon="CircleCheckBig" :label="IDEA_STATUS_LABELS.closed" />
+  <StateMark
+    :icon="IDEA_STATUS_ICONS.closed"
+    :label="IDEA_STATUS_LABELS.closed"
+    :interactive="interactive"
+  />
 </template>

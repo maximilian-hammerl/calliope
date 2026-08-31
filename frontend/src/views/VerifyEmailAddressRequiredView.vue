@@ -9,7 +9,6 @@ import {
   useLogoutUser,
   useResendEmailAddressVerification,
 } from '@/api/auth/auth'
-import { Pencil, Trash2 } from '@lucide/vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { queryClient } from '@/lib/api/queryClient'
 import { ApiError } from '@/lib/api/apiFetch'
@@ -24,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import FormTextField from '@/components/common/FormTextField.vue'
 import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
+import { Pencil, Send, Trash2 } from '@lucide/vue'
 
 const router = useRouter()
 
@@ -134,7 +134,10 @@ async function signOut() {
       <template v-if="mode === 'choices'">
         <div class="mt-7 flex flex-col gap-3">
           <Button :disabled="isResending" @click="resendLink">
+            <!-- The spinner stands in the icon's place rather than beside it, so the row keeps
+                 its width while the link is on its way. -->
             <Spinner v-if="isResending" />
+            <Send v-else :stroke-width="1.5" aria-hidden="true" />
             Link erneut senden
           </Button>
           <Button variant="outline" @click="mode = 'correcting'">
