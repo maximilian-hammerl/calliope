@@ -386,6 +386,19 @@ Three things follow, and the middle one is a genuine cost:
   `deno task dev` — that is how this was found, and under `deno compile` it would have shipped
   green and failed in the container.
 
+**Narrowing `read` has a sharp-shaped requirement.** `sharp` calls `detect-libc` at *import*, which
+tells glibc from musl by reading `/proc/self/exe` and then `/usr/bin/ldd`. Both are in the read
+list for that reason alone. `detect-libc` swallows a denial and guesses glibc, so leaving them out
+breaks nothing on Debian — which is exactly why it went unnoticed: **without a terminal Deno denies
+silently, and with one it stops and asks.** The prompt only appeared on `compose run`, never under
+`compose up` and never in a non-interactive container, so reproduce this kind of thing with
+`docker run -t` or not at all.
+
+The entrypoint therefore passes **`--no-prompt`**, and so does the healthcheck, which spells the
+command out for itself: nothing in production may block waiting for an answer nobody is there to
+give. The dev tasks deliberately do not — a prompt is how a missing permission announces itself
+while there is still somebody to read it.
+
 Neither decision is sacred. Both are cost/benefit, and both were re-decided once already on
 measurement; re-decide them the same way rather than contorting a dependency around them.
 

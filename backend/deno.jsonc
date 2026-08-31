@@ -74,8 +74,15 @@
       "ffi": ["./node_modules"],
       // Not a list: the SMTP relay differs per deployment, and every checkout moves its ports.
       "net": true,
-      // Upload directories
-      "read": ["./.file-storage", "/data/files"],
+      "read": [
+        // Upload directories
+        "./.file-storage",
+        "/data/files",
+        // Files sharp reads at import: `detect-libc` tells glibc from musl by reading the
+        // interpreter and then `ldd`.
+        "/proc/self/exe",
+        "/usr/bin/ldd"
+      ],
       // Upload directories
       "write": ["./.file-storage", "/data/files"],
       // networkInterfaces, hostname for nodemailer; cpus for sharp

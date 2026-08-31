@@ -115,7 +115,7 @@ services:
     # /api/health reports 503 when a database is unreachable, so the container restarts rather
     # than serving errors. The binary asks itself: distroless has no shell for CMD-SHELL.
     healthcheck:
-      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--permission-set=calliope", "main.ts", "--health-check"]
+      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--no-prompt", "--permission-set=calliope", "main.ts", "--health-check"]
       interval: 10s
       timeout: 5s
       retries: 5

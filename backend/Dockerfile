@@ -48,6 +48,8 @@ WORKDIR /app
 EXPOSE 8000
 
 # `--cached-only` so a missing module fails loudly here rather than by reaching the network
-# from production. Arguments appended by `compose run` — `--seed`, `--grant-role` — still land
-# on `main.ts`, because the entry point ends with it.
-ENTRYPOINT ["/usr/bin/deno", "run", "--cached-only", "--permission-set=calliope", "main.ts"]
+# from production. `--no-prompt` because a container with a terminal — `compose run` — would
+# otherwise stop and wait for an answer nobody is there to give. Arguments appended by
+# `compose run` — `--seed`, `--grant-role` — still land on `main.ts`, because the entry point
+# ends with it.
+ENTRYPOINT ["/usr/bin/deno", "run", "--cached-only", "--no-prompt", "--permission-set=calliope", "main.ts"]
