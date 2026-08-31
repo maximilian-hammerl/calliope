@@ -226,7 +226,13 @@ const creating = ref<boolean>(false)
 
       <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
         <p class="text-body text-ink-4">
-          <template v-if="settled !== ''">
+          <!-- Both can empty a list, so an empty one names whichever are set. Naming only the
+               search sent members to clear it, see nothing change, and have no sign of the filter
+               that was also excluding rows. -->
+          <template v-if="settled !== '' && narrowed">
+            Keine deiner Gruppen passt zu „{{ settled }}“ und diesen Filtern.
+          </template>
+          <template v-else-if="settled !== ''">
             Keine deiner Gruppen passt zu „{{ settled }}“.
           </template>
           <template v-else-if="narrowed"> Keine deiner Gruppen passt zu diesen Filtern. </template>

@@ -51,8 +51,12 @@ const inGroup = inject(FILTER_STRIP_GROUP, false)
 
 /**
  * Inside a `FilterStrips` both cells dissolve into that grid, so every filter on the page shares
- * one label column. The columns are explicit because a shut section renders no content: left to
- * flow, the next label would take the empty second cell rather than starting its own row.
+ * one label column.
+ *
+ * The columns are explicit rather than left to auto-flow, because the grid holds more than these
+ * pairs: the reset button is a child of it too, and a strip with a hidden label contributes one
+ * cell instead of two. Any of those shifts the cursor, and from there every label lands in the
+ * options column and every set of options under the label above it.
  */
 const layout = computed<string>(() =>
   inGroup

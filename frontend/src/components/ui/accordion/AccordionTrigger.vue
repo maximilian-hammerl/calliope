@@ -3,12 +3,24 @@ import type { AccordionTriggerProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 import { ChevronDown, ChevronRight } from '@lucide/vue'
 import { reactiveOmit } from '@vueuse/core'
-import { AccordionHeader, AccordionTrigger } from 'reka-ui'
+import { AccordionHeader, AccordionTrigger, injectCollapsibleRootContext, useId } from 'reka-ui'
 import { cn } from '@/lib/utils'
 
 const props = defineProps<AccordionTriggerProps & { class?: HTMLAttributes['class'] }>()
 
 const delegatedProps = reactiveOmit(props, 'class')
+
+/**
+ * Patched: the trigger rendered `aria-controls=""`, an IDREF pointing at nothing.
+ *
+ * `CollapsibleRoot` starts `contentId` empty and `CollapsibleContent` fills it in as it renders —
+ * but the trigger renders first, and a *shut* section renders no content at all, so a collapsed
+ * filter never got one. Claiming the id here, before the trigger paints, gives both sides the
+ * same one: the content assigns with `||=` and so keeps it. Same fix as `DialogContent`'s
+ * `contentId`, and the same cause.
+ */
+const collapsible = injectCollapsibleRootContext()
+collapsible.contentId ||= useId(undefined, 'reka-collapsible-content')
 </script>
 
 <template>

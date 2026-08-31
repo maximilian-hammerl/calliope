@@ -251,7 +251,11 @@ const creating = ref<boolean>(false)
       </Field>
 
       <p v-if="hasLoaded && ideas.length === 0" class="max-w-[46ch] text-body text-ink-4">
-        <template v-if="settled !== ''">Keine Idee passt zu „{{ settled }}“.</template>
+        <!-- Both can empty a board, so an empty one names whichever are set. -->
+        <template v-if="settled !== '' && narrowed">
+          Keine Idee passt zu „{{ settled }}“ und diesen Filtern.
+        </template>
+        <template v-else-if="settled !== ''">Keine Idee passt zu „{{ settled }}“.</template>
         <template v-else-if="props.mine"> Du hast noch keine Storyidee vorgestellt. </template>
         <!-- Without these the filters' own emptiness would read as an empty board. The
              default view avoids claiming why it is empty: nothing unread and nothing at all

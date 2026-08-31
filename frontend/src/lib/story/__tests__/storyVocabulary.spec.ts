@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   GENRES,
@@ -79,5 +81,40 @@ describe('the vocabularies', () => {
 
     expect(new Set(placed).size).toBe(placed.length)
     expect([...placed].sort()).toEqual(Object.keys(SUBGENRE_LABELS).sort())
+  })
+})
+
+/**
+ * The backend keeps the same relation in `story_metadata.ts`, and enforces it: a group whose
+ * subgenre sits under none of its genres is refused. So a disagreement here is not cosmetic —
+ * the form would offer a pairing the API rejects, and the member would get the generic „reload"
+ * message for a perfectly reasonable choice.
+ *
+ * The two projects share no code by design, so this reads the file rather than importing it. If
+ * it moves, this fails loudly, which is the point.
+ */
+describe('the backend agrees about which genre a subgenre belongs to', () => {
+  // From the project root, which is where vitest runs.
+  const source = readFileSync(resolve('../backend/src/story_metadata.ts'), 'utf8')
+
+  const backend = new Map(
+    [...source.matchAll(/^ {2}([a-z_]+): "([a-z_]+)",$/gmu)].map(([, sub, genre]) => [sub, genre]),
+  )
+
+  it('reads a map out of the backend at all', () => {
+    // Guards the regex itself: a formatting change that matched nothing would make every
+    // assertion below vacuous.
+    expect(backend.size).toBe(Object.keys(SUBGENRE_LABELS).length)
+  })
+
+  it('places every subgenre under the same genre the backend does', () => {
+    const ours = new Map<string, string>()
+    for (const genre of Object.keys(GENRES) as Genre[]) {
+      for (const subgenre of GENRES[genre].subgenres) {
+        ours.set(subgenre, genre)
+      }
+    }
+
+    expect(Object.fromEntries(ours)).toEqual(Object.fromEntries(backend))
   })
 })

@@ -177,14 +177,20 @@ const creating = ref<boolean>(false)
       </Field>
 
       <p v-if="hasLoaded && groups.length === 0" class="max-w-[46ch] text-body text-ink-4">
-        <template v-if="settled === '' && narrowed">
+        <!-- Both can empty a list, so an empty one names whichever are set. Naming only the
+             search sent members to clear it, see nothing change, and have no sign of the filter
+             that was also excluding rows. -->
+        <template v-if="settled !== '' && narrowed">
+          Keine öffentliche Gruppe passt zu „{{ settled }}“ und diesen Filtern.
+        </template>
+        <template v-else-if="settled !== ''">
+          Keine öffentliche Gruppe gefunden, die zu „{{ settled }}“ passt.
+        </template>
+        <template v-else-if="narrowed">
           Keine öffentliche Gruppe passt zu diesen Filtern.
         </template>
-        <template v-else-if="settled === ''">
-          Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
-        </template>
         <template v-else>
-          Keine öffentliche Gruppe gefunden, die zu „{{ settled }}“ passt.
+          Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
         </template>
       </p>
 

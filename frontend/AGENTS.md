@@ -149,6 +149,8 @@ grep -c 'role="group"' src/components/ui/field/Field.vue                        
 grep -c min-h-11 src/components/ui/navigation-menu/index.ts                            # expect 1
 grep -c '<ChevronRight' src/components/ui/accordion/AccordionTrigger.vue                # expect 1
 grep -c aria-hidden src/components/ui/accordion/AccordionTrigger.vue                    # expect 2
+# Without this every trigger renders aria-controls="" — see the accordion note below.
+grep -c injectCollapsibleRootContext src/components/ui/accordion/AccordionTrigger.vue   # expect 2
 # The radio and the checkbox share the hairline and the oak, so they read as one family.
 grep -c border-line-5 src/components/ui/radio-group/RadioGroupItem.vue src/components/ui/checkbox/Checkbox.vue  # expect 1 each
 grep -c 'data-\[state=checked\]:bg-oak' src/components/ui/checkbox/Checkbox.vue         # expect 1
@@ -167,6 +169,13 @@ grep -rL 'aria-hidden\|aria-label' $(grep -rl '@lucide/vue' src/components/ui/ -
 ```
 
 Decline every overwrite prompt (`yes n | npx shadcn-vue@latest add …`).
+
+**The accordion trigger claims its content's id.** reka's `CollapsibleRoot` starts `contentId`
+empty and `CollapsibleContent` fills it in *as it renders* — but the trigger renders first, so
+`aria-controls` came out `""`: an IDREF pointing at nothing, on every accordion in the app.
+`AccordionTrigger` now claims the id before it paints and the content keeps it (`||=`). Same cause
+and same shape as `DialogContent`'s `contentId`, which is the other place reka fills an id in too
+late.
 
 **A string template ref does not compile here.** `CarouselContent` came with
 `ref="carouselRef"`, which `noUnusedLocals` reads as the binding never being used — and binding
