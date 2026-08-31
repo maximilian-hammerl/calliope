@@ -17,6 +17,9 @@ import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import { usePagedList } from '@/composables/usePagedList'
 import FilterStrip from '@/components/common/FilterStrip.vue'
 import FilterStrips from '@/components/common/FilterStrips.vue'
+import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
+import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
+import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
 import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -91,8 +94,17 @@ const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   () => totalResults.value,
 )
 
+/** Absent rather than empty, so an untouched filter asks for everything. */
+const vocabulary = ref<StoryVocabularySelection>(emptySelection())
+
+const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
+
+const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
+
 // A search or a filter narrows the board, so whatever page was open is about a different set.
-watch([settled, readerState, status, favourite], () => goToPage(1))
+watch([settled, readerState, status, favourite, vocabulary], () => goToPage(1), {
+  deep: true,
+})
 
 const { data, isPending, isError } = useListStoryIdeas(
   () => ({
@@ -103,6 +115,9 @@ const { data, isPending, isError } = useListStoryIdeas(
     favourite: favourite.value,
     status: props.mine ? undefined : status.value,
     search: settled.value === '' ? undefined : settled.value,
+    genres: chosen(vocabulary.value.genres),
+    subgenres: chosen(vocabulary.value.subgenres),
+    tropes: chosen(vocabulary.value.tropes),
   }),
   { query: { placeholderData: keepPreviousData } },
 )
@@ -160,7 +175,7 @@ const creating = ref<boolean>(false)
       </p>
 
       <!-- One grid for both strips, so the labels share a column and the strips align. -->
-      <FilterStrips v-if="hasLoaded" class="mb-6">
+      <FilterStrips v-if="hasLoaded" class="mb-3">
         <!-- Neither reading nor status says anything on one's own ideas, so those two are the
              discovery board's; the favourite belongs to both. -->
         <template v-if="!mine">
@@ -173,6 +188,8 @@ const creating = ref<boolean>(false)
         </template>
         <FilterStrip v-model="favourite" label="Favoriten" :options="FAVOURITE_FILTERS" />
       </FilterStrips>
+
+      <StoryVocabularyFilters v-if="hasLoaded" v-model="vocabulary" class="mb-7" />
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="ideas-search">Suche</FieldLabel>
@@ -197,6 +214,9 @@ const creating = ref<boolean>(false)
         <!-- Without these the filters' own emptiness would read as an empty board. The
              default view avoids claiming why it is empty: nothing unread and nothing at all
              look the same from here, and only one of them would be true. -->
+        <!-- Before the read filter's own message, which would otherwise blame the wrong thing:
+             a board emptied by a genre does not send anybody to „Gelesen“. -->
+        <template v-else-if="narrowed"> Keine Idee passt zu diesen Filtern. </template>
         <template v-else-if="readerState === 'unread' && status === 'open'">
           Hier ist gerade nichts Ungelesenes. Unter „Gelesen“ findest du, was du schon kennst.
         </template>

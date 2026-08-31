@@ -5,6 +5,9 @@ import { useRouter } from 'vue-router'
 import { useListGroups } from '@/api/groups/groups'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
+import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
+import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
+import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
 import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
 import type { ListGroups200ResultsItem } from '@/api/models'
 import { keepPreviousData } from '@tanstack/vue-query'
@@ -55,7 +58,14 @@ const FAVOURITE_FILTERS = [
   { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
 ] as const
 
-watch([settled, favourite], () => goToPage(1))
+/** Absent rather than empty, so an untouched filter asks for everything. */
+const vocabulary = ref<StoryVocabularySelection>(emptySelection())
+
+const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
+
+const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
+
+watch([settled, favourite, vocabulary], () => goToPage(1), { deep: true })
 
 const { data, isPending, isError } = useListGroups(
   () => ({
@@ -67,6 +77,9 @@ const { data, isPending, isError } = useListGroups(
     sortAttribute: 'lastActivityAt' as const,
     favourite: favourite.value,
     sortOrder: 'desc' as const,
+    genres: chosen(vocabulary.value.genres),
+    subgenres: chosen(vocabulary.value.subgenres),
+    tropes: chosen(vocabulary.value.tropes),
   }),
   // Keeps the page strip and the count on screen while the next page loads.
   { query: { placeholderData: keepPreviousData } },
@@ -165,8 +178,10 @@ const creating = ref<boolean>(false)
         v-model="favourite"
         label="Favoriten"
         :options="FAVOURITE_FILTERS"
-        class="mb-6"
+        class="mb-3"
       />
+
+      <StoryVocabularyFilters v-if="hasLoaded" v-model="vocabulary" class="mb-7" />
 
       <Field v-if="hasLoaded" class="mb-7 max-w-[380px]">
         <FieldLabel for="groups-search">Suche</FieldLabel>
@@ -190,6 +205,7 @@ const creating = ref<boolean>(false)
           <template v-if="settled !== ''">
             Keine deiner Gruppen passt zu „{{ settled }}“.
           </template>
+          <template v-else-if="narrowed"> Keine deiner Gruppen passt zu diesen Filtern. </template>
           <template v-else>
             Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
             bei den öffentlichen Gruppen um, oder warte auf eine Einladung.

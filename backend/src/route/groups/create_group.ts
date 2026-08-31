@@ -13,7 +13,12 @@ import {
   jsonContent,
 } from "@/src/http/response.ts";
 import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
-import { STORY_TAGS_SCHEMA } from "@/src/http/request_schema.ts";
+import {
+  STORY_CONTENT_WARNINGS_SCHEMA,
+  STORY_GENRES_SCHEMA,
+  STORY_SUBGENRES_SCHEMA,
+  STORY_TROPES_SCHEMA,
+} from "@/src/http/request_schema.ts";
 
 const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
   .pick({
@@ -38,12 +43,14 @@ const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
     language: WRITING_GROUP_SCHEMA.shape.language.default("german"),
     // Free text rather than a list: collaborative fiction mixes tense and person across
     // chapters and characters more than any fixed set would survive.
-    tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
-    perspective: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
-    genres: STORY_TAGS_SCHEMA,
-    subgenres: STORY_TAGS_SCHEMA,
-    tropes: STORY_TAGS_SCHEMA,
-    contentWarnings: STORY_TAGS_SCHEMA,
+    genres: STORY_GENRES_SCHEMA,
+    subgenres: STORY_SUBGENRES_SCHEMA,
+    tropes: STORY_TROPES_SCHEMA,
+    contentWarnings: STORY_CONTENT_WARNINGS_SCHEMA,
+    tense: WRITING_GROUP_SCHEMA.shape.tense.nullish(),
+    perspective: WRITING_GROUP_SCHEMA.shape.perspective.nullish(),
+    storyThemes: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
+    storySettings: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
   });
 
 export default new OpenAPIHono().openapi(

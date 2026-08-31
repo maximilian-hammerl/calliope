@@ -1,3 +1,8 @@
+import {
+  STORY_GENRES_SCHEMA,
+  STORY_SUBGENRES_SCHEMA,
+  STORY_TROPES_SCHEMA,
+} from "@/src/http/request_schema.ts";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
@@ -70,7 +75,15 @@ const MEMBERSHIP = z
 
 const LIST_GROUPS_BODY = listQuerySchema(
   SORT_ATTRIBUTE,
-  { membership: MEMBERSHIP, favourite: FAVOURITE_FILTER },
+  {
+    membership: MEMBERSHIP,
+    favourite: FAVOURITE_FILTER,
+    // The same schemas the create bodies use, so what may be chosen and what may be filtered
+    // by cannot drift apart. Absent means "not asked" — an untouched filter never empties a board.
+    genres: STORY_GENRES_SCHEMA,
+    subgenres: STORY_SUBGENRES_SCHEMA,
+    tropes: STORY_TROPES_SCHEMA,
+  },
   "desc",
 );
 

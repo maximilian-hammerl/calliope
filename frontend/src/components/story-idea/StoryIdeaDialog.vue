@@ -19,11 +19,12 @@ import { failureMessage } from '@/lib/format/failure'
 import { focusFirstInvalid, parsed, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
 import { queryClient } from '@/lib/api/queryClient'
 import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { fromTags, toTags } from '@/lib/format/storyTags'
 import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import FormTextField from '@/components/common/FormTextField.vue'
+import StoryVocabularyFields from '@/components/story/StoryVocabularyFields.vue'
+import type { StoryVocabulary } from '@/components/story/StoryVocabularyFields.vue'
 import {
   Dialog,
   DialogContent,
@@ -68,6 +69,19 @@ const formElement = ref<HTMLFormElement | null>(null)
 
 const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
 
+const emptyVocabulary = (): StoryVocabulary => ({
+  genres: [],
+  subgenres: [],
+  tropes: [],
+  contentWarnings: [],
+  storyThemes: '',
+  storySettings: '',
+  tense: '',
+  perspective: '',
+})
+
+const vocabulary = ref<StoryVocabulary>(emptyVocabulary())
+
 const form = useForm({
   defaultValues: {
     title: '',
@@ -75,12 +89,6 @@ const form = useForm({
     teaser: '',
     synopsis: '',
     lookingFor: '',
-    genres: '',
-    subgenres: '',
-    tropes: '',
-    contentWarnings: '',
-    tense: '',
-    perspective: '',
   },
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
@@ -91,12 +99,14 @@ const form = useForm({
       subtitle: blank(value.subtitle),
       teaser: parsed(TEASER, value.teaser),
       synopsis: parsed(SYNOPSIS, value.synopsis),
-      genres: toTags(value.genres),
-      subgenres: toTags(value.subgenres),
-      tropes: toTags(value.tropes),
-      contentWarnings: toTags(value.contentWarnings),
-      tense: blank(value.tense),
-      perspective: blank(value.perspective),
+      genres: vocabulary.value.genres,
+      subgenres: vocabulary.value.subgenres,
+      tropes: vocabulary.value.tropes,
+      contentWarnings: vocabulary.value.contentWarnings,
+      storyThemes: blank(vocabulary.value.storyThemes),
+      storySettings: blank(vocabulary.value.storySettings),
+      tense: vocabulary.value.tense === '' ? null : vocabulary.value.tense,
+      perspective: vocabulary.value.perspective === '' ? null : vocabulary.value.perspective,
       language: language.value,
       lookingFor: blank(value.lookingFor),
       partySize: partySize.value === '' ? null : (partySize.value as GetStoryIdea200['partySize']),
@@ -143,13 +153,19 @@ watch(open, (isOpen) => {
     teaser: props.idea?.teaser ?? '',
     synopsis: props.idea?.synopsis ?? '',
     lookingFor: props.idea?.lookingFor ?? '',
-    genres: fromTags(props.idea?.genres ?? []),
-    subgenres: fromTags(props.idea?.subgenres ?? []),
-    tropes: fromTags(props.idea?.tropes ?? []),
-    contentWarnings: fromTags(props.idea?.contentWarnings ?? []),
-    tense: props.idea?.tense ?? '',
-    perspective: props.idea?.perspective ?? '',
   })
+  vocabulary.value = props.idea
+    ? {
+        genres: [...props.idea.genres],
+        subgenres: [...props.idea.subgenres],
+        tropes: [...props.idea.tropes],
+        contentWarnings: [...props.idea.contentWarnings],
+        storyThemes: props.idea.storyThemes ?? '',
+        storySettings: props.idea.storySettings ?? '',
+        tense: props.idea.tense ?? '',
+        perspective: props.idea.perspective ?? '',
+      }
+    : emptyVocabulary()
   language.value = props.idea?.language ?? 'german'
   partySize.value = props.idea?.partySize ?? ''
   status.value = props.idea?.status ?? 'open'
@@ -291,87 +307,7 @@ watch(open, (isOpen) => {
             </select>
           </Field>
 
-          <!-- Paired from `sm` up: a comma list is short, and two rows of two keep the
-               dialog inside the viewport instead of scrolling it. -->
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <form.Field name="genres">
-              <template v-slot="{ field }">
-                <FormTextField
-                  id="idea-genres"
-                  :field="field"
-                  label="Genres"
-                  optional
-                  placeholder="z. B. Fantasy, Mystery"
-                >
-                  <template #description>Mehrere durch Kommas trennen.</template>
-                </FormTextField>
-              </template>
-            </form.Field>
-
-            <form.Field name="subgenres">
-              <template v-slot="{ field }">
-                <FormTextField
-                  id="idea-subgenres"
-                  :field="field"
-                  label="Subgenres"
-                  optional
-                  placeholder="z. B. Cyberpunk, Dark Romance"
-                />
-              </template>
-            </form.Field>
-
-            <form.Field name="tropes">
-              <template v-slot="{ field }">
-                <FormTextField
-                  id="idea-tropes"
-                  :field="field"
-                  label="Tropes"
-                  optional
-                  placeholder="z. B. Epistolary, Slow Burn"
-                />
-              </template>
-            </form.Field>
-
-            <form.Field name="contentWarnings">
-              <template v-slot="{ field }">
-                <FormTextField
-                  id="idea-content-warnings"
-                  :field="field"
-                  label="Inhaltswarnungen"
-                  optional
-                  placeholder="z. B. Verlust"
-                />
-              </template>
-            </form.Field>
-          </div>
-
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <form.Field name="tense">
-              <template v-slot="{ field }">
-                <FormTextField
-                  id="idea-tense"
-                  :field="field"
-                  label="Zeitform"
-                  optional
-                  :maxlength="LIMIT.tense.maxLength"
-                  placeholder="z. B. Vergangenheit"
-                />
-              </template>
-            </form.Field>
-
-            <form.Field name="perspective">
-              <template v-slot="{ field }">
-                <FormTextField
-                  id="idea-perspective"
-                  :field="field"
-                  label="Perspektive"
-                  optional
-                  :maxlength="LIMIT.perspective.maxLength"
-                  placeholder="z. B. Erste Person"
-                />
-              </template>
-            </form.Field>
-          </div>
+          <StoryVocabularyFields v-model="vocabulary" id-prefix="idea" />
         </FieldGroup>
 
         <Button type="submit" :disabled="isPending">

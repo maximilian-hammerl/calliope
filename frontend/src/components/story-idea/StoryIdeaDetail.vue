@@ -3,7 +3,14 @@ import { computed } from 'vue'
 import type { GetStoryIdea200 } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { paragraphs } from '@/lib/format/formatText'
-import { tagLine } from '@/lib/format/storyTags'
+import {
+  PERSPECTIVE_LABELS,
+  TENSE_LABELS,
+  contentWarningLine,
+  genreLine,
+  subgenreLine,
+  tropeLine,
+} from '@/lib/story/storyVocabulary'
 import {
   IDEA_STATUS_LABELS,
   LANGUAGE_LABELS,
@@ -69,12 +76,21 @@ const seeking = computed<Array<{ label: string; value: string }>>(() =>
 /** The story block, mirroring the group's reference card. */
 const story = computed<Array<{ label: string; value: string }>>(() => {
   return [
-    { label: 'Genre', value: tagLine(props.idea.genres) },
-    { label: 'Subgenre', value: tagLine(props.idea.subgenres) },
-    { label: 'Tropes', value: tagLine(props.idea.tropes) },
-    { label: 'Zeitform', value: props.idea.tense ?? undefined },
-    { label: 'Perspektive', value: props.idea.perspective ?? undefined },
-    { label: 'Inhaltswarnungen', value: tagLine(props.idea.contentWarnings) },
+    { label: 'Genre', value: genreLine(props.idea.genres) },
+    { label: 'Subgenre', value: subgenreLine(props.idea.subgenres) },
+    { label: 'Tropes', value: tropeLine(props.idea.tropes) },
+    { label: 'Themen', value: props.idea.storyThemes ?? undefined },
+    { label: 'Schauplätze', value: props.idea.storySettings ?? undefined },
+    {
+      label: 'Zeitform',
+      value: props.idea.tense === null ? undefined : TENSE_LABELS[props.idea.tense],
+    },
+    {
+      label: 'Perspektive',
+      value:
+        props.idea.perspective === null ? undefined : PERSPECTIVE_LABELS[props.idea.perspective],
+    },
+    { label: 'Inhaltswarnungen', value: contentWarningLine(props.idea.contentWarnings) },
   ].filter((entry): entry is { label: string; value: string } => entry.value !== undefined)
 })
 </script>

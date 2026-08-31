@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import {
+  GENRE_LABELS,
+  PERSPECTIVE_LABELS,
+  SUBGENRE_LABELS,
+  TENSE_LABELS,
+  TROPE_LABELS,
+} from '@/lib/story/storyVocabulary'
 import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
@@ -18,13 +25,13 @@ const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
  */
 const story = computed<string>(() =>
   [
-    ...props.idea.genres,
-    ...props.idea.subgenres,
-    ...props.idea.tropes,
-    props.idea.tense ?? undefined,
-    props.idea.perspective ?? undefined,
+    ...props.idea.genres.map((genre) => GENRE_LABELS[genre]),
+    ...props.idea.subgenres.map((subgenre) => SUBGENRE_LABELS[subgenre]),
+    ...props.idea.tropes.map((trope) => TROPE_LABELS[trope]),
+    props.idea.tense === null ? undefined : TENSE_LABELS[props.idea.tense],
+    props.idea.perspective === null ? undefined : PERSPECTIVE_LABELS[props.idea.perspective],
   ]
-    .filter((entry): entry is string => entry !== undefined)
+    .filter((entry) => entry !== undefined)
     .join(' · '),
 )
 </script>

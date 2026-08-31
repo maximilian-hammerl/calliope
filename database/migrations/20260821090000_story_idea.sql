@@ -23,12 +23,16 @@ CREATE TABLE public.story_idea
     teaser           TEXT                      NOT NULL,
     synopsis         TEXT                      NOT NULL,
 
-    genres           TEXT[]                    NOT NULL DEFAULT '{}',
-    subgenres        TEXT[]                    NOT NULL DEFAULT '{}',
-    tropes           TEXT[]                    NOT NULL DEFAULT '{}',
-    content_warnings TEXT[]                    NOT NULL DEFAULT '{}',
-    tense            TEXT,
-    perspective      TEXT,
+    -- The same vocabularies the group uses, declared in the writing_group migration: an idea's
+    -- metadata becomes the group's when one is founded from it, so the two cannot differ.
+    genres           public.story_genre[]           NOT NULL DEFAULT '{}',
+    subgenres        public.story_subgenre[]        NOT NULL DEFAULT '{}',
+    tropes           public.story_trope[]           NOT NULL DEFAULT '{}',
+    content_warnings public.story_content_warning[] NOT NULL DEFAULT '{}',
+    story_themes     TEXT,
+    story_settings   TEXT,
+    tense            public.story_tense,
+    perspective      public.story_perspective,
     language         public.story_language     NOT NULL DEFAULT 'german',
 
     -- The seeking block. Free text where members write, an enum where §8.2 filters.

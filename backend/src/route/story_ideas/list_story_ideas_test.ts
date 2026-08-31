@@ -4,6 +4,7 @@ import {
   clearRateLimits,
   deleteUsers,
   registerUser,
+  request,
 } from "@/src/test/support.ts";
 import {
   createIdea,
@@ -111,4 +112,82 @@ Deno.test("QUERY /api/story-ideas with author mine shows only one's own, closed 
 Deno.test("QUERY /api/story-ideas needs a session", async () => {
   const response = await listIdeas("", {});
   assertEquals(response.status, STATUS_CODE.Unauthorized);
+});
+
+/**
+ * The board narrows by the same vocabularies a group's does, through the same helper — so an
+ * idea and the group it becomes cannot be findable by different things.
+ */
+Deno.test("QUERY /api/story-ideas narrows the board to the genres asked for", async () => {
+  const cookie = await registerUser(author);
+  const reader = await registerUser(bystander);
+
+  const fantasy = await (await createIdea(cookie, {
+    title: "Fantasy-Idee",
+    genres: ["fantasy"],
+    tropes: ["slow_burn"],
+  })).json();
+  const western = await (await createIdea(cookie, {
+    title: "Western-Idee",
+    genres: ["western"],
+  })).json();
+
+  const page = await (await listIdeas(reader, {
+    genres: ["fantasy"],
+    limit: 100,
+  })).json();
+  const ids = page.results.map((idea: { id: string }) => idea.id);
+
+  assertEquals(ids.includes(fantasy.id), true);
+  assertEquals(ids.includes(western.id), false);
+});
+
+Deno.test("QUERY /api/story-ideas widens within a field and narrows across two", async () => {
+  const cookie = await registerUser(author);
+  const reader = await registerUser(bystander);
+
+  const fantasy = await (await createIdea(cookie, {
+    title: "Fantasy, langsam",
+    genres: ["fantasy"],
+    tropes: ["slow_burn"],
+  })).json();
+  const western = await (await createIdea(cookie, {
+    title: "Western, ohne Trope",
+    genres: ["western"],
+  })).json();
+
+  const either = await (await listIdeas(reader, {
+    genres: ["fantasy", "western"],
+    limit: 100,
+  })).json();
+  const eitherIds = either.results.map((idea: { id: string }) => idea.id);
+  assertEquals(eitherIds.includes(fantasy.id), true);
+  assertEquals(eitherIds.includes(western.id), true);
+
+  const both = await (await listIdeas(reader, {
+    genres: ["fantasy", "western"],
+    tropes: ["slow_burn"],
+    limit: 100,
+  })).json();
+  const bothIds = both.results.map((idea: { id: string }) => idea.id);
+  assertEquals(bothIds.includes(fantasy.id), true);
+  assertEquals(bothIds.includes(western.id), false);
+});
+
+Deno.test("QUERY /api/story-ideas/carousel is not narrowed by a board filter", async () => {
+  const cookie = await registerUser(author);
+  const reader = await registerUser(bystander);
+  const western = await (await createIdea(cookie, {
+    title: "Western im Karussell",
+    genres: ["western"],
+  })).json();
+
+  // The carousel shares the filter chain and passes no vocabulary, so its set stays the view's
+  // own — a neighbour it offers must never be one the board would hide.
+  const step =
+    await (await request("QUERY", "/api/story-ideas/carousel", reader, {
+      storyIdeaId: western.id,
+    })).json();
+
+  assertEquals(step.storyIdea.id, western.id);
 });

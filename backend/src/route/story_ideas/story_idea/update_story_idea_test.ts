@@ -19,7 +19,7 @@ Deno.test.afterEach(() => deleteUsers([author, bystander]));
 
 Deno.test("PATCH /api/story-ideas/{id} moves the status without touching the rest", async () => {
   const cookie = await registerUser(author);
-  const idea = await (await createIdea(cookie, { genres: ["Fantasy"] })).json();
+  const idea = await (await createIdea(cookie, { genres: ["fantasy"] })).json();
 
   const response = await patchIdea(cookie, idea.id, { status: "closed" });
   assertEquals(response.status, STATUS_CODE.OK);
@@ -27,7 +27,7 @@ Deno.test("PATCH /api/story-ideas/{id} moves the status without touching the res
   const updated = await response.json();
   assertEquals(updated.status, "closed");
   // Absent means unchanged — the defaulted-PATCH trap the group update once had.
-  assertEquals(updated.genres, ["Fantasy"]);
+  assertEquals(updated.genres, ["fantasy"]);
   assertEquals(updated.language, "german");
 });
 

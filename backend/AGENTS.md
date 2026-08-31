@@ -223,6 +223,12 @@ A renamed column then breaks compilation instead of quietly producing an API tha
 a field the database no longer has. Constraints the database cannot express — an email
 format, a minimum length, a default — belong in `.extend()`.
 
+**A refinement needs `.meta()` to reach the document.** `superRefine` and `refine` enforce a rule
+the specification never mentions — the reason `moveReport`'s body is a discriminated union rather
+than a refine. Where JSON Schema has a word for the rule, declare it alongside: the story
+vocabularies refuse a repeated value *and* carry `.meta({ uniqueItems: true })`, so the client is
+told. The two are a pair; drop either and the document and the API disagree.
+
 **Responses come from `src/response_schema.ts`**, not from the table schemas directly. Those
 add the author's name to what the table stores, because a client should never have to resolve
 a user id itself to show who wrote something. The name is joined, never stored, so it follows

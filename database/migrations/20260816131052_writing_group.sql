@@ -15,200 +15,185 @@ CREATE TYPE public.writing_group_story_status AS ENUM ('planning', 'writing', 'f
 -- The story metadata vocabularies, shared by writing_group and story_idea like story_language
 -- above, and enums for the same stated reason: a filter over free text is no filter.
 --
--- EVERY VALUE BELOW IS A CANDIDATE, NOT A DECISION. `favourite-books` marks a value taken from
--- that repository's own lists, `proposed` one of mine, `both` a value in each. Cut before this
--- ships: Postgres can add an enum value but never remove one.
---
--- Hybrid genres live in this list rather than in a third type of their own, which is what
--- favourite-books settled on after a separate list proved unproductive.
+-- Genre is the only one of the three anybody asked for: members named it unprompted (interviews,
+-- 4.2 and 4.6), §7.5 lists it and §8.2 filters by it. Subgenre and trope are ours. They are kept
+-- short for that reason — a vocabulary nobody has used yet is a guess, and a filter whose options
+-- mostly return nothing reads as broken rather than as empty.
 CREATE TYPE public.story_genre AS ENUM (
-    'action',          -- favourite-books
-    'adventure',       -- both
-    'comedy',          -- both
-    'crime',           -- favourite-books
-    'mystery',         -- both
-    'fantasy',         -- both
-    'horror',          -- both
-    'science_fiction', -- both
-    'science_fantasy', -- favourite-books — a hybrid genre, which this list carries too
-    'romance',         -- both
-    'romantasy',       -- proposed hybrid; a subgenre in favourite-books
-    'thriller',        -- proposed; a subgenre in favourite-books
-    'historical',      -- proposed; a subgenre in favourite-books
-    'gothic',          -- proposed; a subgenre in favourite-books
-    'contemporary',    -- proposed; a subgenre in favourite-books
-    'western',         -- favourite-books, as a subgenre there
-    'drama',           -- proposed; a trope in favourite-books
-    'satire',          -- proposed
-    'literary',        -- proposed
-    'slice_of_life',   -- proposed
-    'absurdist'        -- proposed — the seed's Absurd has no other home
+    'action',
+    'adventure',
+    'comedy',
+    'crime',
+    'drama',
+    'fantasy',
+    'historical',
+    'horror',
+    'literary',
+    'mystery',
+    'retelling',
+    'romance',
+    'science_fiction',
+    'slice_of_life',
+    'thriller',
+    'western'
     );
 
--- Two models are mixed in here and only one should survive. favourite-books treats a subgenre
--- as a modifier that composes with a genre — Dark + Fantasy, Hard + Science Fiction — which is
--- why Dark, High, Low and Cozy appear alone; forty of them cover what a hundred compound names
--- would. The proposed values are compound names instead, which display on their own but
--- multiply. Picking the modifier model means the label a member reads is composed from two
--- fields, which German does not do as neatly as English.
-CREATE TYPE public.story_subgenre AS ENUM (
-    'action',                 -- favourite-books — repeats the genre list, as it does there
-    'adventure',              -- favourite-books — repeats the genre list
-    'comedy',                 -- favourite-books — repeats the genre list
-    'crime',                  -- favourite-books — repeats the genre list; proposed as a compound too
-    'mystery',                -- favourite-books — repeats the genre list
-    'fantasy',                -- favourite-books — repeats the genre list
-    'horror',                 -- favourite-books — repeats the genre list
-    'science_fiction',        -- favourite-books — repeats the genre list
-    'science_fantasy',        -- favourite-books — repeats the genre list
-    'romance',                -- favourite-books — repeats the genre list
-    'new_adult',              -- favourite-books
-    'young_adult',            -- favourite-books
-    'classic',                -- favourite-books
-    'epic',                   -- favourite-books modifier
-    'historical',             -- favourite-books modifier
-    'realistic',              -- favourite-books modifier
-    'thriller',               -- favourite-books
-    'suspense',               -- favourite-books
-    'erotic',                 -- favourite-books modifier
-    'political',              -- favourite-books modifier
-    'psychological',          -- favourite-books modifier
-    'romantasy',              -- favourite-books; proposed too
-    'urban',                  -- favourite-books modifier
-    'western',                -- favourite-books
-    'cozy',                   -- favourite-books modifier — stored as 'Cozy ' there, with a trailing space
-    'locked_room',            -- favourite-books
-    'contemporary',           -- favourite-books modifier
-    'dark',                   -- favourite-books modifier
-    'fairytale',              -- favourite-books; proposed as fairy_tale
-    'gothic',                 -- favourite-books
-    'hard',                   -- favourite-books modifier
-    'high',                   -- favourite-books modifier
-    'low',                    -- favourite-books modifier
-    'mythic',                 -- favourite-books modifier; proposed as mythology
-    'paranormal',             -- favourite-books modifier
-    'apocalyptic',            -- favourite-books; proposed as post_apocalyptic
-    'utopia',                 -- favourite-books
-    'dystopia',               -- both
-    'nautical',               -- favourite-books modifier
-    'subterranean',           -- favourite-books modifier
-    'planetary',              -- favourite-books modifier
-    'heroic',                 -- favourite-books modifier
-    'supernatural',           -- both
-    'high_fantasy',           -- proposed compound
-    'dark_fantasy',           -- proposed compound
-    'urban_fantasy',          -- proposed compound
-    'mythology',              -- proposed
-    'cyberpunk',              -- proposed; a trope in favourite-books
-    'space_opera',            -- proposed compound
-    'post_apocalyptic',       -- proposed compound
-    'time_travel',            -- proposed; a trope in favourite-books
-    'dark_romance',           -- proposed compound
-    'contemporary_romance',   -- proposed compound
-    'historical_romance',     -- proposed compound
-    'detective',              -- proposed; a trope in favourite-books
-    'psychological_thriller', -- proposed compound
-    'spy',                    -- proposed
-    'ghost_story',            -- proposed
-    'body_horror',            -- proposed compound
-    'medieval',               -- proposed
-    'victorian',              -- proposed
-    'antiquity',              -- proposed
-    'war_story',              -- proposed; War is a trope in favourite-books
-    'coming_of_age',          -- proposed; a trope in favourite-books
-    'family_saga',            -- proposed
-    'dark_academia'           -- proposed; Academy is a trope in favourite-books
-    );
-
--- The list the issue predicts will outgrow itself, so it is the one most worth cutting hard.
--- Several values sit in a different list here than in favourite-books; where a concept appears
--- in two enums a member has to guess which one to fill in, so those pairs want resolving.
-CREATE TYPE public.story_trope AS ENUM (
-    'chosen_one',               -- both
-    'quest',                    -- both
-    'love_triangle',            -- both
-    'unreliable_narrator',      -- both
-    'enemies_to_lovers',        -- both
-    'forced_proximity',         -- both
-    'forbidden_love',           -- both
-    'fake_relationship',        -- both
-    'found_family',             -- both
-    'revenge',                  -- both
-    'second_chance',            -- both — 'Second-Chance love' in favourite-books
-    'mentor',                   -- favourite-books
-    'academy',                  -- favourite-books
-    'school',                   -- favourite-books
-    'reluctant_ruler',          -- favourite-books
-    'reluctant_hero',           -- favourite-books
-    'secret_society',           -- favourite-books
-    'hidden_world',             -- favourite-books
-    'prophecy',                 -- favourite-books
-    'ultimate_evil',            -- favourite-books
-    'newfound_powers',          -- favourite-books
-    'coming_of_age',            -- favourite-books; proposed as a subgenre
-    'time_travel',              -- favourite-books; proposed as a subgenre
-    'alternate_universes',      -- favourite-books
-    'meet_cute',                -- favourite-books
-    'meet_cringe',              -- favourite-books
-    'love_at_first_sight',      -- favourite-books
-    'lovers_to_enemies',        -- favourite-books
-    'imbalanced_dynamics',      -- favourite-books
-    'forced_marriage',          -- favourite-books
-    'detective',                -- favourite-books; proposed as a subgenre
-    'amateur_sleuth',           -- favourite-books — 'Amateur' there, which says nothing on its own
-    'bloodstained_family',      -- favourite-books
-    'ticking_clock',            -- favourite-books
-    'hidden_affair',            -- favourite-books
-    'treasure_hunt',            -- favourite-books
-    'puzzles_and_riddles',      -- favourite-books
-    'double_agent',             -- favourite-books
-    'everyman_turned_hero',     -- favourite-books
-    'high_stakes',              -- favourite-books
-    'monsters',                 -- favourite-books
-    'bargains',                 -- favourite-books
-    'creepy_old_house',         -- favourite-books
-    'inheritance_with_strings', -- favourite-books
-    'stranded',                 -- favourite-books
-    'celebrity',                -- favourite-books
-    'underdog',                 -- favourite-books
-    'self_sacrifice',           -- favourite-books
-    'best_friends',             -- favourite-books
-    'pregnancy',                -- favourite-books
-    'military',                 -- favourite-books
-    'office',                   -- favourite-books
-    'sport',                    -- favourite-books
-    'millionaire',              -- favourite-books
-    'regency',                  -- favourite-books
-    'amnesia',                  -- favourite-books
-    'blackmail',                -- favourite-books
-    'war',                      -- favourite-books; also proposed as a content warning
-    'trauma',                   -- favourite-books; overlaps what story_content_warning is for
-    'drama',                    -- favourite-books; proposed as a genre
-    'fated_mates',              -- favourite-books
-    'grumpy_x_sunshine',        -- favourite-books
-    'aliens',                   -- favourite-books
-    'cyberpunk',                -- favourite-books; proposed as a subgenre
-    'stalker',                  -- favourite-books
-    'friends_to_lovers',        -- proposed
-    'slow_burn',                -- proposed — in the seed
-    'rivals',                   -- proposed
-    'survival',                 -- proposed
-    'redemption',               -- proposed
-    'secret_identity',          -- proposed
-    'morally_grey',             -- proposed
-    'epistolary',               -- proposed — in the seed
-    'chamber_piece',            -- proposed — in the seed, as Kammerspiel
-    'ensemble'                  -- proposed — collaborative fiction is disproportionately this
-    );
-
--- Tense and perspective come from a member describing what they want to know about a writing
--- partner: "erste Person oder dritte Person, Roman, Vergangenheit oder Gegenwart" (interviews,
--- 4.6). favourite-books has nothing for either, so every value here is proposed.
+-- Grouped by the genre each sits under, as a comment because an enum cannot carry the relation:
+-- nothing here stops 'space_opera' on a romance. Whether that becomes a lookup table, a CHECK or
+-- a pairing the frontend merely draws is #75's open question, and this list is deliberately
+-- written so the grouping can be lifted out of it unchanged.
 --
--- `mixed` is what keeps the old free-text reasoning true: a story that changes tense across
--- chapters can still say so.
+-- The grouping is also what makes the length affordable — a member who picked Fantasy chooses
+-- among six, never among sixty.
+CREATE TYPE public.story_subgenre AS ENUM (
+    -- Fantasy
+    'high_fantasy',
+    'dark_fantasy',
+    'urban_fantasy',
+    'portal_fantasy',
+    'fairy_tale',
+    'mythic_fantasy',
+    'paranormal_fantasy',
+    'time_travel_fantasy',
+
+    -- Science fiction
+    'space_opera',
+    'cyberpunk',
+    'dystopian',
+    'post_apocalyptic',
+    'time_travel',
+    'first_contact',
+
+    -- Retelling
+    'retold_book',
+    'retold_movie',
+    'retold_myth',
+    'retold_saga',
+    'retold_manga',
+
+    -- Romance
+    'contemporary_romance',
+    'historical_romance',
+    'romantic_fantasy',
+    'forbidden_romance',
+    'cosy_romance',
+    'comedy_romance',
+    'closed_door_romance',
+    'erotic_romance',
+
+    -- Mystery
+    'intrigue',
+    'detective',
+    'cosy_mystery',
+    'noir',
+    'whodunit',
+
+    -- Crime
+    'heist',
+    'organised_crime',
+    'police_procedural',
+
+    -- Thriller
+    'psychological_thriller',
+    'spy_thriller',
+    'legal_thriller',
+    'survival_thriller',
+
+    -- Horror
+    'gothic_horror',
+    'supernatural_horror',
+    'psychological_horror',
+    'creature_horror',
+    'body_horror',
+    'doll_horror',
+
+    -- Historical
+    'ancient_world',
+    'medieval',
+    'early_modern',
+    'victorian',
+    'world_war',
+    'twentieth_century',
+
+    -- Adventure
+    'quest',
+    'exploration',
+    'treasure_hunt',
+    'survival_adventure',
+
+    -- Action
+    'military_action',
+    'martial_arts',
+    'superhero',
+    'spy_action',
+
+    -- Comedy
+    'romantic_comedy',
+    'satire',
+    'parody',
+    'dark_comedy',
+
+    -- Drama
+    'family_drama',
+    'coming_of_age',
+    'tragedy',
+
+    -- Slice of life
+    'everyday_life',
+    'workplace',
+    'school_life',
+    'university_life',
+    'family_life',
+    'vacation',
+
+    -- Western
+    'classic_western',
+    'weird_western',
+
+    -- Literary
+    'magical_realism',
+    'experimental'
+    );
+
+-- The weakest evidence of the three: no member named a trope in any interview, and neither the
+-- PRD nor the Yooco report contains the word. Short on purpose until somebody uses one, and the
+-- first list here to expect deleting rather than extending.
+CREATE TYPE public.story_trope AS ENUM (
+    'enemies_to_lovers',
+    'friends_to_lovers',
+    'friends_with_benefits',
+    'slow_burn',
+    'forbidden_love',
+    'love_triangle',
+    'fake_relationship',
+    'second_chance',
+    'found_family',
+    'chosen_one',
+    'mentor_and_student',
+    'rivals',
+    'redemption_arc',
+    'villain_to_hero',
+    'hero_to_villain',
+    'hidden_identity',
+    'secret_heritage',
+    'amnesia',
+    'time_loop',
+    'quest_for_an_artefact',
+    'heist_crew',
+    'locked_room',
+    'forced_proximity',
+    'grumpy_and_sunshine',
+    'unreliable_narrator',
+    'epistolary', -- a form rather than a trope, and the odd one out for it
+    'multiple_timelines',
+    'ensemble_cast',
+    'morally_grey_protagonist',
+    'road_trip',
+    'court_intrigue'
+    );
+
 CREATE TYPE public.story_tense AS ENUM (
-    'past',    -- proposed — in the seed
+    'past',    -- proposed
     'present', -- proposed
     'mixed'    -- proposed — the case the free-text column existed for
     );
@@ -216,7 +201,7 @@ CREATE TYPE public.story_tense AS ENUM (
 CREATE TYPE public.story_perspective AS ENUM (
     'first_person',            -- proposed — from the interviews, 4.6
     'second_person',           -- proposed
-    'third_person_limited',    -- proposed — in the seed
+    'third_person_limited',    -- proposed
     'third_person_omniscient', -- proposed
     'mixed'                    -- proposed — one writer per character is the norm here
     );
@@ -230,7 +215,7 @@ CREATE TYPE public.story_content_warning AS ENUM (
     'self_harm',       -- proposed — matches report_category
     'suicide',         -- proposed
     'death',           -- proposed
-    'grief',           -- proposed — in the seed, as Trauer
+    'grief',           -- proposed
     'abuse',           -- proposed
     'sexual_violence', -- proposed
     'substance_abuse', -- proposed
@@ -238,7 +223,7 @@ CREATE TYPE public.story_content_warning AS ENUM (
     'mental_illness',  -- proposed
     'discrimination',  -- proposed
     'gore',            -- proposed
-    'war',             -- proposed — also a trope in favourite-books
+    'war',             -- proposed
     'animal_cruelty',  -- proposed
     'pregnancy_loss'   -- proposed
     );
@@ -270,6 +255,15 @@ CREATE TABLE public.writing_group
     subgenres        public.story_subgenre[]           NOT NULL DEFAULT '{}',
     tropes           public.story_trope[]              NOT NULL DEFAULT '{}',
     content_warnings public.story_content_warning[]    NOT NULL DEFAULT '{}',
+
+    -- Free text, not lists. Both were put to beta testers as vocabularies and both came back
+    -- untouched — not one value added to either, while the genre lists grew by twenty-one — and
+    -- the only comments on them asked for a plain field. So they describe rather than filter, and
+    -- what gets written here is what decides whether they stay.
+    -- Prefixed like `story_status` above, and for the same reason: `settings` alone reads as the
+    -- group's configuration, which is a thing the product also has.
+    story_themes     TEXT,
+    story_settings   TEXT,
 
     -- Chosen from a list rather than typed, for the reason story_language gives above. The
     -- free text this replaced argued that collaborative fiction mixes tense and person across

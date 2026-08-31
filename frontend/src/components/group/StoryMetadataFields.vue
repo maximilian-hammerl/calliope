@@ -1,28 +1,30 @@
 <script setup lang="ts">
 /**
- * The story's metadata, shared by the create and the edit dialog so the two cannot drift —
- * which is exactly what went wrong before: the create dialog offered Genre and Perspektive,
- * the edit dialog did not, and neither actually stored anything.
+ * A group's metadata: the story vocabularies plus the two things only a group has — the story's
+ * own status and the language it is written in. The vocabularies live in `StoryVocabularyFields`
+ * because a story idea carries exactly the same ones, and the two forms drifting apart is what
+ * went wrong the last time they were written twice.
  */
-import { TEXT_LIMIT } from '@/api/textLimit'
+import { computed } from 'vue'
 import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import StoryVocabularyFields from '@/components/story/StoryVocabularyFields.vue'
+import type { StoryVocabulary } from '@/components/story/StoryVocabularyFields.vue'
+import { Field, FieldLabel } from '@/components/ui/field'
 
-export type StoryMetadata = {
+export type StoryMetadata = StoryVocabulary & {
   storyStatus: 'planning' | 'writing' | 'finished'
-  genres: string
-  subgenres: string
-  tropes: string
-  contentWarnings: string
-  tense: string
-  perspective: string
   language: 'german' | 'english'
 }
 
 const metadata = defineModel<StoryMetadata>({ required: true })
 
-const LIMIT = TEXT_LIMIT.createGroup
+/** The wrapper writes back into the same object, so the child never sees status or language. */
+const vocabulary = computed<StoryVocabulary>({
+  get: () => metadata.value,
+  set: (next) => {
+    metadata.value = { ...metadata.value, ...next }
+  },
+})
 
 const STATUS_LABELS = [
   { value: 'planning', label: 'In Planung' },
@@ -30,18 +32,8 @@ const STATUS_LABELS = [
   { value: 'finished', label: 'Abgeschlossen' },
 ] as const
 
-// Every one of these is optional. Members told us Yooco's mandatory profile section got filled
-// with nonsense purely to get past it, so nothing here blocks creating a group.
-const TAG_FIELDS = [
-  { key: 'genres', label: 'Genres', placeholder: 'z. B. Fantasy, Mystery' },
-  { key: 'subgenres', label: 'Subgenres', placeholder: 'z. B. Cyberpunk, Dark Romance' },
-  { key: 'tropes', label: 'Tropes', placeholder: 'z. B. Enemies to Lovers, Found Family' },
-  {
-    key: 'contentWarnings',
-    label: 'Inhaltswarnungen',
-    placeholder: 'z. B. Gewalt, Trauer',
-  },
-] as const
+const selectClass =
+  'h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9'
 </script>
 
 <template>
@@ -51,7 +43,7 @@ const TAG_FIELDS = [
       id="group-story-status"
       v-model="metadata.storyStatus"
       name="storyStatus"
-      class="h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9"
+      :class="selectClass"
     >
       <option v-for="status in STATUS_LABELS" :key="status.value" :value="status.value">
         {{ status.label }}
@@ -59,57 +51,14 @@ const TAG_FIELDS = [
     </select>
   </Field>
 
-  <!-- Paired from `sm` up. A tag input holds a short comma list, so two fit a row — which is
-       what the wider dialog buys: the same fields without a column tall enough to scroll. -->
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-    <Field v-for="field in TAG_FIELDS" :key="field.key">
-      <FieldLabel optional :for="`group-${field.key}`">{{ field.label }}</FieldLabel>
-      <Input
-        :id="`group-${field.key}`"
-        v-model="metadata[field.key]"
-        :name="field.key"
-        :placeholder="field.placeholder"
-      />
-      <FieldDescription>Mit Komma trennen.</FieldDescription>
-    </Field>
-  </div>
+  <StoryVocabularyFields v-model="vocabulary" id-prefix="group" />
 
-  <!-- Typically a word or two each, so they share a line — same as the story-idea dialog. -->
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-    <Field>
-      <FieldLabel optional for="group-tense">Zeitform</FieldLabel>
-      <Input
-        id="group-tense"
-        v-model="metadata.tense"
-        name="tense"
-        :maxlength="LIMIT.tense.maxLength"
-        placeholder="z. B. Vergangenheit"
-      />
-    </Field>
-
-    <Field>
-      <FieldLabel optional for="group-perspective">Perspektive</FieldLabel>
-      <Input
-        id="group-perspective"
-        v-model="metadata.perspective"
-        name="perspective"
-        :maxlength="LIMIT.perspective.maxLength"
-        placeholder="z. B. Dritte Person, begrenzt"
-      />
-    </Field>
-
-    <Field>
-      <FieldLabel for="group-language">Sprache</FieldLabel>
-      <select
-        id="group-language"
-        v-model="metadata.language"
-        name="language"
-        class="h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9"
-      >
-        <option v-for="(label, value) in LANGUAGE_LABELS" :key="value" :value="value">
-          {{ label }}
-        </option>
-      </select>
-    </Field>
-  </div>
+  <Field>
+    <FieldLabel for="group-language">Sprache</FieldLabel>
+    <select id="group-language" v-model="metadata.language" name="language" :class="selectClass">
+      <option v-for="(label, value) in LANGUAGE_LABELS" :key="value" :value="value">
+        {{ label }}
+      </option>
+    </select>
+  </Field>
 </template>

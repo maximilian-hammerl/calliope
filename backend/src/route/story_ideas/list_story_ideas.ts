@@ -1,3 +1,8 @@
+import {
+  STORY_GENRES_SCHEMA,
+  STORY_SUBGENRES_SCHEMA,
+  STORY_TROPES_SCHEMA,
+} from "@/src/http/request_schema.ts";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
@@ -48,6 +53,11 @@ const LIST_STORY_IDEAS_BODY = listQuerySchema(
     // The board is discovery, so `others` is the default: like a public group the reader is
     // already in, their own idea is not something to find.
     author: z.enum(["others", "mine"]).default("others"),
+    // The same schemas the create bodies use, so what may be chosen and what may be filtered
+    // by cannot drift apart. Absent means "not asked" — an untouched filter never empties a board.
+    genres: STORY_GENRES_SCHEMA,
+    subgenres: STORY_SUBGENRES_SCHEMA,
+    tropes: STORY_TROPES_SCHEMA,
   },
   "desc",
 );

@@ -68,21 +68,26 @@ Deno.test("POST /api/groups stores the story metadata", async () => {
     subtitle: "Was du vergisst",
     synopsis: "d",
     storyStatus: "writing",
-    genres: ["Fantasy", "Mystery"],
-    subgenres: ["Urban Fantasy"],
-    tropes: ["Slow Burn"],
-    contentWarnings: ["Gedächtnisverlust"],
-    tense: "Vergangenheit",
-    perspective: "Dritte Person",
+    genres: ["fantasy", "mystery"],
+    subgenres: ["urban_fantasy"],
+    tropes: ["slow_burn"],
+    contentWarnings: ["grief"],
+    storyThemes: "Erinnerung, Schuld",
+    storySettings: "Eine Stadt, die nur nachts existiert",
+    tense: "past",
+    perspective: "third_person_limited",
   });
 
   assertEquals(response.status, STATUS_CODE.Created);
   const group = await response.json();
   assertEquals(group.subtitle, "Was du vergisst");
   assertEquals(group.storyStatus, "writing");
-  assertEquals(group.genres, ["Fantasy", "Mystery"]);
-  assertEquals(group.contentWarnings, ["Gedächtnisverlust"]);
-  assertEquals(group.perspective, "Dritte Person");
+  assertEquals(group.genres, ["fantasy", "mystery"]);
+  assertEquals(group.contentWarnings, ["grief"]);
+  assertEquals(group.perspective, "third_person_limited");
+  // Free text, so it comes back as written rather than as a chosen value.
+  assertEquals(group.storyThemes, "Erinnerung, Schuld");
+  assertEquals(group.storySettings, "Eine Stadt, die nur nachts existiert");
 });
 
 Deno.test("POST /api/groups defaults the metadata a member did not give", async () => {
@@ -103,19 +108,44 @@ Deno.test("POST /api/groups defaults the metadata a member did not give", async 
   assertEquals(group.tropes, []);
 });
 
-Deno.test("POST /api/groups tidies the tags it is given", async () => {
+Deno.test("POST /api/groups refuses a value it is given twice", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
-    title: "Unordentlich",
+    title: "Doppelt",
     synopsis: "d",
-    // Spacing, a repeat in another case, and an entry that is only whitespace.
-    genres: ["  Fantasy  ", "fantasy", "   ", "Mystery"],
+    genres: ["fantasy", "fantasy", "mystery"],
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
-  // The first spelling wins, because that is the one the member chose to type.
-  assertEquals((await response.json()).genres, ["Fantasy", "Mystery"]);
+  // Refused rather than de-duplicated: the values are closed, so a repeat is a client bug, and
+  // quietly fixing it would answer 200 to a request the sender got wrong.
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  // The second one is named, by value and by position.
+  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+    "genres.1",
+  ]);
+  assertEquals(
+    body.issues.map((issue: { message: string }) => issue.message),
+    ["Duplicate value: fantasy"],
+  );
+});
+
+Deno.test("POST /api/groups refuses a genre that is not one", async () => {
+  const cookie = await registerUser(username);
+
+  const response = await request("POST", "/api/groups", cookie, {
+    title: "Erfunden",
+    synopsis: "d",
+    // What the free-text column used to accept, and what made a filter over it impossible.
+    genres: ["Fantasy"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+  const body = await response.json();
+  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+    "genres.0",
+  ]);
 });
 
 Deno.test("POST /api/groups refuses more tags than a rail can show", async () => {

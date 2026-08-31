@@ -1,4 +1,10 @@
 import { db } from "@/src/database/client.ts";
+import type { Insertable } from "kysely";
+import type {
+  StoryIdea as StoryIdeaTable,
+  WritingGroup as WritingGroupTable,
+} from "@/src/database/schema.ts";
+import { omitFromObject } from "@/src/util/object.ts";
 import { hashPassword } from "@/src/util/password.ts";
 import {
   PLATFORM_ROLES,
@@ -7,7 +13,9 @@ import {
   VERIFIED_USERNAMES,
 } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
+import type { GroupFixture } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
+import type { StoryIdeaFixture } from "@/seed/story_ideas.ts";
 import { CHATS } from "@/seed/chats.ts";
 import type { ChatFixture } from "@/seed/chats.ts";
 import { BLOCKS } from "@/seed/blocks.ts";
@@ -216,23 +224,33 @@ async function writeBlocks(): Promise<void> {
   }))).execute();
 }
 
+/**
+ * What is left after the omit has to be a column. A spread is not excess-property-checked — an
+ * explicit `Insertable<…>` annotation does not catch it either — so without this a fixture-only
+ * field added later would compile and fail against Postgres on the next seed. The error names the
+ * key: `Type 'true' does not satisfy the expected type '"note"'`.
+ */
+type OnlyColumns<Fixture, Extra extends keyof Fixture, Row> = [
+  Exclude<keyof Omit<Fixture, Extra>, keyof Row>,
+] extends [never] ? true
+  : Exclude<keyof Omit<Fixture, Extra>, keyof Row>;
+
+true satisfies OnlyColumns<
+  GroupFixture,
+  "by" | "members" | "threads" | "steps",
+  WritingGroupTable
+>;
+true satisfies OnlyColumns<StoryIdeaFixture, "by", StoryIdeaTable>;
+
 async function writeGroups(): Promise<void> {
-  await db.insertInto("writingGroup").values(GROUPS.map((group) => ({
-    id: group.id,
-    title: group.title,
-    subtitle: group.subtitle,
-    synopsis: group.synopsis,
-    visibility: group.visibility,
-    language: group.language,
-    storyStatus: group.storyStatus,
-    genres: group.genres,
-    subgenres: group.subgenres,
-    tropes: group.tropes,
-    contentWarnings: group.contentWarnings,
-    tense: group.tense,
-    perspective: group.perspective,
-    createdBy: group.by,
-  }))).execute();
+  // The fixture is the columns plus what becomes its own insert, so naming those is shorter than
+  // naming the columns — and a column added to the table flows through without touching this.
+  await db.insertInto("writingGroup").values(
+    GROUPS.map((group): Insertable<WritingGroupTable> => ({
+      ...omitFromObject(group, "by", "members", "threads", "steps"),
+      createdBy: group.by,
+    })),
+  ).execute();
 
   await db.insertInto("userInWritingGroup").values(
     GROUPS.flatMap((group) =>
@@ -344,25 +362,14 @@ async function writeChats(): Promise<void> {
 const STEPS_BETWEEN_IDEAS = 60;
 
 async function writeStoryIdeas(): Promise<void> {
-  await db.insertInto("storyIdea").values(STORY_IDEAS.map((idea, index) => ({
-    id: idea.id,
-    title: idea.title,
-    subtitle: idea.subtitle,
-    teaser: idea.teaser,
-    synopsis: idea.synopsis,
-    status: idea.status,
-    language: idea.language,
-    genres: idea.genres,
-    subgenres: idea.subgenres,
-    tropes: idea.tropes,
-    contentWarnings: idea.contentWarnings,
-    tense: idea.tense,
-    perspective: idea.perspective,
-    lookingFor: idea.lookingFor,
-    partySize: idea.partySize,
-    createdBy: idea.by,
-    createdAt: postedAt((STORY_IDEAS.length - index) * STEPS_BETWEEN_IDEAS),
-  }))).execute();
+  await db.insertInto("storyIdea").values(
+    STORY_IDEAS.map((idea, index): Insertable<StoryIdeaTable> => ({
+      // `by` is the only thing the fixture carries that is not a column; see writeGroups.
+      ...omitFromObject(idea, "by"),
+      createdBy: idea.by,
+      createdAt: postedAt((STORY_IDEAS.length - index) * STEPS_BETWEEN_IDEAS),
+    })),
+  ).execute();
 }
 
 /**

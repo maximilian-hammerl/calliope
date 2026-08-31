@@ -54,6 +54,8 @@ const groupInitialValues = computed<GroupInitialValues | undefined>(() =>
         subgenres: idea.value.subgenres,
         tropes: idea.value.tropes,
         contentWarnings: idea.value.contentWarnings,
+        storyThemes: idea.value.storyThemes,
+        storySettings: idea.value.storySettings,
         tense: idea.value.tense ?? null,
         perspective: idea.value.perspective ?? null,
         language: idea.value.language,

@@ -26,18 +26,29 @@ Deno.test("POST /api/story-ideas needs only a title and the idea", async () => {
   assertEquals(idea.genres, []);
 });
 
-Deno.test("POST /api/story-ideas normalises tags like a group does", async () => {
+Deno.test("POST /api/story-ideas takes the same vocabulary a group does", async () => {
   const cookie = await registerUser(author);
 
   const response = await createIdea(cookie, {
-    genres: [" Fantasy ", "fantasy", "", "Mystery"],
+    genres: ["fantasy", "mystery"],
     language: "english",
   });
 
   const idea = await response.json();
-  // One rule for both tables: first spelling wins, case-insensitively, blanks dropped.
-  assertEquals(idea.genres, ["Fantasy", "Mystery"]);
+  // One rule for both tables, which is why the enums are shared: an idea's metadata can become
+  // the group's untouched.
+  assertEquals(idea.genres, ["fantasy", "mystery"]);
   assertEquals(idea.language, "english");
+});
+
+Deno.test("POST /api/story-ideas refuses a repeat, exactly as a group does", async () => {
+  const cookie = await registerUser(author);
+
+  const response = await createIdea(cookie, {
+    genres: ["fantasy", "fantasy"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
 });
 
 Deno.test("POST /api/story-ideas refuses an empty title", async () => {

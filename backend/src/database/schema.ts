@@ -7,6 +7,13 @@ import { Buffer } from "node:buffer";
 
 import type { ColumnType } from "kysely";
 
+export type ArrayType<T> = ArrayTypeImpl<T> extends (infer U)[] ? U[]
+  : ArrayTypeImpl<T>;
+
+export type ArrayTypeImpl<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S[], I[], U[]>
+  : T[];
+
 export type AvatarOrigin =
   | "licence"
   | "other"
@@ -64,11 +71,167 @@ export type ReportTargetType =
   | "writing_post"
   | "writing_thread";
 
+export type StoryContentWarning =
+  | "abuse"
+  | "animal_cruelty"
+  | "death"
+  | "discrimination"
+  | "eating_disorder"
+  | "gore"
+  | "grief"
+  | "mental_illness"
+  | "pregnancy_loss"
+  | "self_harm"
+  | "sexual_content"
+  | "sexual_violence"
+  | "substance_abuse"
+  | "suicide"
+  | "violence"
+  | "war";
+
+export type StoryGenre =
+  | "action"
+  | "adventure"
+  | "comedy"
+  | "crime"
+  | "drama"
+  | "fantasy"
+  | "historical"
+  | "horror"
+  | "literary"
+  | "mystery"
+  | "retelling"
+  | "romance"
+  | "science_fiction"
+  | "slice_of_life"
+  | "thriller"
+  | "western";
+
 export type StoryIdeaPartySize = "group" | "one_on_one";
 
 export type StoryIdeaStatus = "closed" | "open";
 
 export type StoryLanguage = "english" | "german";
+
+export type StoryPerspective =
+  | "first_person"
+  | "mixed"
+  | "second_person"
+  | "third_person_limited"
+  | "third_person_omniscient";
+
+export type StorySubgenre =
+  | "ancient_world"
+  | "body_horror"
+  | "classic_western"
+  | "closed_door_romance"
+  | "comedy_romance"
+  | "coming_of_age"
+  | "contemporary_romance"
+  | "cosy_mystery"
+  | "cosy_romance"
+  | "creature_horror"
+  | "cyberpunk"
+  | "dark_comedy"
+  | "dark_fantasy"
+  | "detective"
+  | "doll_horror"
+  | "dystopian"
+  | "early_modern"
+  | "erotic_romance"
+  | "everyday_life"
+  | "experimental"
+  | "exploration"
+  | "fairy_tale"
+  | "family_drama"
+  | "family_life"
+  | "first_contact"
+  | "forbidden_romance"
+  | "gothic_horror"
+  | "heist"
+  | "high_fantasy"
+  | "historical_romance"
+  | "intrigue"
+  | "legal_thriller"
+  | "magical_realism"
+  | "martial_arts"
+  | "medieval"
+  | "military_action"
+  | "mythic_fantasy"
+  | "noir"
+  | "organised_crime"
+  | "paranormal_fantasy"
+  | "parody"
+  | "police_procedural"
+  | "portal_fantasy"
+  | "post_apocalyptic"
+  | "psychological_horror"
+  | "psychological_thriller"
+  | "quest"
+  | "retold_book"
+  | "retold_manga"
+  | "retold_movie"
+  | "retold_myth"
+  | "retold_saga"
+  | "romantic_comedy"
+  | "romantic_fantasy"
+  | "satire"
+  | "school_life"
+  | "space_opera"
+  | "spy_action"
+  | "spy_thriller"
+  | "superhero"
+  | "supernatural_horror"
+  | "survival_adventure"
+  | "survival_thriller"
+  | "time_travel"
+  | "time_travel_fantasy"
+  | "tragedy"
+  | "treasure_hunt"
+  | "twentieth_century"
+  | "university_life"
+  | "urban_fantasy"
+  | "vacation"
+  | "victorian"
+  | "weird_western"
+  | "whodunit"
+  | "workplace"
+  | "world_war";
+
+export type StoryTense = "mixed" | "past" | "present";
+
+export type StoryTrope =
+  | "amnesia"
+  | "chosen_one"
+  | "court_intrigue"
+  | "enemies_to_lovers"
+  | "ensemble_cast"
+  | "epistolary"
+  | "fake_relationship"
+  | "forbidden_love"
+  | "forced_proximity"
+  | "found_family"
+  | "friends_to_lovers"
+  | "friends_with_benefits"
+  | "grumpy_and_sunshine"
+  | "heist_crew"
+  | "hero_to_villain"
+  | "hidden_identity"
+  | "locked_room"
+  | "love_triangle"
+  | "mentor_and_student"
+  | "morally_grey_protagonist"
+  | "multiple_timelines"
+  | "quest_for_an_artefact"
+  | "redemption_arc"
+  | "rivals"
+  | "road_trip"
+  | "second_chance"
+  | "secret_heritage"
+  | "slow_burn"
+  | "time_loop"
+  | "unreliable_narrator"
+  | "villain_to_hero";
 
 export type UserInChatGroupStatus = "invited" | "joined";
 
@@ -152,23 +315,25 @@ export interface Report {
 }
 
 export interface StoryIdea {
-  contentWarnings: Generated<string[]>;
+  contentWarnings: Generated<ArrayType<StoryContentWarning>>;
   createdAt: Generated<string>;
   createdBy: string;
-  genres: Generated<string[]>;
+  genres: Generated<ArrayType<StoryGenre>>;
   id: Generated<string>;
   language: Generated<StoryLanguage>;
   lookingFor: string | null;
   partySize: StoryIdeaPartySize | null;
-  perspective: string | null;
+  perspective: StoryPerspective | null;
   status: Generated<StoryIdeaStatus>;
-  subgenres: Generated<string[]>;
+  storySettings: string | null;
+  storyThemes: string | null;
+  subgenres: Generated<ArrayType<StorySubgenre>>;
   subtitle: string | null;
   synopsis: string;
   teaser: string;
-  tense: string | null;
+  tense: StoryTense | null;
   title: string;
-  tropes: Generated<string[]>;
+  tropes: Generated<ArrayType<StoryTrope>>;
 }
 
 export interface StoryIdeaReader {
@@ -256,21 +421,23 @@ export interface UserToken {
 }
 
 export interface WritingGroup {
-  contentWarnings: Generated<string[]>;
+  contentWarnings: Generated<ArrayType<StoryContentWarning>>;
   createdAt: Generated<string>;
   createdBy: string | null;
-  genres: Generated<string[]>;
+  genres: Generated<ArrayType<StoryGenre>>;
   id: Generated<string>;
   language: Generated<StoryLanguage>;
   lastActivityAt: Generated<string>;
-  perspective: string | null;
+  perspective: StoryPerspective | null;
+  storySettings: string | null;
   storyStatus: Generated<WritingGroupStoryStatus>;
-  subgenres: Generated<string[]>;
+  storyThemes: string | null;
+  subgenres: Generated<ArrayType<StorySubgenre>>;
   subtitle: string | null;
   synopsis: string;
-  tense: string | null;
+  tense: StoryTense | null;
   title: string;
-  tropes: Generated<string[]>;
+  tropes: Generated<ArrayType<StoryTrope>>;
   visibility: Generated<WritingGroupVisibility>;
 }
 
@@ -343,6 +510,173 @@ export const WRITING_GROUP_STORY_STATUSES = [
 export const WRITING_GROUP_STORY_STATUS_SCHEMA = z.enum(
   WRITING_GROUP_STORY_STATUSES,
 );
+
+export const STORY_GENRES = [
+  "action",
+  "adventure",
+  "comedy",
+  "crime",
+  "drama",
+  "fantasy",
+  "historical",
+  "horror",
+  "literary",
+  "mystery",
+  "retelling",
+  "romance",
+  "science_fiction",
+  "slice_of_life",
+  "thriller",
+  "western",
+] as const;
+export const STORY_GENRE_SCHEMA = z.enum(STORY_GENRES);
+
+export const STORY_SUBGENRES = [
+  "ancient_world",
+  "body_horror",
+  "classic_western",
+  "closed_door_romance",
+  "comedy_romance",
+  "coming_of_age",
+  "contemporary_romance",
+  "cosy_mystery",
+  "cosy_romance",
+  "creature_horror",
+  "cyberpunk",
+  "dark_comedy",
+  "dark_fantasy",
+  "detective",
+  "doll_horror",
+  "dystopian",
+  "early_modern",
+  "erotic_romance",
+  "everyday_life",
+  "experimental",
+  "exploration",
+  "fairy_tale",
+  "family_drama",
+  "family_life",
+  "first_contact",
+  "forbidden_romance",
+  "gothic_horror",
+  "heist",
+  "high_fantasy",
+  "historical_romance",
+  "intrigue",
+  "legal_thriller",
+  "magical_realism",
+  "martial_arts",
+  "medieval",
+  "military_action",
+  "mythic_fantasy",
+  "noir",
+  "organised_crime",
+  "paranormal_fantasy",
+  "parody",
+  "police_procedural",
+  "portal_fantasy",
+  "post_apocalyptic",
+  "psychological_horror",
+  "psychological_thriller",
+  "quest",
+  "retold_book",
+  "retold_manga",
+  "retold_movie",
+  "retold_myth",
+  "retold_saga",
+  "romantic_comedy",
+  "romantic_fantasy",
+  "satire",
+  "school_life",
+  "space_opera",
+  "spy_action",
+  "spy_thriller",
+  "superhero",
+  "supernatural_horror",
+  "survival_adventure",
+  "survival_thriller",
+  "time_travel",
+  "time_travel_fantasy",
+  "tragedy",
+  "treasure_hunt",
+  "twentieth_century",
+  "university_life",
+  "urban_fantasy",
+  "vacation",
+  "victorian",
+  "weird_western",
+  "whodunit",
+  "workplace",
+  "world_war",
+] as const;
+export const STORY_SUBGENRE_SCHEMA = z.enum(STORY_SUBGENRES);
+
+export const STORY_TROPES = [
+  "amnesia",
+  "chosen_one",
+  "court_intrigue",
+  "enemies_to_lovers",
+  "ensemble_cast",
+  "epistolary",
+  "fake_relationship",
+  "forbidden_love",
+  "forced_proximity",
+  "found_family",
+  "friends_to_lovers",
+  "friends_with_benefits",
+  "grumpy_and_sunshine",
+  "heist_crew",
+  "hero_to_villain",
+  "hidden_identity",
+  "locked_room",
+  "love_triangle",
+  "mentor_and_student",
+  "morally_grey_protagonist",
+  "multiple_timelines",
+  "quest_for_an_artefact",
+  "redemption_arc",
+  "rivals",
+  "road_trip",
+  "second_chance",
+  "secret_heritage",
+  "slow_burn",
+  "time_loop",
+  "unreliable_narrator",
+  "villain_to_hero",
+] as const;
+export const STORY_TROPE_SCHEMA = z.enum(STORY_TROPES);
+
+export const STORY_TENSES = ["mixed", "past", "present"] as const;
+export const STORY_TENSE_SCHEMA = z.enum(STORY_TENSES);
+
+export const STORY_PERSPECTIVES = [
+  "first_person",
+  "mixed",
+  "second_person",
+  "third_person_limited",
+  "third_person_omniscient",
+] as const;
+export const STORY_PERSPECTIVE_SCHEMA = z.enum(STORY_PERSPECTIVES);
+
+export const STORY_CONTENT_WARNINGS = [
+  "abuse",
+  "animal_cruelty",
+  "death",
+  "discrimination",
+  "eating_disorder",
+  "gore",
+  "grief",
+  "mental_illness",
+  "pregnancy_loss",
+  "self_harm",
+  "sexual_content",
+  "sexual_violence",
+  "substance_abuse",
+  "suicide",
+  "violence",
+  "war",
+] as const;
+export const STORY_CONTENT_WARNING_SCHEMA = z.enum(STORY_CONTENT_WARNINGS);
 
 export const USER_IN_WRITING_GROUP_ROLES = [
   "administrator",
@@ -513,12 +847,14 @@ export const STORY_IDEA_SCHEMA = z.object({
   subtitle: z.string().nullable(),
   teaser: z.string(),
   synopsis: z.string(),
-  genres: z.array(z.string()),
-  subgenres: z.array(z.string()),
-  tropes: z.array(z.string()),
-  contentWarnings: z.array(z.string()),
-  tense: z.string().nullable(),
-  perspective: z.string().nullable(),
+  genres: z.array(STORY_GENRE_SCHEMA),
+  subgenres: z.array(STORY_SUBGENRE_SCHEMA),
+  tropes: z.array(STORY_TROPE_SCHEMA),
+  contentWarnings: z.array(STORY_CONTENT_WARNING_SCHEMA),
+  storyThemes: z.string().nullable(),
+  storySettings: z.string().nullable(),
+  tense: STORY_TENSE_SCHEMA.nullable(),
+  perspective: STORY_PERSPECTIVE_SCHEMA.nullable(),
   language: STORY_LANGUAGE_SCHEMA,
   lookingFor: z.string().nullable(),
   partySize: STORY_IDEA_PARTY_SIZE_SCHEMA.nullable(),
@@ -618,12 +954,14 @@ export const WRITING_GROUP_SCHEMA = z.object({
   synopsis: z.string(),
   visibility: WRITING_GROUP_VISIBILITY_SCHEMA,
   storyStatus: WRITING_GROUP_STORY_STATUS_SCHEMA,
-  genres: z.array(z.string()),
-  subgenres: z.array(z.string()),
-  tropes: z.array(z.string()),
-  contentWarnings: z.array(z.string()),
-  tense: z.string().nullable(),
-  perspective: z.string().nullable(),
+  genres: z.array(STORY_GENRE_SCHEMA),
+  subgenres: z.array(STORY_SUBGENRE_SCHEMA),
+  tropes: z.array(STORY_TROPE_SCHEMA),
+  contentWarnings: z.array(STORY_CONTENT_WARNING_SCHEMA),
+  storyThemes: z.string().nullable(),
+  storySettings: z.string().nullable(),
+  tense: STORY_TENSE_SCHEMA.nullable(),
+  perspective: STORY_PERSPECTIVE_SCHEMA.nullable(),
   language: STORY_LANGUAGE_SCHEMA,
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),

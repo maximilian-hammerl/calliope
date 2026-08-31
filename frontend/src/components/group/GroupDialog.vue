@@ -20,8 +20,15 @@ import {
 import type { GetGroup200 } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import StoryMetadataFields from '@/components/group/StoryMetadataFields.vue'
+import type {
+  ContentWarning,
+  Genre,
+  Perspective,
+  Subgenre,
+  Tense,
+  Trope,
+} from '@/lib/story/storyVocabulary'
 import type { StoryMetadata } from '@/components/group/StoryMetadataFields.vue'
-import { fromTags, toTags } from '@/lib/format/storyTags'
 import { formatCount } from '@/lib/format/formatNumber'
 import { failureMessage } from '@/lib/format/failure'
 import { focusFirstInvalid, parsed, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
@@ -45,12 +52,14 @@ export type GroupInitialValues = {
   title: string
   subtitle: string | null
   synopsis: string
-  genres: string[]
-  subgenres: string[]
-  tropes: string[]
-  contentWarnings: string[]
-  tense: string | null
-  perspective: string | null
+  genres: Genre[]
+  subgenres: Subgenre[]
+  tropes: Trope[]
+  contentWarnings: ContentWarning[]
+  storyThemes: string | null
+  storySettings: string | null
+  tense: Tense | null
+  perspective: Perspective | null
   language: 'german' | 'english'
 }
 
@@ -74,10 +83,12 @@ const visibility = ref<'private' | 'public'>('private')
 
 const emptyMetadata = (): StoryMetadata => ({
   storyStatus: 'planning',
-  genres: '',
-  subgenres: '',
-  tropes: '',
-  contentWarnings: '',
+  genres: [],
+  subgenres: [],
+  tropes: [],
+  contentWarnings: [],
+  storyThemes: '',
+  storySettings: '',
   tense: '',
   perspective: '',
   language: 'german',
@@ -85,16 +96,18 @@ const emptyMetadata = (): StoryMetadata => ({
 
 const metadata = ref<StoryMetadata>(emptyMetadata())
 
-/** The form holds comma-separated text; the API takes arrays and nulls. */
+/** The form holds chosen values; the API takes the same values, and null for "not said". */
 function metadataForApi() {
   return {
     storyStatus: metadata.value.storyStatus,
-    genres: toTags(metadata.value.genres),
-    subgenres: toTags(metadata.value.subgenres),
-    tropes: toTags(metadata.value.tropes),
-    contentWarnings: toTags(metadata.value.contentWarnings),
-    tense: blank(metadata.value.tense),
-    perspective: blank(metadata.value.perspective),
+    genres: metadata.value.genres,
+    subgenres: metadata.value.subgenres,
+    tropes: metadata.value.tropes,
+    contentWarnings: metadata.value.contentWarnings,
+    storyThemes: blank(metadata.value.storyThemes),
+    storySettings: blank(metadata.value.storySettings),
+    tense: metadata.value.tense === '' ? null : metadata.value.tense,
+    perspective: metadata.value.perspective === '' ? null : metadata.value.perspective,
     language: metadata.value.language,
   }
 }
@@ -196,10 +209,12 @@ watch(open, (isOpen) => {
   visibility.value = props.group?.visibility ?? 'private'
   metadata.value = {
     storyStatus: props.group?.storyStatus ?? 'planning',
-    genres: fromTags(source.genres),
-    subgenres: fromTags(source.subgenres),
-    tropes: fromTags(source.tropes),
-    contentWarnings: fromTags(source.contentWarnings),
+    genres: [...source.genres],
+    subgenres: [...source.subgenres],
+    tropes: [...source.tropes],
+    contentWarnings: [...source.contentWarnings],
+    storyThemes: source.storyThemes ?? '',
+    storySettings: source.storySettings ?? '',
     tense: source.tense ?? '',
     perspective: source.perspective ?? '',
     language: source.language,

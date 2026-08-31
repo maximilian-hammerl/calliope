@@ -1,4 +1,10 @@
 import { z } from "@hono/zod-openapi";
+import {
+  STORY_CONTENT_WARNING_SCHEMA,
+  STORY_GENRE_SCHEMA,
+  STORY_SUBGENRE_SCHEMA,
+  STORY_TROPE_SCHEMA,
+} from "@/src/database/schema.ts";
 import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
 
 /**
@@ -18,16 +24,51 @@ export const EMAIL_ADDRESS_SCHEMA = z.email({ pattern: z.regexes.html5Email })
   .toLowerCase();
 
 /**
- * A list of labels — genres, subgenres, tropes, content warnings. Bounds only; the trimming
- * and de-duplication happen in the service, so the OpenAPI document describes the shape
- * rather than a transform the client cannot see.
+ * The story vocabularies — genres, subgenres, tropes, content warnings. Chosen from the database's
+ * own enums rather than typed, which is what makes them filterable: „Enemies to Lovers" and
+ * „enemies-to-lovers" were three tropes to a query and one to a reader.
  *
  * Optional rather than defaulted to empty. A default materialises the field even when the
  * client omitted it, which on a PATCH means every partial update silently clears the tags —
  * a test caught exactly that. Absent has to mean "unchanged"; the column defaults to empty
  * for a create.
+ *
+ * A repeat is refused rather than dropped. The values are closed, so sending one twice is a
+ * client bug and nothing else — silently de-duplicating it would hide the bug and answer 200 to a
+ * request the sender got wrong. The issue names the value and the position, like every other
+ * field error here.
+ *
+ * **The `superRefine` and the `meta` are a pair.** A refinement does not reach `open-api.json` on
+ * its own, which is why the report body is a union rather than a refine; `uniqueItems` is the one
+ * JSON Schema word for this rule, so declaring it keeps the document honest. Drop either and the
+ * two disagree — the specification would promise a rule nothing enforces, or hide one that bites.
  */
-export const STORY_TAGS_SCHEMA = z
-  .array(z.string().min(1).max(TEXT_LIMIT.storyTag))
-  .max(LIST_LIMIT.storyTags)
-  .optional();
+const storyValues = <T extends z.ZodType>(value: T) =>
+  z
+    .array(value)
+    .max(LIST_LIMIT.storyTags)
+    .superRefine((values, ctx) => {
+      const seen = new Set<unknown>();
+
+      values.forEach((each, index) => {
+        if (seen.has(each)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Duplicate value: ${String(each)}`,
+            path: [index],
+          });
+          return;
+        }
+
+        seen.add(each);
+      });
+    })
+    .meta({ uniqueItems: true })
+    .optional();
+
+export const STORY_GENRES_SCHEMA = storyValues(STORY_GENRE_SCHEMA);
+export const STORY_SUBGENRES_SCHEMA = storyValues(STORY_SUBGENRE_SCHEMA);
+export const STORY_TROPES_SCHEMA = storyValues(STORY_TROPE_SCHEMA);
+export const STORY_CONTENT_WARNINGS_SCHEMA = storyValues(
+  STORY_CONTENT_WARNING_SCHEMA,
+);

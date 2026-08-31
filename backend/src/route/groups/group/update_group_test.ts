@@ -64,16 +64,16 @@ Deno.test("PATCH /api/groups/{groupId} changes the story metadata", async () => 
   const response = await request("PATCH", `/api/groups/${id}`, cookie, {
     subtitle: "Ein Untertitel",
     storyStatus: "finished",
-    genres: ["Krimi"],
-    tense: "Gegenwart",
+    genres: ["crime"],
+    tense: "present",
   });
 
   assertEquals(response.status, STATUS_CODE.OK);
   const updated = await response.json();
   assertEquals(updated.subtitle, "Ein Untertitel");
   assertEquals(updated.storyStatus, "finished");
-  assertEquals(updated.genres, ["Krimi"]);
-  assertEquals(updated.tense, "Gegenwart");
+  assertEquals(updated.genres, ["crime"]);
+  assertEquals(updated.tense, "present");
 });
 
 Deno.test("PATCH /api/groups/{groupId} clears an optional field with null", async () => {
@@ -94,7 +94,7 @@ Deno.test("PATCH /api/groups/{groupId} leaves untouched fields alone", async () 
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
-  await request("PATCH", `/api/groups/${id}`, cookie, { genres: ["Fantasy"] });
+  await request("PATCH", `/api/groups/${id}`, cookie, { genres: ["fantasy"] });
   const response = await request("PATCH", `/api/groups/${id}`, cookie, {
     title: "Neuer Titel",
   });
@@ -102,5 +102,5 @@ Deno.test("PATCH /api/groups/{groupId} leaves untouched fields alone", async () 
   assertEquals(response.status, STATUS_CODE.OK);
   const updated = await response.json();
   assertEquals(updated.title, "Neuer Titel");
-  assertEquals(updated.genres, ["Fantasy"]);
+  assertEquals(updated.genres, ["fantasy"]);
 });

@@ -31,10 +31,11 @@ export const TEXT_LIMIT = {
   groupSubtitle: 120,
   /** The story at length, not the story itself: a treatment, far short of a chapter. */
   groupSynopsis: 8_000,
-  /** One genre, subgenre, trope or content warning. A label, never a sentence. */
-  storyTag: 60,
-  /** "Vergangenheit, dritte Person" and the like — free text, because stories mix them. */
-  narrativeStyle: 60,
+  /**
+   * Themes and setting, written rather than chosen: both were put to beta testers as lists and
+   * came back with nothing added, so they describe instead of filtering. A line or two.
+   */
+  storyMetadataText: 500,
   threadTitle: 120,
   /** Same bounds as the group it may become; an idea is a pitch, not the story. */
   storyIdeaTitle: 120,

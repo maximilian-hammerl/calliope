@@ -311,3 +311,96 @@ Deno.test("QUERY /api/groups rejects a search term shorter than three characters
 
   assertEquals(response.status, STATUS_CODE.BadRequest);
 });
+
+/**
+ * The point of the vocabularies being enums: a board can be narrowed by them. Asserted through
+ * `includes` rather than a count, because the suite runs in parallel and the seed is there too.
+ */
+Deno.test("QUERY /api/groups narrows a board to the genres asked for", async () => {
+  const cookie = await registerUser(owner);
+
+  const fantasy = await (await request("POST", "/api/groups", cookie, {
+    title: "Nur Fantasy hier",
+    synopsis: "d",
+    genres: ["fantasy"],
+    tropes: ["slow_burn"],
+  })).json();
+  const western = await (await request("POST", "/api/groups", cookie, {
+    title: "Nur Western hier",
+    synopsis: "d",
+    genres: ["western"],
+  })).json();
+
+  const page = await (await request("QUERY", "/api/groups", cookie, {
+    genres: ["fantasy"],
+    limit: 100,
+  })).json();
+  const ids = page.results.map((group: { id: string }) => group.id);
+
+  assertEquals(ids.includes(fantasy.id), true);
+  assertEquals(ids.includes(western.id), false);
+});
+
+Deno.test("QUERY /api/groups takes either of two genres, and both fields together", async () => {
+  const cookie = await registerUser(owner);
+
+  const fantasy = await (await request("POST", "/api/groups", cookie, {
+    title: "Fantasy, langsam",
+    synopsis: "d",
+    genres: ["fantasy"],
+    tropes: ["slow_burn"],
+  })).json();
+  const western = await (await request("POST", "/api/groups", cookie, {
+    title: "Western, ohne Trope",
+    synopsis: "d",
+    genres: ["western"],
+  })).json();
+
+  // Two genres widen: somebody browsing both wants either.
+  const either = await (await request("QUERY", "/api/groups", cookie, {
+    genres: ["fantasy", "western"],
+    limit: 100,
+  })).json();
+  const eitherIds = either.results.map((group: { id: string }) => group.id);
+  assertEquals(eitherIds.includes(fantasy.id), true);
+  assertEquals(eitherIds.includes(western.id), true);
+
+  // Two *fields* narrow against each other: fantasy that is also slow burn.
+  const both = await (await request("QUERY", "/api/groups", cookie, {
+    genres: ["fantasy", "western"],
+    tropes: ["slow_burn"],
+    limit: 100,
+  })).json();
+  const bothIds = both.results.map((group: { id: string }) => group.id);
+  assertEquals(bothIds.includes(fantasy.id), true);
+  assertEquals(bothIds.includes(western.id), false);
+});
+
+Deno.test("QUERY /api/groups leaves the board alone when no genre is asked for", async () => {
+  const cookie = await registerUser(owner);
+  const western = await (await request("POST", "/api/groups", cookie, {
+    title: "Immer noch da",
+    synopsis: "d",
+    genres: ["western"],
+  })).json();
+
+  // Absent means "not asked", never "none" — an untouched filter must not empty the list.
+  const page =
+    await (await request("QUERY", "/api/groups", cookie, { limit: 100 }))
+      .json();
+
+  assertEquals(
+    page.results.map((group: { id: string }) => group.id).includes(western.id),
+    true,
+  );
+});
+
+Deno.test("QUERY /api/groups refuses a genre that is not one", async () => {
+  const cookie = await registerUser(owner);
+
+  const response = await request("QUERY", "/api/groups", cookie, {
+    genres: ["Fantasy"],
+  });
+
+  assertEquals(response.status, STATUS_CODE.BadRequest);
+});

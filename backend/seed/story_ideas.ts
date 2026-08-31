@@ -1,29 +1,43 @@
+import type { Selectable } from "kysely";
 import type {
-  StoryIdeaPartySize,
-  StoryIdeaStatus,
+  StoryIdea as DatabaseStoryIdea,
   StoryLanguage,
 } from "@/src/database/schema.ts";
 import { USER } from "@/seed/accounts.ts";
 import { storyIdeaId } from "@/seed/ids.ts";
 
-export type StoryIdeaFixture = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  teaser: string;
-  synopsis: string;
-  status?: StoryIdeaStatus;
-  language?: StoryLanguage;
-  genres?: string[];
-  subgenres?: string[];
-  tropes?: string[];
-  contentWarnings?: string[];
-  tense?: string;
-  perspective?: string;
-  lookingFor?: string;
-  partySize?: StoryIdeaPartySize;
-  by: string;
-};
+/**
+ * A fixture omits a column rather than writing null into it, so what it may leave out is optional
+ * *and* never null — which `Partial<Pick<…>>` alone would not say.
+ */
+type Given<T, K extends keyof T> = { [P in K]?: NonNullable<T[P]> };
+
+type StoryIdeaColumns = Selectable<DatabaseStoryIdea>;
+
+/**
+ * The columns come from the table, for the reason `GroupFixture` gives: a renamed column or a new
+ * vocabulary is a compile error here rather than a field the seed quietly stops filling. `by` is
+ * the only thing written out, because it is a username where the column is an id.
+ */
+export type StoryIdeaFixture =
+  & Pick<StoryIdeaColumns, "id" | "title" | "teaser" | "synopsis">
+  & Given<
+    StoryIdeaColumns,
+    | "subtitle"
+    | "status"
+    | "language"
+    | "genres"
+    | "subgenres"
+    | "tropes"
+    | "contentWarnings"
+    | "storyThemes"
+    | "storySettings"
+    | "tense"
+    | "perspective"
+    | "lookingFor"
+    | "partySize"
+  >
+  & { by: string };
 
 /**
  * Six written-out ideas from six people, plus the run below. Only `open` and `closed` exist,
@@ -51,9 +65,9 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
       "irgendwann schreibt einer von beiden etwas hin, das im Protokoll nichts zu suchen " +
       "hat. Was die See genommen hat, steht in keinem der beiden Hefte — wir schreiben es " +
       "uns gegenseitig zu.",
-    genres: ["Fantasy"],
-    tropes: ["Epistolary", "Slow Burn"],
-    tense: "Vergangenheit",
+    genres: ["fantasy"],
+    tropes: ["epistolary", "slow_burn"],
+    tense: "past",
     lookingFor: "Eine Person, die den zweiten Wächter schreibt.",
     partySize: "one_on_one",
     by: USER.zeilensprung,
@@ -68,7 +82,7 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
       "Manuskript gelesen ist. Wer dort arbeitet, hat sich nie beworben: die Stellen werden " +
       "vererbt, und die Manuskripte kommen ohne Absender.\n\n" +
       "Wir sind inzwischen vollständig und schreiben abwechselnd je einen Abend.",
-    genres: ["Fantasy", "Mystery"],
+    genres: ["fantasy", "mystery"],
     status: "closed",
     by: USER.tintenfleck,
   },
@@ -103,8 +117,8 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
       "One letter per chapter, alternating: the narrator writes what he sees, the host " +
       "writes what he intends. Neither of them reads the other's letters, which is the point.",
     language: "english",
-    genres: ["Literary"],
-    tense: "Vergangenheit",
+    genres: ["literary"],
+    tense: "past",
     lookingFor: "One writer for the narrator. I will take the host.",
     partySize: "one_on_one",
     by: USER.silbenmeer,
@@ -124,12 +138,12 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
       "Four to six writers, one chapter each, then we hand the chapter on and rewrite what " +
       "we were given. Whatever survives the round trip is the story.",
     language: "english",
-    genres: ["Science Fiction", "Satire"],
-    subgenres: ["Dystopia"],
-    tropes: ["Unreliable Narrator", "Kammerspiel"],
-    contentWarnings: ["Überwachung"],
-    tense: "Präsens",
-    perspective: "Erste Person, wechselnd",
+    genres: ["science_fiction", "comedy"],
+    subgenres: ["dystopian"],
+    tropes: ["unreliable_narrator", "forced_proximity"],
+    contentWarnings: ["discrimination"],
+    tense: "present",
+    perspective: "mixed",
     lookingFor: "Four to six writers, one chapter each, then we swap.",
     partySize: "group",
     by: USER.federkiel,
@@ -146,7 +160,7 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
       "weil es ihn nicht überraschte.\n\n" +
       "Wir schreiben die belanglosen Tage weiter und lassen dieselben Lücken.",
     status: "closed",
-    genres: ["Historisch"],
+    genres: ["historical"],
     partySize: "group",
     by: USER.kommafehler,
   },

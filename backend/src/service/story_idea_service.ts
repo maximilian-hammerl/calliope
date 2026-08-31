@@ -2,17 +2,17 @@ import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import type {
   StoryIdea as DatabaseStoryIdea,
-  StoryIdeaPartySize,
   StoryIdeaStatus,
   StoryLanguage,
 } from "@/src/database/schema.ts";
-import { normaliseTags } from "@/src/util/story_tags.ts";
 import { emptyToNull } from "@/src/util/optional_text.ts";
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
 import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import type { StoryVocabularyFilter } from "@/src/query/story_vocabulary.ts";
+import { withStoryVocabulary } from "@/src/query/story_vocabulary.ts";
 import {
   type FavouriteFilter,
   FAVOURITES_FIRST,
@@ -31,6 +31,8 @@ export type StoryIdea =
     | "subgenres"
     | "tropes"
     | "contentWarnings"
+    | "storyThemes"
+    | "storySettings"
     | "tense"
     | "perspective"
     | "language"
@@ -67,6 +69,8 @@ const SELECTED_COLUMNS = [
   "storyIdea.subgenres",
   "storyIdea.tropes",
   "storyIdea.contentWarnings",
+  "storyIdea.storyThemes",
+  "storyIdea.storySettings",
   "storyIdea.tense",
   "storyIdea.perspective",
   "storyIdea.language",
@@ -78,22 +82,26 @@ const SELECTED_COLUMNS = [
 ] as const;
 
 /** What a member may set. Only the title and the two texts are required; see the request body. */
-export type StoryIdeaValues = {
-  title: string;
-  teaser: string;
-  synopsis: string;
-  subtitle?: string | null;
-  genres?: string[];
-  subgenres?: string[];
-  tropes?: string[];
-  contentWarnings?: string[];
-  tense?: string | null;
-  perspective?: string | null;
-  language?: StoryLanguage;
-  lookingFor?: string | null;
-  partySize?: StoryIdeaPartySize | null;
-  status?: StoryIdeaStatus;
-};
+export type StoryIdeaValues =
+  & Pick<Selectable<DatabaseStoryIdea>, "title" | "teaser" | "synopsis">
+  & Partial<
+    Pick<
+      Selectable<DatabaseStoryIdea>,
+      | "subtitle"
+      | "genres"
+      | "subgenres"
+      | "tropes"
+      | "contentWarnings"
+      | "storyThemes"
+      | "storySettings"
+      | "tense"
+      | "perspective"
+      | "language"
+      | "lookingFor"
+      | "partySize"
+      | "status"
+    >
+  >;
 
 /** The one place values become a row: normalisation cannot be skipped by a caller. */
 function toRow(values: Partial<StoryIdeaValues>) {
@@ -106,22 +114,22 @@ function toRow(values: Partial<StoryIdeaValues>) {
     ...(values.subtitle === undefined
       ? {}
       : { subtitle: emptyToNull(values.subtitle) }),
-    ...(values.genres === undefined
-      ? {}
-      : { genres: normaliseTags(values.genres) }),
-    ...(values.subgenres === undefined
-      ? {}
-      : { subgenres: normaliseTags(values.subgenres) }),
-    ...(values.tropes === undefined
-      ? {}
-      : { tropes: normaliseTags(values.tropes) }),
+    ...(values.genres === undefined ? {} : { genres: values.genres }),
+    ...(values.subgenres === undefined ? {} : { subgenres: values.subgenres }),
+    ...(values.tropes === undefined ? {} : { tropes: values.tropes }),
     ...(values.contentWarnings === undefined
       ? {}
-      : { contentWarnings: normaliseTags(values.contentWarnings) }),
-    ...(values.tense === undefined ? {} : { tense: emptyToNull(values.tense) }),
+      : { contentWarnings: values.contentWarnings }),
+    ...(values.storyThemes === undefined
+      ? {}
+      : { storyThemes: emptyToNull(values.storyThemes) }),
+    ...(values.storySettings === undefined
+      ? {}
+      : { storySettings: emptyToNull(values.storySettings) }),
+    ...(values.tense === undefined ? {} : { tense: values.tense ?? null }),
     ...(values.perspective === undefined
       ? {}
-      : { perspective: emptyToNull(values.perspective) }),
+      : { perspective: values.perspective ?? null }),
     ...(values.language === undefined ? {} : { language: values.language }),
     ...(values.lookingFor === undefined
       ? {}
@@ -160,7 +168,7 @@ function withAuthor(readerId: string) {
     ]);
 }
 
-export type StoryIdeaFilters = {
+export type StoryIdeaFilters = StoryVocabularyFilter & {
   /** Whose state to report, and to filter by. Always the requesting member. */
   readerId: string;
   readerState: ReaderStateFilter;
@@ -187,7 +195,9 @@ export type StoryIdeaFilters = {
  * twice.
  */
 function filtered(query: StoryIdeaFilters) {
-  return withAuthor(query.readerId)
+  // The carousel shares this chain and passes no vocabulary, so nothing here narrows its set —
+  // which is what keeps "a neighbour the board would hide" from becoming reachable.
+  return withStoryVocabulary(withAuthor(query.readerId), "storyIdea", query)
     .$if(query.createdBy !== undefined, (queryBuilder) =>
       // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
       queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))

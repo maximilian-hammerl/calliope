@@ -2,14 +2,11 @@ import type { Selectable } from "kysely";
 import { db } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
-  StoryLanguage,
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
   WritingGroup as DatabaseWritingGroup,
-  WritingGroupStoryStatus,
   WritingGroupVisibility,
 } from "@/src/database/schema.ts";
-import { normaliseTags } from "@/src/util/story_tags.ts";
 import { emptyToNull } from "@/src/util/optional_text.ts";
 import type { User } from "./user_service.ts";
 import {
@@ -18,6 +15,8 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
+import type { StoryVocabularyFilter } from "@/src/query/story_vocabulary.ts";
+import { withStoryVocabulary } from "@/src/query/story_vocabulary.ts";
 import {
   type FavouriteFilter,
   FAVOURITES_FIRST,
@@ -37,6 +36,8 @@ export type WritingGroup =
     | "subgenres"
     | "tropes"
     | "contentWarnings"
+    | "storyThemes"
+    | "storySettings"
     | "tense"
     | "perspective"
     | "language"
@@ -76,6 +77,8 @@ const SELECTED_COLUMNS = [
   "writingGroup.subgenres",
   "writingGroup.tropes",
   "writingGroup.contentWarnings",
+  "writingGroup.storyThemes",
+  "writingGroup.storySettings",
   "writingGroup.tense",
   "writingGroup.perspective",
   "writingGroup.language",
@@ -88,20 +91,25 @@ const SELECTED_COLUMNS = [
  * What a member may set about the story. Every field optional except the two that were always
  * required, so a group created before any of this existed is still describable.
  */
-export type WritingGroupValues = {
-  title: string;
-  synopsis: string;
-  subtitle?: string | null;
-  visibility?: WritingGroupVisibility;
-  storyStatus?: WritingGroupStoryStatus;
-  genres?: string[];
-  subgenres?: string[];
-  tropes?: string[];
-  contentWarnings?: string[];
-  tense?: string | null;
-  perspective?: string | null;
-  language?: StoryLanguage;
-};
+export type WritingGroupValues =
+  & Pick<Selectable<DatabaseWritingGroup>, "title" | "synopsis">
+  & Partial<
+    Pick<
+      Selectable<DatabaseWritingGroup>,
+      | "subtitle"
+      | "visibility"
+      | "storyStatus"
+      | "genres"
+      | "subgenres"
+      | "tropes"
+      | "contentWarnings"
+      | "storyThemes"
+      | "storySettings"
+      | "tense"
+      | "perspective"
+      | "language"
+    >
+  >;
 
 /** The one place values become a row: normalisation cannot be skipped by a caller. */
 function toRow(values: Partial<WritingGroupValues>) {
@@ -119,22 +127,22 @@ function toRow(values: Partial<WritingGroupValues>) {
     ...(values.storyStatus === undefined
       ? {}
       : { storyStatus: values.storyStatus }),
-    ...(values.genres === undefined
-      ? {}
-      : { genres: normaliseTags(values.genres) }),
-    ...(values.subgenres === undefined
-      ? {}
-      : { subgenres: normaliseTags(values.subgenres) }),
-    ...(values.tropes === undefined
-      ? {}
-      : { tropes: normaliseTags(values.tropes) }),
+    ...(values.genres === undefined ? {} : { genres: values.genres }),
+    ...(values.subgenres === undefined ? {} : { subgenres: values.subgenres }),
+    ...(values.tropes === undefined ? {} : { tropes: values.tropes }),
     ...(values.contentWarnings === undefined
       ? {}
-      : { contentWarnings: normaliseTags(values.contentWarnings) }),
-    ...(values.tense === undefined ? {} : { tense: emptyToNull(values.tense) }),
+      : { contentWarnings: values.contentWarnings }),
+    ...(values.storyThemes === undefined
+      ? {}
+      : { storyThemes: emptyToNull(values.storyThemes) }),
+    ...(values.storySettings === undefined
+      ? {}
+      : { storySettings: emptyToNull(values.storySettings) }),
+    ...(values.tense === undefined ? {} : { tense: values.tense ?? null }),
     ...(values.perspective === undefined
       ? {}
-      : { perspective: emptyToNull(values.perspective) }),
+      : { perspective: values.perspective ?? null }),
     ...(values.language === undefined ? {} : { language: values.language }),
   };
 }
@@ -277,7 +285,7 @@ async function selectWritingGroupForReader(
 
 function listVisibleWritingGroups(
   user: User,
-  query: ListQuery & {
+  query: ListQuery & StoryVocabularyFilter & {
     membership: MembershipFilter;
     favourite: FavouriteFilter;
   },
@@ -287,6 +295,7 @@ function listVisibleWritingGroups(
       .$call((builder) =>
         withFavourite(builder, "writing_group", "writingGroup.id", user.id)
       )
+      .$call((builder) => withStoryVocabulary(builder, "writingGroup", query))
       .select([
         ...SELECTED_COLUMNS,
         AUTHOR_COLUMN,

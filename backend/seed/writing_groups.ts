@@ -1,9 +1,8 @@
+import type { Selectable } from "kysely";
 import type {
-  StoryLanguage,
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
-  WritingGroupStoryStatus,
-  WritingGroupVisibility,
+  WritingGroup as DatabaseWritingGroup,
 } from "@/src/database/schema.ts";
 import { USER } from "@/seed/accounts.ts";
 import { groupId, postId, stepId, threadId } from "@/seed/ids.ts";
@@ -30,26 +29,42 @@ type Step = {
   completedBy?: string;
 };
 
-export type GroupFixture = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  synopsis: string;
-  visibility: WritingGroupVisibility;
-  language?: StoryLanguage;
-  storyStatus?: WritingGroupStoryStatus;
-  genres?: string[];
-  subgenres?: string[];
-  tropes?: string[];
-  contentWarnings?: string[];
-  tense?: string;
-  perspective?: string;
-  /** Founder. Also has to appear in `members` as a joined administrator; `write.ts` checks. */
-  by: string;
-  members: Member[];
-  threads?: Array<{ id: string; title: string; by: string; posts: Post[] }>;
-  steps?: Step[];
-};
+/**
+ * A fixture omits a column rather than writing null into it, so what it may leave out is optional
+ * *and* never null — which `Partial<Pick<…>>` alone would not say.
+ */
+type Given<T, K extends keyof T> = { [P in K]?: NonNullable<T[P]> };
+
+type GroupColumns = Selectable<DatabaseWritingGroup>;
+
+/**
+ * The columns come from the table, so a rename or a new vocabulary reaches the fixture as a
+ * compile error rather than as a column the seed silently stops filling. Only what is not a
+ * column is written out: the founder and the nested rows `write.ts` turns into their own inserts.
+ */
+export type GroupFixture =
+  & Pick<GroupColumns, "id" | "title" | "synopsis" | "visibility">
+  & Given<
+    GroupColumns,
+    | "subtitle"
+    | "language"
+    | "storyStatus"
+    | "genres"
+    | "subgenres"
+    | "tropes"
+    | "contentWarnings"
+    | "storyThemes"
+    | "storySettings"
+    | "tense"
+    | "perspective"
+  >
+  & {
+    /** Founder. Also has to appear in `members` as a joined administrator; `write.ts` checks. */
+    by: string;
+    members: Member[];
+    threads?: Array<{ id: string; title: string; by: string; posts: Post[] }>;
+    steps?: Step[];
+  };
 
 /**
  * A thread with more posts than one page holds, so numbered pages are always testable against
@@ -154,9 +169,9 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     visibility: "public",
     language: "english",
     storyStatus: "writing",
-    genres: ["Romance"],
-    tropes: ["Slow Burn", "Enemies to Lovers"],
-    tense: "Vergangenheit",
+    genres: ["romance"],
+    tropes: ["slow_burn", "enemies_to_lovers"],
+    tense: "past",
     by: USER.randnotiz,
     members: [
       { user: USER.randnotiz, role: "administrator" },
@@ -194,12 +209,12 @@ const WRITTEN_GROUPS: GroupFixture[] = [
       "Person hängt, und wer mitlesen will, darf das sofort.",
     visibility: "public",
     storyStatus: "writing",
-    genres: ["Fantasy", "Satire"],
-    subgenres: ["Portal Fantasy"],
-    tropes: ["Found Family", "Kammerspiel"],
-    contentWarnings: ["Krankheit"],
-    tense: "Vergangenheit",
-    perspective: "Dritte Person, begrenzt",
+    genres: ["fantasy", "comedy"],
+    subgenres: ["portal_fantasy"],
+    tropes: ["found_family", "forced_proximity"],
+    contentWarnings: ["mental_illness"],
+    tense: "past",
+    perspective: "third_person_limited",
     by: USER.federkiel,
     members: [
       { user: USER.federkiel, role: "administrator" },
@@ -282,7 +297,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
       "Leserin darf und was nicht.",
     visibility: "public",
     storyStatus: "planning",
-    genres: ["Gothic"],
+    genres: ["horror"],
     by: USER.lesezeichen,
     members: [
       { user: USER.lesezeichen, role: "administrator" },
@@ -319,12 +334,12 @@ const WRITTEN_GROUPS: GroupFixture[] = [
       "Einladung, Threads, ein Entwurf und die vollständigen Angaben zur Geschichte.",
     visibility: "private",
     storyStatus: "writing",
-    genres: ["Fantasy", "Mystery"],
-    subgenres: ["Urban Fantasy"],
-    tropes: ["Slow Burn", "Found Family"],
-    contentWarnings: ["Gedächtnisverlust"],
-    tense: "Vergangenheit",
-    perspective: "Dritte Person, begrenzt",
+    genres: ["fantasy", "mystery"],
+    subgenres: ["urban_fantasy"],
+    tropes: ["slow_burn", "found_family"],
+    contentWarnings: ["grief"],
+    tense: "past",
+    perspective: "third_person_limited",
     by: USER.tintenfleck,
     members: [
       { user: USER.tintenfleck, role: "administrator" },
@@ -393,8 +408,8 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     synopsis: "Privat, zu zweit, und alles läuft über Briefe.",
     visibility: "private",
     storyStatus: "writing",
-    genres: ["Historisch"],
-    tropes: ["Epistolary"],
+    genres: ["historical"],
+    tropes: ["epistolary"],
     by: USER.zeilensprung,
     members: [
       { user: USER.zeilensprung, role: "administrator" },
@@ -446,9 +461,9 @@ const WRITTEN_GROUPS: GroupFixture[] = [
       "Privat, zwei Verwalterinnen, und die nächsten Schritte sind größtenteils abgehakt.",
     visibility: "private",
     storyStatus: "finished",
-    genres: ["Absurd"],
-    tropes: ["Kammerspiel"],
-    tense: "Vergangenheit",
+    genres: ["literary"],
+    tropes: ["forced_proximity"],
+    tense: "past",
     by: USER.nachtschreiber,
     members: [
       { user: USER.nachtschreiber, role: "administrator" },

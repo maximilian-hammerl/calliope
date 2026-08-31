@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -13,11 +13,12 @@ import {
   jsonContent,
 } from "@/src/http/response.ts";
 import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
-
-const STORY_TAGS_SCHEMA = z
-  .array(z.string().max(TEXT_LIMIT.storyTag))
-  .max(LIST_LIMIT.storyTags)
-  .optional();
+import {
+  STORY_CONTENT_WARNINGS_SCHEMA,
+  STORY_GENRES_SCHEMA,
+  STORY_SUBGENRES_SCHEMA,
+  STORY_TROPES_SCHEMA,
+} from "@/src/http/request_schema.ts";
 
 const DETAIL_SCHEMA = z.string().max(TEXT_LIMIT.storyIdeaDetail).nullish();
 
@@ -46,16 +47,18 @@ export const STORY_IDEA_BODY = STORY_IDEA_SCHEMA
     synopsis: STORY_IDEA_SCHEMA.shape.synopsis.min(1).max(
       TEXT_LIMIT.storyIdeaSynopsis,
     ),
-    tense: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
-    perspective: z.string().max(TEXT_LIMIT.narrativeStyle).nullish(),
     language: STORY_IDEA_SCHEMA.shape.language.default("german"),
     lookingFor: DETAIL_SCHEMA,
     partySize: STORY_IDEA_SCHEMA.shape.partySize.optional(),
     status: STORY_IDEA_SCHEMA.shape.status.default("open"),
-    genres: STORY_TAGS_SCHEMA,
-    subgenres: STORY_TAGS_SCHEMA,
-    tropes: STORY_TAGS_SCHEMA,
-    contentWarnings: STORY_TAGS_SCHEMA,
+    genres: STORY_GENRES_SCHEMA,
+    subgenres: STORY_SUBGENRES_SCHEMA,
+    tropes: STORY_TROPES_SCHEMA,
+    contentWarnings: STORY_CONTENT_WARNINGS_SCHEMA,
+    tense: STORY_IDEA_SCHEMA.shape.tense.nullish(),
+    perspective: STORY_IDEA_SCHEMA.shape.perspective.nullish(),
+    storyThemes: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
+    storySettings: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
   });
 
 export default new OpenAPIHono().openapi(
