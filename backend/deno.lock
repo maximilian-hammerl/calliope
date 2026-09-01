@@ -32,7 +32,7 @@
     "npm:ioredis@6.0.0": "6.0.0",
     "npm:kysely-postgres-js@4.0.0": "4.0.0_kysely@0.29.5_postgres@3.4.9",
     "npm:kysely@0.29.5": "0.29.5",
-    "npm:nodemailer@9.0.5": "9.0.5",
+    "npm:nodemailer@9.0.6": "9.0.6",
     "npm:openapi3-ts@4.6.1": "4.6.1",
     "npm:postgres@3.4.9": "3.4.9",
     "npm:sharp@0.35.4": "0.35.4",
@@ -472,8 +472,8 @@
     "node-mock-http@1.0.5": {
       "integrity": "sha512-KQyt/wLjG3TAc7DOUhpqWzgd4ERxR80JOlTK5VE5R1S12IaPVN5qkj4klBce9HPG1Njuup4Sb5bljaT34lIyjw=="
     },
-    "nodemailer@9.0.5": {
-      "integrity": "sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ=="
+    "nodemailer@9.0.6": {
+      "integrity": "sha512-IQUGFdhdGwI9+AWX+FpUt4DLmvFaOjTMEoneTIWX/RXxuy1TdenPwWrvFMSfLkPKl+HQEXWuSAxEMMbPYXtBmg=="
     },
     "normalize-path@3.0.0": {
       "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
@@ -608,7 +608,7 @@
       "npm:ioredis@6.0.0",
       "npm:kysely-postgres-js@4.0.0",
       "npm:kysely@0.29.5",
-      "npm:nodemailer@9.0.5",
+      "npm:nodemailer@9.0.6",
       "npm:openapi3-ts@4.6.1",
       "npm:postgres@3.4.9",
       "npm:sharp@0.35.4",
