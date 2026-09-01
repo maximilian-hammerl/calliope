@@ -304,13 +304,25 @@ interface is icon-only, which is why these two are named rather than `aria-hidde
 
 **A list row states what it is and what you did with it, as marks.** A list sorted favourites-first
 otherwise gives no sign of where they stop, which only looks fine while the filter is on. The
-thing's own state comes first and the reader's after it: lock then star on a group, closed then
+thing's own state comes first and the reader's after it: lock then star on a group, status then
 read then favourite on an idea.
 
-**A mark is one-sided or two-sided, and which one is a decision.** „Favorit", „Gelesen" and
-„Geschlossen" are a mark *or nothing* — their absence says nothing worth a chip, and an open idea
-is the board's resting state. Visibility is two-sided: a group is always private or public, and
-`LockOpen` is there so „öffentlich" is read rather than inferred from a missing lock.
+**A mark is one-sided or two-sided, and what decides it is whose fact it is.** „Favorit" and
+„Gelesen" are the *reader's*, and a reader's non-state is not a state: nobody needs telling that
+they have not read a thing, so those are a mark or nothing. Visibility and „Offen"/„Geschlossen"
+are the *thing's own*, and a thing is never without its own state — so both sides are marked, and
+„öffentlich" and „offen" are read rather than inferred from a missing glyph.
+
+Two arguments that sound like this rule are not it, and both were used to defend the opposite
+answers for the same case. *"It is always one of two things"* is true of every two-valued fact
+including the reader's, so it picks nothing. *"The unmarked one is the resting state"* is worse
+than useless: private is at least as ordinary for a group as open is for an idea — the product is
+a public forum around **private** groups — so it argued for whichever answer the code already had.
+An idea's status was one-sided on that reasoning until the two were read side by side.
+
+The second thing to weigh is what misreading costs, and it is why the lock pair gets the scrutiny
+below while the ring and check get none: visibility decides who reads what you write, where a
+misread status costs a click and a page that explains itself.
 
 **The lock pair is shipped as an open question, not as a finding.** `Lock` and `LockOpen` differ
 only by where the shackle sits, which is a fine distinction at 13px, and visibility is the fact
@@ -945,7 +957,7 @@ never matched the hairline weight and changed shape from platform to platform.
 | — | `ShieldBan` `ShieldCheck` | „Konto sperren" / „Sperre aufheben". A shield, not the person the pair above draws: what separates the two rows is that this one is the platform acting |
 | — | `Send` | „Link erneut senden". The spinner takes its place while the link is on its way, so the button keeps its width |
 | — | `Lock` `LockOpen` | a row's „Privat" / „Öffentlich" mark, both always shown, and beside the word in the group's heading — see the open question above |
-| — | `Circle` `CircleCheckBig` | „Offen" / „Geschlossen" for a story idea — the row's mark, and beside the word on the idea's own page. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking. The ring and the check are the pair the step list draws as `Square` and `SquareCheck` |
+| — | `Circle` `CircleCheckBig` | „Offen" / „Geschlossen" for a story idea, both always shown, and beside the word on the idea's own page. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking. The ring and the check are the pair the step list draws as `Square` and `SquareCheck` |
 
 Every icon states `stroke-width="1.5"`; Lucide's own default is 2, which is heavier than
 anything else on the page. Size them to the text they sit beside — 14px against 12.5–13.5px

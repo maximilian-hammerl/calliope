@@ -11,7 +11,7 @@ import type { ListStoryIdeas200ResultsItem } from '@/api/models'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import ClosedMark from '@/components/story-idea/ClosedMark.vue'
+import StatusMark from '@/components/story-idea/StatusMark.vue'
 import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
 import ReadMark from '@/components/story-idea/ReadMark.vue'
 
@@ -45,8 +45,9 @@ const story = computed<string>(() =>
       >
         {{ idea.title }}
       </RouterLink>
-      <!-- Open is the board's resting state and says nothing; the others are worth a mark. -->
-      <ClosedMark v-if="idea.status !== 'open'" class="ml-3" interactive />
+      <!-- Both states, like a group's lock: the idea's own status is never absent, so „offen"
+           is read rather than inferred. The two below are the reader's and stay one-sided. -->
+      <StatusMark :status="idea.status" class="ml-3" interactive />
       <!-- The reader's own two states, as marks rather than words: the idea's own status keeps
            the badge, so the row reads as one fact about the idea and then what you did with it. -->
       <ReadMark v-if="idea.isRead" class="ml-3" interactive />

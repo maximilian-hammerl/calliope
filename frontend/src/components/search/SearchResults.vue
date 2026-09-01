@@ -8,7 +8,7 @@ import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
 import { MEMBERSHIP_LABELS } from '@/lib/format/group'
 import VisibilityMark from '@/components/group/VisibilityMark.vue'
-import ClosedMark from '@/components/story-idea/ClosedMark.vue'
+import StatusMark from '@/components/story-idea/StatusMark.vue'
 import ReadMark from '@/components/story-idea/ReadMark.vue'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { platformRoleLabel } from '@/lib/format/platformRole'
@@ -127,9 +127,9 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             class="flex min-h-[38px] items-center gap-2 px-3.5 py-[7px] text-[13px] text-ink-2 hover:bg-paper-2"
           >
             <span class="truncate">{{ idea.title }}</span>
-            <!-- Unlike the board, this list holds closed ideas and the reader's own, so both
-                 say so. Open and somebody else's are the resting state and say nothing. -->
-            <ClosedMark v-if="idea.status !== 'open'" />
+            <!-- The idea's own state, always shown, as everywhere else. „Von dir" stays
+                 one-sided: whose idea it is is a fact about the reader, not about the idea. -->
+            <StatusMark :status="idea.status" />
             <CalliopeBadge v-if="idea.createdBy === currentUserId">Von dir</CalliopeBadge>
             <ReadMark v-if="idea.isRead" />
             <FavouriteMark v-if="idea.isFavourite" />

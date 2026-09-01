@@ -694,9 +694,16 @@ a call site; it was copied by hand once already.
   Storyideen", where the read and status filters are hidden: your own ideas cannot be unread.
 - **`StateMark` owns the chrome; the four marks own an icon and a label.** The 13px size, the
   `mark` variant and the accessible name live in one place — these are the only icons here that are
-  not `aria-hidden`, which is the part worth forgetting. `FavouriteMark`, `ReadMark`, `ClosedMark`
-  and `VisibilityMark` are three lines each; only the last renders for both its states. Page
-  headings keep the word, which is what teaches the mark.
+  not `aria-hidden`, which is the part worth forgetting. `FavouriteMark`, `ReadMark`, `StatusMark`
+  and `VisibilityMark` are a few lines each, and each reads its glyph and its word from a map in
+  `lib/format/` so a row and a page cannot say one state two ways. The two that carry the thing's
+  *own* fact — `StatusMark` and `VisibilityMark` — render both their states; the two that carry the
+  *reader's* render one, because a reader's non-state is not a state. Page headings keep the word,
+  which is what teaches the mark.
+- **`interactive` makes a mark a popover trigger**, opt-in because a mark inside a search result or
+  a chat row would be a button inside a link or a button. Its two open costs are written in the
+  component: extra tab stops that tell a keyboard user nothing new, and a 37×33 target under the
+  44px rule.
 - **A mark is 25px where the word was 60**, which is why it exists: as a word it pushed the chats
   rail's unread count onto a second line, and the ten-tab strip and search popover could not carry
   it at all.

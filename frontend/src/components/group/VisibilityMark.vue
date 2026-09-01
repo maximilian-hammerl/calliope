@@ -1,8 +1,10 @@
 <script setup lang="ts">
 /**
- * Both states show a mark, unlike the three one-sided ones: a group is always one of two things, so
- * „öffentlich" should be read rather than inferred from a missing lock. The page heading keeps the
- * word, which is what teaches the lock.
+ * Two-sided, like `StatusMark`: a group is always private or public, so „öffentlich" is read
+ * rather than inferred from a missing lock. That argument alone does not pick a side — it fits an
+ * idea's open/closed just as well, which is why both are two-sided now. What decides it is in the
+ * design system: whether the fact is the thing's own or the reader's, and what misreading costs.
+ * The page heading keeps the word, which is what teaches the lock.
  *
  * Open question: the two glyphs are a shackle apart at 13px on the fact whose misreading costs
  * most. The design system records what else was tried and what feedback would settle it.
