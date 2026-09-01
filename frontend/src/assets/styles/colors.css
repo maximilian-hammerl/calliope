@@ -5,6 +5,9 @@
 :root {
   --radius: 6px; /* --radius-control */
 
+  /* What the browser paints its own furniture with, read by `useTheme`. */
+  --chrome: #4f4132;
+
   /* Calliope's own ramps, which theme.css exposes as utilities (bg-paper-1, text-ink-2, …).
      They live here rather than in @theme so a `.dark` block can redefine them; stated as
      literals there, every one of the ~400 uses was a fixed light colour. See issue #60. */
@@ -70,42 +73,83 @@
   --sidebar-ring: #8a6a3a;
 }
 
-/* Calliope defines no dark theme — this is an extrapolation of the ink family,
-   kept so shadcn's dark variant does not fall back to greys. Review before use.
-   It deliberately does not redefine the ramps above, so a dark appearance is still
-   half-light until those values are authored. #60 */
+/* The dark appearance. #60
+
+   The ramp is authored rather than inverted: light recesses a surface by darkening it, and so
+   does this — raised is lighter than the canvas, rails darker — because on a dark ground a
+   surface that catches light reads as nearer, exactly as on paper. Mirroring the ramp would
+   have put the top bar below the canvas.
+
+   The ink and accent steps hold the contrast ratios the light design chose, within a few
+   percent, so emphasis reads the same on both grounds. Two deliberate departures: the
+   hairlines sit higher than their light ratios, because the same ratio at the dark end is a
+   far smaller absolute difference and a 1.21 hairline disappears; and `oak-deep` is *lighter*
+   than `oak` here, where light made it darker — it marks emphasis and hover, which means more
+   contrast on either ground. */
 .dark {
-  --background: #201c17;
-  --foreground: #efe9de;
-  --card: #262119;
-  --card-foreground: #efe9de;
-  --popover: #262119;
-  --popover-foreground: #efe9de;
-  --primary: #e5d9c2;
-  --primary-foreground: #2b2620;
-  --secondary: #322b22;
-  --secondary-foreground: #efe9de;
-  --muted: #2b251d;
-  --muted-foreground: #b3a795;
-  --accent: #322b22;
-  --accent-foreground: #efe9de;
-  --destructive: #b4655c;
-  --avatar: #322b22;
-  --avatar-foreground: #e5d9c2;
-  --border: #fffdf91a;
-  --input: #fffdf926;
-  --ring: #b08b52;
-  --chart-1: #b08b52;
-  --chart-2: #e5d9c2;
-  --chart-3: #b3a795;
-  --chart-4: #7d7364;
-  --chart-5: #4f4132;
-  --sidebar: #262119;
-  --sidebar-foreground: #efe9de;
-  --sidebar-primary: #e5d9c2;
-  --sidebar-primary-foreground: #2b2620;
-  --sidebar-accent: #322b22;
-  --sidebar-accent-foreground: #efe9de;
-  --sidebar-border: #fffdf91a;
-  --sidebar-ring: #b08b52;
+  /* Surfaces, lightest raised */
+  --paper-0: #272119; /* raised: top bar, cards, composer */
+  --paper-1: #1e1a15; /* the app canvas */
+  --paper-2: #17130f; /* rails, recessed below the canvas */
+  --paper-3: #322b21; /* quiet button fill, active rail row */
+  --paper-4: #3e3628; /* avatars, quiet hover */
+
+  --line-1: #2a241c;
+  --line-2: #332c22;
+  --line-3: #3b3428; /* the default hairline */
+  --line-4: #4a4133;
+  --line-5: #5d5240; /* the strong border: quiet buttons, inputs */
+
+  --ink-1: #f3ece0; /* headings */
+  --ink-2: #e9e1d4; /* prose */
+  --ink-3: #d0c7b6;
+  --ink-4: #b6ac99;
+  --ink-5: #9c9280; /* secondary interface text */
+  --ink-6: #8a8069;
+
+  --paper-edge: #2b251d;
+  --ink-label: #9a907d;
+
+  --oak: #b0854a; /* the one accent */
+  --oak-deep: #ddb97e; /* emphasis and hover */
+  --oak-deeper: #ecd0a4;
+
+  --chrome: #272119;
+
+  /* Readable on an author's highlight, which was chosen against paper. */
+  --ink-on-highlight: #201c17;
+
+  --background: #1e1a15; /* --paper-1, app canvas */
+  --foreground: #e9e1d4; /* --ink-2, prose */
+  --card: #272119; /* --paper-0, raised */
+  --card-foreground: #e9e1d4;
+  --popover: #272119;
+  --popover-foreground: #e9e1d4;
+  --primary: #ddb97e; /* --oak-deep, solid action */
+  --primary-foreground: #1e1a15;
+  --secondary: #322b21; /* --paper-3, quiet button fill */
+  --secondary-foreground: #ddb97e;
+  --muted: #17130f; /* --paper-2, rails */
+  --muted-foreground: #9c9280; /* --ink-5 */
+  --accent: #322b21; /* hover/active surface, not a hue */
+  --accent-foreground: #ddb97e;
+  --destructive: #d98078; /* --signal-error, lifted to read on dark */
+  --avatar: #3e3628; /* --paper-4, --surface-avatar */
+  --avatar-foreground: #ddb97e; /* --oak-deep */
+  --border: #3b3428; /* --line-3, hairlines */
+  --input: #4a4133; /* --line-4 */
+  --ring: #b0854a; /* --oak, focus ring + caret */
+  --chart-1: #b0854a;
+  --chart-2: #ddb97e;
+  --chart-3: #8a8069;
+  --chart-4: #5d5240;
+  --chart-5: #3e3628;
+  --sidebar: #17130f; /* --surface-rail */
+  --sidebar-foreground: #d0c7b6; /* --ink-3 */
+  --sidebar-primary: #ddb97e;
+  --sidebar-primary-foreground: #1e1a15;
+  --sidebar-accent: #322b21; /* active rail row */
+  --sidebar-accent-foreground: #ddb97e;
+  --sidebar-border: #3b3428;
+  --sidebar-ring: #b0854a;
 }

@@ -42,7 +42,9 @@
   /* Thread reading size never shrinks, on any device (17px / 1.8). */
   .prose-post {
     font: 400 17px/1.8 var(--font-serif);
-    color: #302a23;
+    /* The ramp, not the literal it used to be: a post is the one thing that must follow the
+       appearance, and this held light's ink on a dark ground. #60 */
+    color: var(--ink-2);
     text-wrap: pretty;
   }
   /* The reading column: 684px, per the design system, centred between the rails' full widths.
@@ -66,7 +68,7 @@
     font: 600 10.5px/1 var(--font-mono);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #6f6455;
+    color: var(--ink-label);
   }
   /* The thread tab strip scrolls horizontally with its scrollbar hidden; nothing else
      lives inside that scroll container. */
@@ -78,7 +80,16 @@
   .scroll-x-hidden::-webkit-scrollbar {
     display: none;
   }
+  /* `--paper-3` reads under the prose ink on either ground; the literal was light's. */
   ::selection {
-    background: #eee5d3;
+    background: var(--paper-3);
   }
+}
+
+/* A post's colours are the author's, stored literally, so they cannot follow the appearance.
+   Where a highlight was set and no text colour with it, the page's ink would land on it — light
+   ink on a light highlight, unreadable. An inline `color` beats this rule, so an author who
+   chose both keeps their pair. #60 */
+.dark [style*='background-color'] {
+  color: var(--ink-on-highlight);
 }

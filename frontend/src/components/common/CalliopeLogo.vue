@@ -3,19 +3,32 @@ import { APP_NAME } from '@/lib/branding'
 import { computed } from 'vue'
 import markRegular from '@/assets/logo/calliope-c.svg'
 import markSmall from '@/assets/logo/calliope-c-small.svg'
+import markRegularInverse from '@/assets/logo/calliope-c-inverse.svg'
+import markSmallInverse from '@/assets/logo/calliope-c-small-inverse.svg'
+import { useTheme } from '@/composables/useTheme'
 
 const props = withDefaults(defineProps<{ size?: number; wordmark?: boolean }>(), {
   size: 22,
   wordmark: false,
 })
 
+const { isDark } = useTheme()
+
 /**
  * Two cuts of the same letter, both outlined from Newsreader itself: the regular one at
  * optical size 36, the small one at 8, where the typeface is drawn with sturdier strokes for
  * exactly this reason. The boundary is 32/33 with no gap and no overlap — below it the
  * regular cut's thin top and bottom drop out.
+ *
+ * Each cut is drawn twice rather than tinted: the dark one is cream, not the ink one recoloured.
  */
-const mark = computed<string>(() => (props.size <= 32 ? markSmall : markRegular))
+const mark = computed<string>(() => {
+  const small = props.size <= 32
+  if (isDark.value) {
+    return small ? markSmallInverse : markRegularInverse
+  }
+  return small ? markSmall : markRegular
+})
 
 /** The lockup geometry the asset set specifies, stated once here rather than at each use. */
 const gap = computed<number>(() => props.size * 0.45)
@@ -46,7 +59,7 @@ const baselineOffset = computed<number>(() => props.size * ((64 - 57.14) / 64))
     <!-- The wordmark stays live text: it keeps its hinting at any size and is selectable. -->
     <span
       v-if="wordmark"
-      class="font-serif leading-none font-semibold tracking-[0.01em] text-[#3a3229]"
+      class="font-serif leading-none font-semibold tracking-[0.01em] text-ink-1"
       :style="{ fontSize: `${wordmarkSize}px` }"
     >
       {{ APP_NAME }}

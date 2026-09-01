@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection.vue'
+import AppearanceSection from '@/components/settings/AppearanceSection.vue'
 import EmailAddressSection from '@/components/settings/EmailAddressSection.vue'
 import PasswordSection from '@/components/settings/PasswordSection.vue'
 import BlockedMembersSection from '@/components/settings/BlockedMembersSection.vue'
@@ -40,6 +41,13 @@ const open = defineModel<boolean>('open', { required: true })
       <!-- All closed to begin with: opening this should not present a form asking for a
            password, and deleting the account must never be the first thing on screen. -->
       <Accordion type="single" collapsible class="w-full">
+        <AccordionItem value="appearance">
+          <AccordionTrigger>Erscheinungsbild</AccordionTrigger>
+          <AccordionContent>
+            <AppearanceSection />
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="email">
           <AccordionTrigger>E-Mail-Adresse</AccordionTrigger>
           <AccordionContent>
