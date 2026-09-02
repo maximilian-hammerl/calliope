@@ -36,6 +36,7 @@ import RailBlock from '@/components/context/RailBlock.vue'
 import { useSteps } from '@/composables/useSteps'
 import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
+import PageList from '@/components/context/PageList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Button } from '@/components/ui/button'
 import GroupInvitation from '@/components/group/GroupInvitation.vue'
@@ -269,6 +270,9 @@ async function askIntoGroup() {
     <template #infoRail="{ collapsible }">
       <RailBlock label="Die Geschichte" :collapsible="collapsible">
         <StoryDetails v-if="group" :group="group" />
+      </RailBlock>
+      <RailBlock label="Seiten" :collapsible="collapsible">
+        <PageList :group-id="groupId" :may-write="mayWrite" />
       </RailBlock>
       <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
         <FileList />

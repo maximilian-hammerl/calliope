@@ -37,6 +37,8 @@ export const TEXT_LIMIT = {
    */
   storyMetadataText: 500,
   threadTitle: 120,
+  /** A page's name in the rail, on one line, like a thread's. */
+  pageTitle: 120,
   /** Same bounds as the group it may become; an idea is a pitch, not the story. */
   storyIdeaTitle: 120,
   storyIdeaSubtitle: 120,
@@ -46,8 +48,11 @@ export const TEXT_LIMIT = {
   storyIdeaSynopsis: 8_000,
   /** One free-text line each: what is sought, how one writes, when one can. */
   storyIdeaDetail: 500,
-  /** Roughly a long chapter. Posts are long-form prose, so this is deliberately generous. */
-  postText: 100_000,
+  /**
+   * Every document — a post or a page — bounded by its prose, not its serialisation. Roughly a
+   * long chapter: long-form writing, so deliberately generous.
+   */
+  documentText: 100_000,
   /** An operator's note about why an account was banned. Same room as a report's reason. */
   banReason: 2_000,
   /** Why a member is reporting something. Room to explain, not to write an essay. */

@@ -10,6 +10,8 @@ export type ApiErrorBody = {
   code?: string
   /** Which of the two rate-limit budgets refused it, on a 429 and nowhere else. */
   scope?: 'read' | 'write'
+  /** Who saved in the meantime, on `updatePage`'s 409 and nowhere else. */
+  updatedByUsername?: string | null
 }
 
 /**

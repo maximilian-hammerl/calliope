@@ -36,6 +36,11 @@ export const routes: Array<RouteRecordRaw> = [
     name: 'thread',
     component: () => import('../views/ThreadView.vue'),
   },
+  {
+    path: '/groups/:groupId/pages/:pageId',
+    name: 'page',
+    component: () => import('../views/PageView.vue'),
+  },
   // As above: the bare path follows the bar, which for ideas is the carousel rather than a list.
   { path: '/story-ideas', redirect: { name: 'storyIdeasCarousel' } },
   {

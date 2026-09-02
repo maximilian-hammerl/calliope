@@ -37,11 +37,15 @@ export const ACCOUNT_BANNED_MESSAGE = "Account banned" as const;
 /** Its own code because the form says this on the password field, not as a form error. */
 export const PASSWORD_BREACHED = "password_breached" as const;
 
+/** Its own code because the editor keeps what was typed and offers to reload, not a form error. */
+export const PAGE_CHANGED = "page_changed" as const;
+
 /** Machine-readable reasons, for the few a client has to act on differently. */
 const ERROR_CODE = z.enum([
   INVALID_CREDENTIALS,
   ACCOUNT_BANNED,
   PASSWORD_BREACHED,
+  PAGE_CHANGED,
 ]);
 
 /**
@@ -71,6 +75,14 @@ export type RateLimitScope = z.infer<typeof RATE_LIMIT_SCOPE>;
 /** The 429's own body: the shared error shape plus which budget it was. */
 export const RATE_LIMIT_RESPONSE = ERROR_RESPONSE.extend({
   scope: RATE_LIMIT_SCOPE,
+});
+
+/**
+ * The 409's own body: who wrote in the meantime, so the refusal can name them. Null when that
+ * account is gone, like every other joined name.
+ */
+export const PAGE_CHANGED_RESPONSE = ERROR_RESPONSE.extend({
+  updatedByUsername: z.string().nullable(),
 });
 
 /**

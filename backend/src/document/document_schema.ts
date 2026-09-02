@@ -281,7 +281,7 @@ export const DOCUMENT_SCHEMA = z.strictObject({
     (document) => withinBounds(document, 0, { nodes: 0 }),
     `A document may not nest deeper than ${MAX_DEPTH} or hold more than ${MAX_NODES} nodes`,
   )
-  .openapi("PostDocument", { maxLength: TEXT_LIMIT.postText });
+  .openapi("PostDocument", { maxLength: TEXT_LIMIT.documentText });
 
 export type PostDocument = z.infer<typeof DOCUMENT_SCHEMA>;
 

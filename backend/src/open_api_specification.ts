@@ -10,6 +10,7 @@ export const GROUPS_TAG = "groups";
 export const MEMBERSHIPS_TAG = "memberships";
 export const THREADS_TAG = "threads";
 export const STEPS_TAG = "steps";
+export const PAGES_TAG = "pages";
 export const POSTS_TAG = "posts";
 export const USERS_TAG = "users";
 export const NOTIFICATIONS_TAG = "notifications";
@@ -27,6 +28,7 @@ type Tag =
   | typeof MEMBERSHIPS_TAG
   | typeof THREADS_TAG
   | typeof STEPS_TAG
+  | typeof PAGES_TAG
   | typeof POSTS_TAG
   | typeof USERS_TAG
   | typeof NOTIFICATIONS_TAG
@@ -60,6 +62,8 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
   [STEPS_TAG]:
     "The next steps a group has agreed on, ticked off as the story gets there",
   [POSTS_TAG]: "Managing the posts of a thread, published or draft",
+  [PAGES_TAG]:
+    "A group's reference pages: material that is written and revised rather than replied to",
   [USERS_TAG]:
     "Finding other members by name, so they can be invited to a group",
   [CHATS_TAG]: "Chats between members, and the messages in them",

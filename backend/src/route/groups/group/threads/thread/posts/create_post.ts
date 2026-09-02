@@ -79,10 +79,11 @@ export default new OpenAPIHono().openapi(
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. Only here,
     // because only here is the text extracted.
     const text = documentToPlainText(document);
-    if (text.length === 0 || text.length > TEXT_LIMIT.postText) {
+    if (text.length === 0 || text.length > TEXT_LIMIT.documentText) {
       return c.json(
         {
-          error: `A post holds between 1 and ${TEXT_LIMIT.postText} characters`,
+          error:
+            `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
         },
         STATUS_CODE.BadRequest,
       );

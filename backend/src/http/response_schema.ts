@@ -10,6 +10,7 @@ import {
   USER_SESSION_SCHEMA,
   WRITING_GROUP_NEXT_STEP_SCHEMA,
   WRITING_GROUP_SCHEMA,
+  WRITING_PAGE_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
 } from "@/src/database/schema.ts";
@@ -86,6 +87,19 @@ export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
   username: z.string(),
   avatarUrl: AVATAR_URL,
 });
+
+/**
+ * A page without its prose, for the rail. `updatedAt` is also what an edit is conditional on,
+ * so the client has to keep the value it loaded.
+ */
+export const PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
+  .omit({ document: true, text: true })
+  .extend(CREATED_BY_USERNAME)
+  .extend({ updatedByUsername: z.string().nullable() });
+
+// `text` stays server-side: it exists for search, and the client renders the document.
+export const PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE
+  .extend({ document: DOCUMENT_SCHEMA });
 
 /**
  * What one member looks like to another. Picked rather than omitted on purpose: a column

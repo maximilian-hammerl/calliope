@@ -3,6 +3,7 @@ import createConversation from "./group/create_conversation.ts";
 import getGroup from "./group/get_group.ts";
 import updateGroup from "./group/update_group.ts";
 import memberships from "./group/memberships.ts";
+import pages from "./group/pages.ts";
 import steps from "./group/steps.ts";
 import threads from "./group/threads.ts";
 
@@ -12,5 +13,6 @@ export default new OpenAPIHono()
   .route("/", updateGroup)
   .route("/", createConversation)
   .route("/memberships", memberships)
+  .route("/pages", pages)
   .route("/steps", steps)
   .route("/threads", threads);
