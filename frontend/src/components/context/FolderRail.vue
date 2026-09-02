@@ -20,8 +20,10 @@ const nodes = computed<TreeNode[]>(() => tree.value)
   <div>
     <p v-if="nodes.length === 0" class="text-rail text-ink-5">Noch nichts angelegt.</p>
 
-    <div v-else class="flex flex-col gap-1.5 text-rail">
+    <!-- A real list, as the group's own tree is: the nesting is what this says, and a margin
+         says it only to the eye. -->
+    <ul v-else class="flex flex-col gap-1.5 text-rail">
       <FolderRailNode v-for="node in nodes" :key="node.id" :node="node" :group-id="groupId" />
-    </div>
+    </ul>
   </div>
 </template>

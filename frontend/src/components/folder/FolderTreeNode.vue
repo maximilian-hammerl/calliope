@@ -50,7 +50,7 @@ const isEmpty = computed<boolean>(() => (folder.value?.children.length ?? 0) ===
 </script>
 
 <template>
-  <div>
+  <li>
     <div v-if="node.kind !== 'folder'" class="flex min-h-11 items-center gap-2 md:min-h-0">
       <RouterLink
         :to="{
@@ -145,7 +145,7 @@ const isEmpty = computed<boolean>(() => (folder.value?.children.length ?? 0) ===
         {{ folder.description }}
       </p>
 
-      <div v-if="!collapsed.has(folder.id)" class="ml-[19px]">
+      <ul v-if="!collapsed.has(folder.id)" class="ml-[19px]">
         <FolderTreeNode
           v-for="child in folder.children"
           :key="child.id"
@@ -161,7 +161,7 @@ const isEmpty = computed<boolean>(() => (folder.value?.children.length ?? 0) ===
           @move="emit('move', $event)"
           @remove="emit('remove', $event)"
         />
-      </div>
+      </ul>
     </template>
-  </div>
+  </li>
 </template>

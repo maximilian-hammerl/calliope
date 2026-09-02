@@ -80,9 +80,14 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    if (
-      await WritingFolderService.deleteFolder(groupId, folderId) === "notEmpty"
-    ) {
+    const outcome = await WritingFolderService.deleteFolder(groupId, folderId);
+
+    // Gone since the read above: a 404, rather than a refusal about contents it no longer has.
+    if (outcome === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
+    }
+
+    if (outcome === "notEmpty") {
       return c.json(
         { error: "The folder is not empty", code: FOLDER_NOT_EMPTY },
         STATUS_CODE.Conflict,

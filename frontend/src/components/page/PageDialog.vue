@@ -91,8 +91,9 @@ watch(open, () => {
       <DialogHeader>
         <DialogTitle>Seite anlegen</DialogTitle>
         <DialogDescription>
-          Eine Seite hält fest, was die Gruppe pflegt — einen Ort, eine Figur, eine Regel. Den Text
-          schreibst du auf der Seite selbst.
+          Ein Text, den alle gemeinsam schreiben und ändern — ein Ort, eine Figur, eine Regel.
+          Anders als ein Thema sammelt eine Seite keine Beiträge; sie bleibt ein Text. Den schreibst
+          du auf der Seite selbst.
         </DialogDescription>
       </DialogHeader>
 

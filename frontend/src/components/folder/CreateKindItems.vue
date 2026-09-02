@@ -5,8 +5,11 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
  * The three things a member can add, with a line each saying what they are for. Written once
  * and used by both menus — the root's and every folder row's — so the wording cannot drift.
  *
- * The lines exist because „Seite" against „Thema" means nothing to somebody new: the
- * difference is that one is revised and the other is answered.
+ * The lines exist because „Seite" against „Thema" means nothing to somebody new. They open on
+ * the same contrast in the same shape — **viele Beiträge** against **ein Text** — because that
+ * is the difference: a thema accumulates posts that each belong to whoever wrote them, a seite
+ * is one document the group writes together. The permissions follow from it, so the wording and
+ * `mayAct`'s table say the same thing.
  */
 const emit = defineEmits<{ choose: [kind: 'folder' | 'page' | 'thread'] }>()
 
@@ -16,12 +19,12 @@ const KINDS = [
   {
     kind: 'thread',
     label: 'Thema',
-    note: 'Beiträge, die aufeinander folgen — hier wird erzählt.',
+    note: 'Viele Beiträge, einer nach dem anderen. Jeder gehört dem, der ihn geschrieben hat.',
   },
   {
     kind: 'page',
     label: 'Seite',
-    note: 'Ein Text, den die Gruppe pflegt: ein Ort, eine Figur, eine Regel.',
+    note: 'Ein Text, den alle gemeinsam schreiben und ändern: ein Ort, eine Figur, eine Regel.',
   },
   { kind: 'folder', label: 'Ordner', note: 'Ordnet Themen, Seiten und weitere Ordner.' },
 ] as const

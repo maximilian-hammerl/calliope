@@ -163,7 +163,9 @@ const nodes = computed<TreeNode[]>(() => tree.value)
       <template v-if="mayWrite">Leg ein Thema, eine Seite oder einen Ordner an.</template>
     </p>
 
-    <div v-else>
+    <!-- A real list, so the nesting is in the markup: it is the whole point of the feature, and
+         indentation alone conveys it to nobody using a screen reader. -->
+    <ul v-else>
       <FolderTreeNode
         v-for="node in nodes"
         :key="node.id"
@@ -179,7 +181,7 @@ const nodes = computed<TreeNode[]>(() => tree.value)
         @move="startMove"
         @remove="remove"
       />
-    </div>
+    </ul>
 
     <!-- The root's own action, in the same shape a folder row offers. -->
     <DropdownMenu v-if="mayWrite">

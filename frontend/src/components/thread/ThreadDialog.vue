@@ -124,8 +124,9 @@ watch(open, (isOpen) => {
       <DialogHeader>
         <DialogTitle>{{ renaming ? 'Thema umbenennen' : 'Thema anlegen' }}</DialogTitle>
         <DialogDescription>
-          Ein Thema sammelt zusammengehörende Beiträge, etwa der Plot, Steckbriefe, Planung oder
-          Inspiration.
+          Viele Beiträge, einer nach dem anderen — zum Erzählen, Planen und Besprechen. Jeder
+          Beitrag gehört dem, der ihn geschrieben hat. Für einen Text, den ihr gemeinsam pflegt,
+          nimm eine Seite.
         </DialogDescription>
       </DialogHeader>
 

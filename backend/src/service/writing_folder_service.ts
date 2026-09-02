@@ -143,11 +143,16 @@ export type DeleteOutcome = "deleted" | "notEmpty";
  * Only an empty folder goes: deleting a subtree is unrecoverable with no edit history behind it.
  * The emptiness is a condition on the delete rather than a read before it, so nothing can be
  * added in between — the same shape a page's conditional save uses.
+ *
+ * `undefined` means no such folder in that group. A delete that changes nothing means one of two
+ * things, and they are told apart afterwards rather than conflated: without that, a folder
+ * somebody else removed a moment ago is refused as "not empty", which is a lie about why.
+ * `updatePage` distinguishes the same pair for the same reason.
  */
 async function deleteFolder(
   writingGroupId: string,
   folderId: string,
-): Promise<DeleteOutcome> {
+): Promise<DeleteOutcome | undefined> {
   const { numDeletedRows } = await db
     .deleteFrom("writingFolder")
     .where("writingGroupId", "=", writingGroupId)
@@ -175,7 +180,18 @@ async function deleteFolder(
     )
     .executeTakeFirst();
 
-  return numDeletedRows > 0n ? "deleted" : "notEmpty";
+  if (numDeletedRows > 0n) {
+    return "deleted";
+  }
+
+  const stillThere = await db
+    .selectFrom("writingFolder")
+    .select("id")
+    .where("writingGroupId", "=", writingGroupId)
+    .where("id", "=", folderId)
+    .executeTakeFirst();
+
+  return stillThere === undefined ? undefined : "notEmpty";
 }
 
 export type MoveOutcome =

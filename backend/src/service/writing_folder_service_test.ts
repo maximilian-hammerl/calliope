@@ -336,3 +336,31 @@ Deno.test("a target in another group is not a target", async () => {
   );
   assertEquals(outcome?.kind, "noSuchParent");
 });
+
+Deno.test("deleting a folder that is not there says so, rather than blaming its contents", async () => {
+  const { groupId, ownerId, cookie } = await aGroup();
+  const elsewhere = await createGroup(cookie, "Andere Gruppe");
+  const theirs = await make(elsewhere.id, ownerId, "Fremd");
+
+  // Never existed here, and existing-but-elsewhere: both are "no such folder in this group",
+  // and neither is a claim that it still holds something.
+  assertEquals(
+    await WritingFolderService.deleteFolder(
+      groupId,
+      "01a00000-0000-7000-8000-00000000ffff",
+    ),
+    undefined,
+  );
+  assertEquals(
+    await WritingFolderService.deleteFolder(groupId, theirs.id),
+    undefined,
+  );
+
+  // And the one it is really about still answers `notEmpty`.
+  const root = await make(groupId, ownerId, "Weltenbau");
+  await make(groupId, ownerId, "Stadt A", root.id);
+  assertEquals(
+    await WritingFolderService.deleteFolder(groupId, root.id),
+    "notEmpty",
+  );
+});
