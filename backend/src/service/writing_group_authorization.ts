@@ -53,7 +53,8 @@ const RULE = {
   "step:delete": "author",
 } as const satisfies Record<string, "writer" | "author">;
 
-export type Act = keyof typeof RULE;
+/** Not exported: a caller names an act with a literal, and the overloads check it. */
+type Act = keyof typeof RULE;
 
 /** The acts the author rule governs, derived from the table so the two cannot disagree. */
 type AuthorAct = {

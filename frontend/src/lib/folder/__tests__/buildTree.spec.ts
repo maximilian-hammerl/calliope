@@ -160,4 +160,47 @@ describe('buildTree', () => {
     const [first, second] = tree as TreeFolder[]
     expect(first?.children).not.toBe(second?.children)
   })
+
+  /**
+   * Two leaves created in one statement share a timestamp to the microsecond — three of the
+   * seed's four pages do. Without a tiebreaker their order is whatever the API returned, which
+   * is unspecified; `id` is uuidv7, so descending reads as newest first.
+   */
+  it('breaks a tie on the id, so the order is the same every time', () => {
+    const moment = at(5)
+    const older = page('01a00000-0000-7000-8000-00000000000a', 'Älter', null, moment)
+    const middle = page('01a00000-0000-7000-8000-00000000000b', 'Mittig', null, moment)
+    const newest = page('01a00000-0000-7000-8000-00000000000c', 'Neuer', null, moment)
+
+    // Whatever order the list arrives in, the tree reads the same way: newest id first.
+    expect(shapeOf(buildTree([], [older, middle, newest], []))).toEqual([
+      'Neuer',
+      'Mittig',
+      'Älter',
+    ])
+    expect(shapeOf(buildTree([], [middle, newest, older], []))).toEqual([
+      'Neuer',
+      'Mittig',
+      'Älter',
+    ])
+  })
+
+  /**
+   * A cycle cannot come from the API: a folder's parent is set against its own subtree under a
+   * lock, and a create only ever attaches a childless row. This records what one would do if it
+   * arrived anyway — **nothing renders**, rather than the walk recursing until the stack gives
+   * out. Every member of a cycle has its parent inside the cycle, so none is hoisted to the root
+   * and the recursion never enters it. No guard is needed for that reason, and this test is what
+   * says so.
+   */
+  it('makes a cycle unreachable rather than hanging', () => {
+    const tree = buildTree(
+      [folder('f1', 'Eins', 'f2', 1), folder('f2', 'Zwei', 'f1', 2)],
+      [page('p1', 'Kino', 'f1', at(1))],
+      [],
+    )
+
+    // Both folders, and the page inside one of them, are simply not there.
+    expect(tree).toEqual([])
+  })
 })

@@ -92,10 +92,20 @@ export function buildTree(
     push(foldersByParent, bucketFor(folder.parentFolderId), folder)
   }
 
-  // Threads and pages arrive already ordered, but each in its own list, so the merged bucket is
-  // sorted again. The timestamps are ISO with a fixed offset, which compares as text.
+  /**
+   * Threads and pages arrive already ordered, but each in its own list, so the merged bucket is
+   * sorted again. The timestamps are ISO with a fixed offset, which compares as text — including
+   * a whole second, which Postgres prints with no fractional part at all: `+` sorts before `.`
+   * and before any digit, so `…:22+00:00` still precedes `…:22.659192+00:00`.
+   *
+   * `id` breaks ties, and they are the ordinary case: one INSERT shares one `now()`, so anything
+   * created together carries the same timestamp. Without this the tied rows keep the order the
+   * API returned them in, which is unspecified. The API sorts by id too, so both agree.
+   */
   for (const leaves of leavesByParent.values()) {
-    leaves.sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
+    leaves.sort(
+      (a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt) || b.id.localeCompare(a.id),
+    )
   }
 
   const childrenOf = (key: string): TreeNode[] => [

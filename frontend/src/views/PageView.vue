@@ -99,12 +99,6 @@ const mayAdminister = computed<boolean>(
   () => group.value?.status === 'joined' && group.value.role === 'administrator',
 )
 
-/**
- * The API's own rule, so the view never offers what the endpoint would refuse. Any writer, not
- * only the author: a page is material the group keeps — see `mayWrite` in the backend.
- */
-const mayChange = computed<boolean>(() => mayWrite.value)
-
 /** The page's own query, so the favourite mark follows a change to it. */
 async function refreshPage() {
   await queryClient.invalidateQueries({
@@ -311,7 +305,9 @@ watch(pageId, () => {
             </Button>
           </div>
 
-          <div v-if="mayChange" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
+          <!-- Any writer, not only the author: a page is material the group keeps, so changing
+               it is the same permission as making one — see `mayAct`'s table in the backend. -->
+          <div v-if="mayWrite" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
             <template v-if="editing">
               <button
                 type="button"

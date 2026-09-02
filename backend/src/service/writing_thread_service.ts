@@ -155,6 +155,11 @@ function selectThreads(
     // by `folderId`, and a favourite jumping above its siblings makes a structure a member built
     // themselves look unstable. `FavouriteMark` still marks the row.
     .orderBy("writingThread.lastActivityAt", "desc")
+    // `id` breaks ties, and they are the ordinary case rather than an edge: one INSERT shares one
+    // `now()`, so everything created together carries the same timestamp — three of the seed's
+    // four pages do. Without it the order among those rows is whatever Postgres returns, which
+    // is unspecified and can shift. uuidv7 is time-ordered, so this reads as newest first.
+    .orderBy("writingThread.id", "desc")
     .execute();
 }
 

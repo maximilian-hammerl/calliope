@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type { WritingFolder as DatabaseWritingFolder } from "@/src/database/schema.ts";
 
 /** The deepest a member may nest: Weltenbau → Stadt → Viertel → Gebäude → Raum. */
@@ -31,8 +31,8 @@ const SELECTED_COLUMNS = [
   "writingFolder.createdAt",
 ] as const;
 
-function foldersWithNames() {
-  return db
+function foldersWithNames(executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("writingFolder")
     .leftJoin("user", "user.id", "writingFolder.createdBy")
     .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
@@ -43,6 +43,9 @@ async function listFolders(writingGroupId: string): Promise<Folder[]> {
   return await foldersWithNames()
     .where("writingFolder.writingGroupId", "=", writingGroupId)
     .orderBy("writingFolder.createdAt", "asc")
+    // As the leaf lists do, and ascending to match: folders made in one statement share a
+    // timestamp, and uuidv7 keeps them in the order they were made.
+    .orderBy("writingFolder.id", "asc")
     .execute();
 }
 
@@ -77,30 +80,45 @@ async function insertFolder(
   },
   createdBy: string,
 ): Promise<CreateOutcome> {
-  let depth = 1;
-  if (values.parentFolderId !== null) {
-    const parent = await selectFolder(writingGroupId, values.parentFolderId);
-    if (parent === undefined) {
-      return { kind: "noSuchParent" };
-    }
-    if (parent.depth >= MAX_FOLDER_DEPTH) {
-      return { kind: "tooDeep" };
-    }
-    depth = parent.depth + 1;
-  }
+  return await db.transaction().execute(async (transaction) => {
+    let depth = 1;
+    if (values.parentFolderId !== null) {
+      // Locked, and in the same transaction as the insert. `moveFolder` takes the same lock, so
+      // the two serialise: without it a move could shift this parent deeper *between* the read
+      // and the insert, leaving the new row with a `depth` that is no longer its parent's plus
+      // one — and a subtree that reaches past the limit while every row in it still passes the
+      // CHECK on its own.
+      const parent = await transaction
+        .selectFrom("writingFolder")
+        .select(["depth"])
+        .where("writingGroupId", "=", writingGroupId)
+        .where("id", "=", values.parentFolderId)
+        .forUpdate()
+        .executeTakeFirst();
 
-  const { id } = await db
-    .insertInto("writingFolder")
-    .values({ writingGroupId, ...values, depth, createdBy })
-    .returning(["id"])
-    .executeTakeFirstOrThrow();
+      if (parent === undefined) {
+        return { kind: "noSuchParent" } as const;
+      }
+      if (parent.depth >= MAX_FOLDER_DEPTH) {
+        return { kind: "tooDeep" } as const;
+      }
+      depth = parent.depth + 1;
+    }
 
-  // Re-read rather than RETURNING, which cannot reach the joined name.
-  const folder = await selectFolder(writingGroupId, id);
-  if (folder === undefined) {
-    throw new Error(`Folder ${id} could not be read back after writing it`);
-  }
-  return { kind: "created", folder };
+    const { id } = await transaction
+      .insertInto("writingFolder")
+      .values({ writingGroupId, ...values, depth, createdBy })
+      .returning(["id"])
+      .executeTakeFirstOrThrow();
+
+    // Re-read rather than RETURNING, which cannot reach the joined name.
+    const folder = await foldersWithNames(transaction)
+      .where("writingFolder.writingGroupId", "=", writingGroupId)
+      .where("writingFolder.id", "=", id)
+      .executeTakeFirstOrThrow();
+
+    return { kind: "created", folder } as const;
+  });
 }
 
 /** Title and description only: where a folder sits is a move, which is its own slice. */

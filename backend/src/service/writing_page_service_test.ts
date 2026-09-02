@@ -1,4 +1,5 @@
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
+import { db } from "@/src/database/client.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
   clearRateLimits,
@@ -136,4 +137,38 @@ Deno.test("a deleted page is gone", async () => {
     undefined,
   );
   assertEquals(await WritingPageService.listPages(groupId, authorId), []);
+});
+
+Deno.test("pages are listed by activity, and ties by id", async () => {
+  const { groupId, authorId } = await groupWithPage("Zuerst");
+
+  // Written in one statement, so all three share a timestamp — which is what the seed does and
+  // what makes the tiebreaker the ordinary case rather than an edge.
+  await db.insertInto("writingPage").values(
+    ["Zweitens", "Drittens"].map((title) => ({
+      writingGroupId: groupId,
+      title,
+      document: plainTextToDocument(title),
+      text: title,
+      createdBy: authorId,
+      updatedBy: authorId,
+    })),
+  ).execute();
+
+  const listed = await WritingPageService.listPages(groupId, authorId);
+  const tied = listed.filter((page) => page.title !== "Zuerst");
+  assertEquals(tied.length, 2);
+  assertEquals(
+    tied[0]?.lastActivityAt,
+    tied[1]?.lastActivityAt,
+    "the two written together should tie",
+  );
+
+  // Newest id first, and the same on every call.
+  assertEquals(
+    tied.map((page) => page.id),
+    [...tied.map((page) => page.id)].sort().reverse(),
+  );
+  const again = await WritingPageService.listPages(groupId, authorId);
+  assertEquals(again.map((page) => page.id), listed.map((page) => page.id));
 });
