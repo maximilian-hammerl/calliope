@@ -183,6 +183,17 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
+      /**
+       * Without this the default is 0, so every query is stale the instant it resolves and every
+       * mount refetches it. Nothing was ever served from cache: walking between a group and one
+       * of its threads cost ten requests each way, and one thread created or deleted cost more
+       * than thirty — which spent a member's 500-read budget in eleven minutes of ordinary use.
+       *
+       * Correctness does not rest on this number. Every mutation invalidates what it changed, and
+       * an invalidated query refetches whatever its age; the window only decides how long an
+       * *unchanged* page may be re-shown without asking again.
+       */
+      staleTime: 30_000,
       // Retrying a 401 or a 429 cannot succeed and, in the rate limiter's case, makes the
       // situation worse. Only genuine transport failures are worth a second attempt.
       retry: (failureCount, error) => {
