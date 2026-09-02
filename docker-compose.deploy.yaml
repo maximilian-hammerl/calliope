@@ -122,7 +122,7 @@ services:
       start_period: 15s
 
   migrate:
-    image: amacneil/dbmate:2.35.0
+    image: amacneil/dbmate:2.35.1
     command: migrate
 
     depends_on:
