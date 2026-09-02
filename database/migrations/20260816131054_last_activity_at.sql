@@ -88,10 +88,13 @@ CREATE TRIGGER set_last_activity_at
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at();
 
--- `UPDATE OF title` for the same reason as the thread's own trigger below: moving a thread
--- into a folder is not activity in its group.
+-- Scoped like the thread's own trigger below, but over *both* columns that mean the group
+-- should move: `title` for a rename, and `last_activity_at` for a post — the trigger on
+-- `writing_post` propagates by writing that column, so leaving it out silently stopped posts
+-- from moving their group at all. `folder_id` is the one deliberately absent: moving a thread
+-- into a folder is not activity in its group. `database/test` is what caught the omission.
 CREATE TRIGGER set_last_activity_at_for_writing_group
-    AFTER INSERT OR UPDATE OF title OR DELETE
+    AFTER INSERT OR UPDATE OF title, last_activity_at OR DELETE
     ON public.writing_thread
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at_for_writing_group();
