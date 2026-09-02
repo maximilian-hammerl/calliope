@@ -18,6 +18,8 @@ const props = defineProps<{
   /** Absent while the reader is unknown; reporting your own post is not a thing. */
   currentUserId?: string
   mayAdminister?: boolean
+  /** Whether the reader may write in this group at all — see `mayModify` below. */
+  mayWrite?: boolean
   /** The thread decides which post is open, so two cannot be edited at once. */
   editing?: boolean
   saving?: boolean
@@ -50,11 +52,16 @@ const mayReport = computed<boolean>(
   () => props.currentUserId !== undefined && props.post.createdBy !== props.currentUserId,
 )
 
-/** The API's own rule, so the row never offers what the endpoint would refuse. */
+/**
+ * The API's own rule, so the row never offers what the endpoint would refuse. `mayWrite` comes
+ * first: a member demoted to reader may not touch even their own writing, which is what makes
+ * demotion a real move against an account somebody else has taken over.
+ */
 const mayModify = computed<boolean>(
   () =>
-    props.mayAdminister ||
-    (props.post.createdBy !== null && props.post.createdBy === props.currentUserId),
+    props.mayWrite === true &&
+    (props.mayAdminister === true ||
+      (props.post.createdBy !== null && props.post.createdBy === props.currentUserId)),
 )
 
 /**

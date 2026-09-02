@@ -273,3 +273,49 @@ Deno.test("completing and creating steps moves no lastActivityAt", async () => {
   // Planning is not writing: the group list must not reorder because somebody ticked a box.
   assertEquals(after.lastActivityAt, before.lastActivityAt);
 });
+
+/**
+ * The other half of the step's split rule. Ticking is any writer's — the test above has an
+ * administrator write a step and a writer complete it — but deleting removes somebody's note
+ * from the group's plan, so it stays with whoever wrote it.
+ */
+Deno.test("DELETE refuses a writer who did not write the step", async () => {
+  const adminCookie = await registerUser(administrator);
+  const { group, step } = await groupWithStep(adminCookie);
+  const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
+
+  const refused = await request(
+    "DELETE",
+    `/api/groups/${group.id}/steps/${step.id}`,
+    writerCookie,
+  );
+  assertEquals(refused.status, STATUS_CODE.Forbidden);
+
+  // Still there, and its own author may remove it.
+  const byAuthor = await request(
+    "DELETE",
+    `/api/groups/${group.id}/steps/${step.id}`,
+    adminCookie,
+  );
+  assertEquals(byAuthor.status, STATUS_CODE.OK);
+});
+
+Deno.test("DELETE lets an administrator remove somebody else's step", async () => {
+  const adminCookie = await registerUser(administrator);
+  const group = await createGroup(adminCookie, "Schrittmacher");
+  const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
+
+  const theirs = await (await request(
+    "POST",
+    `/api/groups/${group.id}/steps`,
+    writerCookie,
+    { text: "Von jemand anderem" },
+  )).json();
+
+  const response = await request(
+    "DELETE",
+    `/api/groups/${group.id}/steps/${theirs.id}`,
+    adminCookie,
+  );
+  assertEquals(response.status, STATUS_CODE.OK);
+});

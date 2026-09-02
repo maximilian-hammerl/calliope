@@ -148,7 +148,7 @@ Deno.test("GET /api/groups/{groupId}/pages/{pageId} answers with the prose", asy
     read.document.content[0].content[0].text,
     "Ein Hafen im Norden.",
   );
-  assertEquals(read.updatedAt, page.updatedAt);
+  assertEquals(read.lastActivityAt, page.lastActivityAt);
 });
 
 Deno.test("GET /api/groups/{groupId}/pages/{pageId} answers 404 for a page of another group", async () => {
@@ -173,7 +173,11 @@ Deno.test("PUT /api/groups/{groupId}/pages/{pageId} saves against the time it wa
     "PUT",
     `/api/groups/${group.id}/pages/${page.id}`,
     adminCookie,
-    pageBody("Stadt A am Meer", "Ein Hafen weit im Norden.", page.updatedAt),
+    pageBody(
+      "Stadt A am Meer",
+      "Ein Hafen weit im Norden.",
+      page.lastActivityAt,
+    ),
   );
 
   // Also proves the timestamp survives the round trip: it is compared for equality, and a
@@ -188,7 +192,7 @@ Deno.test("PUT /api/groups/{groupId}/pages/{pageId} refuses a save against a tim
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const loadedByBoth = page.updatedAt;
+  const loadedByBoth = page.lastActivityAt;
 
   const first = await request(
     "PUT",
@@ -223,7 +227,7 @@ Deno.test("PUT /api/groups/{groupId}/pages/{pageId} refuses a save against a tim
   );
 });
 
-Deno.test("PUT /api/groups/{groupId}/pages/{pageId} refuses a writer who is not the author", async () => {
+Deno.test("PUT /api/groups/{groupId}/pages/{pageId} lets any writer save it", async () => {
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
@@ -232,7 +236,24 @@ Deno.test("PUT /api/groups/{groupId}/pages/{pageId} refuses a writer who is not 
     "PUT",
     `/api/groups/${group.id}/pages/${page.id}`,
     writerCookie,
-    pageBody("Stadt A", "Fremde Fassung.", page.updatedAt),
+    pageBody("Stadt A", "Fremde Fassung.", page.lastActivityAt),
+  );
+
+  // A page is material the group keeps, not writing that belongs to whoever typed it first.
+  assertEquals(response.status, STATUS_CODE.OK);
+  assertEquals((await response.json()).updatedByUsername, writer);
+});
+
+Deno.test("PUT /api/groups/{groupId}/pages/{pageId} still refuses a reader", async () => {
+  const adminCookie = await registerUser(administrator);
+  const { group, page } = await groupWithPage(adminCookie);
+  const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
+
+  const response = await request(
+    "PUT",
+    `/api/groups/${group.id}/pages/${page.id}`,
+    readerCookie,
+    pageBody("Stadt A", "Sollte nicht gehen.", page.lastActivityAt),
   );
 
   assertEquals(response.status, STATUS_CODE.Forbidden);
@@ -257,7 +278,7 @@ Deno.test("DELETE /api/groups/{groupId}/pages/{pageId} removes it for its author
   assertEquals(read.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/pages/{pageId} refuses a writer who is not the author", async () => {
+Deno.test("DELETE /api/groups/{groupId}/pages/{pageId} lets any writer delete it", async () => {
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
@@ -267,13 +288,95 @@ Deno.test("DELETE /api/groups/{groupId}/pages/{pageId} refuses a writer who is n
     `/api/groups/${group.id}/pages/${page.id}`,
     writerCookie,
   );
-
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assertEquals(response.status, STATUS_CODE.OK);
 
   const read = await request(
     "GET",
     `/api/groups/${group.id}/pages/${page.id}`,
     adminCookie,
   );
-  assertEquals(read.status, STATUS_CODE.OK);
+  assertEquals(read.status, STATUS_CODE.NotFound);
+});
+
+Deno.test("DELETE /api/groups/{groupId}/pages/{pageId} still refuses a reader", async () => {
+  const adminCookie = await registerUser(administrator);
+  const { group, page } = await groupWithPage(adminCookie);
+  const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
+
+  const response = await request(
+    "DELETE",
+    `/api/groups/${group.id}/pages/${page.id}`,
+    readerCookie,
+  );
+
+  assertEquals(response.status, STATUS_CODE.Forbidden);
+});
+
+Deno.test("PUT /pages/{pageId}/folder moves it and leaves its activity alone", async () => {
+  const adminCookie = await registerUser(administrator);
+  const { group, page } = await groupWithPage(adminCookie);
+  const folder = await (await request(
+    "POST",
+    `/api/groups/${group.id}/folders`,
+    adminCookie,
+    { title: "Weltenbau" },
+  )).json();
+
+  const response = await request(
+    "PUT",
+    `/api/groups/${group.id}/pages/${page.id}/folder`,
+    adminCookie,
+    { folderId: folder.id },
+  );
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  const moved = await response.json();
+  assertEquals(moved.folderId, folder.id);
+  // Moving is not writing: the page keeps its place in the order, and an editor that loaded it
+  // before the move can still save against the time it holds.
+  assertEquals(moved.lastActivityAt, page.lastActivityAt);
+});
+
+Deno.test("PUT /pages/{pageId}/folder refuses a folder from another group", async () => {
+  const adminCookie = await registerUser(administrator);
+  const { group, page } = await groupWithPage(adminCookie);
+  const elsewhere = await createGroup(adminCookie, "Andere Gruppe");
+  const theirs = await (await request(
+    "POST",
+    `/api/groups/${elsewhere.id}/folders`,
+    adminCookie,
+    { title: "Fremd" },
+  )).json();
+
+  const response = await request(
+    "PUT",
+    `/api/groups/${group.id}/pages/${page.id}/folder`,
+    adminCookie,
+    { folderId: theirs.id },
+  );
+
+  assertEquals(response.status, STATUS_CODE.NotFound);
+});
+
+Deno.test("PUT /pages/{pageId}/folder lets any writer move it, but not a reader", async () => {
+  const adminCookie = await registerUser(administrator);
+  const { group, page } = await groupWithPage(adminCookie);
+  const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
+  const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
+
+  const byWriter = await request(
+    "PUT",
+    `/api/groups/${group.id}/pages/${page.id}/folder`,
+    writerCookie,
+    { folderId: null },
+  );
+  assertEquals(byWriter.status, STATUS_CODE.OK);
+
+  const byReader = await request(
+    "PUT",
+    `/api/groups/${group.id}/pages/${page.id}/folder`,
+    readerCookie,
+    { folderId: null },
+  );
+  assertEquals(byReader.status, STATUS_CODE.Forbidden);
 });

@@ -12,7 +12,9 @@ import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
  * Reporting and favouriting both ask, because either answering differently for a thing that exists
  * and a thing the member cannot see would turn it into a way of discovering private writing.
  *
- * Typed over `ReportTargetType`, the wider set, so a favourite's five values are assignable.
+ * Typed over `ReportTargetType`, the wider set, so a favourite's six values are assignable.
+ * Keeping one resolver is the point — answering differently for a thing that exists and one the
+ * member cannot see is what would leak private writing.
  * Threads, posts and messages are reached through whatever governs them, so the group's visibility
  * rule and the chat's membership rule each stay in one place.
  */
@@ -99,6 +101,32 @@ export async function resolveVisibleTarget(
       return group === undefined
         ? undefined
         : seen(thread.createdBy, () => thread.title);
+    }
+
+    case "writing_page": {
+      const page = await db
+        .selectFrom("writingPage")
+        .select(["writingGroupId", "createdBy"])
+        // The prose, not the title: a page has a body, so an operator reading the queue after
+        // it is deleted needs what it said. Only when somebody asked, as a post's is.
+        .$if(
+          withExcerpt,
+          (queryBuilder) => queryBuilder.select("writingPage.text"),
+        )
+        .where("id", "=", targetId)
+        .executeTakeFirst();
+
+      if (page === undefined) {
+        return undefined;
+      }
+
+      const group = await WritingGroupService.selectVisibleWritingGroup(
+        user,
+        page.writingGroupId,
+      );
+      return group === undefined
+        ? undefined
+        : seen(page.createdBy, () => page.text ?? "");
     }
 
     case "writing_post": {

@@ -91,6 +91,9 @@ function assertFavouritesNameSomething(): void {
         (group.threads ?? []).flatMap((t) => t.posts.map((post) => post.id))
       ),
     ),
+    writing_page: new Set(
+      GROUPS.flatMap((group) => (group.pages ?? []).map((page) => page.id)),
+    ),
     story_idea: new Set(STORY_IDEAS.map((idea) => idea.id)),
     chat_group: new Set(CHATS.map((chat) => chat.id)),
   } as const satisfies Record<FavouriteTargetType, ReadonlySet<string>>;
@@ -237,7 +240,7 @@ type OnlyColumns<Fixture, Extra extends keyof Fixture, Row> = [
 
 true satisfies OnlyColumns<
   GroupFixture,
-  "by" | "members" | "threads" | "steps",
+  "by" | "members" | "threads" | "steps" | "folders" | "pages",
   WritingGroupTable
 >;
 true satisfies OnlyColumns<StoryIdeaFixture, "by", StoryIdeaTable>;
@@ -247,7 +250,15 @@ async function writeGroups(): Promise<void> {
   // naming the columns — and a column added to the table flows through without touching this.
   await db.insertInto("writingGroup").values(
     GROUPS.map((group): Insertable<WritingGroupTable> => ({
-      ...omitFromObject(group, "by", "members", "threads", "steps"),
+      ...omitFromObject(
+        group,
+        "by",
+        "members",
+        "threads",
+        "steps",
+        "folders",
+        "pages",
+      ),
       createdBy: group.by,
     })),
   ).execute();
@@ -270,14 +281,59 @@ async function writeGroups(): Promise<void> {
     (group.threads ?? []).map((thread) => ({ group, thread }))
   );
 
+  // Folders before anything that names one, and in fixture order: `depth` is derived from the
+  // parent already written, which is the same rule the service applies.
+  const depthOf = new Map<string, number>();
+  const folders = GROUPS.flatMap((group) =>
+    (group.folders ?? []).map((folder) => ({ group, folder }))
+  );
+  for (const { group, folder } of folders) {
+    const depth = folder.in === undefined
+      ? 1
+      : (depthOf.get(folder.in) ?? 0) + 1;
+    depthOf.set(folder.id, depth);
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose: a child needs its parent's depth
+    await db.insertInto("writingFolder").values({
+      id: folder.id,
+      writingGroupId: group.id,
+      parentFolderId: folder.in ?? null,
+      depth,
+      title: folder.title,
+      description: folder.description ?? null,
+      createdBy: folder.by,
+    }).execute();
+  }
+
   await db.insertInto("writingThread").values(
     threads.map(({ group, thread }) => ({
       id: thread.id,
       writingGroupId: group.id,
       title: thread.title,
       createdBy: thread.by,
+      folderId: thread.in ?? null,
     })),
   ).execute();
+
+  const pages = GROUPS.flatMap((group) =>
+    (group.pages ?? []).map((page) => ({ group, page }))
+  );
+
+  if (pages.length > 0) {
+    await db.insertInto("writingPage").values(
+      pages.map(({ group, page }) => ({
+        id: page.id,
+        writingGroupId: group.id,
+        folderId: page.in ?? null,
+        title: page.title,
+        document: plainTextToDocument(page.text),
+        text: page.text,
+        createdBy: page.by,
+        // The author counts as the first editor, as the service does it, so a stale save can
+        // name somebody from the start.
+        updatedBy: page.by,
+      })),
+    ).execute();
+  }
 
   await db.insertInto("writingPost").values(
     threads.flatMap(({ thread }, threadIndex) =>
@@ -415,6 +471,7 @@ const REPORT_TARGET_COLUMN = {
   writing_group: "reportedWritingGroupId",
   writing_thread: "reportedWritingThreadId",
   writing_post: "reportedWritingPostId",
+  writing_page: "reportedWritingPageId",
   story_idea: "reportedStoryIdeaId",
   chat_group: "reportedChatGroupId",
   chat_message: "reportedChatMessageId",

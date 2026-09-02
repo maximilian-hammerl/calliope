@@ -37,7 +37,7 @@ defineEmits<{ confirmed: [] }>()
           <template v-if="props.authorName"> Beitrag von {{ props.authorName }} löschen? </template>
           <template v-else>Beitrag löschen?</template>
         </DialogTitle>
-        <DialogDescription>Der Beitrag verschwindet aus dem Thread.</DialogDescription>
+        <DialogDescription>Der Beitrag verschwindet aus dem Thema.</DialogDescription>
       </DialogHeader>
 
       <div class="flex flex-col gap-3 text-note text-ink-4">

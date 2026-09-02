@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -21,6 +22,7 @@ type Section = { results: Array<Record<string, string>>; totalResults: number };
 type SearchResults = {
   groups: Section;
   threads: Section;
+  pages: Section;
   storyIdeas: Section;
   users: Section;
 };
@@ -50,6 +52,7 @@ function totals(found: SearchResults) {
   return {
     groups: found.groups.totalResults,
     threads: found.threads.totalResults,
+    pages: found.pages.totalResults,
     storyIdeas: found.storyIdeas.totalResults,
     users: found.users.totalResults,
   };
@@ -194,4 +197,52 @@ Deno.test("QUERY /api/search needs a session", async () => {
 
   assertEquals(response.status, STATUS_CODE.Unauthorized);
   assertFalse(response.headers.has("set-cookie"));
+});
+
+async function page(
+  cookie: string,
+  groupId: string,
+  title: string,
+  text: string,
+) {
+  const response = await request(
+    "POST",
+    `/api/groups/${groupId}/pages`,
+    cookie,
+    {
+      title,
+      document: plainTextToDocument(text),
+    },
+  );
+  assertEquals(response.status, STATUS_CODE.Created);
+  return await response.json();
+}
+
+Deno.test("a page is found by its title and by its prose", async () => {
+  const cookie = await registerUser(owner);
+  const group = await createGroup(cookie, "Suchgruppe", "public");
+
+  await page(cookie, group.id, `Der ${TERM}`, "Nichts besonderes hier.");
+  await page(cookie, group.id, "Ein anderer Ort", `Dort liegt der ${TERM}.`);
+
+  const found = await search(cookie, { search: TERM });
+
+  // Both: a title match and a body match. The body is the whole point — a page is the one leaf
+  // that can match on something its own row does not show.
+  assertEquals(found.pages.totalResults, 2);
+  assertEquals(titles(found.pages).includes(`Der ${TERM}`), true);
+  assertEquals(titles(found.pages).includes("Ein anderer Ort"), true);
+});
+
+Deno.test("a page in a private group is not found by an outsider", async () => {
+  const cookie = await registerUser(owner);
+  const outsiderCookie = await registerUser(outsider);
+  const group = await createGroup(cookie, "Geheim", "private");
+  await page(cookie, group.id, `Der ${TERM}`, `Und der ${TERM} noch einmal.`);
+
+  assertEquals(
+    (await search(outsiderCookie, { search: TERM })).pages.totalResults,
+    0,
+  );
+  assertEquals((await search(cookie, { search: TERM })).pages.totalResults, 1);
 });

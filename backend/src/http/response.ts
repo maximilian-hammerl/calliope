@@ -40,12 +40,24 @@ export const PASSWORD_BREACHED = "password_breached" as const;
 /** Its own code because the editor keeps what was typed and offers to reload, not a form error. */
 export const PAGE_CHANGED = "page_changed" as const;
 
+/** Its own code so the tree can say to empty the folder first, rather than "not possible". */
+export const FOLDER_NOT_EMPTY = "folder_not_empty" as const;
+
+/** Its own code so the tree can name the limit rather than report a generic refusal. */
+export const FOLDER_TOO_DEEP = "folder_too_deep" as const;
+
+/** A folder cannot move into itself or into something it contains. */
+export const FOLDER_CYCLE = "folder_cycle" as const;
+
 /** Machine-readable reasons, for the few a client has to act on differently. */
 const ERROR_CODE = z.enum([
   INVALID_CREDENTIALS,
   ACCOUNT_BANNED,
   PASSWORD_BREACHED,
   PAGE_CHANGED,
+  FOLDER_NOT_EMPTY,
+  FOLDER_TOO_DEEP,
+  FOLDER_CYCLE,
 ]);
 
 /**

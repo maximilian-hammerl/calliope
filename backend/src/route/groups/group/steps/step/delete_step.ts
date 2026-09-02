@@ -4,7 +4,7 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
-import { mayModify } from "@/src/service/writing_group_authorization.ts";
+import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -68,7 +68,12 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Step not found" }, STATUS_CODE.NotFound);
     }
 
-    if (!mayModify(role, step.createdBy, user.id)) {
+    if (
+      !mayAct(role, "step:delete", {
+        createdBy: step.createdBy,
+        userId: user.id,
+      })
+    ) {
       return c.json(
         { error: "Only the creator or an administrator may delete it" },
         STATUS_CODE.Forbidden,

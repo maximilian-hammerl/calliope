@@ -61,7 +61,7 @@ Deno.test("an edit against the loaded time is written", async () => {
   const outcome = await WritingPageService.updatePage(
     groupId,
     page.id,
-    page.updatedAt,
+    page.lastActivityAt,
     {
       title: "Weltenbau",
       document: plainTextToDocument("Der Berg ist steil."),
@@ -71,7 +71,7 @@ Deno.test("an edit against the loaded time is written", async () => {
 
   assertEquals(outcome?.kind, "updated");
   // The trigger moved it on, which is what the next editor will be checked against.
-  assertNotEquals(outcome?.page.updatedAt, page.updatedAt);
+  assertNotEquals(outcome?.page.lastActivityAt, page.lastActivityAt);
 });
 
 /**
@@ -80,7 +80,7 @@ Deno.test("an edit against the loaded time is written", async () => {
  */
 Deno.test("an edit against a time that has moved on is refused", async () => {
   const { groupId, page, authorId, otherId } = await groupWithPage();
-  const loadedByBoth = page.updatedAt;
+  const loadedByBoth = page.lastActivityAt;
 
   const first = await WritingPageService.updatePage(
     groupId,
@@ -118,7 +118,7 @@ Deno.test("updating a page that is not in the group answers nothing", async () =
     await WritingPageService.updatePage(
       otherGroup.id,
       page.id,
-      page.updatedAt,
+      page.lastActivityAt,
       { title: "x", document: plainTextToDocument("x") },
       await getUserId(OWNER),
     ),
@@ -127,7 +127,7 @@ Deno.test("updating a page that is not in the group answers nothing", async () =
 });
 
 Deno.test("a deleted page is gone", async () => {
-  const { groupId, page } = await groupWithPage();
+  const { groupId, page, authorId } = await groupWithPage();
 
   await WritingPageService.deletePage(groupId, page.id);
 
@@ -135,5 +135,5 @@ Deno.test("a deleted page is gone", async () => {
     await WritingPageService.selectPage(groupId, page.id),
     undefined,
   );
-  assertEquals(await WritingPageService.listPages(groupId), []);
+  assertEquals(await WritingPageService.listPages(groupId, authorId), []);
 });

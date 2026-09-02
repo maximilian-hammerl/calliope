@@ -10,7 +10,7 @@
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
-import { Pencil, Trash2 } from '@lucide/vue'
+import { Flag, Pencil, Trash2 } from '@lucide/vue'
 import { ApiError } from '@/lib/api/apiFetch'
 import { failureMessage } from '@/lib/format/failure'
 import { firstMessage, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
@@ -38,13 +38,16 @@ import GroupHeader from '@/components/group/GroupHeader.vue'
 import PostBody from '@/components/thread/PostBody.vue'
 import PostEditor from '@/components/thread/PostEditor.vue'
 import DeletePageDialog from '@/components/page/DeletePageDialog.vue'
+import ReportDialog from '@/components/report/ReportDialog.vue'
+import PathToHere from '@/components/folder/PathToHere.vue'
+import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
 import RailBlock from '@/components/context/RailBlock.vue'
 import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
 import MemberList from '@/components/context/MemberList.vue'
-import PageList from '@/components/context/PageList.vue'
+import FolderRail from '@/components/context/FolderRail.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -96,12 +99,18 @@ const mayAdminister = computed<boolean>(
   () => group.value?.status === 'joined' && group.value.role === 'administrator',
 )
 
-/** The API's own rule, so the view never offers what the endpoint would refuse. */
-const mayModify = computed<boolean>(
-  () =>
-    mayAdminister.value ||
-    (page.value?.createdBy !== null && page.value?.createdBy === currentUserId.value),
-)
+/**
+ * The API's own rule, so the view never offers what the endpoint would refuse. Any writer, not
+ * only the author: a page is material the group keeps — see `mayWrite` in the backend.
+ */
+const mayChange = computed<boolean>(() => mayWrite.value)
+
+/** The page's own query, so the favourite mark follows a change to it. */
+async function refreshPage() {
+  await queryClient.invalidateQueries({
+    queryKey: getGetPageQueryKey(groupId.value, pageId.value),
+  })
+}
 
 const editing = ref<boolean>(false)
 const draftTitle = ref<string>('')
@@ -112,7 +121,7 @@ const saveError = ref<string | undefined>(undefined)
 const editor = useTemplateRef<{ focus: () => void }>('editor')
 
 /**
- * What the save is conditional on: the `updatedAt` of the version being edited, kept as it was
+ * What the save is conditional on: the `lastActivityAt` of the version being edited, kept as it was
  * received. Parsing it into a date and back would drop the microseconds the API compares.
  */
 const loadedAt = ref<string | undefined>(undefined)
@@ -127,7 +136,7 @@ async function startEditing() {
   // page with a heading in it would silently flatten.
   draftDocument.value = current.document
   draftText.value = ''
-  loadedAt.value = current.updatedAt
+  loadedAt.value = current.lastActivityAt
   editing.value = true
 
   await nextTick()
@@ -175,6 +184,13 @@ async function save() {
   editing.value = false
 }
 
+/** Reporting your own page is not a thing, and an absent reader cannot report at all. */
+const mayReport = computed<boolean>(
+  () => currentUserId.value !== undefined && page.value?.createdBy !== currentUserId.value,
+)
+
+const reportingPage = ref<boolean>(false)
+
 const deleting = ref<boolean>(false)
 const deleteError = ref<string | undefined>(undefined)
 
@@ -208,9 +224,9 @@ const meta = computed<string>(() => {
   const lastEditor = current.updatedByUsername
   const byAnother = lastEditor !== null && lastEditor !== current.createdByUsername
   const changed =
-    current.updatedAt === current.createdAt
+    current.lastActivityAt === current.createdAt
       ? undefined
-      : `bearbeitet ${formatActivityTime(current.updatedAt)}${byAnother ? ` von ${lastEditor}` : ''}`
+      : `bearbeitet ${formatActivityTime(current.lastActivityAt)}${byAnother ? ` von ${lastEditor}` : ''}`
 
   return [author, formatActivityTime(current.createdAt), changed]
     .filter((part) => part !== undefined)
@@ -244,6 +260,13 @@ watch(pageId, () => {
 
         <template v-else>
           <div class="mb-7">
+            <PathToHere
+              v-if="group"
+              :group-id="groupId"
+              :group-title="group.title"
+              :folder-id="page.folderId"
+            />
+
             <Input
               v-if="editing"
               v-model="draftTitle"
@@ -272,7 +295,23 @@ watch(pageId, () => {
             <AlertDescription>{{ saveError }}</AlertDescription>
           </Alert>
 
-          <div v-if="mayModify" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
+          <div v-if="!editing" class="mt-3.5 flex items-center gap-2">
+            <FavouriteToggle
+              target-type="writing_page"
+              :target-id="page.id"
+              :is-favourite="page.isFavourite"
+              @changed="refreshPage"
+            />
+
+            <!-- Outside the group of changing actions, as a thread's is: reporting is what
+                 somebody who may *not* change it does. -->
+            <Button v-if="mayReport" variant="outline" size="sm" @click="reportingPage = true">
+              <Flag :stroke-width="1.5" aria-hidden="true" />
+              Melden
+            </Button>
+          </div>
+
+          <div v-if="mayChange" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
             <template v-if="editing">
               <button
                 type="button"
@@ -321,11 +360,13 @@ watch(pageId, () => {
     </template>
 
     <template #infoRail="{ collapsible }">
+      <!-- First and open: this is the navigation between a group's threads and pages, so it is
+           not something the member should have to open before they can move. -->
+      <RailBlock label="Inhalt" :collapsible="collapsible" open-start>
+        <FolderRail :group-id="groupId" />
+      </RailBlock>
       <RailBlock label="Die Geschichte" :collapsible="collapsible">
         <StoryDetails v-if="group" :group="group" />
-      </RailBlock>
-      <RailBlock label="Seiten" :collapsible="collapsible">
-        <PageList :group-id="groupId" :may-write="mayWrite" />
       </RailBlock>
       <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
         <FileList />
@@ -335,6 +376,14 @@ watch(pageId, () => {
       </RailBlock>
     </template>
   </AppLayout>
+
+  <ReportDialog
+    v-if="page"
+    v-model:open="reportingPage"
+    target-type="writing_page"
+    :target-id="page.id"
+    :subject="page.title"
+  />
 
   <DeletePageDialog
     v-if="page"

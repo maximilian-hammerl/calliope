@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { notBlank } from "@/src/http/request_schema.ts";
 import {
+  FOUND_PAGE_RESPONSE,
   FOUND_THREAD_RESPONSE,
   GROUP_RESPONSE,
   LISTED_MEMBER_RESPONSE,
@@ -11,6 +12,7 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
@@ -39,6 +41,7 @@ const SEARCH_BODY = z.object({
 const SEARCH_RESPONSE = z.object({
   groups: listResponseSchema(GROUP_RESPONSE),
   threads: listResponseSchema(FOUND_THREAD_RESPONSE),
+  pages: listResponseSchema(FOUND_PAGE_RESPONSE),
   storyIdeas: listResponseSchema(STORY_IDEA_RESPONSE),
   users: listResponseSchema(LISTED_MEMBER_RESPONSE),
 });
@@ -82,7 +85,7 @@ export default new OpenAPIHono().openapi(
     // Read before the searches, so the member filter has it and the others are unaffected.
     const blockedIds = await BlockService.selectBlockedIds(user.id);
 
-    const [groups, threads, storyIdeas, users] = await Promise.all([
+    const [groups, threads, pages, storyIdeas, users] = await Promise.all([
       WritingGroupService.listVisibleWritingGroups(user, {
         search,
         limit,
@@ -99,6 +102,13 @@ export default new OpenAPIHono().openapi(
         limit,
         offset: 0,
         sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
+      }),
+      WritingPageService.listVisiblePages(user, {
+        search,
+        limit,
+        offset: 0,
+        // As threads sort: most recently written in first, which a page's own column carries.
+        sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
       }),
       StoryIdeaService.listStoryIdeas({
         search,
@@ -124,6 +134,9 @@ export default new OpenAPIHono().openapi(
       }),
     ]);
 
-    return c.json({ groups, threads, storyIdeas, users }, STATUS_CODE.OK);
+    return c.json(
+      { groups, threads, pages, storyIdeas, users },
+      STATUS_CODE.OK,
+    );
   },
 );

@@ -12,9 +12,10 @@ import {
 } from "@/src/test/favourites.ts";
 
 /**
- * The thread strip is not a list endpoint — it returns every thread with no paging and no sort of
- * the reader's own — so its favourites-first term is written in the service rather than handed to
- * `listResultsWithCount`. That is what this file covers.
+ * Listing threads is not a list endpoint — it returns every thread with no paging and no sort of
+ * the reader's own. A favourite marks a row and no longer moves it: the tree nests these by
+ * folder, and a favourite jumping above its siblings makes a member's own structure look
+ * unstable. That is what this file covers.
  */
 const { owner, member, outsider } = favouriteFixture("threads");
 
@@ -28,7 +29,7 @@ const threadsOf = async (cookie: string, groupId: string) =>
   (await (await request("GET", `/api/groups/${groupId}/threads`, cookie))
     .json()).results as Row[];
 
-/** Three threads written in order, so the strip's own ordering is known before a favourite. */
+/** Three threads written in order, so the ordering is known before a favourite. */
 async function aGroupWithThreads(cookie: string) {
   const group = await createGroup(cookie, "Favoriten im Strip", "public");
 
@@ -48,36 +49,37 @@ async function aGroupWithThreads(cookie: string) {
   };
 }
 
-Deno.test("the strip puts a favourite first, and keeps the rest by activity", async () => {
+Deno.test("a favourite marks a thread without moving it", async () => {
   const ownerCookie = await registerUser(owner);
-  const { group, oldest, newest } = await aGroupWithThreads(ownerCookie);
+  const { group, oldest, middle, newest } = await aGroupWithThreads(
+    ownerCookie,
+  );
 
-  // Newest first is the strip's resting order, so the oldest is the one whose position can only
-  // come from the favourite.
-  assertEquals((await threadsOf(ownerCookie, group.id))[0]?.id, newest.id);
+  const before = await threadsOf(ownerCookie, group.id);
+  assertEquals(before.map((row) => row.id), [newest.id, middle.id, oldest.id]);
 
   await setFavourite(ownerCookie, "writing_thread", oldest.id);
 
-  const strip = await threadsOf(ownerCookie, group.id);
-  assertEquals(strip[0]?.id, oldest.id);
-  assertEquals(strip[0]?.isFavourite, true);
-  // Everything under it keeps the order it had.
-  assertEquals(strip[1]?.id, newest.id);
+  const after = await threadsOf(ownerCookie, group.id);
+  // Most recently written in first, favourite or not: the mark is the only thing that changed.
+  assertEquals(after.map((row) => row.id), [newest.id, middle.id, oldest.id]);
+  assertEquals(after.find((row) => row.id === oldest.id)?.isFavourite, true);
 });
 
-Deno.test("the strip's favourite is the reader's own", async () => {
+Deno.test("the favourite mark is the reader's own", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group, oldest } = await aGroupWithThreads(ownerCookie);
 
   await setFavourite(memberCookie, "writing_thread", oldest.id);
 
-  // The member sees it first; the owner sees their own answer and their own order.
-  assertEquals((await threadsOf(memberCookie, group.id))[0]?.id, oldest.id);
+  const theirs = await threadsOf(memberCookie, group.id);
+  const ours = await threadsOf(ownerCookie, group.id);
 
-  const theirs = await threadsOf(ownerCookie, group.id);
-  assertEquals(theirs.find((row) => row.id === oldest.id)?.isFavourite, false);
-  assertEquals(theirs[0]?.id !== oldest.id, true);
+  assertEquals(theirs.find((row) => row.id === oldest.id)?.isFavourite, true);
+  assertEquals(ours.find((row) => row.id === oldest.id)?.isFavourite, false);
+  // Nobody's favourite changes anybody's order, including their own.
+  assertEquals(theirs.map((row) => row.id), ours.map((row) => row.id));
 });
 
 Deno.test("a thread's own page carries the flag", async () => {

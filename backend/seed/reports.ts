@@ -1,5 +1,5 @@
 import { USER } from "@/seed/accounts.ts";
-import { postId, reportId, storyIdeaId } from "@/seed/ids.ts";
+import { pageId, postId, reportId, storyIdeaId } from "@/seed/ids.ts";
 import type {
   ReportCategory,
   ReportOutcome,
@@ -170,5 +170,18 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     category: "other",
     reason:
       "Ich weiß nicht, in welche Kategorie das gehört, aber es stört mich.",
+  },
+
+  // A page, so the queue holds the kind whose excerpt is prose rather than a title.
+  {
+    id: reportId(9),
+    reporter: USER.zeilensprung,
+    targetType: "writing_page",
+    targetId: pageId(2),
+    author: USER.tintenfleck,
+    excerpt: "Ein Kino mit zwei Sälen, von denen einer immer geschlossen ist.",
+    category: "other",
+    reason:
+      "Die Seite beschreibt einen Ort, den es in der Geschichte so nicht geben soll.",
   },
 ];

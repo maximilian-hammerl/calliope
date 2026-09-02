@@ -30,7 +30,12 @@ import { Spinner } from '@/components/ui/spinner'
  * One dialog for both verbs: an absent `thread` means creating. Two components would share
  * everything but the mutation, which is how the group dialogs drifted.
  */
-const props = defineProps<{ groupId: string; thread?: GetThread200 }>()
+const props = defineProps<{
+  groupId: string
+  thread?: GetThread200
+  /** Absent creates at the root of the group's tree. Ignored when renaming. */
+  folderId?: string
+}>()
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ created: [threadId: string] }>()
 
@@ -40,7 +45,7 @@ const renaming = computed<boolean>(() => props.thread !== undefined)
 
 const LIMIT = TEXT_LIMIT.createThread
 
-const TITLE = titleSchema(LIMIT.title, 'Gib dem Thread einen Titel.')
+const TITLE = titleSchema(LIMIT.title, 'Gib dem Thema einen Titel.')
 
 const formError = ref<string | undefined>(undefined)
 const formElement = ref<HTMLFormElement | null>(null)
@@ -66,7 +71,7 @@ const form = useForm({
       } catch (error) {
         formError.value = failureMessage(
           error,
-          'Der Thread konnte nicht umbenannt werden. Versuche es noch einmal.',
+          'Das Thema konnte nicht umbenannt werden. Versuche es noch einmal.',
         )
         return
       }
@@ -83,11 +88,14 @@ const form = useForm({
 
     let created
     try {
-      created = await createThread({ groupId: props.groupId, data: { title } })
+      created = await createThread({
+        groupId: props.groupId,
+        data: { title, folderId: props.folderId },
+      })
     } catch (error) {
       formError.value = failureMessage(
         error,
-        'Der Thread konnte nicht angelegt werden. Versuche es noch einmal.',
+        'Das Thema konnte nicht angelegt werden. Versuche es noch einmal.',
       )
       return
     }
@@ -114,9 +122,9 @@ watch(open, (isOpen) => {
   <Dialog v-model:open="open">
     <DialogContent class="sm:max-w-dialog-form">
       <DialogHeader>
-        <DialogTitle>{{ renaming ? 'Thread umbenennen' : 'Thread anlegen' }}</DialogTitle>
+        <DialogTitle>{{ renaming ? 'Thema umbenennen' : 'Thema anlegen' }}</DialogTitle>
         <DialogDescription>
-          Ein Thread sammelt zusammengehörende Beiträge, etwa der Plot, Steckbriefe, Planung oder
+          Ein Thema sammelt zusammengehörende Beiträge, etwa der Plot, Steckbriefe, Planung oder
           Inspiration.
         </DialogDescription>
       </DialogHeader>
@@ -152,7 +160,7 @@ watch(open, (isOpen) => {
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" />
-            {{ renaming ? 'Änderungen speichern' : 'Thread anlegen' }}
+            {{ renaming ? 'Änderungen speichern' : 'Thema anlegen' }}
           </Button>
         </DialogFooter>
       </form>

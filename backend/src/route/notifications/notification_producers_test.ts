@@ -1,5 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
   addMember,
   clearRateLimits,
@@ -47,7 +48,13 @@ async function notificationsOf(cookie: string) {
   >;
 }
 
-type Notification = { type: string; actorUsername: string };
+/** Only what these tests read, not the API's full union. */
+type Notification = {
+  type: string;
+  actorUsername: string;
+  writingPageId?: string;
+  writingPageTitle?: string;
+};
 
 const ofType = (notifications: Notification[], type: string) =>
   notifications.filter((notification) => notification.type === type);
@@ -75,6 +82,37 @@ Deno.test("a new thread tells the group but not its author", async () => {
   }
   assertEquals(
     ofType(await notificationsOf(writerCookie), "new_writing_thread").length,
+    0,
+  );
+});
+
+Deno.test("a new page tells the group but not its author", async () => {
+  const { adminCookie, writerCookie, readerCookie, group: created } =
+    await group();
+
+  const response = await request(
+    "POST",
+    `/api/groups/${created.id}/pages`,
+    writerCookie,
+    { title: "Die Bergstadt", document: plainTextToDocument("Ein Hafen.") },
+  );
+  assertEquals(response.status, STATUS_CODE.Created);
+  const page = await response.json();
+
+  for (const cookie of [adminCookie, readerCookie]) {
+    const [notification] = ofType(
+      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      await notificationsOf(cookie),
+      "new_writing_page",
+    );
+    assertExists(notification);
+    assertEquals(notification.actorUsername, writer);
+    // The page's own subject, which is what the interface links to.
+    assertEquals(notification.writingPageId, page.id);
+    assertEquals(notification.writingPageTitle, "Die Bergstadt");
+  }
+  assertEquals(
+    ofType(await notificationsOf(writerCookie), "new_writing_page").length,
     0,
   );
 });

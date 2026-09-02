@@ -29,7 +29,7 @@ export default new OpenAPIHono().openapi(
     tags: [PAGES_TAG],
     summary: "Read a page",
     description:
-      "The page with its prose. Its `updatedAt` is what an edit has to be sent back with.",
+      "The page with its prose. Its `lastActivityAt` is what an edit has to be sent back with.",
     operationId: "getPage",
     middleware: authenticated,
     request: { params: PAGE_PARAMS },
@@ -62,7 +62,11 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const page = await WritingPageService.selectPage(groupId, pageId);
+    const page = await WritingPageService.selectPageForReader(
+      groupId,
+      pageId,
+      c.get("user").id,
+    );
     if (page === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }

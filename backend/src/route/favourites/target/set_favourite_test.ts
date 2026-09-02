@@ -24,7 +24,10 @@ Deno.test.afterEach(() => cleanUpFavourites([owner, member, outsider]));
 Deno.test("PUT /api/favourites marks each kind, in the column that kind belongs to", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
-  const { group, thread, post } = await aPublicGroup(ownerCookie, "Favoriten");
+  const { group, thread, post, page } = await aPublicGroup(
+    ownerCookie,
+    "Favoriten",
+  );
 
   const idea = await (await request("POST", "/api/story-ideas", ownerCookie, {
     title: "Eine Idee",
@@ -37,6 +40,7 @@ Deno.test("PUT /api/favourites marks each kind, in the column that kind belongs 
       ["writing_group", group.id],
       ["writing_thread", thread.id],
       ["writing_post", post.id],
+      ["writing_page", page.id],
       ["story_idea", idea.id],
     ] as const
   ) {
@@ -49,7 +53,7 @@ Deno.test("PUT /api/favourites marks each kind, in the column that kind belongs 
 
   // One row per thing, each with exactly one reference set — which is the whole of the table's
   // shape now that no column repeats the kind.
-  assertEquals(stored.length, 4);
+  assertEquals(stored.length, 5);
   for (const row of stored) {
     assertEquals(
       Object.values(row).filter((value) => value !== null).length,

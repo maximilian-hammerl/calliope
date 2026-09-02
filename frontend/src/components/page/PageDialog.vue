@@ -26,7 +26,11 @@ import { Spinner } from '@/components/ui/spinner'
  * editor has the column's width. So a page starts empty, which the API allows for a page
  * because its title already says what it is.
  */
-const props = defineProps<{ groupId: string }>()
+const props = defineProps<{
+  groupId: string
+  /** Absent creates at the root of the group's tree. */
+  folderId?: string
+}>()
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ created: [pageId: string] }>()
 
@@ -51,7 +55,11 @@ const form = useForm({
     try {
       created = await createPage({
         groupId: props.groupId,
-        data: { title: parsed(TITLE, value.title), document: emptyDocument() },
+        data: {
+          title: parsed(TITLE, value.title),
+          document: emptyDocument(),
+          folderId: props.folderId,
+        },
       })
     } catch (error) {
       formError.value = failureMessage(

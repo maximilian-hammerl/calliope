@@ -119,8 +119,9 @@ const STATUS_LABELS: Record<Status, string> = {
 /** What the report is about, in words rather than the enum's. */
 const TARGET_LABELS: Record<Report['targetType'], string> = {
   writing_group: 'Gruppe',
-  writing_thread: 'Thread',
+  writing_thread: 'Thema',
   writing_post: 'Beitrag',
+  writing_page: 'Seite',
   story_idea: 'Storyidee',
   chat_group: 'Chat',
   chat_message: 'Nachricht',

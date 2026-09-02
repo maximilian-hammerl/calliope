@@ -11,7 +11,6 @@ import {
   getListThreadsQueryKey,
   useDeleteThread,
   useGetThread,
-  useListThreads,
 } from '@/api/threads/threads'
 import {
   getListPostsQueryKey,
@@ -26,15 +25,14 @@ import type {
   GetThread200,
   ListMemberships200ResultsItem,
   ListPosts200ResultsItem,
-  ListThreads200ResultsItem,
   PostDocument,
 } from '@/api/models'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
-import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
+import PathToHere from '@/components/folder/PathToHere.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import DeletePostDialog from '@/components/thread/DeletePostDialog.vue'
 import PostItem from '@/components/thread/PostItem.vue'
@@ -54,7 +52,7 @@ import StoryStatus from '@/components/context/StoryStatus.vue'
 import RailBlock from '@/components/context/RailBlock.vue'
 import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
-import PageList from '@/components/context/PageList.vue'
+import FolderRail from '@/components/context/FolderRail.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -70,10 +68,6 @@ const currentUserId = computed<string | undefined>(() =>
 
 const groupId = computed<string>(() => String(route.params.groupId))
 
-/** A thread created from inside another one is still what the member asked to open. */
-function openThread(newThreadId: string) {
-  void router.push({ name: 'thread', params: { groupId: groupId.value, threadId: newThreadId } })
-}
 const threadId = computed<string>(() => String(route.params.threadId))
 
 const { data: groupData } = useGetGroup(groupId)
@@ -102,11 +96,6 @@ async function refreshThread() {
 }
 const thread = computed<GetThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
-)
-
-const { data: threadsData } = useListThreads(groupId)
-const threads = computed<ListThreads200ResultsItem[]>(() =>
-  threadsData.value?.status === 200 ? threadsData.value.data.results : [],
 )
 
 /**
@@ -198,8 +187,9 @@ const mayWrite = computed<boolean>(
  */
 const mayModifyThread = computed<boolean>(
   () =>
-    mayAdminister.value ||
-    (thread.value?.createdBy !== null && thread.value?.createdBy === currentUserId.value),
+    mayWrite.value &&
+    (mayAdminister.value ||
+      (thread.value?.createdBy !== null && thread.value?.createdBy === currentUserId.value)),
 )
 
 const reportingThread = ref<boolean>(false)
@@ -226,7 +216,7 @@ async function confirmDeleteThread() {
   } catch (error) {
     deletionError.value = failureMessage(
       error,
-      'Der Thread konnte nicht gelöscht werden. Versuche es noch einmal.',
+      'Das Thema konnte nicht gelöscht werden. Versuche es noch einmal.',
     )
     return
   }
@@ -248,8 +238,6 @@ const sendError = ref<string | undefined>(undefined)
 function goToGroup() {
   void router.push({ name: 'group', params: { groupId: groupId.value } })
 }
-
-const creatingThread = ref<boolean>(false)
 
 const { mutateAsync: createPost, isPending: sending } = useCreatePost()
 const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost()
@@ -421,16 +409,15 @@ async function submit() {
         :group-id="groupId"
       />
 
-      <ThreadTabs
-        :group-id="groupId"
-        :threads="threads"
-        :active-id="threadId"
-        :may-write="mayWrite"
-        @create="creatingThread = true"
-      />
-
       <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
         <div class="reading-column">
+          <PathToHere
+            v-if="group"
+            :group-id="groupId"
+            :group-title="group.title"
+            :folder-id="thread.folderId"
+          />
+
           <ThreadHeader
             :title="thread.title"
             :post-count="postCount"
@@ -473,6 +460,7 @@ async function submit() {
             :divider="index < posts.length - 1"
             :current-user-id="currentUserId"
             :may-administer="mayAdminister"
+            :may-write="mayWrite"
             :editing="editingPostId === post.id"
             :saving="savingPost && editingPostId === post.id"
             :error="editingPostId === post.id ? editError : undefined"
@@ -514,13 +502,13 @@ async function submit() {
     </template>
 
     <div v-else-if="isPending" class="px-gutter py-5 text-[12.5px] text-ink-5 md:px-10">
-      <div class="reading-column">Thread wird geladen …</div>
+      <div class="reading-column">Thema wird geladen …</div>
     </div>
 
     <div v-else-if="isError" class="px-gutter py-5 md:px-10">
       <div class="reading-column">
         <p class="max-w-[46ch] text-body text-ink-4">
-          Diesen Thread gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
+          Dieses Thema gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
         </p>
         <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>
       </div>
@@ -542,11 +530,13 @@ async function submit() {
 
     <!-- What the member looks up while writing. -->
     <template #infoRail="{ collapsible }">
+      <!-- First and open: this is the navigation between a group's threads and pages, so it is
+           not something the member should have to open before they can move. -->
+      <RailBlock label="Inhalt" :collapsible="collapsible" open-start>
+        <FolderRail :group-id="groupId" />
+      </RailBlock>
       <RailBlock label="Die Geschichte" :collapsible="collapsible">
         <StoryDetails v-if="group" :group="group" />
-      </RailBlock>
-      <RailBlock label="Seiten" :collapsible="collapsible">
-        <PageList :group-id="groupId" :may-write="mayWrite" />
       </RailBlock>
       <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
         <FileList />
@@ -556,8 +546,6 @@ async function submit() {
       </RailBlock>
     </template>
   </AppLayout>
-
-  <ThreadDialog v-model:open="creatingThread" :group-id="groupId" @created="openThread" />
 
   <ThreadDialog v-if="thread" v-model:open="renamingThread" :group-id="groupId" :thread="thread" />
 

@@ -1,5 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
+import { plainTextToDocument } from "@/src/document/document_text.ts";
 import { db } from "@/src/database/client.ts";
 import {
   clearRateLimits,
@@ -98,6 +99,7 @@ const storedFor = (targetId: string) =>
     .where((eb) =>
       eb.or([
         eb("reportedWritingPostId", "=", targetId),
+        eb("reportedWritingPageId", "=", targetId),
         eb("reportedWritingGroupId", "=", targetId),
         eb("reportedUserId", "=", targetId),
       ])
@@ -399,4 +401,47 @@ Deno.test("POST /api/reports needs a session", async () => {
   });
 
   assertEquals(response.status, STATUS_CODE.Unauthorized);
+});
+
+Deno.test("a page can be reported, and the queue keeps its prose", async () => {
+  const authorCookie = await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+  const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
+
+  const page = await (await request(
+    "POST",
+    `/api/groups/${group.id}/pages`,
+    authorCookie,
+    { title: "Die Bergstadt", document: plainTextToDocument(REPORTED_TEXT) },
+  )).json();
+
+  assertEquals(
+    (await report(reporterCookie, "writing_page", page.id)).status,
+    STATUS_CODE.OK,
+  );
+
+  const stored = await storedFor(page.id);
+  assertExists(stored);
+  // The prose, not the title: the excerpt is what an operator reads once the page is gone.
+  assertEquals(stored.targetExcerpt, REPORTED_TEXT);
+  assertEquals(stored.reportedWritingPageId, page.id);
+  assertEquals(stored.status, "open");
+});
+
+Deno.test("a page in a private group cannot be reported by an outsider", async () => {
+  const authorCookie = await registerUser(author);
+  const reporterCookie = await registerUser(reporter);
+  const group = await createGroup(authorCookie, "Private Gruppe", "private");
+  const page = await (await request(
+    "POST",
+    `/api/groups/${group.id}/pages`,
+    authorCookie,
+    { title: "Geheim", document: plainTextToDocument(REPORTED_TEXT) },
+  )).json();
+
+  // The same answer a thing that does not exist gets, so reporting cannot be used to discover it.
+  assertEquals(
+    (await report(reporterCookie, "writing_page", page.id)).status,
+    STATUS_CODE.NotFound,
+  );
 });

@@ -573,6 +573,35 @@ instead until they were corrected; steps and memberships had always used visibil
 non-member could read a public group's member list but not a word of its story. Drafts do not
 depend on either check — `readableBy` keeps them with their author whoever is asking.
 
+**Who may change what is one table**, `RULE` in `service/writing_group_authorization.ts`. A route
+names the act it performs — `mayAct(role, "page:change")` — rather than choosing between helpers,
+because there are two rules and the names alone stopped saying which applied where:
+
+- **`writer`** — any writer or administrator. Making something, and changing what the group
+  *keeps*: its folders, its pages, and ticking a step off. Holding those to whoever typed them
+  first would stop the group maintaining its own material.
+- **`author`** — its author, or an administrator. Writing that *belongs* to somebody: a thread, a
+  post, and deleting a step somebody wrote down.
+
+The overloads carry that distinction: an `author` act cannot be asked without the content it is
+about, and a `writer` act cannot be handed content it would ignore. A wrong key is a compile error.
+
+**A step splits on the operation**, which the table makes visible rather than surprising: any
+writer may tick one, only its author or an administrator may delete it — whoever writes the
+chapter marks it done.
+
+**Demotion freezes what somebody already wrote.** The author rule asks whether the member may
+write at all *before* asking whether the thing is theirs, so moving a member to reader stops them
+changing and deleting their own threads, posts and steps as well as writing anything new. This is
+a containment measure: demoting is the one move an ordinary group can make against an account it
+believes is compromised, without waiting for an operator, and it would be worth little if it left
+that account free to delete everything it had ever written. The writing stays with the group, and
+administrators can still act on it. Pinned twice — over the helper in
+`writing_group_authorization_test.ts`, and through the routes in
+`route/groups/group/demotion_freezes_writing_test.ts`, because a route that forgot the helper
+would pass the first and fail the second. The frontend mirrors it: `PostItem`, `StepList` and
+`ThreadView` all ask `mayWrite` before offering to change anything.
+
 ## After changing a route
 
 Regenerate the specification, or CI fails:

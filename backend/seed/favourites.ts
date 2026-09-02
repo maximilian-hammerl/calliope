@@ -3,6 +3,7 @@ import {
   chatId,
   favouriteId,
   groupId,
+  pageId,
   postId,
   storyIdeaId,
   threadId,
@@ -10,7 +11,7 @@ import {
 import type { FavouriteTargetType } from "@/src/query/favourite.ts";
 
 /**
- * All five kinds, because every filter is otherwise an empty list on a fresh checkout and the flag
+ * All six kinds, because every filter is otherwise an empty list on a fresh checkout and the flag
  * is never true anywhere.
  *
  * It cannot show the *ordering* on groups, threads or chats: they sort by `last_activity_at`, which
@@ -121,5 +122,13 @@ export const FAVOURITES: ReadonlyArray<FavouriteFixture> = [
     user: USER.nachtschreiber,
     targetType: "chat_group",
     targetId: chatId(2),
+  },
+
+  // A page, so the mark shows in the group's own tree and in a search result.
+  {
+    id: favouriteId(14),
+    user: USER.tintenfleck,
+    targetType: "writing_page",
+    targetId: pageId(1),
   },
 ];

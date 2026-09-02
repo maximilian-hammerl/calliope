@@ -10,6 +10,7 @@ export const FAVOURITE_TARGET_TYPES = [
   "writing_group",
   "writing_thread",
   "writing_post",
+  "writing_page",
   "story_idea",
   "chat_group",
 ] as const;
@@ -24,6 +25,7 @@ export const FAVOURITE_COLUMN = {
   writing_group: "writingGroupId",
   writing_thread: "writingThreadId",
   writing_post: "writingPostId",
+  writing_page: "writingPageId",
   story_idea: "storyIdeaId",
   chat_group: "chatGroupId",
 } as const satisfies Record<FavouriteTargetType, keyof Favourite>;

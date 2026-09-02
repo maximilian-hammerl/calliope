@@ -5,7 +5,7 @@
  * the account-deletion flow. Removing a member or a single post does not: those are reversible
  * by doing them again.
  *
- * The post count is named because "diesen Thread löschen" understates what happens.
+ * The post count is named because "dieses Thema löschen" understates what happens.
  */
 import { computed } from 'vue'
 import { pluralize } from '@/lib/format/formatText'
@@ -50,8 +50,8 @@ const posts = computed<string | undefined>(() => {
       <DialogHeader>
         <DialogTitle>„{{ props.title }}“ löschen?</DialogTitle>
         <DialogDescription>
-          <template v-if="posts"> Der Thread und {{ posts }} werden gelöscht. </template>
-          <template v-else>Der Thread wird gelöscht.</template>
+          <template v-if="posts"> Das Thema und {{ posts }} werden gelöscht. </template>
+          <template v-else>Das Thema wird gelöscht.</template>
         </DialogDescription>
       </DialogHeader>
 
@@ -70,7 +70,7 @@ const posts = computed<string | undefined>(() => {
         </Button>
         <Button type="button" variant="destructive" :disabled="pending" @click="$emit('confirmed')">
           <Spinner v-if="pending" />
-          Thread löschen
+          Thema löschen
         </Button>
       </DialogFooter>
     </DialogContent>

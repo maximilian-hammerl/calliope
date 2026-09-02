@@ -43,7 +43,7 @@ defineEmits<{ confirmed: [] }>()
 
       <div class="flex flex-col gap-3 text-note text-ink-4">
         <p v-if="props.deletesTheGroup">
-          Alle Threads, Beiträge und Nächsten Schritte gehen mit ihr. Das lässt sich nicht
+          Alle Themen, Beiträge und Nächsten Schritte gehen mit ihr. Das lässt sich nicht
           zurückholen.
         </p>
         <p v-else-if="props.leavesNobodyAdministering">

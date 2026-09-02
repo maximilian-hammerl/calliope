@@ -11,6 +11,7 @@ export const MEMBERSHIPS_TAG = "memberships";
 export const THREADS_TAG = "threads";
 export const STEPS_TAG = "steps";
 export const PAGES_TAG = "pages";
+export const FOLDERS_TAG = "folders";
 export const POSTS_TAG = "posts";
 export const USERS_TAG = "users";
 export const NOTIFICATIONS_TAG = "notifications";
@@ -29,6 +30,7 @@ type Tag =
   | typeof THREADS_TAG
   | typeof STEPS_TAG
   | typeof PAGES_TAG
+  | typeof FOLDERS_TAG
   | typeof POSTS_TAG
   | typeof USERS_TAG
   | typeof NOTIFICATIONS_TAG
@@ -54,7 +56,7 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
   [REPORTS_TAG]:
     "Reporting something to the operators, with the reason it is being reported",
   [FAVOURITES_TAG]:
-    "A member's own favourites, across groups, threads, posts, story ideas and chats",
+    "A member's own favourites, across groups, threads, posts, pages, story ideas and chats",
   [MEMBERSHIPS_TAG]:
     "Managing who belongs to a writing group, in which role, and their invitations",
 
@@ -64,6 +66,8 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
   [POSTS_TAG]: "Managing the posts of a thread, published or draft",
   [PAGES_TAG]:
     "A group's reference pages: material that is written and revised rather than replied to",
+  [FOLDERS_TAG]:
+    "The folders a group nests its threads and pages in, named by the members themselves",
   [USERS_TAG]:
     "Finding other members by name, so they can be invited to a group",
   [CHATS_TAG]: "Chats between members, and the messages in them",

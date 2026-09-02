@@ -59,7 +59,10 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    const results = await WritingPageService.listPages(groupId);
+    const results = await WritingPageService.listPages(
+      groupId,
+      c.get("user").id,
+    );
     return c.json({ results }, STATUS_CODE.OK);
   },
 );

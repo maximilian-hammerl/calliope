@@ -4,6 +4,7 @@ CREATE TYPE public.report_target_type AS ENUM (
     'writing_group',
     'writing_thread',
     'writing_post',
+    'writing_page',
     'story_idea',
     'chat_group',
     'chat_message',
@@ -94,6 +95,7 @@ CREATE TABLE public.report
     reported_writing_group_id  UUID                               REFERENCES public.writing_group (id) ON UPDATE CASCADE ON DELETE SET NULL,
     reported_writing_thread_id UUID                               REFERENCES public.writing_thread (id) ON UPDATE CASCADE ON DELETE SET NULL,
     reported_writing_post_id   UUID                               REFERENCES public.writing_post (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    reported_writing_page_id   UUID                               REFERENCES public.writing_page (id) ON UPDATE CASCADE ON DELETE SET NULL,
     reported_story_idea_id     UUID                               REFERENCES public.story_idea (id) ON UPDATE CASCADE ON DELETE SET NULL,
     reported_chat_group_id     UUID                               REFERENCES public.chat_group (id) ON UPDATE CASCADE ON DELETE SET NULL,
     reported_chat_message_id   UUID                               REFERENCES public.chat_message (id) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -191,13 +193,14 @@ CREATE TABLE public.report
     -- matching branch would let a new target type through unchecked rather than stopping it.
     CONSTRAINT report_target_matches_type CHECK (
         CASE target_type
-            WHEN 'writing_group' THEN num_nonnulls(reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
-            WHEN 'writing_thread' THEN num_nonnulls(reported_writing_group_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
-            WHEN 'writing_post' THEN num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
-            WHEN 'story_idea' THEN num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
-            WHEN 'chat_group' THEN num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_message_id, reported_user_id) = 0
-            WHEN 'chat_message' THEN num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_user_id) = 0
-            WHEN 'user' THEN num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id) = 0
+            WHEN 'writing_group' THEN num_nonnulls(reported_writing_page_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
+            WHEN 'writing_thread' THEN num_nonnulls(reported_writing_page_id, reported_writing_group_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
+            WHEN 'writing_post' THEN num_nonnulls(reported_writing_page_id, reported_writing_group_id, reported_writing_thread_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
+            WHEN 'writing_page' THEN num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
+            WHEN 'story_idea' THEN num_nonnulls(reported_writing_page_id, reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 0
+            WHEN 'chat_group' THEN num_nonnulls(reported_writing_page_id, reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_message_id, reported_user_id) = 0
+            WHEN 'chat_message' THEN num_nonnulls(reported_writing_page_id, reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_user_id) = 0
+            WHEN 'user' THEN num_nonnulls(reported_writing_page_id, reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id) = 0
             ELSE false
             END
         )
@@ -223,7 +226,7 @@ CREATE TABLE public.report
 -- Three things this needs, and the last two exist because SET NULL can rewrite an indexed
 -- column long after the row was written.
 --
--- NULLS NOT DISTINCT, because six of the seven target columns are always NULL and Postgres
+-- NULLS NOT DISTINCT, because seven of the eight target columns are always NULL and Postgres
 -- would otherwise treat every row as unique.
 --
 -- `reporter_id IS NOT NULL`, or two reports of the same thing by two different members collide
@@ -237,12 +240,13 @@ CREATE TABLE public.report
 -- things that still exist, which is the only situation in which filing twice is possible.
 CREATE UNIQUE INDEX report_one_open_per_reporter_and_category_idx
     ON public.report (reporter_id, category, reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id,
-                      reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id)
+                      reported_writing_page_id, reported_story_idea_id, reported_chat_group_id, reported_chat_message_id,
+                      reported_user_id)
     NULLS NOT DISTINCT
     WHERE closed_at IS NULL
         AND reporter_id IS NOT NULL
-        AND num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_story_idea_id,
-                         reported_chat_group_id, reported_chat_message_id, reported_user_id) = 1;
+        AND num_nonnulls(reported_writing_group_id, reported_writing_thread_id, reported_writing_post_id, reported_writing_page_id,
+                         reported_story_idea_id, reported_chat_group_id, reported_chat_message_id, reported_user_id) = 1;
 
 -- The queue reads open reports oldest first, and filters them by category and by how they closed.
 CREATE INDEX report_status_created_idx ON public.report (status, created_at DESC);
@@ -271,6 +275,9 @@ CREATE INDEX report_reported_writing_thread_idx ON public.report (reported_writi
 
 CREATE INDEX report_reported_writing_post_idx ON public.report (reported_writing_post_id)
     WHERE reported_writing_post_id IS NOT NULL;
+
+CREATE INDEX report_reported_writing_page_idx ON public.report (reported_writing_page_id)
+    WHERE reported_writing_page_id IS NOT NULL;
 
 CREATE INDEX report_reported_story_idea_idx ON public.report (reported_story_idea_id)
     WHERE reported_story_idea_id IS NOT NULL;

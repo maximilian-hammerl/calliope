@@ -63,6 +63,8 @@ type NotificationRow = {
   writingThreadId: string | null;
   writingThreadTitle: string | null;
   writingPostId: string | null;
+  writingPageId: string | null;
+  writingPageTitle: string | null;
   chatGroupId: string | null;
   chatGroupTitle: string | null;
 };
@@ -122,6 +124,14 @@ function toNotification(row: NotificationRow): Notification {
         ),
         writingPostId: required(row.writingPostId, "writingPostId"),
       };
+    case "new_writing_page":
+      return {
+        ...base,
+        ...writingGroup(),
+        type: row.type,
+        writingPageId: required(row.writingPageId, "writingPageId"),
+        writingPageTitle: required(row.writingPageTitle, "writingPageTitle"),
+      };
     case "invited_to_chat_group":
       return {
         ...base,
@@ -172,6 +182,7 @@ function notificationsFor(recipientId: string) {
       "writingThread.id",
       "notification.writingThreadId",
     )
+    .leftJoin("writingPage", "writingPage.id", "notification.writingPageId")
     .where("notification.recipientId", "=", recipientId)
     .select([
       "notification.id",
@@ -185,6 +196,8 @@ function notificationsFor(recipientId: string) {
       "userInWritingGroup.role",
       "notification.writingThreadId",
       "writingThread.title as writingThreadTitle",
+      "notification.writingPageId",
+      "writingPage.title as writingPageTitle",
       "notification.writingPostId",
       "notification.chatGroupId",
       "chatGroup.title as chatGroupTitle",
@@ -309,13 +322,30 @@ async function insertRoleChangeNotification(
  */
 async function insertGroupActivityNotifications(
   transaction: Transaction,
-  activity: {
-    type: "new_writing_thread" | "new_writing_post";
-    writingGroupId: string;
-    writingThreadId: string;
-    writingPostId?: string;
-    actorId: string;
-  },
+  /**
+   * A union rather than optional fields, so each type carries exactly the subject it needs —
+   * the same shape `notification_subject_matches_type` enforces in the database.
+   */
+  activity:
+    | {
+      type: "new_writing_thread";
+      writingGroupId: string;
+      writingThreadId: string;
+      actorId: string;
+    }
+    | {
+      type: "new_writing_post";
+      writingGroupId: string;
+      writingThreadId: string;
+      writingPostId: string;
+      actorId: string;
+    }
+    | {
+      type: "new_writing_page";
+      writingGroupId: string;
+      writingPageId: string;
+      actorId: string;
+    },
 ): Promise<void> {
   const recipients = await transaction
     .selectFrom("userInWritingGroup")
@@ -336,8 +366,15 @@ async function insertGroupActivityNotifications(
       type: activity.type,
       actorId: activity.actorId,
       writingGroupId: activity.writingGroupId,
-      writingThreadId: activity.writingThreadId,
-      writingPostId: activity.writingPostId ?? null,
+      writingThreadId: "writingThreadId" in activity
+        ? activity.writingThreadId
+        : null,
+      writingPostId: "writingPostId" in activity
+        ? activity.writingPostId
+        : null,
+      writingPageId: "writingPageId" in activity
+        ? activity.writingPageId
+        : null,
     })))
     .execute();
 }

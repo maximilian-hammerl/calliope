@@ -28,6 +28,9 @@ const currentUserId = computed<string | undefined>(() =>
 )
 
 function mayDelete(step: ListSteps200ResultsItem): boolean {
+  // `mayWrite` first: a member demoted to reader keeps nothing, which is what makes demotion
+  // worth anything against an account somebody else is using — see the backend's `mayAct`.
+  if (!props.mayWrite) return false
   return props.mayAdminister || (step.createdBy !== null && step.createdBy === currentUserId.value)
 }
 

@@ -7,7 +7,8 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
-import { mayWrite } from "@/src/service/writing_group_authorization.ts";
+import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -27,6 +28,8 @@ const CREATE_THREAD_BODY = WRITING_THREAD_SCHEMA
     title: notBlank(
       WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
     ),
+    // Absent puts it at the root of the group's tree. Moving it later is its own operation.
+    folderId: WRITING_THREAD_SCHEMA.shape.folderId.optional(),
   });
 
 export default new OpenAPIHono().openapi(
@@ -66,7 +69,7 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const { groupId } = c.req.valid("param");
-    const { title } = c.req.valid("json");
+    const { title, folderId } = c.req.valid("json");
     const user = c.get("user");
 
     // Content is members-only, so a non-member is told nothing about the group.
@@ -75,17 +78,26 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    if (!mayWrite(role)) {
+    if (!mayAct(role, "thread:create")) {
       return c.json(
         { error: "Only writers and administrators can start a thread" },
         STATUS_CODE.Forbidden,
       );
     }
 
+    // Resolved against this group, so a folder id from another group cannot be borrowed.
+    if (folderId !== undefined && folderId !== null) {
+      const folder = await WritingFolderService.selectFolder(groupId, folderId);
+      if (folder === undefined) {
+        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
+      }
+    }
+
     const thread = await WritingThreadService.insertThread(
       groupId,
       title,
       user.id,
+      folderId ?? null,
     );
 
     return c.json(thread, STATUS_CODE.Created);

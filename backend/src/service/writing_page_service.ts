@@ -1,5 +1,14 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
+import { withFavourite } from "@/src/query/favourite.ts";
+import type { User } from "@/src/service/user_service.ts";
+import {
+  type ListQuery,
+  type ListResults,
+  listResultsWithCount,
+  searchPattern,
+} from "@/src/list/list_endpoint_query.ts";
+import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingPage as DatabaseWritingPage } from "@/src/database/schema.ts";
 import type { PostDocument } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
@@ -13,14 +22,25 @@ export type PageSummary =
     | "title"
     | "createdBy"
     | "createdAt"
-    | "updatedAt"
+    | "lastActivityAt"
+    | "folderId"
     | "updatedBy"
   >
   // Null once an account is gone: both columns are ON DELETE SET NULL.
-  & { createdByUsername: string | null; updatedByUsername: string | null };
+  & { createdByUsername: string | null; updatedByUsername: string | null }
+  & {
+    /** The reader's own favourite, visible to nobody else. */
+    isFavourite: boolean;
+  };
 
 // `document` is not picked from the table, where the column is `unknown` by design.
 export type Page = PageSummary & { document: PostDocument };
+
+/**
+ * What the gates need: the page itself, with nothing about who is reading it. Three routes use
+ * this only to authorise and would discard a favourite flag — the view asks `selectPageForReader`.
+ */
+export type PageGate = Omit<Page, "isFavourite">;
 
 const SELECTED_COLUMNS = [
   "writingPage.id",
@@ -28,17 +48,35 @@ const SELECTED_COLUMNS = [
   "writingPage.title",
   "writingPage.createdBy",
   "writingPage.createdAt",
-  "writingPage.updatedAt",
+  "writingPage.lastActivityAt",
+  "writingPage.folderId",
   "writingPage.updatedBy",
 ] as const;
+
+/**
+ * The same, plus whether this reader has favourited it. Takes the reader because a favourite is a
+ * fact about the pair, and the join is bound to their id so no query here can see another
+ * member's.
+ */
+function pagesForReader(
+  readerId: string,
+  executor: typeof db | Transaction = db,
+) {
+  return withFavourite(
+    pagesWithNames(executor),
+    "writing_page",
+    "writingPage.id",
+    readerId,
+  );
+}
 
 /**
  * Both names are joined rather than stored, so they follow a rename, and both tolerate a
  * deleted account. The editor comes from a subquery for the reason `writing_post_service`
  * gives: a second alias on `user` widens the builder's table set, and this is a key lookup.
  */
-function pagesWithNames() {
-  return db
+function pagesWithNames(executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("writingPage")
     .leftJoin("user", "user.id", "writingPage.createdBy")
     .select((eb) => [
@@ -51,11 +89,17 @@ function pagesWithNames() {
     ]);
 }
 
-/** Every page of a group, oldest first — the rail shows them in the order they were made. */
-async function listPages(writingGroupId: string): Promise<PageSummary[]> {
-  return await pagesWithNames()
+/**
+ * Every page of a group, most recently written in first — the tree assembles them by `folderId`,
+ * and orders leaves by activity the way a thread's strip did.
+ */
+async function listPages(
+  writingGroupId: string,
+  readerId: string,
+): Promise<PageSummary[]> {
+  return await pagesForReader(readerId)
     .where("writingPage.writingGroupId", "=", writingGroupId)
-    .orderBy("writingPage.createdAt", "asc")
+    .orderBy("writingPage.lastActivityAt", "desc")
     .execute();
 }
 
@@ -63,7 +107,7 @@ async function listPages(writingGroupId: string): Promise<PageSummary[]> {
 async function selectPage(
   writingGroupId: string,
   pageId: string,
-): Promise<Page | undefined> {
+): Promise<PageGate | undefined> {
   return await pagesWithNames()
     .select((eb) =>
       eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
@@ -78,29 +122,111 @@ async function insertPage(
   title: string,
   document: PostDocument,
   createdBy: string,
+  /** Null puts it at the root of the group's tree, which is where a page starts. */
+  folderId: string | null = null,
 ): Promise<Page> {
-  const { id } = await db
-    .insertInto("writingPage")
-    .values({
-      writingGroupId,
-      title,
-      // An object, not a string: stringifying here stores a jsonb *string*.
-      document,
-      // Derived here and never accepted from the client, as a post's projection is.
-      text: documentToPlainText(document),
-      createdBy,
-      // The creator counts as the first editor, so a refusal can name somebody from the start.
-      updatedBy: createdBy,
-    })
-    .returning(["id"])
-    .executeTakeFirstOrThrow();
+  return await db.transaction().execute(async (transaction) => {
+    const { id } = await transaction
+      .insertInto("writingPage")
+      .values({
+        writingGroupId,
+        title,
+        folderId,
+        // An object, not a string: stringifying here stores a jsonb *string*.
+        document,
+        // Derived here and never accepted from the client, as a post's projection is.
+        text: documentToPlainText(document),
+        createdBy,
+        // The creator counts as the first editor, so a refusal can name somebody from the start.
+        updatedBy: createdBy,
+      })
+      .returning(["id"])
+      .executeTakeFirstOrThrow();
 
-  // Re-read rather than RETURNING, which cannot reach the joined names.
-  const page = await selectPage(writingGroupId, id);
-  if (page === undefined) {
-    throw new Error(`Page ${id} could not be read back after writing it`);
+    await NotificationService.insertGroupActivityNotifications(transaction, {
+      type: "new_writing_page",
+      writingGroupId,
+      writingPageId: id,
+      actorId: createdBy,
+    });
+
+    // Re-read rather than RETURNING, which cannot reach the joined names.
+    const page = await pagesWithNames(transaction)
+      .select((eb) =>
+        eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
+      )
+      .where("writingPage.writingGroupId", "=", writingGroupId)
+      .where("writingPage.id", "=", id)
+      .executeTakeFirstOrThrow();
+
+    // Writing a page does not favourite it — that is the member's own act, available the moment
+    // this returns. Stated rather than joined, inside the transaction that made it.
+    return { ...page, isFavourite: false };
+  });
+}
+
+/** The page as its own view reads it, favourite included. */
+async function selectPageForReader(
+  writingGroupId: string,
+  pageId: string,
+  readerId: string,
+): Promise<Page | undefined> {
+  return await pagesForReader(readerId)
+    .select((eb) =>
+      eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
+    )
+    .where("writingPage.writingGroupId", "=", writingGroupId)
+    .where("writingPage.id", "=", pageId)
+    .executeTakeFirst();
+}
+
+/** A page with the group it belongs to, which a cross-group list has to name. */
+export type FoundPage = PageSummary & { writingGroupTitle: string };
+
+/**
+ * Pages across every group the member may see: their own, and public ones they have not joined —
+ * the same rule threads use, applied to the other leaf.
+ *
+ * Matched on the title *and* the prose, through the `text` projection. A thread has no body, so
+ * this is the one place a leaf can match on something the result row does not show; the row still
+ * carries only the title, as every other kind's does.
+ */
+function listVisiblePages(
+  user: User,
+  query: ListQuery,
+): Promise<ListResults<FoundPage>> {
+  let pages = pagesForReader(user.id)
+    .innerJoin(
+      "writingGroup",
+      "writingGroup.id",
+      "writingPage.writingGroupId",
+    )
+    .leftJoin(
+      "userInWritingGroup",
+      (join) =>
+        join
+          .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+          .on("userInWritingGroup.userId", "=", user.id),
+    )
+    .where((eb) =>
+      eb.or([
+        eb("writingGroup.visibility", "=", "public"),
+        eb("userInWritingGroup.userId", "is not", null),
+      ])
+    )
+    .select("writingGroup.title as writingGroupTitle");
+
+  if (query.search !== undefined) {
+    const term = searchPattern(query.search);
+    pages = pages.where((eb) =>
+      eb.or([
+        eb("writingPage.title", "ilike", term),
+        eb("writingPage.text", "ilike", term),
+      ])
+    );
   }
-  return page;
+
+  return listResultsWithCount(pages, query);
 }
 
 export type UpdateOutcome =
@@ -109,7 +235,7 @@ export type UpdateOutcome =
   | { kind: "stale"; page: Page };
 
 /**
- * Conditional on the `updatedAt` the editor loaded, so two members cannot silently overwrite
+ * Conditional on the `lastActivityAt` the editor loaded, so two members cannot silently overwrite
  * one another: a page has no per-member draft the way a post does, and no history to recover
  * from. `undefined` means no such page in that group.
  */
@@ -127,19 +253,40 @@ async function updatePage(
       document: values.document,
       text: documentToPlainText(values.document),
       updatedBy,
-      // `updated_at` is the `set_updated_at` trigger's to write.
+      // `last_activity_at` is the trigger's to write.
     })
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", pageId)
-    .where("updatedAt", "=", loadedAt)
+    .where("lastActivityAt", "=", loadedAt)
     .returning(["id"])
     .executeTakeFirst();
 
-  const page = await selectPage(writingGroupId, pageId);
+  // The editor's own favourite, because the response carries it like every other page does.
+  const page = await selectPageForReader(writingGroupId, pageId, updatedBy);
   if (page === undefined) {
     return undefined;
   }
   return { kind: written === undefined ? "stale" : "updated", page };
+}
+
+/**
+ * Only `folder_id`, which is what keeps this out of the activity trigger — see
+ * `20260902160000_activity_ignores_a_move.sql`. `undefined` means no such page in that group.
+ */
+async function movePage(
+  writingGroupId: string,
+  pageId: string,
+  folderId: string | null,
+  readerId: string,
+): Promise<Page | undefined> {
+  await db
+    .updateTable("writingPage")
+    .set({ folderId })
+    .where("writingGroupId", "=", writingGroupId)
+    .where("id", "=", pageId)
+    .execute();
+
+  return await selectPageForReader(writingGroupId, pageId, readerId);
 }
 
 async function deletePage(
@@ -155,8 +302,11 @@ async function deletePage(
 
 export const WritingPageService = {
   listPages,
+  listVisiblePages,
   selectPage,
+  selectPageForReader,
   insertPage,
   updatePage,
+  movePage,
   deletePage,
 };

@@ -6,7 +6,7 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { mayModify } from "@/src/service/writing_group_authorization.ts";
+import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -35,9 +35,9 @@ const PAGE_PARAMS = z.object({
 const UPDATE_PAGE_BODY = z.object({
   title: PAGE_TITLE_SCHEMA,
   document: DOCUMENT_SCHEMA,
-  loadedAt: WRITING_PAGE_SCHEMA.shape.updatedAt.openapi({
+  loadedAt: WRITING_PAGE_SCHEMA.shape.lastActivityAt.openapi({
     description:
-      "The page's `updatedAt` as it was received, unchanged: it is compared exactly, and a round trip through a date type drops the microseconds and refuses every save.",
+      "The page's `lastActivityAt` as it was received, unchanged: it is compared exactly, and a round trip through a date type drops the microseconds and refuses every save.",
   }),
 });
 
@@ -48,7 +48,7 @@ export default new OpenAPIHono().openapi(
     tags: [PAGES_TAG],
     summary: "Save a page the current user wrote or administers",
     description:
-      "Refused with 409 when somebody else saved since the page was loaded, so an edit cannot be overwritten unseen. Only its author, or an administrator of the group, may change it.",
+      "Refused with 409 when somebody else saved since the page was loaded, so an edit cannot be overwritten unseen. Any writer or administrator may change it: a page is material the group keeps, not a post that belongs to whoever wrote it.",
     operationId: "updatePage",
     middleware: authenticated,
     request: {
@@ -65,7 +65,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.Forbidden]: {
-        description: "Only the author or an administrator may change it",
+        description: "Only writers and administrators can change a page",
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.NotFound]: {
@@ -104,9 +104,9 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }
 
-    if (!mayModify(role, page.createdBy, user.id)) {
+    if (!mayAct(role, "page:change")) {
       return c.json(
-        { error: "Only the author or an administrator can change a page" },
+        { error: "Only writers and administrators can change a page" },
         STATUS_CODE.Forbidden,
       );
     }

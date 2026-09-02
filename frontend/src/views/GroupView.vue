@@ -14,29 +14,22 @@ import { ApiError } from '@/lib/api/apiFetch'
 import { openChatDialog } from '@/lib/chat/openChatDialog'
 import { paragraphs } from '@/lib/format/formatText'
 import { useGetCurrentUser } from '@/api/auth/auth'
-import { useListThreads } from '@/api/threads/threads'
 import { useListMemberships } from '@/api/memberships/memberships'
-import type {
-  GetGroup200,
-  ListMemberships200ResultsItem,
-  ListThreads200ResultsItem,
-} from '@/api/models'
+import type { GetGroup200, ListMemberships200ResultsItem } from '@/api/models'
 import { Flag, MessageCircle, Pencil } from '@lucide/vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
+import FolderTree from '@/components/folder/FolderTree.vue'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import GroupMembers from '@/components/group/GroupMembers.vue'
-import ThreadTabs from '@/components/thread/ThreadTabs.vue'
 import StepList from '@/components/context/StepList.vue'
 import StoryStatus from '@/components/context/StoryStatus.vue'
 import RailBlock from '@/components/context/RailBlock.vue'
 import { useSteps } from '@/composables/useSteps'
 import StoryDetails from '@/components/context/StoryDetails.vue'
 import FileList from '@/components/context/FileList.vue'
-import PageList from '@/components/context/PageList.vue'
 import MemberList from '@/components/context/MemberList.vue'
 import { Button } from '@/components/ui/button'
 import GroupInvitation from '@/components/group/GroupInvitation.vue'
@@ -60,11 +53,10 @@ async function refreshGroup() {
 /** As the paragraphs its author typed, like a story idea's synopsis. A post is a document. */
 const synopsis = computed<string[]>(() => paragraphs(group.value?.synopsis ?? ''))
 
-// Every thread, newest activity first — the order is the endpoint's now, not a parameter.
-const { data: threadsData } = useListThreads(groupId)
-const threads = computed<ListThreads200ResultsItem[]>(() =>
-  threadsData.value?.status === 200 ? threadsData.value.data.results : [],
+const currentUserId = computed<string | undefined>(() =>
+  currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
 )
+
 const { data: membershipsData } = useListMemberships(groupId)
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
@@ -96,12 +88,6 @@ const router = useRouter()
 
 function goToGroups() {
   void router.push({ name: 'myGroups' })
-}
-
-const creatingThread = ref<boolean>(false)
-/** Creating a thread from the group opens it: that is what the member asked for. */
-function openThread(threadId: string) {
-  void router.push({ name: 'thread', params: { groupId: groupId.value, threadId } })
 }
 
 /** A private group answers 404 to a non-member, so staying here would show an error. */
@@ -144,14 +130,6 @@ async function askIntoGroup() {
     <template v-if="group">
       <GroupHeader :title="group.title" :visibility="group.visibility" :subtitle="group.subtitle" />
 
-      <!-- No thread is open here, so no tab is active; the strip is how one is chosen. -->
-      <ThreadTabs
-        :group-id="groupId"
-        :threads="threads"
-        :may-write="mayWrite"
-        @create="creatingThread = true"
-      />
-
       <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
         <div class="reading-column">
           <!-- Above the group's own text: what to do about the invitation comes before
@@ -169,11 +147,6 @@ async function askIntoGroup() {
               {{ paragraph }}
             </p>
           </div>
-
-          <p v-if="threads.length === 0" class="mt-7 text-body text-ink-4">
-            Noch keine Threads in dieser Gruppe.
-            <template v-if="mayWrite">Leg den ersten an.</template>
-          </p>
 
           <!-- Only here, not in GroupHeader: that header also renders on the thread page,
                where editing the group would sit beside the writing and pull attention. -->
@@ -227,6 +200,18 @@ async function askIntoGroup() {
             {{ conversationError }}
           </p>
 
+          <!-- The group's structure, and the only place it is changed: the rails elsewhere read
+               the same tree without actions. Above the members, because what the group writes
+               comes before who is in it. -->
+          <FolderTree
+            v-if="group"
+            class="mt-10"
+            :group-id="groupId"
+            :may-write="mayWrite"
+            :may-administer="mayAdminister"
+            :current-user-id="currentUserId"
+          />
+
           <GroupMembers
             :group-id="groupId"
             :memberships="memberships"
@@ -271,9 +256,6 @@ async function askIntoGroup() {
       <RailBlock label="Die Geschichte" :collapsible="collapsible">
         <StoryDetails v-if="group" :group="group" />
       </RailBlock>
-      <RailBlock label="Seiten" :collapsible="collapsible">
-        <PageList :group-id="groupId" :may-write="mayWrite" />
-      </RailBlock>
       <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
         <FileList />
       </RailBlock>
@@ -291,6 +273,5 @@ async function askIntoGroup() {
     :subject="group.title"
   />
 
-  <ThreadDialog v-model:open="creatingThread" :group-id="groupId" @created="openThread" />
   <GroupDialog v-if="group" v-model:open="editingGroup" :group="group" />
 </template>

@@ -33,7 +33,8 @@ const props = defineProps<{
 const sections = computed(() =>
   [
     { key: 'groups', heading: 'Gruppen', section: props.results?.groups },
-    { key: 'threads', heading: 'Threads', section: props.results?.threads },
+    { key: 'threads', heading: 'Themen', section: props.results?.threads },
+    { key: 'pages', heading: 'Seiten', section: props.results?.pages },
     { key: 'storyIdeas', heading: 'Storyideen', section: props.results?.storyIdeas },
     { key: 'users', heading: 'Mitglieder', section: props.results?.users },
   ].filter((entry) => (entry.section?.results.length ?? 0) > 0),
@@ -59,6 +60,10 @@ function groupTarget(id: string): RouteLocationRaw {
 
 function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
   return { name: 'thread', params: { groupId, threadId } }
+}
+
+function pageTarget(groupId: string, pageId: string): RouteLocationRaw {
+  return { name: 'page', params: { groupId, pageId } }
 }
 </script>
 
@@ -116,6 +121,22 @@ function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
             </span>
             <!-- A result that can come from anywhere says where it came from. -->
             <span class="truncate text-[11.5px] text-ink-6">{{ thread.writingGroupTitle }}</span>
+          </RouterLink>
+        </template>
+
+        <!-- A page can match on its prose, but the row shows a title like every other kind's. -->
+        <template v-else-if="entry.key === 'pages'">
+          <RouterLink
+            v-for="page in results?.pages.results"
+            :key="page.id"
+            :to="pageTarget(page.writingGroupId, page.id)"
+            class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
+          >
+            <span class="flex items-center gap-2 text-[13px] text-ink-2">
+              <span class="truncate">{{ page.title }}</span>
+              <FavouriteMark v-if="page.isFavourite" />
+            </span>
+            <span class="truncate text-[11.5px] text-ink-6">{{ page.writingGroupTitle }}</span>
           </RouterLink>
         </template>
 

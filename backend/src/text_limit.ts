@@ -37,8 +37,11 @@ export const TEXT_LIMIT = {
    */
   storyMetadataText: 500,
   threadTitle: 120,
-  /** A page's name in the rail, on one line, like a thread's. */
+  /** A page's name in the tree, on one line, like a thread's. */
   pageTitle: 120,
+  folderTitle: 120,
+  /** One line under the folder's title, saying what belongs in it. */
+  folderDescription: 500,
   /** Same bounds as the group it may become; an idea is a pitch, not the story. */
   storyIdeaTitle: 120,
   storyIdeaSubtitle: 120,

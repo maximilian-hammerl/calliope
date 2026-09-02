@@ -6,14 +6,18 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { mayWrite } from "@/src/service/writing_group_authorization.ts";
+import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import {
+  WRITING_GROUP_SCHEMA,
+  WRITING_PAGE_SCHEMA,
+} from "@/src/database/schema.ts";
 import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { PAGE_TITLE_SCHEMA } from "./page_schema.ts";
@@ -24,6 +28,8 @@ const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 const CREATE_PAGE_BODY = z.object({
   title: PAGE_TITLE_SCHEMA,
   document: DOCUMENT_SCHEMA,
+  // Absent puts it at the root of the group's tree. Moving it later is its own operation.
+  folderId: WRITING_PAGE_SCHEMA.shape.folderId.optional(),
 });
 
 export default new OpenAPIHono().openapi(
@@ -54,7 +60,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.NotFound]: {
-        description: "No such group, or it is private and not the user's",
+        description: "No such group, or no such folder in it",
         content: jsonContent(ERROR_RESPONSE),
       },
       ...BAD_REQUEST_RESPONSE,
@@ -63,7 +69,7 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const { groupId } = c.req.valid("param");
-    const { title, document } = c.req.valid("json");
+    const { title, document, folderId } = c.req.valid("json");
     const user = c.get("user");
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. No minimum:
@@ -80,11 +86,19 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
     }
 
-    if (!mayWrite(role)) {
+    if (!mayAct(role, "page:create")) {
       return c.json(
         { error: "Only writers and administrators can add pages" },
         STATUS_CODE.Forbidden,
       );
+    }
+
+    // Resolved against this group, so a folder id from another group cannot be borrowed.
+    if (folderId !== undefined && folderId !== null) {
+      const folder = await WritingFolderService.selectFolder(groupId, folderId);
+      if (folder === undefined) {
+        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
+      }
     }
 
     const page = await WritingPageService.insertPage(
@@ -92,6 +106,7 @@ export default new OpenAPIHono().openapi(
       title,
       document,
       user.id,
+      folderId ?? null,
     );
     return c.json(page, STATUS_CODE.Created);
   },

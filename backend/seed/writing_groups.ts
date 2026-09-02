@@ -5,7 +5,14 @@ import type {
   WritingGroup as DatabaseWritingGroup,
 } from "@/src/database/schema.ts";
 import { USER } from "@/seed/accounts.ts";
-import { groupId, postId, stepId, threadId } from "@/seed/ids.ts";
+import {
+  folderId,
+  groupId,
+  pageId,
+  postId,
+  stepId,
+  threadId,
+} from "@/seed/ids.ts";
 
 type Member = {
   user: string;
@@ -62,7 +69,30 @@ export type GroupFixture =
     /** Founder. Also has to appear in `members` as a joined administrator; `write.ts` checks. */
     by: string;
     members: Member[];
-    threads?: Array<{ id: string; title: string; by: string; posts: Post[] }>;
+    /**
+     * Folders, deepest last: `write.ts` inserts them in order and derives `depth` from the
+     * parent, so a child may only name a folder written before it.
+     */
+    folders?: Array<
+      {
+        id: string;
+        title: string;
+        by: string;
+        in?: string;
+        description?: string;
+      }
+    >;
+    pages?: Array<
+      { id: string; title: string; by: string; in?: string; text: string }
+    >;
+    threads?: Array<{
+      id: string;
+      title: string;
+      by: string;
+      posts: Post[];
+      /** Which folder it sits in. Absent leaves it at the root, as most threads are. */
+      in?: string;
+    }>;
     steps?: Step[];
   };
 
@@ -216,6 +246,56 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     tense: "past",
     perspective: "third_person_limited",
     by: USER.federkiel,
+    // A nested tree, so the rail and the group page have something with depth in them on a
+    // fresh checkout. Deepest last: `write.ts` derives each folder's depth from its parent.
+    folders: [
+      {
+        id: folderId(1),
+        title: "Weltenbau",
+        by: USER.federkiel,
+        description: "Orte, Regeln und was auf dem Berg sonst gilt.",
+      },
+      {
+        id: folderId(2),
+        title: "Stadt A",
+        by: USER.federkiel,
+        in: folderId(1),
+      },
+      { id: folderId(3), title: "Personen", by: USER.nachtschreiber },
+    ],
+    pages: [
+      {
+        id: pageId(1),
+        title: "Der Berg",
+        by: USER.federkiel,
+        in: folderId(1),
+        text:
+          "Der Berg ist kleiner als sein Ruf. Wer oben ankommt, merkt es zuerst am Wind.",
+      },
+      {
+        id: pageId(2),
+        title: "Das Kino",
+        by: USER.tintenfleck,
+        in: folderId(2),
+        text: "Ein Kino mit zwei Sälen, von denen einer immer geschlossen ist.",
+      },
+      {
+        id: pageId(3),
+        title: "Der Zwerg",
+        by: USER.nachtschreiber,
+        in: folderId(3),
+        text:
+          "Klein, zauberhaft, und mit einer Liste, auf der sein Name nicht stand.",
+      },
+      {
+        // At the root, so the tree shows a leaf above the folders as the ordering intends.
+        id: pageId(4),
+        title: "Wie wir hier schreiben",
+        by: USER.federkiel,
+        text:
+          "Ein Beitrag pro Szene. Wer eine Figur übernimmt, sagt es vorher an.",
+      },
+    ],
     members: [
       { user: USER.federkiel, role: "administrator" },
       { user: USER.nachtschreiber, role: "administrator" },
@@ -254,6 +334,9 @@ const WRITTEN_GROUPS: GroupFixture[] = [
       {
         id: threadId(4),
         title: "Figuren",
+        // Reference material kept as a thread, which is the misuse #109 is about — seeded inside
+        // the folder beside the page that replaces it, so the difference is visible.
+        in: folderId(3),
         by: USER.nachtschreiber,
         posts: [
           {

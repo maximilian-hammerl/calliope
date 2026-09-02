@@ -15,18 +15,19 @@ CREATE TABLE public.favourite
     writing_group_id  UUID                            REFERENCES public.writing_group (id) ON UPDATE CASCADE ON DELETE CASCADE,
     writing_thread_id UUID                            REFERENCES public.writing_thread (id) ON UPDATE CASCADE ON DELETE CASCADE,
     writing_post_id   UUID                            REFERENCES public.writing_post (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    writing_page_id   UUID                            REFERENCES public.writing_page (id) ON UPDATE CASCADE ON DELETE CASCADE,
     story_idea_id     UUID                            REFERENCES public.story_idea (id) ON UPDATE CASCADE ON DELETE CASCADE,
     chat_group_id     UUID                            REFERENCES public.chat_group (id) ON UPDATE CASCADE ON DELETE CASCADE,
 
     created_at        TIMESTAMPTZ            NOT NULL DEFAULT now(),
 
     CONSTRAINT favourite_names_exactly_one_thing CHECK (
-        num_nonnulls(writing_group_id, writing_thread_id, writing_post_id, story_idea_id,
-                     chat_group_id) = 1
+        num_nonnulls(writing_group_id, writing_thread_id, writing_post_id, writing_page_id,
+                     story_idea_id, chat_group_id) = 1
         )
 );
 
--- One favourite per member per thing. NULLS NOT DISTINCT because four of the five references are
+-- One favourite per member per thing. NULLS NOT DISTINCT because five of the six references are
 -- always NULL and Postgres would otherwise treat every row as unique — the same reason `report`'s
 -- index needs it. Unlike that one it needs no predicate: a favourite has no status to be in, and
 -- no reference that can empty under it.
@@ -36,7 +37,7 @@ CREATE TABLE public.favourite
 -- the cascade, which is why the per-kind indexes below exist.
 CREATE UNIQUE INDEX favourite_one_per_member_idx
     ON public.favourite (user_id, writing_group_id, writing_thread_id, writing_post_id,
-                         story_idea_id, chat_group_id)
+                         writing_page_id, story_idea_id, chat_group_id)
     NULLS NOT DISTINCT;
 
 -- Per kind, because the cascade needs one and the index above cannot serve it: it leads with
@@ -49,6 +50,9 @@ CREATE INDEX favourite_writing_thread_idx ON public.favourite (writing_thread_id
 
 CREATE INDEX favourite_writing_post_idx ON public.favourite (writing_post_id)
     WHERE writing_post_id IS NOT NULL;
+
+CREATE INDEX favourite_writing_page_idx ON public.favourite (writing_page_id)
+    WHERE writing_page_id IS NOT NULL;
 
 CREATE INDEX favourite_story_idea_idx ON public.favourite (story_idea_id)
     WHERE story_idea_id IS NOT NULL;

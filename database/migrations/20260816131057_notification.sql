@@ -7,6 +7,7 @@ CREATE TYPE public.notification_type AS ENUM (
     'visibility_changed_in_writing_group',
     'new_writing_thread',
     'new_writing_post',
+    'new_writing_page',
     'invited_to_chat_group'
     );
 
@@ -29,6 +30,7 @@ CREATE TABLE public.notification
     chat_group_id     UUID,
 
     writing_thread_id UUID                              REFERENCES public.writing_thread (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    writing_page_id   UUID                              REFERENCES public.writing_page (id) ON UPDATE CASCADE ON DELETE CASCADE,
     writing_post_id   UUID                              REFERENCES public.writing_post (id) ON UPDATE CASCADE ON DELETE CASCADE,
 
     created_at        TIMESTAMPTZ              NOT NULL DEFAULT now(),
@@ -63,26 +65,37 @@ CREATE TABLE public.notification
             WHEN 'invited_to_writing_group' THEN
                 writing_group_id IS NOT NULL AND chat_group_id IS NULL
                     AND writing_thread_id IS NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NULL
             WHEN 'invitation_accepted' THEN
                 writing_group_id IS NOT NULL AND chat_group_id IS NULL
                     AND writing_thread_id IS NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NULL
             WHEN 'visibility_changed_in_writing_group' THEN
                 writing_group_id IS NOT NULL AND chat_group_id IS NULL
                     AND writing_thread_id IS NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NULL
             WHEN 'role_changed_in_writing_group' THEN
                 writing_group_id IS NOT NULL AND chat_group_id IS NULL
                     AND writing_thread_id IS NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NULL
             WHEN 'new_writing_thread' THEN
                 writing_group_id IS NOT NULL AND chat_group_id IS NULL
                     AND writing_thread_id IS NOT NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NULL
             WHEN 'new_writing_post' THEN
                 writing_group_id IS NOT NULL AND chat_group_id IS NULL
                     AND writing_thread_id IS NOT NULL AND writing_post_id IS NOT NULL
+                    AND writing_page_id IS NULL
+            WHEN 'new_writing_page' THEN
+                writing_group_id IS NOT NULL AND chat_group_id IS NULL
+                    AND writing_thread_id IS NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NOT NULL
             -- A chat needs no per-message notification: the chat list counts unread from
             -- last_read_at, and a row per message would say the same thing twice, loudly.
             WHEN 'invited_to_chat_group' THEN
                 chat_group_id IS NOT NULL AND writing_group_id IS NULL
                     AND writing_thread_id IS NULL AND writing_post_id IS NULL
+                    AND writing_page_id IS NULL
             ELSE false
             END
         ),

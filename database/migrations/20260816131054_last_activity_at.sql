@@ -88,14 +88,18 @@ CREATE TRIGGER set_last_activity_at
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at();
 
+-- `UPDATE OF title` for the same reason as the thread's own trigger below: moving a thread
+-- into a folder is not activity in its group.
 CREATE TRIGGER set_last_activity_at_for_writing_group
-    AFTER INSERT OR UPDATE OR DELETE
+    AFTER INSERT OR UPDATE OF title OR DELETE
     ON public.writing_thread
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at_for_writing_group();
 
+-- Scoped to `title`, so re-parenting a thread does not read as writing in it — the same
+-- reasoning as the draft exemption above. A rename still counts.
 CREATE TRIGGER set_last_activity_at
-    BEFORE UPDATE
+    BEFORE UPDATE OF title
     ON public.writing_thread
     FOR EACH ROW
 EXECUTE FUNCTION public.set_last_activity_at();

@@ -4,7 +4,7 @@ import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { mayModify } from "@/src/service/writing_group_authorization.ts";
+import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -27,7 +27,7 @@ export default new OpenAPIHono().openapi(
     method: "delete",
     path: "/",
     tags: [PAGES_TAG],
-    summary: "Delete a page the current user wrote or administers",
+    summary: "Delete a page",
     operationId: "deletePage",
     middleware: authenticated,
     request: { params: PAGE_PARAMS },
@@ -41,7 +41,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.Forbidden]: {
-        description: "Only the author or an administrator may delete it",
+        description: "Only writers and administrators can delete a page",
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.NotFound]: {
@@ -66,9 +66,9 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }
 
-    if (!mayModify(role, page.createdBy, user.id)) {
+    if (!mayAct(role, "page:delete")) {
       return c.json(
-        { error: "Only the author or an administrator may delete it" },
+        { error: "Only writers and administrators can delete a page" },
         STATUS_CODE.Forbidden,
       );
     }
