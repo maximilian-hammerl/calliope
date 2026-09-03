@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useVerifyEmailAddress } from '@/api/auth/auth'
 import { ApiError } from '@/lib/api/apiFetch'
 import { forgetCurrentUser } from '@/lib/auth/session'
+import NarrowPage from '@/components/layout/NarrowPage.vue'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -52,41 +53,39 @@ async function continueToApp() {
 </script>
 
 <template>
-  <main class="flex min-h-svh items-center justify-center px-6 py-12">
-    <div class="w-full max-w-[380px]">
-      <div class="flex flex-col gap-2">
-        <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-h1">
-          {{ status === 'done' ? 'E-Mail-Adresse bestätigt' : 'E-Mail-Adresse bestätigen' }}
-        </h1>
-      </div>
-
-      <div v-if="status === 'verifying'" class="mt-6 flex items-center gap-2 text-note text-ink-5">
-        <Spinner />
-        Einen Moment, wir prüfen deinen Link.
-      </div>
-
-      <template v-else-if="status === 'done'">
-        <p class="mt-5 text-note text-ink-5">
-          Deine E-Mail-Adresse ist bestätigt. Du kannst jetzt loslegen.
-        </p>
-
-        <Button class="mt-7 w-full" @click="continueToApp">Weiter</Button>
-      </template>
-
-      <template v-else>
-        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
-          <p>
-            Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
-            einziges Mal.
-          </p>
-          <p>Melde dich an, um dir einen neuen schicken zu lassen.</p>
-        </div>
-
-        <Button as-child class="mt-7 w-full">
-          <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
-        </Button>
-      </template>
+  <NarrowPage>
+    <div class="flex flex-col gap-2">
+      <CalliopeLogo :size="40" wordmark class="mb-1" />
+      <h1 class="text-h1">
+        {{ status === 'done' ? 'E-Mail-Adresse bestätigt' : 'E-Mail-Adresse bestätigen' }}
+      </h1>
     </div>
-  </main>
+
+    <div v-if="status === 'verifying'" class="mt-6 flex items-center gap-2 text-note text-ink-5">
+      <Spinner />
+      Einen Moment, wir prüfen deinen Link.
+    </div>
+
+    <template v-else-if="status === 'done'">
+      <p class="mt-5 text-note text-ink-5">
+        Deine E-Mail-Adresse ist bestätigt. Du kannst jetzt loslegen.
+      </p>
+
+      <Button class="mt-7 w-full" @click="continueToApp">Weiter</Button>
+    </template>
+
+    <template v-else>
+      <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
+        <p>
+          Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
+          einziges Mal.
+        </p>
+        <p>Melde dich an, um dir einen neuen schicken zu lassen.</p>
+      </div>
+
+      <Button as-child class="mt-7 w-full">
+        <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
+      </Button>
+    </template>
+  </NarrowPage>
 </template>

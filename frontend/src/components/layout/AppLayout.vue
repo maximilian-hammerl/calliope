@@ -28,6 +28,8 @@ const user = computed<GetCurrentUser200 | undefined>(() =>
       <slot />
     </main>
 
-    <BottomBar />
+    <!-- Signed out there is nowhere for it to lead: every destination bounces back to the
+         sign-in page. Same condition the top bar takes. -->
+    <BottomBar v-if="user" />
   </div>
 </template>

@@ -12,6 +12,7 @@ import {
   passwordSchema,
 } from '@/lib/validation/fieldSchemas'
 import { forgetCurrentUser } from '@/lib/auth/session'
+import NarrowPage from '@/components/layout/NarrowPage.vue'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -86,99 +87,97 @@ const form = useForm({
 </script>
 
 <template>
-  <main class="flex min-h-svh items-center justify-center px-6 py-12">
-    <div class="w-full max-w-[380px]">
-      <div class="flex flex-col gap-2">
-        <CalliopeLogo :size="40" wordmark class="mb-1" />
-        <h1 class="text-h1">
-          {{ status === 'done' ? 'Passwort geändert' : 'Neues Passwort' }}
-        </h1>
-        <p v-if="status === 'form'" class="text-note text-ink-5">
-          Vergib ein neues Passwort für dein Konto.
+  <NarrowPage>
+    <div class="flex flex-col gap-2">
+      <CalliopeLogo :size="40" wordmark class="mb-1" />
+      <h1 class="text-h1">
+        {{ status === 'done' ? 'Passwort geändert' : 'Neues Passwort' }}
+      </h1>
+      <p v-if="status === 'form'" class="text-note text-ink-5">
+        Vergib ein neues Passwort für dein Konto.
+      </p>
+    </div>
+
+    <template v-if="status === 'done'">
+      <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
+        <p>
+          Dein neues Passwort ist gespeichert. Du wurdest auf allen Geräten abgemeldet und kannst
+          dich jetzt neu anmelden.
         </p>
       </div>
 
-      <template v-if="status === 'done'">
-        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
-          <p>
-            Dein neues Passwort ist gespeichert. Du wurdest auf allen Geräten abgemeldet und kannst
-            dich jetzt neu anmelden.
-          </p>
-        </div>
+      <Button as-child class="mt-7 w-full">
+        <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
+      </Button>
+    </template>
 
-        <Button as-child class="mt-7 w-full">
+    <template v-else-if="status === 'expired'">
+      <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
+        <p>
+          Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
+          einziges Mal.
+        </p>
+        <p>Fordere einen neuen an, dein Passwort ist unverändert geblieben.</p>
+      </div>
+
+      <div class="mt-7 flex flex-col gap-3">
+        <Button as-child>
+          <RouterLink :to="{ name: 'forgotPassword' }">Neuen Link anfordern</RouterLink>
+        </Button>
+        <Button as-child variant="ghost">
           <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
         </Button>
-      </template>
+      </div>
+    </template>
 
-      <template v-else-if="status === 'expired'">
-        <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
-          <p>
-            Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
-            einziges Mal.
-          </p>
-          <p>Fordere einen neuen an, dein Passwort ist unverändert geblieben.</p>
-        </div>
+    <template v-else>
+      <form
+        ref="formElement"
+        class="mt-7 flex flex-col gap-5"
+        novalidate
+        @submit.prevent="form.handleSubmit()"
+      >
+        <Alert v-if="formError" variant="destructive" role="alert">
+          <AlertDescription>{{ formError }}</AlertDescription>
+        </Alert>
 
-        <div class="mt-7 flex flex-col gap-3">
-          <Button as-child>
-            <RouterLink :to="{ name: 'forgotPassword' }">Neuen Link anfordern</RouterLink>
-          </Button>
-          <Button as-child variant="ghost">
-            <RouterLink :to="{ name: 'login' }">Zur Anmeldung</RouterLink>
-          </Button>
-        </div>
-      </template>
+        <FieldGroup>
+          <form.Field name="password" :validators="{ onSubmit: PASSWORD }">
+            <template v-slot="{ field }">
+              <FormTextField
+                :field="field"
+                label="Neues Passwort"
+                type="password"
+                :maxlength="LIMIT.password.maxLength"
+                autocomplete="new-password"
+              />
+            </template>
+          </form.Field>
 
-      <template v-else>
-        <form
-          ref="formElement"
-          class="mt-7 flex flex-col gap-5"
-          novalidate
-          @submit.prevent="form.handleSubmit()"
-        >
-          <Alert v-if="formError" variant="destructive" role="alert">
-            <AlertDescription>{{ formError }}</AlertDescription>
-          </Alert>
+          <form.Field
+            name="passwordConfirmation"
+            :validators="{
+              onSubmit: ({ value, fieldApi }) =>
+                passwordRepeatMessage(REPEAT, value, fieldApi.form.getFieldValue('password')),
+            }"
+          >
+            <template v-slot="{ field }">
+              <FormTextField
+                :field="field"
+                label="Neues Passwort wiederholen"
+                type="password"
+                :maxlength="LIMIT.password.maxLength"
+                autocomplete="new-password"
+              />
+            </template>
+          </form.Field>
+        </FieldGroup>
 
-          <FieldGroup>
-            <form.Field name="password" :validators="{ onSubmit: PASSWORD }">
-              <template v-slot="{ field }">
-                <FormTextField
-                  :field="field"
-                  label="Neues Passwort"
-                  type="password"
-                  :maxlength="LIMIT.password.maxLength"
-                  autocomplete="new-password"
-                />
-              </template>
-            </form.Field>
-
-            <form.Field
-              name="passwordConfirmation"
-              :validators="{
-                onSubmit: ({ value, fieldApi }) =>
-                  passwordRepeatMessage(REPEAT, value, fieldApi.form.getFieldValue('password')),
-              }"
-            >
-              <template v-slot="{ field }">
-                <FormTextField
-                  :field="field"
-                  label="Neues Passwort wiederholen"
-                  type="password"
-                  :maxlength="LIMIT.password.maxLength"
-                  autocomplete="new-password"
-                />
-              </template>
-            </form.Field>
-          </FieldGroup>
-
-          <Button type="submit" :disabled="isPending">
-            <Spinner v-if="isPending" />
-            Passwort speichern
-          </Button>
-        </form>
-      </template>
-    </div>
-  </main>
+        <Button type="submit" :disabled="isPending">
+          <Spinner v-if="isPending" />
+          Passwort speichern
+        </Button>
+      </form>
+    </template>
+  </NarrowPage>
 </template>
