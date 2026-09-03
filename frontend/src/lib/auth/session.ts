@@ -25,7 +25,16 @@ export async function fetchCurrentUser(): Promise<GetCurrentUser200 | undefined>
   }
 }
 
-/** Drops the cached session so the next guard run has to ask the API again. */
+/**
+ * Drops the cached session so the next guard run has to ask the API again — and makes anything
+ * already watching it ask too.
+ *
+ * `reset`, not `remove`: removing a query orphans its live observers, and `AppLayout` holds one
+ * for the whole session now that the frame is mounted once. Signing in left the bars missing and
+ * the signed-out footer showing until a reload, because the guard re-asked through
+ * `ensureQueryData` while the frame's own observer sat on nothing. It never showed while each
+ * page rendered its own `AppLayout`: navigating destroyed the observer and built a new one.
+ */
 export function forgetCurrentUser(): void {
-  queryClient.removeQueries({ queryKey: getGetCurrentUserQueryKey() })
+  void queryClient.resetQueries({ queryKey: getGetCurrentUserQueryKey() })
 }
