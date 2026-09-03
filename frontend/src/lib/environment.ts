@@ -10,7 +10,7 @@ export const ENVIRONMENTS = ['development', 'testing', 'staging', 'production'] 
 export type Environment = (typeof ENVIRONMENTS)[number]
 
 function readEnvironment(): Environment {
-  const value: unknown = import.meta.env.VITE_ENVIRONMENT
+  const value: unknown = import.meta.env.PUBLIC_ENVIRONMENT
 
   // Anything unrecognised is the least trustworthy state, never production: an instance that
   // silently claims to be production is how somebody loses what they wrote.

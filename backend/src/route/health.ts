@@ -18,7 +18,7 @@ const hostname = new URL(getRequiredEnvVariable("HOST_URL")).hostname;
 
 // Stamped by deploy.sh, so a deploy can prove the code it just pushed is the code answering.
 // Optional: nothing stamps it when the backend is run by hand.
-const releaseId = getOptionalEnvVariable("GIT_COMMIT");
+const releaseId = getOptionalEnvVariable("PUBLIC_GIT_COMMIT");
 
 async function response() {
   const now = Temporal.Now.zonedDateTimeISO();

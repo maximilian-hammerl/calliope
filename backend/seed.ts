@@ -27,7 +27,7 @@ function assertSeedable(): void {
   // never get them — not even with --force, which is exactly the flag somebody reaches for.
   if (!SEEDABLE.includes(ENVIRONMENT)) {
     console.error(
-      `Refusing to seed: ENVIRONMENT is "${ENVIRONMENT}". Seed data is only for ${
+      `Refusing to seed: PUBLIC_ENVIRONMENT is "${ENVIRONMENT}". Seed data is only for ${
         SEEDABLE.join(" and ")
       }.`,
     );

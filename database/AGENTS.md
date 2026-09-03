@@ -7,9 +7,9 @@ conventions shared with the other projects.
 ## Migrations may be edited in place until a staging or production instance exists
 
 The rule hangs on the environments, not on a feeling about how finished the product is.
-`ENVIRONMENT` is one of `development`, `testing`, `staging` or `production`, and a `testing`
+`PUBLIC_ENVIRONMENT` is one of `development`, `testing`, `staging` or `production`, and a `testing`
 instance is one whose database is reset when a migration calls for it — that is what the word
-means here, and it is written into `.example.deploy.env`.
+means here, and it is written into `.example.env`.
 
 **While the only deployed instance is `testing`**, a schema change is made **by editing the
 migration that created the table** rather than by stacking an `ALTER` on top. The files stay

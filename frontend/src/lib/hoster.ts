@@ -11,10 +11,10 @@ export type Hoster = {
 }
 
 export const HOSTER: Hoster = {
-  name: getRequiredEnvVariable(import.meta.env.VITE_HOSTER_NAME, 'VITE_HOSTER_NAME'),
-  street: getOptionalEnvVariable(import.meta.env.VITE_HOSTER_STREET),
-  postalCode: getOptionalEnvVariable(import.meta.env.VITE_HOSTER_POSTAL_CODE),
-  city: getOptionalEnvVariable(import.meta.env.VITE_HOSTER_CITY),
+  name: getRequiredEnvVariable(import.meta.env.PUBLIC_HOSTER_NAME, 'PUBLIC_HOSTER_NAME'),
+  street: getOptionalEnvVariable(import.meta.env.PUBLIC_HOSTER_STREET),
+  postalCode: getOptionalEnvVariable(import.meta.env.PUBLIC_HOSTER_POSTAL_CODE),
+  city: getOptionalEnvVariable(import.meta.env.PUBLIC_HOSTER_CITY),
 }
 
 export const HOSTER_ADDRESS: Address | undefined = addressFrom(HOSTER)

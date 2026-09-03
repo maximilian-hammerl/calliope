@@ -23,17 +23,17 @@ export type WebsiteOperator = {
 /** The build refuses without the two required ones; this is the same rule for the dev server. */
 export const WEBSITE_OPERATOR: WebsiteOperator = {
   name: getRequiredEnvVariable(
-    import.meta.env.VITE_WEBSITE_OPERATOR_NAME,
-    'VITE_WEBSITE_OPERATOR_NAME',
+    import.meta.env.PUBLIC_WEBSITE_OPERATOR_NAME,
+    'PUBLIC_WEBSITE_OPERATOR_NAME',
   ),
   emailAddress: getRequiredEnvVariable(
-    import.meta.env.VITE_WEBSITE_OPERATOR_EMAIL_ADDRESS,
-    'VITE_WEBSITE_OPERATOR_EMAIL_ADDRESS',
+    import.meta.env.PUBLIC_WEBSITE_OPERATOR_EMAIL_ADDRESS,
+    'PUBLIC_WEBSITE_OPERATOR_EMAIL_ADDRESS',
   ),
-  street: getOptionalEnvVariable(import.meta.env.VITE_WEBSITE_OPERATOR_STREET),
-  postalCode: getOptionalEnvVariable(import.meta.env.VITE_WEBSITE_OPERATOR_POSTAL_CODE),
-  city: getOptionalEnvVariable(import.meta.env.VITE_WEBSITE_OPERATOR_CITY),
-  telephoneNumber: getOptionalEnvVariable(import.meta.env.VITE_WEBSITE_OPERATOR_TELEPHONE_NUMBER),
+  street: getOptionalEnvVariable(import.meta.env.PUBLIC_WEBSITE_OPERATOR_STREET),
+  postalCode: getOptionalEnvVariable(import.meta.env.PUBLIC_WEBSITE_OPERATOR_POSTAL_CODE),
+  city: getOptionalEnvVariable(import.meta.env.PUBLIC_WEBSITE_OPERATOR_CITY),
+  telephoneNumber: getOptionalEnvVariable(import.meta.env.PUBLIC_WEBSITE_OPERATOR_TELEPHONE_NUMBER),
 }
 
 export const WEBSITE_OPERATOR_ADDRESS: Address | undefined = addressFrom(WEBSITE_OPERATOR)

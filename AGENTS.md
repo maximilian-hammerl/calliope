@@ -31,6 +31,9 @@ Each project carries its own conventions; read the one you are working in:
   stop. What was tried, what broke, and what it measured belong in the commit message, which
   can be as long as it needs to be. Self-explanatory names get no comment at all, and a
   convention written down here is not repeated at each use site.
+- **`PUBLIC_` is what puts a variable in the browser.** One root `.env` for everything, and Vite's
+  `envPrefix` exposes exactly the prefixed ones — so a new public value needs no mapping anywhere,
+  and the three the backend shares carry the prefix on both sides rather than existing twice.
 - **`type`, never `interface`.**
 - **Imports use each project's `@/` alias** rather than climbing out of deep directories.
   The two differ: in the backend it points at the project root, in the frontend at `src/`.

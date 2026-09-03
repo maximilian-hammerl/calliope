@@ -44,26 +44,26 @@ services:
     # the type check fails on imports that do not exist yet in a fresh checkout.
     command: sh -c "npm ci && npm run open-api:generate-client && npm run build"
     environment:
-      # Baked into the bundle at build time, so the tab title and the wordmark are right from
-      # the first paint. Renaming means rebuilding, which a deploy does anyway.
-      VITE_APP_NAME: ${APP_NAME:-Calliope}
+      # `PUBLIC_` marks a value the browser may see, so the build container is handed those and
+      # nothing else. Baked into the bundle: renaming means rebuilding, which a deploy does anyway.
+      PUBLIC_APP_NAME: ${PUBLIC_APP_NAME:-Calliope}
       # No fallback, unlike the name above: the build refuses to produce a bundle that cannot
       # say which instance it is for.
-      VITE_ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT must be set}
+      PUBLIC_ENVIRONMENT: ${PUBLIC_ENVIRONMENT:?PUBLIC_ENVIRONMENT must be set}
       # Stamped by deploy.sh so it can check that the bundle Caddy serves is the one it built.
       # Defaulted rather than required: a build by hand is not a deploy and has nothing to say.
-      VITE_COMMIT: ${GIT_COMMIT:-unknown}
-      # No fallback on the first two: the build refuses rather than ship nobody's name.
-      VITE_WEBSITE_OPERATOR_NAME: ${WEBSITE_OPERATOR_NAME:?WEBSITE_OPERATOR_NAME must be set}
-      VITE_WEBSITE_OPERATOR_EMAIL_ADDRESS: ${WEBSITE_OPERATOR_EMAIL_ADDRESS:?WEBSITE_OPERATOR_EMAIL_ADDRESS must be set}
-      VITE_WEBSITE_OPERATOR_STREET: ${WEBSITE_OPERATOR_STREET:-}
-      VITE_WEBSITE_OPERATOR_POSTAL_CODE: ${WEBSITE_OPERATOR_POSTAL_CODE:-}
-      VITE_WEBSITE_OPERATOR_CITY: ${WEBSITE_OPERATOR_CITY:-}
-      VITE_WEBSITE_OPERATOR_TELEPHONE_NUMBER: ${WEBSITE_OPERATOR_TELEPHONE_NUMBER:-}
-      VITE_HOSTER_NAME: ${HOSTER_NAME:?HOSTER_NAME must be set}
-      VITE_HOSTER_STREET: ${HOSTER_STREET:-}
-      VITE_HOSTER_POSTAL_CODE: ${HOSTER_POSTAL_CODE:-}
-      VITE_HOSTER_CITY: ${HOSTER_CITY:-}
+      PUBLIC_GIT_COMMIT: ${PUBLIC_GIT_COMMIT:-unknown}
+      # No fallback on the three names: the build refuses rather than ship nobody's.
+      PUBLIC_WEBSITE_OPERATOR_NAME: ${PUBLIC_WEBSITE_OPERATOR_NAME:?PUBLIC_WEBSITE_OPERATOR_NAME must be set}
+      PUBLIC_WEBSITE_OPERATOR_EMAIL_ADDRESS: ${PUBLIC_WEBSITE_OPERATOR_EMAIL_ADDRESS:?PUBLIC_WEBSITE_OPERATOR_EMAIL_ADDRESS must be set}
+      PUBLIC_WEBSITE_OPERATOR_STREET: ${PUBLIC_WEBSITE_OPERATOR_STREET:-}
+      PUBLIC_WEBSITE_OPERATOR_POSTAL_CODE: ${PUBLIC_WEBSITE_OPERATOR_POSTAL_CODE:-}
+      PUBLIC_WEBSITE_OPERATOR_CITY: ${PUBLIC_WEBSITE_OPERATOR_CITY:-}
+      PUBLIC_WEBSITE_OPERATOR_TELEPHONE_NUMBER: ${PUBLIC_WEBSITE_OPERATOR_TELEPHONE_NUMBER:-}
+      PUBLIC_HOSTER_NAME: ${PUBLIC_HOSTER_NAME:?PUBLIC_HOSTER_NAME must be set}
+      PUBLIC_HOSTER_STREET: ${PUBLIC_HOSTER_STREET:-}
+      PUBLIC_HOSTER_POSTAL_CODE: ${PUBLIC_HOSTER_POSTAL_CODE:-}
+      PUBLIC_HOSTER_CITY: ${PUBLIC_HOSTER_CITY:-}
     volumes:
       - ./frontend:/app
       # orval reads the specification at ../backend/open-api.json, which is outside the
@@ -85,13 +85,13 @@ services:
     environment:
       # The backend reads this at boot and refuses to start without it, which is the point:
       # the seed guard and the notice the frontend shows must agree about which instance this is.
-      ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT must be set}
+      PUBLIC_ENVIRONMENT: ${PUBLIC_ENVIRONMENT:?PUBLIC_ENVIRONMENT must be set}
       HOST_URL: ${HOST_URL:?set HOST_URL in .env}
       # Reported as releaseId by the health endpoint. Runtime rather than a build argument:
       # the backend image compiles a binary, and a value that changes every deploy would
       # rebuild it from scratch every deploy.
-      GIT_COMMIT: ${GIT_COMMIT:-}
-      APP_NAME: ${APP_NAME:-}
+      PUBLIC_GIT_COMMIT: ${PUBLIC_GIT_COMMIT:-}
+      PUBLIC_APP_NAME: ${PUBLIC_APP_NAME:-}
       APP_DESCRIPTION: ${APP_DESCRIPTION:-}
       APP_CONTACT_NAME: ${APP_CONTACT_NAME:-}
       APP_CONTACT_EMAIL_ADDRESS: ${APP_CONTACT_EMAIL_ADDRESS:-}

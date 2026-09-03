@@ -16,7 +16,7 @@ of [interviews with members](docs/interviews.md).
 Self-hosted: one Docker Compose stack behind Caddy, described in the
 [deployment runbook](deployment/README.md).
 
-Meant to be run under your own name: `APP_NAME` and the contact details in `.env` carry
+Meant to be run under your own name: `PUBLIC_APP_NAME` and the contact details in `.env` carry
 through to the browser tab, the wordmark and the OpenAPI document. The mark and the icons are
 the letter C and stay as they are — renaming is not yet a full rebrand.
 

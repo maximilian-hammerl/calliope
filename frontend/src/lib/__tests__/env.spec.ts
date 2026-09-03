@@ -15,7 +15,7 @@ describe('getOptionalEnvVariable', () => {
   })
 
   // The rule worth pinning: a variable that exists but is blank has told us nothing, and
-  // `.example.deploy.env` ships every optional one as `""`.
+  // `.example.env` ships every optional one as `""`.
   it('reads blank and whitespace as unset', () => {
     expect(getOptionalEnvVariable('')).toBeUndefined()
     expect(getOptionalEnvVariable('   ')).toBeUndefined()
@@ -25,12 +25,12 @@ describe('getOptionalEnvVariable', () => {
 
 describe('getRequiredEnvVariable', () => {
   it('returns the value when there is one', () => {
-    expect(getRequiredEnvVariable('Erika', 'VITE_WEBSITE_OPERATOR_NAME')).toBe('Erika')
+    expect(getRequiredEnvVariable('Erika', 'PUBLIC_WEBSITE_OPERATOR_NAME')).toBe('Erika')
   })
 
   it('names the variable it is missing, in the backend’s words', () => {
-    expect(() => getRequiredEnvVariable('  ', 'VITE_WEBSITE_OPERATOR_NAME')).toThrow(
-      'Environment variable VITE_WEBSITE_OPERATOR_NAME is not set',
+    expect(() => getRequiredEnvVariable('  ', 'PUBLIC_WEBSITE_OPERATOR_NAME')).toThrow(
+      'Environment variable PUBLIC_WEBSITE_OPERATOR_NAME is not set',
     )
   })
 })

@@ -67,14 +67,18 @@ before closing the current one.
 ```bash
 git clone https://github.com/maximilian-hammerl/calliope.git /opt/calliope
 cd /opt/calliope
-cp .example.deploy.env .env
+cp .example.env .env
 ```
 
-Edit `.env`: set `ENVIRONMENT` to what this machine actually is — it ships empty, and the
-instance at calliope.hammerl.dev is `testing`, not `production` — set `HOST_URL`, and generate
-a password that exists nowhere else. The frontend build refuses to run until `ENVIRONMENT` is
-one of the four values, so a mislabelled instance fails the deploy rather than telling members
-their writing is safe when it is not.
+Edit `.env`: its defaults are the ones a development checkout wants, so every line marked
+„deployment" needs changing here — `PUBLIC_ENVIRONMENT` to what this machine actually is
+(calliope.hammerl.dev is `testing`, not `production`), `HOST_URL`, the operator and hoster names
+the legal pages are built with, `POSTGRES_PASSWORD` and the `SMTP_*` credentials, `MAIL_FROM_ADDRESS`
+and `FILE_STORAGE_PATH`.
+
+None of it fails quietly: `--environment` has to match what the file declares, the compose file
+refuses to start without the passwords, and the frontend build refuses a bundle that cannot say
+which instance it is for or whose legal notice it carries.
 
 ```bash
 chmod 600 .env
@@ -94,7 +98,7 @@ cd /opt/calliope
 ```
 
 `--environment` is required, must be one of `testing`, `staging` or `production`, and must
-match `ENVIRONMENT` in `.env` — the script refuses on a mismatch. It is a statement of intent
+match `PUBLIC_ENVIRONMENT` in `.env` — the script refuses on a mismatch. It is a statement of intent
 rather than a lookup: the mistake worth catching is running a deploy against a server you did
 not think you were on.
 
@@ -107,7 +111,7 @@ separately because the backend and the frontend are built by different compose s
 current backend behind a stale bundle is exactly what a single 200 hides.
 
 The stamp is `git describe --always --dirty`, exported so compose interpolates it — shell
-variables win over `.env` — into `GIT_COMMIT` for the backend and `VITE_COMMIT` for the build.
+variables win over `.env` — into `PUBLIC_GIT_COMMIT`, which the backend and the build both read.
 Neither is required: run by hand, the backend omits `releaseId` and the page says `unknown`.
 `-dirty` means somebody edited a file on the server.
 

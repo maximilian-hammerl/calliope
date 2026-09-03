@@ -95,7 +95,7 @@ Three things about it are deliberate:
 - **It owns its nine usernames.** Cleanup matches id *or* username, so an account somebody made
   by hand as `mira` cannot block a re-run — and neither can renumbering the ids later.
 
-It refuses to run unless **both** guards agree: `ENVIRONMENT` is `development` or `testing`, and
+It refuses to run unless **both** guards agree: `PUBLIC_ENVIRONMENT` is `development` or `testing`, and
 the `DATABASE_URL` host is obviously local. Only the second takes `--force`, which is how the
 deployed testing instance is seeded against a host called `db`; no flag gets past the first,
 because these accounts share one password and an environment that keeps what people write must
@@ -420,7 +420,7 @@ it supplies the elapsed time and puts the logger on the context.
 - **JSON lines in every environment.** `JSON.stringify(new Error("boom"))` is `{}`, so an error is
   spelled out field by field in `describeError` — and a formatter that differed between
   development and production would hide exactly that.
-- **The level comes from `ENVIRONMENT`**, three tiers: `trace` in development, `debug` on the
+- **The level comes from `PUBLIC_ENVIRONMENT`**, three tiers: `trace` in development, `debug` on the
   deployed testing instance, `info` in staging and production. A *healthy* `/api/health` is logged
   at `trace`, so it is visible only locally — the container polls it every ten seconds, which is
   8,640 lines a day burying everything the log is for. `debug` was not low enough, because the

@@ -18,7 +18,7 @@ set -euo pipefail
 	ENV_FILE="$REPOSITORY/.env"
 
 	# Only `testing` is reset when a migration calls for it, and only `testing` gets seed
-	# accounts — see the ENVIRONMENT comment in .example.deploy.env. `development` is not a
+	# accounts — see the PUBLIC_ENVIRONMENT comment in .example.env. `development` is not a
 	# deploy target.
 	DEPLOYABLE=(testing staging production)
 	RESETTABLE=testing
@@ -69,11 +69,11 @@ set -euo pipefail
 
 	# Only this variable is read, and only from a line that assigns it: sourcing .env would run
 	# whatever is in it and export the SMTP password into this shell.
-	declared="$(sed -n 's/^[[:space:]]*ENVIRONMENT[[:space:]]*=[[:space:]]*//p' "$ENV_FILE" |
+	declared="$(sed -n 's/^[[:space:]]*PUBLIC_ENVIRONMENT[[:space:]]*=[[:space:]]*//p' "$ENV_FILE" |
 		tail -n 1 | tr -d '"'"'" | tr -d '[:space:]')"
 
 	[ -n "$declared" ] ||
-		fail "$ENV_FILE declares no ENVIRONMENT. See .example.deploy.env."
+		fail "$ENV_FILE declares no PUBLIC_ENVIRONMENT. See .example.env."
 
 	# The flag is a statement of intent, not a lookup — the mistake worth catching is running
 	# this against a server you did not think you were on.
@@ -248,8 +248,8 @@ it costs."
 	# --dirty so a file edited on the server says so, rather than claiming to be the commit.
 	# Exported because compose interpolates from the shell in preference to .env, which is what
 	# lets a deploy stamp a build without writing to a file nobody meant to change.
-	GIT_COMMIT="$(git describe --always --dirty)"
-	export GIT_COMMIT
+	PUBLIC_GIT_COMMIT="$(git describe --always --dirty)"
+	export PUBLIC_GIT_COMMIT
 
 	if [ "$rebuild" = true ]; then
 		# Stop the backend first, or its open connections make `drop` fail with "database is
@@ -269,7 +269,7 @@ it costs."
 
 	if [ "$rebuild" = true ]; then
 		# --force clears the "does not look local" guard, which sees the compose hostname `db`.
-		# It cannot reach staging or production: the seed refuses any ENVIRONMENT outside
+		# It cannot reach staging or production: the seed refuses any PUBLIC_ENVIRONMENT outside
 		# development and testing, with or without the flag.
 		compose run --rm --no-deps backend --seed --force
 	fi
@@ -309,19 +309,19 @@ The schema is behind what this commit expects. \`compose logs migrate\`."
 	# bundle is exactly what a single 200 hides.
 	if [ -n "$host_url" ]; then
 		health="$(curl -sS --max-time 20 "$host_url/api/health")"
-		printf '%s' "$health" | grep -q "\"releaseId\":\"$GIT_COMMIT\"" ||
+		printf '%s' "$health" | grep -q "\"releaseId\":\"$PUBLIC_GIT_COMMIT\"" ||
 			fail "The backend reports $(printf '%s' "$health" | sed -n 's/.*"releaseId":"\([^"]*\)".*/\1/p' |
-				head -n 1), not $GIT_COMMIT. Something older is still answering."
+				head -n 1), not $PUBLIC_GIT_COMMIT. Something older is still answering."
 
 		frontend="$(curl -sS --max-time 20 "$host_url/")"
-		printf '%s' "$frontend" | grep -q "name=\"commit\" content=\"$GIT_COMMIT\"" ||
-			fail "The frontend Caddy serves is not from $GIT_COMMIT. The frontend build did not reach it."
+		printf '%s' "$frontend" | grep -q "name=\"commit\" content=\"$PUBLIC_GIT_COMMIT\"" ||
+			fail "The frontend Caddy serves is not from $PUBLIC_GIT_COMMIT. The frontend build did not reach it."
 
-		echo "$host_url serves $GIT_COMMIT, backend and frontend both."
+		echo "$host_url serves $PUBLIC_GIT_COMMIT, backend and frontend both."
 	else
 		echo "No HOST_URL in $ENV_FILE; skipped the end-to-end check." >&2
 	fi
 
-	echo "Deployed $GIT_COMMIT to $environment."
+	echo "Deployed $PUBLIC_GIT_COMMIT to $environment."
 	exit 0
 }

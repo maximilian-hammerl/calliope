@@ -13,12 +13,14 @@ export const ENVIRONMENT_SCHEMA = z.enum(ENVIRONMENTS);
 export type Environment = z.infer<typeof ENVIRONMENT_SCHEMA>;
 
 function readEnvironment(): Environment {
-  const value = getRequiredEnvVariable("ENVIRONMENT");
+  const value = getRequiredEnvVariable("PUBLIC_ENVIRONMENT");
   const parsed = ENVIRONMENT_SCHEMA.safeParse(value);
 
   if (!parsed.success) {
     throw new Error(
-      `ENVIRONMENT must be one of ${ENVIRONMENTS.join(", ")}, not "${value}"`,
+      `PUBLIC_ENVIRONMENT must be one of ${
+        ENVIRONMENTS.join(", ")
+      }, not "${value}"`,
     );
   }
 
