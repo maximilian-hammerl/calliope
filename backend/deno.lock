@@ -25,18 +25,18 @@
     "jsr:@std/uuid@1.0.9": "1.0.9",
     "jsr:@std/uuid@1.1.1": "1.1.1",
     "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.5",
-    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.5_zod@4.5.2",
+    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.5_zod@4.5.4",
     "npm:@types/nodemailer@8.0.1": "8.0.1",
     "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.5",
     "npm:hono@4.13.5": "4.13.5",
     "npm:ioredis@6.0.0": "6.0.0",
     "npm:kysely-postgres-js@4.0.0": "4.0.0_kysely@0.29.5_postgres@3.4.9",
     "npm:kysely@0.29.5": "0.29.5",
-    "npm:nodemailer@9.0.5": "9.0.5",
+    "npm:nodemailer@9.0.6": "9.0.6",
     "npm:openapi3-ts@4.6.1": "4.6.1",
     "npm:postgres@3.4.9": "3.4.9",
     "npm:sharp@0.35.4": "0.35.4",
-    "npm:zod@4.5.2": "4.5.2"
+    "npm:zod@4.5.4": "4.5.4"
   },
   "jsr": {
     "@logtape/logtape@2.3.2": {
@@ -129,7 +129,7 @@
     }
   },
   "npm": {
-    "@asteasolutions/zod-to-openapi@9.1.0_zod@4.5.2": {
+    "@asteasolutions/zod-to-openapi@9.1.0_zod@4.5.4": {
       "integrity": "sha512-pLMeRgRYS7/vZIgAAkOe2P6+XGTifR1MT9pqDoxZ11EmcJJ+DPmdPqLN8ZZF4U8R9KHCCQCS9c2wtuE8wSrfkw==",
       "dependencies": [
         "openapi3-ts",
@@ -148,7 +148,7 @@
         "hono"
       ]
     },
-    "@hono/zod-openapi@1.6.1_hono@4.13.5_zod@4.5.2": {
+    "@hono/zod-openapi@1.6.1_hono@4.13.5_zod@4.5.4": {
       "integrity": "sha512-z1xS3FZxl4bBkU3kMIsQsLtsqxPTha5XZCsDEPMSZ6+3RRBQI7KED1GeoDpq2WueXCacsNIjcB0MtCnEHY7ahQ==",
       "dependencies": [
         "@asteasolutions/zod-to-openapi",
@@ -158,7 +158,7 @@
         "zod"
       ]
     },
-    "@hono/zod-validator@0.9.0_hono@4.13.5_zod@4.5.2": {
+    "@hono/zod-validator@0.9.0_hono@4.13.5_zod@4.5.4": {
       "integrity": "sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==",
       "dependencies": [
         "hono",
@@ -472,8 +472,8 @@
     "node-mock-http@1.0.5": {
       "integrity": "sha512-KQyt/wLjG3TAc7DOUhpqWzgd4ERxR80JOlTK5VE5R1S12IaPVN5qkj4klBce9HPG1Njuup4Sb5bljaT34lIyjw=="
     },
-    "nodemailer@9.0.5": {
-      "integrity": "sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ=="
+    "nodemailer@9.0.6": {
+      "integrity": "sha512-IQUGFdhdGwI9+AWX+FpUt4DLmvFaOjTMEoneTIWX/RXxuy1TdenPwWrvFMSfLkPKl+HQEXWuSAxEMMbPYXtBmg=="
     },
     "normalize-path@3.0.0": {
       "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
@@ -588,8 +588,8 @@
       "integrity": "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==",
       "bin": true
     },
-    "zod@4.5.2": {
-      "integrity": "sha512-XkYXCol10+ba/6F/cueWV+TezUeOqXW0hdeJt5CdXjTYeAgAQg5N03RQdJ80mhfFE72+pblvYMW4wy2Qp4Qbrg=="
+    "zod@4.5.4": {
+      "integrity": "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="
     }
   },
   "workspace": {
@@ -608,11 +608,11 @@
       "npm:ioredis@6.0.0",
       "npm:kysely-postgres-js@4.0.0",
       "npm:kysely@0.29.5",
-      "npm:nodemailer@9.0.5",
+      "npm:nodemailer@9.0.6",
       "npm:openapi3-ts@4.6.1",
       "npm:postgres@3.4.9",
       "npm:sharp@0.35.4",
-      "npm:zod@4.5.2"
+      "npm:zod@4.5.4"
     ]
   }
 }
