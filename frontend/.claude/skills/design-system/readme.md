@@ -82,7 +82,9 @@ These are not style preferences; they are findings the design must honour:
    *"beige gefällt mir als farben besser, weil wärmer"* / grey *"fühlt sich emotionslos an."*
 6. **Sparse rounding.** *"Zu viele abgerundete Ecken. Fühlt sich damit überladen an."*
 7. **Collapsibility instead of modes.** A separate reading mode was rejected as unnecessary once
-   both rails and the composer can collapse.
+   both rails and the composer can collapse. That only became true in practice once the layout
+   stopped being rebuilt on every navigation: a collapsed rail sprang open again the moment a
+   member opened a thread, which is exactly when they had asked for the room.
 8. **Mobile is not optional.** The old platform had no mobile layout at all; that was a top
    complaint.
 

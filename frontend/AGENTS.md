@@ -470,10 +470,31 @@ themselves. A blanket `button { min-height }` in the base layer is *not* the ans
 fixed overlay — the layout is already a full-height flex column, so there is no content padding
 to keep in step and nothing can cover the composer. `TopBar`'s nav is `hidden md:flex`.
 
-**The right rail is a sheet below `lg`.** `AppLayout` moves `$slots.rail` between the `aside`
-and `ContextSheet` on a media query rather than a CSS breakpoint, so the rail's contents mount
-once; `hidden` would keep a second copy alive. Without the sheet the story status, the next
-steps and the files had no route at all on a phone *or* a tablet.
+**The right rail is a sheet below `lg`.** `GroupLayout` chooses between the `aside`s and
+`ContextSheet` on a media query rather than a CSS breakpoint, so the rail's contents mount once;
+`hidden` would keep a second copy alive. Without the sheet the story status, the next steps and
+the files had no route at all on a phone *or* a tablet.
+
+## The frame is mounted once
+
+`App.vue` wraps the router view in `AppLayout`, and **no page renders its own**. Each of the
+twelve views used to, which meant every navigation destroyed the whole frame and built it again:
+the bars, and with them `ChatsDialog`, which owns both the chat list *and* the `EventSource`. So
+each navigation closed the stream and opened a new one, `connected` went false and back to true,
+and the watcher on it refetched the list — an explicit refetch, which `staleTime` does not bound.
+Measured on the deployed instance: 39 stream opens in twelve minutes where there should be one,
+and `/api/chats` the busiest endpoint in the log.
+
+`AppLayout` therefore knows nothing but the bars and the body between them. Anything a group's
+pages share belongs to **`GroupLayout`**, the parent route of `/groups/:groupId` — the group's
+own query, the reader's permissions, both rails and the sheet. Its children read those through
+`useGroupContext()` rather than fetching again; before it, three views each ran `useGetGroup` and
+`useListMemberships` and each wrote its own `mayWrite`, in two different shapes.
+
+Two consequences worth knowing. A rail's collapsed state now outlives a navigation, which is what
+the design system's "reading mode" always meant and never did. And `GroupLayout` is **reused**
+when only `:groupId` changes, so nothing in it may read the parameter at mount — `groupId` is a
+computed, and every query takes it as one.
 
 ## Where things live
 
