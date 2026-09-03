@@ -3,7 +3,7 @@
     "db:create": "dbmate --env-file ../.env create",
     "db:up": "dbmate --env-file ../.env up",
     "db:drop": "dbmate --env-file ../.env drop",
-    "db:down": "deno task db:drop",
+    "db:reset": "deno task db:drop && deno task db:up",
     "db:wait": "dbmate --env-file ../.env wait",
     "migrations:migrate": "dbmate --env-file ../.env migrate",
     "migrations:up": "deno task migrations:migrate",
