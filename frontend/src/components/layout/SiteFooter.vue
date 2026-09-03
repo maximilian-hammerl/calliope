@@ -8,7 +8,7 @@
  */
 import { RouterLink } from 'vue-router'
 import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { APP_NAME } from '@/lib/branding'
+import { APP_NAME, SOURCE_URL } from '@/lib/branding'
 
 const LINKS = [
   { name: 'imprint', label: 'Impressum' },
@@ -40,5 +40,16 @@ const LINKS = [
         </li>
       </ul>
     </nav>
+
+    <!-- Outside the legal nav, which is what its label says it holds. A new tab because leaving
+         for the repository is not leaving the site somebody was reading. -->
+    <a
+      :href="SOURCE_URL"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-note text-ink-5 underline-offset-2 hover:text-oak-deep hover:underline"
+    >
+      Quellcode
+    </a>
   </footer>
 </template>

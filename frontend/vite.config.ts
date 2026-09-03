@@ -21,6 +21,7 @@ const BACKEND_URL = `http://localhost:${BACKEND_PORT}`
 const OPTIONAL_ENVIRONMENT = {
   PUBLIC_APP_NAME: 'Calliope',
   PUBLIC_GIT_COMMIT: 'unknown',
+  PUBLIC_SOURCE_URL: 'https://github.com/maximilian-hammerl/calliope',
 } as const
 
 /** Placeholders for serving only; a build refuses rather than ship one. */
