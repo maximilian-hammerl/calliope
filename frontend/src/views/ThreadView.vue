@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
 import { failureMessage } from '@/lib/format/failure'
 import { firstMessage, postSchema } from '@/lib/validation/fieldSchemas'
-import { useGetGroup } from '@/api/groups/groups'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import {
   getGetThreadQueryKey,
@@ -19,15 +18,7 @@ import {
   useListPosts,
   useUpdatePost,
 } from '@/api/posts/posts'
-import { useListMemberships } from '@/api/memberships/memberships'
-import type {
-  GetGroup200,
-  GetThread200,
-  ListMemberships200ResultsItem,
-  ListPosts200ResultsItem,
-  PostDocument,
-} from '@/api/models'
-import AppLayout from '@/components/layout/AppLayout.vue'
+import type { GetThread200, ListPosts200ResultsItem, PostDocument } from '@/api/models'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
@@ -44,16 +35,9 @@ import { listKeyPrefix } from '@/lib/api/queryKeys'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
 import { useDraft } from '@/composables/useDraft'
-import { useSteps } from '@/composables/useSteps'
+import { useGroupContext } from '@/composables/useGroupContext'
 import { usePagedList } from '@/composables/usePagedList'
 import PostComposer from '@/components/thread/PostComposer.vue'
-import StepList from '@/components/context/StepList.vue'
-import StoryStatus from '@/components/context/StoryStatus.vue'
-import RailBlock from '@/components/context/RailBlock.vue'
-import StoryDetails from '@/components/context/StoryDetails.vue'
-import FileList from '@/components/context/FileList.vue'
-import FolderRail from '@/components/context/FolderRail.vue'
-import MemberList from '@/components/context/MemberList.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
@@ -66,14 +50,9 @@ const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
 )
 
-const groupId = computed<string>(() => String(route.params.groupId))
+const { groupId, group, mayWrite, mayAdminister } = useGroupContext()
 
 const threadId = computed<string>(() => String(route.params.threadId))
-
-const { data: groupData } = useGetGroup(groupId)
-const group = computed<GetGroup200 | undefined>(() =>
-  groupData.value?.status === 200 ? groupData.value.data : undefined,
-)
 
 const { data: threadData, isPending, isError } = useGetThread(groupId, threadId)
 
@@ -162,24 +141,6 @@ const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
 const posts = computed<ListPosts200ResultsItem[]>(() =>
   postsData.value?.status === 200 ? postsData.value.data.results : [],
 )
-const { data: membershipsData } = useListMemberships(groupId)
-const memberships = computed<ListMemberships200ResultsItem[]>(() =>
-  membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
-)
-
-// Served from the block's own query: the rail's label says how many are open while it is closed.
-const { open: openSteps } = useSteps(groupId)
-
-/**
- * The group reports the reader's own standing, so the role no longer has to be read out of
- * the member list. Only a joined membership carries it: an invitation may be looked at but
- * not written into.
- */
-const mayWrite = computed<boolean>(
-  () =>
-    group.value?.status === 'joined' &&
-    (group.value.role === 'writer' || group.value.role === 'administrator'),
-)
 
 /**
  * The rule `mayModify` gives content: an administrator of the group, or whoever started it.
@@ -226,10 +187,6 @@ async function confirmDeleteThread() {
   // The thread this page is about no longer exists.
   void router.push({ name: 'group', params: { groupId: groupId.value } })
 }
-
-const mayAdminister = computed<boolean>(
-  () => group.value?.status === 'joined' && group.value.role === 'administrator',
-)
 
 /** The composer holds a document; `draftText` is its prose, which the editor supplies. */
 const draft = ref<PostDocument>(emptyDocument())
@@ -399,153 +356,119 @@ async function submit() {
 </script>
 
 <template>
-  <AppLayout :active-group-id="groupId">
-    <template v-if="thread">
-      <GroupHeader
-        v-if="group"
-        :title="group.title"
-        :visibility="group.visibility"
-        :subtitle="group.subtitle"
-        :group-id="groupId"
-      />
+  <template v-if="thread">
+    <GroupHeader
+      v-if="group"
+      :title="group.title"
+      :visibility="group.visibility"
+      :subtitle="group.subtitle"
+      :group-id="groupId"
+    />
 
-      <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
-        <div class="reading-column">
-          <PathToHere
-            v-if="group"
-            :group-id="groupId"
-            :group-title="group.title"
-            :folder-id="thread.folderId"
-          />
-
-          <ThreadHeader
-            :title="thread.title"
-            :post-count="postCount"
-            :last-activity-at="thread.lastActivityAt"
-            :may-modify="mayModifyThread"
-            :thread-id="thread.id"
-            :is-favourite="thread.isFavourite"
-            @rename="renamingThread = true"
-            @delete="deletingThread = true"
-            @report="reportingThread = true"
-            @favourite-changed="refreshThread"
-          />
-
-          <!-- The filter the header's own comment has been waiting on. It sits under the header
-               rather than in it, beside the order toggle and the page strip it belongs with. -->
-          <FilterStrip v-model="postFilter" label="Beiträge" :options="POST_FILTERS" class="mb-5" />
-
-          <p v-if="posts.length === 0" class="text-body text-ink-4">
-            Noch keine Beiträge in „{{ thread.title }}“.
-            <template v-if="mayWrite">Schreib den ersten.</template>
-          </p>
-
-          <!-- The order sits above the posts it orders. Only worth offering once there is
-               more than one page to start at either end of. -->
-          <div
-            v-if="pageCount > 1"
-            class="mb-5 flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-line-2 pb-2"
-          >
-            <PostSortToggle :model-value="order" @update:model-value="showOrder($event)" />
-            <span class="ml-auto text-[12.5px] text-ink-6"
-              >Seite {{ page }} von {{ pageCount }}</span
-            >
-          </div>
-
-          <PostItem
-            v-for="(post, index) in posts"
-            :key="post.id"
-            :post="post"
-            :first="index === 0"
-            :divider="index < posts.length - 1"
-            :current-user-id="currentUserId"
-            :may-administer="mayAdminister"
-            :may-write="mayWrite"
-            :editing="editingPostId === post.id"
-            :saving="savingPost && editingPostId === post.id"
-            :error="editingPostId === post.id ? editError : undefined"
-            @report="reportedPost = post"
-            @favourite-changed="refreshPosts"
-            @edit="startEditing(post.id)"
-            @cancel="stopEditing"
-            @save="(document, text) => saveEdit(post.id, document, text)"
-            @delete="deletingPost = post"
-          />
-
-          <!-- Below the posts as well as in the strip above: this is where somebody is when
-               they finish a page, and where the composer already has them. -->
-          <div v-if="pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-            <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
-          </div>
-        </div>
-      </div>
-
-      <!-- The alert brings its own padding, which would outrank the reading column's, so the
-           column is a wrapper here rather than the alert itself. -->
-      <div v-if="sendError" class="px-gutter pb-3 md:px-10">
-        <div class="reading-column">
-          <Alert variant="destructive" role="alert">
-            <AlertDescription>{{ sendError }}</AlertDescription>
-          </Alert>
-        </div>
-      </div>
-
-      <!-- Readers may read and comment, so they get no composer. -->
-      <PostComposer
-        v-if="mayWrite"
-        v-model="draft"
-        v-model:text="draftText"
-        :sending="sending || publishing"
-        :draft-status="draftStatus"
-        @submit="submit"
-      />
-    </template>
-
-    <div v-else-if="isPending" class="px-gutter py-5 text-[12.5px] text-ink-5 md:px-10">
-      <div class="reading-column">Thema wird geladen …</div>
-    </div>
-
-    <div v-else-if="isError" class="px-gutter py-5 md:px-10">
+    <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
       <div class="reading-column">
-        <p class="max-w-[46ch] text-body text-ink-4">
-          Dieses Thema gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
+        <PathToHere
+          v-if="group"
+          :group-id="groupId"
+          :group-title="group.title"
+          :folder-id="thread.folderId"
+        />
+
+        <ThreadHeader
+          :title="thread.title"
+          :post-count="postCount"
+          :last-activity-at="thread.lastActivityAt"
+          :may-modify="mayModifyThread"
+          :thread-id="thread.id"
+          :is-favourite="thread.isFavourite"
+          @rename="renamingThread = true"
+          @delete="deletingThread = true"
+          @report="reportingThread = true"
+          @favourite-changed="refreshThread"
+        />
+
+        <!-- The filter the header's own comment has been waiting on. It sits under the header
+             rather than in it, beside the order toggle and the page strip it belongs with. -->
+        <FilterStrip v-model="postFilter" label="Beiträge" :options="POST_FILTERS" class="mb-5" />
+
+        <p v-if="posts.length === 0" class="text-body text-ink-4">
+          Noch keine Beiträge in „{{ thread.title }}“.
+          <template v-if="mayWrite">Schreib den ersten.</template>
         </p>
-        <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>
+
+        <!-- The order sits above the posts it orders. Only worth offering once there is
+             more than one page to start at either end of. -->
+        <div
+          v-if="pageCount > 1"
+          class="mb-5 flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-line-2 pb-2"
+        >
+          <PostSortToggle :model-value="order" @update:model-value="showOrder($event)" />
+          <span class="ml-auto text-[12.5px] text-ink-6">Seite {{ page }} von {{ pageCount }}</span>
+        </div>
+
+        <PostItem
+          v-for="(post, index) in posts"
+          :key="post.id"
+          :post="post"
+          :first="index === 0"
+          :divider="index < posts.length - 1"
+          :current-user-id="currentUserId"
+          :may-administer="mayAdminister"
+          :may-write="mayWrite"
+          :editing="editingPostId === post.id"
+          :saving="savingPost && editingPostId === post.id"
+          :error="editingPostId === post.id ? editError : undefined"
+          @report="reportedPost = post"
+          @favourite-changed="refreshPosts"
+          @edit="startEditing(post.id)"
+          @cancel="stopEditing"
+          @save="(document, text) => saveEdit(post.id, document, text)"
+          @delete="deletingPost = post"
+        />
+
+        <!-- Below the posts as well as in the strip above: this is where somebody is when
+             they finish a page, and where the composer already has them. -->
+        <div v-if="pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+          <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
+        </div>
       </div>
     </div>
 
-    <!-- What the member does. -->
-    <template #rail="{ collapsible }">
-      <RailBlock
-        label="Nächste Schritte"
-        :meta="`${openSteps.length} offen`"
-        :collapsible="collapsible"
-      >
-        <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
-      </RailBlock>
-      <RailBlock label="Story-Status" :collapsible="collapsible">
-        <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
-      </RailBlock>
-    </template>
+    <!-- The alert brings its own padding, which would outrank the reading column's, so the
+         column is a wrapper here rather than the alert itself. -->
+    <div v-if="sendError" class="px-gutter pb-3 md:px-10">
+      <div class="reading-column">
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>{{ sendError }}</AlertDescription>
+        </Alert>
+      </div>
+    </div>
 
-    <!-- What the member looks up while writing. -->
-    <template #infoRail="{ collapsible }">
-      <!-- First and open: this is the navigation between a group's threads and pages, so it is
-           not something the member should have to open before they can move. -->
-      <RailBlock label="Inhalt" :collapsible="collapsible" open-start>
-        <FolderRail :group-id="groupId" />
-      </RailBlock>
-      <RailBlock label="Die Geschichte" :collapsible="collapsible">
-        <StoryDetails v-if="group" :group="group" />
-      </RailBlock>
-      <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
-        <FileList />
-      </RailBlock>
-      <RailBlock label="Mitglieder" :collapsible="collapsible">
-        <MemberList :memberships="memberships" />
-      </RailBlock>
-    </template>
-  </AppLayout>
+    <!-- Readers may read and comment, so they get no composer. -->
+    <PostComposer
+      v-if="mayWrite"
+      v-model="draft"
+      v-model:text="draftText"
+      :sending="sending || publishing"
+      :draft-status="draftStatus"
+      @submit="submit"
+    />
+  </template>
+
+  <div v-else-if="isPending" class="px-gutter py-5 text-[12.5px] text-ink-5 md:px-10">
+    <div class="reading-column">Thema wird geladen …</div>
+  </div>
+
+  <div v-else-if="isError" class="px-gutter py-5 md:px-10">
+    <div class="reading-column">
+      <p class="max-w-[46ch] text-body text-ink-4">
+        Dieses Thema gibt es nicht, oder du gehörst nicht zu seiner Gruppe.
+      </p>
+      <Button variant="outline" size="sm" class="mt-5" @click="goToGroup"> Zur Gruppe </Button>
+    </div>
+  </div>
+
+  <!-- What the member does. -->
 
   <ThreadDialog v-if="thread" v-model:open="renamingThread" :group-id="groupId" :thread="thread" />
 

@@ -13,6 +13,12 @@ declare module 'vue-router' {
      * it rather than exposing it.
      */
     access?: 'member' | 'guest' | 'anyone' | 'operator'
+
+    /**
+     * Set by a page under `/groups/:groupId` that is itself the group's content listing, so
+     * `GroupLayout` leaves the folder tree out of its rail rather than showing it twice.
+     */
+    listsGroupContents?: boolean
   }
 }
 

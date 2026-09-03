@@ -26,20 +26,32 @@ export const routes: Array<RouteRecordRaw> = [
     name: 'discoverGroups',
     component: () => import('../views/DiscoverView.vue'),
   },
+  // Nested so the group's own query, the reader's permissions and both rails are read once by
+  // `GroupLayout` instead of by each child. The parent stays unnamed — navigating to it would
+  // render a layout around nothing; `group` is the empty child.
   {
     path: '/groups/:groupId',
-    name: 'group',
-    component: () => import('../views/GroupView.vue'),
-  },
-  {
-    path: '/groups/:groupId/threads/:threadId',
-    name: 'thread',
-    component: () => import('../views/ThreadView.vue'),
-  },
-  {
-    path: '/groups/:groupId/pages/:pageId',
-    name: 'page',
-    component: () => import('../views/PageView.vue'),
+    component: () => import('../components/layout/GroupLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'group',
+        component: () => import('../views/GroupView.vue'),
+        // This page already lists what the group holds, so the rail's tree would be the same
+        // tree twice. Every other child of the group takes it.
+        meta: { listsGroupContents: true },
+      },
+      {
+        path: 'threads/:threadId',
+        name: 'thread',
+        component: () => import('../views/ThreadView.vue'),
+      },
+      {
+        path: 'pages/:pageId',
+        name: 'page',
+        component: () => import('../views/PageView.vue'),
+      },
+    ],
   },
   // As above: the bare path follows the bar, which for ideas is the carousel rather than a list.
   { path: '/story-ideas', redirect: { name: 'storyIdeasCarousel' } },

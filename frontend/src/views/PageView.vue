@@ -16,7 +16,7 @@ import { failureMessage } from '@/lib/format/failure'
 import { firstMessage, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { formatCount } from '@/lib/format/formatNumber'
-import { useGetGroup } from '@/api/groups/groups'
+import { useGroupContext } from '@/composables/useGroupContext'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import {
   getGetPageQueryKey,
@@ -25,15 +25,8 @@ import {
   useGetPage,
   useUpdatePage,
 } from '@/api/pages/pages'
-import { useListMemberships } from '@/api/memberships/memberships'
 import { TEXT_LIMIT } from '@/api/textLimit'
-import type {
-  GetGroup200,
-  GetPage200,
-  ListMemberships200ResultsItem,
-  PostDocument,
-} from '@/api/models'
-import AppLayout from '@/components/layout/AppLayout.vue'
+import type { GetPage200, PostDocument } from '@/api/models'
 import GroupHeader from '@/components/group/GroupHeader.vue'
 import PostBody from '@/components/thread/PostBody.vue'
 import PostEditor from '@/components/thread/PostEditor.vue'
@@ -41,13 +34,6 @@ import DeletePageDialog from '@/components/page/DeletePageDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import PathToHere from '@/components/folder/PathToHere.vue'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
-import StepList from '@/components/context/StepList.vue'
-import StoryStatus from '@/components/context/StoryStatus.vue'
-import RailBlock from '@/components/context/RailBlock.vue'
-import StoryDetails from '@/components/context/StoryDetails.vue'
-import FileList from '@/components/context/FileList.vue'
-import MemberList from '@/components/context/MemberList.vue'
-import FolderRail from '@/components/context/FolderRail.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,7 +42,8 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 
-const groupId = computed<string>(() => String(route.params.groupId))
+const { groupId, group, mayWrite } = useGroupContext()
+
 const pageId = computed<string>(() => String(route.params.pageId))
 
 const LIMIT = TEXT_LIMIT.updatePage
@@ -74,29 +61,9 @@ const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
 )
 
-const { data: groupData } = useGetGroup(groupId)
-const group = computed<GetGroup200 | undefined>(() =>
-  groupData.value?.status === 200 ? groupData.value.data : undefined,
-)
-
 const { data: pageData, isPending, isError } = useGetPage(groupId, pageId)
 const page = computed<GetPage200 | undefined>(() =>
   pageData.value?.status === 200 ? pageData.value.data : undefined,
-)
-
-const { data: membershipsData } = useListMemberships(groupId)
-const memberships = computed<ListMemberships200ResultsItem[]>(() =>
-  membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
-)
-
-const mayWrite = computed<boolean>(
-  () =>
-    group.value?.status === 'joined' &&
-    (group.value.role === 'writer' || group.value.role === 'administrator'),
-)
-
-const mayAdminister = computed<boolean>(
-  () => group.value?.status === 'joined' && group.value.role === 'administrator',
 )
 
 /** The page's own query, so the favourite mark follows a change to it. */
@@ -235,143 +202,115 @@ watch(pageId, () => {
 </script>
 
 <template>
-  <AppLayout :active-group-id="groupId">
-    <GroupHeader
-      v-if="group"
-      :title="group.title"
-      :visibility="group.visibility"
-      :subtitle="group.subtitle"
-      :group-id="groupId"
-    />
+  <GroupHeader
+    v-if="group"
+    :title="group.title"
+    :visibility="group.visibility"
+    :subtitle="group.subtitle"
+    :group-id="groupId"
+  />
 
-    <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
-      <div class="reading-column">
-        <p v-if="isPending" class="text-body text-ink-4">Die Seite wird geladen …</p>
+  <div class="flex-1 overflow-auto px-gutter pt-7 pb-8 md:px-10">
+    <div class="reading-column">
+      <p v-if="isPending" class="text-body text-ink-4">Die Seite wird geladen …</p>
 
-        <p v-else-if="isError || page === undefined" class="text-body text-ink-4">
-          Diese Seite gibt es nicht mehr.
-        </p>
+      <p v-else-if="isError || page === undefined" class="text-body text-ink-4">
+        Diese Seite gibt es nicht mehr.
+      </p>
 
-        <template v-else>
-          <div class="mb-7">
-            <PathToHere
-              v-if="group"
-              :group-id="groupId"
-              :group-title="group.title"
-              :folder-id="page.folderId"
-            />
-
-            <Input
-              v-if="editing"
-              v-model="draftTitle"
-              class="mb-[5px]"
-              name="pageTitle"
-              :maxlength="LIMIT.title.maxLength"
-              aria-label="Titel der Seite"
-            />
-            <h2 v-else class="mb-[5px] text-h2 text-ink-1">{{ page.title }}</h2>
-
-            <div class="text-[12.5px] leading-[1.3] text-ink-5">{{ meta }}</div>
-          </div>
-
-          <PostEditor
-            v-if="editing"
-            ref="editor"
-            v-model:document="draftDocument"
-            v-model:text="draftText"
-            :disabled="isSaving"
-            framed
+      <template v-else>
+        <div class="mb-7">
+          <PathToHere
+            v-if="group"
+            :group-id="groupId"
+            :group-title="group.title"
+            :folder-id="page.folderId"
           />
 
-          <PostBody v-else :document="page.document" />
+          <Input
+            v-if="editing"
+            v-model="draftTitle"
+            class="mb-[5px]"
+            name="pageTitle"
+            :maxlength="LIMIT.title.maxLength"
+            aria-label="Titel der Seite"
+          />
+          <h2 v-else class="mb-[5px] text-h2 text-ink-1">{{ page.title }}</h2>
 
-          <Alert v-if="saveError" variant="destructive" role="alert" class="mt-3.5">
-            <AlertDescription>{{ saveError }}</AlertDescription>
-          </Alert>
+          <div class="text-[12.5px] leading-[1.3] text-ink-5">{{ meta }}</div>
+        </div>
 
-          <div v-if="!editing" class="mt-3.5 flex items-center gap-2">
-            <FavouriteToggle
-              target-type="writing_page"
-              :target-id="page.id"
-              :is-favourite="page.isFavourite"
-              @changed="refreshPage"
-            />
+        <PostEditor
+          v-if="editing"
+          ref="editor"
+          v-model:document="draftDocument"
+          v-model:text="draftText"
+          :disabled="isSaving"
+          framed
+        />
 
-            <!-- Outside the group of changing actions, as a thread's is: reporting is what
-                 somebody who may *not* change it does. -->
-            <Button v-if="mayReport" variant="outline" size="sm" @click="reportingPage = true">
-              <Flag :stroke-width="1.5" aria-hidden="true" />
-              Melden
+        <PostBody v-else :document="page.document" />
+
+        <Alert v-if="saveError" variant="destructive" role="alert" class="mt-3.5">
+          <AlertDescription>{{ saveError }}</AlertDescription>
+        </Alert>
+
+        <div v-if="!editing" class="mt-3.5 flex items-center gap-2">
+          <FavouriteToggle
+            target-type="writing_page"
+            :target-id="page.id"
+            :is-favourite="page.isFavourite"
+            @changed="refreshPage"
+          />
+
+          <!-- Outside the group of changing actions, as a thread's is: reporting is what
+               somebody who may *not* change it does. -->
+          <Button v-if="mayReport" variant="outline" size="sm" @click="reportingPage = true">
+            <Flag :stroke-width="1.5" aria-hidden="true" />
+            Melden
+          </Button>
+        </div>
+
+        <!-- Any writer, not only the author: a page is material the group keeps, so changing
+             it is the same permission as making one — see `mayAct`'s table in the backend. -->
+        <div v-if="mayWrite" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
+          <template v-if="editing">
+            <button
+              type="button"
+              class="flex min-h-11 items-center font-medium text-oak-deep disabled:opacity-50 md:min-h-0"
+              :disabled="isSaving || draftTitle.trim().length === 0"
+              @click="save"
+            >
+              {{ isSaving ? 'Wird gespeichert …' : 'Speichern' }}
+            </button>
+            <button
+              type="button"
+              class="flex min-h-11 items-center hover:text-ink-2 disabled:opacity-50 md:min-h-0"
+              :disabled="isSaving"
+              @click="editing = false"
+            >
+              Abbrechen
+            </button>
+          </template>
+
+          <template v-else>
+            <Button variant="outline" size="sm" @click="startEditing">
+              <Pencil :stroke-width="1.5" />
+              Seite bearbeiten
             </Button>
-          </div>
-
-          <!-- Any writer, not only the author: a page is material the group keeps, so changing
-               it is the same permission as making one — see `mayAct`'s table in the backend. -->
-          <div v-if="mayWrite" class="mt-3.5 flex items-center gap-4 text-[12px] text-ink-5">
-            <template v-if="editing">
-              <button
-                type="button"
-                class="flex min-h-11 items-center font-medium text-oak-deep disabled:opacity-50 md:min-h-0"
-                :disabled="isSaving || draftTitle.trim().length === 0"
-                @click="save"
-              >
-                {{ isSaving ? 'Wird gespeichert …' : 'Speichern' }}
-              </button>
-              <button
-                type="button"
-                class="flex min-h-11 items-center hover:text-ink-2 disabled:opacity-50 md:min-h-0"
-                :disabled="isSaving"
-                @click="editing = false"
-              >
-                Abbrechen
-              </button>
-            </template>
-
-            <template v-else>
-              <Button variant="outline" size="sm" @click="startEditing">
-                <Pencil :stroke-width="1.5" />
-                Seite bearbeiten
-              </Button>
-              <button
-                type="button"
-                class="flex min-h-11 items-center gap-1 hover:text-ink-2 md:min-h-0"
-                @click="deleting = true"
-              >
-                <Trash2 :size="14" :stroke-width="1.5" />
-                Löschen
-              </button>
-            </template>
-          </div>
-        </template>
-      </div>
+            <button
+              type="button"
+              class="flex min-h-11 items-center gap-1 hover:text-ink-2 md:min-h-0"
+              @click="deleting = true"
+            >
+              <Trash2 :size="14" :stroke-width="1.5" />
+              Löschen
+            </button>
+          </template>
+        </div>
+      </template>
     </div>
-
-    <template #rail="{ collapsible }">
-      <RailBlock label="Nächste Schritte" :collapsible="collapsible">
-        <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
-      </RailBlock>
-      <RailBlock label="Story-Status" :collapsible="collapsible">
-        <StoryStatus v-if="group" :group="group" :may-edit="mayAdminister" />
-      </RailBlock>
-    </template>
-
-    <template #infoRail="{ collapsible }">
-      <!-- First and open: this is the navigation between a group's threads and pages, so it is
-           not something the member should have to open before they can move. -->
-      <RailBlock label="Inhalt" :collapsible="collapsible" open-start>
-        <FolderRail :group-id="groupId" />
-      </RailBlock>
-      <RailBlock label="Die Geschichte" :collapsible="collapsible">
-        <StoryDetails v-if="group" :group="group" />
-      </RailBlock>
-      <RailBlock label="Dateien & Bilder" :collapsible="collapsible">
-        <FileList />
-      </RailBlock>
-      <RailBlock label="Mitglieder" :collapsible="collapsible">
-        <MemberList :memberships="memberships" />
-      </RailBlock>
-    </template>
-  </AppLayout>
+  </div>
 
   <ReportDialog
     v-if="page"
