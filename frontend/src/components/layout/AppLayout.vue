@@ -1,18 +1,14 @@
 <script setup lang="ts">
 /**
- * The frame around every page: the bars and the scrolling body between them. Mounted once by
- * `App.vue` around the router view, not by each page — when each page rendered its own, every
- * navigation tore the whole thing down and built it again, which closed and reopened the chat
- * stream and refetched the chat list each time.
- *
- * It knows nothing about groups. Anything a group's pages need — the rails, the sheet, the
- * group's own queries — belongs to `GroupLayout`, which is the parent route of those pages.
+ * The frame around every page, mounted once by `App.vue`: a page that rendered its own tore the
+ * bars down on every navigation, taking the chat stream with them. Groups belong to `GroupLayout`.
  */
 import { computed } from 'vue'
 import type { GetCurrentUser200 } from '@/api/models'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import TopBar from '@/components/layout/TopBar.vue'
 import BottomBar from '@/components/layout/BottomBar.vue'
+import SiteFooter from '@/components/layout/SiteFooter.vue'
 
 const { data: userData } = useGetCurrentUser()
 const user = computed<GetCurrentUser200 | undefined>(() =>
@@ -28,8 +24,11 @@ const user = computed<GetCurrentUser200 | undefined>(() =>
       <slot />
     </main>
 
-    <!-- Signed out there is nowhere for it to lead: every destination bounces back to the
-         sign-in page. Same condition the top bar takes. -->
+    <!-- Signed out only: below `md` the bottom edge already carries `BottomBar` and a thread's
+         composer. Members reach the legal pages from the account menu. -->
+    <SiteFooter v-if="!user" />
+
+    <!-- Signed out every destination bounces back to sign-in. -->
     <BottomBar v-if="user" />
   </div>
 </template>

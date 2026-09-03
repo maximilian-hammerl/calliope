@@ -1,9 +1,6 @@
 export function getOptionalEnvVariable(key: string): string | undefined {
   const value = Deno.env.get(key);
-  if (!value) {
-    return undefined;
-  }
-  const trimmedValue = value.trim();
+  const trimmedValue = value?.trim();
   return trimmedValue ? trimmedValue : undefined;
 }
 

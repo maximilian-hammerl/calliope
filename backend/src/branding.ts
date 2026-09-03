@@ -7,14 +7,15 @@ export const APP_DESCRIPTION = getOptionalEnvVariable("APP_DESCRIPTION") ??
 
 export const APP_CONTACT = (() => {
   const name = getOptionalEnvVariable("APP_CONTACT_NAME");
-  const email = getOptionalEnvVariable("APP_CONTACT_EMAIL");
+  const emailAddress = getOptionalEnvVariable("APP_CONTACT_EMAIL_ADDRESS");
 
-  if (name === undefined && email === undefined) {
+  if (name === undefined && emailAddress === undefined) {
     return undefined;
   }
 
   return {
     ...(name === undefined ? {} : { name }),
-    ...(email === undefined ? {} : { email }),
+    // `email` is OpenAPI's own field name for a contact, so the key stays as it is.
+    ...(emailAddress === undefined ? {} : { email: emailAddress }),
   };
 })();

@@ -53,6 +53,13 @@ services:
       # Stamped by deploy.sh so it can check that the bundle Caddy serves is the one it built.
       # Defaulted rather than required: a build by hand is not a deploy and has nothing to say.
       VITE_COMMIT: ${GIT_COMMIT:-unknown}
+      # No fallback on the first two: the build refuses rather than ship nobody's name.
+      VITE_IMPRINT_NAME: ${IMPRINT_NAME:?IMPRINT_NAME must be set}
+      VITE_IMPRINT_EMAIL_ADDRESS: ${IMPRINT_EMAIL_ADDRESS:?IMPRINT_EMAIL_ADDRESS must be set}
+      VITE_IMPRINT_STREET: ${IMPRINT_STREET:-}
+      VITE_IMPRINT_POSTAL_CODE: ${IMPRINT_POSTAL_CODE:-}
+      VITE_IMPRINT_CITY: ${IMPRINT_CITY:-}
+      VITE_IMPRINT_TELEPHONE: ${IMPRINT_TELEPHONE:-}
     volumes:
       - ./frontend:/app
       # orval reads the specification at ../backend/open-api.json, which is outside the
@@ -83,7 +90,7 @@ services:
       APP_NAME: ${APP_NAME:-}
       APP_DESCRIPTION: ${APP_DESCRIPTION:-}
       APP_CONTACT_NAME: ${APP_CONTACT_NAME:-}
-      APP_CONTACT_EMAIL: ${APP_CONTACT_EMAIL:-}
+      APP_CONTACT_EMAIL_ADDRESS: ${APP_CONTACT_EMAIL_ADDRESS:-}
       DATABASE_URL: postgres://calliope:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/calliope?sslmode=disable
       REDIS_URL: redis://redis:6379
 
