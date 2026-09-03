@@ -1,5 +1,5 @@
 # Debian, not alpine: the runtime below is glibc and will not start a musl-linked binary.
-FROM denoland/deno:2.9.5 AS build
+FROM denoland/deno:2.9.6 AS build
 
 WORKDIR /app
 
