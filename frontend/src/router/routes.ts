@@ -62,6 +62,12 @@ export const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/ImprintView.vue'),
     meta: { access: 'anyone' },
   },
+  {
+    path: '/privacy-policy',
+    name: 'privacyPolicy',
+    component: () => import('../views/PrivacyPolicyView.vue'),
+    meta: { access: 'anyone' },
+  },
   // As above: the bare path follows the bar, which for ideas is the carousel rather than a list.
   { path: '/story-ideas', redirect: { name: 'storyIdeasCarousel' } },
   {

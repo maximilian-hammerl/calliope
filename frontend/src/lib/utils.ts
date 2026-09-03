@@ -11,7 +11,7 @@ import { extendTailwindMerge } from 'tailwind-merge'
  * Kept in step with theme.css by a test, since a new size that is not listed here fails the
  * same silent way.
  */
-export const FONT_SIZES = ['h1', 'h2', 'body', 'note', 'nav', 'row', 'control', 'rail']
+export const FONT_SIZES = ['h1', 'h2', 'h3', 'body', 'note', 'nav', 'row', 'control', 'rail']
 
 const twMerge = extendTailwindMerge({ extend: { theme: { text: FONT_SIZES } } })
 

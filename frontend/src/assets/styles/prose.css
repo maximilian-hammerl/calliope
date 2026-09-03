@@ -1,0 +1,41 @@
+/* The two long-form prose shapes: a member's writing, and the legal pages. Both are blocks whose
+   every element is the same shape, so the shape is written once rather than at each tag.
+
+   In `@layer base` like the defaults they sit beside, so a utility on any one element still wins;
+   the elements are wrapped in `:where()` so they add no specificity of their own either. */
+
+@layer base {
+  /* Thread reading size never shrinks, on any device (17px / 1.8). */
+  .prose-post {
+    font: 400 17px/1.8 var(--font-serif);
+    /* The ramp, not the literal it used to be: a post is the one thing that must follow the
+       appearance, and this held light's ink on a dark ground. #60 */
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  .prose-legal :where(h2) {
+    @apply mt-10 mb-3 text-h2 text-ink-1;
+  }
+  .prose-legal :where(h3) {
+    @apply mt-7 mb-2 text-h3 text-ink-1;
+  }
+  .prose-legal :where(h4) {
+    @apply mt-5 mb-1 text-body font-semibold text-ink-2;
+  }
+  .prose-legal :where(p, address, dl, ul) {
+    @apply mt-3 text-body text-ink-4;
+  }
+  .prose-legal :where(address) {
+    @apply not-italic;
+  }
+  .prose-legal :where(ul) {
+    @apply flex list-disc flex-col gap-1 pl-5;
+  }
+  .prose-legal :where(dl) {
+    @apply flex flex-col gap-1;
+  }
+  .prose-legal :where(a) {
+    @apply underline underline-offset-2;
+  }
+}

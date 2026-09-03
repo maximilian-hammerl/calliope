@@ -25,12 +25,12 @@ describe('getOptionalEnvVariable', () => {
 
 describe('getRequiredEnvVariable', () => {
   it('returns the value when there is one', () => {
-    expect(getRequiredEnvVariable('Erika', 'VITE_IMPRINT_NAME')).toBe('Erika')
+    expect(getRequiredEnvVariable('Erika', 'VITE_WEBSITE_OPERATOR_NAME')).toBe('Erika')
   })
 
   it('names the variable it is missing, in the backend’s words', () => {
-    expect(() => getRequiredEnvVariable('  ', 'VITE_IMPRINT_NAME')).toThrow(
-      'Environment variable VITE_IMPRINT_NAME is not set',
+    expect(() => getRequiredEnvVariable('  ', 'VITE_WEBSITE_OPERATOR_NAME')).toThrow(
+      'Environment variable VITE_WEBSITE_OPERATOR_NAME is not set',
     )
   })
 })

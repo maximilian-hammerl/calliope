@@ -106,7 +106,7 @@ version. Its `readme.md` is the file to edit; the prototype components under `co
 `ui_kits/` are throwaway mockups and need not follow.
 
 **Type comes from the named scale**, never a literal: `text-body`, `text-note`, `text-nav`,
-`text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2`, declared in `theme.css`. Each sets
+`text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2`, `text-h3`, declared in `theme.css`. Each sets
 the size *and* the line height, which is the point — writing the pair by hand is how 13.5px ended
 up with four different line heights.
 
@@ -114,6 +114,10 @@ A new size goes in `FONT_SIZES` in `lib/utils.ts` as well as `theme.css`. tailwi
 `text-*` and guesses — t-shirt size means size, anything else means colour — so an undeclared
 `text-note` is filed under colour, and `cn('text-note text-ink-5', …)` merges the two and drops
 the size. A test compares the two lists, because the failure is silent.
+
+**A block of prose gets a class, not a class per tag.** `styles/prose.css` holds `.prose-post`
+for a member's writing and `.prose-legal` for the legal pages, whose forty paragraphs would
+otherwise each repeat the same three utilities. `base.css` stays element and role defaults.
 
 **Spacing is Tailwind's scale**, which already covers the design system's 2px steps — `1.5` is
 6px, `3.5` is 14px. Two exceptions: `px-gutter` (18px, the phone gutter, paired with `md:px-10`),

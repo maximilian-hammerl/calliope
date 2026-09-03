@@ -577,8 +577,9 @@ that works; the rest are specified below and unbuilt. A chat message carries the
 same weight, closer under it because the messages themselves sit closer together.
 
 **The type scale is named, and the name carries the line height.** `text-body`, `text-note`,
-`text-nav`, `text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2` — declared once in
-`theme.css`, so a size and its leading cannot drift apart. They had: 13.5px was written by hand
+`text-nav`, `text-row`, `text-control`, `text-rail`, `text-h1`, `text-h2`, `text-h3` — declared
+once in `theme.css`, so a size and its leading cannot drift apart. `h3` is the newest and came
+from the legal pages, which are the first documents deep enough to need a third level. They had: 13.5px was written by hand
 in 149 places and had picked up four different line heights for two different jobs. `body` is
 page prose in `--ink-4`, `note` the quieter second voice in `--ink-5`, and `nav` the single-line
 interface text; those two are additions to `tokens/typography.css`, which was written for the

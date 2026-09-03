@@ -1,24 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import type { Imprint } from '@/lib/imprint'
-import { addressOf } from '@/lib/imprint'
+import { addressFrom } from '@/lib/address'
 
-const REQUIRED: Imprint = { name: 'Erika Mustermann', emailAddress: 'erika@example.de' }
+const NO_ADDRESS = {}
 
-describe('addressOf', () => {
+describe('addressFrom', () => {
   it('is nothing when the operator gave no address, which is allowed', () => {
-    expect(addressOf(REQUIRED)).toBeUndefined()
+    expect(addressFrom(NO_ADDRESS)).toBeUndefined()
   })
 
   it('takes postal code and town together', () => {
-    expect(addressOf({ ...REQUIRED, postalCode: '12345', city: 'Musterstadt' })).toEqual({
+    expect(addressFrom({ ...NO_ADDRESS, postalCode: '12345', city: 'Musterstadt' })).toEqual({
       town: '12345 Musterstadt',
     })
   })
 
   it('keeps the street when there is one', () => {
     expect(
-      addressOf({
-        ...REQUIRED,
+      addressFrom({
+        ...NO_ADDRESS,
         street: 'Musterstraße 1',
         postalCode: '12345',
         city: 'Musterstadt',
@@ -29,8 +28,8 @@ describe('addressOf', () => {
   // Half an address is worse than none: „12345" alone on a line says nothing, and a street
   // without a town cannot be found.
   it('refuses half an address rather than printing it', () => {
-    expect(addressOf({ ...REQUIRED, postalCode: '12345' })).toBeUndefined()
-    expect(addressOf({ ...REQUIRED, city: 'Musterstadt' })).toBeUndefined()
-    expect(addressOf({ ...REQUIRED, street: 'Musterstraße 1' })).toBeUndefined()
+    expect(addressFrom({ ...NO_ADDRESS, postalCode: '12345' })).toBeUndefined()
+    expect(addressFrom({ ...NO_ADDRESS, city: 'Musterstadt' })).toBeUndefined()
+    expect(addressFrom({ ...NO_ADDRESS, street: 'Musterstraße 1' })).toBeUndefined()
   })
 })

@@ -32,9 +32,11 @@ process.env.VITE_COMMIT ||= 'unknown'
  * The legal notice's two required values — see `src/lib/imprint.ts`. Defaulted inside the plugin,
  * not here: a module-scope default runs for a build too and would make the check unreachable.
  */
-const REQUIRED_IMPRINT = {
-  VITE_IMPRINT_NAME: 'Platzhalter-Vorname Platzhalter-Nachname',
-  VITE_IMPRINT_EMAIL_ADDRESS: 'platzhalter@e-mail-adresse.de',
+const REQUIRED_ENVIRONMENT = {
+  VITE_WEBSITE_OPERATOR_NAME: 'Platzhalter-Vorname Platzhalter-Nachname',
+  VITE_WEBSITE_OPERATOR_EMAIL_ADDRESS: 'platzhalter@e-mail-adresse.de',
+  // Named in the privacy policy, which reads badly with nobody after „Wir setzen ein:".
+  VITE_HOSTER_NAME: 'Platzhalter-Hoster',
 } as const
 
 /**
@@ -54,7 +56,7 @@ function environment(): Plugin {
       if (command !== 'build') {
         process.env.VITE_ENVIRONMENT ||= 'development'
         // Obvious placeholders, so nobody mistakes one for configuration.
-        for (const [name, placeholder] of Object.entries(REQUIRED_IMPRINT)) {
+        for (const [name, placeholder] of Object.entries(REQUIRED_ENVIRONMENT)) {
           process.env[name] ||= placeholder
         }
         return
@@ -70,13 +72,13 @@ function environment(): Plugin {
       }
 
       // A page saying "not configured" must never reach production.
-      const missing = Object.keys(REQUIRED_IMPRINT).filter(
+      const missing = Object.keys(REQUIRED_ENVIRONMENT).filter(
         (name) => (process.env[name] ?? '').trim() === '',
       )
       if (missing.length > 0) {
         throw new Error(
-          `${missing.join(' and ')} must be set to build: the Impressum cannot be rendered ` +
-            'without a name and an email address. They come from IMPRINT_* in .env.',
+          `${missing.join(' and ')} must be set to build: the legal pages cannot name ` +
+            'nobody. They come from WEBSITE_OPERATOR_* and HOSTER_* in .env.',
         )
       }
     },

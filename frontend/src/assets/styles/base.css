@@ -39,14 +39,6 @@
   h3 {
     @apply font-serif font-normal;
   }
-  /* Thread reading size never shrinks, on any device (17px / 1.8). */
-  .prose-post {
-    font: 400 17px/1.8 var(--font-serif);
-    /* The ramp, not the literal it used to be: a post is the one thing that must follow the
-       appearance, and this held light's ink on a dark ground. #60 */
-    color: var(--ink-2);
-    text-wrap: pretty;
-  }
   /* The reading column: 684px, per the design system, centred between the rails' full widths.
      Centred inside `main` instead, it slid sideways whenever a rail collapsed and handed `main`
      the width — the padding takes that back. `AppLayout` sets the two variables, 0 where there

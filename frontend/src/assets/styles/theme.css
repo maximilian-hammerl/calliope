@@ -40,6 +40,9 @@
   --text-h1--line-height: 1.2;
   --text-h2: 20px;
   --text-h2--line-height: 1.3;
+  /* A third level, for a document deep enough to need one — the legal pages. */
+  --text-h3: 16px;
+  --text-h3--line-height: 1.4;
 
   /* Page prose. Paired with --ink-4 almost everywhere it appears. */
   --text-body: 13.5px;

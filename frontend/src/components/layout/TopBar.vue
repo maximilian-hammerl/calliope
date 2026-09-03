@@ -203,15 +203,6 @@ async function signOut() {
               <DropdownMenuItem @select="showingSettings = true">Einstellungen</DropdownMenuItem>
             </DropdownMenuGroup>
 
-            <!-- About the site rather than this member, like Moderation below. Signed out
-                 these are in the footer, which has no room here. -->
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem as-child>
-                <RouterLink :to="{ name: 'imprint' }">Impressum</RouterLink>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-
             <!-- Only for operators, and in a group of its own: it belongs to this member the
                  way the items above do, but it is about the site rather than about them. -->
             <template v-if="isOperator">
@@ -228,6 +219,18 @@ async function signOut() {
               <DropdownMenuItem :disabled="isPending" @select="signOut">
                 <LogOut />
                 Abmelden
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <!-- Last, below signing out: about the site rather than this member, and the least
+                 often wanted. Signed out they are in the footer, which has no room here. -->
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem as-child>
+                <RouterLink :to="{ name: 'imprint' }">Impressum</RouterLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem as-child>
+                <RouterLink :to="{ name: 'privacyPolicy' }">Datenschutzerklärung</RouterLink>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

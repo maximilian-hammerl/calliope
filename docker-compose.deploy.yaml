@@ -54,12 +54,16 @@ services:
       # Defaulted rather than required: a build by hand is not a deploy and has nothing to say.
       VITE_COMMIT: ${GIT_COMMIT:-unknown}
       # No fallback on the first two: the build refuses rather than ship nobody's name.
-      VITE_IMPRINT_NAME: ${IMPRINT_NAME:?IMPRINT_NAME must be set}
-      VITE_IMPRINT_EMAIL_ADDRESS: ${IMPRINT_EMAIL_ADDRESS:?IMPRINT_EMAIL_ADDRESS must be set}
-      VITE_IMPRINT_STREET: ${IMPRINT_STREET:-}
-      VITE_IMPRINT_POSTAL_CODE: ${IMPRINT_POSTAL_CODE:-}
-      VITE_IMPRINT_CITY: ${IMPRINT_CITY:-}
-      VITE_IMPRINT_TELEPHONE: ${IMPRINT_TELEPHONE:-}
+      VITE_WEBSITE_OPERATOR_NAME: ${WEBSITE_OPERATOR_NAME:?WEBSITE_OPERATOR_NAME must be set}
+      VITE_WEBSITE_OPERATOR_EMAIL_ADDRESS: ${WEBSITE_OPERATOR_EMAIL_ADDRESS:?WEBSITE_OPERATOR_EMAIL_ADDRESS must be set}
+      VITE_WEBSITE_OPERATOR_STREET: ${WEBSITE_OPERATOR_STREET:-}
+      VITE_WEBSITE_OPERATOR_POSTAL_CODE: ${WEBSITE_OPERATOR_POSTAL_CODE:-}
+      VITE_WEBSITE_OPERATOR_CITY: ${WEBSITE_OPERATOR_CITY:-}
+      VITE_WEBSITE_OPERATOR_TELEPHONE_NUMBER: ${WEBSITE_OPERATOR_TELEPHONE_NUMBER:-}
+      VITE_HOSTER_NAME: ${HOSTER_NAME:?HOSTER_NAME must be set}
+      VITE_HOSTER_STREET: ${HOSTER_STREET:-}
+      VITE_HOSTER_POSTAL_CODE: ${HOSTER_POSTAL_CODE:-}
+      VITE_HOSTER_CITY: ${HOSTER_CITY:-}
     volumes:
       - ./frontend:/app
       # orval reads the specification at ../backend/open-api.json, which is outside the
