@@ -57,6 +57,13 @@ const props = defineProps<{
    * in place has nothing to distinguish it from the posts around it.
    */
   framed?: boolean
+
+  /**
+   * Stop growing at a ceiling and scroll inside it. Only the composer wants this: it is
+   * `flex-none` in a full-height column, so every line it grows is a line of the thread — #84.
+   * A post edited in place sits in the scrolling thread and may take the room it needs.
+   */
+  capped?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -349,7 +356,11 @@ function apply(toggle: Toggle) {
         : undefined
     "
   >
-    <EditorContent :editor="editor" />
+    <!-- The toolbar stays outside, so formatting is reachable while the prose scrolls. -->
+    <EditorContent
+      :editor="editor"
+      :class="capped ? 'max-h-[clamp(184px,22svh,320px)] overflow-y-auto' : undefined"
+    />
 
     <!-- Scrolls rather than wrapping or hiding: formatting has to be reachable on a phone, and a
          second row would push the writing off a short screen. -->
