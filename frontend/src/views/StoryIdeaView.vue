@@ -12,7 +12,6 @@ import type { GetStoryIdea200 } from '@/api/models'
 import { ApiError } from '@/lib/api/apiFetch'
 import { queryClient } from '@/lib/api/queryClient'
 import { listKeyPrefix, listOnlyFilter } from '@/lib/api/queryKeys'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import type { GroupInitialValues } from '@/components/group/GroupDialog.vue'
 import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
@@ -101,37 +100,35 @@ async function remove() {
 </script>
 
 <template>
-  <AppLayout>
-    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</div>
+  <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
+    <div v-if="isPending" class="text-[12.5px] text-ink-5">Einen Moment.</div>
 
-      <StoryIdeaDetail
-        v-else-if="idea"
-        :idea="idea"
-        :own="isOwn"
-        @read-changed="refreshIdea"
-        @favourite-changed="refreshIdea"
-        @report="reporting = true"
-        @edit="editing = true"
-        @remove="deleting = true"
-        @found-group="foundingGroup = true"
-      />
+    <StoryIdeaDetail
+      v-else-if="idea"
+      :idea="idea"
+      :own="isOwn"
+      @read-changed="refreshIdea"
+      @favourite-changed="refreshIdea"
+      @report="reporting = true"
+      @edit="editing = true"
+      @remove="deleting = true"
+      @found-group="foundingGroup = true"
+    />
 
-      <template v-else-if="notFound">
-        <h1 class="text-h1">Keine Idee gefunden</h1>
-        <p class="mt-5 max-w-[46ch] text-body text-ink-4">
-          Diese Idee gibt es nicht mehr, oder der Link stimmt nicht.
-        </p>
-      </template>
+    <template v-else-if="notFound">
+      <h1 class="text-h1">Keine Idee gefunden</h1>
+      <p class="mt-5 max-w-[46ch] text-body text-ink-4">
+        Diese Idee gibt es nicht mehr, oder der Link stimmt nicht.
+      </p>
+    </template>
 
-      <template v-else>
-        <h1 class="text-h1">Das hat nicht geklappt</h1>
-        <p class="mt-5 max-w-[46ch] text-body text-ink-4">
-          Wir konnten diese Idee gerade nicht laden. Versuche es später noch einmal.
-        </p>
-      </template>
-    </div>
-  </AppLayout>
+    <template v-else>
+      <h1 class="text-h1">Das hat nicht geklappt</h1>
+      <p class="mt-5 max-w-[46ch] text-body text-ink-4">
+        Wir konnten diese Idee gerade nicht laden. Versuche es später noch einmal.
+      </p>
+    </template>
+  </div>
 
   <ReportDialog
     v-if="idea"

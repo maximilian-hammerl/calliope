@@ -17,7 +17,6 @@ import { Plus } from '@lucide/vue'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
 import ListPagination from '@/components/common/ListPagination.vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
 import { Button } from '@/components/ui/button'
@@ -125,95 +124,91 @@ const creating = ref<boolean>(false)
 </script>
 
 <template>
-  <AppLayout>
-    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">Gruppen</h1>
-        <div class="ml-auto">
-          <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
-            <Plus :stroke-width="1.5" />
-            Gruppe
-          </Button>
-        </div>
+  <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
+    <div class="mb-2 flex flex-wrap items-baseline gap-3">
+      <h1 class="text-h1 text-ink-1">Gruppen</h1>
+      <div class="ml-auto">
+        <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
+          <Plus :stroke-width="1.5" />
+          Gruppe
+        </Button>
       </div>
-      <div class="mb-2">
-        <GroupsViewStrip />
-      </div>
-
-      <p class="mb-6 max-w-[60ch] text-body text-ink-4">
-        Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
-        sobald dich jemand einlädt.
-      </p>
-
-      <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
-           them. Two rows of filters now, which is what `FilterStrips` is for: the vocabulary
-           shares the strip's label column instead of opening a second one beside it. -->
-      <FilterStrips class="mb-7">
-        <FilterStrip
-          v-model="favourite"
-          label="Favoriten"
-          :options="FAVOURITE_FILTERS"
-          default-value="any"
-        />
-        <StoryVocabularyFilters v-model="vocabulary" />
-        <FilterReset :active="filtersActive" @reset="resetFilters" />
-      </FilterStrips>
-
-      <Field class="mb-7 max-w-[380px]">
-        <FieldLabel for="discover-search">Suche</FieldLabel>
-        <Input
-          id="discover-search"
-          v-model="term"
-          name="search"
-          type="search"
-          placeholder="z. B. Krimi"
-          :maxlength="LIMIT.maxLength"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <FieldDescription>
-          Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
-        </FieldDescription>
-      </Field>
-
-      <p v-if="hasLoaded && groups.length === 0" class="max-w-[46ch] text-body text-ink-4">
-        <!-- Both can empty a list, so an empty one names whichever are set. Naming only the
-             search sent members to clear it, see nothing change, and have no sign of the filter
-             that was also excluding rows. -->
-        <template v-if="settled !== '' && narrowed">
-          Keine öffentliche Gruppe passt zu „{{ settled }}“ und diesen Filtern.
-        </template>
-        <template v-else-if="settled !== ''">
-          Keine öffentliche Gruppe gefunden, die zu „{{ settled }}“ passt.
-        </template>
-        <template v-else-if="narrowed">
-          Keine öffentliche Gruppe passt zu diesen Filtern.
-        </template>
-        <template v-else>
-          Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
-        </template>
-      </p>
-
-      <div v-else-if="hasLoaded">
-        <GroupRow
-          v-for="(group, index) in groups"
-          :key="group.id"
-          :group="group"
-          :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-        />
-      </div>
-
-      <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
-      </div>
-
-      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
-
-      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-        Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
-      </p>
+    </div>
+    <div class="mb-2">
+      <GroupsViewStrip />
     </div>
 
-    <GroupDialog v-model:open="creating" @created="openGroup" />
-  </AppLayout>
+    <p class="mb-6 max-w-[60ch] text-body text-ink-4">
+      Öffentliche Gruppen, in denen du noch nicht bist. Mitlesen kannst du sofort; mitschreiben,
+      sobald dich jemand einlädt.
+    </p>
+
+    <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
+         them. Two rows of filters now, which is what `FilterStrips` is for: the vocabulary
+         shares the strip's label column instead of opening a second one beside it. -->
+    <FilterStrips class="mb-7">
+      <FilterStrip
+        v-model="favourite"
+        label="Favoriten"
+        :options="FAVOURITE_FILTERS"
+        default-value="any"
+      />
+      <StoryVocabularyFilters v-model="vocabulary" />
+      <FilterReset :active="filtersActive" @reset="resetFilters" />
+    </FilterStrips>
+
+    <Field class="mb-7 max-w-[380px]">
+      <FieldLabel for="discover-search">Suche</FieldLabel>
+      <Input
+        id="discover-search"
+        v-model="term"
+        name="search"
+        type="search"
+        placeholder="z. B. Krimi"
+        :maxlength="LIMIT.maxLength"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <FieldDescription>
+        Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
+      </FieldDescription>
+    </Field>
+
+    <p v-if="hasLoaded && groups.length === 0" class="max-w-[46ch] text-body text-ink-4">
+      <!-- Both can empty a list, so an empty one names whichever are set. Naming only the
+           search sent members to clear it, see nothing change, and have no sign of the filter
+           that was also excluding rows. -->
+      <template v-if="settled !== '' && narrowed">
+        Keine öffentliche Gruppe passt zu „{{ settled }}“ und diesen Filtern.
+      </template>
+      <template v-else-if="settled !== ''">
+        Keine öffentliche Gruppe gefunden, die zu „{{ settled }}“ passt.
+      </template>
+      <template v-else-if="narrowed"> Keine öffentliche Gruppe passt zu diesen Filtern. </template>
+      <template v-else>
+        Im Moment gibt es keine öffentliche Gruppe, in der du nicht schon bist.
+      </template>
+    </p>
+
+    <div v-else-if="hasLoaded">
+      <GroupRow
+        v-for="(group, index) in groups"
+        :key="group.id"
+        :group="group"
+        :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
+      />
+    </div>
+
+    <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+      <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
+    </div>
+
+    <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
+
+    <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+      Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
+    </p>
+  </div>
+
+  <GroupDialog v-model:open="creating" @created="openGroup" />
 </template>

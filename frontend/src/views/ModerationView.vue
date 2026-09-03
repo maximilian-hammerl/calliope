@@ -17,7 +17,6 @@ import { formatActivityTime } from '@/lib/format/formatTime'
 import { pluralize } from '@/lib/format/formatText'
 import { REPORT_CATEGORY_LABELS, REPORT_OUTCOME_LABELS, REPORT_OUTCOMES } from '@/lib/format/report'
 import { usePagedList } from '@/composables/usePagedList'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import CloseReportDialog from '@/components/report/CloseReportDialog.vue'
@@ -140,192 +139,186 @@ function operatorAt(report: Report, at: string): string {
 </script>
 
 <template>
-  <AppLayout>
-    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <h1 class="text-h1">Moderation</h1>
-      <p class="mt-2 max-w-[60ch] text-body text-ink-4">
-        Was Mitglieder gemeldet haben, das Älteste zuerst.
+  <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
+    <h1 class="text-h1">Moderation</h1>
+    <p class="mt-2 max-w-[60ch] text-body text-ink-4">
+      Was Mitglieder gemeldet haben, das Älteste zuerst.
+    </p>
+
+    <!-- Each names itself: these carry no visible label, and a value like „Offen" says nothing
+         about what it selects once the trigger is read on its own. -->
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <Select :model-value="status" @update:model-value="(value) => (status = value as Status)">
+        <SelectTrigger aria-label="Status" class="w-[160px] text-[12.5px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">
+            {{ label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        :model-value="category"
+        @update:model-value="(value) => (category = value as Category | 'all')"
+      >
+        <SelectTrigger aria-label="Grund" class="w-[220px] text-[12.5px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Alle Gründe</SelectItem>
+          <SelectItem v-for="(label, value) in REPORT_CATEGORY_LABELS" :key="value" :value="value">
+            {{ label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <!-- Only on the closed queue: an outcome is what closing a report produces, so asking
+           for one among open reports would always answer with nothing. -->
+      <Select
+        v-if="status === 'closed'"
+        :model-value="outcome"
+        @update:model-value="(value) => (outcome = value as Outcome | 'all')"
+      >
+        <SelectTrigger aria-label="Ergebnis" class="w-[220px] text-[12.5px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Alle Ergebnisse</SelectItem>
+          <SelectItem v-for="entry in REPORT_OUTCOMES" :key="entry.value" :value="entry.value">
+            {{ entry.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <p v-if="error" class="mt-4 text-[12.5px] text-destructive" role="alert">{{ error }}</p>
+
+    <p v-if="isPending" class="mt-6 text-[13.5px] text-ink-5">Einen Moment.</p>
+
+    <p v-else-if="reports.length === 0" class="mt-6 text-body text-ink-4">Nichts zu tun.</p>
+
+    <template v-else>
+      <p class="mt-6 text-[12.5px] text-ink-5">
+        {{ pluralize(totalResults, 'Meldung', 'Meldungen') }}
       </p>
 
-      <!-- Each names itself: these carry no visible label, and a value like „Offen" says nothing
-           about what it selects once the trigger is read on its own. -->
-      <div class="mt-6 flex flex-wrap items-center gap-3">
-        <Select :model-value="status" @update:model-value="(value) => (status = value as Status)">
-          <SelectTrigger aria-label="Status" class="w-[160px] text-[12.5px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">
-              {{ label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          :model-value="category"
-          @update:model-value="(value) => (category = value as Category | 'all')"
+      <ul class="mt-2 flex flex-col">
+        <li
+          v-for="report in reports"
+          :key="report.id"
+          class="border-b border-line-2 py-[18px] last:border-b-0"
         >
-          <SelectTrigger aria-label="Grund" class="w-[220px] text-[12.5px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Gründe</SelectItem>
-            <SelectItem
-              v-for="(label, value) in REPORT_CATEGORY_LABELS"
-              :key="value"
-              :value="value"
-            >
-              {{ label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span class="text-[13.5px] text-ink-2">
+              {{ TARGET_LABELS[report.targetType] }}
+            </span>
+            <!-- A tag, not the uppercase label: these run to „Selbstverletzung oder Suizid",
+                 and uppercase German under tracking is the slowest thing to read on the page
+                 an operator scans by category. The two chips after it stay labels — they are
+                 one-word states of the report, not what it is about. -->
+            <CalliopeBadge variant="tag">
+              {{ REPORT_CATEGORY_LABELS[report.category] }}
+            </CalliopeBadge>
+            <!-- Only when it is gone: still being there is the ordinary case and says
+                 nothing worth a mark. -->
+            <CalliopeBadge v-if="!report.targetExists">Gelöscht</CalliopeBadge>
+            <CalliopeBadge v-if="report.status !== 'open'">
+              {{ STATUS_LABELS[report.status] }}
+            </CalliopeBadge>
+          </div>
 
-        <!-- Only on the closed queue: an outcome is what closing a report produces, so asking
-             for one among open reports would always answer with nothing. -->
-        <Select
-          v-if="status === 'closed'"
-          :model-value="outcome"
-          @update:model-value="(value) => (outcome = value as Outcome | 'all')"
-        >
-          <SelectTrigger aria-label="Ergebnis" class="w-[220px] text-[12.5px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Ergebnisse</SelectItem>
-            <SelectItem v-for="entry in REPORT_OUTCOMES" :key="entry.value" :value="entry.value">
-              {{ entry.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <!-- Quoted, in the reading serif behind a rule: it is the writing under review,
+               and an operator must never read it as the reporter's words. -->
+          <div class="mt-2 max-w-[60ch] border-l border-line-4 pl-3">
+            <p class="line-clamp-3 font-serif text-row text-ink-2">
+              {{ report.targetExcerpt }}
+            </p>
+            <p class="mt-1 text-control text-ink-5">
+              <template v-if="report.authorUsername">
+                von
+                <RouterLink
+                  :to="{ name: 'member', params: { userId: report.authorId } }"
+                  class="underline-offset-[6px] hover:underline"
+                >
+                  {{ report.authorUsername }}
+                </RouterLink>
+              </template>
+              <template v-else>von einem gelöschten Konto</template>
+            </p>
+          </div>
 
-      <p v-if="error" class="mt-4 text-[12.5px] text-destructive" role="alert">{{ error }}</p>
+          <!-- Named where it is said, rather than pooled in a line below both texts. -->
+          <p class="mt-2.5 max-w-[60ch] text-row text-ink-4">
+            <span class="text-ink-5">
+              {{ report.reporterUsername ?? 'Ein gelöschtes Konto' }} meldet:
+            </span>
+            {{ report.reason }}
+          </p>
 
-      <p v-if="isPending" class="mt-6 text-[13.5px] text-ink-5">Einen Moment.</p>
+          <p class="mt-2 text-control text-ink-5">
+            {{ formatActivityTime(report.createdAt) }}
+          </p>
 
-      <p v-else-if="reports.length === 0" class="mt-6 text-body text-ink-4">Nichts zu tun.</p>
-
-      <template v-else>
-        <p class="mt-6 text-[12.5px] text-ink-5">
-          {{ pluralize(totalResults, 'Meldung', 'Meldungen') }}
-        </p>
-
-        <ul class="mt-2 flex flex-col">
-          <li
-            v-for="report in reports"
-            :key="report.id"
-            class="border-b border-line-2 py-[18px] last:border-b-0"
+          <!-- Where it has got to, which is the whole point of recording it: an operator
+               seeing this reporter again reads what was decided last time. -->
+          <div
+            v-if="report.status !== 'open'"
+            class="mt-2.5 max-w-[60ch] border-l border-line-4 pl-3"
           >
-            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span class="text-[13.5px] text-ink-2">
-                {{ TARGET_LABELS[report.targetType] }}
-              </span>
-              <!-- A tag, not the uppercase label: these run to „Selbstverletzung oder Suizid",
-                   and uppercase German under tracking is the slowest thing to read on the page
-                   an operator scans by category. The two chips after it stay labels — they are
-                   one-word states of the report, not what it is about. -->
-              <CalliopeBadge variant="tag">
-                {{ REPORT_CATEGORY_LABELS[report.category] }}
-              </CalliopeBadge>
-              <!-- Only when it is gone: still being there is the ordinary case and says
-                   nothing worth a mark. -->
-              <CalliopeBadge v-if="!report.targetExists">Gelöscht</CalliopeBadge>
-              <CalliopeBadge v-if="report.status !== 'open'">
-                {{ STATUS_LABELS[report.status] }}
-              </CalliopeBadge>
-            </div>
-
-            <!-- Quoted, in the reading serif behind a rule: it is the writing under review,
-                 and an operator must never read it as the reporter's words. -->
-            <div class="mt-2 max-w-[60ch] border-l border-line-4 pl-3">
-              <p class="line-clamp-3 font-serif text-row text-ink-2">
-                {{ report.targetExcerpt }}
-              </p>
-              <p class="mt-1 text-control text-ink-5">
-                <template v-if="report.authorUsername">
-                  von
-                  <RouterLink
-                    :to="{ name: 'member', params: { userId: report.authorId } }"
-                    class="underline-offset-[6px] hover:underline"
-                  >
-                    {{ report.authorUsername }}
-                  </RouterLink>
-                </template>
-                <template v-else>von einem gelöschten Konto</template>
-              </p>
-            </div>
-
-            <!-- Named where it is said, rather than pooled in a line below both texts. -->
-            <p class="mt-2.5 max-w-[60ch] text-row text-ink-4">
-              <span class="text-ink-5">
-                {{ report.reporterUsername ?? 'Ein gelöschtes Konto' }} meldet:
-              </span>
-              {{ report.reason }}
+            <p class="text-control text-ink-5">
+              <template v-if="report.status === 'in_progress' && report.inProgressAt">
+                In Arbeit bei {{ operatorAt(report, report.inProgressAt) }}
+              </template>
+              <template v-else-if="report.closedAt">
+                Geschlossen als
+                <span class="text-ink-4">
+                  {{ report.closingOutcome ? REPORT_OUTCOME_LABELS[report.closingOutcome] : '—' }}
+                </span>
+                von {{ operatorAt(report, report.closedAt) }}
+              </template>
             </p>
-
-            <p class="mt-2 text-control text-ink-5">
-              {{ formatActivityTime(report.createdAt) }}
+            <p v-if="report.closingNote" class="mt-1 text-row text-ink-4">
+              {{ report.closingNote }}
             </p>
+          </div>
 
-            <!-- Where it has got to, which is the whole point of recording it: an operator
-                 seeing this reporter again reads what was decided last time. -->
-            <div
-              v-if="report.status !== 'open'"
-              class="mt-2.5 max-w-[60ch] border-l border-line-4 pl-3"
+          <!-- A closed report offers nothing: it is final, and the row above says what was
+               decided. Taking one somebody else holds is allowed, so a forgotten claim cannot
+               strand it — which is why there is no putting it back. -->
+          <div v-if="report.status !== 'closed'" class="mt-2.5 flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="isBusy(report)"
+              @click="moveReport(report, { status: 'in_progress' })"
             >
-              <p class="text-control text-ink-5">
-                <template v-if="report.status === 'in_progress' && report.inProgressAt">
-                  In Arbeit bei {{ operatorAt(report, report.inProgressAt) }}
-                </template>
-                <template v-else-if="report.closedAt">
-                  Geschlossen als
-                  <span class="text-ink-4">
-                    {{ report.closingOutcome ? REPORT_OUTCOME_LABELS[report.closingOutcome] : '—' }}
-                  </span>
-                  von {{ operatorAt(report, report.closedAt) }}
-                </template>
-              </p>
-              <p v-if="report.closingNote" class="mt-1 text-row text-ink-4">
-                {{ report.closingNote }}
-              </p>
-            </div>
+              {{ report.status === 'open' ? 'Übernehmen' : 'An mich übernehmen' }}
+            </Button>
 
-            <!-- A closed report offers nothing: it is final, and the row above says what was
-                 decided. Taking one somebody else holds is allowed, so a forgotten claim cannot
-                 strand it — which is why there is no putting it back. -->
-            <div v-if="report.status !== 'closed'" class="mt-2.5 flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                :disabled="isBusy(report)"
-                @click="moveReport(report, { status: 'in_progress' })"
-              >
-                {{ report.status === 'open' ? 'Übernehmen' : 'An mich übernehmen' }}
-              </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="isBusy(report)"
+              @click="closing = report"
+            >
+              Schließen
+            </Button>
+          </div>
+        </li>
+      </ul>
 
-              <Button
-                variant="outline"
-                size="sm"
-                :disabled="isBusy(report)"
-                @click="closing = report"
-              >
-                Schließen
-              </Button>
-            </div>
-          </li>
-        </ul>
+      <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
+    </template>
 
-        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
-      </template>
-
-      <CloseReportDialog
-        v-if="closing"
-        :open="closing !== undefined"
-        :subject="closing.targetExcerpt"
-        :is-pending="isMoving"
-        @update:open="(value) => !value && (closing = undefined)"
-        @close="closeReport"
-      />
-    </div>
-  </AppLayout>
+    <CloseReportDialog
+      v-if="closing"
+      :open="closing !== undefined"
+      :subject="closing.targetExcerpt"
+      :is-pending="isMoving"
+      @update:open="(value) => !value && (closing = undefined)"
+      @close="closeReport"
+    />
+  </div>
 </template>

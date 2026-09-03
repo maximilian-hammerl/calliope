@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import ConnectionLost from '@/components/common/ConnectionLost.vue'
 import RateLimited from '@/components/common/RateLimited.vue'
 import { backendReachable, rateLimited } from '@/lib/api/queryClient'
 </script>
 
 <template>
-  <RouterView />
+  <!-- The frame is mounted here, once, rather than by each page: a page that rendered its own
+       tore the bars, the chat stream and the chat list down on every navigation. -->
+  <AppLayout>
+    <RouterView />
+  </AppLayout>
 
   <!-- Above the router view rather than inside a layout: it has to be able to cover an empty
        page, which is what a member reloading mid-deploy would otherwise be looking at. It

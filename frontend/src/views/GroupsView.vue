@@ -15,7 +15,6 @@ import type { ListGroups200ResultsItem } from '@/api/models'
 import { keepPreviousData } from '@tanstack/vue-query'
 import { usePagedList } from '@/composables/usePagedList'
 import ListPagination from '@/components/common/ListPagination.vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import GroupDialog from '@/components/group/GroupDialog.vue'
 import GroupInvitationRow from '@/components/group/GroupInvitationRow.vue'
 import GroupRow from '@/components/group/GroupRow.vue'
@@ -149,125 +148,123 @@ const creating = ref<boolean>(false)
 </script>
 
 <template>
-  <AppLayout>
-    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <!-- Above the heading, because an invitation is waiting on an answer and the groups
-           below are not waiting on anything. Absent entirely when there are none. -->
-      <section v-if="invitations.length > 0" class="mb-9">
-        <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
-          <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
-          <span class="text-[11.5px] text-ink-5">
-            {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}
-          </span>
-        </div>
-
-        <div
-          v-for="(invitation, index) in invitations"
-          :key="invitation.id"
-          :class="index > 0 ? 'border-t border-line-2' : ''"
-        >
-          <GroupInvitationRow :group="invitation" />
-        </div>
-      </section>
-
-      <!-- The heading names the resource and the strip below names the view, the way a group's
-           title sits above its thread tabs. Both saying "Meine Gruppen" would be one thing twice.
-           Discovery used to be a text link below the list, where testers missed it and a member
-           with many groups never reached it — hence the strip, and hence its position. -->
-      <div class="mb-2 flex flex-wrap items-baseline gap-3">
-        <h1 class="text-h1 text-ink-1">Gruppen</h1>
-
-        <div class="ml-auto">
-          <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
-            <Plus :stroke-width="1.5" />
-            Gruppe
-          </Button>
-        </div>
+  <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
+    <!-- Above the heading, because an invitation is waiting on an answer and the groups
+         below are not waiting on anything. Absent entirely when there are none. -->
+    <section v-if="invitations.length > 0" class="mb-9">
+      <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
+        <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
+        <span class="text-[11.5px] text-ink-5">
+          {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}
+        </span>
       </div>
 
-      <div class="mb-2">
-        <GroupsViewStrip />
+      <div
+        v-for="(invitation, index) in invitations"
+        :key="invitation.id"
+        :class="index > 0 ? 'border-t border-line-2' : ''"
+      >
+        <GroupInvitationRow :group="invitation" />
       </div>
+    </section>
 
-      <p class="mb-6 max-w-[60ch] text-body text-ink-4">
-        Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
-      </p>
+    <!-- The heading names the resource and the strip below names the view, the way a group's
+         title sits above its thread tabs. Both saying "Meine Gruppen" would be one thing twice.
+         Discovery used to be a text link below the list, where testers missed it and a member
+         with many groups never reached it — hence the strip, and hence its position. -->
+    <div class="mb-2 flex flex-wrap items-baseline gap-3">
+      <h1 class="text-h1 text-ink-1">Gruppen</h1>
 
-      <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
-           them. Two rows of filters now, which is what `FilterStrips` is for: the vocabulary
-           shares the strip's label column instead of opening a second one beside it. -->
-      <FilterStrips v-if="showsControls" class="mb-7">
-        <FilterStrip
-          v-model="favourite"
-          label="Favoriten"
-          :options="FAVOURITE_FILTERS"
-          default-value="any"
-        />
-        <StoryVocabularyFilters v-model="vocabulary" />
-        <FilterReset :active="filtersActive" @reset="resetFilters" />
-      </FilterStrips>
-
-      <Field v-if="showsControls" class="mb-7 max-w-[380px]">
-        <FieldLabel for="groups-search">Suche</FieldLabel>
-        <Input
-          id="groups-search"
-          v-model="term"
-          name="search"
-          type="search"
-          placeholder="z. B. Erinnerungsmarkt"
-          :maxlength="LIMIT.maxLength"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <FieldDescription>
-          Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
-        </FieldDescription>
-      </Field>
-
-      <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
-        <p class="text-body text-ink-4">
-          <!-- Both can empty a list, so an empty one names whichever are set. Naming only the
-               search sent members to clear it, see nothing change, and have no sign of the filter
-               that was also excluding rows. -->
-          <template v-if="settled !== '' && narrowed">
-            Keine deiner Gruppen passt zu „{{ settled }}“ und diesen Filtern.
-          </template>
-          <template v-else-if="settled !== ''">
-            Keine deiner Gruppen passt zu „{{ settled }}“.
-          </template>
-          <template v-else-if="narrowed"> Keine deiner Gruppen passt zu diesen Filtern. </template>
-          <template v-else>
-            Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich
-            bei den öffentlichen Gruppen um, oder warte auf eine Einladung.
-          </template>
-        </p>
+      <div class="ml-auto">
+        <Button variant="outline" size="sm" aria-label="Gruppe gründen" @click="creating = true">
+          <Plus :stroke-width="1.5" />
+          Gruppe
+        </Button>
       </div>
-
-      <div v-else-if="hasLoaded">
-        <!-- No action button: the title is the link, and nothing else in the product says
-             "x öffnen". -->
-        <GroupRow
-          v-for="(group, index) in groups"
-          :key="group.id"
-          :group="group"
-          :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
-        />
-      </div>
-
-      <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
-        <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
-      </div>
-
-      <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
-
-      <p v-else-if="isError" class="text-[12.5px] text-ink-5">
-        Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
-      </p>
-
-      <!-- The way out of this page: without it, listing only your own groups would leave
-           no way to find a public one. -->
     </div>
-  </AppLayout>
+
+    <div class="mb-2">
+      <GroupsViewStrip />
+    </div>
+
+    <p class="mb-6 max-w-[60ch] text-body text-ink-4">
+      Die Gruppen, zu denen du gehörst. Öffne eine, um weiterzulesen.
+    </p>
+
+    <!-- Favourites float to the top of this list whatever it is sorted by; this narrows it to
+         them. Two rows of filters now, which is what `FilterStrips` is for: the vocabulary
+         shares the strip's label column instead of opening a second one beside it. -->
+    <FilterStrips v-if="showsControls" class="mb-7">
+      <FilterStrip
+        v-model="favourite"
+        label="Favoriten"
+        :options="FAVOURITE_FILTERS"
+        default-value="any"
+      />
+      <StoryVocabularyFilters v-model="vocabulary" />
+      <FilterReset :active="filtersActive" @reset="resetFilters" />
+    </FilterStrips>
+
+    <Field v-if="showsControls" class="mb-7 max-w-[380px]">
+      <FieldLabel for="groups-search">Suche</FieldLabel>
+      <Input
+        id="groups-search"
+        v-model="term"
+        name="search"
+        type="search"
+        placeholder="z. B. Erinnerungsmarkt"
+        :maxlength="LIMIT.maxLength"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <FieldDescription>
+        Sucht in Namen und Beschreibungen, ab {{ LIMIT.minLength }} Zeichen.
+      </FieldDescription>
+    </Field>
+
+    <div v-if="hasLoaded && groups.length === 0" class="max-w-[46ch]">
+      <p class="text-body text-ink-4">
+        <!-- Both can empty a list, so an empty one names whichever are set. Naming only the
+             search sent members to clear it, see nothing change, and have no sign of the filter
+             that was also excluding rows. -->
+        <template v-if="settled !== '' && narrowed">
+          Keine deiner Gruppen passt zu „{{ settled }}“ und diesen Filtern.
+        </template>
+        <template v-else-if="settled !== ''">
+          Keine deiner Gruppen passt zu „{{ settled }}“.
+        </template>
+        <template v-else-if="narrowed"> Keine deiner Gruppen passt zu diesen Filtern. </template>
+        <template v-else>
+          Du gehörst noch zu keiner Gruppe. Gründe eine, um mit anderen zu schreiben, sieh dich bei
+          den öffentlichen Gruppen um, oder warte auf eine Einladung.
+        </template>
+      </p>
+    </div>
+
+    <div v-else-if="hasLoaded">
+      <!-- No action button: the title is the link, and nothing else in the product says
+           "x öffnen". -->
+      <GroupRow
+        v-for="(group, index) in groups"
+        :key="group.id"
+        :group="group"
+        :class="index > 0 ? 'border-t border-line-2' : 'pt-0'"
+      />
+    </div>
+
+    <div v-if="hasLoaded && pageCount > 1" class="mt-7 border-t border-line-2 pt-3">
+      <ListPagination v-model:page="page" :total="total" :items-per-page="itemsPerPage" />
+    </div>
+
+    <p v-else-if="isPending" class="text-[12.5px] text-ink-5">Gruppen werden geladen …</p>
+
+    <p v-else-if="isError" class="text-[12.5px] text-ink-5">
+      Die Gruppen lassen sich gerade nicht laden. Versuche es später noch einmal.
+    </p>
+
+    <!-- The way out of this page: without it, listing only your own groups would leave
+         no way to find a public one. -->
+  </div>
 
   <GroupDialog v-model:open="creating" @created="openGroup" />
 </template>

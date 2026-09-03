@@ -11,7 +11,6 @@ import type { GetUser200 } from '@/api/models'
 import { Flag, Pencil, ShieldBan, ShieldCheck, UserCheck, UserX } from '@lucide/vue'
 import { ApiError } from '@/lib/api/apiFetch'
 import { formatJoinedDate } from '@/lib/format/formatTime'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import BanMemberDialog from '@/components/user/BanMemberDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
@@ -98,159 +97,155 @@ async function allowContactAgain() {
 </script>
 
 <template>
-  <AppLayout>
-    <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
-      <div v-if="isPending" class="flex items-center gap-2 text-note text-ink-5">
-        <Spinner />
-        Einen Moment.
-      </div>
-
-      <template v-else-if="member">
-        <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
-             squeezed the name into an ellipsis, which is the one thing this page must show. -->
-        <div class="flex flex-wrap items-center gap-4">
-          <UserAvatar :username="member.username" :avatar-url="member.avatarUrl" size="lg" />
-
-          <div class="flex min-w-0 flex-col gap-1">
-            <h1 class="truncate text-h1">{{ member.username }}</h1>
-            <p class="text-[12px] text-ink-6">
-              <template v-if="platformRoleLabel(member.platformRole)">
-                {{ platformRoleLabel(member.platformRole) }} ·
-              </template>
-              Dabei seit {{ formatJoinedDate(member.createdAt) }}
-            </p>
-          </div>
-
-          <div v-if="isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
-            <Button variant="outline" size="sm" @click="editingProfile = true">
-              <Pencil :stroke-width="1.5" />
-              Profil bearbeiten
-            </Button>
-          </div>
-
-          <div v-else class="w-full sm:ml-auto sm:w-auto">
-            <Button
-              v-if="member.isBlocked"
-              variant="outline"
-              size="sm"
-              :disabled="unblocking"
-              @click="allowContactAgain"
-            >
-              <UserCheck :stroke-width="1.5" aria-hidden="true" />
-              Blockierung aufheben
-            </Button>
-            <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
-                 where the consequences are spelled out. -->
-            <Button v-else variant="outline" size="sm" @click="blocking = true">
-              <UserX :stroke-width="1.5" aria-hidden="true" />
-              Blockieren
-            </Button>
-            <!-- Quiet beside Blockieren: both act on the member the page is about. -->
-            <Button variant="outline" size="sm" @click="reporting = true">
-              <Flag :stroke-width="1.5" aria-hidden="true" />
-              Melden
-            </Button>
-          </div>
-
-          <!-- Its own group, after the member-facing one: blocking is what any member may do
-               to another, banning is the platform acting. `isBanned` is only sent to an
-               operator, so this is absent for everybody else even before the check. -->
-          <div v-if="mayModerate && !isOwnProfile" class="w-full sm:w-auto">
-            <Button
-              v-if="member.isBanned"
-              variant="outline"
-              size="sm"
-              :disabled="liftingBan"
-              @click="liftTheBan"
-            >
-              <ShieldCheck :stroke-width="1.5" aria-hidden="true" />
-              Sperre aufheben
-            </Button>
-            <!-- A shield rather than the person the block pair draws: what separates these two
-                 rows is that this one is the platform acting, not a member. -->
-            <Button v-else variant="outline" size="sm" @click="banning = true">
-              <ShieldBan :stroke-width="1.5" aria-hidden="true" />
-              Konto sperren
-            </Button>
-          </div>
-        </div>
-
-        <p v-if="blockError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-          {{ blockError }}
-        </p>
-
-        <p v-if="banError" class="mt-3 text-[12.5px] text-destructive" role="alert">
-          {{ banError }}
-        </p>
-
-        <!-- Said plainly on the page, not only inside the dialog: an operator looking at this
-             profile has to be able to see the account's state without opening anything. -->
-        <p v-if="member.isBanned" class="mt-3 text-[12.5px] text-ink-5">
-          Dieses Konto ist gesperrt.
-        </p>
-
-        <p v-if="member.isBlocked" class="mt-4 border-l-2 border-line-4 pl-3 text-row text-ink-5">
-          Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
-        </p>
-
-        <ProfileFields :profile="member" />
-
-        <!-- Said outright rather than left as blank space: an empty page reads as an error.
-             Their own profile says where to fill it in; somebody else's cannot. -->
-        <p
-          v-if="answeredFields(member).length === 0"
-          class="mt-8 max-w-[60ch] border-t border-line-3 pt-6 text-note text-ink-5"
-        >
-          <template v-if="isOwnProfile">
-            Du hast noch nichts über dich erzählt. Erzähl, wie du schreibst — danach sehen andere,
-            ob ihr zusammenpasst.
-          </template>
-          <template v-else> {{ member.username }} hat noch nichts über sich erzählt. </template>
-        </p>
-      </template>
-
-      <template v-else-if="notFound">
-        <h1 class="text-h1">Kein Mitglied gefunden</h1>
-        <p class="mt-5 text-note text-ink-5">
-          Dieses Konto gibt es nicht mehr, oder der Link stimmt nicht.
-        </p>
-      </template>
-
-      <template v-else>
-        <h1 class="text-h1">Das hat nicht geklappt</h1>
-        <p class="mt-5 text-note text-ink-5">
-          Wir konnten dieses Mitglied gerade nicht laden. Versuche es später noch einmal.
-        </p>
-      </template>
+  <div class="flex-1 overflow-auto px-gutter py-5 pb-8 md:px-10">
+    <div v-if="isPending" class="flex items-center gap-2 text-note text-ink-5">
+      <Spinner />
+      Einen Moment.
     </div>
 
-    <ProfileDialog
-      v-if="member"
-      v-model:open="editingProfile"
-      :profile="member"
-      @saved="refreshProfile"
-    />
+    <template v-else-if="member">
+      <!-- Wraps below `sm`: "Blockierung aufheben" is wide enough that on a 375px screen it
+           squeezed the name into an ellipsis, which is the one thing this page must show. -->
+      <div class="flex flex-wrap items-center gap-4">
+        <UserAvatar :username="member.username" :avatar-url="member.avatarUrl" size="lg" />
 
-    <BlockMemberDialog
-      v-if="member"
-      v-model:open="blocking"
-      :user-id="member.id"
-      :username="member.username"
-    />
+        <div class="flex min-w-0 flex-col gap-1">
+          <h1 class="truncate text-h1">{{ member.username }}</h1>
+          <p class="text-[12px] text-ink-6">
+            <template v-if="platformRoleLabel(member.platformRole)">
+              {{ platformRoleLabel(member.platformRole) }} ·
+            </template>
+            Dabei seit {{ formatJoinedDate(member.createdAt) }}
+          </p>
+        </div>
 
-    <ReportDialog
-      v-if="member"
-      v-model:open="reporting"
-      target-type="user"
-      :target-id="member.id"
-      :subject="member.username"
-    />
+        <div v-if="isOwnProfile" class="w-full sm:ml-auto sm:w-auto">
+          <Button variant="outline" size="sm" @click="editingProfile = true">
+            <Pencil :stroke-width="1.5" />
+            Profil bearbeiten
+          </Button>
+        </div>
 
-    <BanMemberDialog
-      v-if="member && mayModerate"
-      v-model:open="banning"
-      :user-id="member.id"
-      :username="member.username"
-    />
-  </AppLayout>
+        <div v-else class="w-full sm:ml-auto sm:w-auto">
+          <Button
+            v-if="member.isBlocked"
+            variant="outline"
+            size="sm"
+            :disabled="unblocking"
+            @click="allowContactAgain"
+          >
+            <UserCheck :stroke-width="1.5" aria-hidden="true" />
+            Blockierung aufheben
+          </Button>
+          <!-- Ghost, not destructive: the destructive weight belongs on the confirmation,
+               where the consequences are spelled out. -->
+          <Button v-else variant="outline" size="sm" @click="blocking = true">
+            <UserX :stroke-width="1.5" aria-hidden="true" />
+            Blockieren
+          </Button>
+          <!-- Quiet beside Blockieren: both act on the member the page is about. -->
+          <Button variant="outline" size="sm" @click="reporting = true">
+            <Flag :stroke-width="1.5" aria-hidden="true" />
+            Melden
+          </Button>
+        </div>
+
+        <!-- Its own group, after the member-facing one: blocking is what any member may do
+             to another, banning is the platform acting. `isBanned` is only sent to an
+             operator, so this is absent for everybody else even before the check. -->
+        <div v-if="mayModerate && !isOwnProfile" class="w-full sm:w-auto">
+          <Button
+            v-if="member.isBanned"
+            variant="outline"
+            size="sm"
+            :disabled="liftingBan"
+            @click="liftTheBan"
+          >
+            <ShieldCheck :stroke-width="1.5" aria-hidden="true" />
+            Sperre aufheben
+          </Button>
+          <!-- A shield rather than the person the block pair draws: what separates these two
+               rows is that this one is the platform acting, not a member. -->
+          <Button v-else variant="outline" size="sm" @click="banning = true">
+            <ShieldBan :stroke-width="1.5" aria-hidden="true" />
+            Konto sperren
+          </Button>
+        </div>
+      </div>
+
+      <p v-if="blockError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+        {{ blockError }}
+      </p>
+
+      <p v-if="banError" class="mt-3 text-[12.5px] text-destructive" role="alert">
+        {{ banError }}
+      </p>
+
+      <!-- Said plainly on the page, not only inside the dialog: an operator looking at this
+           profile has to be able to see the account's state without opening anything. -->
+      <p v-if="member.isBanned" class="mt-3 text-[12.5px] text-ink-5">Dieses Konto ist gesperrt.</p>
+
+      <p v-if="member.isBlocked" class="mt-4 border-l-2 border-line-4 pl-3 text-row text-ink-5">
+        Du hast {{ member.username }} blockiert. Ihr könnt euch nicht einladen.
+      </p>
+
+      <ProfileFields :profile="member" />
+
+      <!-- Said outright rather than left as blank space: an empty page reads as an error.
+           Their own profile says where to fill it in; somebody else's cannot. -->
+      <p
+        v-if="answeredFields(member).length === 0"
+        class="mt-8 max-w-[60ch] border-t border-line-3 pt-6 text-note text-ink-5"
+      >
+        <template v-if="isOwnProfile">
+          Du hast noch nichts über dich erzählt. Erzähl, wie du schreibst — danach sehen andere, ob
+          ihr zusammenpasst.
+        </template>
+        <template v-else> {{ member.username }} hat noch nichts über sich erzählt. </template>
+      </p>
+    </template>
+
+    <template v-else-if="notFound">
+      <h1 class="text-h1">Kein Mitglied gefunden</h1>
+      <p class="mt-5 text-note text-ink-5">
+        Dieses Konto gibt es nicht mehr, oder der Link stimmt nicht.
+      </p>
+    </template>
+
+    <template v-else>
+      <h1 class="text-h1">Das hat nicht geklappt</h1>
+      <p class="mt-5 text-note text-ink-5">
+        Wir konnten dieses Mitglied gerade nicht laden. Versuche es später noch einmal.
+      </p>
+    </template>
+  </div>
+
+  <ProfileDialog
+    v-if="member"
+    v-model:open="editingProfile"
+    :profile="member"
+    @saved="refreshProfile"
+  />
+
+  <BlockMemberDialog
+    v-if="member"
+    v-model:open="blocking"
+    :user-id="member.id"
+    :username="member.username"
+  />
+
+  <ReportDialog
+    v-if="member"
+    v-model:open="reporting"
+    target-type="user"
+    :target-id="member.id"
+    :subject="member.username"
+  />
+
+  <BanMemberDialog
+    v-if="member && mayModerate"
+    v-model:open="banning"
+    :user-id="member.id"
+    :username="member.username"
+  />
 </template>
