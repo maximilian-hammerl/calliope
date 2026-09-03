@@ -88,6 +88,7 @@ async function expand() {
         v-model:document="document"
         v-model:text="text"
         :disabled="sending"
+        capped
       />
 
       <div class="mt-[11px] flex items-center">
