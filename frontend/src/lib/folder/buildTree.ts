@@ -29,7 +29,7 @@ export type LeafRow = Pick<
  * A thread or a page: both are leaves, and the tree treats them alike apart from where a click
  * goes and which word marks the row.
  */
-export type TreeLeaf = {
+type TreeLeaf = {
   kind: 'thread' | 'page'
   id: string
   title: string

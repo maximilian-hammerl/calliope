@@ -8,7 +8,7 @@ import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from '@/ap
 import type { GetGroup200, GetGroup200StoryStatus } from '@/api/models'
 import { queryClient } from '@/lib/api/queryClient'
 import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { STORY_STATUS } from '@/lib/format/storyStatus'
+import { STORY_STATUS, storyStatusLabel } from '@/lib/format/storyStatus'
 import {
   Select,
   SelectContent,
@@ -66,7 +66,7 @@ async function change(next: GetGroup200StoryStatus) {
     </Select>
 
     <p v-else class="text-rail font-medium text-ink-4">
-      {{ STORY_STATUS.find((entry) => entry.value === status)?.label }}
+      {{ storyStatusLabel(status) }}
     </p>
 
     <p v-if="failed" class="mt-2 text-[11.5px] leading-[1.5] text-destructive" role="alert">

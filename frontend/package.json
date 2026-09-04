@@ -16,7 +16,9 @@
     "format:check": "oxfmt --check",
     "validate:fix": "npm run format:fix && npm run lint:fix && npm run type-check",
     "validate:check": "npm run format:check && npm run lint:check && npm run type-check",
-    "open-api:generate-client": "orval --config ./orval.config.ts && node scripts/generateTextLimit.ts"
+    "open-api:generate-client": "orval --config ./orval.config.ts && node scripts/generateTextLimit.ts",
+    "knip:check": "knip",
+    "knip:fix": "knip --fix"
   },
   "dependencies": {
     "@lucide/vue": "1.37.0",
@@ -66,6 +68,7 @@
     "@vue/tsconfig": "0.9.1",
     "jiti": "2.7.0",
     "jsdom": "30.0.1",
+    "knip": "6.34.0",
     "npm-run-all2": "9.0.3",
     "orval": "8.27.0",
     "oxfmt": "0.65.0",
