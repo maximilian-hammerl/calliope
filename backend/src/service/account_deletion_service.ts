@@ -44,10 +44,12 @@ async function requestAccountDeletion(
     return "wrong_password";
   }
 
-  const token = await UserTokenService.issueToken({
-    userId,
-    purpose: "account_deletion",
-  });
+  const token = await db.transaction().execute((transaction) =>
+    UserTokenService.issueToken(transaction, {
+      userId,
+      purpose: "account_deletion",
+    })
+  );
 
   // The cooldown swallowed it, so a link is already on its way.
   if (token === undefined) {

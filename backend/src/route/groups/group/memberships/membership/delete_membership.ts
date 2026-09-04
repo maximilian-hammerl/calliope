@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
+import { db } from "@/src/database/client.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
@@ -81,8 +82,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const removed = await UserInWritingGroupService
-      .deleteMembership(groupId, userId);
+    const removed = await db.transaction().execute((transaction) =>
+      UserInWritingGroupService.deleteMembership(transaction, groupId, userId)
+    );
 
     if (!removed) {
       return c.json({ error: "Membership not found" }, STATUS_CODE.NotFound);

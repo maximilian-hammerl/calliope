@@ -45,7 +45,18 @@ const dialect = new PostgresJSDialect({
   postgres: driver,
 });
 
-export const db = new Kysely<DB>({
+/**
+ * Reads and transactions, and deliberately not writes: `insertInto`, `updateTable` and
+ * `deleteFrom` are not on this handle, so a write has to open a transaction and the compiler is
+ * what says so. Forgetting one used to be a convention to remember — and a route composing two
+ * service calls got two transactions, which is how an account could be written without its
+ * session. A write service function therefore takes the `Transaction` from its caller; an entry
+ * point (a route, `cron.ts`, a background task, the seed, a test) is what opens it.
+ */
+export const db: Omit<
+  Kysely<DB>,
+  "insertInto" | "updateTable" | "deleteFrom" | "replaceInto" | "mergeInto"
+> = new Kysely<DB>({
   dialect,
   plugins: [new CamelCasePlugin()],
 });

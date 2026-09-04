@@ -30,12 +30,14 @@ async function setRole(
   username: string,
   role: PlatformRole | null,
 ): Promise<void> {
-  const updated = await db
-    .updateTable("user")
-    .set({ platformRole: role })
-    .where("username", "=", username)
-    .returning(["username", "platformRole"])
-    .executeTakeFirst();
+  const updated = await db.transaction().execute((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole: role })
+      .where("username", "=", username)
+      .returning(["username", "platformRole"])
+      .executeTakeFirst()
+  );
 
   if (updated === undefined) {
     fail(`No account named "${username}".`);

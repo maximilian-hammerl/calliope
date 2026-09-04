@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -109,11 +110,14 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const invitation = await UserInWritingGroupService.insertInvitation(
-      groupId,
-      userId,
-      role,
-      user.id,
+    const invitation = await db.transaction().execute((transaction) =>
+      UserInWritingGroupService.insertInvitation(
+        transaction,
+        groupId,
+        userId,
+        role,
+        user.id,
+      )
     );
 
     if (invitation === undefined) {

@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
@@ -90,9 +91,12 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const idea = await StoryIdeaService.insertStoryIdea(
-      c.get("user").id,
-      c.req.valid("json"),
+    const idea = await db.transaction().execute((transaction) =>
+      StoryIdeaService.insertStoryIdea(
+        transaction,
+        c.get("user").id,
+        c.req.valid("json"),
+      )
     );
     return c.json(idea, STATUS_CODE.Created);
   },

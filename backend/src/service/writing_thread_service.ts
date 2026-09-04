@@ -71,43 +71,45 @@ function threadsWithAuthor(executor: typeof db | Transaction = db) {
  * fact about the pair, and the join is bound to their id so no query here can see another
  * member's.
  */
-function threadsForReader(readerId: string) {
-  return threadsWithAuthor()
+function threadsForReader(
+  readerId: string,
+  executor: typeof db | Transaction = db,
+) {
+  return threadsWithAuthor(executor)
     .$call((builder) =>
       withFavourite(builder, "writing_thread", "writingThread.id", readerId)
     );
 }
 
 async function insertThread(
+  transaction: Transaction,
   writingGroupId: string,
   title: string,
   createdBy: string,
   /** Null puts it at the root of the group's tree, which is where a thread starts. */
   folderId: string | null = null,
 ): Promise<Thread> {
-  return await db.transaction().execute(async (transaction) => {
-    const { id } = await transaction
-      .insertInto("writingThread")
-      .values({ writingGroupId, title, createdBy, folderId })
-      .returning(["id"])
-      .executeTakeFirstOrThrow();
+  const { id } = await transaction
+    .insertInto("writingThread")
+    .values({ writingGroupId, title, createdBy, folderId })
+    .returning(["id"])
+    .executeTakeFirstOrThrow();
 
-    await NotificationService.insertGroupActivityNotifications(transaction, {
-      type: "new_writing_thread",
-      writingGroupId,
-      writingThreadId: id,
-      actorId: createdBy,
-    });
-
-    // Re-read rather than RETURNING, which cannot reach the joined author name.
-    const thread = await threadsWithAuthor(transaction)
-      .where("writingThread.id", "=", id)
-      .executeTakeFirstOrThrow();
-
-    // Creating a thread does not favourite it — that is the member's own act, and one they can
-    // take the moment this returns. Stated rather than joined, inside the transaction that made it.
-    return { ...thread, writingGroupId, isFavourite: false };
+  await NotificationService.insertGroupActivityNotifications(transaction, {
+    type: "new_writing_thread",
+    writingGroupId,
+    writingThreadId: id,
+    actorId: createdBy,
   });
+
+  // Re-read rather than RETURNING, which cannot reach the joined author name.
+  const thread = await threadsWithAuthor(transaction)
+    .where("writingThread.id", "=", id)
+    .executeTakeFirstOrThrow();
+
+  // Creating a thread does not favourite it — that is the member's own act, and one they can
+  // take the moment this returns. Stated rather than joined, inside the transaction that made it.
+  return { ...thread, writingGroupId, isFavourite: false };
 }
 
 /**
@@ -211,12 +213,13 @@ function listVisibleThreads(
 
 /** Scoped to the group, as every write here is: see the note on `Thread`. */
 async function updateThread(
+  transaction: Transaction,
   writingGroupId: string,
   threadId: string,
   changes: { title?: string },
   editedBy: string,
 ): Promise<Thread | undefined> {
-  const updated = await db
+  const updated = await transaction
     .updateTable("writingThread")
     .set(changes)
     .where("writingGroupId", "=", writingGroupId)
@@ -230,7 +233,7 @@ async function updateThread(
 
   // Re-read with the editor's own favourite, because the response carries it like every other
   // thread does. Renaming a thread does not change whether they keep it.
-  return await threadsForReader(editedBy)
+  return await threadsForReader(editedBy, transaction)
     .where("writingThread.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingThread.id", "=", updated.id)
@@ -243,12 +246,13 @@ async function updateThread(
  * `updateThread` takes it: the response carries their own favourite.
  */
 async function moveThread(
+  transaction: Transaction,
   writingGroupId: string,
   threadId: string,
   folderId: string | null,
   readerId: string,
 ): Promise<Thread | undefined> {
-  const moved = await db
+  const moved = await transaction
     .updateTable("writingThread")
     .set({ folderId })
     .where("writingGroupId", "=", writingGroupId)
@@ -260,7 +264,7 @@ async function moveThread(
     return undefined;
   }
 
-  return await threadsForReader(readerId)
+  return await threadsForReader(readerId, transaction)
     .where("writingThread.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingThread.id", "=", moved.id)
@@ -268,11 +272,12 @@ async function moveThread(
 }
 
 async function deleteThread(
+  transaction: Transaction,
   writingGroupId: string,
   threadId: string,
 ): Promise<boolean> {
   // Posts go with the thread through the foreign key's cascade.
-  const deletion = await db
+  const deletion = await transaction
     .deleteFrom("writingThread")
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", threadId)

@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -98,7 +99,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const moved = await ForumService.moveThread(user, threadId, folderId);
+    const moved = await db.transaction().execute((transaction) =>
+      ForumService.moveThread(transaction, user, threadId, folderId)
+    );
     if (moved === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

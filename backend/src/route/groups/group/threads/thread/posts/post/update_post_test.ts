@@ -1,6 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
-import { db } from "@/src/database/client.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,6 +8,7 @@ import {
   postBody,
   registerUser,
   request,
+  write,
 } from "@/src/test/support.ts";
 
 const administrator = "update-post-admin";
@@ -67,11 +67,13 @@ Deno.test("PATCH …/posts/{postId} dates a published post from its publication"
   // the database clock and are serialised to the millisecond, so a draft published in the same
   // millisecond it was written ties — and the assertion below is a strict `>` on purpose.
   const longAgo = Temporal.Now.instant().subtract({ hours: 3 * 24 }).toString();
-  await db
-    .updateTable("writingPost")
-    .set({ createdAt: longAgo })
-    .where("id", "=", draft.id)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("writingPost")
+      .set({ createdAt: longAgo })
+      .where("id", "=", draft.id)
+      .execute()
+  );
 
   const published = await (await request(
     "PATCH",

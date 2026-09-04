@@ -53,8 +53,9 @@ async function listMembers(
 async function selectMembership(
   chatGroupId: string,
   userId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<UserInChatGroup | undefined> {
-  const row = await membersWithUsername()
+  const row = await membersWithUsername(executor)
     .where("userInChatGroup.chatGroupId", "=", chatGroupId)
     .where("userInChatGroup.userId", "=", userId)
     .executeTakeFirst();
@@ -68,46 +69,46 @@ async function selectMembership(
  * them — which on a small private platform is the mechanism for harassment, not a feature.
  */
 async function insertInvitation(
+  transaction: Transaction,
   chatGroupId: string,
   userId: string,
   invitedBy: string,
 ): Promise<UserInChatGroup | undefined> {
   // One transaction: an invitation nobody is told about is the failure that matters.
-  return await db.transaction().execute(async (transaction) => {
-    const invitation = await transaction
-      .insertInto("userInChatGroup")
-      .values({ chatGroupId, userId, status: "invited" })
-      // Nothing to do when they are already invited or already in it.
-      .onConflict((oc) => oc.doNothing())
-      .returning(["userId"])
-      .executeTakeFirst();
+  const invitation = await transaction
+    .insertInto("userInChatGroup")
+    .values({ chatGroupId, userId, status: "invited" })
+    // Nothing to do when they are already invited or already in it.
+    .onConflict((oc) => oc.doNothing())
+    .returning(["userId"])
+    .executeTakeFirst();
 
-    if (invitation === undefined) {
-      // Nothing happened, so nobody is told.
-      return undefined;
-    }
+  if (invitation === undefined) {
+    // Nothing happened, so nobody is told.
+    return undefined;
+  }
 
-    await NotificationService.insertChatInvitationNotifications(transaction, {
-      recipientIds: [userId],
-      chatGroupId,
-      actorId: invitedBy,
-    });
-
-    return withAvatarUrl(
-      await membersWithUsername(transaction)
-        .where("userInChatGroup.chatGroupId", "=", chatGroupId)
-        .where("userInChatGroup.userId", "=", userId)
-        .executeTakeFirstOrThrow(),
-    );
+  await NotificationService.insertChatInvitationNotifications(transaction, {
+    recipientIds: [userId],
+    chatGroupId,
+    actorId: invitedBy,
   });
+
+  return withAvatarUrl(
+    await membersWithUsername(transaction)
+      .where("userInChatGroup.chatGroupId", "=", chatGroupId)
+      .where("userInChatGroup.userId", "=", userId)
+      .executeTakeFirstOrThrow(),
+  );
 }
 
 /** Only the invited user can turn their invitation into a membership. */
 async function acceptInvitation(
+  transaction: Transaction,
   chatGroupId: string,
   userId: string,
 ): Promise<UserInChatGroup | undefined> {
-  const updated = await db
+  const updated = await transaction
     .updateTable("userInChatGroup")
     .set({ status: "joined" })
     .where("chatGroupId", "=", chatGroupId)
@@ -120,7 +121,7 @@ async function acceptInvitation(
     return undefined;
   }
 
-  return await selectMembership(chatGroupId, userId);
+  return await selectMembership(chatGroupId, userId, transaction);
 }
 
 /**
@@ -128,10 +129,11 @@ async function acceptInvitation(
  * but that is a database trigger rather than something this has to remember.
  */
 async function deleteMembership(
+  transaction: Transaction,
   chatGroupId: string,
   userId: string,
 ): Promise<boolean> {
-  const result = await db
+  const result = await transaction
     .deleteFrom("userInChatGroup")
     .where("chatGroupId", "=", chatGroupId)
     .where("userId", "=", userId)

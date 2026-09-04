@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -108,12 +109,14 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await WritingPostService.updatePost(
-      postId,
-      changes,
-      post.isDraft,
-      // No group, so publishing announces nothing — #119 decides who hears.
-      { writingGroupId: null, writingThreadId: threadId, actorId: user.id },
+    const updated = await db.transaction().execute((transaction) =>
+      WritingPostService.updatePost(
+        transaction,
+        postId,
+        changes,
+        post.isDraft, // No group, so publishing announces nothing — #119 decides who hears.
+        { writingGroupId: null, writingThreadId: threadId, actorId: user.id },
+      )
     );
     if (updated === undefined) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);

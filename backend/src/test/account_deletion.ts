@@ -1,5 +1,5 @@
 import { db } from "@/src/database/client.ts";
-import { registerUser } from "@/src/test/support.ts";
+import { registerUser, write } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import {
   countMailFor,
@@ -32,11 +32,13 @@ export function accountDeletionFixture(scope: string) {
   /** Leaves the address unverified, which `registerUser` otherwise confirms for convenience. */
   async function registerUnverified(): Promise<string> {
     const cookie = await registerUser(username);
-    await db
-      .updateTable("user")
-      .set({ emailAddressVerifiedAt: null })
-      .where("username", "=", username)
-      .execute();
+    await write((transaction) =>
+      transaction
+        .updateTable("user")
+        .set({ emailAddressVerifiedAt: null })
+        .where("username", "=", username)
+        .execute()
+    );
     await flushBackgroundWork();
     await clearMail();
     return cookie;

@@ -75,44 +75,43 @@ function postWithAuthorById(
 }
 
 async function insertPost(
+  transaction: Transaction,
   writingGroupId: string,
   threadId: string,
   document: PostDocument,
   isDraft: boolean,
   createdBy: string,
 ): Promise<Post> {
-  return await db.transaction().execute(async (transaction) => {
-    const { id } = await transaction
-      .insertInto("writingPost")
-      // `text` is derived here rather than accepted, so it cannot disagree with the document.
-      .values({
-        writingThreadId: threadId,
-        // An object, not a string: `JSON.stringify` here would store a jsonb *string* rather
-        // than a document.
-        document,
-        text: documentToPlainText(document),
-        isDraft,
-        createdBy,
-      })
-      .returning(["id"])
-      .executeTakeFirstOrThrow();
+  const { id } = await transaction
+    .insertInto("writingPost")
+    // `text` is derived here rather than accepted, so it cannot disagree with the document.
+    .values({
+      writingThreadId: threadId,
+      // An object, not a string: `JSON.stringify` here would store a jsonb *string* rather
+      // than a document.
+      document,
+      text: documentToPlainText(document),
+      isDraft,
+      createdBy,
+    })
+    .returning(["id"])
+    .executeTakeFirstOrThrow();
 
-    // A draft is visible to nobody but its author, so there is nothing yet to announce. The
-    // telling happens when it is published, which is an update rather than an insert.
-    if (!isDraft) {
-      await NotificationService.insertGroupActivityNotifications(transaction, {
-        type: "new_writing_post",
-        writingGroupId,
-        writingThreadId: threadId,
-        writingPostId: id,
-        actorId: createdBy,
-      });
-    }
+  // A draft is visible to nobody but its author, so there is nothing yet to announce. The
+  // telling happens when it is published, which is an update rather than an insert.
+  if (!isDraft) {
+    await NotificationService.insertGroupActivityNotifications(transaction, {
+      type: "new_writing_post",
+      writingGroupId,
+      writingThreadId: threadId,
+      writingPostId: id,
+      actorId: createdBy,
+    });
+  }
 
-    // Re-read rather than RETURNING, which cannot reach the joined author name.
-    return await postWithAuthorById(id, createdBy, transaction)
-      .executeTakeFirstOrThrow();
-  });
+  // Re-read rather than RETURNING, which cannot reach the joined author name.
+  return await postWithAuthorById(id, createdBy, transaction)
+    .executeTakeFirstOrThrow();
 }
 
 /**
@@ -163,8 +162,9 @@ async function selectPost(
   threadId: string,
   postId: string,
   viewerId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<Post | undefined> {
-  return await postsWithAuthor(viewerId)
+  return await postsWithAuthor(viewerId, executor)
     .where("writingPost.writingThreadId", "=", threadId)
     .where("writingPost.id", "=", postId)
     .executeTakeFirst();
@@ -207,6 +207,7 @@ function listPosts(
  * published. Only the last is an edit a reader is told about.
  */
 async function updatePost(
+  transaction: Transaction,
   postId: string,
   changes: { document?: PostDocument; isDraft?: boolean },
   wasDraft: boolean,
@@ -225,59 +226,58 @@ async function updatePost(
   const isPublishing = wasDraft && changes.isDraft === false;
   const isEditingPublished = !wasDraft && document !== undefined;
 
-  return await db.transaction().execute(async (transaction) => {
-    const updated = await transaction
-      .updateTable("writingPost")
-      .set({
-        ...rest,
-        // Both columns move together, or the projection would describe a body it no longer has.
-        ...(document !== undefined
-          ? {
-            document,
-            text: documentToPlainText(document),
-          }
-          : {}),
-        // A post is born when it is published, not when its draft was first autosaved: a
-        // piece drafted over three days would otherwise appear dated three days ago and sort
-        // into the middle of the thread it belongs at the end of.
-        ...(isPublishing
-          ? { createdAt: Temporal.Now.instant().toString() }
-          : {}),
-        // Who, not only when: `mayModify` lets somebody administering the group edit another
-        // member's post, and the reader is told which of the two happened.
-        ...(isEditingPublished
-          ? {
-            editedAt: Temporal.Now.instant().toString(),
-            editedBy: context.actorId,
-          }
-          : {}),
-      })
-      .where("id", "=", postId)
-      .returning(["id"])
-      .executeTakeFirst();
+  const updated = await transaction
+    .updateTable("writingPost")
+    .set({
+      ...rest,
+      // Both columns move together, or the projection would describe a body it no longer has.
+      ...(document !== undefined
+        ? {
+          document,
+          text: documentToPlainText(document),
+        }
+        : {}),
+      // A post is born when it is published, not when its draft was first autosaved: a
+      // piece drafted over three days would otherwise appear dated three days ago and sort
+      // into the middle of the thread it belongs at the end of.
+      ...(isPublishing ? { createdAt: Temporal.Now.instant().toString() } : {}),
+      // Who, not only when: `mayModify` lets somebody administering the group edit another
+      // member's post, and the reader is told which of the two happened.
+      ...(isEditingPublished
+        ? {
+          editedAt: Temporal.Now.instant().toString(),
+          editedBy: context.actorId,
+        }
+        : {}),
+    })
+    .where("id", "=", postId)
+    .returning(["id"])
+    .executeTakeFirst();
 
-    if (updated === undefined) {
-      return undefined;
-    }
+  if (updated === undefined) {
+    return undefined;
+  }
 
-    // Publishing is the moment the writing becomes everybody's; editing it again is not.
-    if (isPublishing && context.writingGroupId !== null) {
-      await NotificationService.insertGroupActivityNotifications(transaction, {
-        type: "new_writing_post",
-        writingGroupId: context.writingGroupId,
-        writingThreadId: context.writingThreadId,
-        writingPostId: updated.id,
-        actorId: context.actorId,
-      });
-    }
+  // Publishing is the moment the writing becomes everybody's; editing it again is not.
+  if (isPublishing && context.writingGroupId !== null) {
+    await NotificationService.insertGroupActivityNotifications(transaction, {
+      type: "new_writing_post",
+      writingGroupId: context.writingGroupId,
+      writingThreadId: context.writingThreadId,
+      writingPostId: updated.id,
+      actorId: context.actorId,
+    });
+  }
 
-    return await postWithAuthorById(updated.id, context.actorId, transaction)
-      .executeTakeFirstOrThrow();
-  });
+  return await postWithAuthorById(updated.id, context.actorId, transaction)
+    .executeTakeFirstOrThrow();
 }
 
-async function deletePost(postId: string): Promise<boolean> {
-  const deletion = await db
+async function deletePost(
+  transaction: Transaction,
+  postId: string,
+): Promise<boolean> {
+  const deletion = await transaction
     .deleteFrom("writingPost")
     .where("id", "=", postId)
     .executeTakeFirst();

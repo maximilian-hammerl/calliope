@@ -1,3 +1,4 @@
+import { db } from "./database/client.ts";
 import { UserAvatarService } from "./service/user_avatar_service.ts";
 import { UserTokenService } from "./service/user_token_service.ts";
 import { UserService } from "./service/user_service.ts";
@@ -9,7 +10,9 @@ export function scheduleCronJobs() {
     "0 * * * *",
     { signal: getAbortSignalForShutdown() },
     async () => {
-      const deletedSessions = await UserService.deleteExpiredSessions();
+      const deletedSessions = await db.transaction().execute((transaction) =>
+        UserService.deleteExpiredSessions(transaction)
+      );
       console.log(`Deleted ${deletedSessions} expired session(s)`);
     },
   );
@@ -31,7 +34,9 @@ export function scheduleCronJobs() {
     "30 * * * *",
     { signal: getAbortSignalForShutdown() },
     async () => {
-      const deletedTokens = await UserTokenService.deleteExpiredTokens();
+      const deletedTokens = await db.transaction().execute((transaction) =>
+        UserTokenService.deleteExpiredTokens(transaction)
+      );
       console.log(`Deleted ${deletedTokens} expired user token(s)`);
     },
   );

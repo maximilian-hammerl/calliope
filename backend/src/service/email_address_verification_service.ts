@@ -23,10 +23,12 @@ function sendVerificationMail(
   runInBackground(
     "Issuing an email address verification link",
     async () => {
-      const token = await UserTokenService.issueToken({
-        userId: user.id,
-        purpose: "email_address_verification",
-      });
+      const token = await db.transaction().execute((transaction) =>
+        UserTokenService.issueToken(transaction, {
+          userId: user.id,
+          purpose: "email_address_verification",
+        })
+      );
 
       // The cooldown swallowed it, which means one is already on its way.
       if (token === undefined) {

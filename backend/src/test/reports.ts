@@ -4,6 +4,7 @@ import {
   deleteUsers,
   postBody,
   request,
+  write,
 } from "@/src/test/support.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 
@@ -42,11 +43,13 @@ export async function makeOperator(
   username: string,
   cookie: string,
 ): Promise<string> {
-  await db
-    .updateTable("user")
-    .set({ platformRole: "moderator" })
-    .where("username", "=", username)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole: "moderator" })
+      .where("username", "=", username)
+      .execute()
+  );
   return cookie;
 }
 
@@ -137,17 +140,19 @@ export async function cleanUpReports(usernames: string[]) {
 
   // Also by `operatorId`, because a report an operator only ever *closed* has none of the three
   // references below pointing at this fixture.
-  await db
-    .deleteFrom("report")
-    .where((eb) =>
-      eb.or([
-        eb("reporterId", "in", fixtureUsers),
-        eb("reportedUserId", "in", fixtureUsers),
-        eb("reportedAuthorId", "in", fixtureUsers),
-        eb("operatorId", "in", fixtureUsers),
-      ])
-    )
-    .execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("report")
+      .where((eb) =>
+        eb.or([
+          eb("reporterId", "in", fixtureUsers),
+          eb("reportedUserId", "in", fixtureUsers),
+          eb("reportedAuthorId", "in", fixtureUsers),
+          eb("operatorId", "in", fixtureUsers),
+        ])
+      )
+      .execute()
+  );
 
   await deleteUsers(usernames);
 }

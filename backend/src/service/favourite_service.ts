@@ -1,4 +1,4 @@
-import { db } from "@/src/database/client.ts";
+import type { Transaction } from "@/src/database/client.ts";
 import type { User } from "@/src/service/user_service.ts";
 import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
 import {
@@ -22,6 +22,7 @@ export type FavouriteRefusal = "not_found";
  * way of discovering private writing. Favouriting your *own* thing is deliberately allowed.
  */
 async function setFavourite(
+  transaction: Transaction,
   user: User,
   targetType: FavouriteTargetType,
   targetId: string,
@@ -32,7 +33,7 @@ async function setFavourite(
     return "not_found";
   }
 
-  await db
+  await transaction
     .insertInto("favourite")
     .values({ userId: user.id, [FAVOURITE_COLUMN[targetType]]: targetId })
     // Favouriting twice is the same as favouriting once, so a second click is not an error.
@@ -53,11 +54,12 @@ async function setFavourite(
  * was never there answers the same way, because absent is the state being asked for.
  */
 async function clearFavourite(
+  transaction: Transaction,
   user: User,
   targetType: FavouriteTargetType,
   targetId: string,
 ): Promise<void> {
-  await db
+  await transaction
     .deleteFrom("favourite")
     .where("userId", "=", user.id)
     .where(FAVOURITE_COLUMN[targetType], "=", targetId)

@@ -1,4 +1,4 @@
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type {
   ReportCategory,
   ReportOutcome,
@@ -34,6 +34,7 @@ const TARGET_COLUMN = {
 export type ReportRefusal = "not_found" | "own_account" | "own_content";
 
 async function insertReport(
+  transaction: Transaction,
   user: User,
   targetType: ReportTargetType,
   targetId: string,
@@ -72,7 +73,7 @@ async function insertReport(
   // exclusion constraint matching the ON CONFLICT specification" for every report ever filed.
   // It is spelled through `eb.fn` rather than a raw `sql` template so the column names stay
   // checked.
-  await db
+  await transaction
     .insertInto("report")
     .values({
       reporterId: user.id,
@@ -251,13 +252,14 @@ export type ReportMoveRefusal =
  * together resolve to one winner rather than both passing a check and then both writing.
  */
 async function moveReport(
+  transaction: Transaction,
   reportId: string,
   move: ReportMove,
   operatorId: string,
 ): Promise<ReportMoveRefusal | undefined> {
   const now = Temporal.Now.instant().toString();
 
-  const moved = await db
+  const moved = await transaction
     .updateTable("report")
     .set(
       move.toStatus === "in_progress"

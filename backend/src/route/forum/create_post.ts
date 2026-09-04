@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -93,11 +94,8 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const post = await ForumService.insertPost(
-      threadId,
-      document,
-      isDraft,
-      user.id,
+    const post = await db.transaction().execute((transaction) =>
+      ForumService.insertPost(transaction, threadId, document, isDraft, user.id)
     );
 
     return c.json(post, STATUS_CODE.Created);

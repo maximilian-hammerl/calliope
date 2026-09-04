@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
@@ -59,12 +60,15 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId, category, reason } = c.req.valid("json");
 
-    const refusal = await ReportService.insertReport(
-      c.get("user"),
-      targetType,
-      targetId,
-      category,
-      reason,
+    const refusal = await db.transaction().execute((transaction) =>
+      ReportService.insertReport(
+        transaction,
+        c.get("user"),
+        targetType,
+        targetId,
+        category,
+        reason,
+      )
     );
 
     switch (refusal) {

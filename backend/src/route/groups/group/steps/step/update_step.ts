@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -83,10 +84,13 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await WritingGroupNextStepService.setCompleted(
-      stepId,
-      done,
-      user.id,
+    const updated = await db.transaction().execute((transaction) =>
+      WritingGroupNextStepService.setCompleted(
+        transaction,
+        stepId,
+        done,
+        user.id,
+      )
     );
     // Deleted between the check above and the update: a race, answered like any other miss.
     if (updated === undefined) {

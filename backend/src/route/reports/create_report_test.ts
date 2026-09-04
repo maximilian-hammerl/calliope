@@ -10,6 +10,7 @@ import {
   postBody,
   registerUser,
   request,
+  write,
 } from "@/src/test/support.ts";
 
 // Its own accounts: the suite runs in parallel, so shared names collide.
@@ -37,16 +38,18 @@ Deno.test.afterEach(async () => {
     .select("id")
     .where("username", "in", [reporter, author, outsider]);
 
-  await db
-    .deleteFrom("report")
-    .where((eb) =>
-      eb.or([
-        eb("reporterId", "in", fixtureUsers),
-        eb("reportedUserId", "in", fixtureUsers),
-        eb("reportedAuthorId", "in", fixtureUsers),
-      ])
-    )
-    .execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("report")
+      .where((eb) =>
+        eb.or([
+          eb("reporterId", "in", fixtureUsers),
+          eb("reportedUserId", "in", fixtureUsers),
+          eb("reportedAuthorId", "in", fixtureUsers),
+        ])
+      )
+      .execute()
+  );
 
   await deleteUsers([reporter, author, outsider]);
 });
@@ -316,10 +319,12 @@ Deno.test("two members reporting the same thing can both still delete their acco
   // Both rows lose their reporter, which under NULLS NOT DISTINCT made them the same key and
   // failed the *deletion* — a member unable to leave because somebody else reported the same
   // thing they did. The index only covers live reporters for this reason.
-  await db
-    .deleteFrom("user")
-    .where("username", "in", [reporter, outsider])
-    .execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("user")
+      .where("username", "in", [reporter, outsider])
+      .execute()
+  );
 
   const surviving = await db
     .selectFrom("report")

@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
@@ -79,10 +80,13 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const step = await WritingGroupNextStepService.insertStep(
-      groupId,
-      text,
-      user.id,
+    const step = await db.transaction().execute((transaction) =>
+      WritingGroupNextStepService.insertStep(
+        transaction,
+        groupId,
+        text,
+        user.id,
+      )
     );
     return c.json(step, STATUS_CODE.Created);
   },

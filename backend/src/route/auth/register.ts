@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
+import { db } from "@/src/database/client.ts";
 import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { sessionProvenance } from "@/src/util/session_provenance.ts";
@@ -69,21 +70,39 @@ export default new OpenAPIHono().openapi(
       return c.json(PASSWORD_BREACHED_BODY, STATUS_CODE.UnprocessableEntity);
     }
 
-    const user = await UserService.insertUser(username, password, emailAddress);
+    // One transaction over both writes: a session is started even though the address is
+    // unverified, because without one there is no way back in to correct a typo — so an account
+    // written without its session is exactly the orphan this is here to prevent.
+    const registered = await db.transaction().execute(async (transaction) => {
+      const user = await UserService.insertUser(
+        transaction,
+        username,
+        password,
+        emailAddress,
+      );
 
-    if (user === undefined) {
+      if (user === undefined) {
+        return undefined;
+      }
+
+      return {
+        user,
+        sessionToken: await UserService.insertSessionForUser(
+          transaction,
+          user,
+          sessionProvenance(c),
+        ),
+      };
+    });
+
+    if (registered === undefined) {
       return c.json(
         { error: "Username or email address already in use" },
         STATUS_CODE.Conflict,
       );
     }
 
-    // A session is started even though the address is unverified: without one there is no
-    // way back in to correct a typo, and the account would be orphaned by a single slip.
-    const sessionToken = await UserService.insertSessionForUser(
-      user,
-      sessionProvenance(c),
-    );
+    const { user, sessionToken } = registered;
     SessionCookieService.setUserSession(c, sessionToken);
 
     EmailAddressVerificationService.sendVerificationMail(user);

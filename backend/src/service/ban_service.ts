@@ -1,4 +1,4 @@
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import { mayModeratePlatform } from "@/src/service/platform_authorization.ts";
 import type { PlatformRole } from "@/src/database/schema.ts";
 
@@ -83,8 +83,11 @@ async function banUser(
  * Lifting restores access and nothing else. The address was never released, so there is nothing
  * to reclaim; the sessions ended at the ban and are not coming back.
  */
-async function liftBan(userId: string): Promise<"not_found" | undefined> {
-  const lifted = await db
+async function liftBan(
+  transaction: Transaction,
+  userId: string,
+): Promise<"not_found" | undefined> {
+  const lifted = await transaction
     .updateTable("user")
     .set({ bannedAt: null, banReason: null, bannedBy: null })
     .where("id", "=", userId)

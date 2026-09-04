@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { FORUM_PAGE_SUMMARY_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -90,7 +91,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const moved = await ForumService.movePage(user, pageId, folderId);
+    const moved = await db.transaction().execute((transaction) =>
+      ForumService.movePage(transaction, user, pageId, folderId)
+    );
     if (moved === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }

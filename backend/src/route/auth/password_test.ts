@@ -3,11 +3,11 @@ import { BreachedPasswordService } from "@/src/service/breached_password_service
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { db } from "@/src/database/client.ts";
 import {
   clearRateLimits,
   deleteUsers,
   registerUser,
+  write,
 } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { TEXT_MINIMUM } from "@/src/text_limit.ts";
@@ -142,11 +142,13 @@ Deno.test("PATCH /api/auth/password needs a session", async () => {
 Deno.test("PATCH /api/auth/password is refused while the address is unverified", async () => {
   const cookie = await signedIn();
 
-  await db
-    .updateTable("user")
-    .set({ emailAddressVerifiedAt: null })
-    .where("username", "=", username)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ emailAddressVerifiedAt: null })
+      .where("username", "=", username)
+      .execute()
+  );
 
   assertEquals((await changePassword(cookie)).status, STATUS_CODE.Forbidden);
 });

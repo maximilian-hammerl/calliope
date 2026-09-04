@@ -1,12 +1,12 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
-import { db } from "@/src/database/client.ts";
 import {
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
   request,
+  write,
 } from "@/src/test/support.ts";
 import { sendJson } from "@/src/test/auth.ts";
 
@@ -82,11 +82,13 @@ Deno.test("GET /api/users/{userId} carries the platform role, and null for an or
     await (await request("GET", `/api/users/${subjectId}`, cookie)).json();
   assertEquals(ordinary.platformRole, null);
 
-  await db
-    .updateTable("user")
-    .set({ platformRole: "administrator" })
-    .where("id", "=", subjectId)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole: "administrator" })
+      .where("id", "=", subjectId)
+      .execute()
+  );
 
   const promoted =
     await (await request("GET", `/api/users/${subjectId}`, cookie)).json();

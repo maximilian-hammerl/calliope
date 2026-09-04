@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -55,7 +56,9 @@ export default new OpenAPIHono().openapi(
         : c.json({ error: access.error }, STATUS_CODE.Forbidden);
     }
 
-    await ChatGroupService.markRead(chatId, user.id);
+    await db.transaction().execute((transaction) =>
+      ChatGroupService.markRead(transaction, chatId, user.id)
+    );
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

@@ -127,6 +127,7 @@ async function selectPage(
 }
 
 async function insertPage(
+  transaction: Transaction,
   writingGroupId: string,
   title: string,
   document: PostDocument,
@@ -134,45 +135,43 @@ async function insertPage(
   /** Null puts it at the root of the group's tree, which is where a page starts. */
   folderId: string | null = null,
 ): Promise<Page> {
-  return await db.transaction().execute(async (transaction) => {
-    const { id } = await transaction
-      .insertInto("writingPage")
-      .values({
-        writingGroupId,
-        title,
-        folderId,
-        // An object, not a string: stringifying here stores a jsonb *string*.
-        document,
-        // Derived here and never accepted from the client, as a post's projection is.
-        text: documentToPlainText(document),
-        createdBy,
-        // The creator counts as the first editor, so a refusal can name somebody from the start.
-        updatedBy: createdBy,
-      })
-      .returning(["id"])
-      .executeTakeFirstOrThrow();
-
-    await NotificationService.insertGroupActivityNotifications(transaction, {
-      type: "new_writing_page",
+  const { id } = await transaction
+    .insertInto("writingPage")
+    .values({
       writingGroupId,
-      writingPageId: id,
-      actorId: createdBy,
-    });
+      title,
+      folderId,
+      // An object, not a string: stringifying here stores a jsonb *string*.
+      document,
+      // Derived here and never accepted from the client, as a post's projection is.
+      text: documentToPlainText(document),
+      createdBy,
+      // The creator counts as the first editor, so a refusal can name somebody from the start.
+      updatedBy: createdBy,
+    })
+    .returning(["id"])
+    .executeTakeFirstOrThrow();
 
-    // Re-read rather than RETURNING, which cannot reach the joined names.
-    const page = await pagesWithNames(transaction)
-      .select((eb) =>
-        eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
-      )
-      .where("writingPage.writingGroupId", "=", writingGroupId)
-      .$narrowType<{ writingGroupId: NotNull }>()
-      .where("writingPage.id", "=", id)
-      .executeTakeFirstOrThrow();
-
-    // Writing a page does not favourite it — that is the member's own act, available the moment
-    // this returns. Stated rather than joined, inside the transaction that made it.
-    return { ...page, isFavourite: false };
+  await NotificationService.insertGroupActivityNotifications(transaction, {
+    type: "new_writing_page",
+    writingGroupId,
+    writingPageId: id,
+    actorId: createdBy,
   });
+
+  // Re-read rather than RETURNING, which cannot reach the joined names.
+  const page = await pagesWithNames(transaction)
+    .select((eb) =>
+      eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
+    )
+    .where("writingPage.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
+    .where("writingPage.id", "=", id)
+    .executeTakeFirstOrThrow();
+
+  // Writing a page does not favourite it — that is the member's own act, available the moment
+  // this returns. Stated rather than joined, inside the transaction that made it.
+  return { ...page, isFavourite: false };
 }
 
 /** The page as its own view reads it, favourite included. */
@@ -180,8 +179,9 @@ async function selectPageForReader(
   writingGroupId: string,
   pageId: string,
   readerId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<Page | undefined> {
-  return await pagesForReader(readerId)
+  return await pagesForReader(readerId, executor)
     .select((eb) =>
       eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
     )
@@ -252,13 +252,14 @@ export type UpdateOutcome =
  * from. `undefined` means no such page in that group.
  */
 async function updatePage(
+  transaction: Transaction,
   writingGroupId: string,
   pageId: string,
   loadedAt: string,
   values: { title: string; document: PostDocument },
   updatedBy: string,
 ): Promise<UpdateOutcome | undefined> {
-  const written = await db
+  const written = await transaction
     .updateTable("writingPage")
     .set({
       title: values.title,
@@ -274,7 +275,12 @@ async function updatePage(
     .executeTakeFirst();
 
   // The editor's own favourite, because the response carries it like every other page does.
-  const page = await selectPageForReader(writingGroupId, pageId, updatedBy);
+  const page = await selectPageForReader(
+    writingGroupId,
+    pageId,
+    updatedBy,
+    transaction,
+  );
   if (page === undefined) {
     return undefined;
   }
@@ -286,26 +292,33 @@ async function updatePage(
  * `20260902160000_activity_ignores_a_move.sql`. `undefined` means no such page in that group.
  */
 async function movePage(
+  transaction: Transaction,
   writingGroupId: string,
   pageId: string,
   folderId: string | null,
   readerId: string,
 ): Promise<Page | undefined> {
-  await db
+  await transaction
     .updateTable("writingPage")
     .set({ folderId })
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", pageId)
     .execute();
 
-  return await selectPageForReader(writingGroupId, pageId, readerId);
+  return await selectPageForReader(
+    writingGroupId,
+    pageId,
+    readerId,
+    transaction,
+  );
 }
 
 async function deletePage(
+  transaction: Transaction,
   writingGroupId: string,
   pageId: string,
 ): Promise<void> {
-  await db
+  await transaction
     .deleteFrom("writingPage")
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", pageId)

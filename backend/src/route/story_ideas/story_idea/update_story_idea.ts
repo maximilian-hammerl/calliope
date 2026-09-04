@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -62,10 +63,13 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { ideaId } = c.req.valid("param");
 
-    const updated = await StoryIdeaService.updateStoryIdea(
-      ideaId,
-      c.get("user").id,
-      c.req.valid("json"),
+    const updated = await db.transaction().execute((transaction) =>
+      StoryIdeaService.updateStoryIdea(
+        transaction,
+        ideaId,
+        c.get("user").id,
+        c.req.valid("json"),
+      )
     );
 
     if (updated !== undefined) {

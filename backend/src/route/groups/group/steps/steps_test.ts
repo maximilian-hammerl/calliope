@@ -8,6 +8,7 @@ import {
   deleteUsers,
   registerUser,
   request,
+  write,
 } from "@/src/test/support.ts";
 
 const administrator = "steps-test-admin";
@@ -225,7 +226,10 @@ Deno.test("a completed step survives its completer's account deletion", async ()
 
   // The completer's account goes; SET NULL fires, and the CHECK must allow a completion
   // time without a completer — the asymmetry the constraint exists to permit.
-  await db.deleteFrom("user").where("username", "=", writer).execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("user").where("username", "=", writer).execute()
+  );
 
   const response = await request(
     "GET",

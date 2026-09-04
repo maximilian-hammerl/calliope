@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -90,10 +91,12 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await WritingFolderService.updateFolder(groupId, folderId, {
-      title,
-      description,
-    });
+    const updated = await db.transaction().execute((transaction) =>
+      WritingFolderService.updateFolder(transaction, groupId, folderId, {
+        title,
+        description,
+      })
+    );
     if (updated === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }

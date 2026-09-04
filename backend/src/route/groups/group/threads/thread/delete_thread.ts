@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -81,7 +82,9 @@ export default new OpenAPIHono().openapi(
     }
 
     // Posts go with it through the foreign key's cascade.
-    await WritingThreadService.deleteThread(groupId, threadId);
+    await db.transaction().execute((transaction) =>
+      WritingThreadService.deleteThread(transaction, groupId, threadId)
+    );
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

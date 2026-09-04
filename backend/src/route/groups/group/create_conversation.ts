@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -95,10 +96,13 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const chat = await ChatGroupService.insertChatGroup(
-      user,
-      conversationTitle("Gruppe", group.title),
-      administratorIds,
+    const chat = await db.transaction().execute((transaction) =>
+      ChatGroupService.insertChatGroup(
+        transaction,
+        user,
+        conversationTitle("Gruppe", group.title),
+        administratorIds,
+      )
     );
 
     return c.json(chat, STATUS_CODE.Created);

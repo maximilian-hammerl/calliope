@@ -1,7 +1,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { db } from "@/src/database/client.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import {
@@ -79,13 +79,15 @@ Deno.test("POST /api/auth/verify-email-address spends the token exactly once", a
 Deno.test("POST /api/auth/verify-email-address rejects an expired token", async () => {
   const { cookie, token } = await registerAndReadLink();
 
-  await db
-    .updateTable("userToken")
-    .set({
-      expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
-    })
-    .where("purpose", "=", "email_address_verification")
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("userToken")
+      .set({
+        expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
+      })
+      .where("purpose", "=", "email_address_verification")
+      .execute()
+  );
 
   assertEquals((await verify(token)).status, STATUS_CODE.Gone);
   // Still walled, rather than let through by a link that no longer counts.
@@ -110,13 +112,15 @@ Deno.test("POST /api/auth/resend-email-address-verification sends another link",
   await clearMail();
 
   // Past the resend cooldown, which the issuing service enforces on the outstanding token.
-  await db
-    .updateTable("userToken")
-    .set({
-      createdAt: Temporal.Now.instant().subtract({ minutes: 5 }).toString(),
-    })
-    .where("purpose", "=", "email_address_verification")
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("userToken")
+      .set({
+        createdAt: Temporal.Now.instant().subtract({ minutes: 5 }).toString(),
+      })
+      .where("purpose", "=", "email_address_verification")
+      .execute()
+  );
 
   const response = await postJson(
     "/api/auth/resend-email-address-verification",

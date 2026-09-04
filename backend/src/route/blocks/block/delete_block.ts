@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -45,9 +46,12 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const removed = await BlockService.deleteBlock(
-      c.get("user").id,
-      c.req.valid("param").userId,
+    const removed = await db.transaction().execute((transaction) =>
+      BlockService.deleteBlock(
+        transaction,
+        c.get("user").id,
+        c.req.valid("param").userId,
+      )
     );
 
     if (!removed) {

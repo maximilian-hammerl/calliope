@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -94,10 +95,13 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await WritingFolderService.moveFolder(
-      groupId,
-      folderId,
-      parentFolderId,
+    const outcome = await db.transaction().execute((transaction) =>
+      WritingFolderService.moveFolder(
+        transaction,
+        groupId,
+        folderId,
+        parentFolderId,
+      )
     );
 
     if (outcome === undefined || outcome.kind === "noSuchParent") {

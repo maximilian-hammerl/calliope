@@ -1,7 +1,7 @@
 import { assertEquals, assertNotEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import { db } from "@/src/database/client.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import {
@@ -43,11 +43,13 @@ async function storedAddress(): Promise<string> {
 }
 
 async function markVerified(): Promise<void> {
-  await db
-    .updateTable("user")
-    .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
-    .where("username", "=", username)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
+      .where("username", "=", username)
+      .execute()
+  );
 }
 
 Deno.test("PATCH /api/auth/email-address corrects an address that is not verified", async () => {

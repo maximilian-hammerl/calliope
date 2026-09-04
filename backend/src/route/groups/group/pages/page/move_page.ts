@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -94,11 +95,14 @@ export default new OpenAPIHono().openapi(
       }
     }
 
-    const moved = await WritingPageService.movePage(
-      groupId,
-      pageId,
-      folderId,
-      user.id,
+    const moved = await db.transaction().execute((transaction) =>
+      WritingPageService.movePage(
+        transaction,
+        groupId,
+        pageId,
+        folderId,
+        user.id,
+      )
     );
     if (moved === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);

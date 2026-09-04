@@ -1,5 +1,5 @@
 import { generate as uuidv7 } from "@std/uuid/v7";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type { AvatarOrigin } from "@/src/database/schema.ts";
 import { toAvatar } from "@/src/image/avatar_image.ts";
 import { FileStore } from "@/src/storage/file_store.ts";
@@ -27,6 +27,7 @@ async function selectAvatar(userId: string): Promise<Avatar | undefined> {
  * order leaves a broken picture. The previous file is left to the sweep too.
  */
 async function setAvatar(
+  transaction: Transaction,
   userId: string,
   bytes: Uint8Array,
   declaration: { origin: AvatarOrigin; credit: string | null },
@@ -40,7 +41,7 @@ async function setAvatar(
   const fileId = uuidv7();
   await FileStore.write(fileId, image);
 
-  await db
+  await transaction
     .insertInto("userAvatar")
     .values({
       userId,
@@ -71,8 +72,11 @@ async function isInUse(fileId: string): Promise<boolean> {
   return row !== undefined;
 }
 
-async function deleteAvatar(userId: string): Promise<boolean> {
-  const result = await db
+async function deleteAvatar(
+  transaction: Transaction,
+  userId: string,
+): Promise<boolean> {
+  const result = await transaction
     .deleteFrom("userAvatar")
     .where("userId", "=", userId)
     .executeTakeFirst();

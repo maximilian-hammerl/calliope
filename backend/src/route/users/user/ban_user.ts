@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
@@ -127,7 +128,11 @@ export default new OpenAPIHono()
     async (c) => {
       const { userId } = c.req.valid("param");
 
-      if (await BanService.liftBan(userId) === "not_found") {
+      if (
+        await db.transaction().execute((transaction) =>
+          BanService.liftBan(transaction, userId)
+        ) === "not_found"
+      ) {
         return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
       }
 

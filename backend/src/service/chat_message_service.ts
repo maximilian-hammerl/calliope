@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type { ChatMessage as DatabaseChatMessage } from "@/src/database/schema.ts";
 
 export type ChatMessage =
@@ -18,8 +18,8 @@ const SELECTED_COLUMNS = [
   "chatMessage.createdAt",
 ] as const;
 
-function messagesWithAuthor() {
-  return db
+function messagesWithAuthor(executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("chatMessage")
     .leftJoin("user", "user.id", "chatMessage.createdBy")
     .select([...SELECTED_COLUMNS, "user.username as createdByUsername"]);
@@ -57,18 +57,19 @@ async function listMessages(
 }
 
 async function insertMessage(
+  transaction: Transaction,
   chatGroupId: string,
   text: string,
   createdBy: string,
 ): Promise<ChatMessage> {
-  const { id } = await db
+  const { id } = await transaction
     .insertInto("chatMessage")
     .values({ chatGroupId, text, createdBy })
     .returning(["id"])
     .executeTakeFirstOrThrow();
 
   // Re-read rather than RETURNING, which cannot reach the joined author name.
-  return await messagesWithAuthor()
+  return await messagesWithAuthor(transaction)
     .where("chatMessage.id", "=", id)
     .executeTakeFirstOrThrow();
 }

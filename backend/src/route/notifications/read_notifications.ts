@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -36,7 +37,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const read = await NotificationService.markAllRead(c.get("user").id);
+    const read = await db.transaction().execute((transaction) =>
+      NotificationService.markAllRead(transaction, c.get("user").id)
+    );
 
     return c.json({ read }, STATUS_CODE.OK);
   },

@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type {
   UserInWritingGroupRole,
@@ -153,50 +153,49 @@ function toRow(values: Partial<WritingGroupValues>) {
  * is not an administrator could never be administered.
  */
 async function insertWritingGroup(
+  transaction: Transaction,
   creator: User,
   values: WritingGroupValues,
 ): Promise<WritingGroup> {
   refuseOrphanedSubgenres(values.genres ?? [], values.subgenres ?? []);
 
-  return await db.transaction().execute(async (transaction) => {
-    const writingGroup = await transaction
-      .insertInto("writingGroup")
-      // title and synopsis restated so the type carries their presence; `toRow` describes a
-      // change, where every field may be absent.
-      .values({
-        ...toRow(values),
-        title: values.title.trim(),
-        synopsis: values.synopsis.trim(),
-        createdBy: creator.id,
-      })
-      .returning(SELECTED_COLUMNS)
-      .executeTakeFirstOrThrow();
+  const writingGroup = await transaction
+    .insertInto("writingGroup")
+    // title and synopsis restated so the type carries their presence; `toRow` describes a
+    // change, where every field may be absent.
+    .values({
+      ...toRow(values),
+      title: values.title.trim(),
+      synopsis: values.synopsis.trim(),
+      createdBy: creator.id,
+    })
+    .returning(SELECTED_COLUMNS)
+    .executeTakeFirstOrThrow();
 
-    await transaction
-      .insertInto("userInWritingGroup")
-      .values({
-        userId: creator.id,
-        writingGroupId: writingGroup.id,
-        role: "administrator",
-        // The creator is not invited to their own group.
-        status: "joined",
-      })
-      .execute();
-
-    // The membership was just written in this transaction, so it is stated rather than
-    // re-read: the founder joined their own group as its administrator.
-    return {
-      ...writingGroup,
-      createdByUsername: creator.username,
-      status: "joined",
+  await transaction
+    .insertInto("userInWritingGroup")
+    .values({
+      userId: creator.id,
+      writingGroupId: writingGroup.id,
       role: "administrator",
-      // Nobody invited the founder, so there is no date to state.
-      invitedAt: null,
-      // Founding a group does not favourite it: that is the member's own act, and one they can
-      // take the moment this returns.
-      isFavourite: false,
-    };
-  });
+      // The creator is not invited to their own group.
+      status: "joined",
+    })
+    .execute();
+
+  // The membership was just written in this transaction, so it is stated rather than
+  // re-read: the founder joined their own group as its administrator.
+  return {
+    ...writingGroup,
+    createdByUsername: creator.username,
+    status: "joined",
+    role: "administrator",
+    // Nobody invited the founder, so there is no date to state.
+    invitedAt: null,
+    // Founding a group does not favourite it: that is the member's own act, and one they can
+    // take the moment this returns.
+    isFavourite: false,
+  };
 }
 
 /**
@@ -373,84 +372,83 @@ async function selectRoleForUser(
 
 /** Returns nothing when the group does not exist. Authorisation is the caller's job. */
 async function updateWritingGroup(
+  transaction: Transaction,
   writingGroupId: string,
   changes: Partial<WritingGroupValues>,
   changedBy: string,
 ): Promise<WritingGroup | undefined> {
-  return await db.transaction().execute(async (transaction) => {
-    // Read first: only a change that actually moves the visibility is worth telling anybody
-    // about, and a request may well send the value it already has.
-    const before = await transaction
-      .selectFrom("writingGroup")
-      .select(["visibility", "genres", "subgenres"])
-      .where("id", "=", writingGroupId)
-      // Locked, as the idea's update locks its own row: a transaction alone is not enough at
-      // READ COMMITTED, so two edits — one moving the genres, the other the subgenres — could
-      // each read a state its own change agreed with and both commit the pair this refuses.
-      .forUpdate()
-      .executeTakeFirst();
+  // Read first: only a change that actually moves the visibility is worth telling anybody
+  // about, and a request may well send the value it already has.
+  const before = await transaction
+    .selectFrom("writingGroup")
+    .select(["visibility", "genres", "subgenres"])
+    .where("id", "=", writingGroupId)
+    // Locked, as the idea's update locks its own row: a transaction alone is not enough at
+    // READ COMMITTED, so two edits — one moving the genres, the other the subgenres — could
+    // each read a state its own change agreed with and both commit the pair this refuses.
+    .forUpdate()
+    .executeTakeFirst();
 
-    if (before === undefined) {
-      return undefined;
-    }
+  if (before === undefined) {
+    return undefined;
+  }
 
-    // Against the row this update produces, not against the request: changing only the genres
-    // would otherwise leave whatever subgenres are already stored sitting under none of them.
-    refuseOrphanedSubgenres(
-      changes.genres ?? before.genres,
-      changes.subgenres ?? before.subgenres,
+  // Against the row this update produces, not against the request: changing only the genres
+  // would otherwise leave whatever subgenres are already stored sitting under none of them.
+  refuseOrphanedSubgenres(
+    changes.genres ?? before.genres,
+    changes.subgenres ?? before.subgenres,
+  );
+
+  const updated = await transaction
+    .updateTable("writingGroup")
+    // Through `toRow` like the insert above, which it was not: an edit stored a padded title
+    // and a whitespace-only subtitle where founding a group trimmed both, and the group page
+    // then drew an empty row for a subtitle nobody wrote.
+    .set(toRow(changes))
+    .where("id", "=", writingGroupId)
+    .returning(["writingGroup.id"])
+    .executeTakeFirst();
+
+  if (updated === undefined) {
+    return undefined;
+  }
+
+  if (
+    changes.visibility !== undefined &&
+    changes.visibility !== before.visibility
+  ) {
+    await NotificationService.insertVisibilityChangeNotifications(
+      transaction,
+      {
+        writingGroupId,
+        actorId: changedBy,
+      },
     );
+  }
 
-    const updated = await transaction
-      .updateTable("writingGroup")
-      // Through `toRow` like the insert above, which it was not: an edit stored a padded title
-      // and a whitespace-only subtitle where founding a group trimmed both, and the group page
-      // then drew an empty row for a subtitle nobody wrote.
-      .set(toRow(changes))
-      .where("id", "=", writingGroupId)
-      .returning(["writingGroup.id"])
-      .executeTakeFirst();
-
-    if (updated === undefined) {
-      return undefined;
-    }
-
-    if (
-      changes.visibility !== undefined &&
-      changes.visibility !== before.visibility
-    ) {
-      await NotificationService.insertVisibilityChangeNotifications(
-        transaction,
-        {
-          writingGroupId,
-          actorId: changedBy,
-        },
-      );
-    }
-
-    // Re-read rather than RETURNING, which cannot reach the joined author name — nor the
-    // editor's own membership, which the response carries like every other group does.
-    return await transaction
-      .selectFrom("writingGroup")
-      .leftJoin("user", "user.id", "writingGroup.createdBy")
-      .leftJoin(
-        "userInWritingGroup",
-        (join) =>
-          join
-            .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
-            .on("userInWritingGroup.userId", "=", changedBy),
-      )
-      .$call((builder) =>
-        withFavourite(builder, "writing_group", "writingGroup.id", changedBy)
-      )
-      .select([
-        ...SELECTED_COLUMNS,
-        AUTHOR_COLUMN,
-        ...OWN_MEMBERSHIP_COLUMNS,
-      ])
-      .where("writingGroup.id", "=", updated.id)
-      .executeTakeFirstOrThrow();
-  });
+  // Re-read rather than RETURNING, which cannot reach the joined author name — nor the
+  // editor's own membership, which the response carries like every other group does.
+  return await transaction
+    .selectFrom("writingGroup")
+    .leftJoin("user", "user.id", "writingGroup.createdBy")
+    .leftJoin(
+      "userInWritingGroup",
+      (join) =>
+        join
+          .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+          .on("userInWritingGroup.userId", "=", changedBy),
+    )
+    .$call((builder) =>
+      withFavourite(builder, "writing_group", "writingGroup.id", changedBy)
+    )
+    .select([
+      ...SELECTED_COLUMNS,
+      AUTHOR_COLUMN,
+      ...OWN_MEMBERSHIP_COLUMNS,
+    ])
+    .where("writingGroup.id", "=", updated.id)
+    .executeTakeFirstOrThrow();
 }
 
 export const WritingGroupService = {

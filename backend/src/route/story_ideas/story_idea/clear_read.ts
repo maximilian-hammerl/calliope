@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -53,7 +54,9 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    await StoryIdeaService.clearRead(ideaId, user.id);
+    await db.transaction().execute((transaction) =>
+      StoryIdeaService.clearRead(transaction, ideaId, user.id)
+    );
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

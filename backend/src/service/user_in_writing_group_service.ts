@@ -86,6 +86,7 @@ function membershipWithUsername(
 
 /** Always starts as an invitation; only the invited user can turn it into a membership. */
 async function insertInvitation(
+  transaction: Transaction,
   writingGroupId: string,
   userId: string,
   role: UserInWritingGroupRole,
@@ -93,37 +94,35 @@ async function insertInvitation(
 ): Promise<UserInWritingGroup | undefined> {
   // One transaction, because an invitation nobody is told about is the failure that matters:
   // the person never finds out, and nothing in the interface would show it went missing.
-  return await db.transaction().execute(async (transaction) => {
-    const invitation = await transaction
-      .insertInto("userInWritingGroup")
-      .values({
-        writingGroupId,
-        userId,
-        role,
-        status: "invited",
-        invitedBy,
-      })
-      // Nothing to do when the user is already invited or a member.
-      .onConflict((oc) => oc.doNothing())
-      .returning(RETURNED_COLUMNS)
-      .executeTakeFirst();
-
-    if (invitation === undefined) {
-      // Nothing happened, so nobody is told.
-      return undefined;
-    }
-
-    await NotificationService.insertInvitationNotification(transaction, {
-      recipientId: userId,
+  const invitation = await transaction
+    .insertInto("userInWritingGroup")
+    .values({
       writingGroupId,
-      actorId: invitedBy,
-    });
+      userId,
+      role,
+      status: "invited",
+      invitedBy,
+    })
+    // Nothing to do when the user is already invited or a member.
+    .onConflict((oc) => oc.doNothing())
+    .returning(RETURNED_COLUMNS)
+    .executeTakeFirst();
 
-    return withAvatarUrl(
-      await membershipWithUsername(writingGroupId, userId, transaction)
-        .executeTakeFirstOrThrow(),
-    );
+  if (invitation === undefined) {
+    // Nothing happened, so nobody is told.
+    return undefined;
+  }
+
+  await NotificationService.insertInvitationNotification(transaction, {
+    recipientId: userId,
+    writingGroupId,
+    actorId: invitedBy,
   });
+
+  return withAvatarUrl(
+    await membershipWithUsername(writingGroupId, userId, transaction)
+      .executeTakeFirstOrThrow(),
+  );
 }
 
 /** Who can act on a request to get in: every administrator who has actually accepted. */
@@ -172,70 +171,68 @@ async function selectMemberships(
 
 /** Returns nothing when there is no such membership. Authorisation is the caller's job. */
 async function updateRole(
+  transaction: Transaction,
   writingGroupId: string,
   userId: string,
   role: UserInWritingGroupRole,
   changedBy: string,
 ): Promise<UserInWritingGroup | undefined> {
-  return await db.transaction().execute(async (transaction) => {
-    const updated = await transaction
-      .updateTable("userInWritingGroup")
-      .set({ role })
-      .where("writingGroupId", "=", writingGroupId)
-      .where("userId", "=", userId)
-      .returning(RETURNED_COLUMNS)
-      .executeTakeFirst();
+  const updated = await transaction
+    .updateTable("userInWritingGroup")
+    .set({ role })
+    .where("writingGroupId", "=", writingGroupId)
+    .where("userId", "=", userId)
+    .returning(RETURNED_COLUMNS)
+    .executeTakeFirst();
 
-    if (updated === undefined) {
-      return undefined;
-    }
+  if (updated === undefined) {
+    return undefined;
+  }
 
-    await NotificationService.insertRoleChangeNotification(transaction, {
-      recipientId: userId,
-      writingGroupId,
-      actorId: changedBy,
-    });
-
-    return withAvatarUrl(
-      await membershipWithUsername(writingGroupId, userId, transaction)
-        .executeTakeFirstOrThrow(),
-    );
+  await NotificationService.insertRoleChangeNotification(transaction, {
+    recipientId: userId,
+    writingGroupId,
+    actorId: changedBy,
   });
+
+  return withAvatarUrl(
+    await membershipWithUsername(writingGroupId, userId, transaction)
+      .executeTakeFirstOrThrow(),
+  );
 }
 
 /** Only the invited user can turn their invitation into a membership. */
 async function acceptInvitation(
+  transaction: Transaction,
   writingGroupId: string,
   userId: string,
 ): Promise<UserInWritingGroup | undefined> {
-  return await db.transaction().execute(async (transaction) => {
-    const updated = await transaction
-      .updateTable("userInWritingGroup")
-      .set({ status: "joined" })
-      .where("writingGroupId", "=", writingGroupId)
-      .where("userId", "=", userId)
-      .where("status", "=", "invited")
-      .returning(RETURNED_COLUMNS)
-      .executeTakeFirst();
+  const updated = await transaction
+    .updateTable("userInWritingGroup")
+    .set({ status: "joined" })
+    .where("writingGroupId", "=", writingGroupId)
+    .where("userId", "=", userId)
+    .where("status", "=", "invited")
+    .returning(RETURNED_COLUMNS)
+    .executeTakeFirst();
 
-    if (updated === undefined) {
-      return undefined;
-    }
+  if (updated === undefined) {
+    return undefined;
+  }
 
-    await NotificationService.insertInvitationAcceptedNotification(
-      transaction,
-      {
-        invitedBy: updated.invitedBy,
-        writingGroupId,
-        actorId: userId,
-      },
-    );
+  await NotificationService.insertInvitationAcceptedNotification(
+    transaction,
+    {
+      invitedBy: updated.invitedBy,
+      writingGroupId,
+      actorId: userId,
+    },
+  );
 
-    return withAvatarUrl(
-      await membershipWithUsername(writingGroupId, userId, transaction)
-        .executeTakeFirstOrThrow(),
-    );
-  });
+  return withAvatarUrl(
+    await membershipWithUsername(writingGroupId, userId, transaction)
+      .executeTakeFirstOrThrow(),
+  );
 }
 
 /**
@@ -244,10 +241,11 @@ async function acceptInvitation(
  * only lived here.
  */
 async function deleteMembership(
+  transaction: Transaction,
   writingGroupId: string,
   userId: string,
 ): Promise<boolean> {
-  const deletion = await db
+  const deletion = await transaction
     .deleteFrom("userInWritingGroup")
     .where("writingGroupId", "=", writingGroupId)
     .where("userId", "=", userId)

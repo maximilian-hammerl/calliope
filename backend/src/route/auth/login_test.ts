@@ -1,6 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
 import { authFixture, password, postJson } from "@/src/test/auth.ts";
 import { INVALID_CREDENTIALS_MESSAGE } from "@/src/http/response.ts";
 import { UserService } from "@/src/service/user_service.ts";
@@ -66,10 +66,13 @@ Deno.test("an account whose password predates the minimum can still sign in", as
   const short = "x".repeat(TEXT_MINIMUM.password - 1);
   const shortUsername = "login-short-password-user";
   await deleteUsers([shortUsername]);
-  await UserService.insertUser(
-    shortUsername,
-    short,
-    `${shortUsername}@example.test`,
+  await write((transaction) =>
+    UserService.insertUser(
+      transaction,
+      shortUsername,
+      short,
+      `${shortUsername}@example.test`,
+    )
   );
 
   const response = await postJson("/api/auth/login", {

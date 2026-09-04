@@ -1,7 +1,7 @@
 import { assertEquals, assertExists } from "@std/assert";
+import { write } from "@/src/test/support.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { Hono } from "hono";
-import { db } from "@/src/database/client.ts";
 import type { PlatformRole } from "@/src/database/schema.ts";
 import { type User, UserService } from "@/src/service/user_service.ts";
 import authenticated from "./authenticated.ts";
@@ -31,27 +31,36 @@ const moderatorApp = probe(authorizedAsModerator);
 const administratorApp = probe(authorizedAsAdministrator);
 
 async function createUserWithSession(platformRole: PlatformRole | null) {
-  const user = await UserService.insertUser(username, password, emailAddress);
+  const user = await write((transaction) =>
+    UserService.insertUser(transaction, username, password, emailAddress)
+  );
   assertExists(user, "fixture user could not be created");
 
-  await db
-    .updateTable("user")
-    .set({
-      emailAddressVerifiedAt: Temporal.Now.instant().toString(),
-      platformRole,
-    })
-    .where("id", "=", user.id)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({
+        emailAddressVerifiedAt: Temporal.Now.instant().toString(),
+        platformRole,
+      })
+      .where("id", "=", user.id)
+      .execute()
+  );
 
-  const session = await UserService.insertSessionForUser(user, {
-    userAgent: undefined,
-    ipAddress: undefined,
-  });
+  const session = await write((transaction) =>
+    UserService.insertSessionForUser(transaction, user, {
+      userAgent: undefined,
+      ipAddress: undefined,
+    })
+  );
   return `session=${session.id}.${session.token}`;
 }
 
 Deno.test.afterEach(async () => {
-  await db.deleteFrom("user").where("username", "=", username).execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("user").where("username", "=", username).execute()
+  );
 });
 
 async function statusFor(
@@ -110,19 +119,25 @@ Deno.test("an operator gate refuses when there is no session at all", async () =
 });
 
 Deno.test("an operator gate refuses an unverified address before the role", async () => {
-  const user = await UserService.insertUser(username, password, emailAddress);
+  const user = await write((transaction) =>
+    UserService.insertUser(transaction, username, password, emailAddress)
+  );
   assertExists(user);
   // A role on an account that has never proven its address must not open the gate.
-  await db
-    .updateTable("user")
-    .set({ platformRole: "administrator" })
-    .where("id", "=", user.id)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole: "administrator" })
+      .where("id", "=", user.id)
+      .execute()
+  );
 
-  const session = await UserService.insertSessionForUser(user, {
-    userAgent: undefined,
-    ipAddress: undefined,
-  });
+  const session = await write((transaction) =>
+    UserService.insertSessionForUser(transaction, user, {
+      userAgent: undefined,
+      ipAddress: undefined,
+    })
+  );
 
   const response = await moderatorApp.request("/probe", {
     headers: { cookie: `session=${session.id}.${session.token}` },

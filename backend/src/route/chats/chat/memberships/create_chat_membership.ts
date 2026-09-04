@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -87,10 +88,13 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const invitation = await UserInChatGroupService.insertInvitation(
-      chatId,
-      userId,
-      user.id,
+    const invitation = await db.transaction().execute((transaction) =>
+      UserInChatGroupService.insertInvitation(
+        transaction,
+        chatId,
+        userId,
+        user.id,
+      )
     );
 
     if (invitation === undefined) {

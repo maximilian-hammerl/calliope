@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import { withAvatar } from "@/src/query/user_avatar.ts";
 import { avatarUrlOf } from "@/src/http/avatar_url.ts";
 import { emptyToNull } from "@/src/util/optional_text.ts";
@@ -80,11 +80,12 @@ const SESSION_REFRESH_INTERVAL = Temporal.Duration.from({ minutes: 15 });
 const ABSENT_USER_HASH = await hashPassword(generateToken());
 
 async function insertUser(
+  transaction: Transaction,
   username: string,
   password: string,
   emailAddress: string,
 ): Promise<User | undefined> {
-  return await db
+  return await transaction
     .insertInto("user")
     .values({
       username,
@@ -150,12 +151,13 @@ async function selectUser(
 }
 
 async function insertSessionForUser(
+  transaction: Transaction,
   user: User,
   provenance: SessionProvenance,
 ): Promise<UserSession> {
   const sessionToken = generateToken();
 
-  const userSession = await db
+  const userSession = await transaction
     .insertInto("userSession")
     .values({
       userId: user.id,
@@ -197,14 +199,18 @@ async function selectUserForSession(
     .add(SESSION_LIFETIME)
     .subtract(SESSION_REFRESH_INTERVAL);
 
+  // Its own transaction, not the caller's: pushing the expiry is the session's business rather
+  // than part of what the request is doing, and it happens once per refresh interval.
   if (Temporal.Instant.compare(expiresAt, refreshThreshold) < 0) {
-    await db
-      .updateTable("userSession")
-      .set({
-        expiresAt: Temporal.Now.instant().add(SESSION_LIFETIME).toString(),
-      })
-      .where("id", "=", databaseUserSession.id)
-      .execute();
+    await db.transaction().execute(async (transaction) => {
+      await transaction
+        .updateTable("userSession")
+        .set({
+          expiresAt: Temporal.Now.instant().add(SESSION_LIFETIME).toString(),
+        })
+        .where("id", "=", databaseUserSession.id)
+        .execute();
+    });
   }
 
   return await db
@@ -225,8 +231,11 @@ async function selectUserForSession(
  * Matching the token as well as the id means only the holder of a session can delete it.
  * Without that, knowing an id would be enough to end someone else's session.
  */
-async function deleteSession(userSession: UserSession): Promise<boolean> {
-  const result = await db
+async function deleteSession(
+  transaction: Transaction,
+  userSession: UserSession,
+): Promise<boolean> {
+  const result = await transaction
     .deleteFrom("userSession")
     .where("id", "=", userSession.id)
     .where("hashedToken", "=", await hashToken(userSession.token))
@@ -257,10 +266,11 @@ async function selectSessionsForUser(userId: string) {
 
 /** The panic button: everything but the session asking. */
 async function deleteOtherSessions(
+  transaction: Transaction,
   userId: string,
   currentSessionId: string,
 ): Promise<number> {
-  const result = await db
+  const result = await transaction
     .deleteFrom("userSession")
     .where("userId", "=", userId)
     .where("id", "!=", currentSessionId)
@@ -274,10 +284,11 @@ async function deleteOtherSessions(
  * else's — the same reason `deleteSession` also matches on the token.
  */
 async function deleteSessionForUser(
+  transaction: Transaction,
   userId: string,
   sessionId: string,
 ): Promise<boolean> {
-  const result = await db
+  const result = await transaction
     .deleteFrom("userSession")
     .where("userId", "=", userId)
     .where("id", "=", sessionId)
@@ -290,8 +301,10 @@ async function deleteSessionForUser(
  * Expired sessions are only filtered out when they are read, so nothing ever removes
  * them from the table on its own.
  */
-async function deleteExpiredSessions(): Promise<number> {
-  const result = await db
+async function deleteExpiredSessions(
+  transaction: Transaction,
+): Promise<number> {
+  const result = await transaction
     .deleteFrom("userSession")
     .where("expiresAt", "<", Temporal.Now.instant().toString())
     .executeTakeFirst();
@@ -347,9 +360,10 @@ async function listUsers(
 
 async function selectUserProfile(
   userId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<UserProfile | undefined> {
   const row = await withAvatar(
-    db
+    executor
       .selectFrom("user")
       .select([
         "user.id",
@@ -373,6 +387,7 @@ async function selectUserProfile(
 
 /** Absent means unchanged, blank means cleared — a member can empty what they filled in. */
 async function updateProfile(
+  transaction: Transaction,
   userId: string,
   changes: Partial<Record<ProfileColumn, string | null>>,
 ): Promise<UserProfile | undefined> {
@@ -387,10 +402,10 @@ async function updateProfile(
 
   // Postgres will not take an update with nothing to set.
   if (Object.keys(row).length === 0) {
-    return await selectUserProfile(userId);
+    return await selectUserProfile(userId, transaction);
   }
 
-  await db
+  await transaction
     .updateTable("user")
     .set(row)
     .where("id", "=", userId)
@@ -398,7 +413,7 @@ async function updateProfile(
 
   // Read back rather than returned: the picture is a join, which an UPDATE cannot carry, and one
   // place building the profile is one place to change when it grows a field.
-  return await selectUserProfile(userId);
+  return await selectUserProfile(userId, transaction);
 }
 
 export const UserService = {

@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
+import { db } from "@/src/database/client.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { USER_SESSION_SCHEMA } from "@/src/database/schema.ts";
@@ -45,9 +46,12 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const ended = await UserService.deleteSessionForUser(
-      c.get("user").id,
-      c.req.valid("param").sessionId,
+    const ended = await db.transaction().execute((transaction) =>
+      UserService.deleteSessionForUser(
+        transaction,
+        c.get("user").id,
+        c.req.valid("param").sessionId,
+      )
     );
 
     // 404 rather than 403: whether somebody else's session has this id is not this member's

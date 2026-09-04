@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -87,10 +88,13 @@ export default new OpenAPIHono().openapi(
     }
 
     const bytes = new Uint8Array(await image.arrayBuffer());
-    const result = await UserAvatarService.setAvatar(
-      c.get("user").id,
-      bytes,
-      declaration,
+    const result = await db.transaction().execute((transaction) =>
+      UserAvatarService.setAvatar(
+        transaction,
+        c.get("user").id,
+        bytes,
+        declaration,
+      )
     );
 
     return result.kind === "not_an_image"

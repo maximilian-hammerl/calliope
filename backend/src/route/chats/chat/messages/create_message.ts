@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
 import { CHAT_MESSAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
@@ -68,10 +69,8 @@ export default new OpenAPIHono().openapi(
         : c.json({ error: access.error }, STATUS_CODE.Forbidden);
     }
 
-    const message = await ChatMessageService.insertMessage(
-      chatId,
-      text,
-      user.id,
+    const message = await db.transaction().execute((transaction) =>
+      ChatMessageService.insertMessage(transaction, chatId, text, user.id)
     );
 
     // After the write, never inside it: a stream that cannot be written to must not fail a

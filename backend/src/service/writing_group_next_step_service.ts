@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type { WritingGroupNextStep as DatabaseStep } from "@/src/database/schema.ts";
 
 export type NextStep =
@@ -26,8 +26,8 @@ const SELECTED_COLUMNS = [
 ] as const;
 
 // Two joins to `user`, so both need aliases.
-function stepsWithNames() {
-  return db
+function stepsWithNames(executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("writingGroupNextStep")
     .leftJoin("user as creator", "creator.id", "writingGroupNextStep.createdBy")
     .leftJoin(
@@ -55,17 +55,18 @@ async function listSteps(writingGroupId: string): Promise<NextStep[]> {
 }
 
 async function insertStep(
+  transaction: Transaction,
   writingGroupId: string,
   text: string,
   createdBy: string,
 ): Promise<NextStep> {
-  const { id } = await db
+  const { id } = await transaction
     .insertInto("writingGroupNextStep")
     .values({ writingGroupId, text, createdBy })
     .returning("id")
     .executeTakeFirstOrThrow();
 
-  return await stepsWithNames()
+  return await stepsWithNames(transaction)
     .where("writingGroupNextStep.id", "=", id)
     .executeTakeFirstOrThrow();
 }
@@ -75,11 +76,12 @@ async function insertStep(
  * step changes nothing, so two members ticking together do not overwrite each other.
  */
 async function setCompleted(
+  transaction: Transaction,
   stepId: string,
   done: boolean,
   userId: string,
 ): Promise<NextStep | undefined> {
-  await db
+  await transaction
     .updateTable("writingGroupNextStep")
     .set(
       done
@@ -93,7 +95,7 @@ async function setCompleted(
     .$if(done, (qb) => qb.where("completedAt", "is", null))
     .execute();
 
-  return await stepsWithNames()
+  return await stepsWithNames(transaction)
     .where("writingGroupNextStep.id", "=", stepId)
     .executeTakeFirst();
 }
@@ -104,8 +106,11 @@ async function selectStep(stepId: string): Promise<NextStep | undefined> {
     .executeTakeFirst();
 }
 
-async function deleteStep(stepId: string): Promise<boolean> {
-  const result = await db
+async function deleteStep(
+  transaction: Transaction,
+  stepId: string,
+): Promise<boolean> {
+  const result = await transaction
     .deleteFrom("writingGroupNextStep")
     .where("id", "=", stepId)
     .executeTakeFirst();

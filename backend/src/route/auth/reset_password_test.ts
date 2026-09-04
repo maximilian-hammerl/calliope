@@ -3,8 +3,7 @@ import { BreachedPasswordService } from "@/src/service/breached_password_service
 import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { db } from "@/src/database/client.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import { PASSWORD_BREACHED } from "@/src/http/response.ts";
@@ -95,13 +94,15 @@ Deno.test("POST /api/auth/reset-password rejects an expired token", async () => 
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
-  await db
-    .updateTable("userToken")
-    .set({
-      expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
-    })
-    .where("purpose", "=", "password_reset")
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("userToken")
+      .set({
+        expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
+      })
+      .where("purpose", "=", "password_reset")
+      .execute()
+  );
 
   assertEquals(
     (await resetPassword(token, newPassword)).status,

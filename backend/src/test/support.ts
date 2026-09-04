@@ -5,7 +5,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
 import app from "@/src/app.ts";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import { redis } from "@/src/redis/client.ts";
 import { RATE_LIMIT_KEY_PREFIX } from "@/src/middleware/rate_limit.ts";
 import "@/src/test/breach_check.ts";
@@ -19,6 +19,16 @@ import type { PostDocument } from "@/src/document/document_schema.ts";
  * and an unverified member is refused by every gated route. Tests that are *about* verification
  * register through the app by hand instead — see `route/auth/`.
  */
+/**
+ * A test is an entry point like a route, so it opens the transaction a write asks for:
+ * `await write((transaction) => UserService.insertUser(transaction, …))`.
+ */
+export function write<T>(
+  task: (transaction: Transaction) => Promise<T>,
+): Promise<T> {
+  return db.transaction().execute(task);
+}
+
 export async function registerUser(username: string): Promise<string> {
   const response = await app.request("/api/auth/register", {
     method: "POST",
@@ -33,11 +43,13 @@ export async function registerUser(username: string): Promise<string> {
   const setCookie = response.headers.get("set-cookie");
   assertExists(setCookie, `could not register ${username}`);
 
-  await db
-    .updateTable("user")
-    .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
-    .where("username", "=", username)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
+      .where("username", "=", username)
+      .execute()
+  );
 
   return setCookie.split(";")[0] ?? setCookie;
 }
@@ -121,9 +133,15 @@ export async function deleteUsers(usernames: Array<string>): Promise<void> {
     .select("id")
     .where("username", "in", usernames);
 
-  await db.deleteFrom("writingGroup").where("createdBy", "in", userIds)
-    .execute();
-  await db.deleteFrom("user").where("username", "in", usernames).execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("writingGroup").where("createdBy", "in", userIds)
+      .execute()
+  );
+  await write((transaction) =>
+    transaction
+      .deleteFrom("user").where("username", "in", usernames).execute()
+  );
 }
 
 /**

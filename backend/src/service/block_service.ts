@@ -174,25 +174,25 @@ async function cancelPendingInvitations(
 
 /** Idempotent: blocking somebody already blocked changes nothing and still succeeds. */
 async function insertBlock(
+  transaction: Transaction,
   blockerId: string,
   blockedId: string,
 ): Promise<void> {
-  await db.transaction().execute(async (transaction) => {
-    await transaction
-      .insertInto("userBlock")
-      .values({ blockerId, blockedId })
-      .onConflict((oc) => oc.doNothing())
-      .execute();
+  await transaction
+    .insertInto("userBlock")
+    .values({ blockerId, blockedId })
+    .onConflict((oc) => oc.doNothing())
+    .execute();
 
-    await cancelPendingInvitations(transaction, blockerId, blockedId);
-  });
+  await cancelPendingInvitations(transaction, blockerId, blockedId);
 }
 
 async function deleteBlock(
+  transaction: Transaction,
   blockerId: string,
   blockedId: string,
 ): Promise<boolean> {
-  const deletion = await db
+  const deletion = await transaction
     .deleteFrom("userBlock")
     .where("blockerId", "=", blockerId)
     .where("blockedId", "=", blockedId)

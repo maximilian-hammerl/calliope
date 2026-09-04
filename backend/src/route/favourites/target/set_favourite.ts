@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { FAVOURITES_TAG } from "@/src/open_api_specification.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
@@ -56,10 +57,13 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId } = c.req.valid("param");
 
-    const refusal = await FavouriteService.setFavourite(
-      c.get("user"),
-      targetType,
-      targetId,
+    const refusal = await db.transaction().execute((transaction) =>
+      FavouriteService.setFavourite(
+        transaction,
+        c.get("user"),
+        targetType,
+        targetId,
+      )
     );
 
     return refusal === "not_found"

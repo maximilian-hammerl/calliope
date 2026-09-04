@@ -78,11 +78,13 @@ async function requestEmailAddressChange(
     return "in_use";
   }
 
-  const token = await UserTokenService.issueToken({
-    userId,
-    purpose: "email_address_change",
-    newEmailAddress: normalisedAddress,
-  });
+  const token = await db.transaction().execute((transaction) =>
+    UserTokenService.issueToken(transaction, {
+      userId,
+      purpose: "email_address_change",
+      newEmailAddress: normalisedAddress,
+    })
+  );
 
   // The cooldown swallowed it, so a link is already on its way to somewhere.
   if (token === undefined) {
@@ -192,7 +194,9 @@ async function confirmEmailAddressChange(
 
 /** The cancel link from the notice sent to the old address. */
 async function cancelEmailAddressChange(token: string): Promise<boolean> {
-  return await UserTokenService.revokeToken(token, "email_address_change");
+  return await db.transaction().execute((transaction) =>
+    UserTokenService.revokeToken(transaction, token, "email_address_change")
+  );
 }
 
 export const EmailAddressChangeService = {

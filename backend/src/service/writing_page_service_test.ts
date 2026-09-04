@@ -1,5 +1,4 @@
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
-import { db } from "@/src/database/client.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
   clearRateLimits,
@@ -7,6 +6,7 @@ import {
   deleteUsers,
   getUserId,
   registerUser,
+  write,
 } from "@/src/test/support.ts";
 import { WritingPageService } from "./writing_page_service.ts";
 
@@ -26,11 +26,14 @@ async function groupWithPage(title = "Weltenbau") {
   const authorId = await getUserId(OWNER);
   const otherId = await getUserId(OTHER);
 
-  const page = await WritingPageService.insertPage(
-    group.id,
-    title,
-    plainTextToDocument("Der Berg ist hoch."),
-    authorId,
+  const page = await write((transaction) =>
+    WritingPageService.insertPage(
+      transaction,
+      group.id,
+      title,
+      plainTextToDocument("Der Berg ist hoch."),
+      authorId,
+    )
   );
   return { groupId: group.id, page, authorId, otherId, cookie, other };
 }
@@ -59,15 +62,18 @@ Deno.test("a page is scoped to its group", async () => {
 Deno.test("an edit against the loaded time is written", async () => {
   const { groupId, page, authorId } = await groupWithPage();
 
-  const outcome = await WritingPageService.updatePage(
-    groupId,
-    page.id,
-    page.lastActivityAt,
-    {
-      title: "Weltenbau",
-      document: plainTextToDocument("Der Berg ist steil."),
-    },
-    authorId,
+  const outcome = await write((transaction) =>
+    WritingPageService.updatePage(
+      transaction,
+      groupId,
+      page.id,
+      page.lastActivityAt,
+      {
+        title: "Weltenbau",
+        document: plainTextToDocument("Der Berg ist steil."),
+      },
+      authorId,
+    )
   );
 
   assertEquals(outcome?.kind, "updated");
@@ -83,24 +89,33 @@ Deno.test("an edit against a time that has moved on is refused", async () => {
   const { groupId, page, authorId, otherId } = await groupWithPage();
   const loadedByBoth = page.lastActivityAt;
 
-  const first = await WritingPageService.updatePage(
-    groupId,
-    page.id,
-    loadedByBoth,
-    { title: "Weltenbau", document: plainTextToDocument("Die erste Fassung.") },
-    authorId,
+  const first = await write((transaction) =>
+    WritingPageService.updatePage(
+      transaction,
+      groupId,
+      page.id,
+      loadedByBoth,
+      {
+        title: "Weltenbau",
+        document: plainTextToDocument("Die erste Fassung."),
+      },
+      authorId,
+    )
   );
   assertEquals(first?.kind, "updated");
 
-  const second = await WritingPageService.updatePage(
-    groupId,
-    page.id,
-    loadedByBoth,
-    {
-      title: "Weltenbau",
-      document: plainTextToDocument("Die zweite Fassung."),
-    },
-    otherId,
+  const second = await write((transaction) =>
+    WritingPageService.updatePage(
+      transaction,
+      groupId,
+      page.id,
+      loadedByBoth,
+      {
+        title: "Weltenbau",
+        document: plainTextToDocument("Die zweite Fassung."),
+      },
+      otherId,
+    )
   );
 
   assertEquals(second?.kind, "stale");
@@ -116,12 +131,15 @@ Deno.test("updating a page that is not in the group answers nothing", async () =
   const otherGroup = await createGroup(cookie, "Effi Briefe");
 
   assertEquals(
-    await WritingPageService.updatePage(
-      otherGroup.id,
-      page.id,
-      page.lastActivityAt,
-      { title: "x", document: plainTextToDocument("x") },
-      await getUserId(OWNER),
+    await write(async (transaction) =>
+      WritingPageService.updatePage(
+        transaction,
+        otherGroup.id,
+        page.id,
+        page.lastActivityAt,
+        { title: "x", document: plainTextToDocument("x") },
+        await getUserId(OWNER),
+      )
     ),
     undefined,
   );
@@ -130,7 +148,9 @@ Deno.test("updating a page that is not in the group answers nothing", async () =
 Deno.test("a deleted page is gone", async () => {
   const { groupId, page, authorId } = await groupWithPage();
 
-  await WritingPageService.deletePage(groupId, page.id);
+  await write((transaction) =>
+    WritingPageService.deletePage(transaction, groupId, page.id)
+  );
 
   assertEquals(
     await WritingPageService.selectPage(groupId, page.id),
@@ -144,16 +164,19 @@ Deno.test("pages are listed by activity, and ties by id", async () => {
 
   // Written in one statement, so all three share a timestamp — which is what the seed does and
   // what makes the tiebreaker the ordinary case rather than an edge.
-  await db.insertInto("writingPage").values(
-    ["Zweitens", "Drittens"].map((title) => ({
-      writingGroupId: groupId,
-      title,
-      document: plainTextToDocument(title),
-      text: title,
-      createdBy: authorId,
-      updatedBy: authorId,
-    })),
-  ).execute();
+  await write((transaction) =>
+    transaction
+      .insertInto("writingPage").values(
+        ["Zweitens", "Drittens"].map((title) => ({
+          writingGroupId: groupId,
+          title,
+          document: plainTextToDocument(title),
+          text: title,
+          createdBy: authorId,
+          updatedBy: authorId,
+        })),
+      ).execute()
+  );
 
   const listed = await WritingPageService.listPages(groupId, authorId);
   const tied = listed.filter((page) => page.title !== "Zuerst");

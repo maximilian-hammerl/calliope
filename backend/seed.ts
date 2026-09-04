@@ -54,21 +54,33 @@ async function removePreviousSeed(): Promise<void> {
   // Before the accounts, and explicitly: a report's references are SET NULL rather than CASCADE
   // so that it outlives its reporter and its target, which is exactly why deleting the users
   // below would leave these rows behind. Their events go with them.
-  await db.deleteFrom("report")
-    .where("id", "in", REPORTS.map((report) => report.id))
-    .execute();
-  await db.deleteFrom("writingGroup")
-    .where("id", "in", GROUPS.map((group) => group.id))
-    .execute();
+  await db.transaction().execute((transaction) =>
+    transaction
+      .deleteFrom("report")
+      .where("id", "in", REPORTS.map((report) => report.id))
+      .execute()
+  );
+  await db.transaction().execute((transaction) =>
+    transaction
+      .deleteFrom("writingGroup")
+      .where("id", "in", GROUPS.map((group) => group.id))
+      .execute()
+  );
   // The forum's rows have no group to cascade from — that absence is what makes them the
   // forum's (#32) — so each kind goes explicitly. Leaves first, because a folder holding one is
   // not empty, and then the folders in reverse fixture order, which is children before parents.
-  await db.deleteFrom("writingPage")
-    .where("id", "in", FORUM_PAGES.map((page) => page.id))
-    .execute();
-  await db.deleteFrom("writingThread")
-    .where("id", "in", FORUM_THREADS.map((thread) => thread.id))
-    .execute();
+  await db.transaction().execute((transaction) =>
+    transaction
+      .deleteFrom("writingPage")
+      .where("id", "in", FORUM_PAGES.map((page) => page.id))
+      .execute()
+  );
+  await db.transaction().execute((transaction) =>
+    transaction
+      .deleteFrom("writingThread")
+      .where("id", "in", FORUM_THREADS.map((thread) => thread.id))
+      .execute()
+  );
   // Deepest first, read from the database rather than from the fixture's order: `RESTRICT` is
   // checked per row, so a parent cannot go before its children, and `depth` is the one ordering
   // that is true whatever order the fixture happens to list them in.
@@ -80,22 +92,30 @@ async function removePreviousSeed(): Promise<void> {
     .execute();
   for (const folder of folders) {
     // deno-lint-ignore no-await-in-loop
-    await db.deleteFrom("writingFolder").where("id", "=", folder.id).execute();
+    await db.transaction().execute((transaction) =>
+      transaction
+        .deleteFrom("writingFolder").where("id", "=", folder.id).execute()
+    );
   }
-  await db.deleteFrom("chatGroup")
-    .where("id", "in", CHATS.map((chat) => chat.id))
-    .execute();
+  await db.transaction().execute((transaction) =>
+    transaction
+      .deleteFrom("chatGroup")
+      .where("id", "in", CHATS.map((chat) => chat.id))
+      .execute()
+  );
   // By name as well as by id: on id alone, an account somebody made by hand under a seeded
   // name would block every re-run.
-  await db
-    .deleteFrom("user")
-    .where((eb) =>
-      eb.or([
-        eb("id", "in", Object.values(USER)),
-        eb("username", "in", Object.keys(USER)),
-      ])
-    )
-    .execute();
+  await db.transaction().execute((transaction) =>
+    transaction
+      .deleteFrom("user")
+      .where((eb) =>
+        eb.or([
+          eb("id", "in", Object.values(USER)),
+          eb("username", "in", Object.keys(USER)),
+        ])
+      )
+      .execute()
+  );
 }
 
 /** Compact on purpose: nine accounts described in prose was longer than anybody reads. */

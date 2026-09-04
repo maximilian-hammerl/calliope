@@ -1,7 +1,7 @@
 import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
+import { write } from "@/src/test/support.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { Hono } from "hono";
-import { db } from "@/src/database/client.ts";
 import { type User, UserService } from "@/src/service/user_service.ts";
 import authenticated from "./authenticated.ts";
 import authenticatedAllowingUnverifiedEmailAddress from "./authenticated_allowing_unverified_email_address.ts";
@@ -20,29 +20,38 @@ const permissiveApp = new Hono<{ Variables: { user: User } }>()
   .get("/probe", (c) => c.json({ username: c.get("user").username }));
 
 async function createUserWithSession({ verified = true } = {}) {
-  const user = await UserService.insertUser(username, password, emailAddress);
+  const user = await write((transaction) =>
+    UserService.insertUser(transaction, username, password, emailAddress)
+  );
   assertExists(user, "fixture user could not be created");
 
   // Registering leaves the address unverified, which every gated route now refuses, so the
   // ordinary fixture confirms it and the unverified case is asked for explicitly.
   if (verified) {
-    await db
-      .updateTable("user")
-      .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
-      .where("id", "=", user.id)
-      .execute();
+    await write((transaction) =>
+      transaction
+        .updateTable("user")
+        .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
+        .where("id", "=", user.id)
+        .execute()
+    );
   }
 
   // No request to read provenance from: this drives the service directly.
-  const session = await UserService.insertSessionForUser(user, {
-    userAgent: undefined,
-    ipAddress: undefined,
-  });
+  const session = await write((transaction) =>
+    UserService.insertSessionForUser(transaction, user, {
+      userAgent: undefined,
+      ipAddress: undefined,
+    })
+  );
   return { user, session };
 }
 
 Deno.test.afterEach(async () => {
-  await db.deleteFrom("user").where("username", "=", username).execute();
+  await write((transaction) =>
+    transaction
+      .deleteFrom("user").where("username", "=", username).execute()
+  );
 });
 
 Deno.test("authenticated passes a valid session through to the handler", async () => {

@@ -10,6 +10,7 @@ import {
   getUserId,
   registerUser,
   request,
+  write,
 } from "@/src/test/support.ts";
 
 // Its own accounts: the suite runs in parallel, so a shared name collides.
@@ -26,11 +27,13 @@ async function registerOperator(
   platformRole: "moderator" | "administrator" = "moderator",
 ): Promise<string> {
   const cookie = await registerUser(operator);
-  await db
-    .updateTable("user")
-    .set({ platformRole })
-    .where("username", "=", operator)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole })
+      .where("username", "=", operator)
+      .execute()
+  );
   return cookie;
 }
 
@@ -100,11 +103,13 @@ Deno.test("a session that outlived a ban is refused", async () => {
 
   // Banning deletes the sessions, so reach the middleware's own check by marking the row
   // directly — the state this guard exists for is one that should never occur.
-  await db
-    .updateTable("user")
-    .set({ bannedAt: Temporal.Now.instant().toString(), banReason: "Spam" })
-    .where("id", "=", offenderId)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ bannedAt: Temporal.Now.instant().toString(), banReason: "Spam" })
+      .where("id", "=", offenderId)
+      .execute()
+  );
 
   const response = await request(
     "GET",
@@ -140,11 +145,13 @@ Deno.test("the banned address stays held, so it cannot register again", async ()
 Deno.test("an operator cannot be banned", async () => {
   const operatorCookie = await registerOperator("administrator");
   await registerUser(bystander);
-  await db
-    .updateTable("user")
-    .set({ platformRole: "moderator" })
-    .where("username", "=", bystander)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole: "moderator" })
+      .where("username", "=", bystander)
+      .execute()
+  );
 
   // Which also settles banning yourself: an operator holds a role, so an operator is unbannable
   // until an administrator revokes it.

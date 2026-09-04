@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type {
   ChatGroup as DatabaseChatGroup,
   UserInChatGroupStatus,
@@ -49,8 +49,8 @@ const SELECTED_COLUMNS = [
  * Invitations are included: an invited member has to be able to see what they are being asked
  * to join. The route decides what an invitation may do beyond looking at it.
  */
-function chatsOf(user: User) {
-  return db
+function chatsOf(user: User, executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("chatGroup")
     .innerJoin("userInChatGroup", (join) =>
       join
@@ -64,8 +64,8 @@ function chatsOf(user: User) {
  * `checkJoinedChatMember` runs on every message sent and every page of messages read, and it was
  * counting unread messages each time only to throw the number away.
  */
-function chatsWithDetail(user: User) {
-  return chatsOf(user)
+function chatsWithDetail(user: User, executor: typeof db | Transaction = db) {
+  return chatsOf(user, executor)
     .leftJoin("user", "user.id", "chatGroup.createdBy")
     .$call((builder) =>
       withFavourite(builder, "chat_group", "chatGroup.id", user.id)
@@ -162,51 +162,48 @@ async function selectChatGroup(
  * the same transaction as the chat, so a conversation cannot exist half-announced.
  */
 async function insertChatGroup(
+  transaction: Transaction,
   creator: User,
   title: string,
   inviteeIds: ReadonlyArray<string> = [],
 ): Promise<ChatGroup> {
-  const id = await db.transaction().execute(async (transaction) => {
-    const chatGroup = await transaction
-      .insertInto("chatGroup")
-      .values({ title, createdBy: creator.id })
-      .returning(["id"])
-      .executeTakeFirstOrThrow();
+  const chatGroup = await transaction
+    .insertInto("chatGroup")
+    .values({ title, createdBy: creator.id })
+    .returning(["id"])
+    .executeTakeFirstOrThrow();
 
+  await transaction
+    .insertInto("userInChatGroup")
+    .values({
+      userId: creator.id,
+      chatGroupId: chatGroup.id,
+      // Nobody invites you to the chat you just made.
+      status: "joined",
+    })
+    .execute();
+
+  if (inviteeIds.length > 0) {
     await transaction
       .insertInto("userInChatGroup")
-      .values({
-        userId: creator.id,
+      .values(inviteeIds.map((userId) => ({
+        userId,
         chatGroupId: chatGroup.id,
-        // Nobody invites you to the chat you just made.
-        status: "joined",
-      })
+        status: "invited" as const,
+      })))
       .execute();
 
-    if (inviteeIds.length > 0) {
-      await transaction
-        .insertInto("userInChatGroup")
-        .values(inviteeIds.map((userId) => ({
-          userId,
-          chatGroupId: chatGroup.id,
-          status: "invited" as const,
-        })))
-        .execute();
-
-      await NotificationService.insertChatInvitationNotifications(transaction, {
-        recipientIds: inviteeIds,
-        chatGroupId: chatGroup.id,
-        actorId: creator.id,
-      });
-    }
-
-    return chatGroup.id;
-  });
+    await NotificationService.insertChatInvitationNotifications(transaction, {
+      recipientIds: inviteeIds,
+      chatGroupId: chatGroup.id,
+      actorId: creator.id,
+    });
+  }
 
   // Re-read rather than RETURNING: the unread count, the founder's name and the favourite are all
   // joined, and a newly created chat is answered in the same shape the list uses.
-  return await chatsWithDetail(creator)
-    .where("chatGroup.id", "=", id)
+  return await chatsWithDetail(creator, transaction)
+    .where("chatGroup.id", "=", chatGroup.id)
     .executeTakeFirstOrThrow();
 }
 
@@ -226,8 +223,12 @@ async function selectMemberIds(chatGroupId: string): Promise<Array<string>> {
  * Everything up to now counts as read. Stamped from the application clock like the rest of
  * the writes here, so no raw SQL is needed for it.
  */
-async function markRead(chatGroupId: string, userId: string): Promise<void> {
-  await db
+async function markRead(
+  transaction: Transaction,
+  chatGroupId: string,
+  userId: string,
+): Promise<void> {
+  await transaction
     .updateTable("userInChatGroup")
     .set({ lastReadAt: Temporal.Now.instant().toString() })
     .where("chatGroupId", "=", chatGroupId)

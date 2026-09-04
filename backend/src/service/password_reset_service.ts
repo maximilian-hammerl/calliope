@@ -52,10 +52,12 @@ async function issuePasswordReset(
     return;
   }
 
-  const token = await UserTokenService.issueToken({
-    userId: user.id,
-    purpose: "password_reset",
-  });
+  const token = await db.transaction().execute((transaction) =>
+    UserTokenService.issueToken(transaction, {
+      userId: user.id,
+      purpose: "password_reset",
+    })
+  );
 
   if (token === undefined) {
     return;

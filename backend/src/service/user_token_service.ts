@@ -1,6 +1,5 @@
-import type { Transaction } from "kysely";
-import { db } from "@/src/database/client.ts";
-import type { DB, UserTokenPurpose } from "@/src/database/schema.ts";
+import type { Transaction } from "@/src/database/client.ts";
+import type { UserTokenPurpose } from "@/src/database/schema.ts";
 import {
   formatToken,
   generateToken,
@@ -46,7 +45,10 @@ export type TokenRequest =
  * — which callers treat as success, because saying otherwise would report on somebody else's
  * inbox.
  */
-async function issueToken(request: TokenRequest): Promise<string | undefined> {
+async function issueToken(
+  transaction: Transaction,
+  request: TokenRequest,
+): Promise<string | undefined> {
   const { userId, purpose } = request;
   const newEmailAddress = request.purpose === "email_address_change"
     ? request.newEmailAddress
@@ -54,52 +56,50 @@ async function issueToken(request: TokenRequest): Promise<string | undefined> {
   const secret = generateToken();
   const now = Temporal.Now.instant();
 
-  const issued = await db.transaction().execute(async (transaction) => {
-    const outstanding = await transaction
-      .selectFrom("userToken")
-      .select(["createdAt"])
-      .where("userId", "=", userId)
-      .where("purpose", "=", purpose)
-      .where("consumedAt", "is", null)
-      .executeTakeFirst();
+  const outstanding = await transaction
+    .selectFrom("userToken")
+    .select(["createdAt"])
+    .where("userId", "=", userId)
+    .where("purpose", "=", purpose)
+    .where("consumedAt", "is", null)
+    .executeTakeFirst();
 
-    if (outstanding !== undefined) {
-      const sentAt = Temporal.Instant.from(outstanding.createdAt);
+  if (outstanding !== undefined) {
+    const sentAt = Temporal.Instant.from(outstanding.createdAt);
 
-      if (Temporal.Instant.compare(sentAt.add(RESEND_COOLDOWN), now) > 0) {
-        return undefined;
-      }
+    if (Temporal.Instant.compare(sentAt.add(RESEND_COOLDOWN), now) > 0) {
+      return undefined;
     }
+  }
 
-    // Issuing revokes the previous link, and clears an expired row so an abandoned request
-    // cannot lock somebody out of asking again.
-    await transaction
-      .deleteFrom("userToken")
-      .where("userId", "=", userId)
-      .where("purpose", "=", purpose)
-      .where("consumedAt", "is", null)
-      .execute();
+  // Issuing revokes the previous link, and clears an expired row so an abandoned request
+  // cannot lock somebody out of asking again.
+  await transaction
+    .deleteFrom("userToken")
+    .where("userId", "=", userId)
+    .where("purpose", "=", purpose)
+    .where("consumedAt", "is", null)
+    .execute();
 
-    // Two requests arriving together each delete nothing the other has inserted yet, so
-    // without this the loser violates the partial unique index and fails.
-    return await transaction
-      .insertInto("userToken")
-      .values({
-        userId,
-        purpose,
-        newEmailAddress,
-        hashedToken: await hashToken(secret),
-        expiresAt: now.add(TOKEN_LIFETIME).toString(),
-      })
-      .onConflict((oc) =>
-        oc
-          .columns(["userId", "purpose"])
-          .where("consumedAt", "is", null)
-          .doNothing()
-      )
-      .returning(["id"])
-      .executeTakeFirst();
-  });
+  // Two requests arriving together each delete nothing the other has inserted yet, so
+  // without this the loser violates the partial unique index and fails.
+  const issued = await transaction
+    .insertInto("userToken")
+    .values({
+      userId,
+      purpose,
+      newEmailAddress,
+      hashedToken: await hashToken(secret),
+      expiresAt: now.add(TOKEN_LIFETIME).toString(),
+    })
+    .onConflict((oc) =>
+      oc
+        .columns(["userId", "purpose"])
+        .where("consumedAt", "is", null)
+        .doNothing()
+    )
+    .returning(["id"])
+    .executeTakeFirst();
 
   return issued === undefined ? undefined : formatToken(issued.id, secret);
 }
@@ -113,7 +113,7 @@ async function issueToken(request: TokenRequest): Promise<string | undefined> {
  * is part of the match, so a token issued for one thing cannot be spent on another.
  */
 async function consumeToken(
-  transaction: Transaction<DB>,
+  transaction: Transaction,
   token: string,
   purpose: UserTokenPurpose,
 ): Promise<{ userId: string; newEmailAddress: string | null } | undefined> {
@@ -143,6 +143,7 @@ async function consumeToken(
  * that mail can do it.
  */
 async function revokeToken(
+  transaction: Transaction,
   token: string,
   purpose: UserTokenPurpose,
 ): Promise<boolean> {
@@ -152,7 +153,7 @@ async function revokeToken(
     return false;
   }
 
-  const result = await db
+  const result = await transaction
     .deleteFrom("userToken")
     .where("id", "=", parsed.id)
     .where("hashedToken", "=", await hashToken(parsed.secret))
@@ -164,8 +165,10 @@ async function revokeToken(
 }
 
 /** Expired rows are only filtered out when they are read, so nothing removes them on its own. */
-async function deleteExpiredTokens(): Promise<number> {
-  const result = await db
+async function deleteExpiredTokens(
+  transaction: Transaction,
+): Promise<number> {
+  const result = await transaction
     .deleteFrom("userToken")
     .where("expiresAt", "<", Temporal.Now.instant().toString())
     .executeTakeFirst();

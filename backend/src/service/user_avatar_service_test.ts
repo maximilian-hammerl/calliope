@@ -9,6 +9,7 @@ import {
   clearRateLimits,
   deleteUsers,
   registerUser,
+  write,
 } from "@/src/test/support.ts";
 
 const USERNAMES = [
@@ -44,10 +45,12 @@ async function userId(username: string): Promise<string> {
 
 Deno.test("a picture is stored, and its bytes are on disk", async () => {
   const id = await userId("avatar-set");
-  const result = await UserAvatarService.setAvatar(id, await picture(), {
-    origin: "own_work",
-    credit: null,
-  });
+  const result = await write(async (transaction) =>
+    UserAvatarService.setAvatar(transaction, id, await picture(), {
+      origin: "own_work",
+      credit: null,
+    })
+  );
 
   assertEquals(result.kind, "set");
   const avatar = await UserAvatarService.selectAvatar(id);
@@ -64,10 +67,17 @@ Deno.test("what is not a picture is refused before anything is written", async (
   // counting the store, which the other test files write into while this one runs.
   assertEquals(await toAvatar(notAnImage), undefined);
 
-  const result = await UserAvatarService.setAvatar(id, notAnImage, {
-    origin: "own_work",
-    credit: null,
-  });
+  const result = await write((transaction) =>
+    UserAvatarService.setAvatar(
+      transaction,
+      id,
+      notAnImage,
+      {
+        origin: "own_work",
+        credit: null,
+      },
+    )
+  );
 
   assertEquals(result.kind, "not_an_image");
   assertEquals(await UserAvatarService.selectAvatar(id), undefined);
@@ -76,17 +86,21 @@ Deno.test("what is not a picture is refused before anything is written", async (
 /** Replacing leaves the old file for the sweep — deleting it inline would break a restore. */
 Deno.test("replacing a picture moves the row and leaves the old file", async () => {
   const id = await userId("avatar-replace");
-  await UserAvatarService.setAvatar(id, await picture(), {
-    origin: "own_work",
-    credit: null,
-  });
+  await write(async (transaction) =>
+    UserAvatarService.setAvatar(transaction, id, await picture(), {
+      origin: "own_work",
+      credit: null,
+    })
+  );
   const first = await UserAvatarService.selectAvatar(id);
   assertExists(first);
 
-  await UserAvatarService.setAvatar(id, await picture(), {
-    origin: "licence",
-    credit: "CC BY 4.0",
-  });
+  await write(async (transaction) =>
+    UserAvatarService.setAvatar(transaction, id, await picture(), {
+      origin: "licence",
+      credit: "CC BY 4.0",
+    })
+  );
   const second = await UserAvatarService.selectAvatar(id);
   assertExists(second);
 
@@ -98,14 +112,21 @@ Deno.test("replacing a picture moves the row and leaves the old file", async () 
 
 Deno.test("deleting removes the row and leaves the file to the sweep", async () => {
   const id = await userId("avatar-delete");
-  await UserAvatarService.setAvatar(id, await picture(), {
-    origin: "own_work",
-    credit: null,
-  });
+  await write(async (transaction) =>
+    UserAvatarService.setAvatar(transaction, id, await picture(), {
+      origin: "own_work",
+      credit: null,
+    })
+  );
   const avatar = await UserAvatarService.selectAvatar(id);
   assertExists(avatar);
 
-  assertEquals(await UserAvatarService.deleteAvatar(id), true);
+  assertEquals(
+    await write((transaction) =>
+      UserAvatarService.deleteAvatar(transaction, id)
+    ),
+    true,
+  );
   assertEquals(await UserAvatarService.selectAvatar(id), undefined);
   assertNotEquals(await FileStore.read(avatar.fileId), undefined);
 });
@@ -113,10 +134,12 @@ Deno.test("deleting removes the row and leaves the file to the sweep", async () 
 /** A file younger than the grace period may be an upload whose row is not committed yet. */
 Deno.test("the sweep spares a referenced file and a recent orphan", async () => {
   const id = await userId("avatar-sweep");
-  await UserAvatarService.setAvatar(id, await picture(), {
-    origin: "own_work",
-    credit: null,
-  });
+  await write(async (transaction) =>
+    UserAvatarService.setAvatar(transaction, id, await picture(), {
+      origin: "own_work",
+      credit: null,
+    })
+  );
   const avatar = await UserAvatarService.selectAvatar(id);
   assertExists(avatar);
 
@@ -152,10 +175,12 @@ Deno.test("the sweep deletes an orphan past the grace period", async () => {
 /** A file the database still names is never deleted, however old it is. */
 Deno.test("the sweep spares a referenced file whatever its age", async () => {
   const id = await userId("avatar-old");
-  await UserAvatarService.setAvatar(id, await picture(), {
-    origin: "own_work",
-    credit: null,
-  });
+  await write(async (transaction) =>
+    UserAvatarService.setAvatar(transaction, id, await picture(), {
+      origin: "own_work",
+      credit: null,
+    })
+  );
   const avatar = await UserAvatarService.selectAvatar(id);
   assertExists(avatar);
 

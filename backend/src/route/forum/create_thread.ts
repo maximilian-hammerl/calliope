@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
@@ -78,10 +79,8 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const thread = await ForumService.insertThread(
-      user,
-      title,
-      folderId ?? null,
+    const thread = await db.transaction().execute((transaction) =>
+      ForumService.insertThread(transaction, user, title, folderId ?? null)
     );
 
     return c.json(thread, STATUS_CODE.Created);

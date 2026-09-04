@@ -1,4 +1,5 @@
 import { db } from "@/src/database/client.ts";
+import { write } from "@/src/test/support.ts";
 import type { ForumPermission } from "@/src/database/schema.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
@@ -29,17 +30,19 @@ export async function createForumFolder(
     .executeTakeFirstOrThrow();
 
   // `effective_member_permission` is the database's to derive, so nothing here computes it.
-  const folder = await db
-    .insertInto("writingFolder")
-    .values({
-      writingGroupId: null,
-      parentFolderId,
-      depth: (parent?.depth ?? 0) + 1,
-      title,
-      memberPermission,
-    })
-    .returning("id")
-    .executeTakeFirstOrThrow();
+  const folder = await write((transaction) =>
+    transaction
+      .insertInto("writingFolder")
+      .values({
+        writingGroupId: null,
+        parentFolderId,
+        depth: (parent?.depth ?? 0) + 1,
+        title,
+        memberPermission,
+      })
+      .returning("id")
+      .executeTakeFirstOrThrow()
+  );
 
   made.folders.push(folder.id);
   return folder;
@@ -50,11 +53,13 @@ export async function createForumThread(
   memberPermission: ForumPermission = "write",
   folderId: string | null = null,
 ): Promise<{ id: string }> {
-  const thread = await db
-    .insertInto("writingThread")
-    .values({ writingGroupId: null, folderId, title, memberPermission })
-    .returning("id")
-    .executeTakeFirstOrThrow();
+  const thread = await write((transaction) =>
+    transaction
+      .insertInto("writingThread")
+      .values({ writingGroupId: null, folderId, title, memberPermission })
+      .returning("id")
+      .executeTakeFirstOrThrow()
+  );
 
   made.threads.push(thread.id);
   return thread;
@@ -62,11 +67,13 @@ export async function createForumThread(
 
 /** Closes a thread to members. Straight to the column: changing a permission is slice 7. */
 export async function closeForumThread(threadId: string): Promise<void> {
-  await db
-    .updateTable("writingThread")
-    .set({ memberPermission: "read" })
-    .where("id", "=", threadId)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("writingThread")
+      .set({ memberPermission: "read" })
+      .where("id", "=", threadId)
+      .execute()
+  );
 }
 
 export async function createForumPost(
@@ -74,17 +81,19 @@ export async function createForumPost(
   text: string,
   createdBy: string,
 ): Promise<{ id: string }> {
-  return await db
-    .insertInto("writingPost")
-    .values({
-      writingThreadId,
-      document: plainTextToDocument(text),
-      text,
-      isDraft: false,
-      createdBy,
-    })
-    .returning("id")
-    .executeTakeFirstOrThrow();
+  return await write((transaction) =>
+    transaction
+      .insertInto("writingPost")
+      .values({
+        writingThreadId,
+        document: plainTextToDocument(text),
+        text,
+        isDraft: false,
+        createdBy,
+      })
+      .returning("id")
+      .executeTakeFirstOrThrow()
+  );
 }
 
 export async function createForumPage(
@@ -93,18 +102,20 @@ export async function createForumPage(
   memberPermission: ForumPermission = "write",
   folderId: string | null = null,
 ): Promise<{ id: string }> {
-  const page = await db
-    .insertInto("writingPage")
-    .values({
-      writingGroupId: null,
-      folderId,
-      title,
-      document: plainTextToDocument(text),
-      text,
-      memberPermission,
-    })
-    .returning("id")
-    .executeTakeFirstOrThrow();
+  const page = await write((transaction) =>
+    transaction
+      .insertInto("writingPage")
+      .values({
+        writingGroupId: null,
+        folderId,
+        title,
+        document: plainTextToDocument(text),
+        text,
+        memberPermission,
+      })
+      .returning("id")
+      .executeTakeFirstOrThrow()
+  );
 
   made.pages.push(page.id);
   return page;
@@ -121,32 +132,47 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
     .where("username", "in", usernames);
 
   if (made.pages.length > 0) {
-    await db.deleteFrom("writingPage").where("id", "in", made.pages).execute();
+    await write((transaction) =>
+      transaction
+        .deleteFrom("writingPage").where("id", "in", made.pages).execute()
+    );
   }
   if (usernames.length > 0) {
-    await db.deleteFrom("writingPage")
-      .where("writingGroupId", "is", null)
-      .where("createdBy", "in", authors)
-      .execute();
+    await write((transaction) =>
+      transaction
+        .deleteFrom("writingPage")
+        .where("writingGroupId", "is", null)
+        .where("createdBy", "in", authors)
+        .execute()
+    );
   }
 
   // Posts go with the thread through the foreign key's cascade.
   if (made.threads.length > 0) {
-    await db.deleteFrom("writingThread").where("id", "in", made.threads)
-      .execute();
+    await write((transaction) =>
+      transaction
+        .deleteFrom("writingThread").where("id", "in", made.threads)
+        .execute()
+    );
   }
   if (usernames.length > 0) {
-    await db.deleteFrom("writingThread")
-      .where("writingGroupId", "is", null)
-      .where("createdBy", "in", authors)
-      .execute();
+    await write((transaction) =>
+      transaction
+        .deleteFrom("writingThread")
+        .where("writingGroupId", "is", null)
+        .where("createdBy", "in", authors)
+        .execute()
+    );
   }
 
   // Newest first, which is children before parents here: `parent_folder_id` is RESTRICT, and it
   // is checked per row rather than at the end of the statement, so one `in` would refuse.
   for (const folderId of [...made.folders].reverse()) {
     // deno-lint-ignore no-await-in-loop
-    await db.deleteFrom("writingFolder").where("id", "=", folderId).execute();
+    await write((transaction) =>
+      transaction
+        .deleteFrom("writingFolder").where("id", "=", folderId).execute()
+    );
   }
 
   // And the ones the API made, whose ids this module never sees — slice 7 gave the forum a create,
@@ -155,11 +181,14 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
   if (usernames.length > 0) {
     for (let depth = MAX_FOLDER_DEPTH; depth >= 1; depth--) {
       // deno-lint-ignore no-await-in-loop
-      await db.deleteFrom("writingFolder")
-        .where("writingGroupId", "is", null)
-        .where("depth", "=", depth)
-        .where("createdBy", "in", authors)
-        .execute();
+      await write((transaction) =>
+        transaction
+          .deleteFrom("writingFolder")
+          .where("writingGroupId", "is", null)
+          .where("depth", "=", depth)
+          .where("createdBy", "in", authors)
+          .execute()
+      );
     }
   }
 

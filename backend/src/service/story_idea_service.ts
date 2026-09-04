@@ -1,5 +1,5 @@
 import type { Selectable } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type {
   StoryIdea as DatabaseStoryIdea,
   StoryIdeaStatus,
@@ -146,8 +146,8 @@ function toRow(values: Partial<StoryIdeaValues>) {
  * Left join on the reader, so an unread idea still comes back — with `isRead` false. The join is
  * bound to one member's id: no query here can see another member's state.
  */
-function withAuthor(readerId: string) {
-  return db
+function withAuthor(readerId: string, executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("storyIdea")
     .innerJoin("user", "user.id", "storyIdea.createdBy")
     .leftJoin(
@@ -315,19 +315,21 @@ async function selectStoryIdeaGate(
 async function selectStoryIdea(
   ideaId: string,
   readerId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<StoryIdea | undefined> {
-  return await withAuthor(readerId)
+  return await withAuthor(readerId, executor)
     .where("storyIdea.id", "=", ideaId)
     .executeTakeFirst();
 }
 
 async function insertStoryIdea(
+  transaction: Transaction,
   createdBy: string,
   values: StoryIdeaValues,
 ): Promise<StoryIdea> {
   refuseOrphanedSubgenres(values.genres ?? [], values.subgenres ?? []);
 
-  const { id } = await db
+  const { id } = await transaction
     .insertInto("storyIdea")
     // title and both texts restated so the type carries their presence; `toRow` describes a
     // change, where every field may be absent.
@@ -342,13 +344,14 @@ async function insertStoryIdea(
     .executeTakeFirstOrThrow();
 
   // The author is the reader here, so a freshly created idea reports its own state: null.
-  return await withAuthor(createdBy)
+  return await withAuthor(createdBy, transaction)
     .where("storyIdea.id", "=", id)
     .executeTakeFirstOrThrow();
 }
 
 /** Only the author's own rows match, so ownership and existence are one query. */
 async function updateStoryIdea(
+  transaction: Transaction,
   ideaId: string,
   createdBy: string,
   values: Partial<StoryIdeaValues>,
@@ -356,7 +359,7 @@ async function updateStoryIdea(
   // One transaction, as the group's update is: read apart from the write, two PATCHes racing can
   // each see a state its own change is consistent with — one setting the genres, the other the
   // subgenres — and both commit, leaving exactly the pair this refuses.
-  const updated = await db.transaction().execute(async (transaction) => {
+  {
     // Scoped to the author like the update itself, so a stranger's idea cannot be reported on.
     // Against the resulting row rather than the request: see `refuseOrphanedSubgenres`.
     const before = await transaction
@@ -373,29 +376,30 @@ async function updateStoryIdea(
         values.subgenres ?? before.subgenres,
       );
     }
+  }
 
-    return await transaction
-      .updateTable("storyIdea")
-      .set(toRow(values))
-      .where("id", "=", ideaId)
-      .where("createdBy", "=", createdBy)
-      .returning("id")
-      .executeTakeFirst();
-  });
+  const updated = await transaction
+    .updateTable("storyIdea")
+    .set(toRow(values))
+    .where("id", "=", ideaId)
+    .where("createdBy", "=", createdBy)
+    .returning("id")
+    .executeTakeFirst();
 
   if (updated === undefined) {
     return undefined;
   }
 
   // Only the author can reach this, so they are the reader whose state comes back.
-  return await selectStoryIdea(updated.id, createdBy);
+  return await selectStoryIdea(updated.id, createdBy, transaction);
 }
 
 async function deleteStoryIdea(
+  transaction: Transaction,
   ideaId: string,
   createdBy: string,
 ): Promise<boolean> {
-  const deletion = await db
+  const deletion = await transaction
     .deleteFrom("storyIdea")
     .where("id", "=", ideaId)
     .where("createdBy", "=", createdBy)
@@ -408,8 +412,12 @@ async function deleteStoryIdea(
  * Upsert, because a member setting a state twice is not an error: the second one wins and the
  * first row is simply overwritten.
  */
-async function markRead(ideaId: string, userId: string): Promise<void> {
-  await db
+async function markRead(
+  transaction: Transaction,
+  ideaId: string,
+  userId: string,
+): Promise<void> {
+  await transaction
     .insertInto("storyIdeaReader")
     .values({ storyIdeaId: ideaId, userId })
     // A row is the whole of the fact, so a second click has nothing to overwrite — but it must
@@ -422,10 +430,11 @@ async function markRead(ideaId: string, userId: string): Promise<void> {
 
 /** Back to unread, which is the absence of a row rather than a value. */
 async function clearRead(
+  transaction: Transaction,
   ideaId: string,
   userId: string,
 ): Promise<void> {
-  await db
+  await transaction
     .deleteFrom("storyIdeaReader")
     .where("storyIdeaId", "=", ideaId)
     .where("userId", "=", userId)

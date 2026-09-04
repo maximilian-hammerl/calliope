@@ -57,8 +57,9 @@ async function listFolders(writingGroupId: string): Promise<Folder[]> {
 async function selectFolder(
   writingGroupId: string,
   folderId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<Folder | undefined> {
-  return await foldersWithNames()
+  return await foldersWithNames(executor)
     .where("writingFolder.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingFolder.id", "=", folderId)
@@ -77,6 +78,7 @@ export type CreateOutcome =
  * exist — which stops being true the moment moving a folder lands.
  */
 async function insertFolder(
+  transaction: Transaction,
   writingGroupId: string,
   values: {
     title: string;
@@ -85,62 +87,61 @@ async function insertFolder(
   },
   createdBy: string,
 ): Promise<CreateOutcome> {
-  return await db.transaction().execute(async (transaction) => {
-    let depth = 1;
-    if (values.parentFolderId !== null) {
-      // Locked, and in the same transaction as the insert. `moveFolder` takes the same lock, so
-      // the two serialise: without it a move could shift this parent deeper *between* the read
-      // and the insert, leaving the new row with a `depth` that is no longer its parent's plus
-      // one — and a subtree that reaches past the limit while every row in it still passes the
-      // CHECK on its own.
-      const parent = await transaction
-        .selectFrom("writingFolder")
-        .select(["depth"])
-        .where("writingGroupId", "=", writingGroupId)
-        .where("id", "=", values.parentFolderId)
-        .forUpdate()
-        .executeTakeFirst();
+  let depth = 1;
+  if (values.parentFolderId !== null) {
+    // Locked, and in the same transaction as the insert. `moveFolder` takes the same lock, so
+    // the two serialise: without it a move could shift this parent deeper *between* the read
+    // and the insert, leaving the new row with a `depth` that is no longer its parent's plus
+    // one — and a subtree that reaches past the limit while every row in it still passes the
+    // CHECK on its own.
+    const parent = await transaction
+      .selectFrom("writingFolder")
+      .select(["depth"])
+      .where("writingGroupId", "=", writingGroupId)
+      .where("id", "=", values.parentFolderId)
+      .forUpdate()
+      .executeTakeFirst();
 
-      if (parent === undefined) {
-        return { kind: "noSuchParent" } as const;
-      }
-      if (parent.depth >= MAX_FOLDER_DEPTH) {
-        return { kind: "tooDeep" } as const;
-      }
-      depth = parent.depth + 1;
+    if (parent === undefined) {
+      return { kind: "noSuchParent" } as const;
     }
+    if (parent.depth >= MAX_FOLDER_DEPTH) {
+      return { kind: "tooDeep" } as const;
+    }
+    depth = parent.depth + 1;
+  }
 
-    const { id } = await transaction
-      .insertInto("writingFolder")
-      .values({ writingGroupId, ...values, depth, createdBy })
-      .returning(["id"])
-      .executeTakeFirstOrThrow();
+  const { id } = await transaction
+    .insertInto("writingFolder")
+    .values({ writingGroupId, ...values, depth, createdBy })
+    .returning(["id"])
+    .executeTakeFirstOrThrow();
 
-    // Re-read rather than RETURNING, which cannot reach the joined name.
-    const folder = await foldersWithNames(transaction)
-      .where("writingFolder.writingGroupId", "=", writingGroupId)
-      .$narrowType<{ writingGroupId: NotNull }>()
-      .where("writingFolder.id", "=", id)
-      .executeTakeFirstOrThrow();
+  // Re-read rather than RETURNING, which cannot reach the joined name.
+  const folder = await foldersWithNames(transaction)
+    .where("writingFolder.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
+    .where("writingFolder.id", "=", id)
+    .executeTakeFirstOrThrow();
 
-    return { kind: "created", folder } as const;
-  });
+  return { kind: "created", folder } as const;
 }
 
 /** Title and description only: where a folder sits is a move, which is its own slice. */
 async function updateFolder(
+  transaction: Transaction,
   writingGroupId: string,
   folderId: string,
   values: { title: string; description: string | null },
 ): Promise<Folder | undefined> {
-  await db
+  await transaction
     .updateTable("writingFolder")
     .set(values)
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", folderId)
     .execute();
 
-  return await selectFolder(writingGroupId, folderId);
+  return await selectFolder(writingGroupId, folderId, transaction);
 }
 
 export type DeleteOutcome = "deleted" | "notEmpty";
@@ -156,10 +157,11 @@ export type DeleteOutcome = "deleted" | "notEmpty";
  * `updatePage` distinguishes the same pair for the same reason.
  */
 async function deleteFolder(
+  transaction: Transaction,
   writingGroupId: string,
   folderId: string,
 ): Promise<DeleteOutcome | undefined> {
-  const { numDeletedRows } = await db
+  const { numDeletedRows } = await transaction
     .deleteFrom("writingFolder")
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", folderId)
@@ -190,7 +192,7 @@ async function deleteFolder(
     return "deleted";
   }
 
-  const stillThere = await db
+  const stillThere = await transaction
     .selectFrom("writingFolder")
     .select("id")
     .where("writingGroupId", "=", writingGroupId)
@@ -224,48 +226,41 @@ export type MoveOutcome =
  * `undefined` means no such folder in that group.
  */
 async function moveFolder(
+  transaction: Transaction,
   writingGroupId: string,
   folderId: string,
   parentFolderId: string | null,
 ): Promise<MoveOutcome | undefined> {
-  const outcome = await db.transaction().execute(async (transaction) => {
-    // No join here: Postgres refuses FOR UPDATE on the nullable side of an outer one, and the
-    // author's name is not needed to decide a move. `insertFolder` takes the same lock.
-    const rows = await transaction
-      .selectFrom("writingFolder")
-      .select(["id", "parentFolderId", "depth"])
-      .where("writingGroupId", "=", writingGroupId)
-      .forUpdate()
-      .execute();
+  // No join here: Postgres refuses FOR UPDATE on the nullable side of an outer one, and the
+  // author's name is not needed to decide a move. `insertFolder` takes the same lock.
+  const rows = await transaction
+    .selectFrom("writingFolder")
+    .select(["id", "parentFolderId", "depth"])
+    .where("writingGroupId", "=", writingGroupId)
+    .forUpdate()
+    .execute();
 
-    const plan = planFolderMove(rows, folderId, parentFolderId);
-    if (plan === undefined || plan.kind !== "plan") {
-      return plan;
-    }
-
-    await transaction
-      .updateTable("writingFolder")
-      .set({ parentFolderId })
-      .where("id", "=", folderId)
-      .execute();
-
-    // One shift for the whole subtree: every node keeps its distance from the folder above it.
-    if (plan.delta !== 0) {
-      await transaction
-        .updateTable("writingFolder")
-        .set((eb) => ({ depth: eb("depth", "+", plan.delta) }))
-        .where("id", "in", plan.subtree)
-        .execute();
-    }
-
-    return { kind: "moved" } as const;
-  });
-
-  if (outcome === undefined || outcome.kind !== "moved") {
-    return outcome;
+  const plan = planFolderMove(rows, folderId, parentFolderId);
+  if (plan === undefined || plan.kind !== "plan") {
+    return plan;
   }
 
-  const folder = await selectFolder(writingGroupId, folderId);
+  await transaction
+    .updateTable("writingFolder")
+    .set({ parentFolderId })
+    .where("id", "=", folderId)
+    .execute();
+
+  // One shift for the whole subtree: every node keeps its distance from the folder above it.
+  if (plan.delta !== 0) {
+    await transaction
+      .updateTable("writingFolder")
+      .set((eb) => ({ depth: eb("depth", "+", plan.delta) }))
+      .where("id", "in", plan.subtree)
+      .execute();
+  }
+
+  const folder = await selectFolder(writingGroupId, folderId, transaction);
   if (folder === undefined) {
     throw new Error(
       `Folder ${folderId} could not be read back after moving it`,

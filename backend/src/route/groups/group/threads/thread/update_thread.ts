@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
@@ -94,11 +95,10 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await WritingThreadService.updateThread(
-      groupId,
-      threadId,
-      { title },
-      c.get("user").id,
+    const updated = await db.transaction().execute((transaction) =>
+      WritingThreadService.updateThread(transaction, groupId, threadId, {
+        title,
+      }, c.get("user").id)
     );
     if (updated === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);

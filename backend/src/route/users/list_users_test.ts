@@ -1,11 +1,11 @@
 import { assertEquals, assertExists, assertFalse } from "@std/assert";
 import { STATUS_CODE } from "@std/http/status";
-import { db } from "@/src/database/client.ts";
 import {
   clearRateLimits,
   deleteUsers,
   registerUser,
   request,
+  write,
 } from "@/src/test/support.ts";
 
 const searcher = "list-users-searcher";
@@ -127,11 +127,13 @@ Deno.test("QUERY /api/users needs a session", async () => {
 Deno.test("QUERY /api/users carries the platform role, and null for an ordinary member", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
-  await db
-    .updateTable("user")
-    .set({ platformRole: "moderator" })
-    .where("username", "=", findable)
-    .execute();
+  await write((transaction) =>
+    transaction
+      .updateTable("user")
+      .set({ platformRole: "moderator" })
+      .where("username", "=", findable)
+      .execute()
+  );
 
   const page = await searchOk(cookie, { search: "quenya-one" });
   const found = page.results.find((user) => user.username === findable);

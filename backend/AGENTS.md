@@ -454,6 +454,43 @@ keeps the draft-7 `RateLimit` headers coherent, since the skipped one sets none.
 travels in the 429 body** rather than being inferred from the limit in the header, because the
 client says something different for each and a number changing must not silently reclassify.
 
+## A write takes its transaction from the caller
+
+`db` is exported **without** `insertInto`, `updateTable` and `deleteFrom`, so a write cannot
+happen outside a transaction and the compiler is what says so. Every write service function
+therefore takes `transaction: Transaction` as its **first** parameter, and an **entry point**
+opens it: a route handler, `cron.ts`, a background task, the seed, a test (through
+`write()` in `test/support.ts`).
+
+That is not tidiness. It was a convention to remember, and `register` had already lost it: two
+service calls, two transactions, so an insert that failed after the account was written left an
+account with no session — the exact orphan the comment above it warns about, since a session is
+what lets somebody correct a mistyped address. One transaction over both, and a route that
+composes two writes now cannot get it wrong.
+
+Three things follow, and the second is the one that bites:
+
+- **A read keeps the pool.** A read-only function takes no transaction; where one can be handed
+  a builder it is an **optional last** parameter, `executor: typeof db | Transaction = db`. The
+  position says which kind it is: required and first means the write must be composed, optional
+  and last means it may be.
+- **A write's read-back must use the transaction.** `updateFolder` reading itself back through
+  `selectFolder()` on the pool sees the row *before* its own update — a different connection, an
+  uncommitted write. Every read-back therefore threads the transaction down, which is what most
+  of the `executor` parameters are for. Getting this wrong is silent: the write lands and the
+  response is stale.
+- **Work that must happen after the commit stays outside.** A few services own a whole use case
+  rather than a statement — `confirmAccountDeletion`, `banUser`, `changePassword`,
+  `resetPassword`, and the two email-address flows — and each opens its own transaction, because
+  the mail it sends afterwards must not go out for something that rolled back. `selectUserForSession`
+  does the same for its expiry touch: pushing it is the session's business, not the request's, and
+  every authenticated request would otherwise pay for a BEGIN it rarely needs.
+
+Expensive work belongs outside the transaction too, which is what `changePassword` already did:
+it hashes before opening one. `insertUser` is the exception and hashes inside — 55 ms of scrypt
+holding a pool connection, on an endpoint nobody hits twice, against a signature that cannot be
+handed a plaintext by mistake.
+
 ## Never raw SQL without asking
 
 Kysely's builder is checked; a template string is not. `sql\`nov()\`` compiles, ships, and

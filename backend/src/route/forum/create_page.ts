@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { db } from "@/src/database/client.ts";
 import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
@@ -86,11 +87,14 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const page = await ForumService.insertPage(
-      user,
-      title,
-      document,
-      folderId ?? null,
+    const page = await db.transaction().execute((transaction) =>
+      ForumService.insertPage(
+        transaction,
+        user,
+        title,
+        document,
+        folderId ?? null,
+      )
     );
 
     return c.json(page, STATUS_CODE.Created);

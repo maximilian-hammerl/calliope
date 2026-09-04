@@ -248,8 +248,11 @@ async function countUnread(recipientId: string): Promise<number> {
  * making somebody dismiss each line is the kind of chore that turns a notification list into
  * a task list.
  */
-async function markAllRead(recipientId: string): Promise<number> {
-  const result = await db
+async function markAllRead(
+  transaction: Transaction,
+  recipientId: string,
+): Promise<number> {
+  const result = await transaction
     .updateTable("notification")
     .set({ readAt: Temporal.Now.instant().toString() })
     .where("recipientId", "=", recipientId)
