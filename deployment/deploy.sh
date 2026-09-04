@@ -315,7 +315,10 @@ The schema is behind what this commit expects. \`compose logs migrate\`."
 
 		frontend="$(curl -sS --max-time 20 "$host_url/")"
 		printf '%s' "$frontend" | grep -q "name=\"commit\" content=\"$PUBLIC_GIT_COMMIT\"" ||
-			fail "The frontend Caddy serves is not from $PUBLIC_GIT_COMMIT. The frontend build did not reach it."
+			fail "The frontend Caddy serves is not from $PUBLIC_GIT_COMMIT. The frontend build
+did not reach it. If \`frontend/dist\` was replaced rather than refilled, Caddy is holding the
+directory it mounted at startup and needs recreating:
+  compose up -d --force-recreate caddy"
 
 		echo "$host_url serves $PUBLIC_GIT_COMMIT, backend and frontend both."
 	else

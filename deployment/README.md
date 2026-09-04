@@ -188,6 +188,26 @@ This only bites when the Caddyfile is the sole change. Anything that also alters
 compose file recreates Caddy along with it. Verify afterwards against a path the change
 should affect, not just that the container is up.
 
+### Why Caddy is not recreated on every deploy
+
+Caddy also bind-mounts `./frontend/dist`, and a bind mount is resolved once, at container
+start. A build that *replaced* that directory rather than refilling it would leave Caddy
+holding the old inode: an empty `/srv`, served by a container that is perfectly healthy.
+Recreating Caddy every time would close that off for about a second of CPU.
+
+We do not, for two measured reasons. `npm run build` empties `dist` and keeps it — the
+inode is unchanged across a build — and nothing else in the deploy path replaces it:
+`dist` is gitignored, so a pull cannot, and no script removes it. On a first deploy Caddy
+waits for `frontend-build` to finish, so it never mounts a directory that is not there yet.
+
+And if it happened anyway it would not be silent. The end-to-end check fetches `/` through
+Caddy and requires the served HTML to carry the commit just built, so a stale or empty
+bundle fails the deploy and the message says to recreate Caddy. That check is the reason
+this is a loud failure rather than a quiet one, and why the unconditional recreate — which
+costs a moment of downtime on every deploy, not just a second — is not worth it here.
+
+Reconsider if the frontend build ever starts deleting `dist` outright.
+
 ## The backend must stay a single instance
 
 Chat messages are fanned out to open streams inside the backend process. Running two
