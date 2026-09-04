@@ -16,6 +16,8 @@ export type FolderRow = Pick<
 > & {
   /** The forum's rows carry it and a group's do not, which is why it is optional (#32). */
   effectiveMemberPermission?: ForumPermission
+  /** A folder's own setting, which the operator's dialog shows rather than the reduced one. */
+  memberPermission?: ForumPermission
 }
 
 export type LeafRow = Pick<
@@ -50,6 +52,8 @@ export type TreeFolder = {
   /** For `mayModify`, so a row only offers what the endpoint would allow. */
   createdBy: string | null
   effectiveMemberPermission?: ForumPermission
+  /** Its own setting, unreduced — what an operator chose, which is what their dialog shows. */
+  memberPermission?: ForumPermission
   children: TreeNode[]
 }
 
@@ -134,6 +138,7 @@ export function buildTree(folders: FolderRow[], pages: LeafRow[], threads: LeafR
       depth: folder.depth,
       createdBy: folder.createdBy,
       effectiveMemberPermission: folder.effectiveMemberPermission,
+      memberPermission: folder.memberPermission,
       children: childrenOf(folder.id),
     })),
   ]

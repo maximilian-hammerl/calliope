@@ -2,7 +2,6 @@ import { assertEquals } from "@std/assert";
 import type { User } from "@/src/service/user_service.ts";
 import {
   effectiveMemberPermission,
-  folderEffectivePermission,
   FORUM_ROOT_PERMISSION,
   mayReadForumContent,
   mostRestrictive,
@@ -25,19 +24,6 @@ Deno.test("the most restrictive setting wins, whichever side it is on", () => {
   assertEquals(mostRestrictive("read", "hidden"), "hidden");
   assertEquals(mostRestrictive("hidden", "write"), "hidden");
   assertEquals(mostRestrictive("write", "write"), "write");
-});
-
-Deno.test("a top-level folder keeps its own setting, so `write` is reachable", () => {
-  // The root's constant clamps a leaf, never a folder: every folder descends from the root, so
-  // clamping folders would put `write` out of reach everywhere.
-  assertEquals(folderEffectivePermission("write", null), "write");
-  assertEquals(folderEffectivePermission("hidden", null), "hidden");
-});
-
-Deno.test("a folder cannot widen the folder above it", () => {
-  assertEquals(folderEffectivePermission("write", "read"), "read");
-  assertEquals(folderEffectivePermission("write", "hidden"), "hidden");
-  assertEquals(folderEffectivePermission("read", "write"), "read");
 });
 
 Deno.test("a thread at the root is readable, not writable", () => {

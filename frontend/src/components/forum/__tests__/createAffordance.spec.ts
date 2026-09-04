@@ -65,9 +65,27 @@ describe('the „+" appears where the viewer may actually create', () => {
     expect(offersCreate(folder('read'), forum(false))).toBe(false)
   })
 
-  it('offers it to an operator even there, because they may create anywhere', () => {
-    // The permission a row carries is what *members* get, so the row alone cannot answer this.
-    expect(offersCreate(folder('read'), forum(true))).toBe(true)
+  /**
+   * Slice 7 gave an operator its own menu, which also makes a folder — so this „+" is a member's,
+   * and an operator's row carries the structure one below instead. Two on a row would be the same
+   * button twice, with only one of them able to make a room.
+   */
+  it('withholds the member menu from an operator, whose own offers more', () => {
+    expect(offersCreate(folder('read'), forum(true))).toBe(false)
+    expect(offersCreate(folder('write'), forum(true))).toBe(false)
+  })
+
+  it('gives an operator the structure menu instead, which a member never sees', () => {
+    const structureMenu = (scope: TreeScope) =>
+      mount(FolderTreeNode, {
+        props: { node: folder('write'), scope, collapsed: new Set<string>() },
+        global: { stubs, provide: { [START_FORUM_CREATE as symbol]: () => undefined } },
+      })
+        .find('[aria-label="In diesem Ordner anlegen"]')
+        .exists()
+
+    expect(structureMenu(forum(true))).toBe(true)
+    expect(structureMenu(forum(false))).toBe(false)
   })
 
   it('never offers it on a leaf, which holds nothing', () => {
@@ -81,5 +99,32 @@ describe('the „+" appears where the viewer may actually create', () => {
   it('offers nothing in a writing group, whose tree carries its own actions', () => {
     // A folder that would qualify in the forum, so the scope is the only thing refusing it.
     expect(offersCreate(folder('write'), { kind: 'group', groupId: 'g1' })).toBe(false)
+  })
+})
+
+/**
+ * The delete button asked the group's own `mayWrite`, which the forum never passes — so an
+ * operator had every control but that one, and no way to remove a room they had just made.
+ */
+describe('the delete button follows the same rule as the rest of the structure', () => {
+  const deleteButton = (node: TreeNode, scope: TreeScope, mayWrite?: boolean) =>
+    mount(FolderTreeNode, {
+      props: { node, scope, collapsed: new Set<string>(), mayWrite },
+      global: { stubs, provide: { [START_FORUM_CREATE as symbol]: () => undefined } },
+    })
+      .find('[aria-label="Ordner löschen"]')
+      .exists()
+
+  it('is offered to an operator on an empty room', () => {
+    expect(deleteButton(folder('write'), forum(true))).toBe(true)
+  })
+
+  it('is withheld from a member, whatever the room grants', () => {
+    expect(deleteButton(folder('write'), forum(false))).toBe(false)
+  })
+
+  it('still follows a group writer, which is where the rule came from', () => {
+    expect(deleteButton(folder(), { kind: 'group', groupId: 'g1' }, true)).toBe(true)
+    expect(deleteButton(folder(), { kind: 'group', groupId: 'g1' }, false)).toBe(false)
   })
 })

@@ -100,3 +100,37 @@ Deno.test("an author act asked without its content is a bug, not a case", () => 
     "decided by its author",
   );
 });
+
+Deno.test("the forum's own shape is nobody's but an operator's", () => {
+  assertEquals(mayActInForum(member, "folder:create"), false);
+  assertEquals(mayActInForum(member, "folder:move"), false);
+  assertEquals(mayActInForum(member, "folder:delete"), false);
+  assertEquals(mayActInForum(member, "permission:change"), false);
+
+  assertEquals(mayActInForum(operator, "folder:create"), true);
+  assertEquals(mayActInForum(operator, "permission:change"), true);
+});
+
+/**
+ * The forum has no administrators, so the operator is the group administrator's counterpart: the
+ * `author` rule already answers for both, which is why renaming needed no rule of its own.
+ */
+Deno.test("a thread is renamed by its author, or by an operator", () => {
+  const somebodyElses = { createdBy: "someone-else", userId: member.id };
+
+  assertEquals(
+    mayActInForum(member, "write", "thread:change", {
+      createdBy: member.id,
+      userId: member.id,
+    }),
+    true,
+  );
+  assertEquals(
+    mayActInForum(member, "write", "thread:change", somebodyElses),
+    false,
+  );
+  assertEquals(
+    mayActInForum(operator, "write", "thread:change", somebodyElses),
+    true,
+  );
+});

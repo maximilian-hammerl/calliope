@@ -23,7 +23,7 @@ import {
 import {
   FOLDER_DESCRIPTION_SCHEMA,
   FOLDER_TITLE_SCHEMA,
-} from "./folder_schema.ts";
+} from "@/src/http/request_schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 

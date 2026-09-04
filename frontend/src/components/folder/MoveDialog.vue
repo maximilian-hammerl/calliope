@@ -4,6 +4,16 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getListFoldersQueryKey, useMoveFolder } from '@/api/folders/folders'
 import { getListPagesQueryKey, useMovePage } from '@/api/pages/pages'
 import { getListThreadsQueryKey, useMoveThread } from '@/api/threads/threads'
+import {
+  getListForumFoldersQueryKey,
+  getListForumPagesQueryKey,
+  getListForumThreadsQueryKey,
+  useMoveForumFolder,
+  useMoveForumPage,
+  useMoveForumThread,
+} from '@/api/forum/forum'
+import { exactKeyFilter } from '@/lib/api/queryKeys'
+import type { WriteScope } from '@/lib/folder/treeScope'
 import { ApiError } from '@/lib/api/apiFetch'
 import { failureMessage } from '@/lib/format/failure'
 import { moveTargets } from '@/lib/folder/moveTargets'
@@ -30,7 +40,7 @@ export type Movable = {
   parentId: string | null
 }
 
-const props = defineProps<{ groupId: string; tree: TreeNode[]; item?: Movable }>()
+const props = defineProps<{ scope: WriteScope; tree: TreeNode[]; item?: Movable }>()
 const open = defineModel<boolean>('open', { required: true })
 
 const queryClient = useQueryClient()
@@ -50,11 +60,31 @@ const chosen = ref<string>(ROOT)
 
 const moveError = ref<string | undefined>(undefined)
 
+/**
+ * The group's three mutations take a `groupId` the forum's do not have. Narrowed here rather than
+ * at each of the three call sites, where the compiler cannot see that the branch already decided.
+ */
+function groupIdOf(scope: WriteScope): string {
+  if (scope.kind === 'forum') {
+    throw new Error('The forum has no group; its own mutations are used instead')
+  }
+  return scope.groupId
+}
+
 const { mutateAsync: moveFolder, isPending: movingFolder } = useMoveFolder()
 const { mutateAsync: movePage, isPending: movingPage } = useMovePage()
 const { mutateAsync: moveThread, isPending: movingThread } = useMoveThread()
+const { mutateAsync: moveForumFolder, isPending: movingForumFolder } = useMoveForumFolder()
+const { mutateAsync: moveForumPage, isPending: movingForumPage } = useMoveForumPage()
+const { mutateAsync: moveForumThread, isPending: movingForumThread } = useMoveForumThread()
 const isPending = computed<boolean>(
-  () => movingFolder.value || movingPage.value || movingThread.value,
+  () =>
+    movingFolder.value ||
+    movingPage.value ||
+    movingThread.value ||
+    movingForumFolder.value ||
+    movingForumPage.value ||
+    movingForumThread.value,
 )
 
 const unchanged = computed<boolean>(
@@ -74,16 +104,32 @@ async function move() {
   moveError.value = undefined
 
   try {
-    if (item.kind === 'folder') {
+    if (props.scope.kind === 'forum') {
+      if (item.kind === 'folder') {
+        await moveForumFolder({ folderId: item.id, data: { parentFolderId: target } })
+      } else if (item.kind === 'page') {
+        await moveForumPage({ pageId: item.id, data: { folderId: target } })
+      } else {
+        await moveForumThread({ threadId: item.id, data: { folderId: target } })
+      }
+    } else if (item.kind === 'folder') {
       await moveFolder({
-        groupId: props.groupId,
+        groupId: groupIdOf(props.scope),
         folderId: item.id,
         data: { parentFolderId: target },
       })
     } else if (item.kind === 'page') {
-      await movePage({ groupId: props.groupId, pageId: item.id, data: { folderId: target } })
+      await movePage({
+        groupId: groupIdOf(props.scope),
+        pageId: item.id,
+        data: { folderId: target },
+      })
     } else {
-      await moveThread({ groupId: props.groupId, threadId: item.id, data: { folderId: target } })
+      await moveThread({
+        groupId: groupIdOf(props.scope),
+        threadId: item.id,
+        data: { folderId: target },
+      })
     }
   } catch (error) {
     if (error instanceof ApiError && error.body.code === 'folder_too_deep') {
@@ -102,11 +148,20 @@ async function move() {
   }
 
   // All three lists feed the tree, and a move changes which of them the reader sees where.
-  await Promise.all([
-    queryClient.invalidateQueries({ queryKey: getListFoldersQueryKey(props.groupId) }),
-    queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(props.groupId) }),
-    queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(props.groupId) }),
-  ])
+  const refreshed =
+    props.scope.kind === 'forum'
+      ? [
+          queryClient.invalidateQueries(exactKeyFilter(getListForumFoldersQueryKey())),
+          queryClient.invalidateQueries(exactKeyFilter(getListForumPagesQueryKey())),
+          queryClient.invalidateQueries(exactKeyFilter(getListForumThreadsQueryKey())),
+        ]
+      : [
+          queryClient.invalidateQueries({ queryKey: getListFoldersQueryKey(props.scope.groupId) }),
+          queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(props.scope.groupId) }),
+          queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(props.scope.groupId) }),
+        ]
+
+  await Promise.all(refreshed)
   open.value = false
 }
 </script>

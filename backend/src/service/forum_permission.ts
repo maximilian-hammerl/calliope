@@ -24,17 +24,6 @@ export function mostRestrictive(
   );
 }
 
-/**
- * What a folder stores: its own setting reduced by its parent's, which is already reduced — so the
- * whole path in one comparison. A folder with no parent keeps its own; see the constant above.
- */
-export function folderEffectivePermission(
-  own: ForumPermission,
-  parentEffective: ForumPermission | null,
-): ForumPermission {
-  return parentEffective === null ? own : mostRestrictive(own, parentEffective);
-}
-
 /** Their access is the role, not a folder's setting (#21) — unrelated to a group's roles. */
 export function isOperator(user: User): boolean {
   return user.platformRole !== null;

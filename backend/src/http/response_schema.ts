@@ -96,26 +96,31 @@ const FORUM_PERMISSION = {
   effectiveMemberPermission: FORUM_PERMISSION_SCHEMA,
 };
 
+/**
+ * Both permissions, unlike a leaf's: the reduced one is what a reader is told, and the folder's
+ * *own* setting is what an operator's dialog has to show — a room closed by the room above it
+ * still remembers what was chosen for it (#32's slice 7).
+ */
 export const FORUM_FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA
-  .omit({ writingGroupId: true, memberPermission: true })
+  .omit({ writingGroupId: true })
   .extend(CREATED_BY_USERNAME)
-  .extend(FORUM_PERMISSION);
+  .extend(FORUM_PERMISSION)
+  // Not nullable here, unlike the column: it is null only for a writing group's folder, which the
+  // table's CHECK requires and `forumFolders`' `$narrowType` asserts.
+  .extend({ memberPermission: FORUM_PERMISSION_SCHEMA });
 
 export const FORUM_THREAD_RESPONSE = WRITING_THREAD_SCHEMA
-  .omit({ writingGroupId: true, memberPermission: true })
+  .omit({ writingGroupId: true })
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
-  .extend(FORUM_PERMISSION);
+  .extend(FORUM_PERMISSION)
+  .extend({ memberPermission: FORUM_PERMISSION_SCHEMA });
 
 export const FORUM_PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
-  .omit({
-    writingGroupId: true,
-    memberPermission: true,
-    document: true,
-    text: true,
-  })
+  .omit({ writingGroupId: true, document: true, text: true })
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
+  .extend({ memberPermission: FORUM_PERMISSION_SCHEMA })
   .extend({ updatedByUsername: z.string().nullable() })
   .extend(FORUM_PERMISSION);
 

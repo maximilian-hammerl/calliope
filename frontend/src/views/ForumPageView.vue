@@ -7,7 +7,7 @@
  */
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useRoute } from 'vue-router'
-import { Flag, Pencil } from '@lucide/vue'
+import { Flag, Pencil, ShieldCheck } from '@lucide/vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { exactKeyFilter } from '@/lib/api/queryKeys'
 import {
@@ -24,6 +24,7 @@ import PathToHere from '@/components/folder/PathToHere.vue'
 import PostBody from '@/components/thread/PostBody.vue'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
+import ForumPermissionDialog from '@/components/forum/ForumPermissionDialog.vue'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { formatActivityTime } from '@/lib/format/formatTime'
 import { formatCount } from '@/lib/format/formatNumber'
@@ -147,6 +148,9 @@ const mayReport = computed<boolean>(
     page.value.createdBy !== currentUserId.value,
 )
 
+/** An operator's act, separate from „Seite bearbeiten", which is any writer's. */
+const settingPermission = ref<boolean>(false)
+
 const meta = computed<string>(() => {
   const current = page.value
   if (current === undefined) return ''
@@ -231,6 +235,18 @@ async function refresh(): Promise<void> {
             Melden
           </button>
 
+          <!-- Beside „Melden" rather than inside the editor: that is gated on `mayWrite`, and
+               this is an operator's alone. -->
+          <button
+            v-if="isOperator"
+            type="button"
+            class="flex min-h-11 items-center gap-1.5 hover:text-oak-deep md:min-h-0"
+            @click="settingPermission = true"
+          >
+            <ShieldCheck :size="14" :stroke-width="1.5" aria-hidden="true" />
+            Rechte
+          </button>
+
           <button
             v-if="mayWrite"
             type="button"
@@ -251,5 +267,15 @@ async function refresh(): Promise<void> {
     target-type="writing_page"
     :target-id="page.id"
     :subject="page.title"
+  />
+
+  <ForumPermissionDialog
+    v-if="page"
+    v-model:open="settingPermission"
+    target-type="page"
+    :target-id="page.id"
+    :member-permission="page.memberPermission"
+    :title="page.title"
+    @changed="refresh"
   />
 </template>

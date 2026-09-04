@@ -24,7 +24,7 @@ import {
   useUpdateForumPost,
 } from '@/api/forum/forum'
 import type { GetForumThread200, ListForumPosts200ResultsItem, PostDocument } from '@/api/models'
-import { Flag } from '@lucide/vue'
+import { Flag, ShieldCheck } from '@lucide/vue'
 import { useForumTree } from '@/composables/useForumTree'
 import { useIsOperator } from '@/composables/useIsOperator'
 import { mayWriteInForum } from '@/lib/forum/permission'
@@ -32,6 +32,7 @@ import { usePagedList } from '@/composables/usePagedList'
 import PathToHere from '@/components/folder/PathToHere.vue'
 import PostItem from '@/components/thread/PostItem.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
+import ForumPermissionDialog from '@/components/forum/ForumPermissionDialog.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import { pluralize } from '@/lib/format/formatText'
@@ -78,6 +79,9 @@ const reportingPost = computed<boolean>({
   },
 })
 const reportingThread = ref<boolean>(false)
+
+/** An operator setting what members may do with this thread (#32's slice 7). */
+const settingPermission = ref<boolean>(false)
 
 /** Reporting your own thread is not a thing, the rule `PostItem` applies to a post. */
 const mayReportThread = computed<boolean>(
@@ -349,6 +353,18 @@ async function refresh(): Promise<void> {
               <Flag :size="14" :stroke-width="1.5" aria-hidden="true" />
               Melden
             </button>
+
+            <!-- An operator's act and only theirs: what members may do here is nobody else's to
+                 set, since the forum has no administrators. -->
+            <button
+              v-if="isOperator"
+              type="button"
+              class="flex min-h-11 items-center gap-1.5 hover:text-oak-deep md:min-h-0"
+              @click="settingPermission = true"
+            >
+              <ShieldCheck :size="14" :stroke-width="1.5" aria-hidden="true" />
+              Rechte
+            </button>
           </div>
         </div>
 
@@ -419,5 +435,17 @@ async function refresh(): Promise<void> {
     target-type="writing_thread"
     :target-id="thread.id"
     :subject="thread.title"
+  />
+
+  <!-- `v-if` as its neighbours have it: a shut dialog keeps its content otherwise, and this one
+       opens on a stored value that would then be the previous thread's. -->
+  <ForumPermissionDialog
+    v-if="thread"
+    v-model:open="settingPermission"
+    target-type="thread"
+    :target-id="thread.id"
+    :member-permission="thread.memberPermission"
+    :title="thread.title"
+    @changed="refresh"
   />
 </template>

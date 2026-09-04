@@ -62,9 +62,12 @@ function createIn(folderId: string, kind: 'folder' | 'page' | 'thread') {
 /** Only an empty folder goes, so a full one does not offer it at all. */
 const isEmpty = computed<boolean>(() => (folder.value?.children.length ?? 0) === 0)
 
-/** A group's structure is changed from this tree; the forum's is #32's seventh slice. */
-const mayChangeStructure = computed<boolean>(
-  () => props.scope.kind === 'group' && props.mayWrite === true,
+/**
+ * Who may reshape the tree: a group's writers, and the forum's operators — it has no
+ * administrators, so its structure is theirs alone (#32).
+ */
+const mayChangeStructure = computed<boolean>(() =>
+  props.scope.kind === 'group' ? props.mayWrite === true : props.scope.isOperator,
 )
 
 /**
@@ -87,11 +90,15 @@ const spacing = computed<string>(() => {
 
 const startForumCreate = inject(START_FORUM_CREATE, undefined)
 
-/** An operator may create anywhere (#21); a member where the folder grants `write`. */
+/**
+ * A *member* with `write` in this folder, offered threads and pages. An operator's create is the
+ * structure menu below instead, which also offers a folder — two „+" on one row would be the same
+ * button twice, and only one of them could make a room.
+ */
 const mayCreateHere = computed<boolean>(() => {
   if (startForumCreate === undefined || folder.value === undefined) return false
-  if (props.scope.kind !== 'forum') return false
-  return mayWriteInForum(folder.value.effectiveMemberPermission, props.scope.isOperator)
+  if (props.scope.kind !== 'forum' || props.scope.isOperator) return false
+  return mayWriteInForum(folder.value.effectiveMemberPermission, false)
 })
 </script>
 
@@ -206,8 +213,10 @@ const mayCreateHere = computed<boolean>(() => {
 
             <!-- Hidden rather than disabled once it holds something: the reason is the content,
                which is on screen right under it. -->
+            <!-- `mayChangeStructure`, not the group's own `mayWrite`: the forum passes no such
+                 prop, so asking it left an operator with no way to delete a room at all. -->
             <button
-              v-if="mayWrite && isEmpty"
+              v-if="mayChangeStructure && isEmpty"
               type="button"
               class="flex min-h-11 items-center px-1 hover:text-oak-deep md:min-h-0"
               aria-label="Ordner löschen"

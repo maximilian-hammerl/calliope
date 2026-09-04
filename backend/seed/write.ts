@@ -14,8 +14,6 @@ import {
 } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
 import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "@/seed/forum.ts";
-import { folderEffectivePermission } from "@/src/service/forum_permission.ts";
-import type { ForumPermission } from "@/src/database/schema.ts";
 import type { GroupFixture } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import type { StoryIdeaFixture } from "@/seed/story_ideas.ts";
@@ -421,21 +419,17 @@ async function writeGroups(): Promise<void> {
  * folder hide its children.
  */
 async function writeForum(): Promise<void> {
-  const effectiveOf = new Map<string, ForumPermission>();
   const depthOf = new Map<string, number>();
 
   for (const folder of FORUM_FOLDERS) {
-    const parentEffective = folder.in === undefined
-      ? null
-      : effectiveOf.get(folder.in) ?? null;
-    const effective = folderEffectivePermission(folder.may, parentEffective);
-    effectiveOf.set(folder.id, effective);
     const depth = folder.in === undefined
       ? 1
       : (depthOf.get(folder.in) ?? 0) + 1;
     depthOf.set(folder.id, depth);
 
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: a child needs its parent's depth
+    // Sequential on purpose: a child needs its parent's depth, and the trigger that derives
+    // `effective_member_permission` reads the parent row, which has to be there already.
+    // deno-lint-ignore no-await-in-loop
     await db.insertInto("writingFolder").values({
       id: folder.id,
       writingGroupId: null,
@@ -445,7 +439,6 @@ async function writeForum(): Promise<void> {
       description: folder.description ?? null,
       createdBy: folder.by,
       memberPermission: folder.may,
-      effectiveMemberPermission: effective,
     }).execute();
   }
 

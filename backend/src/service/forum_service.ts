@@ -1,5 +1,5 @@
 import type { ExpressionBuilder, NotNull } from "kysely";
-import { db } from "@/src/database/client.ts";
+import { db, type Transaction } from "@/src/database/client.ts";
 import type { DB, ForumPermission } from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
 import { withFavourite } from "@/src/query/favourite.ts";
@@ -12,6 +12,8 @@ import {
   effectiveMemberPermission,
   isOperator,
 } from "@/src/service/forum_permission.ts";
+import { planFolderMove } from "@/src/service/folder_move.ts";
+import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
 import type { PostDocument } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
@@ -30,6 +32,8 @@ type Permitted = { effectiveMemberPermission: ForumPermission };
 
 export type ForumFolder = Permitted & {
   id: string;
+  /** The folder's own setting, which an operator's dialog shows; `Permitted` carries the reduced one. */
+  memberPermission: ForumPermission;
   parentFolderId: string | null;
   depth: number;
   title: string;
@@ -41,6 +45,8 @@ export type ForumFolder = Permitted & {
 
 export type ForumThread = Permitted & {
   id: string;
+  /** Its own setting, which an operator's dialog shows; `Permitted` carries the reduced one. */
+  memberPermission: ForumPermission;
   folderId: string | null;
   title: string;
   createdBy: string | null;
@@ -52,6 +58,8 @@ export type ForumThread = Permitted & {
 
 export type ForumPageSummary = Permitted & {
   id: string;
+  /** As a thread's: what was chosen here, which a folder above may still be reducing. */
+  memberPermission: ForumPermission;
   folderId: string | null;
   title: string;
   createdBy: string | null;
@@ -74,12 +82,12 @@ function withEffectivePermission<
     memberPermission: ForumPermission;
     folderPermission: ForumPermission | null;
   },
->(row: Row): Omit<Row, "memberPermission" | "folderPermission"> & Permitted {
-  const { memberPermission, folderPermission, ...rest } = row;
+>(row: Row): Omit<Row, "folderPermission"> & Permitted {
+  const { folderPermission, ...rest } = row;
   return {
     ...rest,
     effectiveMemberPermission: effectiveMemberPermission(
-      memberPermission,
+      rest.memberPermission,
       folderPermission,
     ),
   };
@@ -113,8 +121,8 @@ function pageNotHidden(
   ]);
 }
 
-function forumFolders(user: User) {
-  return db
+function forumFolders(user: User, executor: typeof db | Transaction = db) {
+  return executor
     .selectFrom("writingFolder")
     .leftJoin("user", "user.id", "writingFolder.createdBy")
     .select([
@@ -149,8 +157,9 @@ function forumFolders(user: User) {
 async function selectFolder(
   user: User,
   folderId: string,
+  executor: typeof db | Transaction = db,
 ): Promise<ForumFolder | undefined> {
-  const folder = await forumFolders(user)
+  const folder = await forumFolders(user, executor)
     .where("writingFolder.id", "=", folderId)
     .executeTakeFirst();
 
@@ -158,8 +167,7 @@ async function selectFolder(
     return undefined;
   }
 
-  const { memberPermission: _own, ...rest } = folder;
-  return rest;
+  return folder;
 }
 
 /**
@@ -177,8 +185,8 @@ async function listFolders(user: User): Promise<ForumFolder[]> {
     .execute();
 
   // The stored value is already the minimum over the path including this folder, so nothing is
-  // left to reduce. The own setting is dropped: nothing reads it yet.
-  return folders.map(({ memberPermission: _own, ...folder }) => folder);
+  // left to reduce; both are sent, for the reason `FORUM_FOLDER_RESPONSE` gives.
+  return folders;
 }
 
 function forumThreads(user: User) {
@@ -356,6 +364,269 @@ async function searchPages(
 }
 
 /**
+ * The forum's structure, which is an operator's alone (#32's slice 7). The counterparts of
+ * `WritingFolderService`'s four, without a group to scope them: `writing_group_id IS NULL` is the
+ * scope, and it is written on every one of them.
+ *
+ * `effective_member_permission` is never supplied here — the database derives it, and a move or a
+ * permission change carries the whole subtree with it. See `20260904100000_forum_effective_permission.sql`.
+ */
+export type CreateFolderOutcome =
+  | { kind: "created"; folder: ForumFolder }
+  | { kind: "noSuchParent" }
+  | { kind: "tooDeep" };
+
+async function insertFolder(
+  user: User,
+  values: {
+    title: string;
+    description: string | null;
+    parentFolderId: string | null;
+    memberPermission: ForumPermission;
+  },
+): Promise<CreateFolderOutcome> {
+  return await db.transaction().execute(async (transaction) => {
+    let depth = 1;
+    if (values.parentFolderId !== null) {
+      // Locked, and in the same transaction, for the reason the group's insert gives: a move
+      // could otherwise shift this parent deeper between the read and the insert.
+      const parent = await transaction
+        .selectFrom("writingFolder")
+        .select("depth")
+        .where("writingGroupId", "is", null)
+        .where("id", "=", values.parentFolderId)
+        .forUpdate()
+        .executeTakeFirst();
+
+      if (parent === undefined) {
+        return { kind: "noSuchParent" } as const;
+      }
+      if (parent.depth >= MAX_FOLDER_DEPTH) {
+        return { kind: "tooDeep" } as const;
+      }
+      depth = parent.depth + 1;
+    }
+
+    const { id } = await transaction
+      .insertInto("writingFolder")
+      .values({ writingGroupId: null, ...values, depth, createdBy: user.id })
+      .returning(["id"])
+      .executeTakeFirstOrThrow();
+
+    const folder = await selectFolder(user, id, transaction);
+    if (folder === undefined) {
+      throw new Error(`Folder ${id} was written and could not be read back`);
+    }
+    return { kind: "created", folder } as const;
+  });
+}
+
+/** Title and description only: where a folder sits is `moveFolder`, and its permission is its own. */
+async function updateFolder(
+  user: User,
+  folderId: string,
+  values: { title: string; description: string | null },
+): Promise<ForumFolder | undefined> {
+  const updated = await db
+    .updateTable("writingFolder")
+    .set(values)
+    .where("writingGroupId", "is", null)
+    .where("id", "=", folderId)
+    .returning("id")
+    .executeTakeFirst();
+
+  return updated === undefined ? undefined : await selectFolder(user, folderId);
+}
+
+async function moveFolder(
+  user: User,
+  folderId: string,
+  parentFolderId: string | null,
+): Promise<MoveFolderOutcome | undefined> {
+  const outcome = await db.transaction().execute(async (transaction) => {
+    const rows = await transaction
+      .selectFrom("writingFolder")
+      .select(["id", "parentFolderId", "depth"])
+      .where("writingGroupId", "is", null)
+      .forUpdate()
+      .execute();
+
+    const plan = planFolderMove(rows, folderId, parentFolderId);
+    if (plan === undefined || plan.kind !== "plan") {
+      return plan;
+    }
+
+    // The parent first and on its own, so the trigger that derives the subtree's permissions sees
+    // the new path; the depth shift after it changes no permission.
+    await transaction
+      .updateTable("writingFolder")
+      .set({ parentFolderId })
+      .where("id", "=", folderId)
+      .execute();
+
+    if (plan.delta !== 0) {
+      await transaction
+        .updateTable("writingFolder")
+        .set((eb) => ({ depth: eb("depth", "+", plan.delta) }))
+        .where("id", "in", plan.subtree)
+        .execute();
+    }
+
+    return { kind: "moved" } as const;
+  });
+
+  if (outcome === undefined || outcome.kind !== "moved") {
+    return outcome;
+  }
+
+  const folder = await selectFolder(user, folderId);
+  if (folder === undefined) {
+    throw new Error(
+      `Folder ${folderId} could not be read back after moving it`,
+    );
+  }
+  return { kind: "moved", folder };
+}
+
+export type MoveFolderOutcome =
+  | { kind: "moved"; folder: ForumFolder }
+  | { kind: "noSuchParent" }
+  | { kind: "cycle" }
+  | { kind: "tooDeep" };
+
+export type DeleteFolderOutcome = "deleted" | "notEmpty" | "notFound";
+
+/**
+ * Only an empty folder goes, as a group's does: deleting a subtree is unrecoverable with no edit
+ * history behind it. Emptiness is a condition on the delete rather than a read before it, so
+ * nothing can be added in between.
+ */
+async function deleteFolder(folderId: string): Promise<DeleteFolderOutcome> {
+  const { numDeletedRows } = await db
+    .deleteFrom("writingFolder")
+    .where("writingGroupId", "is", null)
+    .where("id", "=", folderId)
+    .where((eb) =>
+      eb.not(eb.exists(
+        eb.selectFrom("writingFolder as child")
+          .select("child.id")
+          .whereRef("child.parentFolderId", "=", "writingFolder.id"),
+      ))
+    )
+    .where((eb) =>
+      eb.not(eb.exists(
+        eb.selectFrom("writingPage")
+          .select("writingPage.id")
+          .whereRef("writingPage.folderId", "=", "writingFolder.id"),
+      ))
+    )
+    .where((eb) =>
+      eb.not(eb.exists(
+        eb.selectFrom("writingThread")
+          .select("writingThread.id")
+          .whereRef("writingThread.folderId", "=", "writingFolder.id"),
+      ))
+    )
+    .executeTakeFirst();
+
+  if (numDeletedRows > 0n) {
+    return "deleted";
+  }
+
+  // Nothing went, so say which: gone already, or still holding something.
+  const exists = await db
+    .selectFrom("writingFolder")
+    .select("id")
+    .where("writingGroupId", "is", null)
+    .where("id", "=", folderId)
+    .executeTakeFirst();
+
+  return exists === undefined ? "notFound" : "notEmpty";
+}
+
+/**
+ * The three kinds that carry a permission, and the table each one is. One route sets all three
+ * (#32's slice 7) for the reason one pair sets a favourite over five: the act is identical
+ * whatever it names, and three routes saying the same thing would reach the client as three hooks.
+ */
+export const FORUM_PERMISSION_TARGET_TYPES = [
+  "folder",
+  "thread",
+  "page",
+] as const;
+
+export type ForumPermissionTargetType =
+  typeof FORUM_PERMISSION_TARGET_TYPES[number];
+
+const PERMISSION_TABLE = {
+  folder: "writingFolder",
+  thread: "writingThread",
+  page: "writingPage",
+} as const satisfies Record<ForumPermissionTargetType, keyof DB>;
+
+/**
+ * What members may do with one row. A folder's takes its whole subtree with it, which the database
+ * does rather than this — see the trigger migration.
+ *
+ * `member_permission` is the row's *own* setting, never the reduced one: a folder above it can
+ * still close it, and re-opening that folder restores what was set here.
+ */
+async function setPermission(
+  targetType: ForumPermissionTargetType,
+  targetId: string,
+  memberPermission: ForumPermission,
+): Promise<"set" | "notFound"> {
+  const updated = await db
+    .updateTable(PERMISSION_TABLE[targetType])
+    .set({ memberPermission })
+    .where("writingGroupId", "is", null)
+    .where("id", "=", targetId)
+    .returning("id")
+    .executeTakeFirst();
+
+  return updated === undefined ? "notFound" : "set";
+}
+
+/**
+ * Where a leaf sits. The scope needs no checking beyond `writing_group_id IS NULL` here: a folder
+ * of a writing group is refused by the trigger in `20260903140000_folder_scope.sql`, and the route
+ * has already resolved the target through `selectFolder`, which is the forum's own.
+ */
+async function moveThread(
+  user: User,
+  threadId: string,
+  folderId: string | null,
+): Promise<ForumThread | undefined> {
+  const moved = await db
+    .updateTable("writingThread")
+    .set({ folderId })
+    .where("writingGroupId", "is", null)
+    .where("id", "=", threadId)
+    .returning("id")
+    .executeTakeFirst();
+
+  return moved === undefined ? undefined : await selectThread(user, threadId);
+}
+
+async function movePage(
+  user: User,
+  pageId: string,
+  folderId: string | null,
+): Promise<ForumPageSummary | undefined> {
+  const moved = await db
+    .updateTable("writingPage")
+    .set({ folderId })
+    .where("writingGroupId", "is", null)
+    .where("id", "=", pageId)
+    .returning("id")
+    .executeTakeFirst();
+
+  return moved === undefined
+    ? undefined
+    : await selectPageForReader(user, pageId);
+}
+
+/**
  * The forum's writes: the group's inserts without the group, and without its activity
  * notification — who hears about a forum post is #119.
  *
@@ -489,6 +760,13 @@ async function updatePage(
 export const ForumService = {
   listFolders,
   selectFolder,
+  insertFolder,
+  updateFolder,
+  moveFolder,
+  deleteFolder,
+  setPermission,
+  moveThread,
+  movePage,
   listThreads,
   selectThread,
   listPages,

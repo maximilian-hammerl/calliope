@@ -1,7 +1,7 @@
 import { db } from "@/src/database/client.ts";
 import type { ForumPermission } from "@/src/database/schema.ts";
-import { folderEffectivePermission } from "@/src/service/forum_permission.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
 
 /**
  * Forum content is inserted straight into the tables: no endpoint creates a folder yet (#32's
@@ -24,10 +24,11 @@ export async function createForumFolder(
 ): Promise<{ id: string }> {
   const parent = parentFolderId === null ? undefined : await db
     .selectFrom("writingFolder")
-    .select(["depth", "effectiveMemberPermission"])
+    .select("depth")
     .where("id", "=", parentFolderId)
     .executeTakeFirstOrThrow();
 
+  // `effective_member_permission` is the database's to derive, so nothing here computes it.
   const folder = await db
     .insertInto("writingFolder")
     .values({
@@ -36,10 +37,6 @@ export async function createForumFolder(
       depth: (parent?.depth ?? 0) + 1,
       title,
       memberPermission,
-      effectiveMemberPermission: folderEffectivePermission(
-        memberPermission,
-        parent?.effectiveMemberPermission ?? null,
-      ),
     })
     .returning("id")
     .executeTakeFirstOrThrow();
@@ -150,6 +147,20 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
   for (const folderId of [...made.folders].reverse()) {
     // deno-lint-ignore no-await-in-loop
     await db.deleteFrom("writingFolder").where("id", "=", folderId).execute();
+  }
+
+  // And the ones the API made, whose ids this module never sees — slice 7 gave the forum a create,
+  // so a route test leaves folders behind exactly as it leaves threads and pages. Deepest first,
+  // for the RESTRICT above.
+  if (usernames.length > 0) {
+    for (let depth = MAX_FOLDER_DEPTH; depth >= 1; depth--) {
+      // deno-lint-ignore no-await-in-loop
+      await db.deleteFrom("writingFolder")
+        .where("writingGroupId", "is", null)
+        .where("depth", "=", depth)
+        .where("createdBy", "in", authors)
+        .execute();
+    }
   }
 
   made.folders = [];

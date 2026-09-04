@@ -197,10 +197,15 @@ const nodes = computed<TreeNode[]>(() => tree.value)
       </DropdownMenuContent>
     </DropdownMenu>
 
-    <MoveDialog v-model:open="moveDialogOpen" :group-id="groupId" :tree="nodes" :item="moving" />
+    <MoveDialog
+      v-model:open="moveDialogOpen"
+      :scope="{ kind: 'group', groupId }"
+      :tree="nodes"
+      :item="moving"
+    />
     <FolderDialog
       v-model:open="folderDialogOpen"
-      :group-id="groupId"
+      :scope="{ kind: 'group', groupId }"
       :folder="editing"
       :parent-folder-id="creatingFolderUnder ?? null"
     />

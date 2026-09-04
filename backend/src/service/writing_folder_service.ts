@@ -1,5 +1,6 @@
 import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
+import { planFolderMove } from "@/src/service/folder_move.ts";
 import type { WritingFolder as DatabaseWritingFolder } from "@/src/database/schema.ts";
 
 /** The deepest a member may nest: Weltenbau → Stadt → Viertel → Gebäude → Raum. */
@@ -229,7 +230,7 @@ async function moveFolder(
 ): Promise<MoveOutcome | undefined> {
   const outcome = await db.transaction().execute(async (transaction) => {
     // No join here: Postgres refuses FOR UPDATE on the nullable side of an outer one, and the
-    // author's name is not needed to decide a move.
+    // author's name is not needed to decide a move. `insertFolder` takes the same lock.
     const rows = await transaction
       .selectFrom("writingFolder")
       .select(["id", "parentFolderId", "depth"])
@@ -237,55 +238,10 @@ async function moveFolder(
       .forUpdate()
       .execute();
 
-    const byId = new Map(rows.map((row) => [row.id, row]));
-    const moving = byId.get(folderId);
-    if (moving === undefined) {
-      return undefined;
+    const plan = planFolderMove(rows, folderId, parentFolderId);
+    if (plan === undefined || plan.kind !== "plan") {
+      return plan;
     }
-
-    let newDepth = 1;
-    if (parentFolderId !== null) {
-      const target = byId.get(parentFolderId);
-      if (target === undefined) {
-        return { kind: "noSuchParent" } as const;
-      }
-
-      // Walking up from the target: if the folder being moved is on that path, the target is
-      // inside it. Bounded by the depth limit, and by `byId` being a finite map besides.
-      for (
-        let ancestor: string | null = target.id;
-        ancestor !== null;
-        ancestor = byId.get(ancestor)?.parentFolderId ?? null
-      ) {
-        if (ancestor === folderId) {
-          return { kind: "cycle" } as const;
-        }
-      }
-
-      newDepth = target.depth + 1;
-    }
-
-    // The subtree, and how far it reaches below the folder itself.
-    const subtree: string[] = [];
-    const queue = [folderId];
-    let height = 0;
-    while (queue.length > 0) {
-      const id = queue.shift() as string;
-      subtree.push(id);
-      const row = byId.get(id);
-      if (row !== undefined) {
-        height = Math.max(height, row.depth - moving.depth);
-      }
-      for (const row of rows) {
-        if (row.parentFolderId === id) queue.push(row.id);
-      }
-    }
-
-    if (newDepth + height > MAX_FOLDER_DEPTH) {
-      return { kind: "tooDeep" } as const;
-    }
-
-    const delta = newDepth - moving.depth;
 
     await transaction
       .updateTable("writingFolder")
@@ -294,11 +250,11 @@ async function moveFolder(
       .execute();
 
     // One shift for the whole subtree: every node keeps its distance from the folder above it.
-    if (delta !== 0) {
+    if (plan.delta !== 0) {
       await transaction
         .updateTable("writingFolder")
-        .set((eb) => ({ depth: eb("depth", "+", delta) }))
-        .where("id", "in", subtree)
+        .set((eb) => ({ depth: eb("depth", "+", plan.delta) }))
+        .where("id", "in", plan.subtree)
         .execute();
     }
 
