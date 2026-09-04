@@ -1,4 +1,4 @@
-import type { Selectable } from "kysely";
+import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { withFavourite } from "@/src/query/favourite.ts";
 import type { User } from "@/src/service/user_service.ts";
@@ -15,10 +15,12 @@ import { documentToPlainText } from "@/src/document/document_text.ts";
 
 /** What the rail needs: everything but the prose, so listing a group is not a bulk download. */
 export type PageSummary =
+  // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
+  // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
+  & { writingGroupId: string }
   & Pick<
     Selectable<DatabaseWritingPage>,
     | "id"
-    | "writingGroupId"
     | "title"
     | "createdBy"
     | "createdAt"
@@ -99,6 +101,7 @@ async function listPages(
 ): Promise<PageSummary[]> {
   return await pagesForReader(readerId)
     .where("writingPage.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .orderBy("writingPage.lastActivityAt", "desc")
     // `id` breaks ties, and they are the ordinary case rather than an edge: one INSERT shares one
     // `now()`, so everything created together carries the same timestamp — three of the seed's
@@ -118,6 +121,7 @@ async function selectPage(
       eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
     )
     .where("writingPage.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingPage.id", "=", pageId)
     .executeTakeFirst();
 }
@@ -161,6 +165,7 @@ async function insertPage(
         eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
       )
       .where("writingPage.writingGroupId", "=", writingGroupId)
+      .$narrowType<{ writingGroupId: NotNull }>()
       .where("writingPage.id", "=", id)
       .executeTakeFirstOrThrow();
 
@@ -181,6 +186,7 @@ async function selectPageForReader(
       eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
     )
     .where("writingPage.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingPage.id", "=", pageId)
     .executeTakeFirst();
 }
@@ -206,6 +212,7 @@ function listVisiblePages(
       "writingGroup.id",
       "writingPage.writingGroupId",
     )
+    .$narrowType<{ writingGroupId: NotNull }>()
     .leftJoin(
       "userInWritingGroup",
       (join) =>

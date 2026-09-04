@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useForm } from '@tanstack/vue-form'
 import { useQueryClient } from '@tanstack/vue-query'
 import { getListPagesQueryKey, useCreatePage } from '@/api/pages/pages'
+import { getListForumPagesQueryKey, useCreateForumPage } from '@/api/forum/forum'
+import { exactKeyFilter } from '@/lib/api/queryKeys'
+import type { WriteScope } from '@/lib/folder/treeScope'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { failureMessage } from '@/lib/format/failure'
 import { focusFirstInvalid, parsed, titleSchema } from '@/lib/validation/fieldSchemas'
@@ -27,8 +30,13 @@ import { Spinner } from '@/components/ui/spinner'
  * because its title already says what it is.
  */
 const props = defineProps<{
-  groupId: string
-  /** Absent creates at the root of the group's tree. */
+  /**
+   * Which tree this page joins. The copy below is the same product either way — a page means the
+   * same thing in a writing group and in the public forum (#32) — so the scope branches around
+   * it rather than a second dialog repeating it.
+   */
+  scope: WriteScope
+  /** Absent creates at the root of the tree, which in the forum only an operator may write to. */
   folderId?: string
 }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -36,14 +44,28 @@ const emit = defineEmits<{ created: [pageId: string] }>()
 
 const queryClient = useQueryClient()
 
-const LIMIT = TEXT_LIMIT.createPage
+const LIMIT = props.scope.kind === 'forum' ? TEXT_LIMIT.createForumPage : TEXT_LIMIT.createPage
+
+/**
+ * Said where it is decided, not in the tree afterwards: a leaf with no folder above it is
+ * clamped to `read` for members, and no setting on the row itself can lift that.
+ */
+const ROOT_NOTE =
+  'Ohne Ordner liegt die Seite oben im Forum — Mitglieder können sie dann lesen, aber nicht bearbeiten.'
+
+/** Only an operator is offered the root, so the note is theirs. */
+const atForumRoot = computed<boolean>(
+  () => props.scope.kind === 'forum' && props.folderId === undefined,
+)
 
 const TITLE = titleSchema(LIMIT.title, 'Gib der Seite einen Titel.')
 
 const formError = ref<string | undefined>(undefined)
 const formElement = ref<HTMLFormElement | null>(null)
 
-const { mutateAsync: createPage, isPending } = useCreatePage()
+const { mutateAsync: createPage, isPending: isCreatingInGroup } = useCreatePage()
+const { mutateAsync: createForumPage, isPending: isCreatingInForum } = useCreateForumPage()
+const isPending = computed<boolean>(() => isCreatingInGroup.value || isCreatingInForum.value)
 
 const form = useForm({
   defaultValues: { title: '' },
@@ -51,16 +73,18 @@ const form = useForm({
   onSubmit: async ({ value }) => {
     formError.value = undefined
 
+    const data = {
+      title: parsed(TITLE, value.title),
+      document: emptyDocument(),
+      folderId: props.folderId,
+    }
+
     let created
     try {
-      created = await createPage({
-        groupId: props.groupId,
-        data: {
-          title: parsed(TITLE, value.title),
-          document: emptyDocument(),
-          folderId: props.folderId,
-        },
-      })
+      created =
+        props.scope.kind === 'forum'
+          ? await createForumPage({ data })
+          : await createPage({ groupId: props.scope.groupId, data })
     } catch (error) {
       formError.value = failureMessage(
         error,
@@ -69,7 +93,13 @@ const form = useForm({
       return
     }
 
-    await queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(props.groupId) })
+    // The list and nothing under it: its key is a prefix of every page's own, so a bare key here
+    // refetched each page the reader had open.
+    await queryClient.invalidateQueries(
+      props.scope.kind === 'forum'
+        ? exactKeyFilter(getListForumPagesQueryKey())
+        : exactKeyFilter(getListPagesQueryKey(props.scope.groupId)),
+    )
     open.value = false
 
     // The caller opens it, so the member lands where the writing happens.
@@ -96,6 +126,10 @@ watch(open, () => {
           du auf der Seite selbst.
         </DialogDescription>
       </DialogHeader>
+
+      <!-- A quiet note rather than an Alert: it is context for the whole dialog, not a failure,
+           and only an operator can open this at the root, so it is addressed to them. -->
+      <p v-if="atForumRoot" class="text-note text-ink-5">{{ ROOT_NOTE }}</p>
 
       <form
         ref="formElement"

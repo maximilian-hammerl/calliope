@@ -12,7 +12,11 @@ import {
   useGetThread,
 } from '@/api/threads/threads'
 import {
+  createPost as createPostRequest,
+  deletePost as deletePostRequest,
   getListPostsQueryKey,
+  listPosts as listPostsRequest,
+  updatePost as updatePostRequest,
   useCreatePost,
   useDeletePost,
   useListPosts,
@@ -24,6 +28,7 @@ import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
 import ThreadDialog from '@/components/thread/ThreadDialog.vue'
 import ThreadHeader from '@/components/thread/ThreadHeader.vue'
 import PathToHere from '@/components/folder/PathToHere.vue'
+import { useFolderTree } from '@/composables/useFolderTree'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import DeletePostDialog from '@/components/thread/DeletePostDialog.vue'
 import PostItem from '@/components/thread/PostItem.vue'
@@ -31,7 +36,7 @@ import ListPagination from '@/components/common/ListPagination.vue'
 import PostSortToggle from '@/components/thread/PostSortToggle.vue'
 import { TEXT_LIMIT } from '@/api/textLimit'
 import { emptyDocument } from '@/lib/document/emptyDocument'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
+import { exactKeyFilter, listKeyPrefix } from '@/lib/api/queryKeys'
 import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
 import FilterStrip from '@/components/common/FilterStrip.vue'
 import { useDraft } from '@/composables/useDraft'
@@ -52,14 +57,14 @@ const currentUserId = computed<string | undefined>(() =>
 
 const { groupId, group, mayWrite, mayAdminister } = useGroupContext()
 
+// For the breadcrumb, which takes the tree rather than fetching one: the three queries behind
+// it are already loaded by the rail, so this costs no request.
+const { tree } = useFolderTree(groupId)
+
 const threadId = computed<string>(() => String(route.params.threadId))
 
 const { data: threadData, isPending, isError } = useGetThread(groupId, threadId)
 
-/**
- * The thread's own query and the strip it sits in — the strip orders favourites first, so it has
- * to be refetched or the tab stays where it was.
- */
 /** The page of posts this one is on, which carries the flag the row draws. */
 async function refreshPosts() {
   await queryClient.invalidateQueries({
@@ -67,11 +72,15 @@ async function refreshPosts() {
   })
 }
 
+/**
+ * The thread's own query and the strip it sits in — the strip orders favourites first, so it has
+ * to be refetched or the tab stays where it was.
+ */
 async function refreshThread() {
   await queryClient.invalidateQueries({
     queryKey: getGetThreadQueryKey(groupId.value, threadId.value),
   })
-  await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(groupId.value) })
+  await queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId.value)))
 }
 const thread = computed<GetThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
@@ -84,11 +93,12 @@ const thread = computed<GetThread200 | undefined>(() =>
 const POSTS_PER_PAGE = 20
 
 /**
+ * Which end of the thread to start at. The pages themselves are the composable's business.
+ *
  * Page and order live in the URL, which is what makes jumping durable: a reload, the back
  * button and a second tab opened on the passage being referenced all keep their place.
  * Route keys are English like every other path; only what the member reads is German.
  */
-/** Which end of the thread to start at. The pages themselves are the composable's business. */
 const order = computed<'oldest' | 'newest'>(() =>
   route.query.order === 'newest' ? 'newest' : 'oldest',
 )
@@ -182,7 +192,7 @@ async function confirmDeleteThread() {
     return
   }
 
-  await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(groupId.value) })
+  await queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId.value)))
   deletingThread.value = false
   // The thread this page is about no longer exists.
   void router.push({ name: 'group', params: { groupId: groupId.value } })
@@ -297,7 +307,30 @@ const {
   status: draftStatus,
   draftId,
   forget: forgetDraft,
-} = useDraft(groupId, threadId, draft, draftText)
+} = useDraft(
+  threadId,
+  {
+    load: async () => {
+      const response = await listPostsRequest(groupId.value, threadId.value, {
+        isDraft: true,
+        limit: 1,
+      })
+      return response.status === 200 ? response.data.results[0] : undefined
+    },
+    create: async (document) => {
+      const created = await createPostRequest(groupId.value, threadId.value, {
+        document,
+        isDraft: true,
+      })
+      return created.status === 201 ? created.data.id : undefined
+    },
+    update: (postId, document, options) =>
+      updatePostRequest(groupId.value, threadId.value, postId, { document }, options),
+    remove: (postId) => deletePostRequest(groupId.value, threadId.value, postId),
+  },
+  draft,
+  draftText,
+)
 
 async function submit() {
   sendError.value = undefined
@@ -369,8 +402,9 @@ async function submit() {
       <div class="reading-column">
         <PathToHere
           v-if="group"
-          :group-id="groupId"
-          :group-title="group.title"
+          :tree="tree"
+          :root-title="group.title"
+          :root-to="{ name: 'group', params: { groupId } }"
           :folder-id="thread.folderId"
         />
 
@@ -470,7 +504,12 @@ async function submit() {
 
   <!-- What the member does. -->
 
-  <ThreadDialog v-if="thread" v-model:open="renamingThread" :group-id="groupId" :thread="thread" />
+  <ThreadDialog
+    v-if="thread"
+    v-model:open="renamingThread"
+    :scope="{ kind: 'group', groupId }"
+    :thread="thread"
+  />
 
   <ReportDialog
     v-if="reportedPost"

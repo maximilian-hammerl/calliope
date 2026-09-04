@@ -56,8 +56,10 @@ export type StoryIdea =
 /** The board's default is `open`: what is still worth answering. */
 export type StatusFilter = StoryIdeaStatus | "any";
 
-/** `unread` is the absence of a row, which is why it is not a value of the enum itself. */
-/** `marked` was a third value here until favouriting became its own thing across five kinds. */
+/**
+ * `unread` is the absence of a row, which is why it is not a value of the enum itself. `marked`
+ * was a third value here until favouriting became its own thing across five kinds.
+ */
 export type ReaderStateFilter = "read" | "unread" | "any";
 
 const SELECTED_COLUMNS = [

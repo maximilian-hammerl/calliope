@@ -3,15 +3,19 @@ import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import type { Search200 } from '@/api/models'
 import { pluralize } from '@/lib/format/formatText'
+import { leafRoute } from '@/lib/folder/treeScope'
+import type { WriteScope } from '@/lib/folder/treeScope'
 import { cn } from '@/lib/utils'
 import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
 import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
+import ForumPermissionMark from '@/components/forum/ForumPermissionMark.vue'
 import { MEMBERSHIP_LABELS } from '@/lib/format/group'
 import VisibilityMark from '@/components/group/VisibilityMark.vue'
 import StatusMark from '@/components/story-idea/StatusMark.vue'
 import ReadMark from '@/components/story-idea/ReadMark.vue'
 import { useGetCurrentUser } from '@/api/auth/auth'
 import { platformRoleLabel } from '@/lib/format/platformRole'
+import { useIsOperator } from '@/composables/useIsOperator'
 
 const { data: userData } = useGetCurrentUser()
 const currentUserId = computed<string | undefined>(() =>
@@ -34,7 +38,12 @@ const sections = computed(() =>
   [
     { key: 'groups', heading: 'Gruppen', section: props.results?.groups },
     { key: 'threads', heading: 'Themen', section: props.results?.threads },
+    // Directly after its counterpart rather than in a block of its own: ‚Themen‘ above
+    // ‚Themen im Forum‘ is what says the first means a group, without spending a word on it.
+    // Unqualified where nothing sits beside it, since a section with no results is left out.
+    { key: 'forumThreads', heading: 'Themen im Forum', section: props.results?.forumThreads },
     { key: 'pages', heading: 'Seiten', section: props.results?.pages },
+    { key: 'forumPages', heading: 'Seiten im Forum', section: props.results?.forumPages },
     { key: 'storyIdeas', heading: 'Storyideen', section: props.results?.storyIdeas },
     { key: 'users', heading: 'Mitglieder', section: props.results?.users },
   ].filter((entry) => (entry.section?.results.length ?? 0) > 0),
@@ -54,16 +63,19 @@ function remaining(shown: number, total: number): number {
   return Math.max(0, total - shown)
 }
 
+/** Only an operator is shown what members may do, as in the tree and the rail. */
+const isOperator = useIsOperator()
+
 function groupTarget(id: string): RouteLocationRaw {
   return { name: 'group', params: { groupId: id } }
 }
 
-function threadTarget(groupId: string, threadId: string): RouteLocationRaw {
-  return { name: 'thread', params: { groupId, threadId } }
-}
-
-function pageTarget(groupId: string, pageId: string): RouteLocationRaw {
-  return { name: 'page', params: { groupId, pageId } }
+/**
+ * The tree's own function, so a result row and a row of the forum's tree cannot come to disagree
+ * about where a thread lives. A group result carries its scope; the forum's section implies one.
+ */
+function leafTarget(scope: WriteScope, kind: 'thread' | 'page', id: string): RouteLocationRaw {
+  return leafRoute(scope, { kind, id })
 }
 </script>
 
@@ -112,7 +124,7 @@ function pageTarget(groupId: string, pageId: string): RouteLocationRaw {
           <RouterLink
             v-for="thread in results?.threads.results"
             :key="thread.id"
-            :to="threadTarget(thread.writingGroupId, thread.id)"
+            :to="leafTarget({ kind: 'group', groupId: thread.writingGroupId }, 'thread', thread.id)"
             class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
           >
             <span class="flex items-center gap-2 text-[13px] text-ink-2">
@@ -124,12 +136,32 @@ function pageTarget(groupId: string, pageId: string): RouteLocationRaw {
           </RouterLink>
         </template>
 
+        <!-- One line, where a group's row has two: the heading has already said where this is. -->
+        <template v-else-if="entry.key === 'forumThreads'">
+          <RouterLink
+            v-for="thread in results?.forumThreads.results"
+            :key="thread.id"
+            :to="leafTarget({ kind: 'forum' }, 'thread', thread.id)"
+            class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
+          >
+            <span class="flex items-center gap-2 text-[13px] text-ink-2">
+              <span class="truncate">{{ thread.title }}</span>
+              <FavouriteMark v-if="thread.isFavourite" />
+              <!-- An operator's search reaches hidden rows, so a row has to say when it is one. -->
+              <ForumPermissionMark
+                v-if="isOperator"
+                :permission="thread.effectiveMemberPermission"
+              />
+            </span>
+          </RouterLink>
+        </template>
+
         <!-- A page can match on its prose, but the row shows a title like every other kind's. -->
         <template v-else-if="entry.key === 'pages'">
           <RouterLink
             v-for="page in results?.pages.results"
             :key="page.id"
-            :to="pageTarget(page.writingGroupId, page.id)"
+            :to="leafTarget({ kind: 'group', groupId: page.writingGroupId }, 'page', page.id)"
             class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
           >
             <span class="flex items-center gap-2 text-[13px] text-ink-2">
@@ -137,6 +169,21 @@ function pageTarget(groupId: string, pageId: string): RouteLocationRaw {
               <FavouriteMark v-if="page.isFavourite" />
             </span>
             <span class="truncate text-[11.5px] text-ink-6">{{ page.writingGroupTitle }}</span>
+          </RouterLink>
+        </template>
+
+        <template v-else-if="entry.key === 'forumPages'">
+          <RouterLink
+            v-for="page in results?.forumPages.results"
+            :key="page.id"
+            :to="leafTarget({ kind: 'forum' }, 'page', page.id)"
+            class="flex min-h-[38px] flex-col justify-center px-3.5 py-[7px] hover:bg-paper-2"
+          >
+            <span class="flex items-center gap-2 text-[13px] text-ink-2">
+              <span class="truncate">{{ page.title }}</span>
+              <FavouriteMark v-if="page.isFavourite" />
+              <ForumPermissionMark v-if="isOperator" :permission="page.effectiveMemberPermission" />
+            </span>
           </RouterLink>
         </template>
 

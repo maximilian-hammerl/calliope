@@ -1,4 +1,4 @@
-import type { Selectable } from "kysely";
+import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import type { WritingFolder as DatabaseWritingFolder } from "@/src/database/schema.ts";
 
@@ -6,10 +6,12 @@ import type { WritingFolder as DatabaseWritingFolder } from "@/src/database/sche
 export const MAX_FOLDER_DEPTH = 5;
 
 export type Folder =
+  // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
+  // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
+  & { writingGroupId: string }
   & Pick<
     Selectable<DatabaseWritingFolder>,
     | "id"
-    | "writingGroupId"
     | "parentFolderId"
     | "depth"
     | "title"
@@ -42,6 +44,7 @@ function foldersWithNames(executor: typeof db | Transaction = db) {
 async function listFolders(writingGroupId: string): Promise<Folder[]> {
   return await foldersWithNames()
     .where("writingFolder.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .orderBy("writingFolder.createdAt", "asc")
     // As the leaf lists do, and ascending to match: folders made in one statement share a
     // timestamp, and uuidv7 keeps them in the order they were made.
@@ -56,6 +59,7 @@ async function selectFolder(
 ): Promise<Folder | undefined> {
   return await foldersWithNames()
     .where("writingFolder.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingFolder.id", "=", folderId)
     .executeTakeFirst();
 }
@@ -114,6 +118,7 @@ async function insertFolder(
     // Re-read rather than RETURNING, which cannot reach the joined name.
     const folder = await foldersWithNames(transaction)
       .where("writingFolder.writingGroupId", "=", writingGroupId)
+      .$narrowType<{ writingGroupId: NotNull }>()
       .where("writingFolder.id", "=", id)
       .executeTakeFirstOrThrow();
 

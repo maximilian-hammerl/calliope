@@ -3,6 +3,25 @@ import type {
   ListPages200ResultsItem,
   ListThreads200ResultsItem,
 } from '@/api/models'
+import type { ForumPermission } from '@/lib/format/forum'
+
+/**
+ * What the tree reads off a row, and no more. Derived from the generated models rather than
+ * written out, so a renamed column still breaks here — but structural, because the public forum
+ * sends the same six fields without a `writingGroupId` (#32).
+ */
+export type FolderRow = Pick<
+  ListFolders200ResultsItem,
+  'id' | 'parentFolderId' | 'depth' | 'title' | 'description' | 'createdBy'
+> & {
+  /** The forum's rows carry it and a group's do not, which is why it is optional (#32). */
+  effectiveMemberPermission?: ForumPermission
+}
+
+export type LeafRow = Pick<
+  ListThreads200ResultsItem & ListPages200ResultsItem,
+  'id' | 'title' | 'lastActivityAt' | 'isFavourite' | 'createdBy' | 'folderId'
+> & { effectiveMemberPermission?: ForumPermission }
 
 /**
  * A thread or a page: both are leaves, and the tree treats them alike apart from where a click
@@ -18,6 +37,8 @@ export type TreeLeaf = {
   createdBy: string | null
   /** Where it sits now, so a move can mark the current place and skip a pointless request. */
   folderId: string | null
+  /** What members may do with it, in the forum. Absent in a group, which has no permissions. */
+  effectiveMemberPermission?: ForumPermission
 }
 
 export type TreeFolder = {
@@ -28,6 +49,7 @@ export type TreeFolder = {
   depth: number
   /** For `mayModify`, so a row only offers what the endpoint would allow. */
   createdBy: string | null
+  effectiveMemberPermission?: ForumPermission
   children: TreeNode[]
 }
 
@@ -36,10 +58,7 @@ export type TreeNode = TreeFolder | TreeLeaf
 /** The root's bucket. Not a uuid, so it cannot collide with a folder's id. */
 const ROOT = 'root'
 
-function leafOf(
-  kind: 'thread' | 'page',
-  row: ListThreads200ResultsItem | ListPages200ResultsItem,
-): TreeLeaf {
+function leafOf(kind: 'thread' | 'page', row: LeafRow): TreeLeaf {
   return {
     kind,
     id: row.id,
@@ -48,6 +67,7 @@ function leafOf(
     isFavourite: row.isFavourite,
     createdBy: row.createdBy,
     folderId: row.folderId,
+    effectiveMemberPermission: row.effectiveMemberPermission,
   }
 }
 
@@ -72,13 +92,9 @@ function push<T>(map: Map<string, T[]>, key: string, value: T): void {
  * ago may name a folder this tree has not seen yet. Showing it in the wrong place is recoverable
  * on the next refresh; hiding it looks like the writing is gone.
  */
-export function buildTree(
-  folders: ListFolders200ResultsItem[],
-  pages: ListPages200ResultsItem[],
-  threads: ListThreads200ResultsItem[],
-): TreeNode[] {
+export function buildTree(folders: FolderRow[], pages: LeafRow[], threads: LeafRow[]): TreeNode[] {
   const leavesByParent = new Map<string, TreeLeaf[]>()
-  const foldersByParent = new Map<string, ListFolders200ResultsItem[]>()
+  const foldersByParent = new Map<string, FolderRow[]>()
 
   const known = new Set<string>(folders.map((folder) => folder.id))
   const bucketFor = (parent: string | null) =>
@@ -117,6 +133,7 @@ export function buildTree(
       description: folder.description,
       depth: folder.depth,
       createdBy: folder.createdBy,
+      effectiveMemberPermission: folder.effectiveMemberPermission,
       children: childrenOf(folder.id),
     })),
   ]

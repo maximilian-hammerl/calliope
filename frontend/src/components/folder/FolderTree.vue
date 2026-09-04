@@ -170,7 +170,7 @@ const nodes = computed<TreeNode[]>(() => tree.value)
         v-for="node in nodes"
         :key="node.id"
         :node="node"
-        :group-id="groupId"
+        :scope="{ kind: 'group', groupId }"
         :may-write="mayWrite"
         :collapsed="collapsed"
         @toggle="toggle"
@@ -206,13 +206,13 @@ const nodes = computed<TreeNode[]>(() => tree.value)
     />
     <PageDialog
       v-model:open="pageDialogOpen"
-      :group-id="groupId"
+      :scope="{ kind: 'group', groupId }"
       :folder-id="creatingPageUnder ?? undefined"
       @created="openPage"
     />
     <ThreadDialog
       v-model:open="threadDialogOpen"
-      :group-id="groupId"
+      :scope="{ kind: 'group', groupId }"
       :folder-id="creatingThreadUnder ?? undefined"
       @created="openThread"
     />

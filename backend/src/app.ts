@@ -22,6 +22,7 @@ import health from "./route/health.ts";
 import chats from "./route/chats.ts";
 import notifications from "./route/notifications.ts";
 import search from "./route/search.ts";
+import forum from "./route/forum.ts";
 import storyIdeas from "./route/story_ideas.ts";
 import blocks from "@/src/route/blocks.ts";
 import reports from "@/src/route/reports.ts";
@@ -69,7 +70,8 @@ const api = new OpenAPIHono({
   .route("/avatars", avatars)
   .route("/notifications", notifications)
   .route("/chats", chats)
-  .route("/search", search);
+  .route("/search", search)
+  .route("/forum", forum);
 
 const app = new OpenAPIHono();
 

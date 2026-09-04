@@ -126,8 +126,9 @@ export async function deleteUsers(usernames: Array<string>): Promise<void> {
   await db.deleteFrom("user").where("username", "in", usernames).execute();
 }
 
-/** Counters outlive the process, so the suite would eventually rate-limit itself. */
 /**
+ * Counters outlive the process, so the suite would eventually rate-limit itself.
+ *
  * The limiter keys on the client address, so this leaves the middleware's own test alone: it
  * deliberately fills a window request by request, and a `beforeEach` here used to empty it
  * mid-loop, which read as the limiter simply not working.

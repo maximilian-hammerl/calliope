@@ -129,7 +129,6 @@ function listChatGroups(
   );
 }
 
-/** Returns nothing when the chat does not exist or the user is not in it. */
 /**
  * Whether the member is in the chat at all, and what it is called. Not the list's projection: all
  * four callers use this as a gate and only one reads anything off it — `title` for the excerpt of
@@ -142,6 +141,7 @@ export type ChatGroupGate = {
   status: UserInChatGroupStatus;
 };
 
+/** Returns nothing when the chat does not exist or the user is not in it. */
 async function selectChatGroup(
   user: User,
   chatGroupId: string,

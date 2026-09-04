@@ -10,6 +10,9 @@ import {
 } from '@/api/threads/threads'
 import type { GetThread200 } from '@/api/models'
 import { TEXT_LIMIT } from '@/api/textLimit'
+import { getListForumThreadsQueryKey, useCreateForumThread } from '@/api/forum/forum'
+import { exactKeyFilter } from '@/lib/api/queryKeys'
+import type { WriteScope } from '@/lib/folder/treeScope'
 import { failureMessage } from '@/lib/format/failure'
 import { focusFirstInvalid, parsed, titleSchema } from '@/lib/validation/fieldSchemas'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -31,9 +34,14 @@ import { Spinner } from '@/components/ui/spinner'
  * everything but the mutation, which is how the group dialogs drifted.
  */
 const props = defineProps<{
-  groupId: string
+  /**
+   * Which tree this thread joins. A thema means the same thing in a writing group and in the
+   * public forum (#32), so the copy below is written once and the scope branches around it.
+   */
+  scope: WriteScope
+  /** Renaming, which is a group's for now: the forum's rename arrives with its moderation. */
   thread?: GetThread200
-  /** Absent creates at the root of the group's tree. Ignored when renaming. */
+  /** Absent creates at the root of the tree, which in the forum only an operator may write to. */
   folderId?: string
 }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -43,14 +51,28 @@ const queryClient = useQueryClient()
 
 const renaming = computed<boolean>(() => props.thread !== undefined)
 
-const LIMIT = TEXT_LIMIT.createThread
+const LIMIT = props.scope.kind === 'forum' ? TEXT_LIMIT.createForumThread : TEXT_LIMIT.createThread
+
+/**
+ * Said where it is decided, not in the tree afterwards: a leaf with no folder above it is
+ * clamped to `read` for members, and no setting on the row itself can lift that.
+ */
+const ROOT_NOTE =
+  'Ohne Ordner liegt das Thema oben im Forum — Mitglieder können es dann lesen, aber nicht beantworten.'
+
+/** Only an operator is offered the root, so the note is theirs. */
+const atForumRoot = computed<boolean>(
+  () => props.scope.kind === 'forum' && props.folderId === undefined,
+)
 
 const TITLE = titleSchema(LIMIT.title, 'Gib dem Thema einen Titel.')
 
 const formError = ref<string | undefined>(undefined)
 const formElement = ref<HTMLFormElement | null>(null)
 
-const { mutateAsync: createThread, isPending: isCreating } = useCreateThread()
+const { mutateAsync: createThread, isPending: isCreatingInGroup } = useCreateThread()
+const { mutateAsync: createForumThread, isPending: isCreatingInForum } = useCreateForumThread()
+const isCreating = computed<boolean>(() => isCreatingInGroup.value || isCreatingInForum.value)
 const { mutateAsync: updateThread, isPending: isRenaming } = useUpdateThread()
 const isPending = computed<boolean>(() => isCreating.value || isRenaming.value)
 
@@ -61,13 +83,10 @@ const form = useForm({
     formError.value = undefined
     const title = parsed(TITLE, value.title)
 
-    if (props.thread !== undefined) {
+    if (props.thread !== undefined && props.scope.kind === 'group') {
+      const { groupId } = props.scope
       try {
-        await updateThread({
-          groupId: props.groupId,
-          threadId: props.thread.id,
-          data: { title },
-        })
+        await updateThread({ groupId, threadId: props.thread.id, data: { title } })
       } catch (error) {
         formError.value = failureMessage(
           error,
@@ -78,20 +97,22 @@ const form = useForm({
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: getGetThreadQueryKey(props.groupId, props.thread.id),
+          queryKey: getGetThreadQueryKey(groupId, props.thread.id),
         }),
-        queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(props.groupId) }),
+        queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId))),
       ])
       open.value = false
       return
     }
 
+    const data = { title, folderId: props.folderId }
+
     let created
     try {
-      created = await createThread({
-        groupId: props.groupId,
-        data: { title, folderId: props.folderId },
-      })
+      created =
+        props.scope.kind === 'forum'
+          ? await createForumThread({ data })
+          : await createThread({ groupId: props.scope.groupId, data })
     } catch (error) {
       formError.value = failureMessage(
         error,
@@ -100,7 +121,11 @@ const form = useForm({
       return
     }
 
-    await queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(props.groupId) })
+    await queryClient.invalidateQueries(
+      props.scope.kind === 'forum'
+        ? exactKeyFilter(getListForumThreadsQueryKey())
+        : exactKeyFilter(getListThreadsQueryKey(props.scope.groupId)),
+    )
     open.value = false
 
     // Where to go afterwards belongs to the caller: the group opens the new thread, and a
@@ -129,6 +154,10 @@ watch(open, (isOpen) => {
           nimm eine Seite.
         </DialogDescription>
       </DialogHeader>
+
+      <!-- A quiet note rather than an Alert: it is context for the whole dialog, not a failure,
+           and only an operator can open this at the root, so it is addressed to them. -->
+      <p v-if="atForumRoot" class="text-note text-ink-5">{{ ROOT_NOTE }}</p>
 
       <form
         ref="formElement"

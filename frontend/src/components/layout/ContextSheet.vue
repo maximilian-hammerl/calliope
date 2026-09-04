@@ -24,6 +24,13 @@ import {
 
 const open = defineModel<boolean>('open', { required: true })
 
+/**
+ * Both required, with no default: the sheet said „Gruppen-Kontext" wherever it was used, so the
+ * forum's rail introduced itself as a group's. A default would have been the same bug with a
+ * fallback under it.
+ */
+defineProps<{ label: string; description: string }>()
+
 // reka only fills the content's id in for a `DialogTrigger`, and this opens from `open`.
 const contentId = useId()
 </script>
@@ -42,15 +49,13 @@ const contentId = useId()
           <DialogTitle
             class="font-mono text-[10.5px] font-semibold tracking-[0.14em] text-ink-label uppercase"
           >
-            Gruppen-Kontext
+            {{ label }}
           </DialogTitle>
 
           <!-- Not shown: a rail carries its label and nothing more. It exists because reka
                points `aria-describedby` at it regardless, and without it that reference
                dangles — a screen reader is promised a description and finds none. -->
-          <DialogDescription class="sr-only">
-            Was in dieser Gruppe zu tun ist, und was in ihr nachzusehen ist.
-          </DialogDescription>
+          <DialogDescription class="sr-only">{{ description }}</DialogDescription>
           <DialogClose
             class="ml-auto flex size-11 items-center justify-center rounded-md text-ink-label"
             aria-label="Schließen"

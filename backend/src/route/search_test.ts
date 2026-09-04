@@ -9,6 +9,13 @@ import {
   request,
 } from "@/src/test/support.ts";
 import { createIdea, patchIdea } from "@/src/test/story_ideas.ts";
+import {
+  clearForum,
+  createForumFolder,
+  createForumPage,
+  createForumThread,
+} from "@/src/test/forum.ts";
+import { makeOperator } from "@/src/test/reports.ts";
 
 const owner = "search-owner";
 const outsider = "search-outsider";
@@ -16,13 +23,18 @@ const outsider = "search-outsider";
 const TERM = "nachtmarkt";
 
 Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([owner, outsider]));
+Deno.test.afterEach(async () => {
+  await clearForum([owner, outsider]);
+  await deleteUsers([owner, outsider]);
+});
 
 type Section = { results: Array<Record<string, string>>; totalResults: number };
 type SearchResults = {
   groups: Section;
   threads: Section;
   pages: Section;
+  forumThreads: Section;
+  forumPages: Section;
   storyIdeas: Section;
   users: Section;
 };
@@ -245,4 +257,83 @@ Deno.test("a page in a private group is not found by an outsider", async () => {
     0,
   );
   assertEquals((await search(cookie, { search: TERM })).pages.totalResults, 1);
+});
+
+/**
+ * The forum's matches are their own sections rather than rows in the group's. Merged, the five
+ * slots would be shared, and a busy forum could take all of them — which is what these two assert
+ * cannot happen: the same term matches in both scopes, and each section answers with its own.
+ */
+Deno.test("QUERY /api/search keeps the forum's threads and pages in their own sections", async () => {
+  const cookie = await registerUser(owner);
+  const group = await createGroup(cookie, `Gruppe ${TERM}`);
+  await thread(cookie, group.id, `Thema ${TERM}`);
+
+  const folder = await createForumFolder("Forenspiele", "write");
+  await createForumThread(`Forumsthema ${TERM}`, "write", folder.id);
+  await createForumPage(
+    `Forumsseite ${TERM}`,
+    "Nichts weiter.",
+    "write",
+    folder.id,
+  );
+
+  const found = await search(cookie, { search: TERM });
+
+  assertEquals(titles(found.threads), [`Thema ${TERM}`]);
+  assertEquals(titles(found.forumThreads), [`Forumsthema ${TERM}`]);
+  assertEquals(titles(found.forumPages), [`Forumsseite ${TERM}`]);
+
+  // Its own total, which is what „und N weitere" reads: three left joins per query, and a count
+  // that multiplied over any of them would report more than the section holds.
+  assertEquals(found.forumThreads.totalResults, 1);
+  assertEquals(found.forumPages.totalResults, 1);
+  // The group's sections carry the group's rows and nothing else, which is the whole point of
+  // keeping them apart.
+  assertEquals(titles(found.pages), []);
+});
+
+Deno.test("QUERY /api/search matches a forum page's prose, not only its title", async () => {
+  const cookie = await registerUser(owner);
+  const folder = await createForumFolder("Ankündigungen", "read");
+  await createForumPage(
+    "Regeln",
+    `Wir treffen uns am ${TERM}.`,
+    "read",
+    folder.id,
+  );
+
+  const found = await search(cookie, { search: TERM });
+
+  assertEquals(titles(found.forumPages), ["Regeln"]);
+});
+
+Deno.test("QUERY /api/search hides what the forum hides, and shows an operator more", async () => {
+  const memberCookie = await registerUser(owner);
+  const operatorCookie = await makeOperator(
+    outsider,
+    await registerUser(outsider),
+  );
+
+  const hidden = await createForumFolder("Werkstatt", "hidden");
+  await createForumThread(`Entwurf ${TERM}`, "write", hidden.id);
+
+  // The same filter the tree applies, inherited rather than restated - so search cannot come to
+  // disagree with it about what a member may see.
+  assertEquals(
+    titles(
+      await search(memberCookie, { search: TERM }).then((f) => f.forumThreads),
+    ),
+    [],
+  );
+
+  // An operator sees it here for the same reason they see it in the tree (#21).
+  assertEquals(
+    titles(
+      await search(operatorCookie, { search: TERM }).then((f) =>
+        f.forumThreads
+      ),
+    ),
+    [`Entwurf ${TERM}`],
+  );
 });

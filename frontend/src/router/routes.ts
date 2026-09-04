@@ -53,6 +53,31 @@ export const routes: Array<RouteRecordRaw> = [
       },
     ],
   },
+  // The forum's pages share one rail, so they hang off `ForumLayout` for the reason the group's
+  // do. The parent stays unnamed; `forum` is the empty child.
+  {
+    path: '/forum',
+    component: () => import('../components/layout/ForumLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'forum',
+        component: () => import('../views/ForumView.vue'),
+        // This page is the forum's tree, so the rail would show it twice.
+        meta: { listsForumContents: true },
+      },
+      {
+        path: 'threads/:threadId',
+        name: 'forumThread',
+        component: () => import('../views/ForumThreadView.vue'),
+      },
+      {
+        path: 'pages/:pageId',
+        name: 'forumPage',
+        component: () => import('../views/ForumPageView.vue'),
+      },
+    ],
+  },
   // Readable signed out: a legal notice has to be reachable from the sign-in page too. English
   // path like every other route, even though the page is titled „Impressum" — the rule holds and
   // nothing legal turns on the URL.

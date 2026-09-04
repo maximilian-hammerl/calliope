@@ -21,6 +21,8 @@ export type AvatarOrigin =
   | "permission"
   | "public_domain";
 
+export type ForumPermission = "hidden" | "read" | "write";
+
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
@@ -430,10 +432,12 @@ export interface WritingFolder {
   createdBy: string | null;
   depth: number;
   description: string | null;
+  effectiveMemberPermission: ForumPermission | null;
   id: Generated<string>;
+  memberPermission: ForumPermission | null;
   parentFolderId: string | null;
   title: string;
-  writingGroupId: string;
+  writingGroupId: string | null;
 }
 
 export interface WritingGroup {
@@ -474,10 +478,11 @@ export interface WritingPage {
   folderId: string | null;
   id: Generated<string>;
   lastActivityAt: Generated<string>;
+  memberPermission: ForumPermission | null;
   text: string;
   title: string;
   updatedBy: string | null;
-  writingGroupId: string;
+  writingGroupId: string | null;
 }
 
 export interface WritingPost {
@@ -498,8 +503,9 @@ export interface WritingThread {
   folderId: string | null;
   id: Generated<string>;
   lastActivityAt: Generated<string>;
+  memberPermission: ForumPermission | null;
   title: string;
-  writingGroupId: string;
+  writingGroupId: string | null;
 }
 
 export interface DB {
@@ -812,6 +818,9 @@ export const AVATAR_ORIGINS = [
 ] as const;
 export const AVATAR_ORIGIN_SCHEMA = z.enum(AVATAR_ORIGINS);
 
+export const FORUM_PERMISSIONS = ["hidden", "read", "write"] as const;
+export const FORUM_PERMISSION_SCHEMA = z.enum(FORUM_PERMISSIONS);
+
 export const CHAT_GROUP_SCHEMA = z.object({
   id: z.uuidv7(),
   title: z.string(),
@@ -988,13 +997,15 @@ export const USER_TOKEN_SCHEMA = z.object({
 
 export const WRITING_FOLDER_SCHEMA = z.object({
   id: z.uuidv7(),
-  writingGroupId: z.uuidv7(),
+  writingGroupId: z.uuidv7().nullable(),
   parentFolderId: z.uuidv7().nullable(),
   depth: int16,
   title: z.string(),
   description: z.string().nullable(),
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
+  memberPermission: FORUM_PERMISSION_SCHEMA.nullable(),
+  effectiveMemberPermission: FORUM_PERMISSION_SCHEMA.nullable(),
 });
 
 export const WRITING_GROUP_SCHEMA = z.object({
@@ -1030,7 +1041,7 @@ export const WRITING_GROUP_NEXT_STEP_SCHEMA = z.object({
 
 export const WRITING_PAGE_SCHEMA = z.object({
   id: z.uuidv7(),
-  writingGroupId: z.uuidv7(),
+  writingGroupId: z.uuidv7().nullable(),
   title: z.string(),
   document: z.unknown(),
   text: z.string(),
@@ -1039,6 +1050,7 @@ export const WRITING_PAGE_SCHEMA = z.object({
   lastActivityAt: z.iso.datetime({ offset: true }),
   updatedBy: z.uuidv7().nullable(),
   folderId: z.uuidv7().nullable(),
+  memberPermission: FORUM_PERMISSION_SCHEMA.nullable(),
 });
 
 export const WRITING_POST_SCHEMA = z.object({
@@ -1055,10 +1067,11 @@ export const WRITING_POST_SCHEMA = z.object({
 
 export const WRITING_THREAD_SCHEMA = z.object({
   id: z.uuidv7(),
-  writingGroupId: z.uuidv7(),
+  writingGroupId: z.uuidv7().nullable(),
   title: z.string(),
   createdBy: z.uuidv7().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   lastActivityAt: z.iso.datetime({ offset: true }),
   folderId: z.uuidv7().nullable(),
+  memberPermission: FORUM_PERMISSION_SCHEMA.nullable(),
 });

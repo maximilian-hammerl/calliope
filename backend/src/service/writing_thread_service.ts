@@ -1,4 +1,4 @@
-import type { Selectable } from "kysely";
+import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
 import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
@@ -15,19 +15,20 @@ import {
  * A thread found by a search, which can come from any group the member may see — so it says
  * which one. A thread listed inside a group never needs that, because the group is the page
  * you are already on.
- */
-/**
- * A thread as search returns it. It carries the reader's favourite like every other thread does —
- * but search is not *ordered* by it, unlike the lists: a search ranks by relevance to the term,
- * and floating a favourite above a better match would answer a question nobody asked.
+ *
+ * It carries the reader's favourite like every other thread does, but search is not *ordered* by
+ * it, unlike the lists: a search ranks by relevance to the term, and floating a favourite above a
+ * better match would answer a question nobody asked.
  */
 export type FoundThread = Thread & { writingGroupTitle: string };
 
 export type Thread =
+  // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
+  // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
+  & { writingGroupId: string }
   & Pick<
     Selectable<DatabaseWritingThread>,
     | "id"
-    | "writingGroupId"
     | "title"
     | "createdBy"
     | "createdAt"
@@ -105,15 +106,15 @@ async function insertThread(
 
     // Creating a thread does not favourite it — that is the member's own act, and one they can
     // take the moment this returns. Stated rather than joined, inside the transaction that made it.
-    return { ...thread, isFavourite: false };
+    return { ...thread, writingGroupId, isFavourite: false };
   });
 }
 
-/** Scoped to the group, so a thread id from another group cannot be reached through it. */
 /**
- * Whether the thread exists in that group, and who wrote it. Four of the five callers use this as
- * a gate and would only discard a favourite flag, so it does not join one — the page that renders
- * a thread asks `selectThreadForReader`.
+ * Whether the thread exists in that group, and who wrote it — scoped to the group, so a thread id
+ * from another one cannot be reached through it. Four of the five callers use this as a gate and
+ * would only discard a favourite flag, so it does not join one; the page that renders a thread
+ * asks `selectThreadForReader`.
  */
 async function selectThread(
   writingGroupId: string,
@@ -121,6 +122,7 @@ async function selectThread(
 ): Promise<ThreadGate | undefined> {
   return await threadsWithAuthor()
     .where("writingThread.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingThread.id", "=", threadId)
     .executeTakeFirst();
 }
@@ -133,6 +135,7 @@ async function selectThreadForReader(
 ): Promise<Thread | undefined> {
   return await threadsForReader(readerId)
     .where("writingThread.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingThread.id", "=", threadId)
     .executeTakeFirst();
 }
@@ -151,6 +154,7 @@ function selectThreads(
 ): Promise<Array<Thread>> {
   return threadsForReader(readerId)
     .where("writingThread.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     // Most recently written in first, and no longer favourites before that: the tree nests these
     // by `folderId`, and a favourite jumping above its siblings makes a structure a member built
     // themselves look unstable. `FavouriteMark` still marks the row.
@@ -178,6 +182,7 @@ function listVisibleThreads(
       "writingGroup.id",
       "writingThread.writingGroupId",
     )
+    .$narrowType<{ writingGroupId: NotNull }>()
     .leftJoin(
       "userInWritingGroup",
       (join) =>
@@ -204,7 +209,9 @@ function listVisibleThreads(
   return listResultsWithCount(threads, query);
 }
 
+/** Scoped to the group, as every write here is: see the note on `Thread`. */
 async function updateThread(
+  writingGroupId: string,
   threadId: string,
   changes: { title?: string },
   editedBy: string,
@@ -212,6 +219,7 @@ async function updateThread(
   const updated = await db
     .updateTable("writingThread")
     .set(changes)
+    .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", threadId)
     .returning(["id"])
     .executeTakeFirst();
@@ -223,6 +231,8 @@ async function updateThread(
   // Re-read with the editor's own favourite, because the response carries it like every other
   // thread does. Renaming a thread does not change whether they keep it.
   return await threadsForReader(editedBy)
+    .where("writingThread.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingThread.id", "=", updated.id)
     .executeTakeFirstOrThrow();
 }
@@ -233,6 +243,7 @@ async function updateThread(
  * `updateThread` takes it: the response carries their own favourite.
  */
 async function moveThread(
+  writingGroupId: string,
   threadId: string,
   folderId: string | null,
   readerId: string,
@@ -240,6 +251,7 @@ async function moveThread(
   const moved = await db
     .updateTable("writingThread")
     .set({ folderId })
+    .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", threadId)
     .returning(["id"])
     .executeTakeFirst();
@@ -249,14 +261,20 @@ async function moveThread(
   }
 
   return await threadsForReader(readerId)
+    .where("writingThread.writingGroupId", "=", writingGroupId)
+    .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingThread.id", "=", moved.id)
     .executeTakeFirstOrThrow();
 }
 
-async function deleteThread(threadId: string): Promise<boolean> {
+async function deleteThread(
+  writingGroupId: string,
+  threadId: string,
+): Promise<boolean> {
   // Posts go with the thread through the foreign key's cascade.
   const deletion = await db
     .deleteFrom("writingThread")
+    .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", threadId)
     .executeTakeFirst();
 

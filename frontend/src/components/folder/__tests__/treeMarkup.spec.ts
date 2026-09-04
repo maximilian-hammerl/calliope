@@ -47,7 +47,7 @@ describe('the tree renders its hierarchy as nested lists', () => {
     const wrapper = mount(FolderTreeNode, {
       props: {
         node: folder('f1', 'Weltenbau', [leaf('p1', 'Der Berg')]),
-        groupId: 'g1',
+        scope: { kind: 'group', groupId: 'g1' } as const,
         mayWrite: true,
         collapsed: new Set<string>(),
       },
@@ -65,7 +65,7 @@ describe('the tree renders its hierarchy as nested lists', () => {
     const wrapper = mount(FolderTreeNode, {
       props: {
         node: leaf('p1', 'Der Berg'),
-        groupId: 'g1',
+        scope: { kind: 'group', groupId: 'g1' } as const,
         mayWrite: true,
         collapsed: new Set<string>(),
       },
@@ -80,7 +80,7 @@ describe('the tree renders its hierarchy as nested lists', () => {
     const wrapper = mount(FolderTreeNode, {
       props: {
         node: folder('f1', 'Weltenbau', [leaf('p1', 'Der Berg')]),
-        groupId: 'g1',
+        scope: { kind: 'group', groupId: 'g1' } as const,
         mayWrite: true,
         collapsed: new Set(['f1']),
       },

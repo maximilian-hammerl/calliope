@@ -24,7 +24,7 @@ dbmate records a migration by version and will not re-run an edited one, so an e
 the database has to be rebuilt — that is the cost, and it is the whole cost:
 
 ```bash
-cd database && dbmate --env-file ../.env drop && dbmate --env-file ../.env up
+cd database && deno task db:reset
 deno task types:generate && cd ../backend && deno task db:seed
 ```
 

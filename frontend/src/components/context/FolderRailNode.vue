@@ -2,13 +2,16 @@
 import { ref } from 'vue'
 import { ChevronDown, ChevronRight } from '@lucide/vue'
 import type { TreeNode } from '@/lib/folder/buildTree'
+import { leafRoute } from '@/lib/folder/treeScope'
+import type { TreeScope } from '@/lib/folder/treeScope'
 import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
+import ForumPermissionMark from '@/components/forum/ForumPermissionMark.vue'
 
 /**
  * One row, and its children under it. Recursive by name — a component may render itself, and the
  * depth is bounded at five by the API.
  */
-defineProps<{ node: TreeNode; groupId: string }>()
+defineProps<{ node: TreeNode; scope: TreeScope }>()
 
 // Open to start: a member who nested something wants to see it, and the whole tree is small.
 const open = ref<boolean>(true)
@@ -18,15 +21,15 @@ const open = ref<boolean>(true)
   <li>
     <RouterLink
       v-if="node.kind !== 'folder'"
-      :to="{
-        name: node.kind === 'thread' ? 'thread' : 'page',
-        params:
-          node.kind === 'thread' ? { groupId, threadId: node.id } : { groupId, pageId: node.id },
-      }"
+      :to="leafRoute(scope, node)"
       class="flex items-baseline gap-1.5 truncate text-ink-4 hover:text-ink-2"
     >
       <span class="truncate">{{ node.title }}</span>
       <FavouriteMark v-if="node.isFavourite" />
+      <ForumPermissionMark
+        v-if="scope.kind === 'forum' && scope.isOperator && node.effectiveMemberPermission"
+        :permission="node.effectiveMemberPermission"
+      />
     </RouterLink>
 
     <template v-else>
@@ -38,6 +41,10 @@ const open = ref<boolean>(true)
       >
         <component :is="open ? ChevronDown : ChevronRight" :size="12" :stroke-width="1.5" />
         <span class="truncate">{{ node.title }}</span>
+        <ForumPermissionMark
+          v-if="scope.kind === 'forum' && scope.isOperator && node.effectiveMemberPermission"
+          :permission="node.effectiveMemberPermission"
+        />
       </button>
 
       <!-- Indented by one step per level rather than by the node's own depth: the rail is 262px
@@ -48,7 +55,7 @@ const open = ref<boolean>(true)
           v-for="child in node.children"
           :key="child.id"
           :node="child"
-          :group-id="groupId"
+          :scope="scope"
         />
       </ul>
     </template>

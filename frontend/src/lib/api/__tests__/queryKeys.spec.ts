@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { listKeyPrefix, listOnlyFilter } from '../queryKeys'
+import { exactKeyFilter, listKeyPrefix, listOnlyFilter } from '../queryKeys'
 
 /** The shape Orval generates for a QUERY list: path segments, then the body in the final slot. */
 const key = (body: unknown) =>
@@ -71,5 +71,32 @@ describe('listOnlyFilter', () => {
 
     expect(partialDeepEqual(posts, listOnlyFilter(groups).queryKey)).toBe(true)
     expect(listOnlyFilter(groups).predicate({ queryKey: posts })).toBe(false)
+  })
+})
+
+describe('exactKeyFilter', () => {
+  /** A GET list's whole key is its identity: there is no body slot to drop. */
+  const pages = ['api', 'forum', 'pages'] as const
+
+  it('matches the list itself', () => {
+    const filter = exactKeyFilter(pages)
+
+    expect(partialDeepEqual(pages, filter.queryKey)).toBe(true)
+    expect(filter.predicate({ queryKey: pages })).toBe(true)
+  })
+
+  it('does not match an item of that list', () => {
+    // The reason it exists: creating a page invalidated every page detail the reader had open,
+    // because the list's key is a prefix of each of them.
+    const onePage = ['api', 'forum', 'pages', 'p-1'] as const
+
+    expect(partialDeepEqual(onePage, exactKeyFilter(pages).queryKey)).toBe(true)
+    expect(exactKeyFilter(pages).predicate({ queryKey: onePage })).toBe(false)
+  })
+
+  it('does not match a different list of the same length', () => {
+    const threads = ['api', 'forum', 'threads'] as const
+
+    expect(partialDeepEqual(threads, exactKeyFilter(pages).queryKey)).toBe(false)
   })
 })

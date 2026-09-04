@@ -12,6 +12,7 @@ export const THREADS_TAG = "threads";
 export const STEPS_TAG = "steps";
 export const PAGES_TAG = "pages";
 export const FOLDERS_TAG = "folders";
+export const FORUM_TAG = "forum";
 export const POSTS_TAG = "posts";
 export const USERS_TAG = "users";
 export const NOTIFICATIONS_TAG = "notifications";
@@ -31,6 +32,7 @@ type Tag =
   | typeof STEPS_TAG
   | typeof PAGES_TAG
   | typeof FOLDERS_TAG
+  | typeof FORUM_TAG
   | typeof POSTS_TAG
   | typeof USERS_TAG
   | typeof NOTIFICATIONS_TAG
@@ -68,6 +70,8 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
     "A group's reference pages: material that is written and revised rather than replied to",
   [FOLDERS_TAG]:
     "The folders a group nests its threads and pages in, named by the members themselves",
+  [FORUM_TAG]:
+    "The public forum: its folders, the threads and pages in them, and the posts to a thread",
   [USERS_TAG]:
     "Finding other members by name, so they can be invited to a group",
   [CHATS_TAG]: "Chats between members, and the messages in them",

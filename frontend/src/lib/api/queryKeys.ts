@@ -35,3 +35,20 @@ export function listOnlyFilter(queryKey: readonly unknown[]) {
       query.queryKey.length === queryKey.length,
   }
 }
+
+/**
+ * A **GET** list's own key and nothing nested under it. The counterpart of `listOnlyFilter`,
+ * which slices a body slot a GET key does not have.
+ *
+ * Orval's keys are the URL split into segments, so a GET list's whole key is a prefix of every
+ * item below it: `['api','forum','threads']` matches `['api','forum','threads',id]` for every
+ * thread. Invalidating the list after a favourite therefore refetched the detail query of every
+ * thread the reader had opened. The length check is the only thing separating the two.
+ */
+export function exactKeyFilter(queryKey: readonly unknown[]) {
+  return {
+    queryKey,
+    predicate: (query: { queryKey: readonly unknown[] }) =>
+      query.queryKey.length === queryKey.length,
+  }
+}

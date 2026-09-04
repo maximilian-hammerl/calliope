@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useFolderTree } from '@/composables/useFolderTree'
 import type { TreeNode } from '@/lib/folder/buildTree'
+import type { TreeScope } from '@/lib/folder/treeScope'
 import FolderRailNode from '@/components/context/FolderRailNode.vue'
 
 /**
@@ -14,6 +15,7 @@ const props = defineProps<{ groupId: string }>()
 const { tree } = useFolderTree(computed<string>(() => props.groupId))
 
 const nodes = computed<TreeNode[]>(() => tree.value)
+const scope = computed<TreeScope>(() => ({ kind: 'group', groupId: props.groupId }))
 </script>
 
 <template>
@@ -23,7 +25,7 @@ const nodes = computed<TreeNode[]>(() => tree.value)
     <!-- A real list, as the group's own tree is: the nesting is what this says, and a margin
          says it only to the eye. -->
     <ul v-else class="flex flex-col gap-1.5 text-rail">
-      <FolderRailNode v-for="node in nodes" :key="node.id" :node="node" :group-id="groupId" />
+      <FolderRailNode v-for="node in nodes" :key="node.id" :node="node" :scope="scope" />
     </ul>
   </div>
 </template>

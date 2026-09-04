@@ -1,11 +1,15 @@
 import { db } from "@/src/database/client.ts";
-import type { ReportTargetType } from "@/src/database/schema.ts";
+import type {
+  ForumPermission,
+  ReportTargetType,
+} from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { mayReadForumContent } from "@/src/service/forum_permission.ts";
 
 /**
  * Whether a member may see one of the things this platform lets them act on, and what it says.
@@ -13,10 +17,8 @@ import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
  * and a thing the member cannot see would turn it into a way of discovering private writing.
  *
  * Typed over `ReportTargetType`, the wider set, so a favourite's six values are assignable.
- * Keeping one resolver is the point — answering differently for a thing that exists and one the
- * member cannot see is what would leak private writing.
  * Threads, posts and messages are reached through whatever governs them, so the group's visibility
- * rule and the chat's membership rule each stay in one place.
+ * rule, the forum's permission and the chat's membership rule each stay in one place.
  */
 export type VisibleTarget = { authorId: string | null };
 
@@ -35,6 +37,35 @@ function excerpt(text: string): string {
   return collapsed.length <= EXCERPT_LENGTH
     ? collapsed
     : `${collapsed.slice(0, EXCERPT_LENGTH - 1).trimEnd()}…`;
+}
+
+/**
+ * The two scopes the tables shared with the public forum carry (#32). A group row is visible when
+ * its group is; a forum row when its permission is not `hidden`, which is why hidden answers 404
+ * like everything else here. A null `writingGroupId` is what tells the two apart, and the CHECK on
+ * each table is what guarantees the permission is there when it is.
+ */
+async function inScope(
+  user: User,
+  row: {
+    writingGroupId: string | null;
+    memberPermission: ForumPermission | null;
+    effectiveMemberPermission: ForumPermission | null;
+  },
+): Promise<boolean> {
+  if (row.writingGroupId !== null) {
+    return await WritingGroupService.selectVisibleWritingGroup(
+      user,
+      row.writingGroupId,
+    ) !== undefined;
+  }
+
+  // The CHECK makes the fallback unreachable; it is here so the failure is closed rather than open.
+  return mayReadForumContent(
+    user,
+    row.memberPermission ?? "hidden",
+    row.effectiveMemberPermission,
+  );
 }
 
 /**
@@ -86,47 +117,52 @@ export async function resolveVisibleTarget(
     case "writing_thread": {
       const thread = await db
         .selectFrom("writingThread")
-        .select(["title", "writingGroupId", "createdBy"])
-        .where("id", "=", targetId)
+        .leftJoin("writingFolder", "writingFolder.id", "writingThread.folderId")
+        .select([
+          "writingThread.title",
+          "writingThread.writingGroupId",
+          "writingThread.createdBy",
+          "writingThread.memberPermission",
+          "writingFolder.effectiveMemberPermission",
+        ])
+        .where("writingThread.id", "=", targetId)
         .executeTakeFirst();
 
       if (thread === undefined) {
         return undefined;
       }
 
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        thread.writingGroupId,
-      );
-      return group === undefined
-        ? undefined
-        : seen(thread.createdBy, () => thread.title);
+      return await inScope(user, thread)
+        ? seen(thread.createdBy, () => thread.title)
+        : undefined;
     }
 
     case "writing_page": {
       const page = await db
         .selectFrom("writingPage")
-        .select(["writingGroupId", "createdBy"])
+        .leftJoin("writingFolder", "writingFolder.id", "writingPage.folderId")
+        .select([
+          "writingPage.writingGroupId",
+          "writingPage.createdBy",
+          "writingPage.memberPermission",
+          "writingFolder.effectiveMemberPermission",
+        ])
         // The prose, not the title: a page has a body, so an operator reading the queue after
         // it is deleted needs what it said. Only when somebody asked, as a post's is.
         .$if(
           withExcerpt,
           (queryBuilder) => queryBuilder.select("writingPage.text"),
         )
-        .where("id", "=", targetId)
+        .where("writingPage.id", "=", targetId)
         .executeTakeFirst();
 
       if (page === undefined) {
         return undefined;
       }
 
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        page.writingGroupId,
-      );
-      return group === undefined
-        ? undefined
-        : seen(page.createdBy, () => page.text ?? "");
+      return await inScope(user, page)
+        ? seen(page.createdBy, () => page.text ?? "")
+        : undefined;
     }
 
     case "writing_post": {
@@ -137,10 +173,15 @@ export async function resolveVisibleTarget(
           "writingThread.id",
           "writingPost.writingThreadId",
         )
+        .leftJoin("writingFolder", "writingFolder.id", "writingThread.folderId")
         .select([
           "writingPost.isDraft",
           "writingPost.createdBy",
           "writingThread.writingGroupId",
+          // The thread's, not the post's: a post is not placed in the tree, so what governs it
+          // is whatever governs the thread it is in.
+          "writingThread.memberPermission",
+          "writingFolder.effectiveMemberPermission",
         ])
         // Only when somebody asked. This is the column the opt-in exists for.
         .$if(
@@ -155,13 +196,9 @@ export async function resolveVisibleTarget(
         return undefined;
       }
 
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        post.writingGroupId,
-      );
-      return group === undefined
-        ? undefined
-        : seen(post.createdBy, () => post.text ?? "");
+      return await inScope(user, post)
+        ? seen(post.createdBy, () => post.text ?? "")
+        : undefined;
     }
 
     case "story_idea": {

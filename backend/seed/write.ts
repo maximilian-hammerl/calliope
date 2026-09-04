@@ -13,6 +13,9 @@ import {
   VERIFIED_USERNAMES,
 } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
+import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "@/seed/forum.ts";
+import { folderEffectivePermission } from "@/src/service/forum_permission.ts";
+import type { ForumPermission } from "@/src/database/schema.ts";
 import type { GroupFixture } from "@/seed/writing_groups.ts";
 import { STORY_IDEAS } from "@/seed/story_ideas.ts";
 import type { StoryIdeaFixture } from "@/seed/story_ideas.ts";
@@ -41,6 +44,16 @@ function assertDistinctIds(): void {
         ...thread.posts.map((post) => post.id),
       ]),
       ...(group.steps ?? []).map((step) => step.id),
+      // Folders and pages share their id kinds with the forum's, which is what makes listing
+      // them here worth the two lines.
+      ...(group.folders ?? []).map((folder) => folder.id),
+      ...(group.pages ?? []).map((page) => page.id),
+    ]),
+    ...FORUM_FOLDERS.map((folder) => folder.id),
+    ...FORUM_PAGES.map((page) => page.id),
+    ...FORUM_THREADS.flatMap((thread) => [
+      thread.id,
+      ...thread.posts.map((post) => post.id),
     ]),
     ...STORY_IDEAS.map((idea) => idea.id),
     ...CHATS.flatMap((chat) => [chat.id, ...chat.messages.map((m) => m.id)]),
@@ -54,6 +67,34 @@ function assertDistinctIds(): void {
     throw new Error(
       `Seed ids are not unique: ${[...new Set(duplicates)].join(", ")}`,
     );
+  }
+}
+
+/**
+ * Both folder writers derive a folder's `depth` — and the forum's its reduced permission — from the
+ * parent already written, so a child listed above its parent is silently seeded as a root folder.
+ * That makes a hidden folder's child visible to every member, which is not a mistake to find by
+ * looking.
+ */
+function assertFoldersFollowTheirParents(): void {
+  const check = (
+    label: string,
+    folders: ReadonlyArray<{ id: string; title: string; in?: string }>,
+  ) => {
+    const above = new Set<string>();
+    for (const folder of folders) {
+      if (folder.in !== undefined && !above.has(folder.in)) {
+        throw new Error(
+          `${label}: folder "${folder.title}" names a parent that is not above it in the fixture`,
+        );
+      }
+      above.add(folder.id);
+    }
+  };
+
+  check("forum", FORUM_FOLDERS);
+  for (const group of GROUPS) {
+    check(group.title, group.folders ?? []);
   }
 }
 
@@ -373,6 +414,87 @@ async function writeGroups(): Promise<void> {
   ).execute();
 }
 
+/**
+ * The forum's rows are the group's tables with `writing_group_id` null (#32), so this writes the
+ * same shapes and adds only the permission. `effective_member_permission` is derived here exactly
+ * as the service will derive it: from the parent already written, which is what makes a hidden
+ * folder hide its children.
+ */
+async function writeForum(): Promise<void> {
+  const effectiveOf = new Map<string, ForumPermission>();
+  const depthOf = new Map<string, number>();
+
+  for (const folder of FORUM_FOLDERS) {
+    const parentEffective = folder.in === undefined
+      ? null
+      : effectiveOf.get(folder.in) ?? null;
+    const effective = folderEffectivePermission(folder.may, parentEffective);
+    effectiveOf.set(folder.id, effective);
+    const depth = folder.in === undefined
+      ? 1
+      : (depthOf.get(folder.in) ?? 0) + 1;
+    depthOf.set(folder.id, depth);
+
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose: a child needs its parent's depth
+    await db.insertInto("writingFolder").values({
+      id: folder.id,
+      writingGroupId: null,
+      parentFolderId: folder.in ?? null,
+      depth,
+      title: folder.title,
+      description: folder.description ?? null,
+      createdBy: folder.by,
+      memberPermission: folder.may,
+      effectiveMemberPermission: effective,
+    }).execute();
+  }
+
+  await db.insertInto("writingThread").values(
+    FORUM_THREADS.map((thread) => ({
+      id: thread.id,
+      writingGroupId: null,
+      folderId: thread.in ?? null,
+      title: thread.title,
+      createdBy: thread.by,
+      // `write` adds no restriction of its own, which is what makes it the default for a new one.
+      memberPermission: thread.may ?? "write",
+    })),
+  ).execute();
+
+  await db.insertInto("writingPage").values(
+    FORUM_PAGES.map((page) => ({
+      id: page.id,
+      writingGroupId: null,
+      folderId: page.in ?? null,
+      title: page.title,
+      document: plainTextToDocument(page.text),
+      text: page.text,
+      createdBy: page.by,
+      updatedBy: page.by,
+      memberPermission: page.may ?? "write",
+    })),
+  ).execute();
+
+  await db.insertInto("writingPost").values(
+    FORUM_THREADS.flatMap((thread, threadIndex) =>
+      thread.posts.map((post, index) => ({
+        id: post.id,
+        writingThreadId: thread.id,
+        document: plainTextToDocument(post.text),
+        text: post.text,
+        isDraft: false,
+        createdBy: post.by,
+        // Stamped from the fixture's order, for the reason the group's posts are: one insert
+        // shares one `now()`, and paging cannot survive a column full of ties.
+        createdAt: postedAt(
+          newestPostOfThread(threadIndex, FORUM_THREADS.length) +
+            (thread.posts.length - 1 - index),
+        ),
+      }))
+    ),
+  ).execute();
+}
+
 async function writeChats(): Promise<void> {
   await db.insertInto("chatGroup").values(CHATS.map((chat) => ({
     id: chat.id,
@@ -465,7 +587,6 @@ async function writeNotifications(): Promise<void> {
   ).execute();
 }
 
-/** In dependency order, which is the reason this lives in one place. */
 /** The column a report's target id goes in, which `report_target_matches_type` also enforces. */
 const REPORT_TARGET_COLUMN = {
   writing_group: "reportedWritingGroupId",
@@ -550,8 +671,10 @@ async function writeFavourites(): Promise<void> {
   ).execute();
 }
 
+/** In dependency order, which is the reason this lives in one place. */
 export async function writeFixtures(): Promise<void> {
   assertDistinctIds();
+  assertFoldersFollowTheirParents();
   assertFoundersAdminister();
   assertBlocksHaveNoPendingInvitation();
   assertFavouritesNameSomething();
@@ -559,6 +682,7 @@ export async function writeFixtures(): Promise<void> {
   await writeAccounts();
   await writeBlocks();
   await writeGroups();
+  await writeForum();
   await writeChats();
   await writeStoryIdeas();
   await writeNotifications();

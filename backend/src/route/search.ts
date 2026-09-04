@@ -1,6 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { notBlank } from "@/src/http/request_schema.ts";
 import {
+  FORUM_PAGE_SUMMARY_RESPONSE,
+  FORUM_THREAD_RESPONSE,
   FOUND_PAGE_RESPONSE,
   FOUND_THREAD_RESPONSE,
   GROUP_RESPONSE,
@@ -15,6 +17,7 @@ import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
+import { ForumService } from "@/src/service/forum_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
 import { listResponseSchema } from "@/src/list/list_endpoint.ts";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
@@ -42,6 +45,11 @@ const SEARCH_RESPONSE = z.object({
   groups: listResponseSchema(GROUP_RESPONSE),
   threads: listResponseSchema(FOUND_THREAD_RESPONSE),
   pages: listResponseSchema(FOUND_PAGE_RESPONSE),
+  // Their own sections rather than merged into the two above: the budget is per section, so one
+  // scope could otherwise take all five slots and leave the reader nothing from the other — and
+  // a total that summed the two could no longer say where the rest are.
+  forumThreads: listResponseSchema(FORUM_THREAD_RESPONSE),
+  forumPages: listResponseSchema(FORUM_PAGE_SUMMARY_RESPONSE),
   storyIdeas: listResponseSchema(STORY_IDEA_RESPONSE),
   users: listResponseSchema(LISTED_MEMBER_RESPONSE),
 });
@@ -53,9 +61,10 @@ export default new OpenAPIHono().openapi(
     method: "query",
     path: "/",
     tags: [SEARCH_TAG],
-    summary: "Search groups, threads, story ideas and members at once",
+    summary:
+      "Search groups, threads, pages, the public forum, story ideas and members at once",
     description:
-      "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. Story ideas include the reader's own and closed ones, which the interface labels. Posts, chat messages and next steps are not searched.",
+      "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. A writing group's threads and pages and the public forum's are separate kinds, so neither can crowd the other out of a limit they shared. Story ideas include the reader's own and closed ones, which the interface labels. Posts, chat messages and next steps are not searched.",
     operationId: "search",
     middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
@@ -85,7 +94,15 @@ export default new OpenAPIHono().openapi(
     // Read before the searches, so the member filter has it and the others are unaffected.
     const blockedIds = await BlockService.selectBlockedIds(user.id);
 
-    const [groups, threads, pages, storyIdeas, users] = await Promise.all([
+    const [
+      groups,
+      threads,
+      pages,
+      forumThreads,
+      forumPages,
+      storyIdeas,
+      users,
+    ] = await Promise.all([
       WritingGroupService.listVisibleWritingGroups(user, {
         search,
         limit,
@@ -108,6 +125,18 @@ export default new OpenAPIHono().openapi(
         limit,
         offset: 0,
         // As threads sort: most recently written in first, which a page's own column carries.
+        sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
+      }),
+      ForumService.searchThreads(user, {
+        search,
+        limit,
+        offset: 0,
+        sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
+      }),
+      ForumService.searchPages(user, {
+        search,
+        limit,
+        offset: 0,
         sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
       }),
       StoryIdeaService.listStoryIdeas({
@@ -135,7 +164,7 @@ export default new OpenAPIHono().openapi(
     ]);
 
     return c.json(
-      { groups, threads, pages, storyIdeas, users },
+      { groups, threads, pages, forumThreads, forumPages, storyIdeas, users },
       STATUS_CODE.OK,
     );
   },

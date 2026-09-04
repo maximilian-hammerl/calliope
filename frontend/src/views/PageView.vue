@@ -12,6 +12,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQueryClient } from '@tanstack/vue-query'
 import { Flag, Pencil, Trash2 } from '@lucide/vue'
 import { ApiError } from '@/lib/api/apiFetch'
+import { exactKeyFilter } from '@/lib/api/queryKeys'
 import { failureMessage } from '@/lib/format/failure'
 import { firstMessage, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
 import { formatActivityTime } from '@/lib/format/formatTime'
@@ -33,6 +34,7 @@ import PostEditor from '@/components/thread/PostEditor.vue'
 import DeletePageDialog from '@/components/page/DeletePageDialog.vue'
 import ReportDialog from '@/components/report/ReportDialog.vue'
 import PathToHere from '@/components/folder/PathToHere.vue'
+import { useFolderTree } from '@/composables/useFolderTree'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -43,6 +45,10 @@ const router = useRouter()
 const queryClient = useQueryClient()
 
 const { groupId, group, mayWrite } = useGroupContext()
+
+// For the breadcrumb, which takes the tree rather than fetching one: the three queries behind
+// it are already loaded by the rail, so this costs no request.
+const { tree } = useFolderTree(groupId)
 
 const pageId = computed<string>(() => String(route.params.pageId))
 
@@ -67,10 +73,13 @@ const page = computed<GetPage200 | undefined>(() =>
 )
 
 /** The page's own query, so the favourite mark follows a change to it. */
+// The list too, as `ThreadView` does for a thread: the rail draws its favourite mark from the
+// list, so refreshing only the page left the mark as it was.
 async function refreshPage() {
   await queryClient.invalidateQueries({
     queryKey: getGetPageQueryKey(groupId.value, pageId.value),
   })
+  await queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value)))
 }
 
 const editing = ref<boolean>(false)
@@ -140,7 +149,7 @@ async function save() {
 
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: getGetPageQueryKey(groupId.value, pageId.value) }),
-    queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(groupId.value) }),
+    queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value))),
   ])
   editing.value = false
 }
@@ -169,7 +178,7 @@ async function confirmDelete() {
     return
   }
 
-  await queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(groupId.value) })
+  await queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value)))
   void router.push({ name: 'group', params: { groupId: groupId.value } })
 }
 
@@ -222,8 +231,9 @@ watch(pageId, () => {
         <div class="mb-7">
           <PathToHere
             v-if="group"
-            :group-id="groupId"
-            :group-title="group.title"
+            :tree="tree"
+            :root-title="group.title"
+            :root-to="{ name: 'group', params: { groupId } }"
             :folder-id="page.folderId"
           />
 

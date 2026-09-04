@@ -463,6 +463,10 @@ reading size never shrinks below 17px, and the composer starts collapsed. Check 
 calling a surface done, and 375×667 for anything in a dialog — that is where content outgrows
 the screen first.
 
+**The rule goes on the element that takes the tap, not on the row around it.** A 44px row holding
+a 23px link is 21px of dead space that a screenshot cannot show: hit-test a row's top and bottom
+edge with `elementFromPoint`, which is what found it in both folder trees.
+
 Reach for the component before a raw `<button>`: `sm` and `default` both carry
 `min-h-11 md:min-h-0`, so anything hand-rolled has to repeat that rule and will be missed when
 the next component-wide fix lands. A raw button is still right for things that are not

@@ -81,7 +81,7 @@ export default new OpenAPIHono().openapi(
     }
 
     // Posts go with it through the foreign key's cascade.
-    await WritingThreadService.deleteThread(threadId);
+    await WritingThreadService.deleteThread(groupId, threadId);
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

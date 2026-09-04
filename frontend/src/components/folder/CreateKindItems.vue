@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
 
 /**
@@ -11,7 +12,16 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
  * is one document the group writes together. The permissions follow from it, so the wording and
  * `mayAct`'s table say the same thing.
  */
-const emit = defineEmits<{ choose: [kind: 'folder' | 'page' | 'thread'] }>()
+const emit = defineEmits<{ choose: [kind: Kind] }>()
+
+type Kind = 'folder' | 'page' | 'thread'
+
+/**
+ * Which of the three to offer. The forum leaves `folder` out until there is a surface for its
+ * permissions (#32's seventh slice) — a restriction rather than a second component, so the
+ * wording still cannot drift.
+ */
+const props = defineProps<{ only?: ReadonlyArray<Kind> }>()
 
 // Ordered by how often a member reaches for them: writing first, structure last. It is also the
 // order the tree itself reads in, where leaves sit above folders.
@@ -28,11 +38,16 @@ const KINDS = [
   },
   { kind: 'folder', label: 'Ordner', note: 'Ordnet Themen, Seiten und weitere Ordner.' },
 ] as const
+
+const offered = computed<ReadonlyArray<(typeof KINDS)[number]>>(() => {
+  const only = props.only
+  return only === undefined ? KINDS : KINDS.filter((entry) => only.includes(entry.kind))
+})
 </script>
 
 <template>
   <DropdownMenuItem
-    v-for="entry in KINDS"
+    v-for="entry in offered"
     :key="entry.kind"
     class="flex-col items-start gap-0.5"
     @click="emit('choose', entry.kind)"

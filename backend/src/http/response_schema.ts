@@ -2,6 +2,7 @@ import { z } from "@hono/zod-openapi";
 import {
   CHAT_GROUP_SCHEMA,
   CHAT_MESSAGE_SCHEMA,
+  FORUM_PERMISSION_SCHEMA,
   NOTIFICATION_SCHEMA,
   STORY_IDEA_SCHEMA,
   USER_IN_CHAT_GROUP_SCHEMA,
@@ -58,7 +59,17 @@ export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
   .extend(OWN_MEMBERSHIP)
   .extend(OWN_FAVOURITE);
 
+/**
+ * The three tables a writing group shares with the public forum (#32) carry a `writing_group_id`
+ * that is null for a forum row and a permission that is null for a group one. A group's responses
+ * have neither shape: the scope is the group in the path, so the id is present, and the permission
+ * is the forum's alone.
+ */
+const IN_GROUP = { writingGroupId: z.uuidv7() };
+
 export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA
+  .omit({ memberPermission: true })
+  .extend(IN_GROUP)
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE);
 
@@ -76,6 +87,43 @@ export const POST_RESPONSE = WRITING_POST_SCHEMA.extend(CREATED_BY_USERNAME)
   });
 
 /**
+ * The public forum's rows (#32). No `writingGroupId` — it is null on every one of them — and one
+ * permission in place of the two columns: what this member may do here, already reduced along the
+ * path, with `write` for an operator. The folder's own setting is not sent: nothing reads it until
+ * there is a surface for changing it.
+ */
+const FORUM_PERMISSION = {
+  effectiveMemberPermission: FORUM_PERMISSION_SCHEMA,
+};
+
+export const FORUM_FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA
+  .omit({ writingGroupId: true, memberPermission: true })
+  .extend(CREATED_BY_USERNAME)
+  .extend(FORUM_PERMISSION);
+
+export const FORUM_THREAD_RESPONSE = WRITING_THREAD_SCHEMA
+  .omit({ writingGroupId: true, memberPermission: true })
+  .extend(CREATED_BY_USERNAME)
+  .extend(OWN_FAVOURITE)
+  .extend(FORUM_PERMISSION);
+
+export const FORUM_PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
+  .omit({
+    writingGroupId: true,
+    memberPermission: true,
+    document: true,
+    text: true,
+  })
+  .extend(CREATED_BY_USERNAME)
+  .extend(OWN_FAVOURITE)
+  .extend({ updatedByUsername: z.string().nullable() })
+  .extend(FORUM_PERMISSION);
+
+// `text` stays server-side here for the same reason it does in a group: it exists for search.
+export const FORUM_PAGE_RESPONSE = FORUM_PAGE_SUMMARY_RESPONSE
+  .extend({ document: DOCUMENT_SCHEMA });
+
+/**
  * A path, resolved against this API's own origin — never absolute, so it cannot point at another
  * host and needs no `HOST_URL` to be right. Null where a member has set no picture, which is most
  * of them; the interface shows their initial instead.
@@ -90,16 +138,18 @@ export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
 });
 
 /** A folder as the tree reads it. `depth` is derived by the server and never sent by a client. */
-export const FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA.extend(
-  CREATED_BY_USERNAME,
-);
+export const FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA
+  .omit({ memberPermission: true, effectiveMemberPermission: true })
+  .extend(IN_GROUP)
+  .extend(CREATED_BY_USERNAME);
 
 /**
  * A page without its prose, for the tree. `lastActivityAt` is also what an edit is conditional
  * on, so the client has to keep the value it loaded.
  */
 export const PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
-  .omit({ document: true, text: true })
+  .omit({ document: true, text: true, memberPermission: true })
+  .extend(IN_GROUP)
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
   .extend({ updatedByUsername: z.string().nullable() });
@@ -217,12 +267,6 @@ export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
 });
 
 /**
- * A notification as the interface needs it, discriminated on `type` so each kind carries the
- * subjects it is about and nothing else — the CHECK constraint on the table, expressed in the
- * contract. The titles and the name are joined at read time rather than stored, so a renamed
- * group renames everywhere and nothing survives the reader losing access to it.
- */
-/**
  * What every notification has, whatever it is about. The group is deliberately *not* here:
  * the types that exist today all belong to one, but the requirements describe private
  * messages, moderation notices and system announcements, and none of those does. Keeping the
@@ -252,6 +296,12 @@ const PAGE_SUBJECT = {
   writingPageTitle: z.string(),
 };
 
+/**
+ * A notification as the interface needs it, discriminated on `type` so each kind carries the
+ * subjects it is about and nothing else — the CHECK constraint on the table, expressed in the
+ * contract. The titles and the name are joined at read time rather than stored, so a renamed
+ * group renames everywhere and nothing survives the reader losing access to it.
+ */
 export const NOTIFICATION_RESPONSE = z.discriminatedUnion("type", [
   z.object({
     ...NOTIFICATION_BASE,

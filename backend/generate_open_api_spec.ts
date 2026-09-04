@@ -11,8 +11,10 @@ if (import.meta.main) {
 
   spec.openapi = "3.2.0";
 
-  // Depends on settings in .env and would change for every local project.
+  // Both depend on settings in .env and would change for every local project. The served
+  // document keeps them: it is this file, the one in git, that has to be the same for everyone.
   delete spec.servers;
+  delete spec.info.contact;
 
   await Deno.writeTextFile(OPEN_API_SPEC_PATH, JSON.stringify(spec));
   console.log("Saved successfully");

@@ -1,6 +1,10 @@
 import { ApiError } from '@/lib/api/apiFetch'
 import { rateLimitMessage } from '@/lib/format/rateLimit'
 
+/** Said on the field: this password is *known*, which is not a judgement about the member. */
+export const PASSWORD_BREACHED_MESSAGE =
+  'Dieses Passwort steht in bekannten Datenlecks. Wähle bitte ein anderes.'
+
 /**
  * What a control says when its request failed and it has nothing more specific to offer. „Versuche
  * es später" is wrong under a rate limit — later is a number the server has already told us, and
@@ -16,10 +20,6 @@ import { rateLimitMessage } from '@/lib/format/rateLimit'
  * The global notice says the same thing at the same moment, deliberately: it explains the whole
  * interface, this explains the control that was pressed.
  */
-/** Said on the field: this password is *known*, which is not a judgement about the member. */
-export const PASSWORD_BREACHED_MESSAGE =
-  'Dieses Passwort steht in bekannten Datenlecks. Wähle bitte ein anderes.'
-
 export function failureMessage(error: unknown, fallback?: string): string {
   if (error instanceof ApiError) {
     if (error.status === 429) {

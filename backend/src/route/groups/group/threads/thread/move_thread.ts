@@ -98,6 +98,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const moved = await WritingThreadService.moveThread(
+      groupId,
       threadId,
       folderId,
       user.id,

@@ -14,18 +14,14 @@ import {
 } from "@/src/list/list_endpoint_query.ts";
 
 /**
- * A notification is stored as the event that happened, never as the sentence describing it.
- * The wording belongs to the interface and may change; a stored sentence would also freeze a
- * private group's title into a row and keep showing it after the reader lost access.
+ * A notification is stored as the event that happened, never as the sentence describing it. The
+ * wording belongs to the interface and may change; a stored sentence would also freeze a private
+ * group's title into a row and keep showing it after the reader lost access. Everything the
+ * sentence needs is joined at read time instead, so a renamed group renames in every notification
+ * about it.
  *
- * Everything the sentence needs is joined at read time instead, which is also what keeps it
- * honest: a renamed group renames in every notification about it.
- */
-/**
- * Discriminated on `type`, mirroring the CHECK constraint on the table: each kind carries the
- * subjects it is actually about and nothing else. Inferred from the response schema rather
- * than written twice — the schema is the definition, and a second hand-written copy is a
- * second thing to keep in step.
+ * Inferred from the response schema rather than written twice: the schema is the definition, and
+ * a hand-written copy is a second thing to keep in step.
  */
 export type Notification = z.infer<typeof NOTIFICATION_RESPONSE>;
 

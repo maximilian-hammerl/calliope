@@ -23,6 +23,7 @@ describe('DESTINATIONS', () => {
       ['Gruppen', 'myGroups'],
       // The carousel rather than either list: reading through unread ideas is the point of the page.
       ['Storyideen', 'storyIdeasCarousel'],
+      ['Forum', 'forum'],
       ['Mitglieder', 'members'],
     ])
   })
@@ -43,5 +44,16 @@ describe('DESTINATIONS', () => {
     expect(groups && isCurrent(groups, 'discoverGroups')).toBe(true)
     expect(groups && isCurrent(groups, 'thread')).toBe(true)
     expect(groups && isCurrent(groups, 'members')).toBe(false)
+  })
+
+  it('keeps the forum and a group apart, though both have threads and pages', () => {
+    // The two carry the same kinds of content (#32) and their route names are what separate
+    // them, so a forum thread must not mark Gruppen and a group's thread must not mark Forum.
+    const groups = DESTINATIONS[0]
+    const forum = DESTINATIONS.find((destination) => destination.label === 'Forum')
+
+    expect(groups && isCurrent(groups, 'forumThread')).toBe(false)
+    expect(forum && isCurrent(forum, 'thread')).toBe(false)
+    expect(forum && isCurrent(forum, 'forumPage')).toBe(true)
   })
 })

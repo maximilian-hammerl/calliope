@@ -10,6 +10,7 @@ import { ENVIRONMENT, type Environment } from "@/src/environment.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { USER } from "@/seed/accounts.ts";
 import { GROUPS } from "@/seed/writing_groups.ts";
+import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "@/seed/forum.ts";
 import { CHATS } from "@/seed/chats.ts";
 import { REPORTS } from "@/seed/reports.ts";
 import { writeFixtures } from "@/seed/write.ts";
@@ -59,6 +60,28 @@ async function removePreviousSeed(): Promise<void> {
   await db.deleteFrom("writingGroup")
     .where("id", "in", GROUPS.map((group) => group.id))
     .execute();
+  // The forum's rows have no group to cascade from — that absence is what makes them the
+  // forum's (#32) — so each kind goes explicitly. Leaves first, because a folder holding one is
+  // not empty, and then the folders in reverse fixture order, which is children before parents.
+  await db.deleteFrom("writingPage")
+    .where("id", "in", FORUM_PAGES.map((page) => page.id))
+    .execute();
+  await db.deleteFrom("writingThread")
+    .where("id", "in", FORUM_THREADS.map((thread) => thread.id))
+    .execute();
+  // Deepest first, read from the database rather than from the fixture's order: `RESTRICT` is
+  // checked per row, so a parent cannot go before its children, and `depth` is the one ordering
+  // that is true whatever order the fixture happens to list them in.
+  const folders = await db
+    .selectFrom("writingFolder")
+    .select("id")
+    .where("id", "in", FORUM_FOLDERS.map((folder) => folder.id))
+    .orderBy("depth", "desc")
+    .execute();
+  for (const folder of folders) {
+    // deno-lint-ignore no-await-in-loop
+    await db.deleteFrom("writingFolder").where("id", "=", folder.id).execute();
+  }
   await db.deleteFrom("chatGroup")
     .where("id", "in", CHATS.map((chat) => chat.id))
     .execute();

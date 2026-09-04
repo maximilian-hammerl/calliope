@@ -199,22 +199,27 @@ function listPosts(
   );
 }
 
-/** Returns nothing when there is no such post. Authorisation is the caller's job. */
 /**
+ * Returns nothing when there is no such post; authorisation is the caller's job.
+ *
  * `wasDraft` is the row's state before this change, which is what separates the three ways a
  * post can be written to: autosaving a draft, publishing one, and editing what is already
  * published. Only the last is an edit a reader is told about.
- */
-/**
- * `wasDraft` is the row's state before this change, which is what separates the three ways a
- * post can be written to: autosaving a draft, publishing one, and editing what is already
- * published.
  */
 async function updatePost(
   postId: string,
   changes: { document?: PostDocument; isDraft?: boolean },
   wasDraft: boolean,
-  context: { writingGroupId: string; writingThreadId: string; actorId: string },
+  context: {
+    /**
+     * Null for the public forum, whose posts belong to no group (#32) — and who hears about one
+     * is #119, so there is nothing to announce yet. Announcing it to a group's
+     * members would be the wrong answer anyway.
+     */
+    writingGroupId: string | null;
+    writingThreadId: string;
+    actorId: string;
+  },
 ): Promise<Post | undefined> {
   const { document, ...rest } = changes;
   const isPublishing = wasDraft && changes.isDraft === false;
@@ -256,7 +261,7 @@ async function updatePost(
     }
 
     // Publishing is the moment the writing becomes everybody's; editing it again is not.
-    if (isPublishing) {
+    if (isPublishing && context.writingGroupId !== null) {
       await NotificationService.insertGroupActivityNotifications(transaction, {
         type: "new_writing_post",
         writingGroupId: context.writingGroupId,

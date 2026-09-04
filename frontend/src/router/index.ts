@@ -19,6 +19,9 @@ declare module 'vue-router' {
      * `GroupLayout` leaves the folder tree out of its rail rather than showing it twice.
      */
     listsGroupContents?: boolean
+
+    /** The same for the public forum, whose own page is its tree — see `ForumLayout`. */
+    listsForumContents?: boolean
   }
 }
 

@@ -184,7 +184,12 @@ const railSlack = computed<Record<string, string>>(() => ({
     </template>
 
     <!-- One sheet holding both rails' blocks, stacked rather than collapsible. -->
-    <ContextSheet v-else v-model:open="sheetOpen">
+    <ContextSheet
+      v-else
+      v-model:open="sheetOpen"
+      label="Gruppen-Kontext"
+      description="Was in dieser Gruppe zu tun ist, und was in ihr nachzusehen ist."
+    >
       <RailBlock label="Nächste Schritte" :meta="`${openSteps.length} offen`">
         <StepList :group-id="groupId" :may-write="mayWrite" :may-administer="mayAdminister" />
       </RailBlock>

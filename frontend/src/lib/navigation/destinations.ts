@@ -1,4 +1,4 @@
-import { BookOpen, Lightbulb, Users } from '@lucide/vue'
+import { BookOpen, Lightbulb, MessagesSquare, Users } from '@lucide/vue'
 import type { RouteRecordName } from 'vue-router'
 
 /**
@@ -31,6 +31,12 @@ export const DESTINATIONS: ReadonlyArray<{
     // The carousel, not a list: reading through unread ideas is what members come here to do.
     name: 'storyIdeasCarousel',
     belongsTo: ['discoverStoryIdeas', 'myStoryIdeas', 'storyIdea', 'storyIdeasCarousel'],
+  },
+  {
+    label: 'Forum',
+    icon: MessagesSquare,
+    name: 'forum',
+    belongsTo: ['forum', 'forumThread', 'forumPage'],
   },
   {
     label: 'Mitglieder',
