@@ -61,6 +61,34 @@ describe('the tree renders its hierarchy as nested lists', () => {
     expect(nested.text()).toContain('Der Berg')
   })
 
+  /**
+   * Members said the kind after every title was noise — you see what a thing is when you open it.
+   * It stays in the accessible name, because navigating by link list gives neither the row's
+   * shape nor the click.
+   */
+  it('keeps a leaf’s kind for a screen reader and takes it off the screen', () => {
+    const wrapper = mount(FolderTreeNode, {
+      props: {
+        node: leaf('p1', 'Der Berg'),
+        scope: { kind: 'group', groupId: 'g1' } as const,
+        mayWrite: true,
+        collapsed: new Set<string>(),
+      },
+      global: { stubs },
+    })
+
+    const hidden = wrapper.find('.sr-only')
+    expect(hidden.exists()).toBe(true)
+    expect(hidden.text()).toBe('Seite')
+
+    // Everything the eye gets, which is the title and nothing after it.
+    const visible = wrapper
+      .findAll('a span')
+      .filter((span) => !span.classes().includes('sr-only'))
+      .map((span) => span.text())
+    expect(visible).toEqual(['Der Berg'])
+  })
+
   it('puts a leaf in an li with no list of its own', () => {
     const wrapper = mount(FolderTreeNode, {
       props: {

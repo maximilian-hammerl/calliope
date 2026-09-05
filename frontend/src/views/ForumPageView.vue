@@ -20,6 +20,7 @@ import type { GetForumPage200, PostDocument } from '@/api/models'
 import { useForumTree } from '@/composables/useForumTree'
 import { useIsOperator } from '@/composables/useIsOperator'
 import { mayWriteInForum } from '@/lib/forum/permission'
+import { FORUM_READ_ONLY_NOTE } from '@/lib/format/forum'
 import PathToHere from '@/components/folder/PathToHere.vue'
 import PostBody from '@/components/thread/PostBody.vue'
 import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
@@ -256,6 +257,11 @@ async function refresh(): Promise<void> {
             <Pencil :size="14" :stroke-width="1.5" aria-hidden="true" />
             Seite bearbeiten
           </button>
+
+          <!-- Where „Seite bearbeiten" would be. The button's absence alone says nothing, and a
+               read-only page can sit in a folder a member may otherwise write in — an event's
+               rules beside its threads is exactly that. -->
+          <span v-if="!mayWrite" class="text-ink-5">{{ FORUM_READ_ONLY_NOTE.page }}</span>
         </div>
       </template>
     </div>

@@ -39,6 +39,19 @@ export function forumPermissionMark(
   }
 }
 
+/**
+ * What a member reads where the control they cannot use would be — the composer, or „Seite
+ * bearbeiten". Written here rather than at the two call sites, which is the rule `rateLimit.ts`
+ * exists for: four views wrote their own sentence once and two had already drifted.
+ *
+ * „mitlesen" for a thread, because a conversation is something you join and are not joining. A
+ * page is only ever read, so it says so plainly.
+ */
+export const FORUM_READ_ONLY_NOTE: Record<'thread' | 'page', string> = {
+  thread: 'Hier kannst du nur mitlesen.',
+  page: 'Diese Seite kannst du nur lesen.',
+}
+
 /** What carries a permission, for the sentence each choice needs. */
 export type ForumPermissionKind = 'folder' | 'thread' | 'page'
 

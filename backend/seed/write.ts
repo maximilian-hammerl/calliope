@@ -122,17 +122,22 @@ function assertFoundersAdminister(): void {
 function assertFavouritesNameSomething(): void {
   const known = {
     writing_group: new Set(GROUPS.map((group) => group.id)),
-    writing_thread: new Set(
-      GROUPS.flatMap((group) => (group.threads ?? []).map((t) => t.id)),
-    ),
-    writing_post: new Set(
-      GROUPS.flatMap((group) =>
+    // The forum's rows count too: they are favouritable like any other, and leaving them out
+    // made a correct fixture look like a wrong one.
+    writing_thread: new Set([
+      ...GROUPS.flatMap((group) => (group.threads ?? []).map((t) => t.id)),
+      ...FORUM_THREADS.map((thread) => thread.id),
+    ]),
+    writing_post: new Set([
+      ...GROUPS.flatMap((group) =>
         (group.threads ?? []).flatMap((t) => t.posts.map((post) => post.id))
       ),
-    ),
-    writing_page: new Set(
-      GROUPS.flatMap((group) => (group.pages ?? []).map((page) => page.id)),
-    ),
+      ...FORUM_THREADS.flatMap((t) => t.posts.map((post) => post.id)),
+    ]),
+    writing_page: new Set([
+      ...GROUPS.flatMap((group) => (group.pages ?? []).map((page) => page.id)),
+      ...FORUM_PAGES.map((page) => page.id),
+    ]),
     story_idea: new Set(STORY_IDEAS.map((idea) => idea.id)),
     chat_group: new Set(CHATS.map((chat) => chat.id)),
   } as const satisfies Record<FavouriteTargetType, ReadonlySet<string>>;

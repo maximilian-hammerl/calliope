@@ -111,9 +111,12 @@ const mayCreateHere = computed<boolean>(() => {
       >
         <span class="truncate">{{ node.title }}</span>
         <FavouriteMark v-if="node.isFavourite" />
-        <span class="text-[11.5px] text-ink-6">
-          {{ node.kind === 'thread' ? 'Thema' : 'Seite' }}
-        </span>
+        <!-- Hidden rather than dropped: a member reading the tree has the row's shape and the
+             click, and testing said the word was noise repeated down every row. Somebody
+             navigating by link list has neither, and „Wortkette, Link" does not say whether it
+             is a discussion or a document. `sr-only` and not `aria-label`, which would replace
+             the whole link and silence the marks beside it. The rail has always been this way. -->
+        <span class="sr-only">{{ node.kind === 'thread' ? 'Thema' : 'Seite' }}</span>
         <ForumPermissionMark
           v-if="scope.kind === 'forum' && node.effectiveMemberPermission"
           :permission="node.effectiveMemberPermission"

@@ -41,6 +41,7 @@ import { failureMessage } from '@/lib/format/failure'
 import { firstMessage, postSchema } from '@/lib/validation/fieldSchemas'
 import { useDraft } from '@/composables/useDraft'
 import PostComposer from '@/components/thread/PostComposer.vue'
+import { FORUM_READ_ONLY_NOTE } from '@/lib/format/forum'
 import DeletePostDialog from '@/components/thread/DeletePostDialog.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { TEXT_LIMIT } from '@/api/textLimit'
@@ -419,7 +420,7 @@ async function refresh(): Promise<void> {
     v-else
     class="min-h-11 flex-none border-t border-line-3 bg-paper-0 px-gutter py-[13px] md:px-10"
   >
-    <p class="reading-column text-note text-ink-5">Hier kannst du nur mitlesen.</p>
+    <p class="reading-column text-note text-ink-5">{{ FORUM_READ_ONLY_NOTE.thread }}</p>
   </div>
 
   <DeletePostDialog

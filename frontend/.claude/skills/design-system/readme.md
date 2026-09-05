@@ -1000,6 +1000,18 @@ read "Gruppe gründen" and "Thread", with the mark in front. The exception is mo
 nothing to name — the rail's collapse chevron, the tab strip's scroll arrows, the carousel's two —
 which carry an `aria-label` instead. No *act* is ever icon-only.
 
+**A leaf row carries its title and its marks, not its kind.** „Thema" and „Seite" sat after every
+title in the tree and members said they did not need them — you see what a thing is when you open
+it, and repeated down twenty rows the word is noise. It is not replaced by an icon either: that
+spends the same slot on every row, which is the argument that keeps the ordinary permission
+unmarked. The rail had always been this way; the tree now agrees with it.
+
+The word survives twice over. It is `sr-only` inside the link, because somebody navigating by link
+list has neither the row's shape nor the click — and as `sr-only` rather than an `aria-label`,
+which would replace the link's whole subtree and silence the marks in it. And it is still taught
+where somebody is deciding: the create menu gives each kind a sentence, the search sections are
+headed „Themen" and „Seiten", and the empty tree names all three.
+
 **One act, one mark, wherever it appears.** `Plus` adds, `Pencil` edits, `Trash2` deletes for
 good, so a member who has learned one has learned it for every object. `BookCheck` beside
 `SquareCheck` is not the exception it looks like: a check means *done* in both, and the noun in

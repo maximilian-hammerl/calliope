@@ -131,4 +131,19 @@ export const FAVOURITES: ReadonlyArray<FavouriteFixture> = [
     targetType: "writing_page",
     targetId: pageId(1),
   },
+
+  // The forum's own rows, which nothing marked before: the tree and the rail draw a favourite
+  // beside the permission mark, and two marks on one row is the layout worth seeing.
+  {
+    id: favouriteId(15),
+    user: USER.silbenmeer,
+    targetType: "writing_thread",
+    targetId: threadId(50),
+  },
+  {
+    id: favouriteId(16),
+    user: USER.silbenmeer,
+    targetType: "writing_page",
+    targetId: pageId(17),
+  },
 ];
