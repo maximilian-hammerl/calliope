@@ -67,31 +67,58 @@ async function removePreviousSeed(): Promise<void> {
       .execute()
   );
   // The forum's rows have no group to cascade from — that absence is what makes them the
-  // forum's (#32) — so each kind goes explicitly. Leaves first, because a folder holding one is
-  // not empty, and then the folders in reverse fixture order, which is children before parents.
-  await db.transaction().execute((transaction) =>
-    transaction
-      .deleteFrom("writingPage")
-      .where("id", "in", FORUM_PAGES.map((page) => page.id))
-      .execute()
-  );
-  await db.transaction().execute((transaction) =>
-    transaction
-      .deleteFrom("writingThread")
-      .where("id", "in", FORUM_THREADS.map((thread) => thread.id))
-      .execute()
-  );
-  // Deepest first, read from the database rather than from the fixture's order: `RESTRICT` is
-  // checked per row, so a parent cannot go before its children, and `depth` is the one ordering
-  // that is true whatever order the fixture happens to list them in.
-  const folders = await db
-    .selectFrom("writingFolder")
-    .select("id")
-    .where("id", "in", FORUM_FOLDERS.map((folder) => folder.id))
+  // forum's (#32) — so each kind goes explicitly, leaves before the folders holding them.
+  //
+  // Everything under a seeded folder goes with it, whoever wrote it: a thread somebody added
+  // there is built on the fixture exactly as a post inside a seeded thread is, and that one
+  // already goes when its thread does. So the subtree is read from the database rather than
+  // from the fixture — a folder a member made inside a seeded one is part of it.
+  const seededFolders = await db
+    .withRecursive("subtree", (query) =>
+      query
+        .selectFrom("writingFolder")
+        .select(["id", "depth"])
+        .where("id", "in", FORUM_FOLDERS.map((folder) => folder.id))
+        .unionAll(
+          query
+            .selectFrom("writingFolder as child")
+            .innerJoin("subtree", "subtree.id", "child.parentFolderId")
+            .select(["child.id", "child.depth"]),
+        ))
+    .selectFrom("subtree")
+    .select(["id", "depth"])
+    // Deepest first: `RESTRICT` is checked per row, so a parent cannot go before its children.
     .orderBy("depth", "desc")
     .execute();
-  for (const folder of folders) {
-    // deno-lint-ignore no-await-in-loop
+
+  const folderIds = seededFolders.map((folder) => folder.id);
+
+  // By id as well as by folder: the fixture's own leaves may sit at the forum root, where no
+  // folder would carry them out.
+  await db.transaction().execute(async (transaction) => {
+    await transaction
+      .deleteFrom("writingPage")
+      .where((eb) =>
+        eb.or([
+          eb("id", "in", FORUM_PAGES.map((page) => page.id)),
+          ...(folderIds.length > 0 ? [eb("folderId", "in", folderIds)] : []),
+        ])
+      )
+      .execute();
+
+    await transaction
+      .deleteFrom("writingThread")
+      .where((eb) =>
+        eb.or([
+          eb("id", "in", FORUM_THREADS.map((thread) => thread.id)),
+          ...(folderIds.length > 0 ? [eb("folderId", "in", folderIds)] : []),
+        ])
+      )
+      .execute();
+  });
+
+  for (const folder of seededFolders) {
+    // deno-lint-ignore no-await-in-loop -- deepest first, one level at a time
     await db.transaction().execute((transaction) =>
       transaction
         .deleteFrom("writingFolder").where("id", "=", folder.id).execute()
