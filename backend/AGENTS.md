@@ -964,9 +964,11 @@ a session.
 ## A group is a story, for now
 
 `writing_group` carries the story's metadata — `subtitle`, `synopsis`, `story_status`, `genres`,
-`subgenres`, `tropes`, `content_warnings`, `tense`, `perspective`. §5.1 has a group *containing*
-optional stories and §43 puts that split in phase 2; until then the group is the story, and
-moving the columns later is a migration rather than a redesign.
+`subgenres`, `tropes`, `content_warnings`, `tense`, `perspective`. **§20's data model puts them on
+a `Story` instead** — `WritingGroup` holds `Story[]`, and a `Story` carries its own `Metadata` and
+`Visibility` — and §43 schedules that for phase 2. Until then the group is the story, and moving
+the columns later is a migration rather than a redesign. `story_idea` duplicates the same eleven,
+which is #122.
 
 Three things about it:
 
