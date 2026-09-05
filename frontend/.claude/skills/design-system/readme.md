@@ -341,6 +341,14 @@ because the row's marks are facts about the thing while those two say what the r
 it — and neither has a glyph anybody would guess. A `User` icon means *a person*, not *you*, and
 the Lucide marks that do say authorship all collide with `Pencil`, which already means edit.
 
+**The forum's read-only mark is the exception, and it passes that rule's own test.** It says what
+the reader may do, which would make it a word — but a slashed pencil *is* a glyph anybody would
+guess, which is the condition the sentence above names. Two things make it work where an `Eye`
+did not: the subject is right, since what a permission restricts is writing rather than seeing;
+and a negation carries its meaning alone, where `Eye` named a thing and needed the `EyeOff` beside
+it that members never see. `Lock` was the other candidate and is taken — giving the interface's
+riskiest pair a second meaning would make that worse, not better.
+
 And a **page heading keeps the word** where a row takes the mark: „Privat" on the group's own
 page, „Offen" or „Geschlossen" on the idea's. That is not an inconsistency, it is how the mark is taught — you meet the word on
 the thing's own page and the chip in the list means it from then on.
@@ -958,6 +966,8 @@ never matched the hairline weight and changed shape from platform to platform.
 | — | `LogOut` | „Verlassen" — leaving a chat |
 | — | `UserX` `UserCheck` | „Blockieren" / „Blockierung aufheben" — one member acting on another |
 | — | `ShieldBan` `ShieldCheck` | „Konto sperren" / „Sperre aufheben". A shield, not the person the pair above draws: what separates the two rows is that this one is the platform acting |
+| — | `PencilOff` | „Nur lesen" — the forum row's mark, shown to members and operators alike. A *negation*, which is what lets it stand without its opposite; the plain `Pencil` stays the edit act and is never a mark |
+| — | `EyeOff` | „Verborgen" — a forum row only the moderation sees. Operators only, so it needs no `Eye` beside it, and it is the interface's only eye |
 | — | `Send` | „Link erneut senden". The spinner takes its place while the link is on its way, so the button keeps its width |
 | — | `Lock` `LockOpen` | a row's „Privat" / „Öffentlich" mark, both always shown, and beside the word in the group's heading — see the open question above |
 | — | `Circle` `CircleCheckBig` | „Offen" / „Geschlossen" for a story idea, both always shown, and beside the word on the idea's own page. **Not** a lock: a closed idea keeps its page and every word of it, so a lock would say you cannot get in when you can — the author has only stopped looking. The ring and the check are the pair the step list draws as `Square` and `SquareCheck` |

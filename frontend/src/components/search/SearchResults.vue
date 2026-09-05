@@ -147,10 +147,11 @@ function leafTarget(scope: WriteScope, kind: 'thread' | 'page', id: string): Rou
             <span class="flex items-center gap-2 text-[13px] text-ink-2">
               <span class="truncate">{{ thread.title }}</span>
               <FavouriteMark v-if="thread.isFavourite" />
-              <!-- An operator's search reaches hidden rows, so a row has to say when it is one. -->
+              <!-- An operator's search reaches hidden rows, so a row has to say when it is one;
+                   a member's says which of the results they can answer in. -->
               <ForumPermissionMark
-                v-if="isOperator"
                 :permission="thread.effectiveMemberPermission"
+                :is-operator="isOperator"
               />
             </span>
           </RouterLink>
@@ -182,7 +183,10 @@ function leafTarget(scope: WriteScope, kind: 'thread' | 'page', id: string): Rou
             <span class="flex items-center gap-2 text-[13px] text-ink-2">
               <span class="truncate">{{ page.title }}</span>
               <FavouriteMark v-if="page.isFavourite" />
-              <ForumPermissionMark v-if="isOperator" :permission="page.effectiveMemberPermission" />
+              <ForumPermissionMark
+                :permission="page.effectiveMemberPermission"
+                :is-operator="isOperator"
+              />
             </span>
           </RouterLink>
         </template>

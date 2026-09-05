@@ -77,6 +77,18 @@ function marks(found: Record<string, unknown>): number {
   return mountResults(found).findAll('forum-permission-mark-stub').length
 }
 
+/** What each rendered mark was handed, which is all this level decides. */
+function markProps(
+  found: Record<string, unknown>,
+): Array<{ permission: string | undefined; isOperator: string | undefined }> {
+  return mountResults(found)
+    .findAll('forum-permission-mark-stub')
+    .map((mark) => ({
+      permission: mark.attributes('permission'),
+      isOperator: mark.attributes('isoperator'),
+    }))
+}
+
 function headings(found: Record<string, unknown>): Array<string> {
   const wrapper = mount(SearchResults, {
     props: {
@@ -152,22 +164,25 @@ describe('the search popover keeps the forum in its own sections', () => {
   })
 
   /**
-   * An operator's search reaches rows members cannot see, so a forum row has to say when it is
-   * hidden — without this, unpublished notes look published in the results.
+   * A forum row carries the mark for either reader — an operator's search reaches rows members
+   * cannot see, and a member's row is the only place they could learn a thread is read-only
+   * before opening it. Which word it says is `permissionMark.spec.ts`; what this level owes is
+   * the mark on forum rows only, and the reader's role handed to it.
    */
-  it('marks a forum row for an operator and not for a member', () => {
+  it('marks forum rows for either reader, and tells the mark which one is reading', () => {
     const found = {
-      threads: empty,
+      threads: section('Kapitel 3'),
       pages: empty,
       forumThreads: section('Wortkette'),
       forumPages: empty,
     }
 
     operator.value = false
-    expect(marks(found)).toBe(0)
+    expect(marks(found)).toBe(1)
+    expect(markProps(found)).toEqual([{ permission: 'write', isOperator: 'false' }])
 
     operator.value = true
-    expect(marks(found)).toBe(1)
+    expect(markProps(found)).toEqual([{ permission: 'write', isOperator: 'true' }])
     operator.value = false
   })
 })

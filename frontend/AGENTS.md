@@ -721,11 +721,11 @@ a call site; it was copied by hand once already.
   still take their label from `favouriteToggle()`, and carry the 44px rule themselves.
 - **`FilterStrip` on every list that shows a favouritable kind**, the idea board included on „Meine
   Storyideen", where the read and status filters are hidden: your own ideas cannot be unread.
-- **`StateMark` owns the chrome; the four marks own an icon and a label.** The 13px size, the
+- **`StateMark` owns the chrome; the five marks own an icon and a label.** The 13px size, the
   `mark` variant and the accessible name live in one place — these are the only icons here that are
-  not `aria-hidden`, which is the part worth forgetting. `FavouriteMark`, `ReadMark`, `StatusMark`
-  and `VisibilityMark` are a few lines each, and each reads its glyph and its word from a map in
-  `lib/format/` so a row and a page cannot say one state two ways. The two that carry the thing's
+  not `aria-hidden`, which is the part worth forgetting. `FavouriteMark`, `ReadMark`, `StatusMark`,
+  `VisibilityMark` and `ForumPermissionMark` are a few lines each, and each reads its glyph and its
+  word from a map in `lib/format/` so a row and a page cannot say one state two ways. The two that carry the thing's
   *own* fact — `StatusMark` and `VisibilityMark` — render both their states; the two that carry the
   *reader's* render one, because a reader's non-state is not a state. Page headings keep the word,
   which is what teaches the mark.
@@ -738,6 +738,11 @@ a call site; it was copied by hand once already.
   it at all.
 - **Marks are named, not hidden**: `aria-label` *and* `title`, since nothing else here is icon-only
   and hover is desktop-only.
+- **`ForumPermissionMark` is the one whose word depends on who is reading.** „Mitglieder können
+  nur lesen" to an operator and „Du kannst hier nur lesen" to a member — the same fact from either
+  side, since the operator's wording reads to a member as being about somebody else. It is also the
+  only mark on a `PencilOff`: a negation stands without its opposite, which is what the `Eye` it
+  replaced could not do for members who never see an `EyeOff`.
 - **`VisibilityMark` ships as an open question.** `Lock` and `LockOpen` are a shackle apart at 13px
   on the fact whose misreading costs most; the design system records what else was tried and what
   feedback would settle it.

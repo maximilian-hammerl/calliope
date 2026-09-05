@@ -1,25 +1,42 @@
 import type { Component } from 'vue'
-import { Eye, EyeOff } from '@lucide/vue'
+import { EyeOff, PencilOff } from '@lucide/vue'
+import { assertUnreachable } from '@/lib/assertUnreachable'
 import type { ListForumFolders200ResultsItemEffectiveMemberPermission as ForumPermission } from '@/api/models'
 
 export type { ForumPermission }
 
 /**
- * What *members* may do with a row, shown to operators only: a member's own view is already the
- * answer, so marking it would be the bare badge §2.5 objected to.
+ * What a row's permission looks like as a mark. `write` renders nothing: it is the ordinary case,
+ * and marking it would bury the one that matters and put a second glyph on nearly every row.
  *
- * `write` has no mark — the ordinary case, and marking it would bury the two that matter.
+ * **The glyph is a negation, which is what lets it stand alone.** A slashed pencil says "no
+ * writing here" without its opposite beside it, where `Eye` named a thing and needed a partner —
+ * one a member never saw, since a hidden row is not in their lists at all. It is also the right
+ * subject: what a permission restricts is writing, not seeing.
+ *
+ * The word differs by who is reading, because „Mitglieder können nur lesen" reads to a member as
+ * being about somebody else. `StateMark` carries it as `aria-label` and `title`, which is how it
+ * survives without costing the row the 60px a chip would.
  */
-export const FORUM_PERMISSION_LABELS: Record<ForumPermission, string | undefined> = {
-  hidden: 'Für Mitglieder verborgen',
-  read: 'Mitglieder können nur lesen',
-  write: undefined,
-}
-
-export const FORUM_PERMISSION_ICONS: Record<ForumPermission, Component | undefined> = {
-  hidden: EyeOff,
-  read: Eye,
-  write: undefined,
+export function forumPermissionMark(
+  permission: ForumPermission,
+  isOperator: boolean,
+): { icon: Component; label: string } | undefined {
+  switch (permission) {
+    case 'write':
+      return undefined
+    case 'read':
+      return {
+        icon: PencilOff,
+        label: isOperator ? 'Mitglieder können nur lesen' : 'Du kannst hier nur lesen',
+      }
+    case 'hidden':
+      // Only an operator ever meets this: a hidden row is filtered out of a member's lists, so
+      // the guard is what keeps a mark from appearing if that ever stops being true.
+      return isOperator ? { icon: EyeOff, label: 'Für Mitglieder verborgen' } : undefined
+    default:
+      return assertUnreachable(permission)
+  }
 }
 
 /** What carries a permission, for the sentence each choice needs. */

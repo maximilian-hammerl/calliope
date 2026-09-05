@@ -27,8 +27,9 @@ const open = ref<boolean>(true)
       <span class="truncate">{{ node.title }}</span>
       <FavouriteMark v-if="node.isFavourite" />
       <ForumPermissionMark
-        v-if="scope.kind === 'forum' && scope.isOperator && node.effectiveMemberPermission"
+        v-if="scope.kind === 'forum' && node.effectiveMemberPermission"
         :permission="node.effectiveMemberPermission"
+        :is-operator="scope.isOperator"
       />
     </RouterLink>
 
@@ -42,8 +43,9 @@ const open = ref<boolean>(true)
         <component :is="open ? ChevronDown : ChevronRight" :size="12" :stroke-width="1.5" />
         <span class="truncate">{{ node.title }}</span>
         <ForumPermissionMark
-          v-if="scope.kind === 'forum' && scope.isOperator && node.effectiveMemberPermission"
+          v-if="scope.kind === 'forum' && node.effectiveMemberPermission"
           :permission="node.effectiveMemberPermission"
+          :is-operator="scope.isOperator"
         />
       </button>
 

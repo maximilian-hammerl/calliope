@@ -412,6 +412,16 @@ async function refresh(): Promise<void> {
     @submit="submit"
   />
 
+  <!-- Where the composer would be, because its absence alone says nothing: a member who could
+       answer here yesterday would otherwise find the box gone with no reason given, and a missing
+       control reads as a broken one. The strip is the composer's, so it sits where the box did. -->
+  <div
+    v-else
+    class="min-h-11 flex-none border-t border-line-3 bg-paper-0 px-gutter py-[13px] md:px-10"
+  >
+    <p class="reading-column text-note text-ink-5">Hier kannst du nur mitlesen.</p>
+  </div>
+
   <DeletePostDialog
     v-if="deletingPost"
     v-model:open="deletingPostOpen"

@@ -115,8 +115,9 @@ const mayCreateHere = computed<boolean>(() => {
           {{ node.kind === 'thread' ? 'Thema' : 'Seite' }}
         </span>
         <ForumPermissionMark
-          v-if="scope.kind === 'forum' && scope.isOperator && node.effectiveMemberPermission"
+          v-if="scope.kind === 'forum' && node.effectiveMemberPermission"
           :permission="node.effectiveMemberPermission"
+          :is-operator="scope.isOperator"
         />
       </RouterLink>
 
@@ -154,10 +155,9 @@ const mayCreateHere = computed<boolean>(() => {
             <span class="flex min-w-0 items-center gap-1.5">
               <span class="truncate">{{ folder.title }}</span>
               <ForumPermissionMark
-                v-if="
-                  scope.kind === 'forum' && scope.isOperator && folder.effectiveMemberPermission
-                "
+                v-if="scope.kind === 'forum' && folder.effectiveMemberPermission"
                 :permission="folder.effectiveMemberPermission"
+                :is-operator="scope.isOperator"
               />
             </span>
           </AccordionTrigger>
