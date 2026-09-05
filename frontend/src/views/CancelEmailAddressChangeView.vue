@@ -63,7 +63,8 @@ onMounted(async () => {
     <template v-else>
       <p class="mt-5 text-note text-ink-5">
         Es gibt nichts mehr abzubrechen. Entweder wurde die Änderung bereits abgebrochen, sie ist
-        abgelaufen, oder sie wurde inzwischen bestätigt.
+        abgelaufen, sie wurde inzwischen bestätigt, oder eine neu angeforderte Änderung hat diesen
+        Link ersetzt.
       </p>
 
       <Button as-child class="mt-7 w-full">

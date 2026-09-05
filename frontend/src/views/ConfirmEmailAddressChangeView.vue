@@ -80,10 +80,12 @@ const HEADINGS = {
     <template v-else>
       <div class="mt-5 flex flex-col gap-3 text-note text-ink-5">
         <p>
-          Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit, nur ein einziges
-          Mal, und ein Abbruch macht sie ungültig.
+          Dieser Link lässt sich nicht mehr verwenden. Links gelten nur kurze Zeit und nur ein
+          einziges Mal; ein Abbruch macht sie ungültig, und eine neu angeforderte Änderung ebenso.
         </p>
-        <p>Deine E-Mail-Adresse ist unverändert geblieben.</p>
+        <p>
+          Deine E-Mail-Adresse ist unverändert geblieben. Sieh nach, ob eine neuere E-Mail da ist.
+        </p>
       </div>
 
       <Button as-child class="mt-7 w-full">
