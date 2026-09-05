@@ -1,5 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "tags": ["-lintignore"],
-  "ignore": [".claude/**", "src/components/ui/**"],
+  // `.claude/**` holds the design system's throwaway mockups, which are not part of the app.
+  //
+  // Only the **barrels** under `ui/` are ignored, not the directory: a generated `index.ts`
+  // re-exports the whole of a shadcn component and nothing here imports most of it — 23 exports
+  // that are noise, and that the next `shadcn add` would write back anyway. The components
+  // themselves stay in the analysis, because one nobody renders is worth deleting: that is how
+  // `PaginationFirst` and `PaginationLast` went, and how `skeleton` did.
+  "ignore": [".claude/**", "src/components/ui/**/index.ts"],
 }

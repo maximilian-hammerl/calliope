@@ -16,6 +16,32 @@ client. Linted by `oxlint`, formatted by `oxfmt`. Tasks are `npm run …` — se
   handler beside it also lets the returned promise be `void`ed, which a template expression
   cannot do. One file had both at once, which is how this drifted.
 
+## knip finds what the linters cannot
+
+`oxlint` and `vue-tsc` see one file at a time; knip sees the graph, so it finds an export nobody
+imports, a file nobody reaches and a dependency nobody uses. It runs in about a second and is part
+of `validate:check` for that reason — a separate script is one you remember to run after it
+matters.
+
+Two things about `knip.jsonc` are decisions rather than defaults:
+
+- **Only the generated *barrels* under `ui/` are ignored, not the directory.** A shadcn
+  `index.ts` re-exports a component whole, and most of that is never imported here — 23 exports
+  of pure noise, which the next `add` would write back anyway. The components themselves stay in
+  the analysis, because one nobody renders is worth deleting: that is how `PaginationFirst` and
+  `PaginationLast` went, and how `skeleton` did, three weeks after an `add` nothing ever used.
+- **`--treat-config-hints-as-errors`.** knip reports a pattern that no longer matches anything,
+  and a stale ignore silently hides whatever it used to cover. Failing on it is what keeps the
+  file honest as the code moves.
+
+`src/api/` needs no entry: it is git-ignored, and knip respects that, so the generated client's
+several hundred per-operation models never reach the report.
+
+**`knip --production` is a manual audit, not part of the check.** It narrows the graph to shipped
+code, so it finds exports that exist only for their tests — `FONT_SIZES`, `GENRES` and
+`ENVIRONMENTS` are all real answers. It also loses the entry points that only dev tooling reaches,
+so it reports `vite.config.ts`'s dependencies and `scripts/` as unused. Read it, do not gate on it.
+
 ## The lint configuration is a record, not a default
 
 `.oxlintrc.json` runs the `correctness`, `suspicious` and `perf` categories plus a handful of

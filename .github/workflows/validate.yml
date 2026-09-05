@@ -145,11 +145,9 @@ jobs:
       - name: Generate the API client
         run: npm run open-api:generate-client
 
-      - name: Check formatting, lints and types
+      # Includes knip, which detects unused dependencies, exports and files — see knip.jsonc.
+      - name: Check formatting, lints, types and unused code
         run: npm run validate:check
-
-      - name: Detect unused dependencies, exports and files
-        run: npm run knip:check
 
       - name: Run tests
         run: npm run test:unit -- --run

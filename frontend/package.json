@@ -15,9 +15,9 @@
     "format:fix": "oxfmt",
     "format:check": "oxfmt --check",
     "validate:fix": "npm run format:fix && npm run lint:fix && npm run type-check",
-    "validate:check": "npm run format:check && npm run lint:check && npm run type-check",
+    "validate:check": "npm run format:check && npm run lint:check && npm run type-check && npm run knip:check",
     "open-api:generate-client": "orval --config ./orval.config.ts && node scripts/generateTextLimit.ts",
-    "knip:check": "knip",
+    "knip:check": "knip --treat-config-hints-as-errors",
     "knip:fix": "knip --fix"
   },
   "dependencies": {
