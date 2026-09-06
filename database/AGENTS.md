@@ -23,17 +23,11 @@ change is a new migration and an applied file is never touched again.
 
 Editing in place is permission, not obligation — **a purely additive change is clearer as its own
 file**, and needs no rebuild. dbmate records a migration by version and will not re-run an edited
-one, so an edit means everyone rebuilds:
-
-```bash
-cd database && deno task db:reset && deno task types:generate
-cd ../backend && deno fmt src/database/schema.ts && deno task db:seed
-```
-
-That drops **everything**, hand-made accounts included, and signs every browser out — say so before
-doing it to somebody else's database. Stop the backend first (`kill -KILL` its process group, see the
-root file) or open connections block the drop. `deployment/deploy.sh` does the same on `testing` when
-it detects an edited migration, and refuses elsewhere.
+one, so an edit means everyone rebuilds: **`/db-reset`** (`.claude/skills/db-reset/`) does it in the
+right order — stop the backend, drop and migrate, regenerate and format the types, seed, restart. It
+drops **everything**, hand-made accounts included, and signs every browser out, so say so before
+running it against a database somebody else is using. `deployment/deploy.sh` does the same on
+`testing` when it detects an edited migration, and refuses elsewhere.
 
 **Every `migrate:down` must reverse its `migrate:up`**, enum types and trigger functions included.
 Prove it on a throwaway database — `dbmate --url …/calliope_scratch up`, `down` through the file,
