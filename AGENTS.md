@@ -13,6 +13,8 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 - `.claude/rules/`: the reasoning behind each area — why the report lifecycle, the carousel or the
   forum's permissions are shaped as they are. Each file is scoped by `paths:` and loads only when
   you open a matching file. When you change how an area works, change its rule in the same commit.
+- `.claude/skills/`: the workflows worth doing the same way every time — `/db-reset`,
+  `/regenerate`, `/test`, `/validate`.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
 ## How to work here
@@ -33,8 +35,8 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 
 - **Deno for `backend/` and `database/`, Node for `frontend/`.** `deno task …` versus `npm run …`;
   `deno task` will happily run a `package.json` script and then fail confusingly.
-- **Run `validate:check` in whichever project you changed** before considering anything done. Each
-  project has `validate:fix` for what can be repaired automatically.
+- **Run `/validate`** — or `validate:check` in whichever project you changed — before considering
+  anything done. Each project has `validate:fix` for what can be repaired automatically.
 - **Pin exact dependency versions.** No `^` or `~`, in `deno.jsonc` or `package.json`. `deno add`
   and `shadcn-vue add` both write a caret; rewrite it.
 - **`type`, never `interface`.**
@@ -51,8 +53,8 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 `database/` generates `backend/src/database/schema.ts`; the backend builds its request and response
 schemas from that and emits `backend/open-api.json`; the frontend generates `src/api/` from that. A
 renamed column is therefore a compile error, not a lie in the specification. **When you change a
-link, regenerate everything after it**: `deno task types:generate` → `deno task open-api:generate` →
-`npm run open-api:generate-client`.
+link, regenerate everything after it** — `/regenerate` runs the chain in order and reports what
+moved at each step.
 
 ## One prefix
 
