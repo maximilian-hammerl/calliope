@@ -9,8 +9,15 @@ paths:
 `deno task db:seed` writes a fixed fixture: nine accounts sharing the password `calliope`,
 seventeen writing groups (thirteen public), twenty-three story ideas, three chats, two blocks, and a
 forum. It refuses to run unless **both** guards agree — `PUBLIC_ENVIRONMENT` is `development` or
-`testing`, and the `DATABASE_URL` host is local; only the second takes `--force`. It refreshes only
-its own rows, so half-built state you are testing survives, and it runs in **one transaction**.
+`testing`, and the `DATABASE_URL` host is local; only the second takes `--force`. It runs in **one
+transaction** and refreshes only its own rows, so half-built state you are testing survives — with
+one exception, below.
+
+**Everything under a seeded forum folder goes with it, whoever wrote it.** The folder is the
+fixture's, so a thread somebody added inside one is built on the fixture exactly as a post inside a
+seeded thread is, and that already goes when its thread does. The subtree is read from the database
+rather than from the fixture, so a folder a member made inside a seeded one is part of it. Group
+rows need none of this: they cascade from the group.
 
 ## Why the numbers are what they are
 
