@@ -15,6 +15,18 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   you open a matching file. When you change how an area works, change its rule in the same commit.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
+## How to work here
+
+- **Ask, don't assume.** When there are several options or alternatives, explain them and ask
+  which one — do not pick one yourself.
+- **Implement only when told to.** A question is a question: answer it. It is not an instruction
+  to build the answer, least of all when the answer could go several ways.
+- **Push back.** If a rule or a decision makes no sense, a better alternative exists, or something
+  has not been considered, say so before doing the work.
+- **Commits are the human's.** Reading state (`git status`, `git diff`, `git log`) and syncing
+  (`git fetch`, `git pull`, `git merge`) are fine. Branching, committing and pushing are not: leave
+  the changes in the working tree and say what they are.
+
 ## Shared conventions
 
 - **Deno for `backend/` and `database/`, Node for `frontend/`.** `deno task …` versus `npm run …`;
