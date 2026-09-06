@@ -8,7 +8,6 @@ which loads when you open that area's files.
 deno task dev                 # --watch, on $BACKEND_PORT; stop it with kill -KILL on the process group
 deno task test                # --parallel, against the compose stack with migrations applied
 deno task validate:check      # format, lint, type-check  (validate:fix repairs what it can)
-deno task open-api:generate   # after any route change; CI fails on a stale open-api.json
 deno task db:seed             # the fixture: nine accounts, password `calliope`
 ```
 
