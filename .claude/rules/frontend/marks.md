@@ -7,6 +7,9 @@ paths:
   - "frontend/src/lib/format/favourite.ts"
   - "frontend/src/lib/format/forum.ts"
   - "frontend/src/lib/format/storyStatus.ts"
+  - "frontend/src/lib/format/platformRole.ts"
+  - "frontend/src/views/MembersView.vue"
+  - "frontend/src/views/MemberView.vue"
   - "frontend/src/composables/useFavourite.ts"
 ---
 
@@ -32,6 +35,12 @@ states; the two that carry the *reader's* render one — a reader's non-state is
 
 A mark is 25px where the word was 60, which is why it exists: as a word it pushed the chats rail's
 unread count onto a second line. **Page headings keep the word, which is what teaches the mark.**
+
+**The platform role is the deliberate exception — the word, in the list as well.** No glyph reads as
+„Moderation", and a mark nobody can decode does not answer „ich bin Moderator", which is the whole
+reason the role is shown at all (#101). Teaching it on the profile would not work either: most
+members never open a moderator's. A role *in a writing group* stays out of all of them — showing one
+outside its group would disclose private membership.
 
 `interactive` makes a mark a popover trigger — opt-in, because inside a search result or a chat row
 it would be a button inside a link. Its costs are written in the component: extra tab stops, and a
