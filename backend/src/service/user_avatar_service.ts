@@ -1,4 +1,4 @@
-import { generate as uuidv7 } from "@std/uuid/v7";
+import { v7 } from "@std/uuid";
 import { db, type Transaction } from "@/src/database/client.ts";
 import type { AvatarOrigin } from "@/src/database/schema.ts";
 import { toAvatar } from "@/src/image/avatar_image.ts";
@@ -38,7 +38,7 @@ async function setAvatar(
   }
 
   // v7 like every other id here, and like the column's own default.
-  const fileId = uuidv7();
+  const fileId = v7.generate();
   await FileStore.write(fileId, image);
 
   await transaction

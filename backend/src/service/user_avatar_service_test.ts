@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
 import sharp from "sharp";
-import { generate as uuidv7 } from "@std/uuid/v7";
+import { v7 } from "@std/uuid";
 import { db } from "@/src/database/client.ts";
 import { FileStore } from "@/src/storage/file_store.ts";
 import { toAvatar } from "@/src/image/avatar_image.ts";
@@ -143,7 +143,7 @@ Deno.test("the sweep spares a referenced file and a recent orphan", async () => 
   const avatar = await UserAvatarService.selectAvatar(id);
   assertExists(avatar);
 
-  const orphan = uuidv7();
+  const orphan = v7.generate();
   await FileStore.write(orphan, await picture());
 
   await UserAvatarService.sweepUnreferencedFiles();
@@ -156,7 +156,7 @@ Deno.test("the sweep spares a referenced file and a recent orphan", async () => 
 
 /** The other half: an orphan older than the grace period does go. */
 Deno.test("the sweep deletes an orphan past the grace period", async () => {
-  const orphan = uuidv7();
+  const orphan = v7.generate();
   await FileStore.write(orphan, await picture());
 
   // Backdated rather than waited for. The sweep reads the file's own mtime, so this is the only

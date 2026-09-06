@@ -18,6 +18,11 @@ deno task db:seed             # the fixture: nine accounts, password `calliope`
 
 ## Where things live
 
+**`service/` versus `util/` is the export shape, not the subject**: one `Service` object or class is
+a service, a collection of related functions is a utility. Six files in `service/` are the second
+shape and belong elsewhere — `folder_move.ts`, `visible_target.ts`, `forum_permission.ts` and the
+three `*_authorization.ts` predicates. Moving them is the fix, not rewriting them as services.
+
 `route/` mirrors the URL and is not reorganised. `service/` is **flat**, with the domain in the
 prefix (`writing_group_service.ts`); grouping it would repeat the word and rename every module.
 `http/` holds response helpers and schemas, `list/` the list convention, `query/` builder helpers

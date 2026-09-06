@@ -1,11 +1,11 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { generate as uuidv7 } from "@std/uuid/v7";
+import { v7 } from "@std/uuid";
 import { FileStore } from "./file_store.ts";
 
 const BYTES = new TextEncoder().encode("some bytes");
 
 function fileId(): string {
-  return uuidv7();
+  return v7.generate();
 }
 
 Deno.test("what is written is what is read", async () => {
