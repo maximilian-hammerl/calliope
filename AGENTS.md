@@ -17,8 +17,10 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 
 ## How to work here
 
-- **Ask, don't assume.** When there are several options or alternatives, explain them and ask
-  which one — do not pick one yourself.
+- **IMPORTANT — ask, don't assume.** When there are several options or alternatives, explain them
+  and ask which one. Do not pick one yourself.
+- **IMPORTANT — keep it simple.** The smallest change, comment, issue or answer that does the job.
+  Say the reason and stop; a rule buried in six lines is a rule nobody reads.
 - **Implement only when told to.** A question is a question: answer it. It is not an instruction
   to build the answer, least of all when the answer could go several ways.
 - **Push back.** If a rule or a decision makes no sense, a better alternative exists, or something
@@ -76,6 +78,9 @@ Work is GitHub issues, and **a milestone means accepted**: `status: proposed` an
 mutually exclusive, so putting an issue into `v1` or `v2` takes the label off in the same edit.
 Requirements are cited as `§N` (sections of `docs/product-requirements-feature-specification.md`),
 issues as `#N`. Quote the section before citing it.
+
+An issue is short: what the problem is, why it matters, what is decided, and an „Open questions" list
+for what is not. Labels say type and area; nothing else goes in the title.
 
 ## Deployment
 
