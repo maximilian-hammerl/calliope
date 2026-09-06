@@ -35,10 +35,10 @@ Prove it on a throwaway database — `dbmate --url …/calliope_scratch up`, `do
 
 ## After a migration
 
-`deno task types:generate`, format the backend (the generator's output is not `deno fmt`-clean), and
-commit the regenerated `schema.ts`. An added column then surfaces as a compile error wherever a route
-promises it and the service does not select it — which is the point. The backend's OpenAPI document
-and the frontend's client follow; the root file names the order.
+**`/regenerate`** runs the chain in order — types, the formatting the generator's output needs, then
+the OpenAPI document and the frontend's client — and reports what moved at each link. Commit the
+regenerated `schema.ts`. An added column then surfaces as a compile error wherever a route promises
+it and the service does not select it — which is the point.
 
 ## What the schema does and does not have
 

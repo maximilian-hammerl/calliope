@@ -48,9 +48,9 @@ before parameters, or `/me` is swallowed by `/:userId`.
 - **A wrong password is `INVALID_CREDENTIALS_BODY`**, a constant, never a helper — a helper
   returning `c.json(…)` widens the return type the same way. Its `code: "invalid_credentials"` is
   how the frontend tells a wrong password from a lost session; a bare 401 signs the member out.
-- **After changing a route, `deno task open-api:generate`**, then the frontend's client. Generate
-  with `.example.env`'s `HOST_URL`, as CI does. `open-api:lint` is disabled in CI — Spectral does not
-  read the 3.2 document that the QUERY method requires.
+- **After changing a route, run `/regenerate`**, which does the document and the frontend's client
+  in order. Generate with `.example.env`'s `HOST_URL`, as CI does. `open-api:lint` is disabled in
+  CI — Spectral does not read the 3.2 document that the QUERY method requires.
 
 ## Schemas
 
