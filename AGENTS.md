@@ -78,8 +78,9 @@ next saved file restarts it. `lsof -nP -iTCP:$BACKEND_PORT -sTCP:LISTEN`, then `
 
 Work is GitHub issues, and **a milestone means accepted**: `status: proposed` and a milestone are
 mutually exclusive, so putting an issue into `v1` or `v2` takes the label off in the same edit.
-Requirements are cited as `§N` (sections of `docs/product-requirements-feature-specification.md`),
-issues as `#N`. Quote the section before citing it.
+Sections of `docs/product-requirements-feature-specification.md` are cited as `§N`, issues as `#N`.
+Quote the section before citing it. The specification is an inspiration, not a fixed specification:
+a section says where an idea came from, and an issue says what is decided.
 
 An issue is short: what the problem is, why it matters, what is decided, and an „Open questions" list
 for what is not. Labels say type and area; nothing else goes in the title.

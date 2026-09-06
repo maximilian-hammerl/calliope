@@ -2,7 +2,7 @@
 
 ## Product Requirements & Feature Specification for a Collaborative Writing Community
 
-**Document status:** Product concept / requirements baseline  
+**Document status:** Product concept, an inspiration rather than a fixed specification. What is built is decided issue by issue; `implementation-status.md` records where the two differ.  
 **Intended audience:** Community founders, product/design contributors, developers, moderators  
 **Primary audience:** Members of an established German-speaking writing community
 
