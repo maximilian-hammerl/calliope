@@ -14,7 +14,7 @@ paths:
   real send — an account oracle. A failure can only be logged; see `deployment/README.md`.
 - **Tests read the message.** Mailpit is in the compose stack and `test/mailpit.ts` fetches from it.
   A reset token is stored hashed, so the mail is the only place its plaintext exists. Await
-  `Mailer.flushPendingSends()` first, or the assertion races the send.
+  `flushBackgroundWork()` from `util/background.ts` first, or the assertion races the send.
 - **Text, not HTML.** A second copy of the same words is one more thing to keep in step.
 - A background task that writes (`sendVerificationMail` → `issueToken`) runs after the response, so
   it opens **its own** transaction — the request's is already committed.
