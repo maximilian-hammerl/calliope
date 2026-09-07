@@ -25,14 +25,14 @@
     "jsr:@std/uuid@1.0.9": "1.0.9",
     "jsr:@std/uuid@1.1.1": "1.1.1",
     "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.5",
-    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.5_zod@4.5.4",
+    "npm:@hono/zod-openapi@1.6.2": "1.6.2_hono@4.13.5_zod@4.5.4",
     "npm:@types/nodemailer@8.0.1": "8.0.1",
     "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.5",
     "npm:hono@4.13.5": "4.13.5",
     "npm:ioredis@6.0.0": "6.0.0",
     "npm:kysely-postgres-js@4.0.0": "4.0.0_kysely@0.29.5_postgres@3.4.9",
     "npm:kysely@0.29.5": "0.29.5",
-    "npm:nodemailer@9.1.0": "9.1.0",
+    "npm:nodemailer@9.1.1": "9.1.1",
     "npm:openapi3-ts@4.6.1": "4.6.1",
     "npm:postgres@3.4.9": "3.4.9",
     "npm:sharp@0.35.4": "0.35.4",
@@ -148,8 +148,8 @@
         "hono"
       ]
     },
-    "@hono/zod-openapi@1.6.1_hono@4.13.5_zod@4.5.4": {
-      "integrity": "sha512-z1xS3FZxl4bBkU3kMIsQsLtsqxPTha5XZCsDEPMSZ6+3RRBQI7KED1GeoDpq2WueXCacsNIjcB0MtCnEHY7ahQ==",
+    "@hono/zod-openapi@1.6.2_hono@4.13.5_zod@4.5.4": {
+      "integrity": "sha512-ktnBqVgvIlopiiB9ab6hqoYefhcb0DUZU5QJ1F5UtDu8w6+cIORENz93sTZT6G0mQNes0/TbbadfrOpdehioPA==",
       "dependencies": [
         "@asteasolutions/zod-to-openapi",
         "@hono/zod-validator",
@@ -158,8 +158,8 @@
         "zod"
       ]
     },
-    "@hono/zod-validator@0.9.0_hono@4.13.5_zod@4.5.4": {
-      "integrity": "sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==",
+    "@hono/zod-validator@0.9.1_hono@4.13.5_zod@4.5.4": {
+      "integrity": "sha512-iiv6w0qrIc0arfvCtUqBWsvl4fXjzaTcQcCJTTtCnkawF9HHGE+KjEl0ox3gQJ6rKZEgE3mLExlQCF72M+mNuw==",
       "dependencies": [
         "hono",
         "zod"
@@ -472,8 +472,8 @@
     "node-mock-http@1.0.5": {
       "integrity": "sha512-KQyt/wLjG3TAc7DOUhpqWzgd4ERxR80JOlTK5VE5R1S12IaPVN5qkj4klBce9HPG1Njuup4Sb5bljaT34lIyjw=="
     },
-    "nodemailer@9.1.0": {
-      "integrity": "sha512-xj1Ri5Sau3qpPffHJwi2bY0oWVVWYq62Ph17l+2v1xXpxjqTls3YPc3L8dub9mcJpxj+1ucNnuYVqLlgh4pmDA=="
+    "nodemailer@9.1.1": {
+      "integrity": "sha512-izw9mVKFix6YSnC9eLgV6g1opl9DUlRio9ZNcq+Wu9Ujn2UwF+8Nl0B8nz22kEC+CTZCvinkxwJ0DeFbb6NwcQ=="
     },
     "normalize-path@3.0.0": {
       "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
@@ -601,14 +601,14 @@
       "jsr:@std/testing@1.0.20",
       "jsr:@std/uuid@1.1.1",
       "npm:@hono/structured-logger@1.0.0",
-      "npm:@hono/zod-openapi@1.6.1",
+      "npm:@hono/zod-openapi@1.6.2",
       "npm:@types/nodemailer@8.0.1",
       "npm:hono-rate-limiter@0.5.3",
       "npm:hono@4.13.5",
       "npm:ioredis@6.0.0",
       "npm:kysely-postgres-js@4.0.0",
       "npm:kysely@0.29.5",
-      "npm:nodemailer@9.1.0",
+      "npm:nodemailer@9.1.1",
       "npm:openapi3-ts@4.6.1",
       "npm:postgres@3.4.9",
       "npm:sharp@0.35.4",

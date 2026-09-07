@@ -92,7 +92,7 @@
   "imports": {
     "@/": "./",
     "@hono/structured-logger": "npm:@hono/structured-logger@1.0.0",
-    "@hono/zod-openapi": "npm:@hono/zod-openapi@1.6.1",
+    "@hono/zod-openapi": "npm:@hono/zod-openapi@1.6.2",
     "@logtape/logtape": "jsr:@logtape/logtape@2.3.2",
     "@std/assert": "jsr:@std/assert@1.0.19",
     "@std/async": "jsr:@std/async@1.5.0",
@@ -106,7 +106,7 @@
     "ioredis": "npm:ioredis@6.0.0",
     "kysely": "npm:kysely@0.29.5",
     "kysely-postgres-js": "npm:kysely-postgres-js@4.0.0",
-    "nodemailer": "npm:nodemailer@9.1.0",
+    "nodemailer": "npm:nodemailer@9.1.1",
     "openapi3-ts": "npm:openapi3-ts@4.6.1",
     "postgres": "npm:postgres@3.4.9",
     "zod": "npm:zod@4.5.4"
