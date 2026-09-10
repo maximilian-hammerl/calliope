@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@logtape/logtape@2.3.2": "2.3.2",
+    "jsr:@logtape/logtape@2.3.3": "2.3.3",
     "jsr:@std/assert@1.0.19": "1.0.19",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/async@1.5.0": "1.5.0",
@@ -24,11 +24,11 @@
     "jsr:@std/testing@1.0.20": "1.0.20",
     "jsr:@std/uuid@1.0.9": "1.0.9",
     "jsr:@std/uuid@1.1.1": "1.1.1",
-    "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.5",
-    "npm:@hono/zod-openapi@1.6.1": "1.6.1_hono@4.13.5_zod@4.5.4",
+    "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.7",
+    "npm:@hono/zod-openapi@1.6.3": "1.6.3_hono@4.13.7_zod@4.5.4",
     "npm:@types/nodemailer@8.0.1": "8.0.1",
-    "npm:hono-rate-limiter@0.5.3": "0.5.3_hono@4.13.5",
-    "npm:hono@4.13.5": "4.13.5",
+    "npm:hono-rate-limiter@0.5.4": "0.5.4_hono@4.13.7",
+    "npm:hono@4.13.7": "4.13.7",
     "npm:ioredis@6.0.0": "6.0.0",
     "npm:kysely-postgres-js@4.0.0": "4.0.0_kysely@0.29.5_postgres@3.4.9",
     "npm:kysely@0.29.5": "0.29.5",
@@ -39,8 +39,8 @@
     "npm:zod@4.5.4": "4.5.4"
   },
   "jsr": {
-    "@logtape/logtape@2.3.2": {
-      "integrity": "bc18d70a494889ab64d13005cc857d65deb6eea483b1715197fa834582d6eb3c"
+    "@logtape/logtape@2.3.3": {
+      "integrity": "d4d9830057a29e7983471b16ff0d36871e4f636196c948ac8d57555ede7cbf7c"
     },
     "@std/assert@1.0.19": {
       "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
@@ -142,14 +142,14 @@
         "tslib"
       ]
     },
-    "@hono/structured-logger@1.0.0_hono@4.13.5": {
+    "@hono/structured-logger@1.0.0_hono@4.13.7": {
       "integrity": "sha512-MozQvH7oFsi/Pc/0sK6ai7cYpDX81t4UnrxgOo/MslfC7lPFnRcvayVkY3g1Wi/cX6dFmtLhZoGALOfdvAIDgA==",
       "dependencies": [
         "hono"
       ]
     },
-    "@hono/zod-openapi@1.6.1_hono@4.13.5_zod@4.5.4": {
-      "integrity": "sha512-z1xS3FZxl4bBkU3kMIsQsLtsqxPTha5XZCsDEPMSZ6+3RRBQI7KED1GeoDpq2WueXCacsNIjcB0MtCnEHY7ahQ==",
+    "@hono/zod-openapi@1.6.3_hono@4.13.7_zod@4.5.4": {
+      "integrity": "sha512-VYR82Y60plu8g3pN60OUXMVKpmxh3R04Qs++3DY9vtwZ9/sA/BRY0PcRIR+Z37/3itWtM7pYwT9bKiH9JhqV6Q==",
       "dependencies": [
         "@asteasolutions/zod-to-openapi",
         "@hono/zod-validator",
@@ -158,8 +158,8 @@
         "zod"
       ]
     },
-    "@hono/zod-validator@0.9.0_hono@4.13.5_zod@4.5.4": {
-      "integrity": "sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==",
+    "@hono/zod-validator@0.9.1_hono@4.13.7_zod@4.5.4": {
+      "integrity": "sha512-iiv6w0qrIc0arfvCtUqBWsvl4fXjzaTcQcCJTTtCnkawF9HHGE+KjEl0ox3gQJ6rKZEgE3mLExlQCF72M+mNuw==",
       "dependencies": [
         "hono",
         "zod"
@@ -333,9 +333,6 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@ioredis/commands@1.10.0": {
-      "integrity": "sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q=="
-    },
     "@ioredis/commands@2.0.0": {
       "integrity": "sha512-vrx0AE/T0h7cRZwfo1M39Cr+ZhZrkf0V8mQN75wucKCxCLD9l/VX6no3gFvrLqD1IlG/1LtzWovqEw3t0Vr9zg=="
     },
@@ -351,30 +348,8 @@
         "@types/node"
       ]
     },
-    "anymatch@3.1.3": {
-      "integrity": "sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==",
-      "dependencies": [
-        "normalize-path",
-        "picomatch"
-      ]
-    },
-    "chokidar@5.0.0": {
-      "integrity": "sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==",
-      "dependencies": [
-        "readdirp"
-      ]
-    },
     "cluster-key-slot@1.1.1": {
       "integrity": "sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw=="
-    },
-    "cookie-es@1.2.3": {
-      "integrity": "sha512-lXVyvUvrNXblMqzIRrxHb57UUVmqsSWlxqt3XIjCkUP0wDAf6uicO6KMbEgYrMNtEvWgWHwe42CKxPu9MYAnWw=="
-    },
-    "crossws@0.3.5": {
-      "integrity": "sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA==",
-      "dependencies": [
-        "uncrypto"
-      ]
     },
     "debug@4.4.3": {
       "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
@@ -382,70 +357,31 @@
         "ms"
       ]
     },
-    "defu@6.1.7": {
-      "integrity": "sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ=="
-    },
     "denque@2.1.0": {
       "integrity": "sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw=="
-    },
-    "destr@2.0.5": {
-      "integrity": "sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA=="
     },
     "detect-libc@2.1.2": {
       "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="
     },
-    "h3@1.15.11": {
-      "integrity": "sha512-L3THSe2MPeBwgIZVSH5zLdBBU90TOxarvhK9d04IDY2AmVS8j2Jz2LIWtwsGOU3lu2I5jCN7FNvVfY2+XyF+mg==",
+    "hono-rate-limiter@0.5.4_hono@4.13.7": {
+      "integrity": "sha512-P3/cscAmz1hA+MuM+Hn9gP/EyO2zWv2aXIFkVYuLZkPzrPa4oaWdVCS94vyDlsNBgeMnE/Hr2+LznIKQxrF0ng==",
       "dependencies": [
-        "cookie-es",
-        "crossws",
-        "defu",
-        "destr",
-        "iron-webcrypto",
-        "node-mock-http",
-        "radix3",
-        "ufo",
-        "uncrypto"
+        "hono"
       ]
     },
-    "hono-rate-limiter@0.5.3_hono@4.13.5": {
-      "integrity": "sha512-M0DxbVMpPELEzLi0AJg1XyBHLGJXz7GySjsPoK+gc5YeeBsdGDGe+2RvVuCAv8ydINiwlbxqYMNxUEyYfRji/A==",
-      "dependencies": [
-        "hono",
-        "unstorage"
-      ],
-      "optionalPeers": [
-        "unstorage"
-      ]
-    },
-    "hono@4.13.5": {
-      "integrity": "sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw=="
-    },
-    "ioredis@5.11.1": {
-      "integrity": "sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A==",
-      "dependencies": [
-        "@ioredis/commands@1.10.0",
-        "cluster-key-slot",
-        "debug",
-        "denque",
-        "redis-errors",
-        "redis-parser",
-        "standard-as-callback"
-      ]
+    "hono@4.13.7": {
+      "integrity": "sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ=="
     },
     "ioredis@6.0.0": {
       "integrity": "sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==",
       "dependencies": [
-        "@ioredis/commands@2.0.0",
+        "@ioredis/commands",
         "cluster-key-slot",
         "debug",
         "denque",
         "redis-errors",
         "standard-as-callback"
       ]
-    },
-    "iron-webcrypto@1.2.1": {
-      "integrity": "sha512-feOM6FaSr6rEABp/eDfVseKyTMDt+KGpeB35SkVn9Tyn0CqvVsY3EwI0v5i8nMHyJnzCIQf7nsy3p41TPkJZhg=="
     },
     "kysely-postgres-js@4.0.0_kysely@0.29.5_postgres@3.4.9": {
       "integrity": "sha512-zIGYZ1TMduPZJAyeRMo9OodZYPxK4RI8OIKO8XShHiv5gzaY+KxmZnKcnYRvbfdmUH0kv+ZTlYrBZ5Uk+lI1QA==",
@@ -460,31 +396,11 @@
     "kysely@0.29.5": {
       "integrity": "sha512-ooa+eSbBNPTo3MycPEuW5jdrxQdQwdtB3LC3h43FiXQbIry5tR0C5lDG7eealK0E4D7XjrnOP5DIUg/LyjRMYQ=="
     },
-    "lru-cache@11.5.2": {
-      "integrity": "sha512-4pfM1Ff0x50o0tQwb5ucw/RzNyD0/YJME6IVcStalZuMWxdt3sR3huStTtxz4PUmvZfRguvDejasvQ2kifR11g=="
-    },
     "ms@2.1.3": {
       "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
     },
-    "node-fetch-native@1.6.7": {
-      "integrity": "sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q=="
-    },
-    "node-mock-http@1.0.5": {
-      "integrity": "sha512-KQyt/wLjG3TAc7DOUhpqWzgd4ERxR80JOlTK5VE5R1S12IaPVN5qkj4klBce9HPG1Njuup4Sb5bljaT34lIyjw=="
-    },
     "nodemailer@9.1.0": {
       "integrity": "sha512-xj1Ri5Sau3qpPffHJwi2bY0oWVVWYq62Ph17l+2v1xXpxjqTls3YPc3L8dub9mcJpxj+1ucNnuYVqLlgh4pmDA=="
-    },
-    "normalize-path@3.0.0": {
-      "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
-    },
-    "ofetch@1.5.1": {
-      "integrity": "sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA==",
-      "dependencies": [
-        "destr",
-        "node-fetch-native",
-        "ufo"
-      ]
     },
     "openapi3-ts@4.6.1": {
       "integrity": "sha512-XW9MOldkhoICNeXVzzmXzmOW5G73ppOEGmh7fLCqHjgfdEYCGGN+00MlVCeUZgovjjfC56j9tvtDt1zGabNjjA==",
@@ -492,26 +408,11 @@
         "yaml"
       ]
     },
-    "picomatch@2.3.2": {
-      "integrity": "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="
-    },
     "postgres@3.4.9": {
       "integrity": "sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw=="
     },
-    "radix3@1.1.2": {
-      "integrity": "sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA=="
-    },
-    "readdirp@5.0.0": {
-      "integrity": "sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ=="
-    },
     "redis-errors@1.2.0": {
       "integrity": "sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w=="
-    },
-    "redis-parser@3.0.0": {
-      "integrity": "sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==",
-      "dependencies": [
-        "redis-errors"
-      ]
     },
     "semver@7.8.5": {
       "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
@@ -558,31 +459,8 @@
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
     },
-    "ufo@1.6.4": {
-      "integrity": "sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA=="
-    },
-    "uncrypto@0.1.3": {
-      "integrity": "sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q=="
-    },
     "undici-types@8.3.0": {
       "integrity": "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="
-    },
-    "unstorage@1.17.5_ioredis@5.11.1": {
-      "integrity": "sha512-0i3iqvRfx29hkNntHyQvJTpf5W9dQ9ZadSoRU8+xVlhVtT7jAX57fazYO9EHvcRCfBCyi5YRya7XCDOsbTgkPg==",
-      "dependencies": [
-        "anymatch",
-        "chokidar",
-        "destr",
-        "h3",
-        "ioredis@5.11.1",
-        "lru-cache",
-        "node-fetch-native",
-        "ofetch",
-        "ufo"
-      ],
-      "optionalPeers": [
-        "ioredis@5.11.1"
-      ]
     },
     "yaml@2.9.0": {
       "integrity": "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==",
@@ -594,17 +472,17 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@logtape/logtape@2.3.2",
+      "jsr:@logtape/logtape@2.3.3",
       "jsr:@std/assert@1.0.19",
       "jsr:@std/async@1.5.0",
       "jsr:@std/http@1.1.3",
       "jsr:@std/testing@1.0.20",
       "jsr:@std/uuid@1.1.1",
       "npm:@hono/structured-logger@1.0.0",
-      "npm:@hono/zod-openapi@1.6.1",
+      "npm:@hono/zod-openapi@1.6.3",
       "npm:@types/nodemailer@8.0.1",
-      "npm:hono-rate-limiter@0.5.3",
-      "npm:hono@4.13.5",
+      "npm:hono-rate-limiter@0.5.4",
+      "npm:hono@4.13.7",
       "npm:ioredis@6.0.0",
       "npm:kysely-postgres-js@4.0.0",
       "npm:kysely@0.29.5",
