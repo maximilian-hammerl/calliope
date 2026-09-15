@@ -18,15 +18,17 @@ const GROUP = { title: "t", synopsis: "s", visibility: "private" };
 
 /**
  * The session cookie is `SameSite=Lax`, which a same-site subdomain and a top-level GET can both
- * carry — so what stops a forged write is that every state-changing route requires
+ * carry — so what stops a forged write is that every state-changing route declares only
  * `application/json`, a type no form can produce and no `fetch` can send without a preflight.
+ * Anything else is refused as an unsupported media type before a schema is reached.
  */
 Deno.test("a write refuses every body a cross-site request could send", async () => {
   const cookie = await registerUser(USER);
   const body = JSON.stringify(GROUP);
 
   // The three a form may set, plus `text/plain` carrying valid JSON — the one that needs no
-  // preflight and would otherwise be smuggled straight past the schema.
+  // preflight and would otherwise be smuggled straight past the schema. 415, not 400: the route
+  // declares only `application/json`, so the body is never validated at all.
   for (
     const contentType of [
       "application/x-www-form-urlencoded",
@@ -43,7 +45,7 @@ Deno.test("a write refuses every body a cross-site request could send", async ()
 
     assertEquals(
       response.status,
-      STATUS_CODE.BadRequest,
+      STATUS_CODE.UnsupportedMediaType,
       `${contentType} reached the handler`,
     );
   }
@@ -107,15 +109,15 @@ Deno.test("a forgeable write is allowed on Origin alone", async () => {
     origin: getRequiredEnvVariable("HOST_URL"),
   });
 
-  // Past the guard and refused by the schema instead, which is the next line of defence.
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  // Past the guard and refused for its media type instead, which is the next line of defence.
+  assertEquals(response.status, STATUS_CODE.UnsupportedMediaType);
 });
 
 Deno.test("a forgeable write is allowed from this origin", async () => {
   const cookie = await registerUser(USER);
   const response = await forgeable(cookie, SAME_ORIGIN);
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assertEquals(response.status, STATUS_CODE.UnsupportedMediaType);
 });
 
 /** Reads are untouched, and a cross-site read still cannot be *read* — CORS sees to that. */
