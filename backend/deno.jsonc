@@ -100,16 +100,16 @@
     "@std/testing": "jsr:@std/testing@1.0.20",
     "@std/uuid/v7": "jsr:@std/uuid@1.1.1/v7",
     "sharp": "npm:sharp@0.35.4",
-    "@types/nodemailer": "npm:@types/nodemailer@8.0.1",
-    "hono": "npm:hono@4.13.7",
+    "@types/nodemailer": "npm:@types/nodemailer@8.0.2",
+    "hono": "npm:hono@4.13.8",
     "hono-rate-limiter": "npm:hono-rate-limiter@0.5.4",
     "ioredis": "npm:ioredis@6.0.0",
-    "kysely": "npm:kysely@0.29.5",
+    "kysely": "npm:kysely@0.29.6",
     "kysely-postgres-js": "npm:kysely-postgres-js@4.0.0",
     "nodemailer": "npm:nodemailer@9.1.0",
     "openapi3-ts": "npm:openapi3-ts@4.6.1",
     "postgres": "npm:postgres@3.4.9",
-    "zod": "npm:zod@4.6.2"
+    "zod": "npm:zod@4.6.5"
   },
   "fmt": {
     "exclude": ["*.md"]
