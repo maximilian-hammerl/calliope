@@ -133,7 +133,7 @@ services:
       start_period: 15s
 
   migrate:
-    image: amacneil/dbmate:2.35.1
+    image: amacneil/dbmate:2.36.0
     command: migrate
 
     depends_on:
