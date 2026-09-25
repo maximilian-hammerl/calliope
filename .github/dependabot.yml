@@ -18,6 +18,11 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "daily"
+    ignore:
+      # vue-tsc needs the classic TypeScript API, which 7.0 no longer exports; 7.1 is meant to
+      # bring a stable one. Only 7.0.x, so 7.1 is still proposed when it ships (#6).
+      - dependency-name: "typescript"
+        versions: ["7.0.x"]
     groups:
       minor-and-patch:
         applies-to: version-updates
