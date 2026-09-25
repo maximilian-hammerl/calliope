@@ -6,7 +6,7 @@ import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup, threadInGroup } from "@/src/scope/group_scope.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -42,7 +42,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Renames a thread. Only the member who started it, or an administrator of the group, may change it.",
     operationId: "updateThread",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, threadInGroup] as const,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_THREAD_BODY) },
@@ -69,22 +69,13 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, threadId } = c.req.valid("param");
     const { title } = c.req.valid("json");
     const user = c.get("user");
-
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const thread = await WritingThreadService.selectThread(groupId, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
+    const group = c.get("group");
+    const thread = c.get("thread");
 
     if (
-      !mayAct(role, "thread:change", {
+      !mayAct(group.role, "thread:change", {
         createdBy: thread.createdBy,
         userId: user.id,
       })
@@ -96,9 +87,9 @@ export default new OpenAPIHono().openapi(
     }
 
     const updated = await db.transaction().execute((transaction) =>
-      WritingThreadService.updateThread(transaction, groupId, threadId, {
+      WritingThreadService.updateThread(transaction, group.id, thread.id, {
         title,
-      }, c.get("user").id)
+      }, user.id)
     );
     if (updated === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);

@@ -4,6 +4,7 @@ import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolderOf } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
@@ -62,14 +63,14 @@ export default new OpenAPIHono().openapi(
     const { title, document, folderId } = c.req.valid("json");
     const user = c.get("user");
 
-    let permission = FORUM_ROOT_PERMISSION;
-    if (folderId !== undefined && folderId !== null) {
-      const folder = await ForumService.selectFolder(user, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
-      permission = folder.effectiveMemberPermission;
+    const folder = (folderId !== undefined && folderId !== null)
+      ? await forumFolderOf(user, folderId)
+      : null;
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
+    const permission = folder?.effectiveMemberPermission ??
+      FORUM_ROOT_PERMISSION;
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. No minimum:
     // a page is named by its title, so an empty one is a stub somebody has yet to fill.
@@ -93,7 +94,7 @@ export default new OpenAPIHono().openapi(
         user,
         title,
         document,
-        folderId ?? null,
+        folder?.id ?? null,
       )
     );
 

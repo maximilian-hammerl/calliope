@@ -4,7 +4,7 @@ import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { folderInGroup, joinedGroup } from "@/src/scope/group_scope.ts";
 import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -43,7 +43,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Where a folder sits is not changed here — moving one is its own operation.",
     operationId: "updateFolder",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, folderInGroup] as const,
     request: {
       params: FOLDER_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_FOLDER_BODY) },
@@ -70,21 +70,10 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, folderId } = c.req.valid("param");
     const { title, description } = c.req.valid("json");
-    const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const folder = await WritingFolderService.selectFolder(groupId, folderId);
-    if (folder === undefined) {
-      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "folder:change")) {
+    if (!mayAct(group.role, "folder:change")) {
       return c.json(
         { error: "Only writers and administrators can change a folder" },
         STATUS_CODE.Forbidden,
@@ -92,10 +81,12 @@ export default new OpenAPIHono().openapi(
     }
 
     const updated = await db.transaction().execute((transaction) =>
-      WritingFolderService.updateFolder(transaction, groupId, folderId, {
-        title,
-        description,
-      })
+      WritingFolderService.updateFolder(
+        transaction,
+        group.id,
+        c.get("folder").id,
+        { title, description },
+      )
     );
     if (updated === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);

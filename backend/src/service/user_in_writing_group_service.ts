@@ -1,3 +1,4 @@
+import type { GroupId, MemberId } from "@/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { withAvatar } from "@/src/query/user_avatar.ts";
@@ -87,7 +88,7 @@ function membershipWithUsername(
 /** Always starts as an invitation; only the invited user can turn it into a membership. */
 async function insertInvitation(
   transaction: Transaction,
-  writingGroupId: string,
+  writingGroupId: GroupId,
   userId: string,
   role: UserInWritingGroupRole,
   invitedBy: string,
@@ -127,7 +128,7 @@ async function insertInvitation(
 
 /** Who can act on a request to get in: every administrator who has actually accepted. */
 async function selectJoinedAdministratorIds(
-  writingGroupId: string,
+  writingGroupId: GroupId,
 ): Promise<Array<string>> {
   const administrators = await db
     .selectFrom("userInWritingGroup")
@@ -159,7 +160,7 @@ async function selectMembership(
  * being true, this is the place to revisit.
  */
 async function selectMemberships(
-  writingGroupId: string,
+  writingGroupId: GroupId,
 ): Promise<Array<UserInWritingGroup>> {
   const rows = await membershipsWithUsername()
     .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
@@ -172,8 +173,8 @@ async function selectMemberships(
 /** Returns nothing when there is no such membership. Authorisation is the caller's job. */
 async function updateRole(
   transaction: Transaction,
-  writingGroupId: string,
-  userId: string,
+  writingGroupId: GroupId,
+  userId: MemberId,
   role: UserInWritingGroupRole,
   changedBy: string,
 ): Promise<UserInWritingGroup | undefined> {
@@ -242,8 +243,8 @@ async function acceptInvitation(
  */
 async function deleteMembership(
   transaction: Transaction,
-  writingGroupId: string,
-  userId: string,
+  writingGroupId: GroupId,
+  userId: MemberId,
 ): Promise<boolean> {
   const deletion = await transaction
     .deleteFrom("userInWritingGroup")

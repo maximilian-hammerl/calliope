@@ -4,7 +4,11 @@ import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import {
+  folderInGroup,
+  folderOf,
+  joinedGroup,
+} from "@/src/scope/group_scope.ts";
 import {
   MAX_FOLDER_DEPTH,
   WritingFolderService,
@@ -42,7 +46,7 @@ export default new OpenAPIHono().openapi(
     description:
       `Everything inside it moves with it. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels — which depends on its deepest descendant, not on the folder.`,
     operationId: "moveFolder",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, folderInGroup] as const,
     request: {
       params: FOLDER_PARAMS,
       body: { required: true, content: jsonContent(MOVE_FOLDER_BODY) },
@@ -74,33 +78,29 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, folderId } = c.req.valid("param");
     const { parentFolderId } = c.req.valid("json");
-    const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const folder = await WritingFolderService.selectFolder(groupId, folderId);
-    if (folder === undefined) {
-      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "folder:move")) {
+    if (!mayAct(group.role, "folder:move")) {
       return c.json(
         { error: "Only writers and administrators can move a folder" },
         STATUS_CODE.Forbidden,
       );
     }
 
+    const parent = parentFolderId === null
+      ? null
+      : await folderOf(group.id, parentFolderId);
+    if (parent === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
+    }
+
     const outcome = await db.transaction().execute((transaction) =>
       WritingFolderService.moveFolder(
         transaction,
-        groupId,
-        folderId,
-        parentFolderId,
+        group.id,
+        c.get("folder").id,
+        parent?.id ?? null,
       )
     );
 

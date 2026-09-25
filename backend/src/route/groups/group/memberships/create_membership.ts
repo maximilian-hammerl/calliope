@@ -4,7 +4,7 @@ import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { visibleGroup } from "@/src/scope/group_scope.ts";
 import {
   userExists,
   UserInWritingGroupService,
@@ -39,7 +39,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Invites a user to the group with a role. The invitation always starts as such; only the invited user can turn it into a membership.",
     operationId: "inviteMember",
-    middleware: authenticated,
+    middleware: [authenticated, visibleGroup] as const,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_MEMBERSHIP_BODY) },
@@ -69,24 +69,13 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
+  // `visibleGroup` before the role, so a group the user cannot see stays hidden.
   async (c) => {
-    const { groupId } = c.req.valid("param");
     const { userId, role } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
-    // Checked before the role, so a group the user cannot see stays hidden.
-    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(
-      user,
-      groupId,
-    );
-    if (writingGroup === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (
-      await WritingGroupService.selectRoleForUser(user, groupId) !==
-        "administrator"
-    ) {
+    if (group.role !== "administrator") {
       return c.json(
         { error: "Only administrators can invite users" },
         STATUS_CODE.Forbidden,
@@ -113,7 +102,7 @@ export default new OpenAPIHono().openapi(
     const invitation = await db.transaction().execute((transaction) =>
       UserInWritingGroupService.insertInvitation(
         transaction,
-        groupId,
+        group.id,
         userId,
         role,
         user.id,

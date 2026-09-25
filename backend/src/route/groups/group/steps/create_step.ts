@@ -6,7 +6,7 @@ import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup } from "@/src/scope/group_scope.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -37,7 +37,7 @@ export default new OpenAPIHono().openapi(
     tags: [STEPS_TAG],
     summary: "Add a next step",
     operationId: "createStep",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup] as const,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_STEP_BODY) },
@@ -64,16 +64,11 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId } = c.req.valid("param");
     const { text } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "step:create")) {
+    if (!mayAct(group.role, "step:create")) {
       return c.json(
         { error: "Only writers and administrators can add steps" },
         STATUS_CODE.Forbidden,
@@ -83,7 +78,7 @@ export default new OpenAPIHono().openapi(
     const step = await db.transaction().execute((transaction) =>
       WritingGroupNextStepService.insertStep(
         transaction,
-        groupId,
+        group.id,
         text,
         user.id,
       )

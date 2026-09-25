@@ -31,13 +31,13 @@ a route that forgot the helper would pass the first and fail the second.
 
 ## Reading and writing are guarded differently
 
-A read asks `selectVisibleWritingGroup`, which is what makes a public group public. Writing asks
-`selectRoleForUser`, which only returns a role for a *joined* membership — an invited administrator
-cannot administer until they accept. Drafts depend on neither: `readableBy` keeps them with their
-author whoever asks.
+A read goes through `visibleGroup`, over `selectVisibleWritingGroup`, which is what makes a public
+group public. A write goes through `joinedGroup`, over `selectRoleForUser`, which only returns a role
+for a *joined* membership — an invited administrator cannot administer until they accept. Drafts
+depend on neither: `readableBy` keeps them with their author whoever asks.
 
 `selectVisibleWritingGroup` is a lean gate and `selectWritingGroupForReader` the full read with the
-favourite joined, on one base builder — sixteen of seventeen callers only ask yes or no.
+favourite joined, on one base builder — most callers only ask yes or no.
 
 ## Memberships
 

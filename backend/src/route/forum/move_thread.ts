@@ -4,6 +4,7 @@ import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolderOf, forumThread } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
@@ -35,7 +36,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Its author or an operator, and only into a folder they may write in — otherwise a member could drop a thread into a room that only reads. Its own permission travels with it; what the folder grants is applied on top.",
     operationId: "moveForumThread",
-    middleware: authenticated,
+    middleware: [authenticated, forumThread] as const,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(MOVE_THREAD_BODY) },
@@ -59,14 +60,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { threadId } = c.req.valid("param");
     const { folderId } = c.req.valid("json");
     const user = c.get("user");
-
-    const thread = await ForumService.selectThread(user, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
+    const thread = c.get("thread");
 
     // Two questions, not one: may they change this thread, and may they put things where it is
     // going. A writing group needs only the first, its folders all granting the same thing.
@@ -82,14 +78,14 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    let destination = FORUM_ROOT_PERMISSION;
-    if (folderId !== null) {
-      const folder = await ForumService.selectFolder(user, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
-      destination = folder.effectiveMemberPermission;
+    const folder = folderId !== null
+      ? await forumFolderOf(user, folderId)
+      : null;
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
+    const destination = folder?.effectiveMemberPermission ??
+      FORUM_ROOT_PERMISSION;
 
     // The same permission starting a thread there needs, because that is the same act.
     if (!mayActInForum(user, destination, "thread:create")) {
@@ -100,7 +96,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const moved = await db.transaction().execute((transaction) =>
-      ForumService.moveThread(transaction, user, threadId, folderId)
+      ForumService.moveThread(transaction, user, thread.id, folder?.id ?? null)
     );
     if (moved === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);

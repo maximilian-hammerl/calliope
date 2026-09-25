@@ -6,10 +6,9 @@ import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { folderOf, joinedGroup } from "@/src/scope/group_scope.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
-import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -42,7 +41,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Starts a thread in the group. Writers and administrators may start threads; readers may not.",
     operationId: "createThread",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup] as const,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_THREAD_BODY) },
@@ -68,39 +67,33 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
+  // Content is members-only, so `joinedGroup` tells a non-member nothing about the group.
   async (c) => {
-    const { groupId } = c.req.valid("param");
     const { title, folderId } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
-    // Content is members-only, so a non-member is told nothing about the group.
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "thread:create")) {
+    if (!mayAct(group.role, "thread:create")) {
       return c.json(
         { error: "Only writers and administrators can start a thread" },
         STATUS_CODE.Forbidden,
       );
     }
 
-    // Resolved against this group, so a folder id from another group cannot be borrowed.
-    if (folderId !== undefined && folderId !== null) {
-      const folder = await WritingFolderService.selectFolder(groupId, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
+    const folder = folderId === undefined || folderId === null
+      ? null
+      : await folderOf(group.id, folderId);
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
     const thread = await db.transaction().execute((transaction) =>
       WritingThreadService.insertThread(
         transaction,
-        groupId,
+        group.id,
         title,
         user.id,
-        folderId ?? null,
+        folder?.id ?? null,
       )
     );
 

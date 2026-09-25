@@ -4,6 +4,7 @@ import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumPage } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
@@ -39,7 +40,7 @@ export default new OpenAPIHono().openapi(
     description:
       "A page is written together rather than owned, so whoever may write here may change it — which is why this asks the page's own permission rather than who wrote it.",
     operationId: "updateForumPage",
-    middleware: authenticated,
+    middleware: [authenticated, forumPage] as const,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_PAGE_BODY) },
@@ -67,17 +68,10 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { pageId } = c.req.valid("param");
     const { title, document, loadedAt } = c.req.valid("json");
     const user = c.get("user");
+    const page = c.get("page");
 
-    const page = await ForumService.selectPageForReader(user, pageId);
-    if (page === undefined) {
-      return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
-    }
-
-    // The bound is on the prose, not the serialisation — see `document_schema.ts`. No minimum:
-    // a page is named by its title, so an empty one is a stub somebody has yet to fill.
     if (documentToPlainText(document).length > TEXT_LIMIT.documentText) {
       return c.json(
         { error: `A page holds at most ${TEXT_LIMIT.documentText} characters` },
@@ -93,7 +87,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const outcome = await db.transaction().execute((transaction) =>
-      ForumService.updatePage(transaction, user, pageId, loadedAt, {
+      ForumService.updatePage(transaction, user, page.id, loadedAt, {
         title,
         document,
       })

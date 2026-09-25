@@ -1,3 +1,4 @@
+import type { FolderId, PageId, ThreadId } from "@/src/scope/scoped_id.ts";
 import type { ExpressionBuilder, NotNull } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import type { DB, ForumPermission } from "@/src/database/schema.ts";
@@ -384,7 +385,7 @@ async function insertFolder(
   values: {
     title: string;
     description: string | null;
-    parentFolderId: string | null;
+    parentFolderId: FolderId | null;
     memberPermission: ForumPermission;
   },
 ): Promise<CreateFolderOutcome> {
@@ -426,7 +427,7 @@ async function insertFolder(
 async function updateFolder(
   transaction: Transaction,
   user: User,
-  folderId: string,
+  folderId: FolderId,
   values: { title: string; description: string | null },
 ): Promise<ForumFolder | undefined> {
   const updated = await transaction
@@ -445,8 +446,8 @@ async function updateFolder(
 async function moveFolder(
   transaction: Transaction,
   user: User,
-  folderId: string,
-  parentFolderId: string | null,
+  folderId: FolderId,
+  parentFolderId: FolderId | null,
 ): Promise<MoveFolderOutcome | undefined> {
   const rows = await transaction
     .selectFrom("writingFolder")
@@ -500,7 +501,7 @@ export type DeleteFolderOutcome = "deleted" | "notEmpty" | "notFound";
  */
 async function deleteFolder(
   transaction: Transaction,
-  folderId: string,
+  folderId: FolderId,
 ): Promise<DeleteFolderOutcome> {
   const { numDeletedRows } = await transaction
     .deleteFrom("writingFolder")
@@ -596,8 +597,8 @@ async function setPermission(
 async function moveThread(
   transaction: Transaction,
   user: User,
-  threadId: string,
-  folderId: string | null,
+  threadId: ThreadId,
+  folderId: FolderId | null,
 ): Promise<ForumThread | undefined> {
   const moved = await transaction
     .updateTable("writingThread")
@@ -615,8 +616,8 @@ async function moveThread(
 async function movePage(
   transaction: Transaction,
   user: User,
-  pageId: string,
-  folderId: string | null,
+  pageId: PageId,
+  folderId: FolderId | null,
 ): Promise<ForumPageSummary | undefined> {
   const moved = await transaction
     .updateTable("writingPage")
@@ -642,7 +643,7 @@ async function insertThread(
   transaction: Transaction,
   user: User,
   title: string,
-  folderId: string | null = null,
+  folderId: FolderId | null = null,
 ): Promise<ForumThread> {
   const { id } = await transaction
     .insertInto("writingThread")
@@ -671,7 +672,7 @@ async function insertThread(
  */
 async function insertPost(
   transaction: Transaction,
-  threadId: string,
+  threadId: ThreadId,
   document: PostDocument,
   isDraft: boolean,
   createdBy: string,
@@ -706,7 +707,7 @@ async function insertPage(
   user: User,
   title: string,
   document: PostDocument,
-  folderId: string | null = null,
+  folderId: FolderId | null = null,
 ): Promise<ForumPage> {
   const { id } = await transaction
     .insertInto("writingPage")
@@ -744,7 +745,7 @@ export type UpdateOutcome =
 async function updatePage(
   transaction: Transaction,
   user: User,
-  pageId: string,
+  pageId: PageId,
   loadedAt: string,
   values: { title: string; document: PostDocument },
 ): Promise<UpdateOutcome | undefined> {

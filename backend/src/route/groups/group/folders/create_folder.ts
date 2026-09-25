@@ -4,7 +4,7 @@ import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { folderOf, joinedGroup } from "@/src/scope/group_scope.ts";
 import {
   MAX_FOLDER_DEPTH,
   WritingFolderService,
@@ -44,7 +44,7 @@ export default new OpenAPIHono().openapi(
     description:
       `Nests under \`parentFolderId\`, or sits at the root without one. At most ${MAX_FOLDER_DEPTH} levels deep.`,
     operationId: "createFolder",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup] as const,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_FOLDER_BODY) },
@@ -75,27 +75,29 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId } = c.req.valid("param");
     const { title, description, parentFolderId } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "folder:create")) {
+    if (!mayAct(group.role, "folder:create")) {
       return c.json(
         { error: "Only writers and administrators can add folders" },
         STATUS_CODE.Forbidden,
       );
     }
 
+    const parent = parentFolderId === undefined || parentFolderId === null
+      ? null
+      : await folderOf(group.id, parentFolderId);
+    if (parent === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
+    }
+
     const outcome = await db.transaction().execute((transaction) =>
-      WritingFolderService.insertFolder(transaction, groupId, {
+      WritingFolderService.insertFolder(transaction, group.id, {
         title,
         description: description ?? null,
-        parentFolderId: parentFolderId ?? null,
+        parentFolderId: parent?.id ?? null,
       }, user.id)
     );
 

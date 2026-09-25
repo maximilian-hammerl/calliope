@@ -4,6 +4,7 @@ import { FORUM_FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolder } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import {
@@ -40,7 +41,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Operators only. A null description clears it, which is the only way back to none.",
     operationId: "updateForumFolder",
-    middleware: authenticated,
+    middleware: [authenticated, forumFolder] as const,
     request: {
       params: FOLDER_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_FOLDER_BODY) },
@@ -64,7 +65,6 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { folderId } = c.req.valid("param");
     const values = c.req.valid("json");
     const user = c.get("user");
 
@@ -76,7 +76,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const folder = await db.transaction().execute((transaction) =>
-      ForumService.updateFolder(transaction, user, folderId, values)
+      ForumService.updateFolder(transaction, user, c.get("folder").id, values)
     );
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);

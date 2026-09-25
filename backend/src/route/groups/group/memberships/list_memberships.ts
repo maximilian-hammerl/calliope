@@ -3,7 +3,7 @@ import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { visibleGroup } from "@/src/scope/group_scope.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -36,7 +36,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Every membership of the group, invitations included, in one answer. Not paged: a member missing from the list of who is in a group is worse than a long list.",
     operationId: "listMemberships",
-    middleware: authenticated,
+    middleware: [authenticated, visibleGroup] as const,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -57,17 +57,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId } = c.req.valid("param");
-
-    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(
-      c.get("user"),
-      groupId,
+    const results = await UserInWritingGroupService.selectMemberships(
+      c.get("group").id,
     );
-    if (writingGroup === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const results = await UserInWritingGroupService.selectMemberships(groupId);
 
     return c.json({ results }, STATUS_CODE.OK);
   },

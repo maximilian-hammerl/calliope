@@ -22,8 +22,9 @@ deno task db:seed             # the fixture: nine accounts, password `calliope`
 prefix (`writing_group_service.ts`); grouping it would repeat the word and rename every module.
 `http/` holds response helpers and schemas, `list/` the list convention, `query/` builder helpers
 with no authorisation and no side effects, `event/` the in-process SSE fan-out, `mail/` the transport
-and the messages, `test/` fixtures that nothing shipping imports. `app.ts` composes everything;
-`text_limit.ts` is the origin of every length bound and is imported, never restated.
+and the messages, `scope/` the resolvers for the ids in a path, `test/` fixtures that nothing
+shipping imports. `app.ts` composes everything; `text_limit.ts` is the origin of every length bound
+and is imported, never restated.
 
 ## Routes
 
@@ -95,11 +96,13 @@ has the rest, including the two collections that are deliberately GETs.
 ## Authorisation
 
 Check what the user may *see* before what they may *do*, and answer anything they may not see with
-**404**, never 403, so its existence stays hidden. A read of a group asks `selectVisibleWritingGroup`
-(a public group is readable by anyone signed in); a write asks `selectRoleForUser`, which returns a
-role only for a *joined* membership. Acts are named against one table — `mayAct(role, "page:change")`
-for groups, `mayActInForum(…)` for the forum — never chosen between helpers. A block means contact,
-not visibility, and refuses with a neutral 403.
+**404**, never 403, so its existence stays hidden. **A child is reached only through its parent**:
+each id under a group or the forum has a resolver in `scope/`, listed after `authenticated` —
+`[authenticated, joinedGroup, threadInGroup] as const` — that finds it under the one before it and
+hands it on scoped; a service acting on a child takes only that (`.claude/rules/backend/scope.md`).
+Acts are named against one table — `mayAct(role, "page:change")` for groups, `mayActInForum(…)` for
+the forum — never chosen between helpers. A block means contact, not visibility, and refuses with a
+neutral 403.
 
 ## Notifications and mail
 
@@ -117,3 +120,8 @@ baseline delta), scope every fixture query to its own account. `clearRateLimits(
 `RATE_LIMIT_TEST_CLIENTS`. Auth tests go through the app by hand, since registering is the thing under
 test. Prefer assertions that fail for the right reason — a *different* user still sees the group, not
 merely a 200. Prove a guard by perturbing it: remove the check, watch the test fail, restore it.
+
+**A new route with an id in its path needs a case in two tests** that read every route from
+`open-api.json`: `parent_scope_test.ts`, for a child reached through another parent, and
+`stranger_access_test.ts`, for what a member with no part in something gets at each visibility.
+A case without an expectation fails with what the route answers now — review that before pinning it.

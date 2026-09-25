@@ -3,8 +3,11 @@ import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { WritingPostService } from "@/src/service/writing_post_service.ts";
+import {
+  postInThread,
+  threadInGroup,
+  visibleGroup,
+} from "@/src/scope/group_scope.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -33,7 +36,12 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a single post. Another member's unpublished draft is reported as missing, including to administrators.",
     operationId: "getPost",
-    middleware: authenticated,
+    middleware: [
+      authenticated,
+      visibleGroup,
+      threadInGroup,
+      postInThread,
+    ] as const,
     request: { params: POST_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -53,21 +61,5 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
-  async (c) => {
-    const { groupId, threadId, postId } = c.req.valid("param");
-    const user = c.get("user");
-
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    // Another member's draft is reported as missing rather than forbidden.
-    const post = await WritingPostService.selectPost(threadId, postId, user.id);
-    if (post === undefined) {
-      return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
-    }
-
-    return c.json(post, STATUS_CODE.OK);
-  },
+  (c) => c.json(c.get("post"), STATUS_CODE.OK),
 );

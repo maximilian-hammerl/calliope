@@ -3,7 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup, pageInGroup } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -30,7 +30,7 @@ export default new OpenAPIHono().openapi(
     tags: [PAGES_TAG],
     summary: "Delete a page",
     operationId: "deletePage",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, pageInGroup] as const,
     request: { params: PAGE_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -54,20 +54,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, pageId } = c.req.valid("param");
-    const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const page = await WritingPageService.selectPage(groupId, pageId);
-    if (page === undefined) {
-      return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "page:delete")) {
+    if (!mayAct(group.role, "page:delete")) {
       return c.json(
         { error: "Only writers and administrators can delete a page" },
         STATUS_CODE.Forbidden,
@@ -75,7 +64,7 @@ export default new OpenAPIHono().openapi(
     }
 
     await db.transaction().execute((transaction) =>
-      WritingPageService.deletePage(transaction, groupId, pageId)
+      WritingPageService.deletePage(transaction, group.id, c.get("page").id)
     );
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

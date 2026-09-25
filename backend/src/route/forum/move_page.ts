@@ -4,6 +4,7 @@ import { FORUM_PAGE_SUMMARY_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolderOf, forumPage } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
@@ -34,7 +35,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Whoever may write the page, and only into a folder they may write in. A page is written together rather than owned, so this asks the page's permission rather than who wrote it.",
     operationId: "moveForumPage",
-    middleware: authenticated,
+    middleware: [authenticated, forumPage] as const,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(MOVE_PAGE_BODY) },
@@ -58,14 +59,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { pageId } = c.req.valid("param");
     const { folderId } = c.req.valid("json");
     const user = c.get("user");
-
-    const page = await ForumService.selectPageForReader(user, pageId);
-    if (page === undefined) {
-      return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
-    }
+    const page = c.get("page");
 
     if (!mayActInForum(user, page.effectiveMemberPermission, "page:move")) {
       return c.json(
@@ -74,16 +70,15 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    let destination = FORUM_ROOT_PERMISSION;
-    if (folderId !== null) {
-      const folder = await ForumService.selectFolder(user, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
-      destination = folder.effectiveMemberPermission;
+    const folder = folderId === null
+      ? null
+      : await forumFolderOf(user, folderId);
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    // The same permission adding a page there needs, because that is the same act.
+    const destination = folder?.effectiveMemberPermission ??
+      FORUM_ROOT_PERMISSION;
     if (!mayActInForum(user, destination, "page:create")) {
       return c.json(
         { error: "You cannot put a page there" },
@@ -92,7 +87,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const moved = await db.transaction().execute((transaction) =>
-      ForumService.movePage(transaction, user, pageId, folderId)
+      ForumService.movePage(transaction, user, page.id, folder?.id ?? null)
     );
     if (moved === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);

@@ -1,3 +1,4 @@
+import type { GroupId, StepId } from "@/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import type { WritingGroupNextStep as DatabaseStep } from "@/src/database/schema.ts";
@@ -46,7 +47,7 @@ function stepsWithNames(executor: typeof db | Transaction = db) {
  * Open steps by age, then completed ones by completion — the order the rail shows them.
  * DESC puts NULLs first in Postgres, which is what leads with the open steps.
  */
-async function listSteps(writingGroupId: string): Promise<NextStep[]> {
+async function listSteps(writingGroupId: GroupId): Promise<NextStep[]> {
   return await stepsWithNames()
     .where("writingGroupNextStep.writingGroupId", "=", writingGroupId)
     .orderBy("writingGroupNextStep.completedAt", "desc")
@@ -56,7 +57,7 @@ async function listSteps(writingGroupId: string): Promise<NextStep[]> {
 
 async function insertStep(
   transaction: Transaction,
-  writingGroupId: string,
+  writingGroupId: GroupId,
   text: string,
   createdBy: string,
 ): Promise<NextStep> {
@@ -77,7 +78,7 @@ async function insertStep(
  */
 async function setCompleted(
   transaction: Transaction,
-  stepId: string,
+  stepId: StepId,
   done: boolean,
   userId: string,
 ): Promise<NextStep | undefined> {
@@ -100,15 +101,20 @@ async function setCompleted(
     .executeTakeFirst();
 }
 
-async function selectStep(stepId: string): Promise<NextStep | undefined> {
+/** Only under its own group, so a step id from another group finds nothing. */
+async function selectStep(
+  writingGroupId: GroupId,
+  stepId: string,
+): Promise<NextStep | undefined> {
   return await stepsWithNames()
+    .where("writingGroupNextStep.writingGroupId", "=", writingGroupId)
     .where("writingGroupNextStep.id", "=", stepId)
     .executeTakeFirst();
 }
 
 async function deleteStep(
   transaction: Transaction,
-  stepId: string,
+  stepId: StepId,
 ): Promise<boolean> {
   const result = await transaction
     .deleteFrom("writingGroupNextStep")

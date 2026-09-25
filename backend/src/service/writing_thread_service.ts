@@ -1,3 +1,4 @@
+import type { FolderId, GroupId, ThreadId } from "@/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
@@ -83,11 +84,11 @@ function threadsForReader(
 
 async function insertThread(
   transaction: Transaction,
-  writingGroupId: string,
+  writingGroupId: GroupId,
   title: string,
   createdBy: string,
   /** Null puts it at the root of the group's tree, which is where a thread starts. */
-  folderId: string | null = null,
+  folderId: FolderId | null = null,
 ): Promise<Thread> {
   const { id } = await transaction
     .insertInto("writingThread")
@@ -119,7 +120,7 @@ async function insertThread(
  * asks `selectThreadForReader`.
  */
 async function selectThread(
-  writingGroupId: string,
+  writingGroupId: GroupId,
   threadId: string,
 ): Promise<ThreadGate | undefined> {
   return await threadsWithAuthor()
@@ -131,8 +132,8 @@ async function selectThread(
 
 /** The thread as this reader sees it, favourite included. */
 async function selectThreadForReader(
-  writingGroupId: string,
-  threadId: string,
+  writingGroupId: GroupId,
+  threadId: ThreadId,
   readerId: string,
 ): Promise<Thread | undefined> {
   return await threadsForReader(readerId)
@@ -151,7 +152,7 @@ async function selectThreadForReader(
  * list of its own rather than a page of tabs, and this is where to start.
  */
 function selectThreads(
-  writingGroupId: string,
+  writingGroupId: GroupId,
   readerId: string,
 ): Promise<Array<Thread>> {
   return threadsForReader(readerId)
@@ -214,8 +215,8 @@ function listVisibleThreads(
 /** Scoped to the group, as every write here is: see the note on `Thread`. */
 async function updateThread(
   transaction: Transaction,
-  writingGroupId: string,
-  threadId: string,
+  writingGroupId: GroupId,
+  threadId: ThreadId,
   changes: { title?: string },
   editedBy: string,
 ): Promise<Thread | undefined> {
@@ -247,9 +248,9 @@ async function updateThread(
  */
 async function moveThread(
   transaction: Transaction,
-  writingGroupId: string,
-  threadId: string,
-  folderId: string | null,
+  writingGroupId: GroupId,
+  threadId: ThreadId,
+  folderId: FolderId | null,
   readerId: string,
 ): Promise<Thread | undefined> {
   const moved = await transaction
@@ -273,8 +274,8 @@ async function moveThread(
 
 async function deleteThread(
   transaction: Transaction,
-  writingGroupId: string,
-  threadId: string,
+  writingGroupId: GroupId,
+  threadId: ThreadId,
 ): Promise<boolean> {
   // Posts go with the thread through the foreign key's cascade.
   const deletion = await transaction

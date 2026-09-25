@@ -6,6 +6,7 @@ import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolderOf } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
@@ -63,14 +64,14 @@ export default new OpenAPIHono().openapi(
 
     // The folder decides, and at the root the forum's constant does — which is what makes
     // creating an operator's act until a folder opens.
-    let permission = FORUM_ROOT_PERMISSION;
-    if (folderId !== undefined && folderId !== null) {
-      const folder = await ForumService.selectFolder(user, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
-      permission = folder.effectiveMemberPermission;
+    const folder = (folderId !== undefined && folderId !== null)
+      ? await forumFolderOf(user, folderId)
+      : null;
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
+    const permission = folder?.effectiveMemberPermission ??
+      FORUM_ROOT_PERMISSION;
 
     if (!mayActInForum(user, permission, "thread:create")) {
       return c.json(
@@ -80,7 +81,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const thread = await db.transaction().execute((transaction) =>
-      ForumService.insertThread(transaction, user, title, folderId ?? null)
+      ForumService.insertThread(transaction, user, title, folder?.id ?? null)
     );
 
     return c.json(thread, STATUS_CODE.Created);

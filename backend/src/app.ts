@@ -16,6 +16,7 @@ import {
   UPLOAD_BODY_LIMIT_BYTES,
 } from "./text_limit.ts";
 import { type ErrorResponse } from "@/src/http/response.ts";
+import { invalidRequest } from "@/src/http/invalid_request.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
 import health from "./route/health.ts";
@@ -40,22 +41,12 @@ const api = new OpenAPIHono({
       return;
     }
 
-    const issues = result.error.issues.map((issue) => ({
-      path: issue.path.join("."),
-      message: issue.message,
-    }));
-
-    // Here rather than in the request middleware, which never sees this: returning a response is
-    // not throwing, so `onError` does not fire and the log would say `400` and nothing more.
-    logger.warn("Invalid request", {
-      method: c.req.method,
-      path: c.req.path,
-      issues,
-    });
-
-    return c.json(
-      { error: "Invalid request", issues } satisfies ErrorResponse,
-      STATUS_CODE.BadRequest,
+    return invalidRequest(
+      c,
+      result.error.issues.map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+      })),
     );
   },
 })

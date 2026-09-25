@@ -1,3 +1,5 @@
+import type { GroupId, PageId } from "@/src/scope/scoped_id.ts";
+import { scoped } from "@/src/test/scope.ts";
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
@@ -23,19 +25,27 @@ async function groupWithPage(title = "Weltenbau") {
   const cookie = await registerUser(OWNER);
   const other = await registerUser(OTHER);
   const group = await createGroup(cookie, "Der Zauberzwerg");
+  const groupId = scoped<GroupId>(group.id);
   const authorId = await getUserId(OWNER);
   const otherId = await getUserId(OTHER);
 
   const page = await write((transaction) =>
     WritingPageService.insertPage(
       transaction,
-      group.id,
+      groupId,
       title,
       plainTextToDocument("Der Berg ist hoch."),
       authorId,
     )
   );
-  return { groupId: group.id, page, authorId, otherId, cookie, other };
+  return {
+    groupId,
+    page: { ...page, id: scoped<PageId>(page.id) },
+    authorId,
+    otherId,
+    cookie,
+    other,
+  };
 }
 
 Deno.test("a page carries its author, its editor and the prose of its document", async () => {
@@ -54,7 +64,7 @@ Deno.test("a page is scoped to its group", async () => {
 
   assertExists(await WritingPageService.selectPage(groupId, page.id));
   assertEquals(
-    await WritingPageService.selectPage(otherGroup.id, page.id),
+    await WritingPageService.selectPage(scoped(otherGroup.id), page.id),
     undefined,
   );
 });
@@ -134,7 +144,7 @@ Deno.test("updating a page that is not in the group answers nothing", async () =
     await write(async (transaction) =>
       WritingPageService.updatePage(
         transaction,
-        otherGroup.id,
+        scoped(otherGroup.id),
         page.id,
         page.lastActivityAt,
         { title: "x", document: plainTextToDocument("x") },

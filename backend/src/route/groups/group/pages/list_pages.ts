@@ -3,7 +3,7 @@ import { PAGE_SUMMARY_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { visibleGroup } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -26,7 +26,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Titles in the order they were made, without their prose. Readable by whoever may see the group, which for a public group includes non-members.",
     operationId: "listPages",
-    middleware: authenticated,
+    middleware: [authenticated, visibleGroup] as const,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -49,18 +49,8 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId } = c.req.valid("param");
-
-    const group = await WritingGroupService.selectVisibleWritingGroup(
-      c.get("user"),
-      groupId,
-    );
-    if (group === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
     const results = await WritingPageService.listPages(
-      groupId,
+      c.get("group").id,
       c.get("user").id,
     );
     return c.json({ results }, STATUS_CODE.OK);

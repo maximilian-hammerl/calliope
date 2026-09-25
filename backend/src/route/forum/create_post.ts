@@ -4,6 +4,7 @@ import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumThread } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
@@ -38,7 +39,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Members may reply where the thread grants `write`; operators may anywhere. A thread the member may not see answers 404 rather than 403.",
     operationId: "createForumPost",
-    middleware: authenticated,
+    middleware: [authenticated, forumThread] as const,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(CREATE_POST_BODY) },
@@ -62,15 +63,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { threadId } = c.req.valid("param");
     const { document, isDraft } = c.req.valid("json");
     const user = c.get("user");
-
-    // What may be seen before what may be done: a thread they cannot see does not exist to them.
-    const thread = await ForumService.selectThread(user, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
+    const thread = c.get("thread");
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`.
     const text = documentToPlainText(document);
@@ -95,7 +90,13 @@ export default new OpenAPIHono().openapi(
     }
 
     const post = await db.transaction().execute((transaction) =>
-      ForumService.insertPost(transaction, threadId, document, isDraft, user.id)
+      ForumService.insertPost(
+        transaction,
+        thread.id,
+        document,
+        isDraft,
+        user.id,
+      )
     );
 
     return c.json(post, STATUS_CODE.Created);

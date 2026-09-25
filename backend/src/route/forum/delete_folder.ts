@@ -3,6 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolder } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import {
@@ -29,7 +30,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Operators only, and only when it holds nothing: no folder, thread or page. Removing what is inside it is #62's, not this.",
     operationId: "deleteForumFolder",
-    middleware: authenticated,
+    middleware: [authenticated, forumFolder] as const,
     request: { params: FOLDER_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -54,10 +55,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { folderId } = c.req.valid("param");
-    const user = c.get("user");
-
-    if (!mayActInForum(user, "folder:delete")) {
+    if (!mayActInForum(c.get("user"), "folder:delete")) {
       return c.json(
         { error: "Only operators can change the forum's structure" },
         STATUS_CODE.Forbidden,
@@ -65,7 +63,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const outcome = await db.transaction().execute((transaction) =>
-      ForumService.deleteFolder(transaction, folderId)
+      ForumService.deleteFolder(transaction, c.get("folder").id)
     );
 
     if (outcome === "notFound") {

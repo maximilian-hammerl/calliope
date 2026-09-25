@@ -3,7 +3,7 @@ import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { db } from "@/src/database/client.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { memberOfGroup, visibleGroup } from "@/src/scope/group_scope.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -31,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Removes a membership or a pending invitation: one's own, which also declines an invitation, or anybody's for an administrator of the group. Removing the last remaining member deletes the group along with it.",
     operationId: "removeMember",
-    middleware: authenticated,
+    middleware: [authenticated, visibleGroup, memberOfGroup] as const,
     request: { params: MEMBERSHIP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -56,26 +56,14 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, userId } = c.req.valid("param");
     const user = c.get("user");
-
-    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(
-      user,
-      groupId,
-    );
-    if (writingGroup === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
+    const group = c.get("group");
+    const member = c.get("member");
 
     // The shape `mayModify` gives posts, threads and steps: an administrator of the group, or
     // whoever the thing belongs to. Here that is the member whose own membership it is, which
     // is how leaving and declining an invitation are reached.
-    const isOwnMembership = userId === user.id;
-    if (
-      !isOwnMembership &&
-      await WritingGroupService.selectRoleForUser(user, groupId) !==
-        "administrator"
-    ) {
+    if (member.userId !== user.id && group.role !== "administrator") {
       return c.json(
         { error: "Only administrators can remove another member" },
         STATUS_CODE.Forbidden,
@@ -83,7 +71,11 @@ export default new OpenAPIHono().openapi(
     }
 
     const removed = await db.transaction().execute((transaction) =>
-      UserInWritingGroupService.deleteMembership(transaction, groupId, userId)
+      UserInWritingGroupService.deleteMembership(
+        transaction,
+        group.id,
+        member.userId,
+      )
     );
 
     if (!removed) {

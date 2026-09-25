@@ -5,8 +5,7 @@ import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { joinedGroup, threadInGroup } from "@/src/scope/group_scope.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -46,7 +45,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Adds a post to the thread, either published or as a draft. Writers and administrators may write posts; readers may not.",
     operationId: "createPost",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, threadInGroup] as const,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(CREATE_POST_BODY) },
@@ -73,9 +72,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, threadId } = c.req.valid("param");
     const { document, isDraft } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. Only here,
     // because only here is the text extracted.
@@ -90,28 +89,18 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "post:create")) {
+    if (!mayAct(group.role, "post:create")) {
       return c.json(
         { error: "Only writers and administrators can write a post" },
         STATUS_CODE.Forbidden,
       );
     }
 
-    const thread = await WritingThreadService.selectThread(groupId, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
-
     const post = await db.transaction().execute((transaction) =>
       WritingPostService.insertPost(
         transaction,
-        groupId,
-        threadId,
+        group.id,
+        c.get("thread").id,
         document,
         isDraft,
         user.id,

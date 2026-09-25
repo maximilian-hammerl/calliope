@@ -1,3 +1,4 @@
+import type { FolderId, GroupId, PageId } from "@/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { withFavourite } from "@/src/query/favourite.ts";
@@ -96,7 +97,7 @@ function pagesWithNames(executor: typeof db | Transaction = db) {
  * and orders leaves by activity the way a thread's strip did.
  */
 async function listPages(
-  writingGroupId: string,
+  writingGroupId: GroupId,
   readerId: string,
 ): Promise<PageSummary[]> {
   return await pagesForReader(readerId)
@@ -113,7 +114,7 @@ async function listPages(
 
 /** Scoped to the group, so a page id from another group cannot be reached through it. */
 async function selectPage(
-  writingGroupId: string,
+  writingGroupId: GroupId,
   pageId: string,
 ): Promise<PageGate | undefined> {
   return await pagesWithNames()
@@ -128,12 +129,12 @@ async function selectPage(
 
 async function insertPage(
   transaction: Transaction,
-  writingGroupId: string,
+  writingGroupId: GroupId,
   title: string,
   document: PostDocument,
   createdBy: string,
   /** Null puts it at the root of the group's tree, which is where a page starts. */
-  folderId: string | null = null,
+  folderId: FolderId | null = null,
 ): Promise<Page> {
   const { id } = await transaction
     .insertInto("writingPage")
@@ -176,8 +177,8 @@ async function insertPage(
 
 /** The page as its own view reads it, favourite included. */
 async function selectPageForReader(
-  writingGroupId: string,
-  pageId: string,
+  writingGroupId: GroupId,
+  pageId: PageId,
   readerId: string,
   executor: typeof db | Transaction = db,
 ): Promise<Page | undefined> {
@@ -253,8 +254,8 @@ export type UpdateOutcome =
  */
 async function updatePage(
   transaction: Transaction,
-  writingGroupId: string,
-  pageId: string,
+  writingGroupId: GroupId,
+  pageId: PageId,
   loadedAt: string,
   values: { title: string; document: PostDocument },
   updatedBy: string,
@@ -293,9 +294,9 @@ async function updatePage(
  */
 async function movePage(
   transaction: Transaction,
-  writingGroupId: string,
-  pageId: string,
-  folderId: string | null,
+  writingGroupId: GroupId,
+  pageId: PageId,
+  folderId: FolderId | null,
   readerId: string,
 ): Promise<Page | undefined> {
   await transaction
@@ -315,8 +316,8 @@ async function movePage(
 
 async function deletePage(
   transaction: Transaction,
-  writingGroupId: string,
-  pageId: string,
+  writingGroupId: GroupId,
+  pageId: PageId,
 ): Promise<void> {
   await transaction
     .deleteFrom("writingPage")

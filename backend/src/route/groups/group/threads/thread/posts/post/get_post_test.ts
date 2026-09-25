@@ -12,13 +12,14 @@ import {
 
 const administrator = "get-post-admin";
 const writer = "get-post-writer";
+const outsider = "get-post-outsider";
 
 Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer]));
+Deno.test.afterEach(() => deleteUsers([administrator, writer, outsider]));
 
-async function postsByWriter() {
+async function postsByWriter(visibility: "private" | "public" = "private") {
   const adminCookie = await registerUser(administrator);
-  const group = await createGroup(adminCookie, "Beitrag");
+  const group = await createGroup(adminCookie, "Beitrag", visibility);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
   const thread = await (await request(
     "POST",
@@ -68,5 +69,39 @@ Deno.test("GET …/posts/{postId} reports another member's draft as missing", as
   );
 
   const response = await request("GET", `${posts}/${draft.id}`, adminCookie);
+  assertEquals(response.status, STATUS_CODE.NotFound);
+});
+
+Deno.test("GET …/posts/{postId} lets anyone signed in read a public group's post", async () => {
+  const { posts, published } = await postsByWriter("public");
+  const outsiderCookie = await registerUser(outsider);
+
+  const response = await request(
+    "GET",
+    `${posts}/${published.id}`,
+    outsiderCookie,
+  );
+
+  assertEquals(response.status, STATUS_CODE.OK);
+  assertEquals((await response.json()).text, "Veröffentlicht");
+});
+
+Deno.test("GET …/posts/{postId} keeps a public group's draft with its author", async () => {
+  const { posts, draft } = await postsByWriter("public");
+  const outsiderCookie = await registerUser(outsider);
+
+  const response = await request("GET", `${posts}/${draft.id}`, outsiderCookie);
+  assertEquals(response.status, STATUS_CODE.NotFound);
+});
+
+Deno.test("GET …/posts/{postId} hides a private group's post from a non-member", async () => {
+  const { posts, published } = await postsByWriter();
+  const outsiderCookie = await registerUser(outsider);
+
+  const response = await request(
+    "GET",
+    `${posts}/${published.id}`,
+    outsiderCookie,
+  );
   assertEquals(response.status, STATUS_CODE.NotFound);
 });

@@ -5,7 +5,11 @@ import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import {
+  joinedGroup,
+  postInThread,
+  threadInGroup,
+} from "@/src/scope/group_scope.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -48,7 +52,12 @@ export default new OpenAPIHono().openapi(
     description:
       "Edits a post's text, or publishes a draft by clearing its draft flag. Only its author, or an administrator of the group, may change it.",
     operationId: "updatePost",
-    middleware: authenticated,
+    middleware: [
+      authenticated,
+      joinedGroup,
+      threadInGroup,
+      postInThread,
+    ] as const,
     request: {
       params: POST_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_POST_BODY) },
@@ -75,19 +84,10 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, threadId, postId } = c.req.valid("param");
     const changes = c.req.valid("json");
     const user = c.get("user");
-
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const post = await WritingPostService.selectPost(threadId, postId, user.id);
-    if (post === undefined) {
-      return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
-    }
+    const group = c.get("group");
+    const post = c.get("post");
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`.
     if (changes.document !== undefined) {
@@ -104,7 +104,7 @@ export default new OpenAPIHono().openapi(
     }
 
     if (
-      !mayAct(role, "post:change", {
+      !mayAct(group.role, "post:change", {
         createdBy: post.createdBy,
         userId: user.id,
       })
@@ -118,12 +118,12 @@ export default new OpenAPIHono().openapi(
     const updated = await db.transaction().execute((transaction) =>
       WritingPostService.updatePost(
         transaction,
-        postId,
+        post.id,
         changes,
         post.isDraft,
         {
-          writingGroupId: groupId,
-          writingThreadId: threadId,
+          writingGroupId: group.id,
+          writingThreadId: c.get("thread").id,
           actorId: user.id,
         },
       )

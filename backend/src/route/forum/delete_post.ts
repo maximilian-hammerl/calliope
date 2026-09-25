@@ -3,7 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
+import { postInThread } from "@/src/scope/group_scope.ts";
+import { forumThread } from "@/src/scope/forum_scope.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import {
@@ -32,7 +33,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Whoever wrote it, and only while they may still write in the thread. Discarding an unpublished draft is this endpoint too.",
     operationId: "deleteForumPost",
-    middleware: authenticated,
+    middleware: [authenticated, forumThread, postInThread] as const,
     request: { params: POST_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -53,24 +54,16 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { threadId, postId } = c.req.valid("param");
     const user = c.get("user");
-
-    const thread = await ForumService.selectThread(user, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
-
-    const post = await WritingPostService.selectPost(threadId, postId, user.id);
-    if (post === undefined) {
-      return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
-    }
+    const post = c.get("post");
 
     if (
-      !mayActInForum(user, thread.effectiveMemberPermission, "post:delete", {
-        createdBy: post.createdBy,
-        userId: user.id,
-      })
+      !mayActInForum(
+        user,
+        c.get("thread").effectiveMemberPermission,
+        "post:delete",
+        { createdBy: post.createdBy, userId: user.id },
+      )
     ) {
       return c.json(
         { error: "You cannot remove this post" },
@@ -79,7 +72,7 @@ export default new OpenAPIHono().openapi(
     }
 
     const removed = await db.transaction().execute((transaction) =>
-      WritingPostService.deletePost(transaction, postId)
+      WritingPostService.deletePost(transaction, post.id)
     );
     if (!removed) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);

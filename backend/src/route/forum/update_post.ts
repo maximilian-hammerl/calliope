@@ -4,7 +4,8 @@ import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
+import { postInThread } from "@/src/scope/group_scope.ts";
+import { forumThread } from "@/src/scope/forum_scope.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
@@ -44,7 +45,7 @@ export default new OpenAPIHono().openapi(
     description:
       "A post belongs to whoever wrote it, and only while they may still write in the thread — closing a folder freezes what was written in it. Autosaving a draft is this endpoint too.",
     operationId: "updateForumPost",
-    middleware: authenticated,
+    middleware: [authenticated, forumThread, postInThread] as const,
     request: {
       params: POST_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_POST_BODY) },
@@ -68,20 +69,10 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { threadId, postId } = c.req.valid("param");
     const changes = c.req.valid("json");
     const user = c.get("user");
-
-    const thread = await ForumService.selectThread(user, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
-
-    // Scoped to the thread, so a post id from another thread cannot be reached through it.
-    const post = await WritingPostService.selectPost(threadId, postId, user.id);
-    if (post === undefined) {
-      return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
-    }
+    const thread = c.get("thread");
+    const post = c.get("post");
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`.
     if (changes.document !== undefined) {
@@ -112,10 +103,10 @@ export default new OpenAPIHono().openapi(
     const updated = await db.transaction().execute((transaction) =>
       WritingPostService.updatePost(
         transaction,
-        postId,
+        post.id,
         changes,
         post.isDraft, // No group, so publishing announces nothing — #119 decides who hears.
-        { writingGroupId: null, writingThreadId: threadId, actorId: user.id },
+        { writingGroupId: null, writingThreadId: thread.id, actorId: user.id },
       )
     );
     if (updated === undefined) {

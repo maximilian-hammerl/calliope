@@ -4,8 +4,7 @@ import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { threadInGroup, visibleGroup } from "@/src/scope/group_scope.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import {
   FAVOURITE_FILTER,
@@ -56,7 +55,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of the thread's published posts, plus the current user's own unpublished drafts. Other members' drafts are never included.",
     operationId: "listPosts",
-    middleware: authenticated,
+    middleware: [authenticated, visibleGroup, threadInGroup] as const,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(LIST_POSTS_BODY) },
@@ -79,30 +78,13 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
+  // Whatever the reader may *see*, which `visibleGroup` settles: a public group's writing is
+  // readable by the community. Drafts stay with their author, and writing still needs a role.
   async (c) => {
-    const { groupId, threadId } = c.req.valid("param");
-    const user = c.get("user");
-
-    // Whatever the reader may *see* — a public group's writing is readable by the community,
-    // which is what makes it public rather than merely listed. Drafts stay with their author
-    // through `readableBy`, and writing still needs a role.
-    const group = await WritingGroupService.selectVisibleWritingGroup(
-      user,
-      groupId,
-    );
-    if (group === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const thread = await WritingThreadService.selectThread(groupId, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
-
     // Other members' drafts are not published yet, so they stay out of the page.
     const page = await WritingPostService.listPosts(
-      threadId,
-      user.id,
+      c.get("thread").id,
+      c.get("user").id,
       listQuery(c.req.valid("json")),
     );
 

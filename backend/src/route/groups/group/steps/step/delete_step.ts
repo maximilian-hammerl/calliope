@@ -3,7 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup, stepInGroup } from "@/src/scope/group_scope.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -32,7 +32,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Completed steps are never removed on their own; this is the only way one leaves.",
     operationId: "deleteStep",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, stepInGroup] as const,
     request: { params: STEP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -56,21 +56,11 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, stepId } = c.req.valid("param");
     const user = c.get("user");
-
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const step = await WritingGroupNextStepService.selectStep(stepId);
-    if (step === undefined || step.writingGroupId !== groupId) {
-      return c.json({ error: "Step not found" }, STATUS_CODE.NotFound);
-    }
+    const step = c.get("step");
 
     if (
-      !mayAct(role, "step:delete", {
+      !mayAct(c.get("group").role, "step:delete", {
         createdBy: step.createdBy,
         userId: user.id,
       })
@@ -82,7 +72,7 @@ export default new OpenAPIHono().openapi(
     }
 
     await db.transaction().execute((transaction) =>
-      WritingGroupNextStepService.deleteStep(transaction, stepId)
+      WritingGroupNextStepService.deleteStep(transaction, step.id)
     );
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

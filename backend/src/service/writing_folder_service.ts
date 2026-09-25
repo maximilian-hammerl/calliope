@@ -1,3 +1,4 @@
+import type { FolderId, GroupId } from "@/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { planFolderMove } from "@/src/service/folder_move.ts";
@@ -42,7 +43,7 @@ function foldersWithNames(executor: typeof db | Transaction = db) {
 }
 
 /** Every folder of a group in creation order, which is the tree's ordering for branches. */
-async function listFolders(writingGroupId: string): Promise<Folder[]> {
+async function listFolders(writingGroupId: GroupId): Promise<Folder[]> {
   return await foldersWithNames()
     .where("writingFolder.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
@@ -55,7 +56,7 @@ async function listFolders(writingGroupId: string): Promise<Folder[]> {
 
 /** Scoped to the group, so a folder id from another group cannot be reached through it. */
 async function selectFolder(
-  writingGroupId: string,
+  writingGroupId: GroupId,
   folderId: string,
   executor: typeof db | Transaction = db,
 ): Promise<Folder | undefined> {
@@ -79,11 +80,11 @@ export type CreateOutcome =
  */
 async function insertFolder(
   transaction: Transaction,
-  writingGroupId: string,
+  writingGroupId: GroupId,
   values: {
     title: string;
     description: string | null;
-    parentFolderId: string | null;
+    parentFolderId: FolderId | null;
   },
   createdBy: string,
 ): Promise<CreateOutcome> {
@@ -130,8 +131,8 @@ async function insertFolder(
 /** Title and description only: where a folder sits is a move, which is its own slice. */
 async function updateFolder(
   transaction: Transaction,
-  writingGroupId: string,
-  folderId: string,
+  writingGroupId: GroupId,
+  folderId: FolderId,
   values: { title: string; description: string | null },
 ): Promise<Folder | undefined> {
   await transaction
@@ -158,8 +159,8 @@ export type DeleteOutcome = "deleted" | "notEmpty";
  */
 async function deleteFolder(
   transaction: Transaction,
-  writingGroupId: string,
-  folderId: string,
+  writingGroupId: GroupId,
+  folderId: FolderId,
 ): Promise<DeleteOutcome | undefined> {
   const { numDeletedRows } = await transaction
     .deleteFrom("writingFolder")
@@ -227,9 +228,9 @@ export type MoveOutcome =
  */
 async function moveFolder(
   transaction: Transaction,
-  writingGroupId: string,
-  folderId: string,
-  parentFolderId: string | null,
+  writingGroupId: GroupId,
+  folderId: FolderId,
+  parentFolderId: FolderId | null,
 ): Promise<MoveOutcome | undefined> {
   // No join here: Postgres refuses FOR UPDATE on the nullable side of an outer one, and the
   // author's name is not needed to decide a move. `insertFolder` takes the same lock.

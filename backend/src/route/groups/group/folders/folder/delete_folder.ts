@@ -3,7 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { folderInGroup, joinedGroup } from "@/src/scope/group_scope.ts";
 import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -33,7 +33,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Only an empty one: deleting a folder with anything in it would take writing with it, and there is no history to recover it from. Empty it first.",
     operationId: "deleteFolder",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, folderInGroup] as const,
     request: { params: FOLDER_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -61,20 +61,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, folderId } = c.req.valid("param");
-    const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const folder = await WritingFolderService.selectFolder(groupId, folderId);
-    if (folder === undefined) {
-      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "folder:delete")) {
+    if (!mayAct(group.role, "folder:delete")) {
       return c.json(
         { error: "Only writers and administrators can delete a folder" },
         STATUS_CODE.Forbidden,
@@ -82,7 +71,11 @@ export default new OpenAPIHono().openapi(
     }
 
     const outcome = await db.transaction().execute((transaction) =>
-      WritingFolderService.deleteFolder(transaction, groupId, folderId)
+      WritingFolderService.deleteFolder(
+        transaction,
+        group.id,
+        c.get("folder").id,
+      )
     );
 
     // Gone since the read above: a 404, rather than a refusal about contents it no longer has.

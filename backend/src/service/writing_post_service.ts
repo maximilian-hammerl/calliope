@@ -1,3 +1,4 @@
+import type { GroupId, PostId, ThreadId } from "@/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";
@@ -76,8 +77,8 @@ function postWithAuthorById(
 
 async function insertPost(
   transaction: Transaction,
-  writingGroupId: string,
-  threadId: string,
+  writingGroupId: GroupId,
+  threadId: ThreadId,
   document: PostDocument,
   isDraft: boolean,
   createdBy: string,
@@ -159,7 +160,7 @@ function postsWithAuthor(
 
 /** Scoped to the thread, so a post id from another thread cannot be reached through it. */
 async function selectPost(
-  threadId: string,
+  threadId: ThreadId,
   postId: string,
   viewerId: string,
   executor: typeof db | Transaction = db,
@@ -171,7 +172,7 @@ async function selectPost(
 }
 
 function listPosts(
-  threadId: string,
+  threadId: ThreadId,
   viewerId: string,
   query: ListQuery & { isDraft: boolean; favourite: FavouriteFilter },
 ): Promise<ListResults<Post>> {
@@ -208,7 +209,7 @@ function listPosts(
  */
 async function updatePost(
   transaction: Transaction,
-  postId: string,
+  postId: PostId,
   changes: { document?: PostDocument; isDraft?: boolean },
   wasDraft: boolean,
   context: {
@@ -217,8 +218,8 @@ async function updatePost(
      * is #119, so there is nothing to announce yet. Announcing it to a group's
      * members would be the wrong answer anyway.
      */
-    writingGroupId: string | null;
-    writingThreadId: string;
+    writingGroupId: GroupId | null;
+    writingThreadId: ThreadId;
     actorId: string;
   },
 ): Promise<Post | undefined> {
@@ -275,7 +276,7 @@ async function updatePost(
 
 async function deletePost(
   transaction: Transaction,
-  postId: string,
+  postId: PostId,
 ): Promise<boolean> {
   const deletion = await transaction
     .deleteFrom("writingPost")

@@ -4,6 +4,7 @@ import { FORUM_FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
+import { forumFolderOf } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
@@ -85,11 +86,18 @@ export default new OpenAPIHono().openapi(
       );
     }
 
+    const parent = parentFolderId === undefined || parentFolderId === null
+      ? null
+      : await forumFolderOf(user, parentFolderId);
+    if (parent === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
+    }
+
     const outcome = await db.transaction().execute((transaction) =>
       ForumService.insertFolder(transaction, user, {
         title,
         description: description ?? null,
-        parentFolderId: parentFolderId ?? null,
+        parentFolderId: parent?.id ?? null,
         memberPermission,
       })
     );

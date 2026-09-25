@@ -4,9 +4,12 @@ import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import {
+  folderOf,
+  joinedGroup,
+  threadInGroup,
+} from "@/src/scope/group_scope.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
-import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -38,7 +41,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Does not count as activity in the thread or in its group: moving something is not writing in it, so neither is reordered.",
     operationId: "moveThread",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, threadInGroup] as const,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(MOVE_THREAD_BODY) },
@@ -65,22 +68,13 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, threadId } = c.req.valid("param");
     const { folderId } = c.req.valid("json");
     const user = c.get("user");
-
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const thread = await WritingThreadService.selectThread(groupId, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
+    const group = c.get("group");
+    const thread = c.get("thread");
 
     if (
-      !mayAct(role, "thread:move", {
+      !mayAct(group.role, "thread:move", {
         createdBy: thread.createdBy,
         userId: user.id,
       })
@@ -91,19 +85,19 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    if (folderId !== null) {
-      const folder = await WritingFolderService.selectFolder(groupId, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
+    const folder = folderId === null
+      ? null
+      : await folderOf(group.id, folderId);
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
     const moved = await db.transaction().execute((transaction) =>
       WritingThreadService.moveThread(
         transaction,
-        groupId,
-        threadId,
-        folderId,
+        group.id,
+        thread.id,
+        folder?.id ?? null,
         user.id,
       )
     );

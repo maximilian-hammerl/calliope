@@ -3,7 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup, threadInGroup } from "@/src/scope/group_scope.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -32,7 +32,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Deletes a thread and every post in it. Only the member who started it, or an administrator of the group, may delete it.",
     operationId: "deleteThread",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, threadInGroup] as const,
     request: { params: THREAD_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -56,21 +56,12 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, threadId } = c.req.valid("param");
     const user = c.get("user");
-
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const thread = await WritingThreadService.selectThread(groupId, threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
+    const group = c.get("group");
+    const thread = c.get("thread");
 
     if (
-      !mayAct(role, "thread:delete", {
+      !mayAct(group.role, "thread:delete", {
         createdBy: thread.createdBy,
         userId: user.id,
       })
@@ -83,7 +74,7 @@ export default new OpenAPIHono().openapi(
 
     // Posts go with it through the foreign key's cascade.
     await db.transaction().execute((transaction) =>
-      WritingThreadService.deleteThread(transaction, groupId, threadId)
+      WritingThreadService.deleteThread(transaction, group.id, thread.id)
     );
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);

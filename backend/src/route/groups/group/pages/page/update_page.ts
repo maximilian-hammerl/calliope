@@ -5,7 +5,7 @@ import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup, pageInGroup } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -51,7 +51,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Refused with 409 when somebody else saved since the page was loaded, so an edit cannot be overwritten unseen. Any writer or administrator may change it: a page is material the group keeps, not a post that belongs to whoever wrote it.",
     operationId: "updatePage",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, pageInGroup] as const,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_PAGE_BODY) },
@@ -82,9 +82,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, pageId } = c.req.valid("param");
     const { title, document, loadedAt } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. No minimum:
     // a page is named by its title, so an empty one is a stub somebody has yet to fill.
@@ -95,17 +95,7 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const page = await WritingPageService.selectPage(groupId, pageId);
-    if (page === undefined) {
-      return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "page:change")) {
+    if (!mayAct(group.role, "page:change")) {
       return c.json(
         { error: "Only writers and administrators can change a page" },
         STATUS_CODE.Forbidden,
@@ -113,10 +103,14 @@ export default new OpenAPIHono().openapi(
     }
 
     const outcome = await db.transaction().execute((transaction) =>
-      WritingPageService.updatePage(transaction, groupId, pageId, loadedAt, {
-        title,
-        document,
-      }, user.id)
+      WritingPageService.updatePage(
+        transaction,
+        group.id,
+        c.get("page").id,
+        loadedAt,
+        { title, document },
+        user.id,
+      )
     );
     if (outcome === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);

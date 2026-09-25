@@ -4,9 +4,8 @@ import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { folderOf, joinedGroup, pageInGroup } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -39,7 +38,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Does not count as writing in it: the page keeps the activity time it had, so it stays where it was in the order and still reports when it was last edited.",
     operationId: "movePage",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, pageInGroup] as const,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(MOVE_PAGE_BODY) },
@@ -66,41 +65,30 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, pageId } = c.req.valid("param");
     const { folderId } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const page = await WritingPageService.selectPage(groupId, pageId);
-    if (page === undefined) {
-      return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "page:move")) {
+    if (!mayAct(group.role, "page:move")) {
       return c.json(
         { error: "Only writers and administrators can move a page" },
         STATUS_CODE.Forbidden,
       );
     }
 
-    // Resolved against this group, so a folder id from another group cannot be borrowed.
-    if (folderId !== null) {
-      const folder = await WritingFolderService.selectFolder(groupId, folderId);
-      if (folder === undefined) {
-        return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
-      }
+    const folder = folderId === null
+      ? null
+      : await folderOf(group.id, folderId);
+    if (folder === undefined) {
+      return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
     const moved = await db.transaction().execute((transaction) =>
       WritingPageService.movePage(
         transaction,
-        groupId,
-        pageId,
-        folderId,
+        group.id,
+        c.get("page").id,
+        folder?.id ?? null,
         user.id,
       )
     );

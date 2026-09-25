@@ -3,7 +3,7 @@ import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
+import { forumThread } from "@/src/scope/forum_scope.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The thread itself, without its posts. Hidden answers 404 rather than 403, so a member cannot tell a thread they may not see from one that does not exist.",
     operationId: "getForumThread",
-    middleware: authenticated,
+    middleware: [authenticated, forumThread] as const,
     request: { params: THREAD_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -44,14 +44,5 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
-  async (c) => {
-    const { threadId } = c.req.valid("param");
-
-    const thread = await ForumService.selectThread(c.get("user"), threadId);
-    if (thread === undefined) {
-      return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
-    }
-
-    return c.json(thread, STATUS_CODE.OK);
-  },
+  (c) => c.json(c.get("thread"), STATUS_CODE.OK),
 );

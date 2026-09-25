@@ -3,7 +3,7 @@ import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
+import { forumPage } from "@/src/scope/forum_scope.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The page and its prose. Hidden answers 404 rather than 403, so a member cannot tell a page they may not see from one that does not exist.",
     operationId: "getForumPage",
-    middleware: authenticated,
+    middleware: [authenticated, forumPage] as const,
     request: { params: PAGE_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {
@@ -44,17 +44,5 @@ export default new OpenAPIHono().openapi(
       ...COMMON_RESPONSES,
     },
   }),
-  async (c) => {
-    const { pageId } = c.req.valid("param");
-
-    const page = await ForumService.selectPageForReader(
-      c.get("user"),
-      pageId,
-    );
-    if (page === undefined) {
-      return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
-    }
-
-    return c.json(page, STATUS_CODE.OK);
-  },
+  (c) => c.json(c.get("page"), STATUS_CODE.OK),
 );

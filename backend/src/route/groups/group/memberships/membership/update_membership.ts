@@ -4,7 +4,7 @@ import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { memberOfGroup, visibleGroup } from "@/src/scope/group_scope.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -36,7 +36,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Changes a member's role. The status cannot be changed here: accepting an invitation is the invited user's to do.",
     operationId: "updateMembership",
-    middleware: authenticated,
+    middleware: [authenticated, visibleGroup, memberOfGroup] as const,
     request: {
       params: MEMBERSHIP_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_MEMBERSHIP_BODY) },
@@ -63,22 +63,11 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, userId } = c.req.valid("param");
     const { role } = c.req.valid("json");
     const user = c.get("user");
+    const group = c.get("group");
 
-    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(
-      user,
-      groupId,
-    );
-    if (writingGroup === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (
-      await WritingGroupService.selectRoleForUser(user, groupId) !==
-        "administrator"
-    ) {
+    if (group.role !== "administrator") {
       return c.json(
         { error: "Only administrators can change a role" },
         STATUS_CODE.Forbidden,
@@ -88,8 +77,8 @@ export default new OpenAPIHono().openapi(
     const membership = await db.transaction().execute((transaction) =>
       UserInWritingGroupService.updateRole(
         transaction,
-        groupId,
-        userId,
+        group.id,
+        c.get("member").userId,
         role,
         user.id,
       )

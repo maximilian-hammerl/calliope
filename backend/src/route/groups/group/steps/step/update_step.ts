@@ -4,7 +4,7 @@ import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
 import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { joinedGroup, stepInGroup } from "@/src/scope/group_scope.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -34,7 +34,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Idempotent in both directions. Ticking an already-completed step changes nothing, so the first completer wins.",
     operationId: "updateStep",
-    middleware: authenticated,
+    middleware: [authenticated, joinedGroup, stepInGroup] as const,
     request: {
       params: STEP_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_STEP_BODY) },
@@ -61,23 +61,10 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { groupId, stepId } = c.req.valid("param");
     const { done } = c.req.valid("json");
     const user = c.get("user");
 
-    const role = await WritingGroupService.selectRoleForUser(user, groupId);
-    if (role === undefined) {
-      return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
-    }
-
-    const step = await WritingGroupNextStepService.selectStep(stepId);
-    // The id in the path has to belong to the group in the path, or any member of any group
-    // could reach any step by guessing ids.
-    if (step === undefined || step.writingGroupId !== groupId) {
-      return c.json({ error: "Step not found" }, STATUS_CODE.NotFound);
-    }
-
-    if (!mayAct(role, "step:tick")) {
+    if (!mayAct(c.get("group").role, "step:tick")) {
       return c.json(
         { error: "Only writers and administrators can tick steps" },
         STATUS_CODE.Forbidden,
@@ -87,7 +74,7 @@ export default new OpenAPIHono().openapi(
     const updated = await db.transaction().execute((transaction) =>
       WritingGroupNextStepService.setCompleted(
         transaction,
-        stepId,
+        c.get("step").id,
         done,
         user.id,
       )

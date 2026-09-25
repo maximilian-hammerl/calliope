@@ -1,3 +1,5 @@
+import type { FolderId, GroupId } from "@/src/scope/scoped_id.ts";
+import { scoped } from "@/src/test/scope.ts";
 import { assertEquals, assertExists } from "@std/assert";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
@@ -24,15 +26,19 @@ Deno.test.afterEach(() => deleteUsers(USERNAMES));
 async function aGroup() {
   const cookie = await registerUser(OWNER);
   const group = await createGroup(cookie, "Der Zauberzwerg");
-  return { groupId: group.id, ownerId: await getUserId(OWNER), cookie };
+  return {
+    groupId: scoped<GroupId>(group.id),
+    ownerId: await getUserId(OWNER),
+    cookie,
+  };
 }
 
 /** Creating, with the outcome unwrapped — every test but the refusals expects a folder. */
 async function make(
-  groupId: string,
+  groupId: GroupId,
   ownerId: string,
   title: string,
-  parentFolderId: string | null = null,
+  parentFolderId: FolderId | null = null,
 ) {
   const outcome = await write((transaction) =>
     WritingFolderService.insertFolder(transaction, groupId, {
@@ -43,7 +49,7 @@ async function make(
   );
   assertEquals(outcome.kind, "created");
   if (outcome.kind !== "created") throw new Error("unreachable");
-  return outcome.folder;
+  return { ...outcome.folder, id: scoped<FolderId>(outcome.folder.id) };
 }
 
 Deno.test("a root folder is depth 1 and a child counts up from its parent", async () => {
@@ -84,7 +90,7 @@ Deno.test("nesting stops at the maximum depth", async () => {
 Deno.test("a parent in another group is not a parent", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
-  const theirs = await make(elsewhere.id, ownerId, "Fremder Ordner");
+  const theirs = await make(scoped(elsewhere.id), ownerId, "Fremder Ordner");
 
   const refused = await write((transaction) =>
     WritingFolderService.insertFolder(
@@ -103,7 +109,7 @@ Deno.test("folders are listed in creation order, scoped to their group", async (
 
   const first = await make(groupId, ownerId, "Zuerst");
   const second = await make(groupId, ownerId, "Dann");
-  await make(elsewhere.id, ownerId, "Woanders");
+  await make(scoped(elsewhere.id), ownerId, "Woanders");
 
   const folders = await WritingFolderService.listFolders(groupId);
   assertEquals(folders.map((folder) => folder.id), [first.id, second.id]);
@@ -206,9 +212,9 @@ Deno.test("a folder holding a thread is refused", async () => {
 });
 
 /** A chain of folders, deepest last, so a subtree's height is easy to state in a test. */
-async function chain(groupId: string, ownerId: string, titles: string[]) {
+async function chain(groupId: GroupId, ownerId: string, titles: string[]) {
   const made = [];
-  let parent: string | null = null;
+  let parent: FolderId | null = null;
   for (const title of titles) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose: each level needs the one above
     const folder = await make(groupId, ownerId, title, parent);
@@ -348,7 +354,12 @@ Deno.test("the refusal is about the deepest descendant, not the folder", async (
   assertExists(e2);
   assertEquals(
     (await write((transaction) =>
-      WritingFolderService.moveFolder(transaction, groupId, top.id, e2.id)
+      WritingFolderService.moveFolder(
+        transaction,
+        groupId,
+        top.id,
+        scoped(e2.id),
+      )
     ))
       ?.kind,
     "moved",
@@ -360,7 +371,7 @@ Deno.test("the refusal is about the deepest descendant, not the folder", async (
 Deno.test("moving a folder that is not in the group answers nothing", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
-  const theirs = await make(elsewhere.id, ownerId, "Fremd");
+  const theirs = await make(scoped(elsewhere.id), ownerId, "Fremd");
 
   assertEquals(
     await write((transaction) =>
@@ -378,7 +389,7 @@ Deno.test("moving a folder that is not in the group answers nothing", async () =
 Deno.test("a target in another group is not a target", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
-  const theirs = await make(elsewhere.id, ownerId, "Fremd");
+  const theirs = await make(scoped(elsewhere.id), ownerId, "Fremd");
   const ours = await make(groupId, ownerId, "Weltenbau");
 
   const outcome = await write((transaction) =>
@@ -395,7 +406,7 @@ Deno.test("a target in another group is not a target", async () => {
 Deno.test("deleting a folder that is not there says so, rather than blaming its contents", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
-  const theirs = await make(elsewhere.id, ownerId, "Fremd");
+  const theirs = await make(scoped(elsewhere.id), ownerId, "Fremd");
 
   // Never existed here, and existing-but-elsewhere: both are "no such folder in this group",
   // and neither is a claim that it still holds something.
@@ -404,7 +415,7 @@ Deno.test("deleting a folder that is not there says so, rather than blaming its 
       WritingFolderService.deleteFolder(
         transaction,
         groupId,
-        "01a00000-0000-7000-8000-00000000ffff",
+        scoped("01a00000-0000-7000-8000-00000000ffff"),
       )
     ),
     undefined,
