@@ -105,7 +105,7 @@
     "hono-rate-limiter": "npm:hono-rate-limiter@0.5.4",
     "ioredis": "npm:ioredis@6.0.0",
     "kysely": "npm:kysely@0.29.6",
-    "kysely-postgres-js": "npm:kysely-postgres-js@4.0.0",
+    "kysely-postgres-js": "npm:kysely-postgres-js@5.0.0",
     "nodemailer": "npm:nodemailer@10.0.10",
     "openapi3-ts": "npm:openapi3-ts@4.6.1",
     "postgres": "npm:postgres@3.4.9",

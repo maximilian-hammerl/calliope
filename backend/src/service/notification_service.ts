@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { sql } from "kysely";
 import type {
   NotificationType,
   WritingGroupVisibility,
@@ -303,7 +304,8 @@ async function insertRoleChangeNotification(
     .onConflict((oc) =>
       oc
         .columns(["recipientId", "writingGroupId"])
-        .where("type", "=", "role_changed_in_writing_group")
+        // A literal for the reason `insertReport` gives: the partial index says it as one.
+        .where("type", "=", sql.lit("role_changed_in_writing_group"))
         .doUpdateSet({
           occurredAt: Temporal.Now.instant().toString(),
           // A fresh change is worth seeing again, however the last one was left.
@@ -443,7 +445,8 @@ async function insertVisibilityChangeNotifications(
     .onConflict((oc) =>
       oc
         .columns(["recipientId", "writingGroupId"])
-        .where("type", "=", "visibility_changed_in_writing_group")
+        // A literal for the reason `insertReport` gives: the partial index says it as one.
+        .where("type", "=", sql.lit("visibility_changed_in_writing_group"))
         .doUpdateSet({
           occurredAt: Temporal.Now.instant().toString(),
           readAt: null,

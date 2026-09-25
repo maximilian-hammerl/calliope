@@ -1,3 +1,5 @@
+import { assertEquals } from "@std/assert";
+import { STATUS_CODE } from "@std/http/status";
 import { db } from "@/src/database/client.ts";
 import {
   createGroup,
@@ -71,6 +73,24 @@ export const fileReport = (
     category,
     reason: "Grund",
   });
+
+/**
+ * For a fixture that needs the report to exist. `fileReport` stays for the tests asserting a
+ * refusal; this one fails here with the answer, rather than later as a row that is not there.
+ */
+export async function fileReportOk(
+  cookie: string,
+  targetType: string,
+  targetId: string,
+  category = "harassment",
+): Promise<void> {
+  const response = await fileReport(cookie, targetType, targetId, category);
+  assertEquals(
+    response.status,
+    STATUS_CODE.OK,
+    `filing a report answered ${await response.text()}`,
+  );
+}
 
 export const moveReport = (
   cookie: string,
