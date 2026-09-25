@@ -56,6 +56,22 @@ function offersCreate(node: TreeNode, scope: TreeScope, editable = true): boolea
 
 const forum = (isOperator: boolean): TreeScope => ({ kind: 'forum', isOperator })
 
+const structureMenu = (scope: TreeScope) =>
+  mount(FolderTreeNode, {
+    props: { node: folder('write'), scope, collapsed: new Set<string>() },
+    global: { stubs, provide: { [START_FORUM_CREATE as symbol]: () => undefined } },
+  })
+    .find('[aria-label="In diesem Ordner anlegen"]')
+    .exists()
+
+const deleteButton = (node: TreeNode, scope: TreeScope, mayWrite?: boolean) =>
+  mount(FolderTreeNode, {
+    props: { node, scope, collapsed: new Set<string>(), mayWrite },
+    global: { stubs, provide: { [START_FORUM_CREATE as symbol]: () => undefined } },
+  })
+    .find('[aria-label="Ordner löschen"]')
+    .exists()
+
 describe('the „+" appears where the viewer may actually create', () => {
   it('offers it in a folder members may write in', () => {
     expect(offersCreate(folder('write'), forum(false))).toBe(true)
@@ -76,14 +92,6 @@ describe('the „+" appears where the viewer may actually create', () => {
   })
 
   it('gives an operator the structure menu instead, which a member never sees', () => {
-    const structureMenu = (scope: TreeScope) =>
-      mount(FolderTreeNode, {
-        props: { node: folder('write'), scope, collapsed: new Set<string>() },
-        global: { stubs, provide: { [START_FORUM_CREATE as symbol]: () => undefined } },
-      })
-        .find('[aria-label="In diesem Ordner anlegen"]')
-        .exists()
-
     expect(structureMenu(forum(true))).toBe(true)
     expect(structureMenu(forum(false))).toBe(false)
   })
@@ -107,14 +115,6 @@ describe('the „+" appears where the viewer may actually create', () => {
  * operator had every control but that one, and no way to remove a room they had just made.
  */
 describe('the delete button follows the same rule as the rest of the structure', () => {
-  const deleteButton = (node: TreeNode, scope: TreeScope, mayWrite?: boolean) =>
-    mount(FolderTreeNode, {
-      props: { node, scope, collapsed: new Set<string>(), mayWrite },
-      global: { stubs, provide: { [START_FORUM_CREATE as symbol]: () => undefined } },
-    })
-      .find('[aria-label="Ordner löschen"]')
-      .exists()
-
   it('is offered to an operator on an empty room', () => {
     expect(deleteButton(folder('write'), forum(true))).toBe(true)
   })
