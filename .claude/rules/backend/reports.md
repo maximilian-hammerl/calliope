@@ -31,6 +31,8 @@ a report and making a second claim. Two consequences, and the second has bitten 
 predicate is `closed_at IS NULL`, not a status, or taking a report would let the same member file it
 again; and `insertReport`'s `ON CONFLICT` has to restate that predicate *the same way*, or Postgres
 answers "no unique or exclusion constraint matching the ON CONFLICT specification" for every report.
+**The same way includes literals** — `eb.lit(1)`, never a bound `1`. A parameter matches the index's
+`= 1` only until a prepared statement goes to a generic plan, and then reporting fails intermittently.
 
 `report_outcome` says which kind of closing it was — `content_removed`, `no_violation`, `duplicate`
 and six more. The enum is what the queue filters on; the note is what the next operator reads.

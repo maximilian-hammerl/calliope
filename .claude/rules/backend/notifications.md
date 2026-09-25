@@ -18,8 +18,13 @@ event cannot exist unannounced. Four rules they all share:
 - **Drafts tell nobody.** `new_writing_post` is written on publication — on insert if it goes
   straight out, on the update that clears `is_draft` otherwise. Editing a published post is silent.
 
-Timestamps come from the database clock (`sql\`now()\``), so rows written in one transaction agree
-with each other and with column defaults.
+A role change and a visibility change each keep **one notification per membership**, updated in
+place by an upsert onto a partial unique index (`WHERE type = '…'`). The conflict target's `type` is
+`sql.lit(…)`, not a bound value: a prepared statement's generic plan cannot match a parameter to the
+index's literal, and the upsert then finds no constraint — see `reports.md`.
+
+`occurredAt` and `readAt` come from the application clock like every other timestamp a write sets
+(`backend/AGENTS.md`), so they can differ by milliseconds from the row's defaulted `created_at`.
 
 `NOTIFICATION_RESPONSE` is a discriminated union mirroring the table's CHECK, so reading a thread
 title off an invitation is a type error in the generated client rather than an empty string.

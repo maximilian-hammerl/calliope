@@ -9,7 +9,7 @@ import {
 import {
   aPostBy,
   cleanUpReports,
-  fileReport,
+  fileReportOk,
   listReports,
   makeOperator,
   ownRow,
@@ -41,7 +41,7 @@ Deno.test("the queue names who is answerable, not only what was said", async () 
   const reporterCookie = await registerUser(reporter);
   const { post } = await aPostBy(authorCookie, reportedText);
 
-  await fileReport(reporterCookie, "writing_post", post.id);
+  await fileReportOk(reporterCookie, "writing_post", post.id);
 
   const row = await ownRow(operatorCookie, reportedText, { status: "open" });
 
@@ -61,7 +61,7 @@ Deno.test("a report nothing has happened to yet has no lifecycle to report", asy
   const reporterCookie = await registerUser(reporter);
   const { post } = await aPostBy(authorCookie, reportedText);
 
-  await fileReport(reporterCookie, "writing_post", post.id);
+  await fileReportOk(reporterCookie, "writing_post", post.id);
 
   const row = await ownRow(operatorCookie, reportedText, { status: "open" });
 
@@ -82,7 +82,7 @@ Deno.test("deleting the reported post keeps the author, so it can still be acted
   const reporterCookie = await registerUser(reporter);
   const { group, thread, post } = await aPostBy(authorCookie, reportedText);
 
-  await fileReport(reporterCookie, "writing_post", post.id);
+  await fileReportOk(reporterCookie, "writing_post", post.id);
   assertEquals(
     (await request(
       "DELETE",
@@ -109,8 +109,8 @@ Deno.test("the queue filters by status and category", async () => {
   const authorId = await getUserId(author);
   const { post } = await aPostBy(authorCookie, reportedText);
 
-  await fileReport(reporterCookie, "writing_post", post.id, "spam");
-  await fileReport(reporterCookie, "user", authorId, "harassment");
+  await fileReportOk(reporterCookie, "writing_post", post.id, "spam");
+  await fileReportOk(reporterCookie, "user", authorId, "harassment");
 
   const spam = await rowsFor(operatorCookie, { category: "spam" });
   assert(spam.every((r) => r.category === "spam"));

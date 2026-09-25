@@ -113,7 +113,9 @@ async function insertReport(
               "reportedUserId",
             ]),
             "=",
-            1,
+            // A literal, not a parameter: a prepared statement's generic plan cannot prove a
+            // bound `$n` matches the index's `= 1`, and the upsert then finds no constraint.
+            eb.lit(1),
           )
         )
         // The reason alone. The category cannot be rewritten because it is part of the key — a

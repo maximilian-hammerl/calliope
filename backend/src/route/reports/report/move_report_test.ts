@@ -10,7 +10,7 @@ import {
 import {
   aPostBy,
   cleanUpReports,
-  fileReport,
+  fileReportOk,
   makeOperator,
   moveReport,
   ownRow,
@@ -51,7 +51,7 @@ async function anOpenReport() {
   const reporterCookie = await registerUser(reporter);
   const { post } = await aPostBy(authorCookie, reportedText);
 
-  await fileReport(reporterCookie, "writing_post", post.id);
+  await fileReportOk(reporterCookie, "writing_post", post.id);
   const row = await ownRow(operatorCookie, reportedText, { status: "open" });
   assertExists(row);
 
