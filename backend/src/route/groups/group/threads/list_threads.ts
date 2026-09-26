@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { visibleGroup } from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -31,7 +30,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Every thread of the group, most recently written in first. Not paged: the tab strip these fill is the only way between threads.",
     operationId: "listThreads",
-    middleware: [authenticated, visibleGroup] as const,
+    middleware: VISIBLE_GROUP,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

@@ -3,8 +3,7 @@ import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumThread } from "@/src/scope/forum_scope.ts";
+import { FORUM_THREAD } from "@/src/scope/chains.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import {
   FAVOURITE_FILTER,
@@ -49,7 +48,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a page of the thread's published posts, plus the current user's own unpublished drafts. Other members' drafts are never included.",
     operationId: "listForumPosts",
-    middleware: [authenticated, forumThread] as const,
+    middleware: FORUM_THREAD,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(LIST_POSTS_BODY) },

@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumPage } from "@/src/scope/forum_scope.ts";
+import { FORUM_PAGE } from "@/src/scope/chains.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -24,7 +23,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The page and its prose. Hidden answers 404 rather than 403, so a member cannot tell a page they may not see from one that does not exist.",
     operationId: "getForumPage",
-    middleware: [authenticated, forumPage] as const,
+    middleware: FORUM_PAGE,
     request: { params: PAGE_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

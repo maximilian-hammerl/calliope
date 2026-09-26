@@ -47,10 +47,10 @@ import {
 } from "@/src/scope/scoped_id.ts";
 
 /**
- * Resolvers for the ids in a path, one per level, listed after `authenticated` in the route's
- * middleware — `[authenticated, joinedGroup, threadInGroup] as const`. Each finds its row under
- * the one resolved before it and answers 404 when it is not there or not visible, so a child is
- * only ever reached through its own parent. What the member may *do* stays with the handler.
+ * Resolvers for the ids in a path, one per level, which a route takes as a chain from
+ * `chains.ts`. Each finds its row under the one resolved before it and answers 404 when it is not
+ * there or not visible, so a child is only ever reached through its own parent. What the member
+ * may *do* stays with the handler.
  *
  * They run before the route's validators, so a malformed id is refused here, in the validators'
  * shape, rather than reaching the database.

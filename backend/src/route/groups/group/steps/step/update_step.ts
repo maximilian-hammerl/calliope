@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup, stepInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_STEP } from "@/src/scope/chains.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -34,7 +33,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Idempotent in both directions. Ticking an already-completed step changes nothing, so the first completer wins.",
     operationId: "updateStep",
-    middleware: [authenticated, joinedGroup, stepInGroup] as const,
+    middleware: JOINED_GROUP_STEP,
     request: {
       params: STEP_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_STEP_BODY) },

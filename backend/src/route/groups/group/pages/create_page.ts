@@ -4,8 +4,8 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { folderOf, joinedGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP } from "@/src/scope/chains.ts";
+import { folderOf } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -41,7 +41,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Pages hold material the group revises — a place, a character, a rule — rather than a conversation.",
     operationId: "createPage",
-    middleware: [authenticated, joinedGroup] as const,
+    middleware: JOINED_GROUP,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_PAGE_BODY) },

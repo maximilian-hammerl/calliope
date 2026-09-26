@@ -3,8 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf, forumThread } from "@/src/scope/forum_scope.ts";
+import { FORUM_THREAD } from "@/src/scope/chains.ts";
+import { forumFolderOf } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
@@ -36,7 +36,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Its author or an operator, and only into a folder they may write in — otherwise a member could drop a thread into a room that only reads. Its own permission travels with it; what the folder grants is applied on top.",
     operationId: "moveForumThread",
-    middleware: [authenticated, forumThread] as const,
+    middleware: FORUM_THREAD,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(MOVE_THREAD_BODY) },

@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { visibleGroup } from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
 import {
   userExists,
   UserInWritingGroupService,
@@ -39,7 +38,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Invites a user to the group with a role. The invitation always starts as such; only the invited user can turn it into a membership.",
     operationId: "inviteMember",
-    middleware: [authenticated, visibleGroup] as const,
+    middleware: VISIBLE_GROUP,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_MEMBERSHIP_BODY) },

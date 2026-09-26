@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
 import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { visibleGroup } from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { BanService } from "@/src/service/ban_service.ts";
@@ -29,7 +28,7 @@ export default new OpenAPIHono().openapi(
     description:
       "For asking into a group found through discovery: creates a chat titled after the group and invites every joined administrator. Each has to accept before anything is read — there is no join request, only people talking.",
     operationId: "startGroupConversation",
-    middleware: [authenticated, visibleGroup] as const,
+    middleware: VISIBLE_GROUP,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.Created]: {

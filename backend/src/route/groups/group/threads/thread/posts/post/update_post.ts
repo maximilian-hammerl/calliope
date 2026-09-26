@@ -4,12 +4,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import {
-  joinedGroup,
-  postInThread,
-  threadInGroup,
-} from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_POST } from "@/src/scope/chains.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -52,12 +47,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Edits a post's text, or publishes a draft by clearing its draft flag. Only its author, or an administrator of the group, may change it.",
     operationId: "updatePost",
-    middleware: [
-      authenticated,
-      joinedGroup,
-      threadInGroup,
-      postInThread,
-    ] as const,
+    middleware: JOINED_GROUP_POST,
     request: {
       params: POST_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_POST_BODY) },

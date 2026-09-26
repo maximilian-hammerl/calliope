@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumPage } from "@/src/scope/forum_scope.ts";
+import { FORUM_PAGE } from "@/src/scope/chains.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
@@ -40,7 +39,7 @@ export default new OpenAPIHono().openapi(
     description:
       "A page is written together rather than owned, so whoever may write here may change it — which is why this asks the page's own permission rather than who wrote it.",
     operationId: "updateForumPage",
-    middleware: [authenticated, forumPage] as const,
+    middleware: FORUM_PAGE,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_PAGE_BODY) },

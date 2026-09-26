@@ -3,8 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { folderOf, joinedGroup, pageInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_PAGE } from "@/src/scope/chains.ts";
+import { folderOf } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -38,7 +38,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Does not count as writing in it: the page keeps the activity time it had, so it stays where it was in the order and still reports when it was last edited.",
     operationId: "movePage",
-    middleware: [authenticated, joinedGroup, pageInGroup] as const,
+    middleware: JOINED_GROUP_PAGE,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(MOVE_PAGE_BODY) },

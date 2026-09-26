@@ -4,8 +4,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup, threadInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_THREAD } from "@/src/scope/chains.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -45,7 +44,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Adds a post to the thread, either published or as a draft. Writers and administrators may write posts; readers may not.",
     operationId: "createPost",
-    middleware: [authenticated, joinedGroup, threadInGroup] as const,
+    middleware: JOINED_GROUP_THREAD,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(CREATE_POST_BODY) },

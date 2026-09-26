@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup, stepInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_STEP } from "@/src/scope/chains.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -32,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Completed steps are never removed on their own; this is the only way one leaves.",
     operationId: "deleteStep",
-    middleware: [authenticated, joinedGroup, stepInGroup] as const,
+    middleware: JOINED_GROUP_STEP,
     request: { params: STEP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

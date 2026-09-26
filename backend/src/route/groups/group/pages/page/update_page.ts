@@ -4,8 +4,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup, pageInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_PAGE } from "@/src/scope/chains.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -51,7 +50,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Refused with 409 when somebody else saved since the page was loaded, so an edit cannot be overwritten unseen. Any writer or administrator may change it: a page is material the group keeps, not a post that belongs to whoever wrote it.",
     operationId: "updatePage",
-    middleware: [authenticated, joinedGroup, pageInGroup] as const,
+    middleware: JOINED_GROUP_PAGE,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_PAGE_BODY) },

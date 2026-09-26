@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { folderInGroup, joinedGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_FOLDER } from "@/src/scope/chains.ts";
 import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -43,7 +42,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Where a folder sits is not changed here — moving one is its own operation.",
     operationId: "updateFolder",
-    middleware: [authenticated, joinedGroup, folderInGroup] as const,
+    middleware: JOINED_GROUP_FOLDER,
     request: {
       params: FOLDER_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_FOLDER_BODY) },

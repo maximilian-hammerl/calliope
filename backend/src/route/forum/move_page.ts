@@ -3,8 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { FORUM_PAGE_SUMMARY_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf, forumPage } from "@/src/scope/forum_scope.ts";
+import { FORUM_PAGE } from "@/src/scope/chains.ts";
+import { forumFolderOf } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
@@ -35,7 +35,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Whoever may write the page, and only into a folder they may write in. A page is written together rather than owned, so this asks the page's permission rather than who wrote it.",
     operationId: "moveForumPage",
-    middleware: [authenticated, forumPage] as const,
+    middleware: FORUM_PAGE,
     request: {
       params: PAGE_PARAMS,
       body: { required: true, content: jsonContent(MOVE_PAGE_BODY) },

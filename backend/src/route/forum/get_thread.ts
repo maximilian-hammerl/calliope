@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumThread } from "@/src/scope/forum_scope.ts";
+import { FORUM_THREAD } from "@/src/scope/chains.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -24,7 +23,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The thread itself, without its posts. Hidden answers 404 rather than 403, so a member cannot tell a thread they may not see from one that does not exist.",
     operationId: "getForumThread",
-    middleware: [authenticated, forumThread] as const,
+    middleware: FORUM_THREAD,
     request: { params: THREAD_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

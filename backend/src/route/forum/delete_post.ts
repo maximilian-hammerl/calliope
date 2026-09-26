@@ -2,9 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { postInThread } from "@/src/scope/group_scope.ts";
-import { forumThread } from "@/src/scope/forum_scope.ts";
+import { FORUM_POST } from "@/src/scope/chains.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import {
@@ -33,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Whoever wrote it, and only while they may still write in the thread. Discarding an unpublished draft is this endpoint too.",
     operationId: "deleteForumPost",
-    middleware: [authenticated, forumThread, postInThread] as const,
+    middleware: FORUM_POST,
     request: { params: POST_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

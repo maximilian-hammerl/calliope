@@ -15,10 +15,11 @@ somewhere else would be reached with rights it was never given.
 
 ## A resolver per id, then the handler
 
-Each id has a resolver in `scope/`, listed after `authenticated` in the route's middleware:
-`[authenticated, joinedGroup, threadInGroup, postInThread] as const`. Each finds its row under the
-one resolved before it, answers 404 when the row is missing or not visible, and hands it on —
-`c.get("thread")`. What the member may *do* stays in the handler, as `mayAct` and a 403.
+Each id has a resolver in `scope/`, and a route takes them as one chain from `scope/chains.ts` —
+`middleware: JOINED_GROUP_POST`, which is `authenticated, joinedGroup, threadInGroup, postInThread`.
+Each finds its row under the one resolved before it, answers 404 when the row is missing or not
+visible, and hands it on — `c.get("thread")`. What the member may *do* stays in the handler, as
+`mayAct` and a 403. A new path shape gets a new chain there, never a list in the route.
 
 - **`visibleGroup` for a read, `joinedGroup` for a write** — the two gates `groups.md` describes.
 - **They run before the validators**, so a malformed id is refused there with the validators' 400,
@@ -39,9 +40,10 @@ A cast would forge one, and the compiler allows it, so a lint rule does not: `ca
 ## What the compiler does not see
 
 A resolver left out of a chain still compiles, since Hono merges what every middleware declares; it
-answers 500 at runtime (`earlier`). `parent_scope_test.ts` covers that: it finds every path with a
-parent and a child in `open-api.json` and requires a 404 for a child of another group and of the
-forum. A new route fails there until it has a case.
+answers 500 at runtime (`earlier`). That is why the chains are written once, in `chains.ts`, and
+`parent_scope_test.ts` covers the rest: it finds every path with a parent and a child in
+`open-api.json` and requires a 404 for a child of another group and of the forum. A new route fails
+there until it has a case.
 
 ## Beside it
 
@@ -52,5 +54,5 @@ a path under a new prefix fails there until it has some. Ids in a request body a
 
 ## Not covered
 
-Favourites and forum permissions take a kind and an id, not a parent and a child; `visible_target.ts`
-resolves those. Accepting an invitation names no child.
+Favourites and forum permissions take a kind and an id, not a parent and a child;
+`visible_target.ts` resolves those. Accepting an invitation names no child.

@@ -3,9 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { postInThread } from "@/src/scope/group_scope.ts";
-import { forumThread } from "@/src/scope/forum_scope.ts";
+import { FORUM_POST } from "@/src/scope/chains.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
@@ -45,7 +43,7 @@ export default new OpenAPIHono().openapi(
     description:
       "A post belongs to whoever wrote it, and only while they may still write in the thread — closing a folder freezes what was written in it. Autosaving a draft is this endpoint too.",
     operationId: "updateForumPost",
-    middleware: [authenticated, forumThread, postInThread] as const,
+    middleware: FORUM_POST,
     request: {
       params: POST_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_POST_BODY) },

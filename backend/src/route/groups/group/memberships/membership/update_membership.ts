@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { memberOfGroup, visibleGroup } from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP_MEMBER } from "@/src/scope/chains.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -36,7 +35,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Changes a member's role. The status cannot be changed here: accepting an invitation is the invited user's to do.",
     operationId: "updateMembership",
-    middleware: [authenticated, visibleGroup, memberOfGroup] as const,
+    middleware: VISIBLE_GROUP_MEMBER,
     request: {
       params: MEMBERSHIP_PARAMS,
       body: { required: true, content: jsonContent(UPDATE_MEMBERSHIP_BODY) },

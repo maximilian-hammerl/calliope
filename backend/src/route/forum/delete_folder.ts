@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolder } from "@/src/scope/forum_scope.ts";
+import { FORUM_FOLDER } from "@/src/scope/chains.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 import {
@@ -30,7 +29,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Operators only, and only when it holds nothing: no folder, thread or page. Removing what is inside it is #62's, not this.",
     operationId: "deleteForumFolder",
-    middleware: [authenticated, forumFolder] as const,
+    middleware: FORUM_FOLDER,
     request: { params: FOLDER_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

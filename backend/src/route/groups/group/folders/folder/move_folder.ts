@@ -3,12 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import {
-  folderInGroup,
-  folderOf,
-  joinedGroup,
-} from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_FOLDER } from "@/src/scope/chains.ts";
+import { folderOf } from "@/src/scope/group_scope.ts";
 import {
   MAX_FOLDER_DEPTH,
   WritingFolderService,
@@ -46,7 +42,7 @@ export default new OpenAPIHono().openapi(
     description:
       `Everything inside it moves with it. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels — which depends on its deepest descendant, not on the folder.`,
     operationId: "moveFolder",
-    middleware: [authenticated, joinedGroup, folderInGroup] as const,
+    middleware: JOINED_GROUP_FOLDER,
     request: {
       params: FOLDER_PARAMS,
       body: { required: true, content: jsonContent(MOVE_FOLDER_BODY) },

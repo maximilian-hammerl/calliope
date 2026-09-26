@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { visibleGroup } from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -27,7 +26,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Open steps by age, then completed ones by completion. Readable by whoever may see the group, which for a public group includes non-members.",
     operationId: "listSteps",
-    middleware: [authenticated, visibleGroup] as const,
+    middleware: VISIBLE_GROUP,
     request: { params: GROUP_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

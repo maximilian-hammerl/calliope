@@ -2,12 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { POSTS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import {
-  postInThread,
-  threadInGroup,
-  visibleGroup,
-} from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP_POST } from "@/src/scope/chains.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -36,12 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Returns a single post. Another member's unpublished draft is reported as missing, including to administrators.",
     operationId: "getPost",
-    middleware: [
-      authenticated,
-      visibleGroup,
-      threadInGroup,
-      postInThread,
-    ] as const,
+    middleware: VISIBLE_GROUP_POST,
     request: { params: POST_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

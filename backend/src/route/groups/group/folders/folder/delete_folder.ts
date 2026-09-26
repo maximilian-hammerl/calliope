@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { folderInGroup, joinedGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_FOLDER } from "@/src/scope/chains.ts";
 import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -33,7 +32,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Only an empty one: deleting a folder with anything in it would take writing with it, and there is no history to recover it from. Empty it first.",
     operationId: "deleteFolder",
-    middleware: [authenticated, joinedGroup, folderInGroup] as const,
+    middleware: JOINED_GROUP_FOLDER,
     request: { params: FOLDER_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

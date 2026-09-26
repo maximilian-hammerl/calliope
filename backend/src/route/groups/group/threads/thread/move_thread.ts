@@ -3,12 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import {
-  folderOf,
-  joinedGroup,
-  threadInGroup,
-} from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_THREAD } from "@/src/scope/chains.ts";
+import { folderOf } from "@/src/scope/group_scope.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -41,7 +37,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Does not count as activity in the thread or in its group: moving something is not writing in it, so neither is reordered.",
     operationId: "moveThread",
-    middleware: [authenticated, joinedGroup, threadInGroup] as const,
+    middleware: JOINED_GROUP_THREAD,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(MOVE_THREAD_BODY) },

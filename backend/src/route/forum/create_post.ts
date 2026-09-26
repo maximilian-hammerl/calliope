@@ -3,8 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { POST_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumThread } from "@/src/scope/forum_scope.ts";
+import { FORUM_THREAD } from "@/src/scope/chains.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
@@ -39,7 +38,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Members may reply where the thread grants `write`; operators may anywhere. A thread the member may not see answers 404 rather than 403.",
     operationId: "createForumPost",
-    middleware: [authenticated, forumThread] as const,
+    middleware: FORUM_THREAD,
     request: {
       params: THREAD_PARAMS,
       body: { required: true, content: jsonContent(CREATE_POST_BODY) },

@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup, pageInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_PAGE } from "@/src/scope/chains.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -30,7 +29,7 @@ export default new OpenAPIHono().openapi(
     tags: [PAGES_TAG],
     summary: "Delete a page",
     operationId: "deletePage",
-    middleware: [authenticated, joinedGroup, pageInGroup] as const,
+    middleware: JOINED_GROUP_PAGE,
     request: { params: PAGE_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

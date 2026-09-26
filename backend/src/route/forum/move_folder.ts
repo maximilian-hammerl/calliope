@@ -3,8 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { FORUM_FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolder, forumFolderOf } from "@/src/scope/forum_scope.ts";
+import { FORUM_FOLDER } from "@/src/scope/chains.ts";
+import { forumFolderOf } from "@/src/scope/forum_scope.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
@@ -37,7 +37,7 @@ export default new OpenAPIHono().openapi(
     description:
       `Operators only. Everything inside it moves with it, and every permission below is reduced along the new path — so moving a room into a closed one closes what it holds. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels, which depends on its deepest descendant.`,
     operationId: "moveForumFolder",
-    middleware: [authenticated, forumFolder] as const,
+    middleware: FORUM_FOLDER,
     request: {
       params: FOLDER_PARAMS,
       body: { required: true, content: jsonContent(MOVE_FOLDER_BODY) },

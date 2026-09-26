@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { pageInGroup, visibleGroup } from "@/src/scope/group_scope.ts";
+import { VISIBLE_GROUP_PAGE } from "@/src/scope/chains.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -31,7 +30,7 @@ export default new OpenAPIHono().openapi(
     description:
       "The page with its prose. Its `lastActivityAt` is what an edit has to be sent back with.",
     operationId: "getPage",
-    middleware: [authenticated, visibleGroup, pageInGroup] as const,
+    middleware: VISIBLE_GROUP_PAGE,
     request: { params: PAGE_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

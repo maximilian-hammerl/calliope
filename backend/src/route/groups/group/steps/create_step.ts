@@ -5,8 +5,7 @@ import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
 import { STEPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP } from "@/src/scope/chains.ts";
 import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -37,7 +36,7 @@ export default new OpenAPIHono().openapi(
     tags: [STEPS_TAG],
     summary: "Add a next step",
     operationId: "createStep",
-    middleware: [authenticated, joinedGroup] as const,
+    middleware: JOINED_GROUP,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_STEP_BODY) },

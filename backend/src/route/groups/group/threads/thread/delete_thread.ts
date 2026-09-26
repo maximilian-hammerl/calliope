@@ -2,8 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { joinedGroup, threadInGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP_THREAD } from "@/src/scope/chains.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
@@ -32,7 +31,7 @@ export default new OpenAPIHono().openapi(
     description:
       "Deletes a thread and every post in it. Only the member who started it, or an administrator of the group, may delete it.",
     operationId: "deleteThread",
-    middleware: [authenticated, joinedGroup, threadInGroup] as const,
+    middleware: JOINED_GROUP_THREAD,
     request: { params: THREAD_PARAMS },
     responses: {
       [STATUS_CODE.OK]: {

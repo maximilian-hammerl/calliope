@@ -3,8 +3,8 @@ import { db } from "@/src/database/client.ts";
 import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@std/http/status";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { folderOf, joinedGroup } from "@/src/scope/group_scope.ts";
+import { JOINED_GROUP } from "@/src/scope/chains.ts";
+import { folderOf } from "@/src/scope/group_scope.ts";
 import {
   MAX_FOLDER_DEPTH,
   WritingFolderService,
@@ -44,7 +44,7 @@ export default new OpenAPIHono().openapi(
     description:
       `Nests under \`parentFolderId\`, or sits at the root without one. At most ${MAX_FOLDER_DEPTH} levels deep.`,
     operationId: "createFolder",
-    middleware: [authenticated, joinedGroup] as const,
+    middleware: JOINED_GROUP,
     request: {
       params: GROUP_PARAMS,
       body: { required: true, content: jsonContent(CREATE_FOLDER_BODY) },

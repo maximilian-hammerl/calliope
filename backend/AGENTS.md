@@ -97,12 +97,12 @@ has the rest, including the two collections that are deliberately GETs.
 
 Check what the user may *see* before what they may *do*, and answer anything they may not see with
 **404**, never 403, so its existence stays hidden. **A child is reached only through its parent**:
-each id under a group or the forum has a resolver in `scope/`, listed after `authenticated` —
-`[authenticated, joinedGroup, threadInGroup] as const` — that finds it under the one before it and
-hands it on scoped; a service acting on a child takes only that (`.claude/rules/backend/scope.md`).
-Acts are named against one table — `mayAct(role, "page:change")` for groups, `mayActInForum(…)` for
-the forum — never chosen between helpers. A block means contact, not visibility, and refuses with a
-neutral 403.
+each id under a group or the forum has a resolver in `scope/`, and a route takes them as one chain
+— `middleware: JOINED_GROUP_THREAD` from `scope/chains.ts` — that finds each under the one before it
+and hands it on scoped; a service acting on a child takes only that
+(`.claude/rules/backend/scope.md`). Acts are named against one table — `mayAct(role,
+"page:change")` for groups, `mayActInForum(…)` for the forum — never chosen between helpers. A block
+means contact, not visibility, and refuses with a neutral 403.
 
 ## Notifications and mail
 
