@@ -117,6 +117,15 @@ jobs:
           for migration in migrations/*.sql; do deno task migrations:rollback; done
           deno task migrations:migrate
 
+      # Deleted first: kysely-codegen that cannot read its config still succeeds, writing elsewhere.
+      # Formatted from backend/, whose deno.jsonc the committed file follows.
+      - name: Check the generated types are up to date
+        run: |
+          rm ../backend/src/database/schema.ts
+          deno task types:generate
+          (cd ../backend && deno fmt src/database/schema.ts)
+          git diff --exit-code -- ../backend/src/database/schema.ts
+
       - name: Run tests
         run: deno task test
 
