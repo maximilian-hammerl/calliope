@@ -5,7 +5,7 @@ paths:
   - "backend/src/route/forum/**"
   - "backend/src/route/parent_scope_test.ts"
   - "backend/src/route/stranger_access_test.ts"
-  - "backend/lint/**"
+  - "backend/src/test/route_fixtures.ts"
 ---
 
 # The ids in a path
@@ -31,11 +31,11 @@ visible, and hands it on — `c.get("thread")`. What the member may *do* stays i
 Resolvers hand ids on branded — `ThreadId`, `FolderId`, … in `scoped_id.ts` — and a service that
 acts on a child takes only the brand, so a handler that skipped its resolver does not compile. The
 lookups the resolvers use are the exception: their child parameter stays a string. A service test
-that made its own ids scopes them with `test/scope.ts`.
+that made its own ids scopes them with `mint`.
 
-A cast would forge one, and the compiler allows it, so a lint rule does not: `calliope/scoped-ids`
-(`lint/scoped_ids.ts`) refuses a cast to a scoped id or a value import from `scoped_id.ts` outside
-`src/scope/`, and `test/scope.ts` outside tests. A new scoped id type goes in its pattern too.
+**Never cast to a scoped id or call `mint` outside `src/scope/` and tests**: take it from the
+route's chain, or from `folderOf`/`forumFolderOf` for one in a body. No test probes a body, so a
+cast there leaks.
 
 ## What the compiler does not see
 

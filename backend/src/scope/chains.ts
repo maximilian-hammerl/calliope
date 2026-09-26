@@ -17,9 +17,8 @@ import {
 } from "@/src/scope/forum_scope.ts";
 
 /**
- * A route's whole middleware, one per path shape. Each resolver reads the one before it, and the
- * compiler cannot see a link left out — so the order is written here once, not in every route.
- * `VISIBLE_` reads a group anybody may see; `JOINED_` writes and needs a joined membership.
+ * A route's whole middleware, one per path shape, so the order the compiler cannot check is
+ * written once. `VISIBLE_` reads a group anybody may see; `JOINED_` needs a joined membership.
  */
 
 /**

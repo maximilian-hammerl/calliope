@@ -3,7 +3,6 @@ import sharp from "sharp";
 import openApi from "@/open-api.json" with { type: "json" };
 import app from "@/src/app.ts";
 import { db } from "@/src/database/client.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
 import type { ForumPermission } from "@/src/database/schema.ts";
 import {
   addMember,
@@ -11,32 +10,30 @@ import {
   createGroup,
   deleteUsers,
   getUserId,
-  postBody,
   registerUser,
   request,
   SAME_ORIGIN,
   write,
 } from "@/src/test/support.ts";
+import { clearForum } from "@/src/test/forum.ts";
 import {
-  clearForum,
-  createForumFolder,
-  createForumPage,
-  createForumPost,
-  createForumThread,
-} from "@/src/test/forum.ts";
+  address,
+  answer,
+  createdOk,
+  forumWithChildren,
+  groupWithChildren,
+  type Ids,
+  missingId,
+  REQUEST_BODIES,
+} from "@/src/test/route_fixtures.ts";
 import { fileReportOk, makeOperator } from "@/src/test/reports.ts";
 import { createIdea, patchIdea } from "@/src/test/story_ideas.ts";
 import { blockMember } from "@/src/test/blocks.ts";
+import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 
 /**
- * What a member with no part in something may do with it. For every route with an id in its path,
- * the stranger — signed in, verified, no membership, no authorship, no role — tries it on another
- * member's rows at each visibility, and gets exactly what the case says. Where the rows are hidden
- * from them, they must not be able to tell them from rows that do not exist: the answer is
- * compared with one for ids nobody has.
- *
- * The routes come from `open-api.json`, so a new one fails here until it has a case; a case
- * without an expectation fails with what the route answers now.
+ * For every route with an id in its path: what a member with no part in the rows gets at each
+ * visibility, and, where they cannot see the rows, the same answer as for ids nobody has.
  */
 
 const OWNER = "stranger-access-owner";
@@ -124,8 +121,8 @@ type Fixture = {
 };
 
 type Case = {
-  /** Given the tree whose rows are addressed. */
-  body?: (target: Tree, found: Fixture) => unknown;
+  /** Only where the body depends on the tree; otherwise `REQUEST_BODIES` has it. */
+  body?: (target: Tree) => unknown;
   /** Path ids the case names rather than the tree — a kind, and the row of that kind. */
   params?: (target: Tree) => Record<string, string>;
   /** What the stranger gets, per tree. */
@@ -134,19 +131,9 @@ type Case = {
   control?: Partial<Record<Key, number>>;
 };
 
-async function pageLoadedAt(pageId: string | undefined): Promise<string> {
-  const page = await db
-    .selectFrom("writingPage")
-    .select("lastActivityAt")
-    .where("id", "=", pageId ?? "")
-    .executeTakeFirstOrThrow();
-  return page.lastActivityAt;
-}
-
 const CASES: Record<string, Case> = {
   "GET /api/groups/{groupId}": { stranger: { private: 404, public: 200 } },
   "PATCH /api/groups/{groupId}": {
-    body: () => ({ title: "Umbenannt" }),
     stranger: { private: 404, public: 403 },
   },
   // Asking a public group's administrators is what a stranger may do; its owner is already in it.
@@ -155,25 +142,21 @@ const CASES: Record<string, Case> = {
     control: { private: 403, public: 403 },
   },
   "POST /api/groups/{groupId}/folders": {
-    body: () => ({ title: "Neu" }),
     stranger: { private: 404, public: 404 },
   },
   "GET /api/groups/{groupId}/folders": {
     stranger: { private: 404, public: 200 },
   },
   "PUT /api/groups/{groupId}/folders/{folderId}": {
-    body: () => ({ title: "Umbenannt", description: null }),
     stranger: { private: 404, public: 404 },
   },
   "DELETE /api/groups/{groupId}/folders/{folderId}": {
     stranger: { private: 404, public: 404 },
   },
   "PUT /api/groups/{groupId}/folders/{folderId}/parent": {
-    body: () => ({ parentFolderId: null }),
     stranger: { private: 404, public: 404 },
   },
   "POST /api/groups/{groupId}/memberships": {
-    body: (_, found) => ({ userId: found.strangerId, role: "reader" }),
     stranger: { private: 404, public: 403 },
   },
   "GET /api/groups/{groupId}/memberships": {
@@ -185,14 +168,12 @@ const CASES: Record<string, Case> = {
     control: { private: 409, public: 409 },
   },
   "PATCH /api/groups/{groupId}/memberships/{userId}": {
-    body: () => ({ role: "reader" }),
     stranger: { private: 404, public: 403 },
   },
   "DELETE /api/groups/{groupId}/memberships/{userId}": {
     stranger: { private: 404, public: 403 },
   },
   "POST /api/groups/{groupId}/pages": {
-    body: () => ({ title: "Neu", document: plainTextToDocument("Text") }),
     stranger: { private: 404, public: 404 },
   },
   "GET /api/groups/{groupId}/pages": {
@@ -202,36 +183,27 @@ const CASES: Record<string, Case> = {
     stranger: { private: 404, public: 200 },
   },
   "PUT /api/groups/{groupId}/pages/{pageId}": {
-    body: async (target) => ({
-      title: "Umbenannt",
-      document: plainTextToDocument("Neu"),
-      loadedAt: await pageLoadedAt(target.ids.pageId),
-    }),
     stranger: { private: 404, public: 404 },
   },
   "DELETE /api/groups/{groupId}/pages/{pageId}": {
     stranger: { private: 404, public: 404 },
   },
   "PUT /api/groups/{groupId}/pages/{pageId}/folder": {
-    body: () => ({ folderId: null }),
     stranger: { private: 404, public: 404 },
   },
   "POST /api/groups/{groupId}/steps": {
-    body: () => ({ text: "Planen" }),
     stranger: { private: 404, public: 404 },
   },
   "GET /api/groups/{groupId}/steps": {
     stranger: { private: 404, public: 200 },
   },
   "PATCH /api/groups/{groupId}/steps/{stepId}": {
-    body: () => ({ done: true }),
     stranger: { private: 404, public: 404 },
   },
   "DELETE /api/groups/{groupId}/steps/{stepId}": {
     stranger: { private: 404, public: 404 },
   },
   "POST /api/groups/{groupId}/threads": {
-    body: () => ({ title: "Neu" }),
     stranger: { private: 404, public: 404 },
   },
   "GET /api/groups/{groupId}/threads": {
@@ -241,43 +213,36 @@ const CASES: Record<string, Case> = {
     stranger: { private: 404, public: 200 },
   },
   "PATCH /api/groups/{groupId}/threads/{threadId}": {
-    body: () => ({ title: "Umbenannt" }),
     stranger: { private: 404, public: 404 },
   },
   "DELETE /api/groups/{groupId}/threads/{threadId}": {
     stranger: { private: 404, public: 404 },
   },
   "POST /api/groups/{groupId}/threads/{threadId}/posts": {
-    body: () => postBody("Dazwischen"),
     stranger: { private: 404, public: 404 },
   },
   "QUERY /api/groups/{groupId}/threads/{threadId}/posts": {
-    body: () => ({}),
     stranger: { private: 404, public: 200 },
   },
   "GET /api/groups/{groupId}/threads/{threadId}/posts/{postId}": {
     stranger: { private: 404, public: 200 },
   },
   "PATCH /api/groups/{groupId}/threads/{threadId}/posts/{postId}": {
-    body: () => postBody("Überschrieben"),
     stranger: { private: 404, public: 404 },
   },
   "DELETE /api/groups/{groupId}/threads/{threadId}/posts/{postId}": {
     stranger: { private: 404, public: 404 },
   },
   "PUT /api/groups/{groupId}/threads/{threadId}/folder": {
-    body: () => ({ folderId: null }),
     stranger: { private: 404, public: 404 },
   },
   "PUT /api/forum/folders/{folderId}": {
-    body: () => ({ title: "Umbenannt", description: null }),
     stranger: { hidden: 404, read: 403, write: 403 },
   },
   "DELETE /api/forum/folders/{folderId}": {
     stranger: { hidden: 404, read: 403, write: 403 },
   },
   "PUT /api/forum/folders/{folderId}/parent": {
-    body: () => ({ parentFolderId: null }),
     stranger: { hidden: 404, read: 403, write: 403 },
   },
   // Refused before anything is looked up, so hidden rows and missing ones get the same 403.
@@ -293,20 +258,16 @@ const CASES: Record<string, Case> = {
     stranger: { hidden: 404, read: 200, write: 200 },
   },
   "PUT /api/forum/threads/{threadId}/folder": {
-    body: () => ({ folderId: null }),
     stranger: { hidden: 404, read: 403, write: 403 },
   },
   "QUERY /api/forum/threads/{threadId}/posts": {
-    body: () => ({}),
     stranger: { hidden: 404, read: 200, write: 200 },
   },
   // Replying where members may write is what the forum is for.
   "POST /api/forum/threads/{threadId}/posts": {
-    body: () => postBody("Dazwischen"),
     stranger: { hidden: 404, read: 403, write: 201 },
   },
   "PATCH /api/forum/threads/{threadId}/posts/{postId}": {
-    body: () => postBody("Überschrieben"),
     stranger: { hidden: 404, read: 403, write: 403 },
   },
   "DELETE /api/forum/threads/{threadId}/posts/{postId}": {
@@ -317,23 +278,15 @@ const CASES: Record<string, Case> = {
   },
   // A page members may write is one anybody may edit, as „Linksammlung" in the seed is.
   "PUT /api/forum/pages/{pageId}": {
-    body: async (target) => ({
-      title: "Umbenannt",
-      document: plainTextToDocument("Neu"),
-      loadedAt: await pageLoadedAt(target.ids.pageId),
-    }),
     stranger: { hidden: 404, read: 403, write: 200 },
   },
   "PUT /api/forum/pages/{pageId}/folder": {
-    body: () => ({ folderId: null }),
     stranger: { hidden: 404, read: 403, write: 403 },
   },
   "POST /api/chats/{chatId}/memberships": {
-    body: (_, found) => ({ userId: found.strangerId }),
     stranger: { chat: 404 },
   },
   "QUERY /api/chats/{chatId}/memberships": {
-    body: () => ({}),
     stranger: { chat: 404 },
   },
   // The owner started the chat, so has no invitation to accept.
@@ -343,11 +296,9 @@ const CASES: Record<string, Case> = {
   },
   "DELETE /api/chats/{chatId}/memberships/me": { stranger: { chat: 404 } },
   "QUERY /api/chats/{chatId}/messages": {
-    body: () => ({}),
     stranger: { chat: 404 },
   },
   "POST /api/chats/{chatId}/messages": {
-    body: () => ({ text: "Hallo" }),
     stranger: { chat: 404 },
   },
   "POST /api/chats/{chatId}/read": { stranger: { chat: 404 } },
@@ -355,7 +306,6 @@ const CASES: Record<string, Case> = {
     stranger: { "open idea": 200, "closed idea": 200 },
   },
   "PATCH /api/story-ideas/{ideaId}": {
-    body: () => ({ title: "Umbenannt" }),
     stranger: { "open idea": 403, "closed idea": 403 },
   },
   "DELETE /api/story-ideas/{ideaId}": {
@@ -402,7 +352,6 @@ const CASES: Record<string, Case> = {
   },
   "GET /api/users/{userId}": { stranger: { member: 200 } },
   "POST /api/users/{userId}/ban": {
-    body: () => ({ reason: "Grund" }),
     stranger: { member: 403 },
   },
   // The member is not banned, so an operator finds nothing to lift.
@@ -414,7 +363,6 @@ const CASES: Record<string, Case> = {
   "DELETE /api/auth/sessions/{sessionId}": { stranger: { session: 404 } },
   "GET /api/avatars/{fileId}": { stranger: { avatar: 200 } },
   "PATCH /api/reports/{reportId}": {
-    body: () => ({ status: "in_progress" }),
     stranger: { report: 403 },
   },
 };
@@ -424,6 +372,7 @@ type Operation = {
   method: string;
   path: string;
   keys: readonly Key[] | undefined;
+  bodyRequired: boolean;
 };
 
 /** Every operation with an id in its path, and the rows its part of the API is tried on. */
@@ -434,23 +383,21 @@ function operations(): Operation[] {
       continue;
     }
     const keys = SCOPES.find(({ prefix }) => path.startsWith(prefix))?.keys;
-    for (const method of Object.keys(item)) {
+    for (const [method, definition] of Object.entries(item)) {
       const upper = method.toUpperCase();
-      found.push({ operation: `${upper} ${path}`, method: upper, path, keys });
+      const bodyRequired =
+        (definition as { requestBody?: { required?: boolean } }).requestBody
+          ?.required === true;
+      found.push({
+        operation: `${upper} ${path}`,
+        method: upper,
+        path,
+        keys,
+        bodyRequired,
+      });
     }
   }
   return found;
-}
-
-async function created(
-  cookie: string,
-  path: string,
-  body: unknown,
-  status = 201,
-) {
-  const response = await request("POST", path, cookie, body);
-  assertEquals(response.status, status, `POST ${path}`);
-  return await response.json();
 }
 
 type People = {
@@ -460,34 +407,20 @@ type People = {
   memberId: string;
 };
 
-/** A group of the owner's with one of everything, all at the root so its folder is empty. */
+/** A group of the owner's with one of everything, and the member joined to it. */
 async function groupTree(
   people: People,
   key: "private" | "public",
 ): Promise<Tree> {
-  const cookie = people.ownerCookie;
-  const group = await createGroup(cookie, "Fremde Gruppe", key);
-  const base = `/api/groups/${group.id}`;
-
-  const thread = await created(cookie, `${base}/threads`, { title: "Kapitel" });
-  const post = await created(
-    cookie,
-    `${base}/threads/${thread.id}/posts`,
-    postBody("Text"),
-  );
-  const page = await created(cookie, `${base}/pages`, {
-    title: "Figuren",
-    document: plainTextToDocument("Liste"),
-  });
-  const folder = await created(cookie, `${base}/folders`, { title: "Leer" });
-  const step = await created(cookie, `${base}/steps`, { text: "Planen" });
-  await created(cookie, `${base}/memberships`, {
+  const ids = await groupWithChildren(people.ownerCookie, "Fremde Gruppe", key);
+  const memberships = `/api/groups/${ids.groupId}/memberships`;
+  await createdOk(people.ownerCookie, memberships, {
     userId: people.memberId,
     role: "writer",
   });
-  await created(
+  await createdOk(
     people.memberCookie,
-    `${base}/memberships/me/accept`,
+    `${memberships}/me/accept`,
     undefined,
     200,
   );
@@ -495,59 +428,40 @@ async function groupTree(
   return {
     key,
     controller: "owner",
-    ids: {
-      groupId: group.id,
-      threadId: thread.id,
-      postId: post.id,
-      pageId: page.id,
-      folderId: folder.id,
-      stepId: step.id,
-      userId: people.memberId,
-    },
-    favourite: { targetType: "writing_thread", targetId: thread.id },
+    ids: { ...ids, userId: people.memberId },
+    favourite: { targetType: "writing_thread", targetId: ids.threadId ?? "" },
   };
 }
 
-/** The forum at one permission: a room with a thread and a page, and an empty room beside it. */
 async function forumTree(
   key: ForumPermission,
   people: People,
 ): Promise<Tree> {
-  const room = await createForumFolder(`Raum (${key})`, key);
-  const thread = await createForumThread("Thema", key, room.id);
-  const post = await createForumPost(thread.id, "Text", people.ownerId);
-  const page = await createForumPage("Seite", "Text", key, room.id);
-  const empty = await createForumFolder(`Leer (${key})`, key);
-
+  const ids = await forumWithChildren(`Thema (${key})`, key, people.ownerId);
   return {
     key,
     controller: "operator",
-    ids: {
-      threadId: thread.id,
-      postId: post.id,
-      pageId: page.id,
-      folderId: empty.id,
-    },
-    favourite: { targetType: "writing_thread", targetId: thread.id },
+    ids,
+    favourite: { targetType: "writing_thread", targetId: ids.threadId ?? "" },
   };
 }
 
 /** The owner's conversation with the member, a message in it. */
 async function chatTree(people: People): Promise<Tree> {
-  const chat = await created(people.ownerCookie, "/api/chats", {
+  const chat = await createdOk(people.ownerCookie, "/api/chats", {
     title: "Unter uns",
   });
   const base = `/api/chats/${chat.id}`;
-  await created(people.ownerCookie, `${base}/memberships`, {
+  await createdOk(people.ownerCookie, `${base}/memberships`, {
     userId: people.memberId,
   });
-  await created(
+  await createdOk(
     people.memberCookie,
     `${base}/memberships/me/accept`,
     undefined,
     200,
   );
-  await created(people.ownerCookie, `${base}/messages`, { text: "Hallo" });
+  await createdOk(people.ownerCookie, `${base}/messages`, { text: "Hallo" });
 
   return {
     key: "chat",
@@ -581,7 +495,7 @@ async function ideaTree(
 
 /** A second session of the owner's, so revoking it leaves the one the control signs in with. */
 async function sessionTree(people: People): Promise<Tree> {
-  await created(
+  await createdOk(
     "",
     "/api/auth/login",
     { login: OWNER, password: "a-complex-password" },
@@ -672,12 +586,8 @@ async function tree(key: Key, people: People): Promise<Tree> {
     case "report":
       return await reportTree(people);
     default:
-      return assertNever(key);
+      return assertUnreachable(key);
   }
-}
-
-function assertNever(value: never): never {
-  throw new Error(`Unexpected ${value}`);
 }
 
 /** Only the trees a route is tried on: each costs its own requests. */
@@ -702,7 +612,7 @@ async function fixture(keys: readonly Key[]): Promise<Fixture> {
 
   const trees: Tree[] = [];
   for (const key of keys) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: trees share the forum and the owner
+    // deno-lint-ignore no-await-in-loop -- sequential on purpose: trees share the owner
     trees.push(await tree(key, people));
   }
 
@@ -713,33 +623,6 @@ async function fixture(keys: readonly Key[]): Promise<Fixture> {
     operatorCookie,
     trees,
   };
-}
-
-/** A well-formed id that nothing has. */
-function missingId(): string {
-  const hex = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
-  return `01900000-0000-7000-8000-${hex}`;
-}
-
-function address(path: string, ids: Record<string, string>): string {
-  return path.replace(/\{(\w+)\}/g, (whole, name) => ids[name] ?? whole);
-}
-
-type Answer = { status: number; error: unknown };
-
-async function answer(
-  method: string,
-  path: string,
-  cookie: string,
-  body: unknown,
-): Promise<Answer> {
-  const response = await request(method, path, cookie, body);
-  // A picture is bytes, not an error.
-  if (!response.headers.get("content-type")?.includes("application/json")) {
-    await response.body?.cancel();
-    return { status: response.status, error: undefined };
-  }
-  return { status: response.status, error: (await response.json())?.error };
 }
 
 Deno.test("every route with an id in its path has a case", () => {
@@ -754,6 +637,17 @@ Deno.test("every route with an id in its path has a case", () => {
     Object.keys(CASES).sort(),
     "Add a case for each new route, and remove the case of a route that is gone",
   );
+  const withoutBody = found
+    .filter(({ bodyRequired, operation }) =>
+      bodyRequired && REQUEST_BODIES[operation] === undefined &&
+      CASES[operation]?.body === undefined
+    )
+    .map(({ operation }) => operation);
+  assertEquals(
+    withoutBody,
+    [],
+    "Add these operations' bodies to REQUEST_BODIES in `test/route_fixtures.ts`",
+  );
 });
 
 for (const { operation, method, path, keys } of operations()) {
@@ -766,17 +660,13 @@ for (const { operation, method, path, keys } of operations()) {
     const test = CASES[operation];
     assert(test !== undefined, `${operation} has no case`);
 
-    const ask = async (
-      tree: Tree,
-      ids: Record<string, string>,
-      cookie: string,
-    ) =>
-      await answer(
-        method,
-        address(path, ids),
-        cookie,
-        await test.body?.(tree, found),
-      );
+    const body = (tree: Tree) =>
+      test.body !== undefined ? test.body(tree) : REQUEST_BODIES[operation]?.({
+        ...tree.ids,
+        inviteeId: found.strangerId,
+      });
+    const ask = async (tree: Tree, ids: Ids, cookie: string) =>
+      await answer(method, address(path, ids), cookie, await body(tree));
 
     const actual: Partial<Record<Key, number>> = {};
     const telling: string[] = [];
@@ -784,7 +674,7 @@ for (const { operation, method, path, keys } of operations()) {
     for (const tree of found.trees) {
       const ids = { ...tree.ids, ...test.params?.(tree) };
 
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose: a tree's control may change the rows
+      // deno-lint-ignore no-await-in-loop -- sequential: a control may change the rows
       const tried = await ask(tree, ids, found.strangerCookie);
       actual[tree.key] = tried.status;
 

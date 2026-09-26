@@ -121,7 +121,7 @@ baseline delta), scope every fixture query to its own account. `clearRateLimits(
 test. Prefer assertions that fail for the right reason — a *different* user still sees the group, not
 merely a 200. Prove a guard by perturbing it: remove the check, watch the test fail, restore it.
 
-**A new route with an id in its path needs a case in two tests** that read every route from
-`open-api.json`: `parent_scope_test.ts`, for a child reached through another parent, and
-`stranger_access_test.ts`, for what a member with no part in something gets at each visibility.
-A case without an expectation fails with what the route answers now — review that before pinning it.
+**A new route with an id in its path needs a case in `stranger_access_test.ts`**, for what a member
+with no part in something gets at each visibility, and its body in `REQUEST_BODIES`
+(`test/route_fixtures.ts`). A case without an expectation fails with what the route answers now —
+review that before pinning it. `parent_scope_test.ts` finds nested routes itself.

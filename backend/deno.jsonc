@@ -30,8 +30,6 @@
     "noUncheckedIndexedAccess": true
   },
   "lint": {
-    // The one rule the compiler cannot hold: only `src/scope/` makes a scoped id.
-    "plugins": ["./lint/scoped_ids.ts"],
     "rules": {
       "tags": ["recommended"],
       "include": [

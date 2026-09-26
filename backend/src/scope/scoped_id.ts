@@ -1,8 +1,6 @@
 /**
- * An id that a resolver in this directory has found under its parent and visible to the member
- * asking. A service that acts on a child takes one of these rather than a string, so a handler
- * that never resolved the id does not compile. Minting is this directory's alone, and
- * `test/scope.ts`'s for tests that made their ids themselves — `lint/scoped_ids.ts` holds that.
+ * An id a resolver in this directory found under its parent, visible to the member asking; a
+ * service acting on a child takes only these. Only this directory, and tests, mint them.
  */
 declare const SCOPE: unique symbol;
 

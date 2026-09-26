@@ -47,18 +47,13 @@ import {
 } from "@/src/scope/scoped_id.ts";
 
 /**
- * Resolvers for the ids in a path, one per level, which a route takes as a chain from
- * `chains.ts`. Each finds its row under the one resolved before it and answers 404 when it is not
- * there or not visible, so a child is only ever reached through its own parent. What the member
- * may *do* stays with the handler.
- *
- * They run before the route's validators, so a malformed id is refused here, in the validators'
- * shape, rather than reaching the database.
+ * Resolvers for the ids in a path, one per level, taken as a chain from `chains.ts`. Each answers
+ * 404 unless its row is under the one before and visible; what a member may *do* is the handler's.
  */
 
 const ID = z.uuidv7();
 
-/** The path segment as an id, or the 400 the validator would have given. */
+/** The path segment as an id, or the validator's 400 — resolvers run before validators. */
 export function pathId(c: Context, name: string): string | Response {
   const raw = c.req.param(name);
   if (raw === undefined) {
@@ -148,7 +143,8 @@ export const joinedGroup = createMiddleware<{
     return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
   }
 
-  c.set("group", { id: mint<GroupId>(id), role });
+  // Lower case, as Postgres writes a uuid and as every other resolver takes it from the row.
+  c.set("group", { id: mint<GroupId>(id.toLowerCase()), role });
   await next();
   return;
 });
