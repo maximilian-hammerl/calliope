@@ -13,6 +13,10 @@ should do better, is written up in
 [the product requirements](docs/product-requirements-feature-specification.md), which grew out
 of [interviews with members](docs/interviews.md).
 
+The community plans Calliope together in the [Calliope Community](https://discourse.hammerl.dev), in
+German: what is being built, on a board per milestone, and the wishes and ideas members vote on.
+Technical tasks and bugs stay in this repository's issues.
+
 Self-hosted: one Docker Compose stack behind Caddy, described in the
 [deployment runbook](deployment/README.md).
 

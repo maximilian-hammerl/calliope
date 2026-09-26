@@ -14,7 +14,7 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   forum's permissions are shaped as they are. Each file is scoped by `paths:` and loads only when
   you open a matching file. When you change how an area works, change its rule in the same commit.
 - `.claude/skills/`: the workflows worth doing the same way every time — `/db-reset`,
-  `/regenerate`, `/test`, `/validate`.
+  `/mirror-story`, `/regenerate`, `/test`, `/validate`.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
 ## How to work here
@@ -84,6 +84,10 @@ a section says where an idea came from, and an issue says what is decided.
 
 An issue is short: what the problem is, why it matters, what is decided, and an „Open questions" list
 for what is not. Labels say type and area; nothing else goes in the title.
+
+**Stories are mirrored to the community forum.** A user or admin story with a milestone or `status:
+proposed` also has a topic at discourse.hammerl.dev, written for members. When you create one,
+change its milestone, or close or reopen it, run `/mirror-story` in the same step.
 
 ## Deployment
 
