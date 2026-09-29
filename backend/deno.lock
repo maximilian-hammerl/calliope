@@ -1,36 +1,35 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@logtape/logtape@2.3.6": "2.3.6",
+    "jsr:@logtape/logtape@2.3.7": "2.3.7",
     "jsr:@std/assert@1.0.19": "1.0.19",
     "jsr:@std/assert@^1.0.19": "1.0.19",
-    "jsr:@std/async@1.5.0": "1.5.0",
-    "jsr:@std/async@^1.5.0": "1.5.0",
+    "jsr:@std/async@1.5.1": "1.5.1",
+    "jsr:@std/async@^1.5.1": "1.5.1",
     "jsr:@std/cli@^1.0.32": "1.0.32",
-    "jsr:@std/data-structures@^1.1.1": "1.1.2",
-    "jsr:@std/data-structures@^1.1.2": "1.1.2",
+    "jsr:@std/data-structures@^1.1.3": "1.1.3",
     "jsr:@std/encoding@^1.0.11": "1.0.11",
     "jsr:@std/fmt@^1.0.10": "1.0.10",
     "jsr:@std/fs@^1.0.24": "1.0.24",
     "jsr:@std/html@^1.0.7": "1.0.7",
-    "jsr:@std/http@1.1.3": "1.1.3",
+    "jsr:@std/http@1.1.4": "1.1.4",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
-    "jsr:@std/net@^1.0.6": "1.0.6",
+    "jsr:@std/net@^1.0.7": "1.0.7",
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
-    "jsr:@std/streams@^1.1.2": "1.1.2",
-    "jsr:@std/testing@1.0.20": "1.0.20",
+    "jsr:@std/streams@^1.2.0": "1.2.0",
+    "jsr:@std/testing@1.0.21": "1.0.21",
     "jsr:@std/uuid@1.0.9": "1.0.9",
-    "jsr:@std/uuid@1.1.1": "1.1.1",
-    "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.8",
-    "npm:@hono/zod-openapi@1.6.3": "1.6.3_hono@4.13.8_zod@4.6.5",
+    "jsr:@std/uuid@1.1.2": "1.1.2",
+    "npm:@hono/structured-logger@1.0.0": "1.0.0_hono@4.13.9",
+    "npm:@hono/zod-openapi@1.6.3": "1.6.3_hono@4.13.9_zod@4.6.5",
     "npm:@types/nodemailer@8.0.2": "8.0.2",
-    "npm:hono-rate-limiter@0.5.4": "0.5.4_hono@4.13.8",
-    "npm:hono@4.13.8": "4.13.8",
+    "npm:hono-rate-limiter@0.5.4": "0.5.4_hono@4.13.9",
+    "npm:hono@4.13.9": "4.13.9",
     "npm:ioredis@6.0.0": "6.0.0",
-    "npm:kysely-postgres-js@5.0.0": "5.0.0_kysely@0.29.6_postgres@3.4.9",
+    "npm:kysely-postgres-js@5.0.1": "5.0.1_kysely@0.29.6_postgres@3.4.9",
     "npm:kysely@0.29.6": "0.29.6",
     "npm:nodemailer@10.0.10": "10.0.10",
     "npm:openapi3-ts@4.6.1": "4.6.1",
@@ -39,8 +38,8 @@
     "npm:zod@4.6.5": "4.6.5"
   },
   "jsr": {
-    "@logtape/logtape@2.3.6": {
-      "integrity": "42d8429ee6f09ea38ac090fc8ab522c905dcb56a882b2466ba55bfc4b58efd76"
+    "@logtape/logtape@2.3.7": {
+      "integrity": "b5b958c09692e07d687bc909d806481159edec5feffa6b69eb655726ae2a3106"
     },
     "@std/assert@1.0.19": {
       "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
@@ -48,10 +47,10 @@
         "jsr:@std/internal@^1.0.12"
       ]
     },
-    "@std/async@1.5.0": {
-      "integrity": "4c1f22d287a17ad7d8643b1952bc5a4d21e5d8b68dc8c20d8268eecc69096e82",
+    "@std/async@1.5.1": {
+      "integrity": "c82455dc70cab29a0adf3ac8075db934785bffdd3902af5afcf25d21a74cfd86",
       "dependencies": [
-        "jsr:@std/data-structures@^1.1.1"
+        "jsr:@std/data-structures"
       ]
     },
     "@std/cli@1.0.32": {
@@ -60,8 +59,8 @@
     "@std/data-structures@1.1.1": {
       "integrity": "7e1fcf19771fb9c6dbcd7f65039d6d42ef8dc023cfbc0c4cdc74b24e09229380"
     },
-    "@std/data-structures@1.1.2": {
-      "integrity": "2471377c9e0051f9ec34e57d0ebd0ad133a5a889677446ec6ba9938e4e102918"
+    "@std/data-structures@1.1.3": {
+      "integrity": "a5ec67199e79ee5b29123474d93fa9a47701ec08a4ef3bd1b623a36476306c5b"
     },
     "@std/encoding@1.0.11": {
       "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
@@ -78,8 +77,8 @@
     "@std/html@1.0.7": {
       "integrity": "175c818905a6e75743c69c251395e273d82698e58cfe7dd76268d70e28b8d8fe"
     },
-    "@std/http@1.1.3": {
-      "integrity": "73a98e05ff58aa18bea562d286172e6c815b1eddd4fcab194beda19e3683b88c",
+    "@std/http@1.1.4": {
+      "integrity": "4f1575226ca7c0df1df38b26d50265fed30869b2a63ab867edc5b92492150c8c",
       "dependencies": [
         "jsr:@std/cli",
         "jsr:@std/encoding",
@@ -98,8 +97,8 @@
     "@std/media-types@1.1.0": {
       "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
     },
-    "@std/net@1.0.6": {
-      "integrity": "110735f93e95bb9feb95790a8b1d1bf69ec0dc74f3f97a00a76ea5efea25500c"
+    "@std/net@1.0.7": {
+      "integrity": "e0b995738cfe2ed56f64591d400e55f143cff164efd690343f2deb4cf4d06d86"
     },
     "@std/path@1.1.6": {
       "integrity": "c68485c2a4dfbb5ae3cc74fae4e8c4e5d874cf8a8ed12927917235c758b46cbe",
@@ -107,15 +106,15 @@
         "jsr:@std/internal@^1.0.14"
       ]
     },
-    "@std/streams@1.1.2": {
-      "integrity": "0249bf9b78a999f57032ca4d8e7ccaa57579090242640b35ddc948fbb745d3af"
+    "@std/streams@1.2.0": {
+      "integrity": "256b934254778f2bf45f5713b934209ff29e9b4b7fd4ec095219966813758c5f"
     },
-    "@std/testing@1.0.20": {
-      "integrity": "21380ed438672762e4ec549cbf4fe41c5b68f5598773a30b64abe7375513e721",
+    "@std/testing@1.0.21": {
+      "integrity": "a0d14b2519005242821565091127c7d6fa96ca1b330e84e9249afcd602ee764f",
       "dependencies": [
         "jsr:@std/assert@^1.0.19",
-        "jsr:@std/async@^1.5.0",
-        "jsr:@std/data-structures@^1.1.2",
+        "jsr:@std/async@^1.5.1",
+        "jsr:@std/data-structures",
         "jsr:@std/fs",
         "jsr:@std/internal@^1.0.14",
         "jsr:@std/path@^1.1.6"
@@ -124,8 +123,8 @@
     "@std/uuid@1.0.9": {
       "integrity": "44b627bf2d372fe1bd099e2ad41b2be41a777fc94e62a3151006895a037f1642"
     },
-    "@std/uuid@1.1.1": {
-      "integrity": "7b49060282d90f72fec64952f8c7a2914cbe6fdba3eca665f8cedc90830154a7"
+    "@std/uuid@1.1.2": {
+      "integrity": "348b68ca357058d83e3aa463c8a72e836d7df7e9e095332b0e1ec78873b40b7a"
     }
   },
   "npm": {
@@ -142,13 +141,13 @@
         "tslib"
       ]
     },
-    "@hono/structured-logger@1.0.0_hono@4.13.8": {
+    "@hono/structured-logger@1.0.0_hono@4.13.9": {
       "integrity": "sha512-MozQvH7oFsi/Pc/0sK6ai7cYpDX81t4UnrxgOo/MslfC7lPFnRcvayVkY3g1Wi/cX6dFmtLhZoGALOfdvAIDgA==",
       "dependencies": [
         "hono"
       ]
     },
-    "@hono/zod-openapi@1.6.3_hono@4.13.8_zod@4.6.5": {
+    "@hono/zod-openapi@1.6.3_hono@4.13.9_zod@4.6.5": {
       "integrity": "sha512-VYR82Y60plu8g3pN60OUXMVKpmxh3R04Qs++3DY9vtwZ9/sA/BRY0PcRIR+Z37/3itWtM7pYwT9bKiH9JhqV6Q==",
       "dependencies": [
         "@asteasolutions/zod-to-openapi",
@@ -158,7 +157,7 @@
         "zod"
       ]
     },
-    "@hono/zod-validator@0.9.1_hono@4.13.8_zod@4.6.5": {
+    "@hono/zod-validator@0.9.1_hono@4.13.9_zod@4.6.5": {
       "integrity": "sha512-iiv6w0qrIc0arfvCtUqBWsvl4fXjzaTcQcCJTTtCnkawF9HHGE+KjEl0ox3gQJ6rKZEgE3mLExlQCF72M+mNuw==",
       "dependencies": [
         "hono",
@@ -363,14 +362,14 @@
     "detect-libc@2.1.2": {
       "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="
     },
-    "hono-rate-limiter@0.5.4_hono@4.13.8": {
+    "hono-rate-limiter@0.5.4_hono@4.13.9": {
       "integrity": "sha512-P3/cscAmz1hA+MuM+Hn9gP/EyO2zWv2aXIFkVYuLZkPzrPa4oaWdVCS94vyDlsNBgeMnE/Hr2+LznIKQxrF0ng==",
       "dependencies": [
         "hono"
       ]
     },
-    "hono@4.13.8": {
-      "integrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ=="
+    "hono@4.13.9": {
+      "integrity": "sha512-7dMkQmZoC4E6F7AtaQSPhlWAdnBti+j7rreMZl8QB4jFiEhP9TWbGWUMi8WYzBCgmgulxuvLQupKqo+Co6Omyg=="
     },
     "ioredis@6.0.0": {
       "integrity": "sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==",
@@ -383,8 +382,8 @@
         "standard-as-callback"
       ]
     },
-    "kysely-postgres-js@5.0.0_kysely@0.29.6_postgres@3.4.9": {
-      "integrity": "sha512-KD3Lzhzua5KlHFrtQdkxYH5tOpiJTz0e1OhJjEcJAmce7lfpXzZA07ZJYj1QQV1gKBoYnBBqM/621St6/X0YUA==",
+    "kysely-postgres-js@5.0.1_kysely@0.29.6_postgres@3.4.9": {
+      "integrity": "sha512-3qY2qzXJszS35CMuknpon79CE5G7MfcTMoIQHuFmGsaQQ2rau3rwx7eNaRJkO9nhli8yQedQroBZ/VehzNJy4w==",
       "dependencies": [
         "kysely",
         "postgres"
@@ -472,19 +471,19 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@logtape/logtape@2.3.6",
+      "jsr:@logtape/logtape@2.3.7",
       "jsr:@std/assert@1.0.19",
-      "jsr:@std/async@1.5.0",
-      "jsr:@std/http@1.1.3",
-      "jsr:@std/testing@1.0.20",
-      "jsr:@std/uuid@1.1.1",
+      "jsr:@std/async@1.5.1",
+      "jsr:@std/http@1.1.4",
+      "jsr:@std/testing@1.0.21",
+      "jsr:@std/uuid@1.1.2",
       "npm:@hono/structured-logger@1.0.0",
       "npm:@hono/zod-openapi@1.6.3",
       "npm:@types/nodemailer@8.0.2",
       "npm:hono-rate-limiter@0.5.4",
-      "npm:hono@4.13.8",
+      "npm:hono@4.13.9",
       "npm:ioredis@6.0.0",
-      "npm:kysely-postgres-js@5.0.0",
+      "npm:kysely-postgres-js@5.0.1",
       "npm:kysely@0.29.6",
       "npm:nodemailer@10.0.10",
       "npm:openapi3-ts@4.6.1",
