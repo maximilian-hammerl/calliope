@@ -3,11 +3,11 @@ name: workflow-review
 description: Review a change to calliope — uncommitted changes, a branch against main, or a GitHub pull request — for bugs and for breaks of calliope's written rules (the AGENTS.md files, the .claude/rules/ notes for the touched paths, the design system), and report verified findings as must fix, should fix and can fix, each with its options and a recommendation. Use when asked to review a change, a branch or a PR, or before handing a change over.
 argument-hint: "[<branch> | pr <number>]"
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git hash-object *), Bash(git cat-file *), Bash(gh pr view *), Bash(gh pr diff *), Bash(gh issue view *), Bash(grep *), Bash(npm ci), Bash(deno task db:up), Bash(deno task db:drop)
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(gh pr view *), Bash(gh pr diff *), Bash(gh issue view *), Bash(grep *), Bash(dbmate --env-file ../.env --url *calliope_review*)
 ---
 
 A review reports only what it has checked and leaves every decision to the human. It changes no
-file until the human picks fixes (step 8).
+file until the human picks fixes (step 8), except a stale generated file its checks regenerate.
 
 ## 1. Target and intent
 
@@ -34,16 +34,13 @@ Arguments: `$ARGUMENTS`
 ## 2. Checks, in the background
 
 Start `/workflow-validate` without `--fix` for the target, in the directory that holds it, before
-the hunt. It changes no tracked file:
+the hunt. The only files it changes are generated ones: a `schema.ts` or `open-api.json` it
+regenerates was stale, which is a finding, and stays regenerated, since that is what to commit.
 
-- Where it regenerates `schema.ts` or `open-api.json`, keep the file first (`git hash-object -w
-  <file>` prints a blob id) and put it back afterwards (`git cat-file blob <id> > <file>`). A file
-  that moved is a finding.
-- A throwaway worktree needs `npm ci` in `frontend/` and a copy of the checkout's `.env` whose
-  `DATABASE_URL` names `calliope_review`. `deno task db:up` in that worktree's `database/` creates
-  and migrates it, so the tests run on the target's migrations, not on the human's database. It
-  shares the checkout's containers: Compose names its project after the directory, so
-  `docker compose ps` and `up` run in the checkout, not in the worktree.
+A throwaway worktree is set up as `/workflow-validate` step 3 says, with one difference: its
+`.env` copy always names `calliope_review` in `DATABASE_URL` (`<review>`), so the tests run on the
+target's migrations and never on the human's database. `dbmate --env-file ../.env --url
+"<review>" up` in its `database/` creates and migrates it.
 
 ## 3. Hunt: one agent per angle
 
@@ -181,4 +178,4 @@ End by asking which to apply, answered by id and option ("M1, S2: B"); the other
 3. Hand over as for any change, without offering another review, and commit only after a confirmed
    review (root `AGENTS.md`).
 4. Once nothing in the review's worktree waits for review or a commit, remove it, and drop its
-   database from inside it first (`deno task db:drop` in its `database/`).
+   database first (`dbmate --env-file ../.env --url "<review>" drop` in its `database/`).

@@ -19,9 +19,6 @@ allowed-tools: Bash(gh issue list *), Bash(gh issue view *), Bash(gh label list 
   (`accessibility`, `privacy`, `performance`, `security`). The other labels are Dependabot's.
 - **The body is short:** an opening paragraph saying what the problem is, then `## Why`,
   `## Decided` for what is, and `## Open questions` for what is not.
-- **The specification** (`docs/product-requirements-feature-specification.md`) is cited as `§N`,
-  issues as `#N`. Quote the section before citing it. It is an inspiration: a section says where an
-  idea came from, the issue says what is decided.
 - **Before writing one,** search for a duplicate in every state.
 
 ## Commands
@@ -49,4 +46,5 @@ gh issue edit <n> --remove-label 'status: proposed' --add-label 'status: rejecte
 gh issue close <n> --reason 'not planned'
 ```
 
-Writing, editing and closing publish at once, on a public repository: they ask first.
+Writing, editing and closing publish at once, on a public repository, so they aren't in
+`allowed-tools` and ask for permission first.

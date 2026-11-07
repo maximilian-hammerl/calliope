@@ -9,8 +9,7 @@ allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git f
 (`Backend`, `Database`, `Frontend`) and nobody bypasses it. Pull requests merge with a merge
 commit, never squashed or rebased, so stacked branches keep their commits; a merged branch is
 deleted. No reviewer is required, so the human's review before the commit is the change's review.
-Their confirmation ("reviewed, commit it") covers the commit, the push and the pull request, which
-then merges itself.
+What the human's confirmation covers is in the root `AGENTS.md`.
 
 ## 1. Start
 
@@ -71,18 +70,6 @@ Elsewhere, one background `gh pr checks <number> --watch`, not repeated polling.
 2. **The deploy is the human's:** `./deployment/deploy.sh --environment testing` on the server
    (`deployment/README.md`). Say that it is still to do.
 
-## Stacked pull requests
-
-For changes that build on each other, such as the four of the Node migration:
-
-- Each branch starts from the one below it, and its pull request targets that branch
-  (`gh pr create --base <branch below>`), so it shows only its own diff. Validate runs on it there.
-- Auto-merge goes on the bottom one only, which targets `main`. When it merges and its branch is
-  deleted, GitHub points the next pull request at `main`; the checks it already has count, since
-  they belong to its commits. Then set auto-merge on that one.
-- A fix lower in the stack is committed on its branch after review, then merged into each branch
-  above (`git merge`, never a rebase) and pushed.
-
 ## 6. What's still open
 
 Unasked, at the end: go through every source since the session's first request, and say whether
@@ -102,3 +89,15 @@ line: what it is, where it came from, and a proposed next step: do it here, an i
 (`/workflow-issues`, after its duplicate search), or let it go. Act on none before the human says
 which. With nothing open, say that everything is done and name the sources checked; a source that
 couldn't be checked isn't empty, and the change isn't done.
+
+## Stacked pull requests
+
+For changes that build on each other:
+
+- Each branch starts from the one below it, and its pull request targets that branch
+  (`gh pr create --base <branch below>`), so it shows only its own diff. Validate runs on it there.
+- Auto-merge goes on the bottom one only, which targets `main`. When it merges and its branch is
+  deleted, GitHub points the next pull request at `main`; the checks it already has count, since
+  they belong to its commits. Then set auto-merge on that one.
+- A fix lower in the stack is committed on its branch after review, then merged into each branch
+  above (`git merge`, never a rebase) and pushed.
