@@ -32,11 +32,11 @@ test("a new post moves the last activity of its thread and group", async () => {
   await insertPost(threadId);
 
   assert(
-    await lastActivityOf("writing_thread", threadId) > threadBefore,
+    (await lastActivityOf("writing_thread", threadId)) > threadBefore,
     "the thread the post belongs to should have moved",
   );
   assert(
-    await lastActivityOf("writing_group", groupId) > groupBefore,
+    (await lastActivityOf("writing_group", groupId)) > groupBefore,
     "the activity should propagate up to the group",
   );
   assert.equal(
@@ -59,7 +59,7 @@ test("activity is recorded for a thread whose author is gone", async () => {
   const before = await lastActivityOf("writing_thread", threadId);
   await insertPost(threadId);
 
-  assert(await lastActivityOf("writing_thread", threadId) > before);
+  assert((await lastActivityOf("writing_thread", threadId)) > before);
 });
 
 test("deleting a post counts as activity too", async () => {
@@ -72,7 +72,7 @@ test("deleting a post counts as activity too", async () => {
   const before = await lastActivityOf("writing_thread", threadId);
   await client.query(`DELETE FROM public.writing_post WHERE id = $1`, [postId]);
 
-  assert(await lastActivityOf("writing_thread", threadId) > before);
+  assert((await lastActivityOf("writing_thread", threadId)) > before);
 });
 
 test("deleting a group with content does not error on the way down", async () => {
@@ -84,9 +84,7 @@ test("deleting a group with content does not error on the way down", async () =>
 
   // The cascade removes threads and posts while their triggers are still trying to write
   // back to the rows being removed.
-  await client.query(`DELETE FROM public.writing_group WHERE id = $1`, [
-    groupId,
-  ]);
+  await client.query(`DELETE FROM public.writing_group WHERE id = $1`, [groupId]);
 
   const { rows } = await client.query<{ count: string }>(
     `SELECT count(*)::text AS count FROM public.writing_thread WHERE writing_group_id = $1`,

@@ -37,31 +37,22 @@ const config: Config = {
   // so they cannot drift from each other or from the database.
   serializer: {
     serializeFile: (metadata, dialect, options) => {
-      const typeScriptTypes = new TypeScriptSerializer().serializeFile(
-        metadata,
-        dialect,
-        {
-          ...options,
-          overrides: {
-            ...options?.overrides,
-            columns: Object.fromEntries(
-              Object.entries(columnOverrides).map((
-                [column, { typeScript }],
-              ) => [column, typeScript]),
-            ),
-          },
+      const typeScriptTypes = new TypeScriptSerializer().serializeFile(metadata, dialect, {
+        ...options,
+        overrides: {
+          ...options?.overrides,
+          columns: Object.fromEntries(
+            Object.entries(columnOverrides).map(([column, { typeScript }]) => [column, typeScript]),
+          ),
         },
-      );
+      });
 
       const zodSchemas = new ZodSerializer().serializeFile(metadata, dialect, {
         ...options,
         overrides: {
           ...options?.overrides,
           columns: Object.fromEntries(
-            Object.entries(columnOverrides).map(([column, { zod }]) => [
-              column,
-              zod,
-            ]),
+            Object.entries(columnOverrides).map(([column, { zod }]) => [column, zod]),
           ),
         },
       });

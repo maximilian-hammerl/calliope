@@ -65,10 +65,9 @@ test("removing every member in one statement removes the group once", async () =
 
   // The trigger is per statement, so this fires it once with both departures in its
   // transition table rather than once per row.
-  await client.query(
-    `DELETE FROM public.user_in_writing_group WHERE writing_group_id = $1`,
-    [groupId],
-  );
+  await client.query(`DELETE FROM public.user_in_writing_group WHERE writing_group_id = $1`, [
+    groupId,
+  ]);
 
   assert.equal(await countRows("writing_group", groupId), 0);
 });

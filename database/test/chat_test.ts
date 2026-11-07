@@ -48,9 +48,7 @@ test("an invitation records when it was sent, and nothing else", async () => {
 
   await addChatMember(chatGroupId, userId, "invited");
 
-  const { rows } = await client.query<
-    { invited_at: string | null; joined_at: string | null }
-  >(
+  const { rows } = await client.query<{ invited_at: string | null; joined_at: string | null }>(
     `SELECT invited_at, joined_at FROM public.user_in_chat_group
      WHERE chat_group_id = $1 AND user_id = $2`,
     [chatGroupId, userId],
@@ -84,7 +82,7 @@ test("a message moves the chat's last activity", async () => {
 
   await insertChatMessage(chatGroupId, memberId);
 
-  assert(await lastActivityOfChat(chatGroupId) > before);
+  assert((await lastActivityOfChat(chatGroupId)) > before);
 });
 
 test("the chat goes when the last member leaves, not before", async () => {
@@ -95,11 +93,7 @@ test("the chat goes when the last member leaves, not before", async () => {
     `DELETE FROM public.user_in_chat_group WHERE chat_group_id = $1 AND user_id = $2`,
     [chatGroupId, memberId],
   );
-  assert.equal(
-    await countChatGroups(chatGroupId),
-    1,
-    "one member is still in it",
-  );
+  assert.equal(await countChatGroups(chatGroupId), 1, "one member is still in it");
 
   await client.query(
     `DELETE FROM public.user_in_chat_group WHERE chat_group_id = $1 AND user_id = $2`,
@@ -115,9 +109,7 @@ test("messages go with the chat, and survive their author", async () => {
   await client.query(`DELETE FROM public.user WHERE id = $1`, [memberId]);
 
   // The writing outlives the account, so a message does too, with no author.
-  const { rows } = await client.query<
-    { count: string; created_by: string | null }
-  >(
+  const { rows } = await client.query<{ count: string; created_by: string | null }>(
     `SELECT count(*)::text AS count, max(created_by::text) AS created_by
      FROM public.chat_message WHERE chat_group_id = $1`,
     [chatGroupId],
@@ -152,20 +144,26 @@ test("a notification carries one group, never both and never neither", async () 
   const writingGroupId = await insertChatGroup("chat-one-group-decoy");
 
   // Neither.
-  await assert.rejects(() =>
-    client.query(
-      `INSERT INTO public.notification (recipient_id, type, actor_id)
+  await assert.rejects(
+    () =>
+      client.query(
+        `INSERT INTO public.notification (recipient_id, type, actor_id)
          VALUES ($1, 'invited_to_chat_group', $2)`,
-      [memberId, otherId],
-    ), { message: /notification_subject_matches_type/u });
+        [memberId, otherId],
+      ),
+    { message: /notification_subject_matches_type/u },
+  );
 
   // A chat invitation pointing at a writing group.
-  await assert.rejects(() =>
-    client.query(
-      `INSERT INTO public.notification (recipient_id, writing_group_id, type, actor_id)
+  await assert.rejects(
+    () =>
+      client.query(
+        `INSERT INTO public.notification (recipient_id, writing_group_id, type, actor_id)
          VALUES ($1, $2, 'invited_to_chat_group', $3)`,
-      [memberId, writingGroupId, otherId],
-    ), { message: /notification/u });
+        [memberId, writingGroupId, otherId],
+      ),
+    { message: /notification/u },
+  );
 
   // And the right one is accepted.
   await client.query(
