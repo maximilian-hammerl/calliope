@@ -14,7 +14,7 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   forum's permissions are shaped as they are. Each file is scoped by `paths:` and loads only when
   you open a matching file. When you change how an area works, change its rule in the same commit.
 - `.claude/skills/`: the workflows worth doing the same way every time — `/db-reset`,
-  `/regenerate`, `/test`, `/validate`.
+  `/regenerate`, `/workflow-validate`.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
 ## How to work here
@@ -27,16 +27,18 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   to build the answer, least of all when the answer could go several ways.
 - **Push back.** If a rule or a decision makes no sense, a better alternative exists, or something
   has not been considered, say so before doing the work.
-- **Commits are the human's.** Reading state (`git status`, `git diff`, `git log`) and syncing
-  (`git fetch`, `git pull`, `git merge`) are fine. Branching, committing and pushing are not: leave
-  the changes in the working tree and say what they are.
+- **Commit only after a confirmed review**: once the human has said in the conversation that they
+  reviewed the change ("reviewed, commit it"); asking for a review is not that. Until then, leave
+  the changes in the working tree and say what they are. Stage by path. The confirmation also
+  covers pushing the branch and its pull request; rebasing, or any other push, only when asked.
+  Syncing (`git fetch`, `git pull`, `git merge`) is always fine.
 
 ## Shared conventions
 
 - **Deno for `backend/` and `database/`, Node for `frontend/`.** `deno task …` versus `npm run …`;
   `deno task` will happily run a `package.json` script and then fail confusingly.
-- **Run `/validate`** — or `validate:check` in whichever project you changed — before considering
-  anything done. Each project has `validate:fix` for what can be repaired automatically.
+- **Run `/workflow-validate`** before considering anything done: what CI runs, for the projects
+  you changed.
 - **Pin exact dependency versions.** No `^` or `~`, in `deno.jsonc` or `package.json`. `deno add`
   and `shadcn-vue add` both write a caret; rewrite it.
 - **`type`, never `interface`.**
