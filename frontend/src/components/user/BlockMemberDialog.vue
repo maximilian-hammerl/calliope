@@ -3,13 +3,13 @@
  * The copy carries the feature's real shape: a block stops contact, and deliberately does not
  * touch what is already shared. Saying so here is what keeps the word "blockieren" honest.
  */
-import { ref } from 'vue'
-import { useBlockMember } from '@/api/blocks/blocks'
-import { getGetUserQueryKey, getListUsersQueryKey } from '@/api/users/users'
-import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { ref } from "vue";
+import { useBlockMember } from "@/api/blocks/blocks";
+import { getGetUserQueryKey, getListUsersQueryKey } from "@/api/users/users";
+import { queryClient } from "@/lib/api/queryClient";
+import { listKeyPrefix } from "@/lib/api/queryKeys";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,31 +17,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 
-const open = defineModel<boolean>('open', { required: true })
-const props = defineProps<{ userId: string; username: string }>()
-const emit = defineEmits<{ blocked: [] }>()
+const open = defineModel<boolean>("open", { required: true });
+const props = defineProps<{ userId: string; username: string }>();
+const emit = defineEmits<{ blocked: [] }>();
 
-const { mutateAsync: block, isPending } = useBlockMember()
-const error = ref<string | undefined>(undefined)
+const { mutateAsync: block, isPending } = useBlockMember();
+const error = ref<string | undefined>(undefined);
 
 async function confirm() {
-  error.value = undefined
+  error.value = undefined;
   try {
-    await block({ data: { userId: props.userId } })
+    await block({ data: { userId: props.userId } });
   } catch {
-    error.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
+    error.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
+    return;
   }
 
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(props.userId) }),
     queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListUsersQueryKey()) }),
-  ])
+  ]);
 
-  open.value = false
-  emit('blocked')
+  open.value = false;
+  emit("blocked");
 }
 </script>
 

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
-import { useRouter } from 'vue-router'
-import type { ListMemberships200ResultsItem } from '@/api/models'
-import { useOwnMembership } from '@/composables/useOwnMembership'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { computed, toRef } from "vue";
+import { useRouter } from "vue-router";
+import type { ListMemberships200ResultsItem } from "@/api/models";
+import { useOwnMembership } from "@/composables/useOwnMembership";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * What a pending invitation looks like from the invited member's side, on the group's own
@@ -14,43 +14,43 @@ import { Spinner } from '@/components/ui/spinner'
  * notification led here and the page offered no way through.
  */
 const props = defineProps<{
-  groupId: string
-  role: ListMemberships200ResultsItem['role']
+  groupId: string;
+  role: ListMemberships200ResultsItem["role"];
   /** The reader's own membership row, for who invited them and when. */
-  own?: ListMemberships200ResultsItem
-}>()
+  own?: ListMemberships200ResultsItem;
+}>();
 
-const router = useRouter()
+const router = useRouter();
 
 // The role reads as what it lets you do, which also keeps it neutral where a noun would
 // force a guess at somebody's gender.
-const ROLE_CLAUSE: Record<ListMemberships200ResultsItem['role'], string> = {
-  administrator: 'Du verwaltest die Gruppe.',
-  writer: 'Du schreibst mit.',
-  reader: 'Du liest mit.',
-}
+const ROLE_CLAUSE: Record<ListMemberships200ResultsItem["role"], string> = {
+  administrator: "Du verwaltest die Gruppe.",
+  writer: "Du schreibst mit.",
+  reader: "Du liest mit.",
+};
 
 const sentence = computed<string>(() => {
-  const who = props.own?.invitedByUsername
-  const when = props.own?.invitedAt
+  const who = props.own?.invitedByUsername;
+  const when = props.own?.invitedAt;
   const opening =
     who === null || who === undefined
-      ? 'Du bist in diese Gruppe eingeladen'
-      : `${who} hat dich in diese Gruppe eingeladen`
-  const time = when === null || when === undefined ? '' : ` ${formatActivityTime(when)}`
-  return `${opening}${time}. ${ROLE_CLAUSE[props.role]}`
-})
+      ? "Du bist in diese Gruppe eingeladen"
+      : `${who} hat dich in diese Gruppe eingeladen`;
+  const time = when === null || when === undefined ? "" : ` ${formatActivityTime(when)}`;
+  return `${opening}${time}. ${ROLE_CLAUSE[props.role]}`;
+});
 
 const { accept, decline, isAccepting, isDeclining, isBusy, error } = useOwnMembership(
-  toRef(props, 'groupId'),
-)
+  toRef(props, "groupId"),
+);
 
 async function onDecline() {
   if (!(await decline())) {
-    return
+    return;
   }
   // A declined private group stops being readable, so staying here would show the error page.
-  void router.push({ name: 'myGroups' })
+  void router.push({ name: "myGroups" });
 }
 </script>
 

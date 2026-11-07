@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { RouteLocationRaw } from 'vue-router'
-import { ChevronRight } from '@lucide/vue'
-import type { TreeNode } from '@/lib/folder/buildTree'
-import { pathToFolder } from '@/lib/folder/pathToFolder'
+import { computed } from "vue";
+import type { RouteLocationRaw } from "vue-router";
+import { ChevronRight } from "@lucide/vue";
+import type { TreeNode } from "@/lib/folder/buildTree";
+import { pathToFolder } from "@/lib/folder/pathToFolder";
 
 /**
  * Where a thread or a page sits, above its title. The tab strip used to say this by being the
@@ -16,16 +16,16 @@ import { pathToFolder } from '@/lib/folder/pathToFolder'
  * forum both have one (#32) and this component should not have to know which it is looking at.
  */
 const props = defineProps<{
-  tree: TreeNode[]
-  rootTitle: string
-  rootTo: RouteLocationRaw
+  tree: TreeNode[];
+  rootTitle: string;
+  rootTo: RouteLocationRaw;
   /** Null for something at the root, which then shows the root alone. */
-  folderId: string | null
-}>()
+  folderId: string | null;
+}>();
 
 const folders = computed<string[]>(() =>
   props.folderId === null ? [] : pathToFolder(props.tree, props.folderId),
-)
+);
 </script>
 
 <template>

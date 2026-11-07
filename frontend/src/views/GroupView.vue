@@ -1,83 +1,83 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useStartGroupConversation } from '@/api/groups/groups'
-import { getListChatsQueryKey } from '@/api/chats/chats'
-import { queryClient } from '@/lib/api/queryClient'
-import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { ApiError } from '@/lib/api/apiFetch'
-import { openChatDialog } from '@/lib/chat/openChatDialog'
-import { paragraphs } from '@/lib/format/formatText'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import type { ListMemberships200ResultsItem } from '@/api/models'
-import { useGroupContext } from '@/composables/useGroupContext'
-import { Flag, MessageCircle, Pencil } from '@lucide/vue'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
-import GroupDialog from '@/components/group/GroupDialog.vue'
-import FolderTree from '@/components/folder/FolderTree.vue'
-import GroupHeader from '@/components/group/GroupHeader.vue'
-import GroupMembers from '@/components/group/GroupMembers.vue'
-import { Button } from '@/components/ui/button'
-import GroupInvitation from '@/components/group/GroupInvitation.vue'
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useStartGroupConversation } from "@/api/groups/groups";
+import { getListChatsQueryKey } from "@/api/chats/chats";
+import { queryClient } from "@/lib/api/queryClient";
+import { listOnlyFilter } from "@/lib/api/queryKeys";
+import { ApiError } from "@/lib/api/apiFetch";
+import { openChatDialog } from "@/lib/chat/openChatDialog";
+import { paragraphs } from "@/lib/format/formatText";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import type { ListMemberships200ResultsItem } from "@/api/models";
+import { useGroupContext } from "@/composables/useGroupContext";
+import { Flag, MessageCircle, Pencil } from "@lucide/vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import FavouriteToggle from "@/components/favourite/FavouriteToggle.vue";
+import GroupDialog from "@/components/group/GroupDialog.vue";
+import FolderTree from "@/components/folder/FolderTree.vue";
+import GroupHeader from "@/components/group/GroupHeader.vue";
+import GroupMembers from "@/components/group/GroupMembers.vue";
+import { Button } from "@/components/ui/button";
+import GroupInvitation from "@/components/group/GroupInvitation.vue";
 
 const { groupId, group, memberships, mayWrite, mayAdminister, isPending, isError, refreshGroup } =
-  useGroupContext()
+  useGroupContext();
 
-const { data: currentUserData } = useGetCurrentUser()
+const { data: currentUserData } = useGetCurrentUser();
 
 /** As the paragraphs its author typed, like a story idea's synopsis. A post is a document. */
-const synopsis = computed<string[]>(() => paragraphs(group.value?.synopsis ?? ''))
+const synopsis = computed<string[]>(() => paragraphs(group.value?.synopsis ?? ""));
 
 const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
-)
+);
 
-const isInvited = computed<boolean>(() => group.value?.status === 'invited')
+const isInvited = computed<boolean>(() => group.value?.status === "invited");
 
 /** The reader's own row, for who invited them and when. */
 const ownMembership = computed<ListMemberships200ResultsItem | undefined>(() => {
-  const userId = currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined
-  return memberships.value.find((membership) => membership.userId === userId)
-})
+  const userId = currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined;
+  return memberships.value.find((membership) => membership.userId === userId);
+});
 
-const router = useRouter()
+const router = useRouter();
 
 function goToGroups() {
-  void router.push({ name: 'myGroups' })
+  void router.push({ name: "myGroups" });
 }
 
 /** A private group answers 404 to a non-member, so staying here would show an error. */
 function leaveGroupPage() {
-  void router.push({ name: 'myGroups' })
+  void router.push({ name: "myGroups" });
 }
 
-const reportingGroup = ref<boolean>(false)
-const editingGroup = ref<boolean>(false)
+const reportingGroup = ref<boolean>(false);
+const editingGroup = ref<boolean>(false);
 
 /** A visitor: somebody reading a public group they are in no relation to. */
-const isVisitor = computed<boolean>(() => group.value !== undefined && group.value.status === null)
+const isVisitor = computed<boolean>(() => group.value !== undefined && group.value.status === null);
 
 const { mutateAsync: startConversation, isPending: startingConversation } =
-  useStartGroupConversation()
-const conversationError = ref<string | undefined>(undefined)
+  useStartGroupConversation();
+const conversationError = ref<string | undefined>(undefined);
 
 /** Creates the chat with every administrator invited, then opens the messages dialog on it. */
 async function askIntoGroup() {
-  conversationError.value = undefined
+  conversationError.value = undefined;
   try {
-    const created = await startConversation({ groupId: groupId.value })
+    const created = await startConversation({ groupId: groupId.value });
     if (created.status !== 201) {
-      return
+      return;
     }
-    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
-    openChatDialog(created.data.id)
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()));
+    openChatDialog(created.data.id);
   } catch (error) {
     // The ungoverned-group hole seen from outside: there is nobody to ask.
     conversationError.value =
       error instanceof ApiError && error.status === 409
-        ? 'In dieser Gruppe kann gerade niemand einladen.'
-        : 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+        ? "In dieser Gruppe kann gerade niemand einladen."
+        : "Das ist gerade nicht möglich. Versuche es später noch einmal.";
   }
 }
 </script>

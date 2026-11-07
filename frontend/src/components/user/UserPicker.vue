@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, useId, watch } from 'vue'
-import { Check } from '@lucide/vue'
-import { useListUsers } from '@/api/users/users'
-import type { ListUsers200ResultsItem } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import UserAvatar from '@/components/user/UserAvatar.vue'
-import { Field, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { computed, ref, useId, watch } from "vue";
+import { Check } from "@lucide/vue";
+import { useListUsers } from "@/api/users/users";
+import type { ListUsers200ResultsItem } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import UserAvatar from "@/components/user/UserAvatar.vue";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 /**
  * Search for a member by username and pick one. Both invitation flows use this — the group
@@ -17,33 +17,33 @@ import { Input } from '@/components/ui/input'
 const props = withDefaults(
   defineProps<{
     /** Ids to leave out, normally whoever is already a member. */
-    excludeIds: string[]
-    label?: string
-    placeholder?: string
-    disabled?: boolean
+    excludeIds: string[];
+    label?: string;
+    placeholder?: string;
+    disabled?: boolean;
     /** False while the surrounding dialog or panel is closed, so nothing is fetched. */
-    active?: boolean
+    active?: boolean;
   }>(),
-  { label: undefined, placeholder: 'z. B. mira', disabled: false, active: true },
-)
+  { label: undefined, placeholder: "z. B. mira", disabled: false, active: true },
+);
 
 /** Its own, so two pickers can share a screen — the caller used to have to name them. */
-const inputId = useId()
+const inputId = useId();
 
 /** The committed pick. Left unbound by callers that act on `pick` immediately. */
-const selected = defineModel<ListUsers200ResultsItem | undefined>({ default: undefined })
+const selected = defineModel<ListUsers200ResultsItem | undefined>({ default: undefined });
 
-const emit = defineEmits<{ pick: [user: ListUsers200ResultsItem] }>()
+const emit = defineEmits<{ pick: [user: ListUsers200ResultsItem] }>();
 
-const term = ref<string>('')
+const term = ref<string>("");
 /** The keyboard cursor. -1 is no row, so a stray Enter cannot invite the wrong person. */
-const activeIndex = ref<number>(-1)
+const activeIndex = ref<number>(-1);
 
 /** The API's own bounds. Below the minimum nothing is asked for at all. */
-const LIMIT = TEXT_LIMIT.listUsers.search
+const LIMIT = TEXT_LIMIT.listUsers.search;
 
-const trimmedTerm = computed<string>(() => term.value.trim())
-const termIsLongEnough = computed<boolean>(() => trimmedTerm.value.length >= LIMIT.minLength)
+const trimmedTerm = computed<string>(() => term.value.trim());
+const termIsLongEnough = computed<boolean>(() => trimmedTerm.value.length >= LIMIT.minLength);
 
 const { data: usersData, isFetching } = useListUsers(
   () => ({ search: trimmedTerm.value, limit: 8 }),
@@ -56,7 +56,7 @@ const { data: usersData, isFetching } = useListUsers(
       staleTime: 30_000,
     },
   },
-)
+);
 
 /**
  * People already in the group are dropped rather than shown as unavailable: an invitation
@@ -64,73 +64,73 @@ const { data: usersData, isFetching } = useListUsers(
  */
 const candidates = computed<ListUsers200ResultsItem[]>(() => {
   if (usersData.value?.status !== 200) {
-    return []
+    return [];
   }
-  return usersData.value.data.results.filter((user) => !props.excludeIds.includes(user.id))
-})
+  return usersData.value.data.results.filter((user) => !props.excludeIds.includes(user.id));
+});
 
 // Typing again is a new search, so neither an earlier pick nor the keyboard cursor may
 // silently survive it.
 watch(trimmedTerm, () => {
-  selected.value = undefined
-  activeIndex.value = -1
-})
+  selected.value = undefined;
+  activeIndex.value = -1;
+});
 
 function optionId(user: ListUsers200ResultsItem): string {
-  return `${inputId}-option-${user.id}`
+  return `${inputId}-option-${user.id}`;
 }
 
 const activeOptionId = computed<string | undefined>(() => {
-  const user = candidates.value[activeIndex.value]
-  return user === undefined ? undefined : optionId(user)
-})
+  const user = candidates.value[activeIndex.value];
+  return user === undefined ? undefined : optionId(user);
+});
 
 function pick(user: ListUsers200ResultsItem) {
-  selected.value = user
-  emit('pick', user)
+  selected.value = user;
+  emit("pick", user);
 }
 
 /** Wraps at both ends, which is what a short list wants. */
 function move(step: number) {
-  const { length } = candidates.value
+  const { length } = candidates.value;
   if (length === 0) {
-    return
+    return;
   }
-  activeIndex.value = (activeIndex.value + step + length) % length
+  activeIndex.value = (activeIndex.value + step + length) % length;
 }
 
 function onKeydown(event: KeyboardEvent) {
   if (props.disabled) {
-    return
+    return;
   }
 
-  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
     // Otherwise the caret jumps to the far end of the field instead.
-    event.preventDefault()
-    move(event.key === 'ArrowDown' ? 1 : -1)
-    return
+    event.preventDefault();
+    move(event.key === "ArrowDown" ? 1 : -1);
+    return;
   }
 
-  if (event.key !== 'Enter') {
-    return
+  if (event.key !== "Enter") {
+    return;
   }
 
-  const user = candidates.value[activeIndex.value]
+  const user = candidates.value[activeIndex.value];
   if (user === undefined) {
-    return
+    return;
   }
   // Only when a row is actually under the cursor, so Enter still submits the form otherwise.
-  event.preventDefault()
-  pick(user)
+  event.preventDefault();
+  pick(user);
 }
 
 /** Cleared by the caller between openings, since the field belongs to this component. */
 function reset() {
-  term.value = ''
-  activeIndex.value = -1
+  term.value = "";
+  activeIndex.value = -1;
 }
 
-defineExpose({ reset })
+defineExpose({ reset });
 </script>
 
 <template>

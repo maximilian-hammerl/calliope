@@ -8,11 +8,11 @@
  * The glyph and the word both come from `lib/format/storyIdea`, beside the toggle that names the
  * same state, so a row and a page cannot say it two ways.
  */
-import type { GetStoryIdea200 } from '@/api/models'
-import StateMark from '@/components/common/StateMark.vue'
-import { IDEA_STATUS_ICONS, IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
+import type { GetStoryIdea200 } from "@/api/models";
+import StateMark from "@/components/common/StateMark.vue";
+import { IDEA_STATUS_ICONS, IDEA_STATUS_LABELS } from "@/lib/format/storyIdea";
 
-const props = defineProps<{ status: GetStoryIdea200['status']; interactive?: boolean }>()
+const props = defineProps<{ status: GetStoryIdea200["status"]; interactive?: boolean }>();
 </script>
 
 <template>

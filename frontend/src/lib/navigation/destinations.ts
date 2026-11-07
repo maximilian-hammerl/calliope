@@ -1,5 +1,5 @@
-import { BookOpen, Lightbulb, MessagesSquare, Users } from '@lucide/vue'
-import type { RouteRecordName } from 'vue-router'
+import { BookOpen, Lightbulb, MessagesSquare, Users } from "@lucide/vue";
+import type { RouteRecordName } from "vue-router";
 
 /**
  * The primary destinations, shared by the top bar and the bottom bar so the two cannot
@@ -12,43 +12,43 @@ import type { RouteRecordName } from 'vue-router'
  * menu shape is in the history if it is ever genuinely wanted back.
  */
 export const DESTINATIONS: ReadonlyArray<{
-  label: string
-  icon: typeof BookOpen
-  name: string
-  belongsTo: readonly string[]
+  label: string;
+  icon: typeof BookOpen;
+  name: string;
+  belongsTo: readonly string[];
 }> = [
   {
-    label: 'Gruppen',
+    label: "Gruppen",
     icon: BookOpen,
-    name: 'myGroups',
+    name: "myGroups",
     // `discover` stays here so the bar still marks Gruppen while discovery is open, even though
     // the bar no longer navigates there.
-    belongsTo: ['myGroups', 'group', 'thread', 'discoverGroups'],
+    belongsTo: ["myGroups", "group", "thread", "discoverGroups"],
   },
   {
-    label: 'Storyideen',
+    label: "Storyideen",
     icon: Lightbulb,
     // The carousel, not a list: reading through unread ideas is what members come here to do.
-    name: 'storyIdeasCarousel',
-    belongsTo: ['discoverStoryIdeas', 'myStoryIdeas', 'storyIdea', 'storyIdeasCarousel'],
+    name: "storyIdeasCarousel",
+    belongsTo: ["discoverStoryIdeas", "myStoryIdeas", "storyIdea", "storyIdeasCarousel"],
   },
   {
-    label: 'Forum',
+    label: "Forum",
     icon: MessagesSquare,
-    name: 'forum',
-    belongsTo: ['forum', 'forumThread', 'forumPage'],
+    name: "forum",
+    belongsTo: ["forum", "forumThread", "forumPage"],
   },
   {
-    label: 'Mitglieder',
+    label: "Mitglieder",
     icon: Users,
-    name: 'members',
-    belongsTo: ['members', 'member'],
+    name: "members",
+    belongsTo: ["members", "member"],
   },
-]
+];
 
 export function isCurrent(
   destination: (typeof DESTINATIONS)[number],
   routeName: RouteRecordName | null | undefined,
 ): boolean {
-  return destination.belongsTo.some((name) => name === routeName)
+  return destination.belongsTo.some((name) => name === routeName);
 }

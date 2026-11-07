@@ -3,25 +3,25 @@
  * The appearance a member reads in. Nothing is saved to the account: it belongs to the device,
  * where the ambient light is.
  */
-import { Moon, Sun, SunMoon } from '@lucide/vue'
-import type { ThemeChoice } from '@/composables/useTheme'
-import { useTheme } from '@/composables/useTheme'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import { Field, FieldDescription } from '@/components/ui/field'
+import { Moon, Sun, SunMoon } from "@lucide/vue";
+import type { ThemeChoice } from "@/composables/useTheme";
+import { useTheme } from "@/composables/useTheme";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Field, FieldDescription } from "@/components/ui/field";
 
-const { choice } = useTheme()
+const { choice } = useTheme();
 
 /** Sun, both, moon — the three read as a set, and none of them carries the meaning alone. */
 const CHOICES: ReadonlyArray<{
-  value: ThemeChoice
-  label: string
-  icon: typeof Sun
+  value: ThemeChoice;
+  label: string;
+  icon: typeof Sun;
 }> = [
-  { value: 'auto', label: 'Wie das Gerät', icon: SunMoon },
-  { value: 'light', label: 'Hell', icon: Sun },
-  { value: 'dark', label: 'Dunkel', icon: Moon },
-]
+  { value: "auto", label: "Wie das Gerät", icon: SunMoon },
+  { value: "light", label: "Hell", icon: Sun },
+  { value: "dark", label: "Dunkel", icon: Moon },
+];
 </script>
 
 <template>

@@ -1,57 +1,57 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Plus } from '@lucide/vue'
-import { useQueryClient } from '@tanstack/vue-query'
+import { computed, ref } from "vue";
+import { Plus } from "@lucide/vue";
+import { useQueryClient } from "@tanstack/vue-query";
 import {
   getListMembershipsQueryKey,
   useRemoveMember,
   useUpdateMembership,
-} from '@/api/memberships/memberships'
-import { getGetGroupQueryKey } from '@/api/groups/groups'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import type { ListMemberships200ResultsItem, UpdateMembershipBodyRole } from '@/api/models'
-import { useOwnMembership } from '@/composables/useOwnMembership'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { pluralize } from '@/lib/format/formatText'
-import InviteMemberDialog from '@/components/group/InviteMemberDialog.vue'
-import LastAdministratorDialog from '@/components/group/LastAdministratorDialog.vue'
-import LeaveGroupDialog from '@/components/group/LeaveGroupDialog.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import UserAvatar from '@/components/user/UserAvatar.vue'
-import { Button } from '@/components/ui/button'
+} from "@/api/memberships/memberships";
+import { getGetGroupQueryKey } from "@/api/groups/groups";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import type { ListMemberships200ResultsItem, UpdateMembershipBodyRole } from "@/api/models";
+import { useOwnMembership } from "@/composables/useOwnMembership";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { pluralize } from "@/lib/format/formatText";
+import InviteMemberDialog from "@/components/group/InviteMemberDialog.vue";
+import LastAdministratorDialog from "@/components/group/LastAdministratorDialog.vue";
+import LeaveGroupDialog from "@/components/group/LeaveGroupDialog.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import UserAvatar from "@/components/user/UserAvatar.vue";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
 const props = defineProps<{
-  groupId: string
-  memberships: ListMemberships200ResultsItem[]
-  mayAdminister: boolean
-}>()
+  groupId: string;
+  memberships: ListMemberships200ResultsItem[];
+  mayAdminister: boolean;
+}>();
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
 // Grammatical gender follows the person, which nothing here knows, so the role names stay
 // neutral rather than guessing between Autor and Autorin.
 const ROLE_LABELS: Record<string, string> = {
-  administrator: 'Admin',
-  writer: 'Schreibt',
-  reader: 'Liest',
-}
+  administrator: "Admin",
+  writer: "Schreibt",
+  reader: "Liest",
+};
 
 const ROLES = (Object.keys(ROLE_LABELS) as UpdateMembershipBodyRole[]).map((value) => ({
   value,
   label: ROLE_LABELS[value] as string,
-}))
+}));
 
-const { data: currentUserData } = useGetCurrentUser()
+const { data: currentUserData } = useGetCurrentUser();
 const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
-)
+);
 
 /**
  * Joined first, then invited, each alphabetically. Whoever has accepted is who the group
@@ -60,57 +60,59 @@ const currentUserId = computed<string | undefined>(() =>
 const sortedMemberships = computed<ListMemberships200ResultsItem[]>(() =>
   [...props.memberships].sort((one, other) => {
     if (one.status !== other.status) {
-      return one.status === 'joined' ? -1 : 1
+      return one.status === "joined" ? -1 : 1;
     }
-    return one.username.localeCompare(other.username, 'de')
+    return one.username.localeCompare(other.username, "de");
   }),
-)
+);
 
 const joinedCount = computed<number>(
-  () => props.memberships.filter((membership) => membership.status === 'joined').length,
-)
+  () => props.memberships.filter((membership) => membership.status === "joined").length,
+);
 
-const memberIds = computed<string[]>(() => props.memberships.map((membership) => membership.userId))
+const memberIds = computed<string[]>(() =>
+  props.memberships.map((membership) => membership.userId),
+);
 
 /**
  * The date of the state the row is actually in: when an invitation was sent, or when a member
  * joined. Once somebody is in the group, when they were asked stopped mattering.
  */
 function membershipDate(membership: ListMemberships200ResultsItem): string | undefined {
-  if (membership.status === 'invited') {
+  if (membership.status === "invited") {
     if (membership.invitedAt === null) {
-      return undefined
+      return undefined;
     }
     // Who did the inviting matters while it is still an invitation: an administrator looking
     // at a pending row wants to know whether it was theirs to chase.
     const invitedBy =
-      membership.invitedByUsername === null ? '' : ` von ${membership.invitedByUsername}`
-    return `eingeladen ${formatActivityTime(membership.invitedAt)}${invitedBy}`
+      membership.invitedByUsername === null ? "" : ` von ${membership.invitedByUsername}`;
+    return `eingeladen ${formatActivityTime(membership.invitedAt)}${invitedBy}`;
   }
 
   return membership.joinedAt === null
     ? undefined
-    : `beigetreten ${formatActivityTime(membership.joinedAt)}`
+    : `beigetreten ${formatActivityTime(membership.joinedAt)}`;
 }
 
-const inviting = ref<boolean>(false)
-const removalError = ref<string | undefined>(undefined)
+const inviting = ref<boolean>(false);
+const removalError = ref<string | undefined>(undefined);
 /** Which row is mid-removal, so only that button reports it. */
-const removingUserId = ref<string | undefined>(undefined)
+const removingUserId = ref<string | undefined>(undefined);
 
-const { mutateAsync: removeMember } = useRemoveMember()
-const { mutateAsync: updateMembership } = useUpdateMembership()
+const { mutateAsync: removeMember } = useRemoveMember();
+const { mutateAsync: updateMembership } = useUpdateMembership();
 
-const roleError = ref<string | undefined>(undefined)
+const roleError = ref<string | undefined>(undefined);
 /** Which row is mid-change, so only that select is disabled. */
-const savingRoleFor = ref<string | undefined>(undefined)
+const savingRoleFor = ref<string | undefined>(undefined);
 
 const joinedAdministrators = computed<number>(
   () =>
     props.memberships.filter(
-      (membership) => membership.status === 'joined' && membership.role === 'administrator',
+      (membership) => membership.status === "joined" && membership.role === "administrator",
     ).length,
-)
+);
 
 /**
  * Only giving up one's own administration can leave a group ungoverned: an administrator
@@ -123,93 +125,93 @@ function wouldLeaveNobodyAdministering(
 ): boolean {
   return (
     membership.userId === currentUserId.value &&
-    membership.status === 'joined' &&
-    membership.role === 'administrator' &&
-    role !== 'administrator' &&
+    membership.status === "joined" &&
+    membership.role === "administrator" &&
+    role !== "administrator" &&
     joinedAdministrators.value === 1
-  )
+  );
 }
 
 const pendingRoleChange = ref<
   { membership: ListMemberships200ResultsItem; role: UpdateMembershipBodyRole } | undefined
->(undefined)
+>(undefined);
 
 async function applyRole(
   membership: ListMemberships200ResultsItem,
   role: UpdateMembershipBodyRole,
 ) {
-  roleError.value = undefined
-  savingRoleFor.value = membership.userId
+  roleError.value = undefined;
+  savingRoleFor.value = membership.userId;
 
   try {
-    await updateMembership({ groupId: props.groupId, userId: membership.userId, data: { role } })
+    await updateMembership({ groupId: props.groupId, userId: membership.userId, data: { role } });
     await queryClient.invalidateQueries({
       queryKey: getListMembershipsQueryKey(props.groupId),
-    })
+    });
     // Losing one's own administration changes what the whole page may offer.
     if (membership.userId === currentUserId.value) {
-      await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.groupId) })
+      await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.groupId) });
     }
   } catch {
-    roleError.value = `Die Rolle von ${membership.username} konnte nicht geändert werden. Versuche es noch einmal.`
+    roleError.value = `Die Rolle von ${membership.username} konnte nicht geändert werden. Versuche es noch einmal.`;
   } finally {
-    savingRoleFor.value = undefined
-    pendingRoleChange.value = undefined
+    savingRoleFor.value = undefined;
+    pendingRoleChange.value = undefined;
   }
 }
 
-const { leave, isBusy, error: leaveError } = useOwnMembership(() => props.groupId)
-const emit = defineEmits<{ left: [] }>()
+const { leave, isBusy, error: leaveError } = useOwnMembership(() => props.groupId);
+const emit = defineEmits<{ left: [] }>();
 
 /** What leaving costs, which is only irreversible for the last member. */
-const leavingDeletesTheGroup = computed<boolean>(() => props.memberships.length === 1)
+const leavingDeletesTheGroup = computed<boolean>(() => props.memberships.length === 1);
 const leavingLeavesNobodyAdministering = computed<boolean>(() => {
-  const own = props.memberships.find((membership) => membership.userId === currentUserId.value)
+  const own = props.memberships.find((membership) => membership.userId === currentUserId.value);
   return (
-    own?.status === 'joined' &&
-    own.role === 'administrator' &&
+    own?.status === "joined" &&
+    own.role === "administrator" &&
     joinedAdministrators.value === 1 &&
     props.memberships.length > 1
-  )
-})
+  );
+});
 
-const askingToLeave = ref<boolean>(false)
+const askingToLeave = ref<boolean>(false);
 
 function askToLeave() {
-  askingToLeave.value = true
+  askingToLeave.value = true;
 }
 
 async function confirmLeave() {
   if (await leave()) {
-    askingToLeave.value = false
-    emit('left')
+    askingToLeave.value = false;
+    emit("left");
   }
 }
 
 function changeRole(membership: ListMemberships200ResultsItem, role: UpdateMembershipBodyRole) {
   if (role === membership.role) {
-    return
+    return;
   }
   if (wouldLeaveNobodyAdministering(membership, role)) {
-    pendingRoleChange.value = { membership, role }
-    return
+    pendingRoleChange.value = { membership, role };
+    return;
   }
-  void applyRole(membership, role)
+  void applyRole(membership, role);
 }
 
 async function remove(membership: ListMemberships200ResultsItem) {
-  removalError.value = undefined
-  removingUserId.value = membership.userId
+  removalError.value = undefined;
+  removingUserId.value = membership.userId;
 
   try {
-    await removeMember({ groupId: props.groupId, userId: membership.userId })
+    await removeMember({ groupId: props.groupId, userId: membership.userId });
     await queryClient.invalidateQueries({
       queryKey: getListMembershipsQueryKey(props.groupId),
-    })
+    });
   } catch {
-    removalError.value = `${membership.username} konnte nicht entfernt werden. Versuche es noch einmal.`
+    removalError.value = `${membership.username} konnte nicht entfernt werden. Versuche es noch einmal.`;
   } finally {
-    removingUserId.value = undefined
+    removingUserId.value = undefined;
   }
 }
 </script>
@@ -219,7 +221,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
     <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
       <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Mitglieder</h2>
       <span class="text-[11.5px] text-ink-5">
-        {{ pluralize(joinedCount, 'Mitglied', 'Mitglieder') }}
+        {{ pluralize(joinedCount, "Mitglied", "Mitglieder") }}
       </span>
       <Button
         v-if="mayAdminister"
@@ -338,7 +340,7 @@ async function remove(membership: ListMemberships200ResultsItem) {
               :disabled="removingUserId === membership.userId"
               @click="remove(membership)"
             >
-              {{ membership.status === 'invited' ? 'Einladung zurückziehen' : 'Entfernen' }}
+              {{ membership.status === "invited" ? "Einladung zurückziehen" : "Entfernen" }}
             </Button>
           </div>
         </div>

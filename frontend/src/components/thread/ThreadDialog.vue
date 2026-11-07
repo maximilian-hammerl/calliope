@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useForm } from '@tanstack/vue-form'
-import { useQueryClient } from '@tanstack/vue-query'
+import { computed, ref, watch } from "vue";
+import { useForm } from "@tanstack/vue-form";
+import { useQueryClient } from "@tanstack/vue-query";
 import {
   getGetThreadQueryKey,
   getListThreadsQueryKey,
   useCreateThread,
   useUpdateThread,
-} from '@/api/threads/threads'
-import type { GetThread200 } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { getListForumThreadsQueryKey, useCreateForumThread } from '@/api/forum/forum'
-import { exactKeyFilter } from '@/lib/api/queryKeys'
-import type { WriteScope } from '@/lib/folder/treeScope'
-import { failureMessage } from '@/lib/format/failure'
-import { focusFirstInvalid, parsed, titleSchema } from '@/lib/validation/fieldSchemas'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import FormTextField from '@/components/common/FormTextField.vue'
+} from "@/api/threads/threads";
+import type { GetThread200 } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { getListForumThreadsQueryKey, useCreateForumThread } from "@/api/forum/forum";
+import { exactKeyFilter } from "@/lib/api/queryKeys";
+import type { WriteScope } from "@/lib/folder/treeScope";
+import { failureMessage } from "@/lib/format/failure";
+import { focusFirstInvalid, parsed, titleSchema } from "@/lib/validation/fieldSchemas";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import FormTextField from "@/components/common/FormTextField.vue";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +25,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { FieldGroup } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * One dialog for both verbs: an absent `thread` means creating. Two components would share
@@ -38,61 +38,61 @@ const props = defineProps<{
    * Which tree this thread joins. A thema means the same thing in a writing group and in the
    * public forum (#32), so the copy below is written once and the scope branches around it.
    */
-  scope: WriteScope
+  scope: WriteScope;
   /** Renaming, which is a group's for now: the forum's rename arrives with its moderation. */
-  thread?: GetThread200
+  thread?: GetThread200;
   /** Absent creates at the root of the tree, which in the forum only an operator may write to. */
-  folderId?: string
-}>()
-const open = defineModel<boolean>('open', { required: true })
-const emit = defineEmits<{ created: [threadId: string] }>()
+  folderId?: string;
+}>();
+const open = defineModel<boolean>("open", { required: true });
+const emit = defineEmits<{ created: [threadId: string] }>();
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
-const renaming = computed<boolean>(() => props.thread !== undefined)
+const renaming = computed<boolean>(() => props.thread !== undefined);
 
-const LIMIT = props.scope.kind === 'forum' ? TEXT_LIMIT.createForumThread : TEXT_LIMIT.createThread
+const LIMIT = props.scope.kind === "forum" ? TEXT_LIMIT.createForumThread : TEXT_LIMIT.createThread;
 
 /**
  * Said where it is decided, not in the tree afterwards: a leaf with no folder above it is
  * clamped to `read` for members, and no setting on the row itself can lift that.
  */
 const ROOT_NOTE =
-  'Ohne Ordner liegt das Thema oben im Forum — Mitglieder können es dann lesen, aber nicht beantworten.'
+  "Ohne Ordner liegt das Thema oben im Forum — Mitglieder können es dann lesen, aber nicht beantworten.";
 
 /** Only an operator is offered the root, so the note is theirs. */
 const atForumRoot = computed<boolean>(
-  () => props.scope.kind === 'forum' && props.folderId === undefined,
-)
+  () => props.scope.kind === "forum" && props.folderId === undefined,
+);
 
-const TITLE = titleSchema(LIMIT.title, 'Gib dem Thema einen Titel.')
+const TITLE = titleSchema(LIMIT.title, "Gib dem Thema einen Titel.");
 
-const formError = ref<string | undefined>(undefined)
-const formElement = ref<HTMLFormElement | null>(null)
+const formError = ref<string | undefined>(undefined);
+const formElement = ref<HTMLFormElement | null>(null);
 
-const { mutateAsync: createThread, isPending: isCreatingInGroup } = useCreateThread()
-const { mutateAsync: createForumThread, isPending: isCreatingInForum } = useCreateForumThread()
-const isCreating = computed<boolean>(() => isCreatingInGroup.value || isCreatingInForum.value)
-const { mutateAsync: updateThread, isPending: isRenaming } = useUpdateThread()
-const isPending = computed<boolean>(() => isCreating.value || isRenaming.value)
+const { mutateAsync: createThread, isPending: isCreatingInGroup } = useCreateThread();
+const { mutateAsync: createForumThread, isPending: isCreatingInForum } = useCreateForumThread();
+const isCreating = computed<boolean>(() => isCreatingInGroup.value || isCreatingInForum.value);
+const { mutateAsync: updateThread, isPending: isRenaming } = useUpdateThread();
+const isPending = computed<boolean>(() => isCreating.value || isRenaming.value);
 
 const form = useForm({
-  defaultValues: { title: '' },
+  defaultValues: { title: "" },
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
-    formError.value = undefined
-    const title = parsed(TITLE, value.title)
+    formError.value = undefined;
+    const title = parsed(TITLE, value.title);
 
-    if (props.thread !== undefined && props.scope.kind === 'group') {
-      const { groupId } = props.scope
+    if (props.thread !== undefined && props.scope.kind === "group") {
+      const { groupId } = props.scope;
       try {
-        await updateThread({ groupId, threadId: props.thread.id, data: { title } })
+        await updateThread({ groupId, threadId: props.thread.id, data: { title } });
       } catch (error) {
         formError.value = failureMessage(
           error,
-          'Das Thema konnte nicht umbenannt werden. Versuche es noch einmal.',
-        )
-        return
+          "Das Thema konnte nicht umbenannt werden. Versuche es noch einmal.",
+        );
+        return;
       }
 
       await Promise.all([
@@ -100,54 +100,54 @@ const form = useForm({
           queryKey: getGetThreadQueryKey(groupId, props.thread.id),
         }),
         queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId))),
-      ])
-      open.value = false
-      return
+      ]);
+      open.value = false;
+      return;
     }
 
-    const data = { title, folderId: props.folderId }
+    const data = { title, folderId: props.folderId };
 
-    let created
+    let created;
     try {
       created =
-        props.scope.kind === 'forum'
+        props.scope.kind === "forum"
           ? await createForumThread({ data })
-          : await createThread({ groupId: props.scope.groupId, data })
+          : await createThread({ groupId: props.scope.groupId, data });
     } catch (error) {
       formError.value = failureMessage(
         error,
-        'Das Thema konnte nicht angelegt werden. Versuche es noch einmal.',
-      )
-      return
+        "Das Thema konnte nicht angelegt werden. Versuche es noch einmal.",
+      );
+      return;
     }
 
     await queryClient.invalidateQueries(
-      props.scope.kind === 'forum'
+      props.scope.kind === "forum"
         ? exactKeyFilter(getListForumThreadsQueryKey())
         : exactKeyFilter(getListThreadsQueryKey(props.scope.groupId)),
-    )
-    open.value = false
+    );
+    open.value = false;
 
     // Where to go afterwards belongs to the caller: the group opens the new thread, and a
     // rename leaves the reader where they were.
     if (created.status === 201) {
-      emit('created', created.data.id)
+      emit("created", created.data.id);
     }
   },
-})
+});
 
 // Opening fills the field from the thread being renamed; closing clears it either way.
 watch(open, (isOpen) => {
-  formError.value = undefined
-  form.reset({ title: isOpen ? (props.thread?.title ?? '') : '' })
-})
+  formError.value = undefined;
+  form.reset({ title: isOpen ? (props.thread?.title ?? "") : "" });
+});
 </script>
 
 <template>
   <Dialog v-model:open="open">
     <DialogContent class="sm:max-w-dialog-form">
       <DialogHeader>
-        <DialogTitle>{{ renaming ? 'Thema umbenennen' : 'Thema anlegen' }}</DialogTitle>
+        <DialogTitle>{{ renaming ? "Thema umbenennen" : "Thema anlegen" }}</DialogTitle>
         <DialogDescription>
           Viele Beiträge, einer nach dem anderen — zum Erzählen, Planen und Besprechen. Jeder
           Beitrag gehört dem, der ihn geschrieben hat. Für einen Text, den ihr gemeinsam pflegt,
@@ -190,7 +190,7 @@ watch(open, (isOpen) => {
           </Button>
           <Button type="submit" :disabled="isPending">
             <Spinner v-if="isPending" />
-            {{ renaming ? 'Änderungen speichern' : 'Thema anlegen' }}
+            {{ renaming ? "Änderungen speichern" : "Thema anlegen" }}
           </Button>
         </DialogFooter>
       </form>

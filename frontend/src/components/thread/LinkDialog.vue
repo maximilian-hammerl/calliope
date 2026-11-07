@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useForm } from '@tanstack/vue-form'
-import { focusFirstInvalid, httpUrlSchema } from '@/lib/validation/fieldSchemas'
-import { Button } from '@/components/ui/button'
+import { computed, ref, watch } from "vue";
+import { useForm } from "@tanstack/vue-form";
+import { focusFirstInvalid, httpUrlSchema } from "@/lib/validation/fieldSchemas";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { FieldGroup } from '@/components/ui/field'
-import FormTextField from '@/components/common/FormTextField.vue'
+} from "@/components/ui/dialog";
+import { FieldGroup } from "@/components/ui/field";
+import FormTextField from "@/components/common/FormTextField.vue";
 
 /**
  * The address for a link in a post. One dialog for both verbs, as the group and thread dialogs
@@ -22,39 +22,39 @@ import FormTextField from '@/components/common/FormTextField.vue'
  * rather than when the post is sent. `mailto:` is refused deliberately by both: the allowlist is
  * `HREF` in `backend/src/document/document_schema.ts`.
  */
-const props = defineProps<{ href?: string }>()
-const open = defineModel<boolean>('open', { required: true })
-const emit = defineEmits<{ submit: [href: string]; remove: [] }>()
+const props = defineProps<{ href?: string }>();
+const open = defineModel<boolean>("open", { required: true });
+const emit = defineEmits<{ submit: [href: string]; remove: [] }>();
 
-const editing = computed<boolean>(() => props.href !== undefined && props.href.length > 0)
+const editing = computed<boolean>(() => props.href !== undefined && props.href.length > 0);
 
-const ADDRESS = httpUrlSchema('Gib die Adresse des Links ein.')
+const ADDRESS = httpUrlSchema("Gib die Adresse des Links ein.");
 
 // Bound rather than written in the template: vue-tsc 3.3.12+ mangles a `//` in a component's
 // attribute and loses the slot's `field` (vuejs/language-tools#6322).
-const PLACEHOLDER = 'https://'
+const PLACEHOLDER = "https://";
 
-const formElement = ref<HTMLFormElement | null>(null)
+const formElement = ref<HTMLFormElement | null>(null);
 
 const form = useForm({
-  defaultValues: { address: '' },
+  defaultValues: { address: "" },
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: ({ value }) => {
     // Normalised through `URL`, so `example.org/x ` and `https://example.org/x` reach the document
     // in one shape. The schema has already proved it parses.
-    emit('submit', new URL(value.address).toString())
-    open.value = false
+    emit("submit", new URL(value.address).toString());
+    open.value = false;
   },
-})
+});
 
 // Opening fills the field from the link being edited; closing clears it either way.
 watch(open, (isOpen) => {
-  form.reset({ address: isOpen ? (props.href ?? '') : '' })
-})
+  form.reset({ address: isOpen ? (props.href ?? "") : "" });
+});
 
 function remove() {
-  emit('remove')
-  open.value = false
+  emit("remove");
+  open.value = false;
 }
 </script>
 
@@ -62,7 +62,7 @@ function remove() {
   <Dialog v-model:open="open">
     <DialogContent class="sm:max-w-dialog-form">
       <DialogHeader>
-        <DialogTitle>{{ editing ? 'Link bearbeiten' : 'Link einfügen' }}</DialogTitle>
+        <DialogTitle>{{ editing ? "Link bearbeiten" : "Link einfügen" }}</DialogTitle>
         <DialogDescription> Die Adresse, auf die der markierte Text zeigt. </DialogDescription>
       </DialogHeader>
 
@@ -94,7 +94,7 @@ function remove() {
             Link entfernen
           </Button>
           <Button type="button" variant="outline" @click="open = false">Abbrechen</Button>
-          <Button type="submit">{{ editing ? 'Änderungen speichern' : 'Link einfügen' }}</Button>
+          <Button type="submit">{{ editing ? "Änderungen speichern" : "Link einfügen" }}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

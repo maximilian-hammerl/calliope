@@ -1,34 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { RouteLocationRaw } from 'vue-router'
-import type { Search200 } from '@/api/models'
-import { pluralize } from '@/lib/format/formatText'
-import { leafRoute } from '@/lib/folder/treeScope'
-import type { WriteScope } from '@/lib/folder/treeScope'
-import { cn } from '@/lib/utils'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
-import ForumPermissionMark from '@/components/forum/ForumPermissionMark.vue'
-import { MEMBERSHIP_LABELS } from '@/lib/format/group'
-import VisibilityMark from '@/components/group/VisibilityMark.vue'
-import StatusMark from '@/components/story-idea/StatusMark.vue'
-import ReadMark from '@/components/story-idea/ReadMark.vue'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import { platformRoleLabel } from '@/lib/format/platformRole'
-import { useIsOperator } from '@/composables/useIsOperator'
+import { computed } from "vue";
+import type { RouteLocationRaw } from "vue-router";
+import type { Search200 } from "@/api/models";
+import { pluralize } from "@/lib/format/formatText";
+import { leafRoute } from "@/lib/folder/treeScope";
+import type { WriteScope } from "@/lib/folder/treeScope";
+import { cn } from "@/lib/utils";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import FavouriteMark from "@/components/favourite/FavouriteMark.vue";
+import ForumPermissionMark from "@/components/forum/ForumPermissionMark.vue";
+import { MEMBERSHIP_LABELS } from "@/lib/format/group";
+import VisibilityMark from "@/components/group/VisibilityMark.vue";
+import StatusMark from "@/components/story-idea/StatusMark.vue";
+import ReadMark from "@/components/story-idea/ReadMark.vue";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import { platformRoleLabel } from "@/lib/format/platformRole";
+import { useIsOperator } from "@/composables/useIsOperator";
 
-const { data: userData } = useGetCurrentUser()
+const { data: userData } = useGetCurrentUser();
 const currentUserId = computed<string | undefined>(() =>
   userData.value?.status === 200 ? userData.value.data.id : undefined,
-)
+);
 
 const props = defineProps<{
-  results: Search200 | undefined
-  isSearching: boolean
-  termIsLongEnough: boolean
-  minimumLength: number
-  class?: string
-}>()
+  results: Search200 | undefined;
+  isSearching: boolean;
+  termIsLongEnough: boolean;
+  minimumLength: number;
+  class?: string;
+}>();
 
 /**
  * A section is left out entirely when it found nothing, rather than shown empty — three
@@ -36,46 +36,46 @@ const props = defineProps<{
  */
 const sections = computed(() =>
   [
-    { key: 'groups', heading: 'Gruppen', section: props.results?.groups },
-    { key: 'threads', heading: 'Themen', section: props.results?.threads },
+    { key: "groups", heading: "Gruppen", section: props.results?.groups },
+    { key: "threads", heading: "Themen", section: props.results?.threads },
     // Directly after its counterpart rather than in a block of its own: ‚Themen‘ above
     // ‚Themen im Forum‘ is what says the first means a group, without spending a word on it.
     // Unqualified where nothing sits beside it, since a section with no results is left out.
-    { key: 'forumThreads', heading: 'Themen im Forum', section: props.results?.forumThreads },
-    { key: 'pages', heading: 'Seiten', section: props.results?.pages },
-    { key: 'forumPages', heading: 'Seiten im Forum', section: props.results?.forumPages },
-    { key: 'storyIdeas', heading: 'Storyideen', section: props.results?.storyIdeas },
-    { key: 'users', heading: 'Mitglieder', section: props.results?.users },
+    { key: "forumThreads", heading: "Themen im Forum", section: props.results?.forumThreads },
+    { key: "pages", heading: "Seiten", section: props.results?.pages },
+    { key: "forumPages", heading: "Seiten im Forum", section: props.results?.forumPages },
+    { key: "storyIdeas", heading: "Storyideen", section: props.results?.storyIdeas },
+    { key: "users", heading: "Mitglieder", section: props.results?.users },
   ].filter((entry) => (entry.section?.results.length ?? 0) > 0),
-)
+);
 
 /** Null for a group the reader has not joined, which takes no chip — see `MEMBERSHIP_LABELS`. */
 function membershipLabel(status: string | null): string | undefined {
-  return status === 'joined' || status === 'invited' ? MEMBERSHIP_LABELS[status] : undefined
+  return status === "joined" || status === "invited" ? MEMBERSHIP_LABELS[status] : undefined;
 }
 
 const foundNothing = computed<boolean>(
   () => props.results !== undefined && !props.isSearching && sections.value.length === 0,
-)
+);
 
 /** How many were found beyond the few shown, so an imprecise search says so. */
 function remaining(shown: number, total: number): number {
-  return Math.max(0, total - shown)
+  return Math.max(0, total - shown);
 }
 
 /** Only an operator is shown what members may do, as in the tree and the rail. */
-const isOperator = useIsOperator()
+const isOperator = useIsOperator();
 
 function groupTarget(id: string): RouteLocationRaw {
-  return { name: 'group', params: { groupId: id } }
+  return { name: "group", params: { groupId: id } };
 }
 
 /**
  * The tree's own function, so a result row and a row of the forum's tree cannot come to disagree
  * about where a thread lives. A group result carries its scope; the forum's section implies one.
  */
-function leafTarget(scope: WriteScope, kind: 'thread' | 'page', id: string): RouteLocationRaw {
-  return leafRoute(scope, { kind, id })
+function leafTarget(scope: WriteScope, kind: "thread" | "page", id: string): RouteLocationRaw {
+  return leafRoute(scope, { kind, id });
 }
 </script>
 
@@ -234,8 +234,8 @@ function leafTarget(scope: WriteScope, kind: 'thread' | 'page', id: string): Rou
           {{
             pluralize(
               remaining(entry.section.results.length, entry.section.totalResults),
-              'weiterer Treffer',
-              'weitere Treffer',
+              "weiterer Treffer",
+              "weitere Treffer",
             )
           }}
         </p>

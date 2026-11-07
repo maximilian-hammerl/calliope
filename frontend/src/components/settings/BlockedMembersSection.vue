@@ -3,37 +3,37 @@
  * Where a block is undone. The profile is where one is made, but a blocked member is exactly
  * the person you no longer visit, so the list has to live somewhere you can reach without them.
  */
-import { computed, ref } from 'vue'
-import { getListBlocksQueryKey, useListBlocks, useUnblockMember } from '@/api/blocks/blocks'
-import type { ListBlocks200ResultsItem } from '@/api/models'
-import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { formatJoinedDate } from '@/lib/format/formatTime'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { computed, ref } from "vue";
+import { getListBlocksQueryKey, useListBlocks, useUnblockMember } from "@/api/blocks/blocks";
+import type { ListBlocks200ResultsItem } from "@/api/models";
+import { queryClient } from "@/lib/api/queryClient";
+import { listKeyPrefix } from "@/lib/api/queryKeys";
+import { formatJoinedDate } from "@/lib/format/formatTime";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const { data, isPending } = useListBlocks(() => ({ limit: 100 }))
+const { data, isPending } = useListBlocks(() => ({ limit: 100 }));
 
 const blocks = computed<ListBlocks200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
-const { mutateAsync: unblock } = useUnblockMember()
+const { mutateAsync: unblock } = useUnblockMember();
 /** Per row, so one slow request does not disable every other button in the list. */
-const pendingId = ref<string | undefined>(undefined)
-const error = ref<string | undefined>(undefined)
+const pendingId = ref<string | undefined>(undefined);
+const error = ref<string | undefined>(undefined);
 
 async function allowContactAgain(userId: string) {
-  error.value = undefined
-  pendingId.value = userId
+  error.value = undefined;
+  pendingId.value = userId;
   try {
-    await unblock({ userId })
-    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListBlocksQueryKey()) })
+    await unblock({ userId });
+    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListBlocksQueryKey()) });
   } catch {
-    error.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    error.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
   } finally {
-    pendingId.value = undefined
+    pendingId.value = undefined;
   }
 }
 </script>

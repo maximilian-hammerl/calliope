@@ -4,7 +4,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion'
+} from "@/components/ui/accordion";
 
 /**
  * One block of either rail. Collapsible where the rail exists as a rail, plain where it does
@@ -24,11 +24,11 @@ import {
  * which is what says whether opening it is worth it.
  */
 defineProps<{
-  label: string
-  collapsible?: boolean
-  meta?: string
-  openStart?: boolean
-}>()
+  label: string;
+  collapsible?: boolean;
+  meta?: string;
+  openStart?: boolean;
+}>();
 </script>
 
 <template>

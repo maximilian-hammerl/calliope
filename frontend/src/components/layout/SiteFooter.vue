@@ -6,14 +6,14 @@
  *
  * Signed in the legal pages are in the account menu instead; see `AppLayout`.
  */
-import { RouterLink } from 'vue-router'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { APP_NAME, SOURCE_URL } from '@/lib/branding'
+import { RouterLink } from "vue-router";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { APP_NAME, SOURCE_URL } from "@/lib/branding";
 
 const LINKS = [
-  { name: 'imprint', label: 'Impressum' },
-  { name: 'privacyPolicy', label: 'Datenschutzerklärung' },
-] as const
+  { name: "imprint", label: "Impressum" },
+  { name: "privacyPolicy", label: "Datenschutzerklärung" },
+] as const;
 </script>
 
 <template>

@@ -20,10 +20,10 @@ import {
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination'
+} from "@/components/ui/pagination";
 
-const props = defineProps<{ page: number; total: number; itemsPerPage: number }>()
-const emit = defineEmits<{ 'update:page': [page: number] }>()
+const props = defineProps<{ page: number; total: number; itemsPerPage: number }>();
+const emit = defineEmits<{ "update:page": [page: number] }>();
 </script>
 
 <template>

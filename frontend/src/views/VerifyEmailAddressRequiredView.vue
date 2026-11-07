@@ -1,111 +1,111 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useForm } from '@tanstack/vue-form'
-import { useRouter } from 'vue-router'
+import { computed, ref } from "vue";
+import { useForm } from "@tanstack/vue-form";
+import { useRouter } from "vue-router";
 import {
   getGetCurrentUserQueryKey,
   useChangeEmailAddress,
   useGetCurrentUser,
   useLogoutUser,
   useResendEmailAddressVerification,
-} from '@/api/auth/auth'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { queryClient } from '@/lib/api/queryClient'
-import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage } from '@/lib/format/failure'
-import { emailAddressSchema, focusFirstInvalid, parsed } from '@/lib/validation/fieldSchemas'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
-import DeleteAccountForm from '@/components/settings/DeleteAccountForm.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import FormTextField from '@/components/common/FormTextField.vue'
-import { FieldGroup } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
-import { Pencil, Send, Trash2 } from '@lucide/vue'
+} from "@/api/auth/auth";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { queryClient } from "@/lib/api/queryClient";
+import { ApiError } from "@/lib/api/apiFetch";
+import { failureMessage } from "@/lib/format/failure";
+import { emailAddressSchema, focusFirstInvalid, parsed } from "@/lib/validation/fieldSchemas";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import MailedLinkNote from "@/components/common/MailedLinkNote.vue";
+import DeleteAccountForm from "@/components/settings/DeleteAccountForm.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import FormTextField from "@/components/common/FormTextField.vue";
+import { FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import { Pencil, Send, Trash2 } from "@lucide/vue";
 
-const router = useRouter()
+const router = useRouter();
 
-const { data: currentUser } = useGetCurrentUser()
+const { data: currentUser } = useGetCurrentUser();
 const emailAddress = computed(() =>
-  currentUser.value?.status === 200 ? currentUser.value.data.emailAddress : '',
-)
+  currentUser.value?.status === 200 ? currentUser.value.data.emailAddress : "",
+);
 
-const { mutateAsync: resend, isPending: isResending } = useResendEmailAddressVerification()
-const { mutateAsync: changeAddress, isPending: isChanging } = useChangeEmailAddress()
-const { mutateAsync: logOut } = useLogoutUser()
+const { mutateAsync: resend, isPending: isResending } = useResendEmailAddressVerification();
+const { mutateAsync: changeAddress, isPending: isChanging } = useChangeEmailAddress();
+const { mutateAsync: logOut } = useLogoutUser();
 
 /**
  * One value rather than a boolean per branch: two flags could both be set, which would mean
  * nothing and which nothing would catch.
  */
-const mode = ref<'choices' | 'correcting' | 'deleting'>('choices')
+const mode = ref<"choices" | "correcting" | "deleting">("choices");
 
-const deletionRequested = ref<boolean>(false)
-const resent = ref<boolean>(false)
-const formError = ref<string | undefined>(undefined)
+const deletionRequested = ref<boolean>(false);
+const resent = ref<boolean>(false);
+const formError = ref<string | undefined>(undefined);
 
-const LIMIT = TEXT_LIMIT.changeEmailAddress
+const LIMIT = TEXT_LIMIT.changeEmailAddress;
 
-const NEW_ADDRESS = emailAddressSchema(LIMIT.emailAddress, 'Gib eine E-Mail-Adresse ein.')
+const NEW_ADDRESS = emailAddressSchema(LIMIT.emailAddress, "Gib eine E-Mail-Adresse ein.");
 
 async function resendLink() {
-  formError.value = undefined
+  formError.value = undefined;
 
   try {
-    await resend()
+    await resend();
   } catch (error) {
-    formError.value = failureMessage(error)
-    return
+    formError.value = failureMessage(error);
+    return;
   }
 
-  resent.value = true
+  resent.value = true;
 }
 
-const formElement = ref<HTMLFormElement | null>(null)
+const formElement = ref<HTMLFormElement | null>(null);
 
 const form = useForm({
-  defaultValues: { emailAddress: '' },
+  defaultValues: { emailAddress: "" },
   // Focus follows the first thing that is wrong; without it focus stays on the button.
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
-    formError.value = undefined
+    formError.value = undefined;
 
     try {
-      await changeAddress({ data: { emailAddress: parsed(NEW_ADDRESS, value.emailAddress) } })
+      await changeAddress({ data: { emailAddress: parsed(NEW_ADDRESS, value.emailAddress) } });
     } catch (error) {
       if (error instanceof ApiError) {
         // Unlike a 400, this one is worth saying on the field: it is about the address typed, and
         // no client rule could have known it.
         if (error.status === 409) {
-          form.setFieldMeta('emailAddress', (meta) => ({
+          form.setFieldMeta("emailAddress", (meta) => ({
             ...meta,
             errorMap: {
               ...meta.errorMap,
-              onServer: 'Diese E-Mail-Adresse wird bereits verwendet.',
+              onServer: "Diese E-Mail-Adresse wird bereits verwendet.",
             },
-          }))
-          return
+          }));
+          return;
         }
       }
-      formError.value = failureMessage(error)
-      return
+      formError.value = failureMessage(error);
+      return;
     }
 
     // The heading shows the address, which the change just moved.
-    await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
-    mode.value = 'choices'
-    form.reset()
-    resent.value = true
+    await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+    mode.value = "choices";
+    form.reset();
+    resent.value = true;
   },
-})
+});
 
 async function signOut() {
-  await logOut().catch(() => undefined)
-  forgetCurrentUser()
-  await router.push({ name: 'login' })
+  await logOut().catch(() => undefined);
+  forgetCurrentUser();
+  await router.push({ name: "login" });
 }
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ variant?: 'label' | 'tag' | 'mark' }>(), { variant: 'label' })
+withDefaults(defineProps<{ variant?: "label" | "tag" | "mark" }>(), { variant: "label" });
 </script>
 
 <template>

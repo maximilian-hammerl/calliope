@@ -3,7 +3,7 @@
  * Lays out what `lib/imprint.ts` was configured with. German whatever the interface becomes: the
  * language of a legal notice is itself legally meaningful.
  */
-import { WEBSITE_OPERATOR, WEBSITE_OPERATOR_ADDRESS } from '@/lib/websiteOperator'
+import { WEBSITE_OPERATOR, WEBSITE_OPERATOR_ADDRESS } from "@/lib/websiteOperator";
 </script>
 
 <template>

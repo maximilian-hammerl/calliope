@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { Editor } from '@tiptap/core'
-import { DOCUMENT_EXTENSIONS } from '@/lib/document/extensions'
-import { EVERY_NODE_AND_MARK, EXPECTED } from '@/lib/document/__tests__/documentFixture'
+import { describe, expect, it } from "vitest";
+import { Editor } from "@tiptap/core";
+import { DOCUMENT_EXTENSIONS } from "@/lib/document/extensions";
+import { EVERY_NODE_AND_MARK, EXPECTED } from "@/lib/document/__tests__/documentFixture";
 
 /**
  * What Tiptap emits, pinned. The backend validates the same vocabulary in
@@ -17,17 +17,17 @@ import { EVERY_NODE_AND_MARK, EXPECTED } from '@/lib/document/__tests__/document
  * yourself the change is intended, and paste it in.
  */
 
-describe('the Tiptap vocabulary the backend validates', () => {
-  it('still emits the document the schema is written against', () => {
+describe("the Tiptap vocabulary the backend validates", () => {
+  it("still emits the document the schema is written against", () => {
     const editor = new Editor({
       // The reader's list, which is the whole vocabulary `DOCUMENT_SCHEMA` accepts.
       extensions: DOCUMENT_EXTENSIONS,
       content: EVERY_NODE_AND_MARK,
-    })
+    });
 
-    const produced = editor.getJSON()
-    editor.destroy()
+    const produced = editor.getJSON();
+    editor.destroy();
 
-    expect(produced).toEqual(EXPECTED)
-  })
-})
+    expect(produced).toEqual(EXPECTED);
+  });
+});

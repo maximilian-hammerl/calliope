@@ -1,89 +1,89 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useForm } from '@tanstack/vue-form'
-import { useRoute } from 'vue-router'
-import { useResetPassword } from '@/api/auth/auth'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage, PASSWORD_BREACHED_MESSAGE } from '@/lib/format/failure'
+import { ref } from "vue";
+import { useForm } from "@tanstack/vue-form";
+import { useRoute } from "vue-router";
+import { useResetPassword } from "@/api/auth/auth";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { ApiError } from "@/lib/api/apiFetch";
+import { failureMessage, PASSWORD_BREACHED_MESSAGE } from "@/lib/format/failure";
 import {
   focusFirstInvalid,
   passwordRepeatMessage,
   passwordSchema,
-} from '@/lib/validation/fieldSchemas'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import FormTextField from '@/components/common/FormTextField.vue'
-import { FieldGroup } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/lib/validation/fieldSchemas";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import FormTextField from "@/components/common/FormTextField.vue";
+import { FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 
-const route = useRoute()
+const route = useRoute();
 
-const token = typeof route.query.token === 'string' ? route.query.token : undefined
+const token = typeof route.query.token === "string" ? route.query.token : undefined;
 
 /**
  * A link with no token is as unusable as a spent one, so both land in the same state rather
  * than showing a form that cannot succeed.
  */
-const status = ref<'form' | 'done' | 'expired'>(token === undefined ? 'expired' : 'form')
+const status = ref<"form" | "done" | "expired">(token === undefined ? "expired" : "form");
 
-const formError = ref<string | undefined>(undefined)
+const formError = ref<string | undefined>(undefined);
 
-const { mutateAsync: setPassword, isPending } = useResetPassword()
+const { mutateAsync: setPassword, isPending } = useResetPassword();
 
-const LIMIT = TEXT_LIMIT.resetPassword
+const LIMIT = TEXT_LIMIT.resetPassword;
 
 // Rules and wording from `lib/validation/fieldSchemas`; only the empty-field wording is this
 // form's own, because it names what is being asked for.
-const PASSWORD = passwordSchema(LIMIT.password, 'Gib ein neues Passwort ein.')
-const REPEAT = passwordSchema(LIMIT.password, 'Wiederhole dein neues Passwort.')
+const PASSWORD = passwordSchema(LIMIT.password, "Gib ein neues Passwort ein.");
+const REPEAT = passwordSchema(LIMIT.password, "Wiederhole dein neues Passwort.");
 
-const formElement = ref<HTMLFormElement | null>(null)
+const formElement = ref<HTMLFormElement | null>(null);
 
 const form = useForm({
-  defaultValues: { password: '', passwordConfirmation: '' },
+  defaultValues: { password: "", passwordConfirmation: "" },
   // Focus follows the first thing that is wrong; without it focus stays on the button.
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
-    formError.value = undefined
+    formError.value = undefined;
 
     if (token === undefined) {
-      return
+      return;
     }
 
     try {
       // Not trimmed: a password may legitimately begin or end with a space.
-      await setPassword({ data: { token, password: value.password } })
+      await setPassword({ data: { token, password: value.password } });
     } catch (error) {
-      if (error instanceof ApiError && error.body.code === 'password_breached') {
-        form.setFieldMeta('password', (meta) => ({
+      if (error instanceof ApiError && error.body.code === "password_breached") {
+        form.setFieldMeta("password", (meta) => ({
           ...meta,
           errorMap: { ...meta.errorMap, onServer: PASSWORD_BREACHED_MESSAGE },
-        }))
-        return
+        }));
+        return;
       }
       if (error instanceof ApiError) {
         // The one answer the API gives for spent, expired and unknown alike.
         if (error.status === 410) {
-          status.value = 'expired'
-          return
+          status.value = "expired";
+          return;
         }
       }
-      formError.value = failureMessage(error)
-      return
+      formError.value = failureMessage(error);
+      return;
     }
 
     // Every session ended with the reset, including this browser's if it had one. The guard
     // reads the session from the cache, so the stale answer has to go or it would send a
     // signed-in visitor home instead of to the sign-in page.
-    forgetCurrentUser()
-    form.reset()
-    status.value = 'done'
+    forgetCurrentUser();
+    form.reset();
+    status.value = "done";
   },
-})
+});
 </script>
 
 <template>
@@ -91,7 +91,7 @@ const form = useForm({
     <div class="flex flex-col gap-2">
       <CalliopeLogo :size="40" wordmark class="mb-1" />
       <h1 class="text-h1">
-        {{ status === 'done' ? 'Passwort geändert' : 'Neues Passwort' }}
+        {{ status === "done" ? "Passwort geändert" : "Neues Passwort" }}
       </h1>
       <p v-if="status === 'form'" class="text-note text-ink-5">
         Vergib ein neues Passwort für dein Konto.

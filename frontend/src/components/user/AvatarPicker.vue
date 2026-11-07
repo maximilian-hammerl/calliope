@@ -3,72 +3,72 @@
  * Choosing a picture, and the declaration that comes with it. The preview is the picture itself:
  * the server centre-crops the same way, so it shows what will actually be stored.
  */
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { Camera } from '@lucide/vue'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { userInitial } from '@/lib/format/formatUser'
-import { formatBytes } from '@/lib/format/formatNumber'
+import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { Camera } from "@lucide/vue";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { userInitial } from "@/lib/format/formatUser";
+import { formatBytes } from "@/lib/format/formatNumber";
 import {
   AVATAR_ORIGIN_LABELS,
   AVATAR_ORIGINS,
   AVATAR_TOO_LARGE,
   OWN_WORK,
-} from '@/lib/format/avatar'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import type { SetAvatarBodyOrigin } from '@/api/models'
+} from "@/lib/format/avatar";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import type { SetAvatarBodyOrigin } from "@/api/models";
 
-const props = defineProps<{ username: string; currentUrl: string | null; disabled?: boolean }>()
+const props = defineProps<{ username: string; currentUrl: string | null; disabled?: boolean }>();
 
-const file = defineModel<File | undefined>('file', { required: true })
-const origin = defineModel<SetAvatarBodyOrigin>('origin', { required: true })
-const credit = defineModel<string>('credit', { required: true })
-const confirmed = defineModel<boolean>('confirmed', { required: true })
+const file = defineModel<File | undefined>("file", { required: true });
+const origin = defineModel<SetAvatarBodyOrigin>("origin", { required: true });
+const credit = defineModel<string>("credit", { required: true });
+const confirmed = defineModel<boolean>("confirmed", { required: true });
 
 /** Mirrors the server's allowlist; SVG is deliberately absent from both. */
-const ACCEPT = 'image/jpeg,image/png,image/webp'
+const ACCEPT = "image/jpeg,image/png,image/webp";
 
-const chosenUrl = ref<string | undefined>(undefined)
-const tooLarge = ref<string | undefined>(undefined)
+const chosenUrl = ref<string | undefined>(undefined);
+const tooLarge = ref<string | undefined>(undefined);
 
 function forgetPreview(): void {
   if (chosenUrl.value !== undefined) {
-    URL.revokeObjectURL(chosenUrl.value)
-    chosenUrl.value = undefined
+    URL.revokeObjectURL(chosenUrl.value);
+    chosenUrl.value = undefined;
   }
 }
 
 watch(file, (chosen) => {
-  forgetPreview()
-  chosenUrl.value = chosen === undefined ? undefined : URL.createObjectURL(chosen)
-})
+  forgetPreview();
+  chosenUrl.value = chosen === undefined ? undefined : URL.createObjectURL(chosen);
+});
 
 // Or a picture chosen and then abandoned is held for as long as the page lives.
-onBeforeUnmount(forgetPreview)
+onBeforeUnmount(forgetPreview);
 
-const previewUrl = computed<string | null>(() => chosenUrl.value ?? props.currentUrl)
+const previewUrl = computed<string | null>(() => chosenUrl.value ?? props.currentUrl);
 
 /**
  * Refused here rather than after the upload: the size is known before anything is sent, and a
  * phone should not spend four megabytes of somebody's data to be told no.
  */
 function choose(event: Event): void {
-  const input = event.target as HTMLInputElement
-  const chosen = input.files?.[0]
+  const input = event.target as HTMLInputElement;
+  const chosen = input.files?.[0];
 
   if (chosen !== undefined && chosen.size > TEXT_LIMIT.setAvatar.image.maxLength) {
-    tooLarge.value = AVATAR_TOO_LARGE
-    file.value = undefined
-    input.value = ''
-    return
+    tooLarge.value = AVATAR_TOO_LARGE;
+    file.value = undefined;
+    input.value = "";
+    return;
   }
 
-  tooLarge.value = undefined
-  file.value = chosen
+  tooLarge.value = undefined;
+  file.value = chosen;
 }
 </script>
 
@@ -89,7 +89,7 @@ function choose(event: Event): void {
           class="inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-lg border border-line-5 bg-paper-3 px-3 text-control font-medium text-oak-deep hover:bg-paper-4 md:min-h-9"
         >
           <Camera :size="14" :stroke-width="1.5" aria-hidden="true" />
-          {{ file === undefined ? 'Bild wählen' : 'Anderes Bild' }}
+          {{ file === undefined ? "Bild wählen" : "Anderes Bild" }}
           <input
             class="sr-only"
             type="file"

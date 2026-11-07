@@ -5,14 +5,14 @@
  * reason is a note for operators and is never shown to the banned member; what they read at
  * sign-in is one fixed sentence.
  */
-import { ref, watch } from 'vue'
-import { getGetUserQueryKey, getListUsersQueryKey, useBanUser } from '@/api/users/users'
-import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { ApiError } from '@/lib/api/apiFetch'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { ref, watch } from "vue";
+import { getGetUserQueryKey, getListUsersQueryKey, useBanUser } from "@/api/users/users";
+import { queryClient } from "@/lib/api/queryClient";
+import { listKeyPrefix } from "@/lib/api/queryKeys";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { ApiError } from "@/lib/api/apiFetch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,47 +20,47 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
-const open = defineModel<boolean>('open', { required: true })
-const props = defineProps<{ userId: string; username: string }>()
-const emit = defineEmits<{ banned: [] }>()
+const open = defineModel<boolean>("open", { required: true });
+const props = defineProps<{ userId: string; username: string }>();
+const emit = defineEmits<{ banned: [] }>();
 
-const { mutateAsync: ban, isPending } = useBanUser()
-const reason = ref<string>('')
-const error = ref<string | undefined>(undefined)
+const { mutateAsync: ban, isPending } = useBanUser();
+const reason = ref<string>("");
+const error = ref<string | undefined>(undefined);
 
 watch(open, () => {
-  reason.value = ''
-  error.value = undefined
-})
+  reason.value = "";
+  error.value = undefined;
+});
 
 async function confirm() {
-  error.value = undefined
+  error.value = undefined;
 
-  if (reason.value.trim() === '') {
-    error.value = 'Gib einen Grund an.'
-    return
+  if (reason.value.trim() === "") {
+    error.value = "Gib einen Grund an.";
+    return;
   }
 
   try {
-    await ban({ userId: props.userId, data: { reason: reason.value.trim() } })
+    await ban({ userId: props.userId, data: { reason: reason.value.trim() } });
   } catch (caught) {
     // The one refusal worth naming: an operator cannot be banned until the role is revoked.
     error.value =
       caught instanceof ApiError && caught.status === 403
-        ? 'Konten mit einer Plattformrolle können nicht gesperrt werden.'
-        : 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
+        ? "Konten mit einer Plattformrolle können nicht gesperrt werden."
+        : "Das ist gerade nicht möglich. Versuche es später noch einmal.";
+    return;
   }
 
-  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(props.userId) })
-  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListUsersQueryKey()) })
-  open.value = false
-  emit('banned')
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(props.userId) });
+  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListUsersQueryKey()) });
+  open.value = false;
+  emit("banned");
 }
 </script>
 

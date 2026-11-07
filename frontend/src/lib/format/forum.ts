@@ -1,9 +1,9 @@
-import type { Component } from 'vue'
-import { EyeOff, PencilOff } from '@lucide/vue'
-import { assertUnreachable } from '@/lib/assertUnreachable'
-import type { ListForumFolders200ResultsItemEffectiveMemberPermission as ForumPermission } from '@/api/models'
+import type { Component } from "vue";
+import { EyeOff, PencilOff } from "@lucide/vue";
+import { assertUnreachable } from "@/lib/assertUnreachable";
+import type { ListForumFolders200ResultsItemEffectiveMemberPermission as ForumPermission } from "@/api/models";
 
-export type { ForumPermission }
+export type { ForumPermission };
 
 /**
  * What a row's permission looks like as a mark. `write` renders nothing: it is the ordinary case,
@@ -23,19 +23,19 @@ export function forumPermissionMark(
   isOperator: boolean,
 ): { icon: Component; label: string } | undefined {
   switch (permission) {
-    case 'write':
-      return undefined
-    case 'read':
+    case "write":
+      return undefined;
+    case "read":
       return {
         icon: PencilOff,
-        label: isOperator ? 'Mitglieder können nur lesen' : 'Du kannst hier nur lesen',
-      }
-    case 'hidden':
+        label: isOperator ? "Mitglieder können nur lesen" : "Du kannst hier nur lesen",
+      };
+    case "hidden":
       // Only an operator ever meets this: a hidden row is filtered out of a member's lists, so
       // the guard is what keeps a mark from appearing if that ever stops being true.
-      return isOperator ? { icon: EyeOff, label: 'Für Mitglieder verborgen' } : undefined
+      return isOperator ? { icon: EyeOff, label: "Für Mitglieder verborgen" } : undefined;
     default:
-      return assertUnreachable(permission)
+      return assertUnreachable(permission);
   }
 }
 
@@ -47,19 +47,19 @@ export function forumPermissionMark(
  * „mitlesen" for a thread, because a conversation is something you join and are not joining. A
  * page is only ever read, so it says so plainly.
  */
-export const FORUM_READ_ONLY_NOTE: Record<'thread' | 'page', string> = {
-  thread: 'Hier kannst du nur mitlesen.',
-  page: 'Diese Seite kannst du nur lesen.',
-}
+export const FORUM_READ_ONLY_NOTE: Record<"thread" | "page", string> = {
+  thread: "Hier kannst du nur mitlesen.",
+  page: "Diese Seite kannst du nur lesen.",
+};
 
 /** What carries a permission, for the sentence each choice needs. */
-export type ForumPermissionKind = 'folder' | 'thread' | 'page'
+export type ForumPermissionKind = "folder" | "thread" | "page";
 
 const SUBJECT: Record<ForumPermissionKind, string> = {
-  folder: 'den Ordner und alles darin',
-  thread: 'das Thema',
-  page: 'die Seite',
-}
+  folder: "den Ordner und alles darin",
+  thread: "das Thema",
+  page: "die Seite",
+};
 
 /**
  * The three settings an operator picks between, in the order they read: what members may do, most
@@ -73,19 +73,19 @@ export function forumPermissionChoices(
 ): ReadonlyArray<{ value: ForumPermission; label: string; note: string }> {
   return [
     {
-      value: 'write',
-      label: 'Mitschreiben',
-      note: 'Mitglieder lesen und schreiben hier.',
+      value: "write",
+      label: "Mitschreiben",
+      note: "Mitglieder lesen und schreiben hier.",
     },
     {
-      value: 'read',
-      label: 'Nur lesen',
-      note: 'Mitglieder lesen mit, schreiben aber nicht mehr.',
+      value: "read",
+      label: "Nur lesen",
+      note: "Mitglieder lesen mit, schreiben aber nicht mehr.",
     },
     {
-      value: 'hidden',
-      label: 'Verborgen',
+      value: "hidden",
+      label: "Verborgen",
       note: `Nur die Moderation sieht ${SUBJECT[kind]}.`,
     },
-  ]
+  ];
 }

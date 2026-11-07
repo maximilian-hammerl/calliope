@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onScopeDispose, ref } from 'vue'
-import { useIntervalFn } from '@vueuse/core'
-import { useQueryClient } from '@tanstack/vue-query'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Button } from '@/components/ui/button'
+import { computed, onScopeDispose, ref } from "vue";
+import { useIntervalFn } from "@vueuse/core";
+import { useQueryClient } from "@tanstack/vue-query";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Button } from "@/components/ui/button";
 
 /**
  * What the member sees while the API cannot be reached — during a deploy, a restart, or an
@@ -18,30 +18,30 @@ import { Button } from '@/components/ui/button'
  * every query has exhausted its attempts and stopped — so without the probe below the member
  * would sit on a dead page until they reloaded.
  */
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
 // Only to tell the two sizes apart. The query is shared, so this reads what the app already
 // asked for rather than asking again.
-const { data: userData } = useGetCurrentUser()
-const hasSession = computed<boolean>(() => userData.value?.status === 200)
+const { data: userData } = useGetCurrentUser();
+const hasSession = computed<boolean>(() => userData.value?.status === 200);
 
 /**
  * The same ladder the chat stream uses, for the same reason: a deploy is over in seconds, and
  * past the end of it a longer outage settles to about two attempts a minute.
  */
-const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000] as const
-const MAX_RETRY_DELAY_MS = 30_000
+const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000] as const;
+const MAX_RETRY_DELAY_MS = 30_000;
 
-const attempt = ref<number>(0)
-const isProbing = ref<boolean>(false)
-const secondsLeft = ref<number>(0)
+const attempt = ref<number>(0);
+const isProbing = ref<boolean>(false);
+const secondsLeft = ref<number>(0);
 
-let timer: ReturnType<typeof setTimeout> | undefined
+let timer: ReturnType<typeof setTimeout> | undefined;
 
 function clearTimer(): void {
   if (timer !== undefined) {
-    clearTimeout(timer)
-    timer = undefined
+    clearTimeout(timer);
+    timer = undefined;
   }
 }
 
@@ -52,68 +52,68 @@ function clearTimer(): void {
  */
 async function reachable(): Promise<boolean> {
   try {
-    return (await fetch('/api/health')).ok
+    return (await fetch("/api/health")).ok;
   } catch {
-    return false
+    return false;
   }
 }
 
 async function probe(): Promise<void> {
   if (isProbing.value) {
-    return
+    return;
   }
 
-  isProbing.value = true
-  const isBack = await reachable()
-  isProbing.value = false
+  isProbing.value = true;
+  const isBack = await reachable();
+  isProbing.value = false;
 
   if (!isBack) {
-    scheduleProbe()
-    return
+    scheduleProbe();
+    return;
   }
 
   // Everything gave up when it ran out of attempts, so coming back has to be said out loud.
   // The refetches this triggers are what clear `backendReachable` and remove this component.
-  attempt.value = 0
-  await queryClient.invalidateQueries()
+  attempt.value = 0;
+  await queryClient.invalidateQueries();
 }
 
 function scheduleProbe(): void {
-  clearTimer()
+  clearTimer();
 
-  const delay = RETRY_DELAYS_MS[attempt.value] ?? MAX_RETRY_DELAY_MS
-  attempt.value += 1
-  secondsLeft.value = Math.ceil(delay / 1000)
+  const delay = RETRY_DELAYS_MS[attempt.value] ?? MAX_RETRY_DELAY_MS;
+  attempt.value += 1;
+  secondsLeft.value = Math.ceil(delay / 1000);
 
   timer = setTimeout(() => {
-    timer = undefined
-    void probe()
-  }, delay)
+    timer = undefined;
+    void probe();
+  }, delay);
 }
 
 /** So the wait never looks like nothing is happening. */
 useIntervalFn(() => {
   if (secondsLeft.value > 0) {
-    secondsLeft.value -= 1
+    secondsLeft.value -= 1;
   }
-}, 1000)
+}, 1000);
 
 function retryNow(): void {
-  clearTimer()
-  attempt.value = 0
-  secondsLeft.value = 0
-  void probe()
+  clearTimer();
+  attempt.value = 0;
+  secondsLeft.value = 0;
+  void probe();
 }
 
 const status = computed<string>(() =>
   isProbing.value
-    ? 'Wird versucht …'
+    ? "Wird versucht …"
     : `Nächster Versuch in ${Math.max(secondsLeft.value, 1)} Sekunden`,
-)
+);
 
-scheduleProbe()
+scheduleProbe();
 
-onScopeDispose(clearTimer)
+onScopeDispose(clearTimer);
 </script>
 
 <template>

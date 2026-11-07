@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import { forumPermissionChoices } from '@/lib/format/forum'
-import type { ForumPermission, ForumPermissionKind } from '@/lib/format/forum'
+import { computed } from "vue";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { forumPermissionChoices } from "@/lib/format/forum";
+import type { ForumPermission, ForumPermissionKind } from "@/lib/format/forum";
 
 /**
  * What members may do with one row of the forum, as three radios rather than a select: each option
@@ -15,13 +15,13 @@ import type { ForumPermission, ForumPermissionKind } from '@/lib/format/forum'
  * The value is the row's **own** setting, never the reduced one: something above it may still be
  * closing it, and re-opening that folder has to restore what was chosen here.
  */
-const props = defineProps<{ kind: ForumPermissionKind }>()
+const props = defineProps<{ kind: ForumPermissionKind }>();
 
-const permission = defineModel<ForumPermission>({ required: true })
+const permission = defineModel<ForumPermission>({ required: true });
 
 const choices = computed<ReturnType<typeof forumPermissionChoices>>(() =>
   forumPermissionChoices(props.kind),
-)
+);
 </script>
 
 <template>

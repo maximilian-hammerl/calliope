@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import type { RouteRecordRaw } from 'vue-router'
-import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
-import { routes } from '@/router/routes'
+import { describe, expect, it } from "vitest";
+import type { RouteRecordRaw } from "vue-router";
+import { DESTINATIONS, isCurrent } from "@/lib/navigation/destinations";
+import { routes } from "@/router/routes";
 
 /**
  * The bars are built from this list, so what it says is what a member can reach in one press.
@@ -10,50 +10,50 @@ import { routes } from '@/router/routes'
  */
 function routeNames(records: readonly RouteRecordRaw[]): string[] {
   return records.flatMap((record) => [
-    ...(typeof record.name === 'string' ? [record.name] : []),
+    ...(typeof record.name === "string" ? [record.name] : []),
     ...routeNames(record.children ?? []),
-  ])
+  ]);
 }
 
-const NAMES = routeNames(routes)
+const NAMES = routeNames(routes);
 
-describe('DESTINATIONS', () => {
-  it('opens the view members actually want, in one press', () => {
+describe("DESTINATIONS", () => {
+  it("opens the view members actually want, in one press", () => {
     expect(DESTINATIONS.map((destination) => [destination.label, destination.name])).toEqual([
-      ['Gruppen', 'myGroups'],
+      ["Gruppen", "myGroups"],
       // The carousel rather than either list: reading through unread ideas is the point of the page.
-      ['Storyideen', 'storyIdeasCarousel'],
-      ['Forum', 'forum'],
-      ['Mitglieder', 'members'],
-    ])
-  })
+      ["Storyideen", "storyIdeasCarousel"],
+      ["Forum", "forum"],
+      ["Mitglieder", "members"],
+    ]);
+  });
 
-  it('names routes that exist', () => {
+  it("names routes that exist", () => {
     // A renamed route would otherwise leave a bar item that navigates nowhere, or one that never
     // marks itself — the second is silent, which is how `/groups/discover` drifted once before.
     const named = DESTINATIONS.flatMap((destination) => [
       ...(destination.name === undefined ? [] : [destination.name]),
       ...destination.belongsTo,
-    ])
+    ]);
 
-    expect(named.filter((name) => !NAMES.includes(name))).toEqual([])
-  })
+    expect(named.filter((name) => !NAMES.includes(name))).toEqual([]);
+  });
 
-  it('marks a destination while any of its pages is open', () => {
-    const groups = DESTINATIONS[0]
-    expect(groups && isCurrent(groups, 'discoverGroups')).toBe(true)
-    expect(groups && isCurrent(groups, 'thread')).toBe(true)
-    expect(groups && isCurrent(groups, 'members')).toBe(false)
-  })
+  it("marks a destination while any of its pages is open", () => {
+    const groups = DESTINATIONS[0];
+    expect(groups && isCurrent(groups, "discoverGroups")).toBe(true);
+    expect(groups && isCurrent(groups, "thread")).toBe(true);
+    expect(groups && isCurrent(groups, "members")).toBe(false);
+  });
 
-  it('keeps the forum and a group apart, though both have threads and pages', () => {
+  it("keeps the forum and a group apart, though both have threads and pages", () => {
     // The two carry the same kinds of content (#32) and their route names are what separate
     // them, so a forum thread must not mark Gruppen and a group's thread must not mark Forum.
-    const groups = DESTINATIONS[0]
-    const forum = DESTINATIONS.find((destination) => destination.label === 'Forum')
+    const groups = DESTINATIONS[0];
+    const forum = DESTINATIONS.find((destination) => destination.label === "Forum");
 
-    expect(groups && isCurrent(groups, 'forumThread')).toBe(false)
-    expect(forum && isCurrent(forum, 'thread')).toBe(false)
-    expect(forum && isCurrent(forum, 'forumPage')).toBe(true)
-  })
-})
+    expect(groups && isCurrent(groups, "forumThread")).toBe(false);
+    expect(forum && isCurrent(forum, "thread")).toBe(false);
+    expect(forum && isCurrent(forum, "forumPage")).toBe(true);
+  });
+});

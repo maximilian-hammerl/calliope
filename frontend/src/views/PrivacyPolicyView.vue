@@ -3,8 +3,8 @@
  * Lays out the policy text with the named parties from configuration: the responsible party is
  * the Impressum's operator, and the hoster differs per instance. German, like the Impressum.
  */
-import { HOSTER, HOSTER_ADDRESS } from '@/lib/hoster'
-import { WEBSITE_OPERATOR, WEBSITE_OPERATOR_ADDRESS } from '@/lib/websiteOperator'
+import { HOSTER, HOSTER_ADDRESS } from "@/lib/hoster";
+import { WEBSITE_OPERATOR, WEBSITE_OPERATOR_ADDRESS } from "@/lib/websiteOperator";
 </script>
 
 <template>

@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/lib/utils'
-import { Label } from '@/components/ui/label'
+import type { HTMLAttributes } from "vue";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 const props = defineProps<{
-  class?: HTMLAttributes['class']
+  class?: HTMLAttributes["class"];
   /**
    * Says the field may be left blank. Patched in rather than written at each call site so the
    * word is the same everywhere — and marked on the *optional* fields, never the required ones,
    * because the problem it solves is members typing filler into fields they believe they must
    * answer. Silence therefore means required, which works because that is the rare case.
    */
-  optional?: boolean
-}>()
+  optional?: boolean;
+}>();
 </script>
 
 <template>

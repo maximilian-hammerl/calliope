@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 import {
   GENRE_LABELS,
   PERSPECTIVE_LABELS,
   SUBGENRE_LABELS,
   TENSE_LABELS,
   TROPE_LABELS,
-} from '@/lib/story/storyVocabulary'
-import type { ListStoryIdeas200ResultsItem } from '@/api/models'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import StatusMark from '@/components/story-idea/StatusMark.vue'
-import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
-import ReadMark from '@/components/story-idea/ReadMark.vue'
+} from "@/lib/story/storyVocabulary";
+import type { ListStoryIdeas200ResultsItem } from "@/api/models";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { LANGUAGE_LABELS } from "@/lib/format/storyIdea";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import StatusMark from "@/components/story-idea/StatusMark.vue";
+import FavouriteMark from "@/components/favourite/FavouriteMark.vue";
+import ReadMark from "@/components/story-idea/ReadMark.vue";
 
-const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>()
+const props = defineProps<{ idea: ListStoryIdeas200ResultsItem }>();
 
 /**
  * What the story is, in one line. Genres before subgenres before tropes, because that is
@@ -32,8 +32,8 @@ const story = computed<string>(() =>
     props.idea.perspective === null ? undefined : PERSPECTIVE_LABELS[props.idea.perspective],
   ]
     .filter((entry) => entry !== undefined)
-    .join(' · '),
-)
+    .join(" · "),
+);
 </script>
 
 <template>
@@ -75,7 +75,7 @@ const story = computed<string>(() =>
       v-if="idea.contentWarnings.length > 0"
       class="mt-0.5 max-w-[60ch] text-[12.5px] leading-[1.6] text-ink-5"
     >
-      <span class="text-ink-6">Inhaltswarnungen:&nbsp;</span>{{ idea.contentWarnings.join(', ') }}
+      <span class="text-ink-6">Inhaltswarnungen:&nbsp;</span>{{ idea.contentWarnings.join(", ") }}
     </div>
 
     <div class="mt-1.5 text-rail text-ink-5">

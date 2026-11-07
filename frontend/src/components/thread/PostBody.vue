@@ -20,14 +20,14 @@
  * them the schema cannot allow a document this cannot render, so a throw would mean a drift that
  * already failed a test — worth seeing rather than degrading for.
  */
-import { computed } from 'vue'
-import { generateHTML } from '@tiptap/core'
-import type { PostDocument } from '@/api/models'
-import { DOCUMENT_EXTENSIONS } from '@/lib/document/extensions'
+import { computed } from "vue";
+import { generateHTML } from "@tiptap/core";
+import type { PostDocument } from "@/api/models";
+import { DOCUMENT_EXTENSIONS } from "@/lib/document/extensions";
 
-const props = defineProps<{ document: PostDocument }>()
+const props = defineProps<{ document: PostDocument }>();
 
-const html = computed<string>(() => generateHTML(props.document, DOCUMENT_EXTENSIONS))
+const html = computed<string>(() => generateHTML(props.document, DOCUMENT_EXTENSIONS));
 </script>
 
 <template>

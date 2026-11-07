@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronUp } from '@lucide/vue'
-import { nextTick, ref, useTemplateRef } from 'vue'
-import { useMediaQuery } from '@vueuse/core'
-import type { PostDocument } from '@/api/models'
-import type { DraftStatus } from '@/composables/useDraft'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
-import PostEditor from '@/components/thread/PostEditor.vue'
+import { ChevronDown, ChevronUp } from "@lucide/vue";
+import { nextTick, ref, useTemplateRef } from "vue";
+import { useMediaQuery } from "@vueuse/core";
+import type { PostDocument } from "@/api/models";
+import type { DraftStatus } from "@/composables/useDraft";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import PostEditor from "@/components/thread/PostEditor.vue";
 
-defineProps<{ sending: boolean; draftStatus: DraftStatus }>()
-const document = defineModel<PostDocument>({ required: true })
+defineProps<{ sending: boolean; draftStatus: DraftStatus }>();
+const document = defineModel<PostDocument>({ required: true });
 /** The prose of the document, from the editor rather than a second walker. */
-const text = defineModel<string>('text', { required: true })
-const emit = defineEmits<{ submit: [] }>()
+const text = defineModel<string>("text", { required: true });
+const emit = defineEmits<{ submit: [] }>();
 
 /**
  * Collapsing the composer is half of the reading mode; there is no separate mode. On a phone it
  * starts collapsed, where expanded it took a third of the screen before a word was read. Read
  * once rather than watched, so resizing never opens or closes an editor somebody is using.
  */
-const collapsed = ref<boolean>(useMediaQuery('(max-width: 767px)').value)
+const collapsed = ref<boolean>(useMediaQuery("(max-width: 767px)").value);
 
-const editor = useTemplateRef<{ focus: () => void }>('editor')
+const editor = useTemplateRef<{ focus: () => void }>("editor");
 
 /** Focus follows the expansion, so opening the bar and typing is one gesture, not two. */
 async function expand() {
-  collapsed.value = false
-  await nextTick()
-  editor.value?.focus()
+  collapsed.value = false;
+  await nextTick();
+  editor.value?.focus();
 }
 </script>
 
@@ -64,11 +64,11 @@ async function expand() {
         >
           <Spinner v-if="draftStatus === 'saving'" class="size-3" />
           {{
-            draftStatus === 'saving'
-              ? 'Entwurf wird gespeichert'
-              : draftStatus === 'failed'
-                ? 'Entwurf nicht gespeichert'
-                : 'Entwurf gespeichert'
+            draftStatus === "saving"
+              ? "Entwurf wird gespeichert"
+              : draftStatus === "failed"
+                ? "Entwurf nicht gespeichert"
+                : "Entwurf gespeichert"
           }}
         </span>
 
@@ -97,7 +97,7 @@ async function expand() {
                deliberate posts in a row stay possible. -->
           <Button size="lg" :disabled="sending || text.trim().length === 0" @click="emit('submit')">
             <Spinner v-if="sending" />
-            {{ sending ? 'Wird gesendet …' : 'Beitrag senden' }}
+            {{ sending ? "Wird gesendet …" : "Beitrag senden" }}
           </Button>
         </div>
       </div>

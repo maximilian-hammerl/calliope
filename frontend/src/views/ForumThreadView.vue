@@ -5,10 +5,10 @@
  *
  * What differs is who may write: a group asks the member's role, this asks the thread.
  */
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
-import { exactKeyFilter, listKeyPrefix } from '@/lib/api/queryKeys'
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { keepPreviousData, useQueryClient } from "@tanstack/vue-query";
+import { exactKeyFilter, listKeyPrefix } from "@/lib/api/queryKeys";
 import {
   createForumPost as createForumPostRequest,
   deleteForumPost as deleteForumPostRequest,
@@ -22,67 +22,67 @@ import {
   useGetForumThread,
   useListForumPosts,
   useUpdateForumPost,
-} from '@/api/forum/forum'
-import type { GetForumThread200, ListForumPosts200ResultsItem, PostDocument } from '@/api/models'
-import { Flag, ShieldCheck } from '@lucide/vue'
-import { useForumTree } from '@/composables/useForumTree'
-import { useIsOperator } from '@/composables/useIsOperator'
-import { mayWriteInForum } from '@/lib/forum/permission'
-import { usePagedList } from '@/composables/usePagedList'
-import PathToHere from '@/components/folder/PathToHere.vue'
-import PostItem from '@/components/thread/PostItem.vue'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import ForumPermissionDialog from '@/components/forum/ForumPermissionDialog.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
-import { pluralize } from '@/lib/format/formatText'
-import { emptyDocument } from '@/lib/document/emptyDocument'
-import { failureMessage } from '@/lib/format/failure'
-import { firstMessage, postSchema } from '@/lib/validation/fieldSchemas'
-import { useDraft } from '@/composables/useDraft'
-import PostComposer from '@/components/thread/PostComposer.vue'
-import { FORUM_READ_ONLY_NOTE } from '@/lib/format/forum'
-import DeletePostDialog from '@/components/thread/DeletePostDialog.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { useGetCurrentUser } from '@/api/auth/auth'
+} from "@/api/forum/forum";
+import type { GetForumThread200, ListForumPosts200ResultsItem, PostDocument } from "@/api/models";
+import { Flag, ShieldCheck } from "@lucide/vue";
+import { useForumTree } from "@/composables/useForumTree";
+import { useIsOperator } from "@/composables/useIsOperator";
+import { mayWriteInForum } from "@/lib/forum/permission";
+import { usePagedList } from "@/composables/usePagedList";
+import PathToHere from "@/components/folder/PathToHere.vue";
+import PostItem from "@/components/thread/PostItem.vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import ForumPermissionDialog from "@/components/forum/ForumPermissionDialog.vue";
+import ListPagination from "@/components/common/ListPagination.vue";
+import FavouriteToggle from "@/components/favourite/FavouriteToggle.vue";
+import { pluralize } from "@/lib/format/formatText";
+import { emptyDocument } from "@/lib/document/emptyDocument";
+import { failureMessage } from "@/lib/format/failure";
+import { firstMessage, postSchema } from "@/lib/validation/fieldSchemas";
+import { useDraft } from "@/composables/useDraft";
+import PostComposer from "@/components/thread/PostComposer.vue";
+import { FORUM_READ_ONLY_NOTE } from "@/lib/format/forum";
+import DeletePostDialog from "@/components/thread/DeletePostDialog.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { useGetCurrentUser } from "@/api/auth/auth";
 
-const POSTS_PER_PAGE = 20
+const POSTS_PER_PAGE = 20;
 
-const route = useRoute()
-const threadId = computed<string>(() => String(route.params.threadId))
+const route = useRoute();
+const threadId = computed<string>(() => String(route.params.threadId));
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
-const { data: threadData, isPending, isError } = useGetForumThread(threadId)
+const { data: threadData, isPending, isError } = useGetForumThread(threadId);
 const thread = computed<GetForumThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
-)
+);
 
-const { tree } = useForumTree()
+const { tree } = useForumTree();
 
-const isOperator = useIsOperator()
+const isOperator = useIsOperator();
 
-const { data: userData } = useGetCurrentUser()
+const { data: userData } = useGetCurrentUser();
 /** Absent until the session answers; `PostItem` hides „Melden" without it, and your own post. */
 const currentUserId = computed<string | undefined>(() =>
   userData.value?.status === 200 ? userData.value.data.id : undefined,
-)
+);
 
 /** A member's action rather than moderation, so it waits for neither #62 nor slice 7. */
-const reportedPost = ref<ListForumPosts200ResultsItem | undefined>(undefined)
+const reportedPost = ref<ListForumPosts200ResultsItem | undefined>(undefined);
 const reportingPost = computed<boolean>({
   get: () => reportedPost.value !== undefined,
   set: (open) => {
     if (!open) {
-      reportedPost.value = undefined
+      reportedPost.value = undefined;
     }
   },
-})
-const reportingThread = ref<boolean>(false)
+});
+const reportingThread = ref<boolean>(false);
 
 /** An operator setting what members may do with this thread (#32's slice 7). */
-const settingPermission = ref<boolean>(false)
+const settingPermission = ref<boolean>(false);
 
 /** Reporting your own thread is not a thing, the rule `PostItem` applies to a post. */
 const mayReportThread = computed<boolean>(
@@ -90,43 +90,43 @@ const mayReportThread = computed<boolean>(
     currentUserId.value !== undefined &&
     thread.value !== undefined &&
     thread.value.createdBy !== currentUserId.value,
-)
+);
 
 // Declared before the query it pages: the request body needs `offset` while vue-query builds
 // the key, and the total it corrects against comes back from that same query.
 const { page, offset, total, itemsPerPage, goToPage } = usePagedList(
   POSTS_PER_PAGE,
   () => postCount.value,
-)
+);
 
 const postsQuery = computed(() => ({
   limit: POSTS_PER_PAGE,
   offset: offset.value,
-  sortAttribute: 'createdAt' as const,
+  sortAttribute: "createdAt" as const,
   // Oldest first: a thread reads in the order it was written.
-  sortOrder: 'asc' as const,
-}))
+  sortOrder: "asc" as const,
+}));
 
 const { data: postsData } = useListForumPosts(threadId, postsQuery, {
   // Without this the strip vanishes between pages: a new page is a new query key, so the count
   // it is built from is briefly unknown.
   query: { placeholderData: keepPreviousData },
-})
+});
 
 const posts = computed<ListForumPosts200ResultsItem[]>(() =>
   postsData.value?.status === 200 ? postsData.value.data.results : [],
-)
+);
 const postCount = computed<number | undefined>(() =>
   postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
-)
+);
 
 const meta = computed<string>(() => {
-  const count = postCount.value
-  return count === undefined ? '' : pluralize(count, 'Beitrag', 'Beiträge')
-})
+  const count = postCount.value;
+  return count === undefined ? "" : pluralize(count, "Beitrag", "Beiträge");
+});
 
 /** The limits come from this operation's own entry, never another's. */
-const NEW_POST = postSchema(TEXT_LIMIT.createForumPost.document)
+const NEW_POST = postSchema(TEXT_LIMIT.createForumPost.document);
 
 /**
  * Only where the thread grants `write`, which is the forum's „locked". The API refuses either way;
@@ -134,11 +134,11 @@ const NEW_POST = postSchema(TEXT_LIMIT.createForumPost.document)
  */
 const mayWrite = computed<boolean>(() =>
   mayWriteInForum(thread.value?.effectiveMemberPermission, isOperator.value),
-)
+);
 
-const draft = ref<PostDocument>(emptyDocument())
-const draftText = ref<string>('')
-const sendError = ref<string | undefined>(undefined)
+const draft = ref<PostDocument>(emptyDocument());
+const draftText = ref<string>("");
+const sendError = ref<string | undefined>(undefined);
 
 const {
   status: draftStatus,
@@ -151,15 +151,15 @@ const {
       const response = await listForumPostsRequest(threadId.value, {
         isDraft: true,
         limit: 1,
-      })
-      return response.status === 200 ? response.data.results[0] : undefined
+      });
+      return response.status === 200 ? response.data.results[0] : undefined;
     },
     create: async (document) => {
       const created = await createForumPostRequest(threadId.value, {
         document,
         isDraft: true,
-      })
-      return created.status === 201 ? created.data.id : undefined
+      });
+      return created.status === 201 ? created.data.id : undefined;
     },
     update: (postId, document, options) =>
       updateForumPostRequest(threadId.value, postId, { document }, options),
@@ -167,22 +167,22 @@ const {
   },
   draft,
   draftText,
-)
+);
 
-const { mutateAsync: createReply, isPending: sending } = useCreateForumPost()
-const { mutateAsync: publishDraft, isPending: publishing } = useUpdateForumPost()
+const { mutateAsync: createReply, isPending: sending } = useCreateForumPost();
+const { mutateAsync: publishDraft, isPending: publishing } = useUpdateForumPost();
 
 async function submit() {
-  sendError.value = undefined
+  sendError.value = undefined;
   if (draftText.value.trim().length === 0) {
-    return
+    return;
   }
 
   // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word with
   // no explanation is worse than being told why, and the draft is kept either way.
-  sendError.value = firstMessage(NEW_POST.safeParse(draftText.value))
+  sendError.value = firstMessage(NEW_POST.safeParse(draftText.value));
   if (sendError.value !== undefined) {
-    return
+    return;
   }
 
   try {
@@ -193,115 +193,115 @@ async function submit() {
         threadId: threadId.value,
         postId: draftId.value,
         data: { document: draft.value, isDraft: false },
-      })
-      forgetDraft()
+      });
+      forgetDraft();
     } else {
-      await createReply({ threadId: threadId.value, data: { document: draft.value } })
+      await createReply({ threadId: threadId.value, data: { document: draft.value } });
     }
   } catch (error) {
     // The draft is kept either way, which is what the clearing below guarantees.
     sendError.value = failureMessage(
       error,
-      'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.',
-    )
-    return
+      "Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
   // Only cleared once the post is really stored, so nothing written is lost.
-  draft.value = emptyDocument()
-  draftText.value = ''
+  draft.value = emptyDocument();
+  draftText.value = "";
 
   // Every page, not the one on screen: a new post changes the count, and with it which page
   // anything sits on.
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListForumPostsQueryKey(threadId.value)),
-  })
+  });
 
   // Land where the new post is — a thread reads oldest first, so that is the last page.
-  goToPage(Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE))
+  goToPage(Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE));
 }
 
-const EDITED_POST = postSchema(TEXT_LIMIT.updateForumPost.document, 'Ein Beitrag braucht Text.')
+const EDITED_POST = postSchema(TEXT_LIMIT.updateForumPost.document, "Ein Beitrag braucht Text.");
 
 /** The thread decides which post is open, so two cannot be edited at once. */
-const editingPostId = ref<string | undefined>(undefined)
-const editError = ref<string | undefined>(undefined)
+const editingPostId = ref<string | undefined>(undefined);
+const editError = ref<string | undefined>(undefined);
 
-const { mutateAsync: saveReply, isPending: savingReply } = useUpdateForumPost()
+const { mutateAsync: saveReply, isPending: savingReply } = useUpdateForumPost();
 
 function startEditing(postId: string) {
-  editError.value = undefined
-  editingPostId.value = postId
+  editError.value = undefined;
+  editingPostId.value = postId;
 }
 
 function stopEditing() {
-  editError.value = undefined
-  editingPostId.value = undefined
+  editError.value = undefined;
+  editingPostId.value = undefined;
 }
 
 async function refreshReplies(): Promise<void> {
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListForumPostsQueryKey(threadId.value)),
-  })
+  });
 }
 
 async function saveEdit(postId: string, document: PostDocument, text: string) {
-  editError.value = firstMessage(EDITED_POST.safeParse(text))
+  editError.value = firstMessage(EDITED_POST.safeParse(text));
   if (editError.value !== undefined) {
-    return
+    return;
   }
 
   try {
-    await saveReply({ threadId: threadId.value, postId, data: { document } })
+    await saveReply({ threadId: threadId.value, postId, data: { document } });
   } catch (error) {
     editError.value = failureMessage(
       error,
-      'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.',
-    )
-    return
+      "Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
-  await refreshReplies()
-  stopEditing()
+  await refreshReplies();
+  stopEditing();
 }
 
-const deletingPost = ref<ListForumPosts200ResultsItem | undefined>(undefined)
-const deletePostError = ref<string | undefined>(undefined)
-const { mutateAsync: removeReply, isPending: removingReply } = useDeleteForumPost()
+const deletingPost = ref<ListForumPosts200ResultsItem | undefined>(undefined);
+const deletePostError = ref<string | undefined>(undefined);
+const { mutateAsync: removeReply, isPending: removingReply } = useDeleteForumPost();
 
 const deletingPostOpen = computed<boolean>({
   get: () => deletingPost.value !== undefined,
   set: (open) => {
-    if (!open) deletingPost.value = undefined
+    if (!open) deletingPost.value = undefined;
   },
-})
+});
 
 /** Named only when it is somebody else's, which is the case worth a second look. */
 const deletingPostAuthor = computed<string | undefined>(() =>
   deletingPost.value !== undefined && deletingPost.value.createdBy !== currentUserId.value
     ? (deletingPost.value.createdByUsername ?? undefined)
     : undefined,
-)
+);
 
 async function confirmDeletePost() {
-  const post = deletingPost.value
-  if (post === undefined) return
+  const post = deletingPost.value;
+  if (post === undefined) return;
 
-  deletePostError.value = undefined
+  deletePostError.value = undefined;
   try {
-    await removeReply({ threadId: threadId.value, postId: post.id })
+    await removeReply({ threadId: threadId.value, postId: post.id });
   } catch (error) {
     deletePostError.value = failureMessage(
       error,
-      'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.',
-    )
-    return
+      "Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
   // The post being edited may be the one just deleted.
-  if (editingPostId.value === post.id) stopEditing()
-  await refreshReplies()
-  deletingPost.value = undefined
+  if (editingPostId.value === post.id) stopEditing();
+  await refreshReplies();
+  deletingPost.value = undefined;
 }
 
 /**
@@ -309,8 +309,8 @@ async function confirmDeletePost() {
  * because a GET list's key is a prefix of every item under it.
  */
 async function refresh(): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: getGetForumThreadQueryKey(threadId) })
-  await queryClient.invalidateQueries(exactKeyFilter(getListForumThreadsQueryKey()))
+  await queryClient.invalidateQueries({ queryKey: getGetForumThreadQueryKey(threadId) });
+  await queryClient.invalidateQueries(exactKeyFilter(getListForumThreadsQueryKey()));
 }
 </script>
 

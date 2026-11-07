@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { ref, watch } from 'vue'
-import { Search } from '@lucide/vue'
-import { ComboboxAnchor, ComboboxContent, ComboboxInput, ComboboxRoot } from 'reka-ui'
-import { useRoute } from 'vue-router'
-import { cn } from '@/lib/utils'
-import { useSearch } from '@/composables/useSearch'
-import SearchResults from '@/components/search/SearchResults.vue'
+import type { HTMLAttributes } from "vue";
+import { ref, watch } from "vue";
+import { Search } from "@lucide/vue";
+import { ComboboxAnchor, ComboboxContent, ComboboxInput, ComboboxRoot } from "reka-ui";
+import { useRoute } from "vue-router";
+import { cn } from "@/lib/utils";
+import { useSearch } from "@/composables/useSearch";
+import SearchResults from "@/components/search/SearchResults.vue";
 
 /**
  * Built on reka's Combobox rather than a generated `ui/` component: this lives in the top bar
@@ -14,28 +14,28 @@ import SearchResults from '@/components/search/SearchResults.vue'
  * that owning it outright is simpler than bending one. Reka is what every `ui/` component
  * already stands on, so this is the same layer, not a new dependency.
  */
-const props = defineProps<{ class?: HTMLAttributes['class'] }>()
+const props = defineProps<{ class?: HTMLAttributes["class"] }>();
 
-const route = useRoute()
+const route = useRoute();
 
-const term = ref<string>('')
-const open = ref<boolean>(false)
+const term = ref<string>("");
+const open = ref<boolean>(false);
 
-const { results, isSearching, termIsLongEnough, minimumLength } = useSearch(term)
+const { results, isSearching, termIsLongEnough, minimumLength } = useSearch(term);
 
 watch(term, (value) => {
-  open.value = value.trim().length > 0
-})
+  open.value = value.trim().length > 0;
+});
 
 // Following a result navigates; leaving the popover open over the page you just asked for
 // would be in the way.
 watch(
   () => route.fullPath,
   () => {
-    open.value = false
-    term.value = ''
+    open.value = false;
+    term.value = "";
   },
-)
+);
 </script>
 
 <template>

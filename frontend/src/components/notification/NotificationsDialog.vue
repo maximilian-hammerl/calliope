@@ -1,51 +1,51 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-import { ChevronRight } from '@lucide/vue'
-import { useRouter } from 'vue-router'
-import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
-import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
-import { useListNotifications, useReadNotifications } from '@/api/notifications/notifications'
-import { usePagedList } from '@/composables/usePagedList'
-import ListPagination from '@/components/common/ListPagination.vue'
-import type { ListNotifications200ResultsItem } from '@/api/models'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { notificationAction, notificationText } from '@/lib/notification/notificationText'
+import { computed, watch } from "vue";
+import { ChevronRight } from "@lucide/vue";
+import { useRouter } from "vue-router";
+import { keepPreviousData, useQueryClient } from "@tanstack/vue-query";
+import { getGetCurrentUserQueryKey } from "@/api/auth/auth";
+import { useListNotifications, useReadNotifications } from "@/api/notifications/notifications";
+import { usePagedList } from "@/composables/usePagedList";
+import ListPagination from "@/components/common/ListPagination.vue";
+import type { ListNotifications200ResultsItem } from "@/api/models";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { notificationAction, notificationText } from "@/lib/notification/notificationText";
 import {
   Dialog,
   DialogDescription,
   DialogHeader,
   DialogScrollContent,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 
-const emit = defineEmits<{ openChat: [chatGroupId: string] }>()
+const emit = defineEmits<{ openChat: [chatGroupId: string] }>();
 
-const router = useRouter()
+const router = useRouter();
 
 /**
  * Chats have no URL — they live in the Chats dialog — so this either navigates or asks
  * the top bar, which owns both dialogs, to open the other one.
  */
 function follow(notification: ListNotifications200ResultsItem) {
-  const action = notificationAction(notification)
-  open.value = false
+  const action = notificationAction(notification);
+  open.value = false;
 
-  if (action.kind === 'route') {
-    void router.push(action.to)
-    return
+  if (action.kind === "route") {
+    void router.push(action.to);
+    return;
   }
 
-  emit('openChat', action.chatGroupId)
+  emit("openChat", action.chatGroupId);
 }
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
 // Only asked for while the dialog is open: this sits in the top bar on every page, and a list
 // nobody is looking at is not worth fetching.
 /** A sentence per row, so a screenful is about twenty. */
-const PER_PAGE = 20
+const PER_PAGE = 20;
 
 // Kept in memory rather than the address: a dialog is not what a URL describes, and the page
 // of the list behind it uses the same key.
@@ -53,27 +53,27 @@ const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   PER_PAGE,
   () => totalResults.value,
   false,
-)
+);
 
 const { data, isPending, isError } = useListNotifications(
   () => ({ limit: PER_PAGE, offset: offset.value }),
   { query: { enabled: open, placeholderData: keepPreviousData } },
-)
+);
 
 const totalResults = computed<number | undefined>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : undefined,
-)
+);
 
 const notifications = computed<ListNotifications200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
 // Opening it again starts at the top, where what is new actually is.
 watch(open, (isOpen) => {
   if (isOpen) {
-    goToPage(1)
+    goToPage(1);
   }
-})
+});
 
 /**
  * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
@@ -81,9 +81,9 @@ watch(open, (isOpen) => {
  * and what keeps the empty state, which is a statement about the data, from being shown when
  * there is no data to make it about.
  */
-const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+const hasLoaded = computed<boolean>(() => data.value?.status === 200);
 
-const { mutateAsync: markAllRead } = useReadNotifications()
+const { mutateAsync: markAllRead } = useReadNotifications();
 
 /**
  * Opening the list is the act of having read it, so everything is marked at once rather than
@@ -95,11 +95,11 @@ const { mutateAsync: markAllRead } = useReadNotifications()
  */
 watch(notifications, async (loaded) => {
   if (!open.value || !loaded.some((notification) => notification.readAt === null)) {
-    return
+    return;
   }
-  await markAllRead().catch(() => undefined)
-  await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() })
-})
+  await markAllRead().catch(() => undefined);
+  await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+});
 </script>
 
 <template>

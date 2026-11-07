@@ -4,6 +4,6 @@
  * rather than being cut in half by charAt.
  */
 export function userInitial(username: string): string {
-  const [first] = [...username.trim()]
-  return (first ?? '').toLocaleUpperCase('de')
+  const [first] = [...username.trim()];
+  return (first ?? "").toLocaleUpperCase("de");
 }

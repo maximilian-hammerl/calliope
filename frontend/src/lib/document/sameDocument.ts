@@ -1,10 +1,10 @@
-import { getSchema } from '@tiptap/core'
-import { Node } from '@tiptap/pm/model'
-import type { PostDocument } from '@/api/models'
-import { DOCUMENT_EXTENSIONS } from '@/lib/document/extensions'
+import { getSchema } from "@tiptap/core";
+import { Node } from "@tiptap/pm/model";
+import type { PostDocument } from "@/api/models";
+import { DOCUMENT_EXTENSIONS } from "@/lib/document/extensions";
 
 /** Built once: deriving it per comparison is the expensive half. */
-let schema: ReturnType<typeof getSchema> | undefined
+let schema: ReturnType<typeof getSchema> | undefined;
 
 /**
  * Whether two documents say the same thing.
@@ -20,11 +20,11 @@ let schema: ReturnType<typeof getSchema> | undefined
  * site that only wanted to know whether Speichern should light up.
  */
 export function sameDocument(a: PostDocument, b: PostDocument): boolean {
-  schema ??= getSchema(DOCUMENT_EXTENSIONS)
+  schema ??= getSchema(DOCUMENT_EXTENSIONS);
 
   try {
-    return Node.fromJSON(schema, a).eq(Node.fromJSON(schema, b))
+    return Node.fromJSON(schema, a).eq(Node.fromJSON(schema, b));
   } catch {
-    return JSON.stringify(a) === JSON.stringify(b)
+    return JSON.stringify(a) === JSON.stringify(b);
   }
 }

@@ -6,33 +6,33 @@
  * Its own page *is* that tree, so the rail is left off there — declared at the route, as the
  * group does it.
  */
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { ChevronLeft, PanelRight } from '@lucide/vue'
-import { useMediaQuery } from '@vueuse/core'
-import RailLabel from '@/components/layout/RailLabel.vue'
-import RailToggle from '@/components/layout/RailToggle.vue'
-import ContextSheet from '@/components/layout/ContextSheet.vue'
-import RailBlock from '@/components/context/RailBlock.vue'
-import ForumRail from '@/components/context/ForumRail.vue'
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { ChevronLeft, PanelRight } from "@lucide/vue";
+import { useMediaQuery } from "@vueuse/core";
+import RailLabel from "@/components/layout/RailLabel.vue";
+import RailToggle from "@/components/layout/RailToggle.vue";
+import ContextSheet from "@/components/layout/ContextSheet.vue";
+import RailBlock from "@/components/context/RailBlock.vue";
+import ForumRail from "@/components/context/ForumRail.vue";
 
-const route = useRoute()
+const route = useRoute();
 
-const showsContentRail = computed<boolean>(() => route.meta.listsForumContents !== true)
+const showsContentRail = computed<boolean>(() => route.meta.listsForumContents !== true);
 
-const leftOpen = ref<boolean>(true)
+const leftOpen = ref<boolean>(true);
 
 /** Matches the `lg` breakpoint, so the rail's contents mount in exactly one place. */
-const railFits = useMediaQuery('(min-width: 1024px)')
-const sheetOpen = ref<boolean>(false)
+const railFits = useMediaQuery("(min-width: 1024px)");
+const sheetOpen = ref<boolean>(false);
 
 const railSlack = computed<Record<string, string>>(() => ({
-  '--rail-slack-left':
+  "--rail-slack-left":
     railFits.value && !leftOpen.value
-      ? 'calc(var(--container-rail-left) - var(--container-rail-collapsed))'
-      : '0px',
-  '--rail-slack-right': '0px',
-}))
+      ? "calc(var(--container-rail-left) - var(--container-rail-collapsed))"
+      : "0px",
+  "--rail-slack-right": "0px",
+}));
 </script>
 
 <template>

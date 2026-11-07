@@ -13,27 +13,27 @@
  * and the page has no way off it. Covering the screen says what happened instead of leaving them
  * on a shell that looks broken.
  */
-import { computed, onScopeDispose, ref } from 'vue'
-import { useIntervalFn } from '@vueuse/core'
-import { useQueryClient } from '@tanstack/vue-query'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import { rateLimitedUntil } from '@/lib/api/queryClient'
-import type { RateLimitScope } from '@/lib/api/queryClient'
-import { rateLimitWait } from '@/lib/format/rateLimit'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Button } from '@/components/ui/button'
+import { computed, onScopeDispose, ref } from "vue";
+import { useIntervalFn } from "@vueuse/core";
+import { useQueryClient } from "@tanstack/vue-query";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import { rateLimitedUntil } from "@/lib/api/queryClient";
+import type { RateLimitScope } from "@/lib/api/queryClient";
+import { rateLimitWait } from "@/lib/format/rateLimit";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Button } from "@/components/ui/button";
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
 // Shared with the app rather than asked again: while this is up, another request is the last
 // thing wanted.
-const { data: userData } = useGetCurrentUser()
-const hasSession = computed<boolean>(() => userData.value?.status === 200)
+const { data: userData } = useGetCurrentUser();
+const hasSession = computed<boolean>(() => userData.value?.status === 200);
 
-const now = ref<number>(Date.now())
+const now = ref<number>(Date.now());
 useIntervalFn(() => {
-  now.value = Date.now()
-}, 1000)
+  now.value = Date.now();
+}, 1000);
 
 /**
  * Reads win when both budgets are spent: an interface that cannot load anything is the bigger
@@ -41,39 +41,39 @@ useIntervalFn(() => {
  */
 const scope = computed<RateLimitScope | undefined>(() =>
   rateLimitedUntil.value.read !== undefined
-    ? 'read'
+    ? "read"
     : rateLimitedUntil.value.write !== undefined
-      ? 'write'
+      ? "write"
       : undefined,
-)
+);
 
 const secondsLeft = computed<number>(() => {
-  const until = scope.value === undefined ? undefined : rateLimitedUntil.value[scope.value]
-  return until === undefined ? 0 : Math.max(0, Math.ceil((until - now.value) / 1000))
-})
+  const until = scope.value === undefined ? undefined : rateLimitedUntil.value[scope.value];
+  return until === undefined ? 0 : Math.max(0, Math.ceil((until - now.value) / 1000));
+});
 
-const wait = computed<string | undefined>(() => rateLimitWait(secondsLeft.value))
+const wait = computed<string | undefined>(() => rateLimitWait(secondsLeft.value));
 
-const canRetry = computed<boolean>(() => secondsLeft.value === 0)
+const canRetry = computed<boolean>(() => secondsLeft.value === 0);
 
 /**
  * Only reads take the screen. A spent write budget leaves a page that reads perfectly, so covering
  * it would hide the thing that still works.
  */
-const takesTheScreen = computed<boolean>(() => scope.value === 'read' && !hasSession.value)
+const takesTheScreen = computed<boolean>(() => scope.value === "read" && !hasSession.value);
 
 /**
  * Offered only once the window has passed, so the one control here cannot be used to spend the
  * budget it is waiting for.
  */
 async function retryNow(): Promise<void> {
-  rateLimitedUntil.value = {}
-  await queryClient.invalidateQueries()
+  rateLimitedUntil.value = {};
+  await queryClient.invalidateQueries();
 }
 
 onScopeDispose(() => {
-  rateLimitedUntil.value = {}
-})
+  rateLimitedUntil.value = {};
+});
 </script>
 
 <template>

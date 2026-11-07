@@ -3,7 +3,7 @@
  * so a bound reads "100.000 Zeichen" rather than "100000 Zeichen".
  */
 export function formatCount(value: number): string {
-  return value.toLocaleString('de-DE')
+  return value.toLocaleString("de-DE");
 }
 
 /**
@@ -12,15 +12,15 @@ export function formatCount(value: number): string {
  */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) {
-    return `${formatCount(bytes)} ${bytes === 1 ? 'Byte' : 'Bytes'}`
+    return `${formatCount(bytes)} ${bytes === 1 ? "Byte" : "Bytes"}`;
   }
 
-  const kilobytes = bytes / 1024
+  const kilobytes = bytes / 1024;
   if (kilobytes < 1024) {
-    return `${formatCount(Math.round(kilobytes))} KB`
+    return `${formatCount(Math.round(kilobytes))} KB`;
   }
 
   // One decimal from a megabyte up, which is the difference between reading as inside the limit
   // and outside it.
-  return `${(kilobytes / 1024).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MB`
+  return `${(kilobytes / 1024).toLocaleString("de-DE", { maximumFractionDigits: 1 })} MB`;
 }

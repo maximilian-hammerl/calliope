@@ -1,6 +1,6 @@
-import type { ClassValue } from 'clsx'
-import { clsx } from 'clsx'
-import { extendTailwindMerge } from 'tailwind-merge'
+import type { ClassValue } from "clsx";
+import { clsx } from "clsx";
+import { extendTailwindMerge } from "tailwind-merge";
 
 /**
  * The type scale, which tailwind-merge cannot infer. It reads `text-*` and guesses: a t-shirt
@@ -11,10 +11,10 @@ import { extendTailwindMerge } from 'tailwind-merge'
  * Kept in step with theme.css by a test, since a new size that is not listed here fails the
  * same silent way.
  */
-export const FONT_SIZES = ['h1', 'h2', 'h3', 'body', 'note', 'nav', 'row', 'control', 'rail']
+export const FONT_SIZES = ["h1", "h2", "h3", "body", "note", "nav", "row", "control", "rail"];
 
-const twMerge = extendTailwindMerge({ extend: { theme: { text: FONT_SIZES } } })
+const twMerge = extendTailwindMerge({ extend: { theme: { text: FONT_SIZES } } });
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }

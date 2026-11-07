@@ -5,35 +5,35 @@
  * because a story idea carries exactly the same ones, and the two forms drifting apart is what
  * went wrong the last time they were written twice.
  */
-import { computed } from 'vue'
-import { LANGUAGE_LABELS } from '@/lib/format/storyIdea'
-import StoryVocabularyFields from '@/components/story/StoryVocabularyFields.vue'
-import type { StoryVocabulary } from '@/components/story/StoryVocabularyFields.vue'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { computed } from "vue";
+import { LANGUAGE_LABELS } from "@/lib/format/storyIdea";
+import StoryVocabularyFields from "@/components/story/StoryVocabularyFields.vue";
+import type { StoryVocabulary } from "@/components/story/StoryVocabularyFields.vue";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 export type StoryMetadata = StoryVocabulary & {
-  storyStatus: 'planning' | 'writing' | 'finished'
-  language: 'german' | 'english'
-}
+  storyStatus: "planning" | "writing" | "finished";
+  language: "german" | "english";
+};
 
-const metadata = defineModel<StoryMetadata>({ required: true })
+const metadata = defineModel<StoryMetadata>({ required: true });
 
 /** The wrapper writes back into the same object, so the child never sees status or language. */
 const vocabulary = computed<StoryVocabulary>({
   get: () => metadata.value,
   set: (next) => {
-    metadata.value = { ...metadata.value, ...next }
+    metadata.value = { ...metadata.value, ...next };
   },
-})
+});
 
 const STATUS_LABELS = [
-  { value: 'planning', label: 'In Planung' },
-  { value: 'writing', label: 'Wird geschrieben' },
-  { value: 'finished', label: 'Abgeschlossen' },
-] as const
+  { value: "planning", label: "In Planung" },
+  { value: "writing", label: "Wird geschrieben" },
+  { value: "finished", label: "Abgeschlossen" },
+] as const;
 
 const selectClass =
-  'h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9'
+  "h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9";
 </script>
 
 <template>

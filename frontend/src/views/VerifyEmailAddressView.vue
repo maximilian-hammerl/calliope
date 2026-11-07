@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useVerifyEmailAddress } from '@/api/auth/auth'
-import { ApiError } from '@/lib/api/apiFetch'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useVerifyEmailAddress } from "@/api/auth/auth";
+import { ApiError } from "@/lib/api/apiFetch";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const router = useRouter()
+const router = useRouter();
 
-const token = new URLSearchParams(window.location.search).get('token') ?? undefined
+const token = new URLSearchParams(window.location.search).get("token") ?? undefined;
 
 /**
  * Unlike a password reset there is nothing to fill in, so the link is spent on arrival and
  * the page only reports what happened. A link with no token is as unusable as a spent one.
  */
-const status = ref<'verifying' | 'done' | 'expired'>(token === undefined ? 'expired' : 'verifying')
+const status = ref<"verifying" | "done" | "expired">(token === undefined ? "expired" : "verifying");
 
-const { mutateAsync: verify } = useVerifyEmailAddress()
+const { mutateAsync: verify } = useVerifyEmailAddress();
 
 onMounted(async () => {
   if (token === undefined) {
-    return
+    return;
   }
 
   try {
-    await verify({ data: { token } })
+    await verify({ data: { token } });
   } catch (error) {
     // 410 is the one answer for spent, expired and unknown alike; anything else is a fault,
     // but the member can do the same thing about either.
-    status.value = 'expired'
+    status.value = "expired";
     if (!(error instanceof ApiError)) {
-      throw error
+      throw error;
     }
-    return
+    return;
   }
 
-  status.value = 'done'
-})
+  status.value = "done";
+});
 
 /**
  * The cached session still says unconfirmed, so it has to go before navigating or the guard
@@ -47,8 +47,8 @@ onMounted(async () => {
  * a session, to the sign-in page without one.
  */
 async function continueToApp() {
-  forgetCurrentUser()
-  await router.push({ name: 'home' })
+  forgetCurrentUser();
+  await router.push({ name: "home" });
 }
 </script>
 
@@ -57,7 +57,7 @@ async function continueToApp() {
     <div class="flex flex-col gap-2">
       <CalliopeLogo :size="40" wordmark class="mb-1" />
       <h1 class="text-h1">
-        {{ status === 'done' ? 'E-Mail-Adresse bestätigt' : 'E-Mail-Adresse bestätigen' }}
+        {{ status === "done" ? "E-Mail-Adresse bestätigt" : "E-Mail-Adresse bestätigen" }}
       </h1>
     </div>
 

@@ -5,7 +5,7 @@
  * removes a group nobody is left in. That case gets the destructive weight; the ordinary one
  * says what it costs and no more.
  */
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,15 +13,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 const props = defineProps<{
-  pending: boolean
-  deletesTheGroup: boolean
-  leavesNobodyAdministering: boolean
-}>()
-defineEmits<{ confirmed: [] }>()
+  pending: boolean;
+  deletesTheGroup: boolean;
+  leavesNobodyAdministering: boolean;
+}>();
+defineEmits<{ confirmed: [] }>();
 </script>
 
 <template>
@@ -29,7 +29,7 @@ defineEmits<{ confirmed: [] }>()
     <DialogContent class="sm:max-w-dialog-confirm">
       <DialogHeader>
         <DialogTitle>
-          {{ props.deletesTheGroup ? 'Gruppe verlassen und löschen?' : 'Gruppe verlassen?' }}
+          {{ props.deletesTheGroup ? "Gruppe verlassen und löschen?" : "Gruppe verlassen?" }}
         </DialogTitle>
         <DialogDescription>
           <template v-if="props.deletesTheGroup">
@@ -63,7 +63,7 @@ defineEmits<{ confirmed: [] }>()
           :disabled="pending"
           @click="$emit('confirmed')"
         >
-          {{ props.deletesTheGroup ? 'Verlassen und löschen' : 'Gruppe verlassen' }}
+          {{ props.deletesTheGroup ? "Verlassen und löschen" : "Gruppe verlassen" }}
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { computed } from 'vue'
-import { userInitial } from '@/lib/format/formatUser'
-import { cn } from '@/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import type { HTMLAttributes } from "vue";
+import { computed } from "vue";
+import { userInitial } from "@/lib/format/formatUser";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 /**
  * A picture, or the initial. The fallback is a sibling rather than a `v-else` because reka swaps
@@ -11,16 +11,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
  */
 const props = withDefaults(
   defineProps<{
-    username: string
-    avatarUrl?: string | null
-    size?: 'sm' | 'lg'
-    class?: HTMLAttributes['class']
+    username: string;
+    avatarUrl?: string | null;
+    size?: "sm" | "lg";
+    class?: HTMLAttributes["class"];
   }>(),
-  { avatarUrl: null, size: 'sm' },
-)
+  { avatarUrl: null, size: "sm" },
+);
 
-const box = computed<string>(() => (props.size === 'lg' ? 'size-12' : 'size-7'))
-const type = computed<string>(() => (props.size === 'lg' ? 'text-[17px]' : 'text-[11.5px]'))
+const box = computed<string>(() => (props.size === "lg" ? "size-12" : "size-7"));
+const type = computed<string>(() => (props.size === "lg" ? "text-[17px]" : "text-[11.5px]"));
 </script>
 
 <template>

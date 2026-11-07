@@ -8,7 +8,7 @@
  * Only a confirmation — the change itself stays with the list, so there is one place that
  * patches a membership and invalidates it.
  */
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,11 +16,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 
-const open = defineModel<boolean>('open', { required: true })
-defineProps<{ pending: boolean }>()
-defineEmits<{ confirmed: [] }>()
+const open = defineModel<boolean>("open", { required: true });
+defineProps<{ pending: boolean }>();
+defineEmits<{ confirmed: [] }>();
 </script>
 
 <template>

@@ -3,12 +3,12 @@
  * Which end of the thread to start at. A story is written front to back, but somebody
  * returning to it wants the newest first — so this is a choice rather than a default.
  */
-const order = defineModel<'oldest' | 'newest'>({ required: true })
+const order = defineModel<"oldest" | "newest">({ required: true });
 
 const OPTIONS = [
-  { value: 'oldest', label: 'Älteste zuerst' },
-  { value: 'newest', label: 'Neueste zuerst' },
-] as const
+  { value: "oldest", label: "Älteste zuerst" },
+  { value: "newest", label: "Neueste zuerst" },
+] as const;
 </script>
 
 <template>

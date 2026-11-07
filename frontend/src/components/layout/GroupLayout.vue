@@ -7,52 +7,52 @@
  * The component is *reused* when only `:groupId` changes, so nothing here may read the parameter
  * at mount: `groupId` is a computed and every query takes it as one.
  */
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { ChevronLeft, ChevronRight, PanelRight } from '@lucide/vue'
-import { useMediaQuery } from '@vueuse/core'
-import { getGetGroupQueryKey, getListGroupsQueryKey, useGetGroup } from '@/api/groups/groups'
-import { useListMemberships } from '@/api/memberships/memberships'
-import type { GetGroup200, ListMemberships200ResultsItem } from '@/api/models'
-import { queryClient } from '@/lib/api/queryClient'
-import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { provideGroupContext } from '@/composables/useGroupContext'
-import { useSteps } from '@/composables/useSteps'
-import RailLabel from '@/components/layout/RailLabel.vue'
-import RailToggle from '@/components/layout/RailToggle.vue'
-import ContextSheet from '@/components/layout/ContextSheet.vue'
-import RailBlock from '@/components/context/RailBlock.vue'
-import StepList from '@/components/context/StepList.vue'
-import StoryStatus from '@/components/context/StoryStatus.vue'
-import StoryDetails from '@/components/context/StoryDetails.vue'
-import FileList from '@/components/context/FileList.vue'
-import MemberList from '@/components/context/MemberList.vue'
-import FolderRail from '@/components/context/FolderRail.vue'
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { ChevronLeft, ChevronRight, PanelRight } from "@lucide/vue";
+import { useMediaQuery } from "@vueuse/core";
+import { getGetGroupQueryKey, getListGroupsQueryKey, useGetGroup } from "@/api/groups/groups";
+import { useListMemberships } from "@/api/memberships/memberships";
+import type { GetGroup200, ListMemberships200ResultsItem } from "@/api/models";
+import { queryClient } from "@/lib/api/queryClient";
+import { listOnlyFilter } from "@/lib/api/queryKeys";
+import { provideGroupContext } from "@/composables/useGroupContext";
+import { useSteps } from "@/composables/useSteps";
+import RailLabel from "@/components/layout/RailLabel.vue";
+import RailToggle from "@/components/layout/RailToggle.vue";
+import ContextSheet from "@/components/layout/ContextSheet.vue";
+import RailBlock from "@/components/context/RailBlock.vue";
+import StepList from "@/components/context/StepList.vue";
+import StoryStatus from "@/components/context/StoryStatus.vue";
+import StoryDetails from "@/components/context/StoryDetails.vue";
+import FileList from "@/components/context/FileList.vue";
+import MemberList from "@/components/context/MemberList.vue";
+import FolderRail from "@/components/context/FolderRail.vue";
 
-const route = useRoute()
-const groupId = computed<string>(() => String(route.params.groupId))
+const route = useRoute();
+const groupId = computed<string>(() => String(route.params.groupId));
 
-const { data: groupData, isPending, isError } = useGetGroup(groupId)
+const { data: groupData, isPending, isError } = useGetGroup(groupId);
 const group = computed<GetGroup200 | undefined>(() =>
   groupData.value?.status === 200 ? groupData.value.data : undefined,
-)
+);
 
-const { data: membershipsData } = useListMemberships(groupId)
+const { data: membershipsData } = useListMemberships(groupId);
 const memberships = computed<ListMemberships200ResultsItem[]>(() =>
   membershipsData.value?.status === 200 ? membershipsData.value.data.results : [],
-)
+);
 
 // Only a joined membership carries authority: somebody invited as an administrator has not
 // accepted yet, and an invitation may be looked at but not written into.
-const role = computed<GetGroup200['role']>(() =>
-  group.value?.status === 'joined' ? group.value.role : null,
-)
-const mayWrite = computed<boolean>(() => role.value === 'writer' || role.value === 'administrator')
-const mayAdminister = computed<boolean>(() => role.value === 'administrator')
+const role = computed<GetGroup200["role"]>(() =>
+  group.value?.status === "joined" ? group.value.role : null,
+);
+const mayWrite = computed<boolean>(() => role.value === "writer" || role.value === "administrator");
+const mayAdminister = computed<boolean>(() => role.value === "administrator");
 
 async function refreshGroup(): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(groupId.value) })
-  await queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey()))
+  await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(groupId.value) });
+  await queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey()));
 }
 
 provideGroupContext({
@@ -64,33 +64,33 @@ provideGroupContext({
   isPending: computed<boolean>(() => isPending.value),
   isError: computed<boolean>(() => isError.value),
   refreshGroup,
-})
+});
 
 // Served from the block's own query: the label says how many are open while the block is shut.
-const { open: openSteps } = useSteps(groupId)
+const { open: openSteps } = useSteps(groupId);
 
 /**
  * The group page is itself the list of the group's contents, so the rail's tree would be the
  * same tree twice on that one page. Declared at the route rather than guessed from its name.
  */
-const showsContentRail = computed<boolean>(() => route.meta.listsGroupContents !== true)
+const showsContentRail = computed<boolean>(() => route.meta.listsGroupContents !== true);
 
 // Collapsing both rails plus the composer is the reading mode; there is no separate mode. The
 // state now outlives a navigation, which is the point: it is undone by leaving the group.
-const leftOpen = ref<boolean>(true)
-const rightOpen = ref<boolean>(true)
+const leftOpen = ref<boolean>(true);
+const rightOpen = ref<boolean>(true);
 
 /**
  * Matches the `lg` breakpoint the rails are shown at. A media query rather than CSS, because the
  * rail content has to render in exactly one place — hiding a second copy with `hidden` would
  * still mount it.
  */
-const railFits = useMediaQuery('(min-width: 1024px)')
-const sheetOpen = ref<boolean>(false)
+const railFits = useMediaQuery("(min-width: 1024px)");
+const sheetOpen = ref<boolean>(false);
 
 /** What a rail gave up by collapsing to its strip, or nothing while it is still open. */
 function slack(collapsed: boolean, rail: string): string {
-  return collapsed ? `calc(var(${rail}) - var(--container-rail-collapsed))` : '0px'
+  return collapsed ? `calc(var(${rail}) - var(--container-rail-collapsed))` : "0px";
 }
 
 /**
@@ -98,9 +98,9 @@ function slack(collapsed: boolean, rail: string): string {
  * Zero wherever a rail is not a rail: below `lg`.
  */
 const railSlack = computed<Record<string, string>>(() => ({
-  '--rail-slack-left': slack(railFits.value && !leftOpen.value, '--container-rail-left'),
-  '--rail-slack-right': slack(railFits.value && !rightOpen.value, '--container-rail-right'),
-}))
+  "--rail-slack-left": slack(railFits.value && !leftOpen.value, "--container-rail-left"),
+  "--rail-slack-right": slack(railFits.value && !rightOpen.value, "--container-rail-right"),
+}));
 </script>
 
 <template>

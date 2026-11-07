@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   getGetStoryIdeaQueryKey,
   getListStoryIdeasQueryKey,
   useDeleteStoryIdea,
   useGetStoryIdea,
-} from '@/api/story-ideas/story-ideas'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import type { GetStoryIdea200 } from '@/api/models'
-import { ApiError } from '@/lib/api/apiFetch'
-import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix, listOnlyFilter } from '@/lib/api/queryKeys'
-import GroupDialog from '@/components/group/GroupDialog.vue'
-import type { GroupInitialValues } from '@/components/group/GroupDialog.vue'
-import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
-import DeleteStoryIdeaDialog from '@/components/story-idea/DeleteStoryIdeaDialog.vue'
-import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
-import ReportDialog from '@/components/report/ReportDialog.vue'
+} from "@/api/story-ideas/story-ideas";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import type { GetStoryIdea200 } from "@/api/models";
+import { ApiError } from "@/lib/api/apiFetch";
+import { queryClient } from "@/lib/api/queryClient";
+import { listKeyPrefix, listOnlyFilter } from "@/lib/api/queryKeys";
+import GroupDialog from "@/components/group/GroupDialog.vue";
+import type { GroupInitialValues } from "@/components/group/GroupDialog.vue";
+import StoryIdeaDetail from "@/components/story-idea/StoryIdeaDetail.vue";
+import DeleteStoryIdeaDialog from "@/components/story-idea/DeleteStoryIdeaDialog.vue";
+import StoryIdeaDialog from "@/components/story-idea/StoryIdeaDialog.vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
 
-const route = useRoute()
-const router = useRouter()
-const ideaId = computed<string>(() => String(route.params.ideaId))
+const route = useRoute();
+const router = useRouter();
+const ideaId = computed<string>(() => String(route.params.ideaId));
 
-const { data, isPending, error } = useGetStoryIdea(ideaId)
+const { data, isPending, error } = useGetStoryIdea(ideaId);
 
 const idea = computed<GetStoryIdea200 | undefined>(() =>
   data.value?.status === 200 ? data.value.data : undefined,
-)
+);
 
 /** The page shows one idea, so it can simply refetch what it changed — and the board it came from. */
 async function refreshIdea() {
-  await queryClient.invalidateQueries({ queryKey: getGetStoryIdeaQueryKey(ideaId.value) })
-  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+  await queryClient.invalidateQueries({ queryKey: getGetStoryIdeaQueryKey(ideaId.value) });
+  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()));
 }
 
 function openGroup(groupId: string) {
-  void router.push({ name: 'group', params: { groupId } })
+  void router.push({ name: "group", params: { groupId } });
 }
 
-const foundingGroup = ref<boolean>(false)
+const foundingGroup = ref<boolean>(false);
 
 /** Field for field, because the idea's story block mirrors writing_group by design. */
 const groupInitialValues = computed<GroupInitialValues | undefined>(() =>
@@ -59,43 +59,43 @@ const groupInitialValues = computed<GroupInitialValues | undefined>(() =>
         perspective: idea.value.perspective ?? null,
         language: idea.value.language,
       },
-)
+);
 
 const notFound = computed<boolean>(
   () => error.value instanceof ApiError && error.value.status === 404,
-)
+);
 
-const { data: userData } = useGetCurrentUser()
+const { data: userData } = useGetCurrentUser();
 const isOwn = computed<boolean>(
   () =>
     userData.value?.status === 200 &&
     idea.value !== undefined &&
     userData.value.data.id === idea.value.createdBy,
-)
+);
 
-const reporting = ref<boolean>(false)
-const editing = ref<boolean>(false)
-const deleting = ref<boolean>(false)
-const removing = ref<boolean>(false)
-const removalError = ref<string | undefined>(undefined)
+const reporting = ref<boolean>(false);
+const editing = ref<boolean>(false);
+const deleting = ref<boolean>(false);
+const removing = ref<boolean>(false);
+const removalError = ref<string | undefined>(undefined);
 
-const { mutateAsync: removeIdea } = useDeleteStoryIdea()
+const { mutateAsync: removeIdea } = useDeleteStoryIdea();
 
 async function remove() {
-  removalError.value = undefined
-  removing.value = true
+  removalError.value = undefined;
+  removing.value = true;
 
   try {
-    await removeIdea({ ideaId: ideaId.value })
+    await removeIdea({ ideaId: ideaId.value });
   } catch {
-    removalError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    removing.value = false
-    return
+    removalError.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
+    removing.value = false;
+    return;
   }
 
-  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListStoryIdeasQueryKey()) })
-  deleting.value = false
-  await router.push({ name: 'myStoryIdeas' })
+  await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListStoryIdeasQueryKey()) });
+  deleting.value = false;
+  await router.push({ name: "myStoryIdeas" });
 }
 </script>
 

@@ -1,4 +1,4 @@
-import type { TreeNode } from '@/lib/folder/buildTree'
+import type { TreeNode } from "@/lib/folder/buildTree";
 
 /**
  * The titles of the folders from the root down to `folderId`, for a breadcrumb.
@@ -9,14 +9,14 @@ import type { TreeNode } from '@/lib/folder/buildTree'
 export function pathToFolder(tree: TreeNode[], folderId: string): string[] {
   const walk = (nodes: TreeNode[], above: string[]): string[] | undefined => {
     for (const node of nodes) {
-      if (node.kind !== 'folder') continue
-      const here = [...above, node.title]
-      if (node.id === folderId) return here
-      const found = walk(node.children, here)
-      if (found !== undefined) return found
+      if (node.kind !== "folder") continue;
+      const here = [...above, node.title];
+      if (node.id === folderId) return here;
+      const found = walk(node.children, here);
+      if (found !== undefined) return found;
     }
-    return undefined
-  }
+    return undefined;
+  };
 
-  return walk(tree, []) ?? []
+  return walk(tree, []) ?? [];
 }

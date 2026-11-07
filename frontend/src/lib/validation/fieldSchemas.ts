@@ -1,6 +1,6 @@
-import type { ZodType } from 'zod'
-import { z } from 'zod'
-import { formatCount } from '@/lib/format/formatNumber'
+import type { ZodType } from "zod";
+import { z } from "zod";
+import { formatCount } from "@/lib/format/formatNumber";
 
 /**
  * One declaration of each field's rules, shared by every form that asks for it.
@@ -18,17 +18,17 @@ import { formatCount } from '@/lib/format/formatNumber'
  * keeps them in order, and the forms show the first.
  */
 
-const PASSWORDS_DIFFER = 'Die Passwörter stimmen nicht überein.'
+const PASSWORDS_DIFFER = "Die Passwörter stimmen nicht überein.";
 
-type LengthBound = { maxLength: number }
-type RangeBound = { minLength: number; maxLength: number }
+type LengthBound = { maxLength: number };
+type RangeBound = { minLength: number; maxLength: number };
 
 /** Whitespace-only counts as empty, which took `required` *and* `pattern=".*\S.*"` before. */
 export function usernameSchema(bound: RangeBound) {
   return z
     .string()
     .trim()
-    .min(1, 'Gib einen Benutzernamen ein.')
+    .min(1, "Gib einen Benutzernamen ein.")
     .min(
       bound.minLength,
       `Der Benutzername braucht mindestens ${formatCount(bound.minLength)} Zeichen.`,
@@ -36,7 +36,7 @@ export function usernameSchema(bound: RangeBound) {
     .max(
       bound.maxLength,
       `Der Benutzername darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`,
-    )
+    );
 }
 
 /**
@@ -52,7 +52,7 @@ export function emailAddressSchema(bound: LengthBound, missing: string) {
       bound.maxLength,
       `Die E-Mail-Adresse darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`,
     )
-    .regex(z.regexes.html5Email, 'Das sieht nicht nach einer E-Mail-Adresse aus.')
+    .regex(z.regexes.html5Email, "Das sieht nicht nach einer E-Mail-Adresse aus.");
 }
 
 /**
@@ -73,7 +73,7 @@ export function passwordSchema(bound: RangeBound, missing: string) {
     .max(
       bound.maxLength,
       `Das Passwort darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`,
-    )
+    );
 }
 
 /** A username *or* an address, so neither format applies — length and presence only. */
@@ -82,7 +82,7 @@ export function loginSchema(bound: LengthBound, missing: string) {
     .string()
     .trim()
     .min(1, missing)
-    .max(bound.maxLength, `Das darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`)
+    .max(bound.maxLength, `Das darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`);
 }
 
 /**
@@ -97,7 +97,7 @@ export function titleSchema(bound: LengthBound, missing: string) {
     .max(
       bound.maxLength,
       `Der Titel darf höchstens ${formatCount(bound.maxLength)} Zeichen lang sein.`,
-    )
+    );
 }
 
 /**
@@ -109,10 +109,10 @@ export function titleSchema(bound: LengthBound, missing: string) {
  * Leaving `missing` out makes the field optional, which is what a group's description is.
  */
 export function proseSchema(bound: LengthBound, tooLong: string, missing?: string) {
-  const bounded = z.string().trim()
+  const bounded = z.string().trim();
   return missing === undefined
     ? bounded.max(bound.maxLength, tooLong)
-    : bounded.min(1, missing).max(bound.maxLength, tooLong)
+    : bounded.min(1, missing).max(bound.maxLength, tooLong);
 }
 
 /**
@@ -124,7 +124,7 @@ export function postSchema(bound: LengthBound, missing?: string) {
     bound,
     `Der Beitrag ist zu lang. Er darf höchstens ${formatCount(bound.maxLength)} Zeichen haben.`,
     missing,
-  )
+  );
 }
 
 /**
@@ -139,12 +139,12 @@ export function httpUrlSchema(missing: string) {
     .min(1, missing)
     .refine(
       (value) => URL.canParse(value),
-      'Das ist keine vollständige Adresse. Sie muss mit https:// oder http:// beginnen.',
+      "Das ist keine vollständige Adresse. Sie muss mit https:// oder http:// beginnen.",
     )
     .refine(
-      (value) => !URL.canParse(value) || ['http:', 'https:'].includes(new URL(value).protocol),
-      'Nur Adressen mit https:// oder http:// sind möglich.',
-    )
+      (value) => !URL.canParse(value) || ["http:", "https:"].includes(new URL(value).protocol),
+      "Nur Adressen mit https:// oder http:// sind möglich.",
+    );
 }
 
 /**
@@ -161,11 +161,11 @@ export function passwordRepeatMessage(
   repeat: string,
   password: string,
 ): string | undefined {
-  const failed = firstMessage(schema.safeParse(repeat))
+  const failed = firstMessage(schema.safeParse(repeat));
   if (failed !== undefined) {
-    return failed
+    return failed;
   }
-  return repeat === password ? undefined : PASSWORDS_DIFFER
+  return repeat === password ? undefined : PASSWORDS_DIFFER;
 }
 
 /**
@@ -178,7 +178,7 @@ export function passwordRepeatMessage(
  * Not for `passwordSchema`, which transforms nothing on purpose: a space belongs to a password.
  */
 export function parsed<T extends z.ZodType>(schema: T, value: unknown): z.output<T> {
-  return schema.parse(value) as z.output<T>
+  return schema.parse(value) as z.output<T>;
 }
 
 /**
@@ -186,7 +186,7 @@ export function parsed<T extends z.ZodType>(schema: T, value: unknown): z.output
  * and the in-place post editor are Tiptap, not fields, and have one error line each.
  */
 export function firstMessage(result: { success: boolean; error?: z.ZodError }): string | undefined {
-  return result.error?.issues[0]?.message
+  return result.error?.issues[0]?.message;
 }
 
 /**
@@ -200,5 +200,5 @@ export function firstMessage(result: { success: boolean; error?: z.ZodError }): 
  * the fields are *shown* in — which only the document knows.
  */
 export function focusFirstInvalid(form: HTMLFormElement | null | undefined) {
-  form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+  form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
 }

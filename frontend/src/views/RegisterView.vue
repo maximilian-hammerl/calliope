@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useForm } from '@tanstack/vue-form'
-import { useRouter } from 'vue-router'
-import { useRegisterUser } from '@/api/auth/auth'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage, PASSWORD_BREACHED_MESSAGE } from '@/lib/format/failure'
+import { ref } from "vue";
+import { useForm } from "@tanstack/vue-form";
+import { useRouter } from "vue-router";
+import { useRegisterUser } from "@/api/auth/auth";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { ApiError } from "@/lib/api/apiFetch";
+import { failureMessage, PASSWORD_BREACHED_MESSAGE } from "@/lib/format/failure";
 import {
   emailAddressSchema,
   focusFirstInvalid,
@@ -13,46 +13,46 @@ import {
   passwordRepeatMessage,
   passwordSchema,
   usernameSchema,
-} from '@/lib/validation/fieldSchemas'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import FormTextField from '@/components/common/FormTextField.vue'
-import { FieldGroup } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/lib/validation/fieldSchemas";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import EnvironmentNotice from "@/components/common/EnvironmentNotice.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import FormTextField from "@/components/common/FormTextField.vue";
+import { FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 
-const router = useRouter()
+const router = useRouter();
 
-const formError = ref<string | undefined>(undefined)
+const formError = ref<string | undefined>(undefined);
 
-const { mutateAsync: signUp, isPending } = useRegisterUser()
+const { mutateAsync: signUp, isPending } = useRegisterUser();
 
 /** The API's own bounds, so the form cannot disagree with what the server will accept. */
-const LIMIT = TEXT_LIMIT.registerUser
+const LIMIT = TEXT_LIMIT.registerUser;
 
 // Each field's rules come from `lib/validation/fieldSchemas`; only the empty-field wording is this
 // form's own, because it names what is being asked for.
-const USERNAME = usernameSchema(LIMIT.username)
-const EMAIL_ADDRESS = emailAddressSchema(LIMIT.emailAddress, 'Gib eine E-Mail-Adresse ein.')
-const PASSWORD = passwordSchema(LIMIT.password, 'Wähle ein Passwort.')
-const REPEAT = passwordSchema(LIMIT.password, 'Wiederhole dein Passwort.')
+const USERNAME = usernameSchema(LIMIT.username);
+const EMAIL_ADDRESS = emailAddressSchema(LIMIT.emailAddress, "Gib eine E-Mail-Adresse ein.");
+const PASSWORD = passwordSchema(LIMIT.password, "Wähle ein Passwort.");
+const REPEAT = passwordSchema(LIMIT.password, "Wiederhole dein Passwort.");
 
-const formElement = ref<HTMLFormElement | null>(null)
+const formElement = ref<HTMLFormElement | null>(null);
 
 const form = useForm({
   defaultValues: {
-    username: '',
-    emailAddress: '',
-    password: '',
-    passwordConfirmation: '',
+    username: "",
+    emailAddress: "",
+    password: "",
+    passwordConfirmation: "",
   },
   // Focus follows the first thing that is wrong; without it focus stays on the button.
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
-    formError.value = undefined
+    formError.value = undefined;
 
     try {
       await signUp({
@@ -61,35 +61,35 @@ const form = useForm({
           emailAddress: parsed(EMAIL_ADDRESS, value.emailAddress),
           password: value.password,
         },
-      })
+      });
     } catch (error) {
-      if (error instanceof ApiError && error.body.code === 'password_breached') {
-        form.setFieldMeta('password', (meta) => ({
+      if (error instanceof ApiError && error.body.code === "password_breached") {
+        form.setFieldMeta("password", (meta) => ({
           ...meta,
           errorMap: { ...meta.errorMap, onServer: PASSWORD_BREACHED_MESSAGE },
-        }))
-        return
+        }));
+        return;
       }
       if (error instanceof ApiError) {
         if (error.status === 409) {
           // Which of the two collided is not disclosed, so neither is named here.
-          formError.value = 'Benutzername oder E-Mail-Adresse ist bereits vergeben.'
-          return
+          formError.value = "Benutzername oder E-Mail-Adresse ist bereits vergeben.";
+          return;
         }
       }
       formError.value = failureMessage(
         error,
-        'Die Registrierung ist gerade nicht möglich. Versuche es später noch einmal.',
-      )
-      return
+        "Die Registrierung ist gerade nicht möglich. Versuche es später noch einmal.",
+      );
+      return;
     }
 
     // Registering already starts a session, so the cached signed-out answer has to go before
     // navigating or the guard would send us straight back here.
-    forgetCurrentUser()
-    await router.push({ name: 'home' })
+    forgetCurrentUser();
+    await router.push({ name: "home" });
   },
-})
+});
 </script>
 
 <template>

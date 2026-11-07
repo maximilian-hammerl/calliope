@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { routes } from './routes'
-import { fetchCurrentUser, forgetCurrentUser } from '@/lib/auth/session'
-import { setSessionLostHandler } from '@/lib/api/queryClient'
-import { assertUnreachable } from '@/lib/assertUnreachable'
+import { createRouter, createWebHistory } from "vue-router";
+import { routes } from "./routes";
+import { fetchCurrentUser, forgetCurrentUser } from "@/lib/auth/session";
+import { setSessionLostHandler } from "@/lib/api/queryClient";
+import { assertUnreachable } from "@/lib/assertUnreachable";
 
-declare module 'vue-router' {
+declare module "vue-router" {
   interface RouteMeta {
     /**
      * Who may open the route. One value rather than a flag per case: separate booleans let a
@@ -12,29 +12,29 @@ declare module 'vue-router' {
      * nothing would catch. Omitting it means `member`, so forgetting to mark a route locks
      * it rather than exposing it.
      */
-    access?: 'member' | 'guest' | 'anyone' | 'operator'
+    access?: "member" | "guest" | "anyone" | "operator";
 
     /**
      * Set by a page under `/groups/:groupId` that is itself the group's content listing, so
      * `GroupLayout` leaves the folder tree out of its rail rather than showing it twice.
      */
-    listsGroupContents?: boolean
+    listsGroupContents?: boolean;
 
     /** The same for the public forum, whose own page is its tree — see `ForumLayout`. */
-    listsForumContents?: boolean
+    listsForumContents?: boolean;
   }
 }
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-})
+});
 
 router.beforeEach(async (to) => {
-  let user: Awaited<ReturnType<typeof fetchCurrentUser>>
+  let user: Awaited<ReturnType<typeof fetchCurrentUser>>;
 
   try {
-    user = await fetchCurrentUser()
+    user = await fetchCurrentUser();
   } catch {
     /**
      * The check itself failed, which is not the same as there being no session — during a
@@ -46,63 +46,63 @@ router.beforeEach(async (to) => {
      * cookie, and if it turns out there is no session the first 401 hands over to
      * `setSessionLostHandler` below.
      */
-    return true
+    return true;
   }
 
   // Bound rather than switched on inline, so TypeScript narrows it to `never` in the default
   // branch and a fourth kind of access cannot be added without handling it here.
-  const access = to.meta.access ?? 'member'
+  const access = to.meta.access ?? "member";
 
   // Verification is orthogonal to access: `access` asks whether there is a session, this asks
   // what state that session's account is in. An operator route needs it as much as a member
   // one — the API refuses an unverified session whatever role it holds.
-  if (user !== undefined && (access === 'member' || access === 'operator')) {
-    const addressIsUnconfirmed = user.emailAddressVerifiedAt === null
+  if (user !== undefined && (access === "member" || access === "operator")) {
+    const addressIsUnconfirmed = user.emailAddressVerifiedAt === null;
 
-    if (addressIsUnconfirmed && to.name !== 'verifyEmailAddressRequired') {
-      return { name: 'verifyEmailAddressRequired' }
+    if (addressIsUnconfirmed && to.name !== "verifyEmailAddressRequired") {
+      return { name: "verifyEmailAddressRequired" };
     }
 
-    if (!addressIsUnconfirmed && to.name === 'verifyEmailAddressRequired') {
-      return { name: 'home' }
+    if (!addressIsUnconfirmed && to.name === "verifyEmailAddressRequired") {
+      return { name: "home" };
     }
   }
 
   switch (access) {
-    case 'member':
+    case "member":
       // `redirect` carries where they were headed, so signing in resumes it.
       return user === undefined
-        ? { name: 'login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
-        : true
+        ? { name: "login", query: to.fullPath === "/" ? {} : { redirect: to.fullPath } }
+        : true;
 
-    case 'guest':
-      return user === undefined ? true : { name: 'home' }
+    case "guest":
+      return user === undefined ? true : { name: "home" };
 
-    case 'operator': {
+    case "operator": {
       // Signed out goes to the sign-in page like any member route; signed in without a role
       // goes home rather than to a refusal, because there is nothing there to explain to
       // somebody who was never meant to see it. The API refuses independently.
       if (user === undefined) {
-        return { name: 'login', query: { redirect: to.fullPath } }
+        return { name: "login", query: { redirect: to.fullPath } };
       }
-      return user.platformRole === null ? { name: 'home' } : true
+      return user.platformRole === null ? { name: "home" } : true;
     }
 
-    case 'anyone':
-      return true
+    case "anyone":
+      return true;
 
     default:
-      return assertUnreachable(access)
+      return assertUnreachable(access);
   }
-})
+});
 
 // A session that ends mid-visit returns the reader to the sign-in page, carrying where they
 // were so it resumes afterwards. Which requests may legitimately answer 401 is decided in
 // the query client, not here.
 setSessionLostHandler(() => {
-  forgetCurrentUser()
-  const from = router.currentRoute.value.fullPath
-  void router.replace({ name: 'login', query: from === '/' ? {} : { redirect: from } })
-})
+  forgetCurrentUser();
+  const from = router.currentRoute.value.fullPath;
+  void router.replace({ name: "login", query: from === "/" ? {} : { redirect: from } });
+});
 
-export default router
+export default router;

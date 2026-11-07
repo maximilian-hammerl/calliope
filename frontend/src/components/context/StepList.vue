@@ -1,111 +1,111 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
-import { ChevronDown, ChevronRight, Plus, Square, SquareCheck, X } from '@lucide/vue'
+import { computed, nextTick, ref, useTemplateRef } from "vue";
+import { ChevronDown, ChevronRight, Plus, Square, SquareCheck, X } from "@lucide/vue";
 import {
   getListStepsQueryKey,
   useCreateStep,
   useDeleteStep,
   useUpdateStep,
-} from '@/api/steps/steps'
-import type { ListSteps200ResultsItem } from '@/api/models'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { queryClient } from '@/lib/api/queryClient'
-import { useSteps } from '@/composables/useSteps'
-import PanelCard from '@/components/common/PanelCard.vue'
-import { Input } from '@/components/ui/input'
+} from "@/api/steps/steps";
+import type { ListSteps200ResultsItem } from "@/api/models";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { queryClient } from "@/lib/api/queryClient";
+import { useSteps } from "@/composables/useSteps";
+import PanelCard from "@/components/common/PanelCard.vue";
+import { Input } from "@/components/ui/input";
 
-const props = defineProps<{ groupId: string; mayWrite: boolean; mayAdminister: boolean }>()
+const props = defineProps<{ groupId: string; mayWrite: boolean; mayAdminister: boolean }>();
 
-const LIMIT = TEXT_LIMIT.createStep.text
+const LIMIT = TEXT_LIMIT.createStep.text;
 
-const { open, completed } = useSteps(() => props.groupId)
+const { open, completed } = useSteps(() => props.groupId);
 
-const { data: userData } = useGetCurrentUser()
+const { data: userData } = useGetCurrentUser();
 const currentUserId = computed<string | undefined>(() =>
   userData.value?.status === 200 ? userData.value.data.id : undefined,
-)
+);
 
 function mayDelete(step: ListSteps200ResultsItem): boolean {
   // `mayWrite` first: a member demoted to reader keeps nothing, which is what makes demotion
   // worth anything against an account somebody else is using — see the backend's `mayAct`.
-  if (!props.mayWrite) return false
-  return props.mayAdminister || (step.createdBy !== null && step.createdBy === currentUserId.value)
+  if (!props.mayWrite) return false;
+  return props.mayAdminister || (step.createdBy !== null && step.createdBy === currentUserId.value);
 }
 
 /** One fact per state, as memberships do: who created it and when, or who completed it and when. */
 function metaLine(step: ListSteps200ResultsItem): string {
   if (step.completedAt === null) {
-    const by = step.createdByUsername ?? 'Gelöschtes Konto'
-    return `angelegt ${formatActivityTime(step.createdAt)} von ${by}`
+    const by = step.createdByUsername ?? "Gelöschtes Konto";
+    return `angelegt ${formatActivityTime(step.createdAt)} von ${by}`;
   }
-  const by = step.completedByUsername ?? 'Gelöschtes Konto'
-  return `erledigt ${formatActivityTime(step.completedAt)} von ${by}`
+  const by = step.completedByUsername ?? "Gelöschtes Konto";
+  return `erledigt ${formatActivityTime(step.completedAt)} von ${by}`;
 }
 
-const failed = ref<boolean>(false)
+const failed = ref<boolean>(false);
 
 async function refresh() {
-  await queryClient.invalidateQueries({ queryKey: getListStepsQueryKey(props.groupId) })
+  await queryClient.invalidateQueries({ queryKey: getListStepsQueryKey(props.groupId) });
 }
 
-const { mutateAsync: updateStep } = useUpdateStep()
+const { mutateAsync: updateStep } = useUpdateStep();
 
 async function setDone(step: ListSteps200ResultsItem, done: boolean) {
-  failed.value = false
+  failed.value = false;
   try {
-    await updateStep({ groupId: props.groupId, stepId: step.id, data: { done } })
+    await updateStep({ groupId: props.groupId, stepId: step.id, data: { done } });
   } catch {
-    failed.value = true
-    return
+    failed.value = true;
+    return;
   }
-  await refresh()
+  await refresh();
 }
 
-const { mutateAsync: deleteStep } = useDeleteStep()
+const { mutateAsync: deleteStep } = useDeleteStep();
 
 async function remove(step: ListSteps200ResultsItem) {
-  failed.value = false
+  failed.value = false;
   try {
-    await deleteStep({ groupId: props.groupId, stepId: step.id })
+    await deleteStep({ groupId: props.groupId, stepId: step.id });
   } catch {
-    failed.value = true
-    return
+    failed.value = true;
+    return;
   }
-  await refresh()
+  await refresh();
 }
 
-const adding = ref<boolean>(false)
-const newText = ref<string>('')
-const addRow = useTemplateRef<HTMLDivElement>('addRow')
+const adding = ref<boolean>(false);
+const newText = ref<string>("");
+const addRow = useTemplateRef<HTMLDivElement>("addRow");
 
 async function startAdding() {
-  adding.value = true
-  await nextTick()
-  addRow.value?.querySelector('input')?.focus()
+  adding.value = true;
+  await nextTick();
+  addRow.value?.querySelector("input")?.focus();
 }
 
-const { mutateAsync: createStep, isPending: isCreating } = useCreateStep()
+const { mutateAsync: createStep, isPending: isCreating } = useCreateStep();
 
 async function submit() {
-  const text = newText.value.trim()
+  const text = newText.value.trim();
   if (text.length === 0) {
-    return
+    return;
   }
-  failed.value = false
+  failed.value = false;
   try {
-    await createStep({ groupId: props.groupId, data: { text } })
+    await createStep({ groupId: props.groupId, data: { text } });
   } catch {
-    failed.value = true
-    return
+    failed.value = true;
+    return;
   }
-  newText.value = ''
-  adding.value = false
-  await refresh()
+  newText.value = "";
+  adding.value = false;
+  await refresh();
 }
 
-const showingCompleted = ref<boolean>(false)
+const showingCompleted = ref<boolean>(false);
 </script>
 
 <template>

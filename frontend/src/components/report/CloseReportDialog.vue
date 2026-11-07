@@ -9,11 +9,11 @@
  * reason a member's own report needs a reason beside its category. It is also the only account
  * there will be: closing is final, so the dialog says so.
  */
-import { ref, watch } from 'vue'
-import type { MoveReportBody } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { ref, watch } from "vue";
+import type { MoveReportBody } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -21,58 +21,58 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
-import { REPORT_OUTCOMES } from '@/lib/format/report'
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { REPORT_OUTCOMES } from "@/lib/format/report";
 
 /** The closing branch of the request body, which is the only one this dialog builds. */
-type Closing = Extract<MoveReportBody, { status: 'closed' }>
-type Outcome = Closing['outcome']
+type Closing = Extract<MoveReportBody, { status: "closed" }>;
+type Outcome = Closing["outcome"];
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 const props = defineProps<{
   /** What was reported, so the dialog says it back rather than „diese Meldung". */
-  subject: string
-  isPending: boolean
-}>()
+  subject: string;
+  isPending: boolean;
+}>();
 
 // Emits rather than closing the report itself: where the queue goes afterwards — which page it is
 // on, what it invalidates — belongs to the caller, the same rule `GroupDialog` follows.
-const emit = defineEmits<{ close: [outcome: Outcome, note: string] }>()
+const emit = defineEmits<{ close: [outcome: Outcome, note: string] }>();
 
-const outcome = ref<Outcome | undefined>(undefined)
-const note = ref<string>('')
-const error = ref<string | undefined>(undefined)
+const outcome = ref<Outcome | undefined>(undefined);
+const note = ref<string>("");
+const error = ref<string | undefined>(undefined);
 
 watch(open, () => {
-  outcome.value = undefined
-  note.value = ''
-  error.value = undefined
-})
+  outcome.value = undefined;
+  note.value = "";
+  error.value = undefined;
+});
 
 function confirm() {
-  error.value = undefined
+  error.value = undefined;
 
   if (outcome.value === undefined) {
-    error.value = 'Wähle aus, was aus der Meldung geworden ist.'
-    return
+    error.value = "Wähle aus, was aus der Meldung geworden ist.";
+    return;
   }
 
-  if (note.value.trim() === '') {
-    error.value = 'Schreib kurz, was du entschieden hast.'
-    return
+  if (note.value.trim() === "") {
+    error.value = "Schreib kurz, was du entschieden hast.";
+    return;
   }
 
-  emit('close', outcome.value, note.value.trim())
+  emit("close", outcome.value, note.value.trim());
 }
 </script>
 

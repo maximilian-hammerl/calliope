@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight } from '@lucide/vue'
-defineProps<{ side: 'left' | 'right'; label: string }>()
-defineEmits<{ click: [] }>()
+import { ChevronLeft, ChevronRight } from "@lucide/vue";
+defineProps<{ side: "left" | "right"; label: string }>();
+defineEmits<{ click: [] }>();
 </script>
 
 <template>

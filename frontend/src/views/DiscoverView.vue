@@ -1,48 +1,48 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { watchDebounced } from '@vueuse/core'
-import { useListGroups } from '@/api/groups/groups'
-import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
-import FilterStrip from '@/components/common/FilterStrip.vue'
-import FilterStrips from '@/components/common/FilterStrips.vue'
-import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
-import FilterReset from '@/components/common/FilterReset.vue'
-import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
-import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
-import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
-import type { ListGroups200ResultsItem } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { Plus } from '@lucide/vue'
-import { keepPreviousData } from '@tanstack/vue-query'
-import { usePagedList } from '@/composables/usePagedList'
-import ListPagination from '@/components/common/ListPagination.vue'
-import GroupDialog from '@/components/group/GroupDialog.vue'
-import GroupRow from '@/components/group/GroupRow.vue'
-import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { computed, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { watchDebounced } from "@vueuse/core";
+import { useListGroups } from "@/api/groups/groups";
+import { FAVOURITE_FILTER_LABELS } from "@/lib/format/favourite";
+import FilterStrip from "@/components/common/FilterStrip.vue";
+import FilterStrips from "@/components/common/FilterStrips.vue";
+import StoryVocabularyFilters from "@/components/story/StoryVocabularyFilters.vue";
+import FilterReset from "@/components/common/FilterReset.vue";
+import { emptySelection, isNarrowed } from "@/lib/story/storyVocabulary";
+import type { StoryVocabularySelection } from "@/lib/story/storyVocabulary";
+import GroupsViewStrip from "@/components/group/GroupsViewStrip.vue";
+import type { ListGroups200ResultsItem } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { Plus } from "@lucide/vue";
+import { keepPreviousData } from "@tanstack/vue-query";
+import { usePagedList } from "@/composables/usePagedList";
+import ListPagination from "@/components/common/ListPagination.vue";
+import GroupDialog from "@/components/group/GroupDialog.vue";
+import GroupRow from "@/components/group/GroupRow.vue";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
-const LIMIT = TEXT_LIMIT.listGroups.search
+const LIMIT = TEXT_LIMIT.listGroups.search;
 
 /** Ten to a page: enough to scan at once, few enough that a page number means something. */
-const GROUPS_PER_PAGE = 10
+const GROUPS_PER_PAGE = 10;
 
-const term = ref<string>('')
+const term = ref<string>("");
 
 /** What the request asks for, which only follows the field once typing pauses. */
-const settled = ref<string>('')
-const trimmed = computed<string>(() => term.value.trim())
+const settled = ref<string>("");
+const trimmed = computed<string>(() => term.value.trim());
 
 watchDebounced(
   trimmed,
   (value) => {
     // Below the minimum the server refuses the term, so an emptied field goes back to
     // listing everything rather than sending two characters.
-    settled.value = value.length >= LIMIT.minLength ? value : ''
+    settled.value = value.length >= LIMIT.minLength ? value : "";
   },
   { debounce: 300 },
-)
+);
 
 /**
  * Public groups this member is not in. `none` is what makes it discovery rather than a second
@@ -51,60 +51,60 @@ watchDebounced(
 const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   GROUPS_PER_PAGE,
   () => totalResults.value,
-)
+);
 // A search narrows the list, so whatever page was open is about a different set of groups.
 /** Offered on every list that shows a favouritable kind, so none of them can drift apart. */
-const favourite = ref<'any' | 'only'>('any')
+const favourite = ref<"any" | "only">("any");
 
 const FAVOURITE_FILTERS = [
-  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
-  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
-] as const
+  { value: "any", label: FAVOURITE_FILTER_LABELS.any },
+  { value: "only", label: FAVOURITE_FILTER_LABELS.only },
+] as const;
 
 /** Absent rather than empty, so an untouched filter asks for everything. */
-const vocabulary = ref<StoryVocabularySelection>(emptySelection())
+const vocabulary = ref<StoryVocabularySelection>(emptySelection());
 
-const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
+const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value));
 
 /**
  * Whether anything is narrowing the list, and how to stop it. Both are the view's because only
  * the view knows every filter — the reset lived inside the vocabularies and cleared just those,
  * leaving the strips beside it still set.
  */
-const filtersActive = computed<boolean>(() => favourite.value !== 'any' || narrowed.value)
+const filtersActive = computed<boolean>(() => favourite.value !== "any" || narrowed.value);
 
 function resetFilters() {
-  favourite.value = 'any'
-  vocabulary.value = emptySelection()
+  favourite.value = "any";
+  vocabulary.value = emptySelection();
 }
 
-const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
+const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values);
 
-watch([settled, favourite, vocabulary], () => goToPage(1), { deep: true })
+watch([settled, favourite, vocabulary], () => goToPage(1), { deep: true });
 
 const { data, isPending, isError } = useListGroups(
   () => ({
     limit: GROUPS_PER_PAGE,
     offset: offset.value,
-    membership: 'none' as const,
-    search: settled.value === '' ? undefined : settled.value,
-    sortAttribute: 'lastActivityAt' as const,
+    membership: "none" as const,
+    search: settled.value === "" ? undefined : settled.value,
+    sortAttribute: "lastActivityAt" as const,
     favourite: favourite.value,
-    sortOrder: 'desc' as const,
+    sortOrder: "desc" as const,
     genres: chosen(vocabulary.value.genres),
     subgenres: chosen(vocabulary.value.subgenres),
     tropes: chosen(vocabulary.value.tropes),
   }),
   { query: { placeholderData: keepPreviousData } },
-)
+);
 
 const totalResults = computed<number | undefined>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : undefined,
-)
+);
 
 const groups = computed<ListGroups200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
 /**
  * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
@@ -112,15 +112,15 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
  * and what keeps the empty state, which is a statement about the data, from being shown when
  * there is no data to make it about.
  */
-const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+const hasLoaded = computed<boolean>(() => data.value?.status === 200);
 
-const router = useRouter()
+const router = useRouter();
 
 function openGroup(groupId: string) {
-  void router.push({ name: 'group', params: { groupId } })
+  void router.push({ name: "group", params: { groupId } });
 }
 
-const creating = ref<boolean>(false)
+const creating = ref<boolean>(false);
 </script>
 
 <template>

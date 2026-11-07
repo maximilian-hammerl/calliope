@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { ListGroups200ResultsItem } from '@/api/models'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import VisibilityMark from '@/components/group/VisibilityMark.vue'
-import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
+import type { ListGroups200ResultsItem } from "@/api/models";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import VisibilityMark from "@/components/group/VisibilityMark.vue";
+import FavouriteMark from "@/components/favourite/FavouriteMark.vue";
 
 /**
  * One group in a list. Meine Gruppen, Einladungen and Gruppen entdecken all show the same
  * thing and differ only in what may be done with it, which is the slot.
  */
-defineProps<{ group: ListGroups200ResultsItem }>()
+defineProps<{ group: ListGroups200ResultsItem }>();
 
-defineSlots<{ actions?: () => unknown; meta?: () => unknown }>()
+defineSlots<{ actions?: () => unknown; meta?: () => unknown }>();
 </script>
 
 <template>

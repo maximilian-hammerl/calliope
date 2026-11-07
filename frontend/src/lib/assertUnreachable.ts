@@ -10,5 +10,5 @@
  * code; the file is four lines, and a build-time dependency between them would cost more.
  */
 export function assertUnreachable(value: never): never {
-  throw new Error(`Case not handled: ${JSON.stringify(value)}`)
+  throw new Error(`Case not handled: ${JSON.stringify(value)}`);
 }

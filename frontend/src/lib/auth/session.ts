@@ -1,7 +1,7 @@
-import { getGetCurrentUserQueryKey, getGetCurrentUserQueryOptions } from '@/api/auth/auth'
-import type { GetCurrentUser200 } from '@/api/models'
-import { ApiError } from '@/lib/api/apiFetch'
-import { queryClient } from '@/lib/api/queryClient'
+import { getGetCurrentUserQueryKey, getGetCurrentUserQueryOptions } from "@/api/auth/auth";
+import type { GetCurrentUser200 } from "@/api/models";
+import { ApiError } from "@/lib/api/apiFetch";
+import { queryClient } from "@/lib/api/queryClient";
 
 /**
  * The session cookie is httpOnly, so asking the API is the only way to find out whether this
@@ -13,15 +13,15 @@ import { queryClient } from '@/lib/api/queryClient'
  */
 export async function fetchCurrentUser(): Promise<GetCurrentUser200 | undefined> {
   try {
-    const response = await queryClient.ensureQueryData(getGetCurrentUserQueryOptions())
+    const response = await queryClient.ensureQueryData(getGetCurrentUserQueryOptions());
     // The generated type is a union over every declared status; the mutator throws on all
     // but the first, so this narrows what is already true at runtime.
-    return response.status === 200 ? response.data : undefined
+    return response.status === 200 ? response.data : undefined;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
-      return undefined
+      return undefined;
     }
-    throw error
+    throw error;
   }
 }
 
@@ -36,5 +36,5 @@ export async function fetchCurrentUser(): Promise<GetCurrentUser200 | undefined>
  * page rendered its own `AppLayout`: navigating destroyed the observer and built a new one.
  */
 export function forgetCurrentUser(): void {
-  void queryClient.resetQueries({ queryKey: getGetCurrentUserQueryKey() })
+  void queryClient.resetQueries({ queryKey: getGetCurrentUserQueryKey() });
 }

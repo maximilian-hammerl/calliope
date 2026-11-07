@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue'
-import { useQueryClient } from '@tanstack/vue-query'
-import { getListMembershipsQueryKey, useInviteMember } from '@/api/memberships/memberships'
-import type { InviteMemberBodyRole, ListUsers200ResultsItem } from '@/api/models'
-import { ApiError } from '@/lib/api/apiFetch'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { ref, useTemplateRef, watch } from "vue";
+import { useQueryClient } from "@tanstack/vue-query";
+import { getListMembershipsQueryKey, useInviteMember } from "@/api/memberships/memberships";
+import type { InviteMemberBodyRole, ListUsers200ResultsItem } from "@/api/models";
+import { ApiError } from "@/lib/api/apiFetch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,61 +13,61 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import UserPicker from '@/components/user/UserPicker.vue'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import UserPicker from "@/components/user/UserPicker.vue";
+import { Spinner } from "@/components/ui/spinner";
 
-const props = defineProps<{ groupId: string; memberIds: string[] }>()
-const open = defineModel<boolean>('open', { required: true })
+const props = defineProps<{ groupId: string; memberIds: string[] }>();
+const open = defineModel<boolean>("open", { required: true });
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
-const picker = useTemplateRef('picker')
-const selected = ref<ListUsers200ResultsItem | undefined>(undefined)
-const role = ref<InviteMemberBodyRole>('writer')
-const formError = ref<string | undefined>(undefined)
+const picker = useTemplateRef("picker");
+const selected = ref<ListUsers200ResultsItem | undefined>(undefined);
+const role = ref<InviteMemberBodyRole>("writer");
+const formError = ref<string | undefined>(undefined);
 
 watch(open, (isOpen) => {
   if (isOpen) {
-    return
+    return;
   }
-  picker.value?.reset()
-  selected.value = undefined
-  role.value = 'writer'
-  formError.value = undefined
-})
+  picker.value?.reset();
+  selected.value = undefined;
+  role.value = "writer";
+  formError.value = undefined;
+});
 
 // A different pick is a different attempt, so the failure of the last one stops applying.
 watch(selected, () => {
-  formError.value = undefined
-})
+  formError.value = undefined;
+});
 
-const { mutateAsync: inviteMember, isPending } = useInviteMember()
+const { mutateAsync: inviteMember, isPending } = useInviteMember();
 
 async function submit() {
-  const user = selected.value
+  const user = selected.value;
   if (user === undefined) {
-    return
+    return;
   }
 
-  formError.value = undefined
+  formError.value = undefined;
 
   try {
-    await inviteMember({ groupId: props.groupId, data: { userId: user.id, role: role.value } })
+    await inviteMember({ groupId: props.groupId, data: { userId: user.id, role: role.value } });
   } catch (error) {
     if (error instanceof ApiError && error.status === 409) {
-      formError.value = `${user.username} gehört schon zur Gruppe oder ist bereits eingeladen.`
-      return
+      formError.value = `${user.username} gehört schon zur Gruppe oder ist bereits eingeladen.`;
+      return;
     }
-    formError.value = 'Die Einladung konnte nicht verschickt werden. Versuche es noch einmal.'
-    return
+    formError.value = "Die Einladung konnte nicht verschickt werden. Versuche es noch einmal.";
+    return;
   }
 
   await queryClient.invalidateQueries({
     queryKey: getListMembershipsQueryKey(props.groupId),
-  })
-  open.value = false
+  });
+  open.value = false;
 }
 </script>
 

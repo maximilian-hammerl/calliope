@@ -4,16 +4,16 @@
  * the top bar shows — rising above the bar (`viewport: false` renders each menu in place, so
  * it can be positioned upward; the shared viewport only drops downward, off-screen here).
  */
-import { useRoute } from 'vue-router'
-import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
+import { useRoute } from "vue-router";
+import { DESTINATIONS, isCurrent } from "@/lib/navigation/destinations";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from '@/components/ui/navigation-menu'
+} from "@/components/ui/navigation-menu";
 
-const route = useRoute()
+const route = useRoute();
 </script>
 
 <template>

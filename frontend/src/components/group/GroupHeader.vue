@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Component } from 'vue'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import { VISIBILITY_ICONS, VISIBILITY_LABELS } from '@/lib/format/group'
+import { computed } from "vue";
+import type { Component } from "vue";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import { VISIBILITY_ICONS, VISIBILITY_LABELS } from "@/lib/format/group";
 
 const props = defineProps<{
-  title: string
-  visibility: 'private' | 'public'
-  subtitle?: string | null
+  title: string;
+  visibility: "private" | "public";
+  subtitle?: string | null;
   // Given only where the header is not already the group's own page: the way back from a
   // thread. On the group page the title is the page's own heading and links nowhere.
-  groupId?: string
-}>()
+  groupId?: string;
+}>();
 
 /**
  * The word *and* the mark: on the group's own page this is the subject, and it is where a member
@@ -19,9 +19,9 @@ const props = defineProps<{
  * the two never appearing together — so nothing said they were the same fact, and testers clicked
  * the lock in a list to find out what it was.
  */
-const visibilityLabel = computed<string>(() => VISIBILITY_LABELS[props.visibility])
+const visibilityLabel = computed<string>(() => VISIBILITY_LABELS[props.visibility]);
 
-const visibilityIcon = computed<Component>(() => VISIBILITY_ICONS[props.visibility])
+const visibilityIcon = computed<Component>(() => VISIBILITY_ICONS[props.visibility]);
 </script>
 
 <template>

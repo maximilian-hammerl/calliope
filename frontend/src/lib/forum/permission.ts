@@ -1,4 +1,4 @@
-import type { ForumPermission } from '@/lib/format/forum'
+import type { ForumPermission } from "@/lib/format/forum";
 
 /**
  * Whether this viewer may write to a row of the forum — the mirror of the backend's
@@ -15,5 +15,5 @@ export function mayWriteInForum(
   permission: ForumPermission | undefined,
   isOperator: boolean,
 ): boolean {
-  return isOperator || permission === 'write'
+  return isOperator || permission === "write";
 }

@@ -9,10 +9,10 @@
  * Open question: the two glyphs are a shackle apart at 13px on the fact whose misreading costs
  * most. The design system records what else was tried and what feedback would settle it.
  */
-import StateMark from '@/components/common/StateMark.vue'
-import { VISIBILITY_ICONS, VISIBILITY_LABELS } from '@/lib/format/group'
+import StateMark from "@/components/common/StateMark.vue";
+import { VISIBILITY_ICONS, VISIBILITY_LABELS } from "@/lib/format/group";
 
-const props = defineProps<{ visibility: 'private' | 'public'; interactive?: boolean }>()
+const props = defineProps<{ visibility: "private" | "public"; interactive?: boolean }>();
 </script>
 
 <template>

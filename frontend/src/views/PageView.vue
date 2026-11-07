@@ -7,70 +7,70 @@
  * otherwise overwrite one another silently: the `updatedAt` that was loaded goes back with the
  * save, and a 409 names whoever wrote in the meantime rather than merging.
  */
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useQueryClient } from '@tanstack/vue-query'
-import { Flag, Pencil, Trash2 } from '@lucide/vue'
-import { ApiError } from '@/lib/api/apiFetch'
-import { exactKeyFilter } from '@/lib/api/queryKeys'
-import { failureMessage } from '@/lib/format/failure'
-import { firstMessage, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { formatCount } from '@/lib/format/formatNumber'
-import { useGroupContext } from '@/composables/useGroupContext'
-import { useGetCurrentUser } from '@/api/auth/auth'
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useQueryClient } from "@tanstack/vue-query";
+import { Flag, Pencil, Trash2 } from "@lucide/vue";
+import { ApiError } from "@/lib/api/apiFetch";
+import { exactKeyFilter } from "@/lib/api/queryKeys";
+import { failureMessage } from "@/lib/format/failure";
+import { firstMessage, proseSchema, titleSchema } from "@/lib/validation/fieldSchemas";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { formatCount } from "@/lib/format/formatNumber";
+import { useGroupContext } from "@/composables/useGroupContext";
+import { useGetCurrentUser } from "@/api/auth/auth";
 import {
   getGetPageQueryKey,
   getListPagesQueryKey,
   useDeletePage,
   useGetPage,
   useUpdatePage,
-} from '@/api/pages/pages'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import type { GetPage200, PostDocument } from '@/api/models'
-import GroupHeader from '@/components/group/GroupHeader.vue'
-import PostBody from '@/components/thread/PostBody.vue'
-import PostEditor from '@/components/thread/PostEditor.vue'
-import DeletePageDialog from '@/components/page/DeletePageDialog.vue'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import PathToHere from '@/components/folder/PathToHere.vue'
-import { useFolderTree } from '@/composables/useFolderTree'
-import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+} from "@/api/pages/pages";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import type { GetPage200, PostDocument } from "@/api/models";
+import GroupHeader from "@/components/group/GroupHeader.vue";
+import PostBody from "@/components/thread/PostBody.vue";
+import PostEditor from "@/components/thread/PostEditor.vue";
+import DeletePageDialog from "@/components/page/DeletePageDialog.vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import PathToHere from "@/components/folder/PathToHere.vue";
+import { useFolderTree } from "@/composables/useFolderTree";
+import FavouriteToggle from "@/components/favourite/FavouriteToggle.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-const route = useRoute()
-const router = useRouter()
-const queryClient = useQueryClient()
+const route = useRoute();
+const router = useRouter();
+const queryClient = useQueryClient();
 
-const { groupId, group, mayWrite } = useGroupContext()
+const { groupId, group, mayWrite } = useGroupContext();
 
 // For the breadcrumb, which takes the tree rather than fetching one: the three queries behind
 // it are already loaded by the rail, so this costs no request.
-const { tree } = useFolderTree(groupId)
+const { tree } = useFolderTree(groupId);
 
-const pageId = computed<string>(() => String(route.params.pageId))
+const pageId = computed<string>(() => String(route.params.pageId));
 
-const LIMIT = TEXT_LIMIT.updatePage
+const LIMIT = TEXT_LIMIT.updatePage;
 
-const TITLE = titleSchema(LIMIT.title, 'Gib der Seite einen Titel.')
+const TITLE = titleSchema(LIMIT.title, "Gib der Seite einen Titel.");
 
 // No minimum: a page named „Stadt A" with nothing in it yet is a stub, which the API allows.
 const PAGE_TEXT = proseSchema(
   LIMIT.document,
   `Die Seite ist zu lang. Sie darf höchstens ${formatCount(LIMIT.document.maxLength)} Zeichen haben.`,
-)
+);
 
-const { data: currentUserData } = useGetCurrentUser()
+const { data: currentUserData } = useGetCurrentUser();
 const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
-)
+);
 
-const { data: pageData, isPending, isError } = useGetPage(groupId, pageId)
+const { data: pageData, isPending, isError } = useGetPage(groupId, pageId);
 const page = computed<GetPage200 | undefined>(() =>
   pageData.value?.status === 200 ? pageData.value.data : undefined,
-)
+);
 
 /** The page's own query, so the favourite mark follows a change to it. */
 // The list too, as `ThreadView` does for a thread: the rail draws its favourite mark from the
@@ -78,136 +78,136 @@ const page = computed<GetPage200 | undefined>(() =>
 async function refreshPage() {
   await queryClient.invalidateQueries({
     queryKey: getGetPageQueryKey(groupId.value, pageId.value),
-  })
-  await queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value)))
+  });
+  await queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value)));
 }
 
-const editing = ref<boolean>(false)
-const draftTitle = ref<string>('')
-const draftDocument = ref<PostDocument>({ type: 'doc', content: [{ type: 'paragraph' }] })
-const draftText = ref<string>('')
-const saveError = ref<string | undefined>(undefined)
+const editing = ref<boolean>(false);
+const draftTitle = ref<string>("");
+const draftDocument = ref<PostDocument>({ type: "doc", content: [{ type: "paragraph" }] });
+const draftText = ref<string>("");
+const saveError = ref<string | undefined>(undefined);
 
-const editor = useTemplateRef<{ focus: () => void }>('editor')
+const editor = useTemplateRef<{ focus: () => void }>("editor");
 
 /**
  * What the save is conditional on: the `lastActivityAt` of the version being edited, kept as it was
  * received. Parsing it into a date and back would drop the microseconds the API compares.
  */
-const loadedAt = ref<string | undefined>(undefined)
+const loadedAt = ref<string | undefined>(undefined);
 
 async function startEditing() {
-  const current = page.value
-  if (current === undefined) return
+  const current = page.value;
+  if (current === undefined) return;
 
-  saveError.value = undefined
-  draftTitle.value = current.title
+  saveError.value = undefined;
+  draftTitle.value = current.title;
   // The stored document, never a rebuild from the prose: the projection carries no marks, so a
   // page with a heading in it would silently flatten.
-  draftDocument.value = current.document
-  draftText.value = ''
-  loadedAt.value = current.lastActivityAt
-  editing.value = true
+  draftDocument.value = current.document;
+  draftText.value = "";
+  loadedAt.value = current.lastActivityAt;
+  editing.value = true;
 
-  await nextTick()
-  editor.value?.focus()
+  await nextTick();
+  editor.value?.focus();
 }
 
-const { mutateAsync: updatePage, isPending: isSaving } = useUpdatePage()
+const { mutateAsync: updatePage, isPending: isSaving } = useUpdatePage();
 
 async function save() {
-  const at = loadedAt.value
-  if (at === undefined) return
+  const at = loadedAt.value;
+  if (at === undefined) return;
 
   saveError.value =
     firstMessage(TITLE.safeParse(draftTitle.value)) ??
-    firstMessage(PAGE_TEXT.safeParse(draftText.value))
-  if (saveError.value !== undefined) return
+    firstMessage(PAGE_TEXT.safeParse(draftText.value));
+  if (saveError.value !== undefined) return;
 
   try {
     await updatePage({
       groupId: groupId.value,
       pageId: pageId.value,
       data: { title: draftTitle.value.trim(), document: draftDocument.value, loadedAt: at },
-    })
+    });
   } catch (error) {
     // The one refusal worth its own sentence: somebody else's version is now the stored one, and
     // what the member typed is still in front of them.
-    if (error instanceof ApiError && error.body.code === 'page_changed') {
-      const other = error.body.updatedByUsername
+    if (error instanceof ApiError && error.body.code === "page_changed") {
+      const other = error.body.updatedByUsername;
       saveError.value = other
         ? `${other} hat die Seite inzwischen bearbeitet. Lade sie neu — dein Text geht dabei verloren.`
-        : 'Die Seite wurde inzwischen bearbeitet. Lade sie neu — dein Text geht dabei verloren.'
-      return
+        : "Die Seite wurde inzwischen bearbeitet. Lade sie neu — dein Text geht dabei verloren.";
+      return;
     }
     saveError.value = failureMessage(
       error,
-      'Die Seite konnte nicht gespeichert werden. Versuche es noch einmal.',
-    )
-    return
+      "Die Seite konnte nicht gespeichert werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: getGetPageQueryKey(groupId.value, pageId.value) }),
     queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value))),
-  ])
-  editing.value = false
+  ]);
+  editing.value = false;
 }
 
 /** Reporting your own page is not a thing, and an absent reader cannot report at all. */
 const mayReport = computed<boolean>(
   () => currentUserId.value !== undefined && page.value?.createdBy !== currentUserId.value,
-)
+);
 
-const reportingPage = ref<boolean>(false)
+const reportingPage = ref<boolean>(false);
 
-const deleting = ref<boolean>(false)
-const deleteError = ref<string | undefined>(undefined)
+const deleting = ref<boolean>(false);
+const deleteError = ref<string | undefined>(undefined);
 
-const { mutateAsync: deletePage, isPending: isDeleting } = useDeletePage()
+const { mutateAsync: deletePage, isPending: isDeleting } = useDeletePage();
 
 async function confirmDelete() {
-  deleteError.value = undefined
+  deleteError.value = undefined;
   try {
-    await deletePage({ groupId: groupId.value, pageId: pageId.value })
+    await deletePage({ groupId: groupId.value, pageId: pageId.value });
   } catch (error) {
     deleteError.value = failureMessage(
       error,
-      'Die Seite konnte nicht gelöscht werden. Versuche es noch einmal.',
-    )
-    return
+      "Die Seite konnte nicht gelöscht werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
-  await queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value)))
-  void router.push({ name: 'group', params: { groupId: groupId.value } })
+  await queryClient.invalidateQueries(exactKeyFilter(getListPagesQueryKey(groupId.value)));
+  void router.push({ name: "group", params: { groupId: groupId.value } });
 }
 
 /** Who last wrote it, which is what a group maintaining a page together wants to see. */
 const meta = computed<string>(() => {
-  const current = page.value
-  if (current === undefined) return ''
+  const current = page.value;
+  if (current === undefined) return "";
 
-  const author = current.createdByUsername ?? 'Gelöschtes Konto'
+  const author = current.createdByUsername ?? "Gelöschtes Konto";
 
   // Named only when somebody other than the author wrote it, as a post's row does it:
   // "bearbeitet von federkiel" beside "federkiel" is noise.
-  const lastEditor = current.updatedByUsername
-  const byAnother = lastEditor !== null && lastEditor !== current.createdByUsername
+  const lastEditor = current.updatedByUsername;
+  const byAnother = lastEditor !== null && lastEditor !== current.createdByUsername;
   const changed =
     current.lastActivityAt === current.createdAt
       ? undefined
-      : `bearbeitet ${formatActivityTime(current.lastActivityAt)}${byAnother ? ` von ${lastEditor}` : ''}`
+      : `bearbeitet ${formatActivityTime(current.lastActivityAt)}${byAnother ? ` von ${lastEditor}` : ""}`;
 
   return [author, formatActivityTime(current.createdAt), changed]
     .filter((part) => part !== undefined)
-    .join(' · ')
-})
+    .join(" · ");
+});
 
 // Navigating from one page to another in the rail must not carry an open editor with it.
 watch(pageId, () => {
-  editing.value = false
-  saveError.value = undefined
-})
+  editing.value = false;
+  saveError.value = undefined;
+});
 </script>
 
 <template>
@@ -291,7 +291,7 @@ watch(pageId, () => {
               :disabled="isSaving || draftTitle.trim().length === 0"
               @click="save"
             >
-              {{ isSaving ? 'Wird gespeichert …' : 'Speichern' }}
+              {{ isSaving ? "Wird gespeichert …" : "Speichern" }}
             </button>
             <button
               type="button"

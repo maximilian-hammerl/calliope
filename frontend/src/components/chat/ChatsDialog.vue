@@ -1,59 +1,59 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { Plus } from '@lucide/vue'
-import { useForm } from '@tanstack/vue-form'
-import { useQueryClient } from '@tanstack/vue-query'
-import { getListChatsQueryKey, useCreateChat, useListChats } from '@/api/chats/chats'
-import type { ListChats200ResultsItem, ListMessages200ResultsItem } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { failureMessage } from '@/lib/format/failure'
-import { focusFirstInvalid, parsed, titleSchema } from '@/lib/validation/fieldSchemas'
-import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
-import FilterStrip from '@/components/common/FilterStrip.vue'
-import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
-import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { useChatStream } from '@/composables/useChatStream'
-import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
-import ChatConversation from '@/components/chat/ChatConversation.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { computed, ref, watch } from "vue";
+import { Plus } from "@lucide/vue";
+import { useForm } from "@tanstack/vue-form";
+import { useQueryClient } from "@tanstack/vue-query";
+import { getListChatsQueryKey, useCreateChat, useListChats } from "@/api/chats/chats";
+import type { ListChats200ResultsItem, ListMessages200ResultsItem } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { failureMessage } from "@/lib/format/failure";
+import { focusFirstInvalid, parsed, titleSchema } from "@/lib/validation/fieldSchemas";
+import { FAVOURITE_FILTER_LABELS } from "@/lib/format/favourite";
+import FilterStrip from "@/components/common/FilterStrip.vue";
+import FavouriteMark from "@/components/favourite/FavouriteMark.vue";
+import { listOnlyFilter } from "@/lib/api/queryKeys";
+import { useChatStream } from "@/composables/useChatStream";
+import { useOwnChatMembership } from "@/composables/useOwnChatMembership";
+import ChatConversation from "@/components/chat/ChatConversation.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogDescription,
   DialogHeader,
   DialogScrollContent,
   DialogTitle,
-} from '@/components/ui/dialog'
-import FormTextField from '@/components/common/FormTextField.vue'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import FormTextField from "@/components/common/FormTextField.vue";
+import { Spinner } from "@/components/ui/spinner";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 /** Set when a chat invitation was followed from the notifications dialog. */
-const props = defineProps<{ startAt?: string }>()
+const props = defineProps<{ startAt?: string }>();
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
 /** Offered on every list that shows a favouritable kind, so none of them can drift apart. */
-const favourite = ref<'any' | 'only'>('any')
+const favourite = ref<"any" | "only">("any");
 
 const FAVOURITE_FILTERS = [
-  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
-  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
-] as const
+  { value: "any", label: FAVOURITE_FILTER_LABELS.any },
+  { value: "only", label: FAVOURITE_FILTER_LABELS.only },
+] as const;
 
 const { data, refetch } = useListChats(() => ({
   limit: 50,
   favourite: favourite.value,
-}))
+}));
 const chats = computed<ListChats200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
-const selectedId = ref<string | undefined>(undefined)
+const selectedId = ref<string | undefined>(undefined);
 const selected = computed<ListChats200ResultsItem | undefined>(() =>
   chats.value.find((chat) => chat.id === selectedId.value),
-)
+);
 
 /**
  * A selection has to name something in the list. Leaving a chat, declining an invitation or
@@ -66,47 +66,47 @@ watch([chats, selected], () => {
     selectedId.value !== undefined &&
     selected.value === undefined
   ) {
-    selectedId.value = undefined
+    selectedId.value = undefined;
   }
-})
+});
 
 /** Messages the stream delivered since the conversation last fetched, keyed by chat. */
-const liveByChat = ref<Record<string, ListMessages200ResultsItem[]>>({})
+const liveByChat = ref<Record<string, ListMessages200ResultsItem[]>>({});
 
 const { connected } = useChatStream((event) => {
-  const existing = liveByChat.value[event.chatGroupId] ?? []
+  const existing = liveByChat.value[event.chatGroupId] ?? [];
   liveByChat.value = {
     ...liveByChat.value,
     [event.chatGroupId]: [...existing, event.message as ListMessages200ResultsItem],
-  }
+  };
   // The list carries unread counts and the ordering, both of which just changed.
-  void queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
-})
+  void queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()));
+});
 
 // The stream cannot say what arrived while it was away, so coming back is a refetch rather
 // than a replay — which is also what makes the server's fan-out replaceable.
 watch(connected, (isConnected) => {
   if (isConnected) {
-    void refetch()
+    void refetch();
   }
-})
+});
 
 watch(
   () => props.startAt,
   (chatGroupId) => {
     if (chatGroupId !== undefined) {
-      selectedId.value = chatGroupId
+      selectedId.value = chatGroupId;
     }
   },
   { immediate: true },
-)
+);
 
-const creating = ref<boolean>(false)
-const createError = ref<string | undefined>(undefined)
-const createFormElement = ref<HTMLFormElement | null>(null)
-const { mutateAsync: createChat, isPending: isCreating } = useCreateChat()
+const creating = ref<boolean>(false);
+const createError = ref<string | undefined>(undefined);
+const createFormElement = ref<HTMLFormElement | null>(null);
+const { mutateAsync: createChat, isPending: isCreating } = useCreateChat();
 
-const CHAT_TITLE = titleSchema(TEXT_LIMIT.createChat.title, 'Gib dem Chat einen Titel.')
+const CHAT_TITLE = titleSchema(TEXT_LIMIT.createChat.title, "Gib dem Chat einen Titel.");
 
 // Answering an invitation needs a chat to answer about, and only the selected one is ever
 // answered — an unselected invitation shows no controls.
@@ -117,49 +117,49 @@ const {
   isDeclining,
   isBusy: isAnswering,
   error: answerError,
-} = useOwnChatMembership(() => selectedId.value ?? '')
+} = useOwnChatMembership(() => selectedId.value ?? "");
 
 const createForm = useForm({
-  defaultValues: { title: '' },
+  defaultValues: { title: "" },
   onSubmitInvalid: () => focusFirstInvalid(createFormElement.value),
   onSubmit: async ({ value }) => {
-    createError.value = undefined
+    createError.value = undefined;
 
-    let created
+    let created;
     try {
-      created = await createChat({ data: { title: parsed(CHAT_TITLE, value.title) } })
+      created = await createChat({ data: { title: parsed(CHAT_TITLE, value.title) } });
     } catch (error) {
       createError.value = failureMessage(
         error,
-        'Der Chat konnte nicht angelegt werden. Versuche es noch einmal.',
-      )
-      return
+        "Der Chat konnte nicht angelegt werden. Versuche es noch einmal.",
+      );
+      return;
     }
 
-    creating.value = false
-    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
+    creating.value = false;
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()));
 
     if (created.status === 201) {
-      selectedId.value = created.data.id
+      selectedId.value = created.data.id;
     }
   },
-})
+});
 
 // Closing the row throws the attempt away, so reopening it does not start on an old error.
 watch(creating, () => {
-  createError.value = undefined
-  createForm.reset()
-})
+  createError.value = undefined;
+  createForm.reset();
+});
 
 /** Declining takes the invitation off the list, so nothing is left to keep selected. */
 async function declineInvitation() {
   if (await decline()) {
-    selectedId.value = undefined
+    selectedId.value = undefined;
   }
 }
 
 /** An invitation is visible but not yet a conversation, so it cannot be opened. */
-const selectedIsInvitation = computed<boolean>(() => selected.value?.status === 'invited')
+const selectedIsInvitation = computed<boolean>(() => selected.value?.status === "invited");
 </script>
 
 <template>
