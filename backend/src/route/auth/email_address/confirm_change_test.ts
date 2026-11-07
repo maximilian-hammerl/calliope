@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";

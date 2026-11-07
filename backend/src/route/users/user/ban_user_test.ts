@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertFalse } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import app from "@/src/app.ts";
 import { ACCOUNT_BANNED, INVALID_CREDENTIALS } from "@/src/http/response.ts";

@@ -1,5 +1,5 @@
 import { assertEquals, assertExists } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { Hono } from "hono";
 import { redis } from "@/src/redis/client.ts";
 import { RATE_LIMIT_TEST_CLIENTS } from "@/src/test/support.ts";

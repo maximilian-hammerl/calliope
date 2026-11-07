@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { UserService } from "@/src/service/user_service.ts";

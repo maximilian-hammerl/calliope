@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { deadline } from "@std/async/deadline";
+import { withDeadline } from "@/src/util/async.ts";
 
 // https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check
 // https://github.com/healthjson/schema
@@ -101,7 +101,7 @@ export async function probeDatabase(
   const start = performance.now();
 
   try {
-    await deadline(probe(), PROBE_TIMEOUT.total("milliseconds"));
+    await withDeadline(probe(), PROBE_TIMEOUT.total("milliseconds"));
 
     return {
       name,

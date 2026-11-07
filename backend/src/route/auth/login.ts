@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { sessionProvenance } from "@/src/util/session_provenance.ts";

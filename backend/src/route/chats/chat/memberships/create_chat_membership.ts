@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { BanService } from "@/src/service/ban_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";

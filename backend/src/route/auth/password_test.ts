@@ -1,7 +1,7 @@
 import { assertSpyCall, stub } from "@std/testing/mock";
 import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { assertEquals, assertExists } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import {
   clearRateLimits,

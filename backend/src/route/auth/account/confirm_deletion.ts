@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { AccountDeletionService } from "@/src/service/account_deletion_service.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import {

@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { SESSION_RESPONSE } from "@/src/http/response_schema.ts";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
 import { SESSION_LIFETIME, UserService } from "@/src/service/user_service.ts";

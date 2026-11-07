@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
 import { REPORT_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
 import authenticated from "@/src/middleware/authenticated.ts";

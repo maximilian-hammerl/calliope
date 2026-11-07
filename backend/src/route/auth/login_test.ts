@@ -1,5 +1,5 @@
 import { assertEquals, assertExists } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
 import { authFixture, password, postJson } from "@/src/test/auth.ts";
 import { INVALID_CREDENTIALS_MESSAGE } from "@/src/http/response.ts";

@@ -7,7 +7,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
 import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";

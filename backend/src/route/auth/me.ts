@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { USER_SCHEMA } from "@/src/database/schema.ts";
 import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
 import { NotificationService } from "@/src/service/notification_service.ts";

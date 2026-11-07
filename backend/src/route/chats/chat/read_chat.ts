@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatGroupService } from "@/src/service/chat_group_service.ts";
 import { checkJoinedChatMember } from "@/src/route/chats/chat/chat_membership.ts";

@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { APP_NAME } from "@/src/branding.ts";
 import { API_VERSION, OPERATIONS_TAG } from "@/src/open_api_specification.ts";
 import {

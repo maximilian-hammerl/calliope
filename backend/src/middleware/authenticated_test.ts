@@ -1,6 +1,6 @@
 import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
 import { write } from "@/src/test/support.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { Hono } from "hono";
 import { type User, UserService } from "@/src/service/user_service.ts";
 import authenticated from "./authenticated.ts";

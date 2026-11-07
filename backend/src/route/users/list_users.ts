@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { listQuery } from "@/src/list/list_endpoint_query.ts";
 import { LISTED_MEMBER_RESPONSE } from "@/src/http/response_schema.ts";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
