@@ -6,10 +6,9 @@ allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git f
 ---
 
 `main` takes changes only through pull requests: a ruleset requires the three Validate jobs
-(`Backend`, `Database`, `Frontend`) and nobody bypasses it. Pull requests merge with a merge
-commit, never squashed or rebased, so stacked branches keep their commits; a merged branch is
-deleted. No reviewer is required, so the human's review before the commit is the change's review.
-What the human's confirmation covers is in the root `AGENTS.md`.
+(`Backend`, `Database`, `Frontend`) and nobody bypasses it. A pull request is squashed into one
+commit on `main`, and its branch is deleted. No reviewer is required, so the human's review before
+the commit is the change's review. What that confirmation covers is in the root `AGENTS.md`.
 
 ## 1. Start
 
@@ -42,10 +41,11 @@ human reviews the diff either way, and confirms.
 ## 3. Commit, push, pull request
 
 1. Stage by path and commit with the reviewed message; `git push -u origin HEAD`.
-2. `gh pr create --base main --title "<commit header>" --body-file <file>`. The body: what changed
-   and why, what was checked and what wasn't, `Closes #<issue>` if it finishes one, and it ends with
-   the "Generated with Claude Code" line.
-3. `gh pr merge <number> --auto --merge`: it merges once the three checks pass.
+2. `gh pr create --base main --title "<commit header>" --body-file <file>`. With several commits,
+   the title is a header for all of them, in the same style: it heads the squashed commit. The
+   body: what changed and why, what was checked and what wasn't, `Closes #<issue>` if it finishes
+   one, and it ends with the "Generated with Claude Code" line.
+3. `gh pr merge <number> --auto --squash`: it merges once the three checks pass.
 
 If the human committed or pushed themselves, ask once before opening the pull request.
 
@@ -65,8 +65,10 @@ Elsewhere, one background `gh pr checks <number> --watch`, not repeated polling.
 
 1. `git fetch --prune origin`. Where the change was made in the human's checkout, and it is still on
    that branch with nothing uncommitted (`git status --porcelain` prints nothing):
-   `git switch main`, `git pull --ff-only` and `git branch -d <branch>`. A worktree the desktop app
-   made is the app's to clean up (`git rev-parse --git-dir` and `--git-common-dir` differ).
+   `git switch main`, `git pull --ff-only` and `git branch -D <branch>`, once `git rev-parse
+   <branch>` equals the pull request's `headRefOid`: after a squash git doesn't see the branch as
+   merged, so this is what shows nothing on it is lost. A worktree the desktop app made is the
+   app's to clean up (`git rev-parse --git-dir` and `--git-common-dir` differ).
 2. **The deploy is the human's:** `./deployment/deploy.sh --environment testing` on the server
    (`deployment/README.md`). Say that it is still to do.
 
@@ -92,12 +94,17 @@ couldn't be checked isn't empty, and the change isn't done.
 
 ## Stacked pull requests
 
-For changes that build on each other:
+For changes that build on each other, with the `gh stack` extension (`github/gh-stack`):
 
-- Each branch starts from the one below it, and its pull request targets that branch
-  (`gh pr create --base <branch below>`), so it shows only its own diff. Validate runs on it there.
-- Auto-merge goes on the bottom one only, which targets `main`. When it merges and its branch is
-  deleted, GitHub points the next pull request at `main`; the checks it already has count, since
-  they belong to its commits. Then set auto-merge on that one.
-- A fix lower in the stack is committed on its branch after review, then merged into each branch
-  above (`git merge`, never a rebase) and pushed.
+- **Build:** `gh stack init <branch>` from `main`, then `gh stack add <branch>` for each layer on
+  top. Each layer is committed as step 3 says, after the human's review.
+- **Open:** `gh stack submit --auto --open` pushes every branch and opens a pull request per
+  layer, each against the one below it. Then give each its title and description, as step 3 says,
+  with `gh pr edit <number> --title "<commit header>" --body-file <file>`.
+- **A fix lower down** is committed on its branch after review; `gh stack rebase --upstack`
+  carries it into the layers above and `gh stack push` pushes them with a lease.
+- **Merge:** a stack has no auto-merge. Once every layer's checks pass,
+  `gh stack merge <top pull request> --squash --yes` merges the stack up to it into `main`, all or
+  nothing.
+- `gh stack view` shows each layer's state. `gh stack sync` catches the stack up with `main` by
+  rebasing it, so only when asked.
