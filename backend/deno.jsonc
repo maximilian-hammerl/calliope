@@ -108,7 +108,7 @@
     "kysely-postgres-js": "npm:kysely-postgres-js@5.0.1",
     "nodemailer": "npm:nodemailer@10.1.2",
     "openapi3-ts": "npm:openapi3-ts@4.6.2",
-    "postgres": "npm:postgres@3.4.9",
+    "postgres": "npm:postgres@4.0.0",
     "zod": "npm:zod@4.6.7"
   },
   "fmt": {
