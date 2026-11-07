@@ -7,6 +7,11 @@ updates:
       - "/database"
     schedule:
       interval: "daily"
+    ignore:
+      # kysely-codegen needs the classic TypeScript API, which 7.0 no longer exports. Only 7.0.x,
+      # as for the frontend below, so 7.1 is still proposed when it ships.
+      - dependency-name: "typescript"
+        versions: ["7.0.x"]
     groups:
       minor-and-patch:
         applies-to: version-updates
