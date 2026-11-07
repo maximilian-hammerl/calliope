@@ -2,7 +2,7 @@
 name: workflow-validate
 description: Run what CI runs (.github/workflows/validate.yml) for the projects a change touches — format, lint, types, the OpenAPI and schema checks, the migration round trip and the tests — and report what passed, what failed and what did not run. Use before calling a change done, or when asked to check, validate or test. Pass --fix to repair what can be repaired first; backend, database or frontend to run only those.
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git merge-base *), Bash(git diff *), Bash(git ls-files *), Bash(git worktree list*), Bash(git hash-object *), Bash(docker compose ps*), Bash(docker compose -p * ps*), Bash(docker compose up -d --wait*), Bash(npm ci), Bash(deno task db:up), Bash(deno task validate:*), Bash(deno task open-api:check), Bash(deno task open-api:generate), Bash(deno task migrations:status), Bash(deno task migrations:migrate), Bash(deno task test), Bash(deno fmt src/database/schema.ts), Bash(dbmate --env-file ../.env --url *calliope_scratch*), Bash(DATABASE_URL=*calliope_scratch* DBMATE_NO_DUMP_SCHEMA=true deno task migrations:*), Bash(DATABASE_URL=*calliope_scratch* deno task types:generate), Bash(npm run validate:*), Bash(npm run open-api:generate-client), Bash(npm run test:unit *)
+allowed-tools: Bash(git status *), Bash(git merge-base *), Bash(git diff *), Bash(git ls-files *), Bash(git worktree list*), Bash(git hash-object *), Bash(docker compose ps*), Bash(docker compose -p * ps*), Bash(docker compose up -d --wait*), Bash(pnpm install), Bash(deno task db:up), Bash(deno task validate:*), Bash(deno task open-api:check), Bash(deno task open-api:generate), Bash(deno task migrations:status), Bash(deno task migrations:migrate), Bash(deno task test), Bash(deno fmt src/database/schema.ts), Bash(dbmate --env-file ../.env --url *calliope_scratch*), Bash(DATABASE_URL=*calliope_scratch* DBMATE_NO_DUMP_SCHEMA=true deno task migrations:*), Bash(DATABASE_URL=*calliope_scratch* deno task types:generate), Bash(pnpm run validate:*), Bash(pnpm run open-api:generate-client), Bash(pnpm run test:unit *)
 ---
 
 `$ARGUMENTS` may hold `--fix` and any of `backend`, `database`, `frontend`. Keep going after a
@@ -18,7 +18,7 @@ failure, so the report is complete.
    | `backend/**` | `deno task validate:check`, `deno task open-api:check`, `deno task test` |
    | `database/**` | `deno task validate:check`, `deno task test`, and step 5 |
    | `database/migrations/**` | also the backend's three |
-   | `frontend/**` or `backend/open-api.json` | `npm run open-api:generate-client`, `npm run validate:check`, `npm run test:unit -- --run` |
+   | `frontend/**` or `backend/open-api.json` | `pnpm run open-api:generate-client`, `pnpm run validate:check`, `pnpm run test:unit --run` |
    | only `*.md`, `docs/**` or `.claude/**` | nothing; say so |
    | anything else (`docker-compose.yaml`, `.example.env`, `.github/**`, …) | all three projects |
 
@@ -29,7 +29,7 @@ failure, so the report is complete.
    - **A worktree** (one the desktop app made, or a review's) has no `.env`: copy the main
      checkout's (`git worktree list` names it first). If the change edits migrations, the copy's
      `DATABASE_URL` names a database of the worktree's own, which `deno task db:up` in `database/`
-     creates and migrates. Without `frontend/node_modules`, `npm ci` in `frontend/`.
+     creates and migrates. Without `node_modules` at the root, `pnpm install` there.
    - **The containers** are the main checkout's: Compose names its project after the directory, so
      from a worktree check them with `docker compose -p <main checkout's directory name> ps`. If
      they're down, `docker compose up -d --wait` in the main checkout.
@@ -38,7 +38,7 @@ failure, so the report is complete.
      tests fail on the old schema: ask before `/db-reset`, which wipes it. Rows a test leaves behind
      are a bug in its cleanup, not a reason to reset.
 4. **With `--fix`**, first `deno task validate:fix` in each Deno project that runs and
-   `npm run validate:fix` in `frontend/`. List the files it changed; stage nothing.
+   `pnpm run validate:fix` in `frontend/`. List the files it changed; stage nothing.
 5. **After a change in `database/`**, on a scratch database, as CI builds its own:
    `<scratch>` is `.env`'s `DATABASE_URL` with the database named `calliope_scratch`. From
    `database/`, dropped first in case an interrupted run left it behind:

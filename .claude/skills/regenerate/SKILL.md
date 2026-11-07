@@ -2,7 +2,7 @@
 name: regenerate
 description: Regenerate the type chain end to end — database types, the OpenAPI document, the frontend client — and report which links changed. Run after a migration or a route change.
 user-invocable: true
-allowed-tools: Bash(deno task types:generate), Bash(deno fmt src/database/schema.ts), Bash(git diff *), Bash(deno task open-api:generate), Bash(npm run open-api:generate-client), Bash(npm run type-check)
+allowed-tools: Bash(deno task types:generate), Bash(deno fmt src/database/schema.ts), Bash(git diff *), Bash(deno task open-api:generate), Bash(pnpm run open-api:generate-client), Bash(pnpm run type-check)
 ---
 
 The database is the origin of the types, so a change to one link has to be regenerated into every
