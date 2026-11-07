@@ -30,6 +30,10 @@ const editing = computed<boolean>(() => props.href !== undefined && props.href.l
 
 const ADDRESS = httpUrlSchema('Gib die Adresse des Links ein.')
 
+// Bound rather than written in the template: vue-tsc 3.3.12+ mangles a `//` in a component's
+// attribute and loses the slot's `field` (vuejs/language-tools#6322).
+const PLACEHOLDER = 'https://'
+
 const formElement = ref<HTMLFormElement | null>(null)
 
 const form = useForm({
@@ -76,7 +80,7 @@ function remove() {
                 :field="field"
                 label="Adresse"
                 type="url"
-                placeholder="https://"
+                :placeholder="PLACEHOLDER"
                 required
               />
             </template>
