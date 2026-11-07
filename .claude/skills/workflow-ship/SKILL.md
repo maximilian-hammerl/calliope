@@ -16,8 +16,10 @@ the commit is the change's review. What that confirmation covers is in the root 
    it; if not, the change goes without.
 2. **The branch**, from `origin/main` after `git fetch origin`: `<type>/<issue>-<slug>`, or
    `<type>/<slug>` without an issue, the type as in the commit header. A session the desktop app
-   started in its own worktree already has its branch: work there. If the human's checkout has
-   uncommitted changes, ask before switching.
+   started in its own worktree works there, but the app names its branch `claude/<name>`: rename it
+   before the first commit (`git branch -m <type>/<slug>`). A pushed branch keeps its name, since
+   renaming it on GitHub closes its pull request. If the human's checkout has uncommitted changes,
+   ask before switching.
 
 ## 2. Change and hand over
 
