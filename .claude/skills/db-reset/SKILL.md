@@ -30,5 +30,5 @@ session — so say so before running it against a database somebody else is usin
 5. **Tell the user their session is gone.** The nine seeded accounts share the password `calliope`;
    they sign in themselves — never type credentials.
 
-If a migration was edited in place, prove its `migrate:down` still reverses it on a throwaway
-database first — `database/AGENTS.md` describes the round trip.
+If a migration was edited in place, prove its `migrate:down` still reverses it first:
+`/workflow-validate` does the round trip on a scratch database.

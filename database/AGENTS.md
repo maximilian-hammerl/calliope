@@ -30,8 +30,8 @@ running it against a database somebody else is using. `deployment/deploy.sh` doe
 `testing` when it detects an edited migration, and refuses elsewhere.
 
 **Every `migrate:down` must reverse its `migrate:up`**, enum types and trigger functions included.
-Prove it on a throwaway database — `dbmate --url …/calliope_scratch up`, `down` through the file,
-`up` again; `CREATE TYPE` and `CREATE FUNCTION` fail if the down left anything behind.
+`/workflow-validate` proves it on a scratch database, as CI does; `CREATE TYPE` and
+`CREATE FUNCTION` fail if the down left anything behind.
 
 ## After a migration
 

@@ -13,8 +13,7 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 - `.claude/rules/`: the reasoning behind each area — why the report lifecycle, the carousel or the
   forum's permissions are shaped as they are. Each file is scoped by `paths:` and loads only when
   you open a matching file. When you change how an area works, change its rule in the same commit.
-- `.claude/skills/`: the workflows worth doing the same way every time — `/db-reset`,
-  `/regenerate`, `/test`, `/validate`.
+- `.claude/skills/`: the workflows worth doing the same way every time.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
 ## How to work here
@@ -27,16 +26,18 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   to build the answer, least of all when the answer could go several ways.
 - **Push back.** If a rule or a decision makes no sense, a better alternative exists, or something
   has not been considered, say so before doing the work.
-- **Commits are the human's.** Reading state (`git status`, `git diff`, `git log`) and syncing
-  (`git fetch`, `git pull`, `git merge`) are fine. Branching, committing and pushing are not: leave
-  the changes in the working tree and say what they are.
+- **Commit only after the human confirms they reviewed the change** ("reviewed, commit it"; asking
+  for a review is not that); until then, leave it in the working tree. The confirmation covers the
+  push, the pull request and its merge once Validate passes, and a reviewed fix rebased up its
+  stack (`/workflow-ship`); any other rebase or push only when asked. Syncing (`git fetch`,
+  `git pull`, `git merge`) is always fine.
 
 ## Shared conventions
 
 - **Deno for `backend/` and `database/`, Node for `frontend/`.** `deno task …` versus `npm run …`;
   `deno task` will happily run a `package.json` script and then fail confusingly.
-- **Run `/validate`** — or `validate:check` in whichever project you changed — before considering
-  anything done. Each project has `validate:fix` for what can be repaired automatically.
+- **Run `/workflow-validate`** before considering anything done: what CI runs, for the projects
+  you changed.
 - **Pin exact dependency versions.** No `^` or `~`, in `deno.jsonc` or `package.json`. `deno add`
   and `shadcn-vue add` both write a caret; rewrite it.
 - **`type`, never `interface`.**
@@ -76,14 +77,10 @@ next saved file restarts it. `lsof -nP -iTCP:$BACKEND_PORT -sTCP:LISTEN`, then `
 
 ## The issue tracker
 
-Work is GitHub issues, and **a milestone means accepted**: `status: proposed` and a milestone are
-mutually exclusive, so putting an issue into `v1` or `v2` takes the label off in the same edit.
-Sections of `docs/product-requirements-feature-specification.md` are cited as `§N`, issues as `#N`.
-Quote the section before citing it. The specification is an inspiration, not a fixed specification:
-a section says where an idea came from, and an issue says what is decided.
-
-An issue is short: what the problem is, why it matters, what is decided, and an „Open questions" list
-for what is not. Labels say type and area; nothing else goes in the title.
+Work is GitHub issues, run as `/workflow-issues` says. `§N` is a section of
+`docs/product-requirements-feature-specification.md`, `#N` an issue. Quote the section before
+citing it. The specification is an inspiration: a section says where an idea came from, an issue
+says what is decided.
 
 ## Deployment
 
