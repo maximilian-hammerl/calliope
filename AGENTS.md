@@ -14,7 +14,7 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   forum's permissions are shaped as they are. Each file is scoped by `paths:` and loads only when
   you open a matching file. When you change how an area works, change its rule in the same commit.
 - `.claude/skills/`: the workflows worth doing the same way every time — `/db-reset`,
-  `/regenerate`, `/workflow-validate`.
+  `/regenerate`, `/workflow-review`, `/workflow-validate`.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
 ## How to work here
