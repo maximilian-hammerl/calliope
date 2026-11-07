@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import assert from "node:assert/strict";
 import { db } from "@/src/database/client.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import type { ForumPermission } from "@/src/database/schema.ts";
@@ -22,7 +22,7 @@ export async function createdOk(
   status = 201,
 ) {
   const response = await request("POST", path, cookie, body);
-  assertEquals(response.status, status, `POST ${path}`);
+  assert.equal(response.status, status, `POST ${path}`);
   return await response.json();
 }
 

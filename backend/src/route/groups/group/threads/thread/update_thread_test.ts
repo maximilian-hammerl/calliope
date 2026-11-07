@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -13,8 +14,8 @@ const administrator = "update-thread-admin";
 const writer = "update-thread-writer";
 const other = "update-thread-other";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer, other]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, writer, other]));
 
 async function threadByWriter() {
   const adminCookie = await registerUser(administrator);
@@ -30,7 +31,7 @@ async function threadByWriter() {
   return { adminCookie, writerCookie, group, thread };
 }
 
-Deno.test("PATCH /api/groups/{groupId}/threads/{threadId} lets an administrator rename another's thread", async () => {
+test("PATCH /api/groups/{groupId}/threads/{threadId} lets an administrator rename another's thread", async () => {
   const { adminCookie, group, thread } = await threadByWriter();
 
   const response = await request(
@@ -40,11 +41,11 @@ Deno.test("PATCH /api/groups/{groupId}/threads/{threadId} lets an administrator 
     { title: "Nachher" },
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).title, "Nachher");
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).title, "Nachher");
 });
 
-Deno.test("PATCH /api/groups/{groupId}/threads/{threadId} refuses another writer", async () => {
+test("PATCH /api/groups/{groupId}/threads/{threadId} refuses another writer", async () => {
   const { adminCookie, group, thread } = await threadByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
 
@@ -56,5 +57,5 @@ Deno.test("PATCH /api/groups/{groupId}/threads/{threadId} refuses another writer
     { title: "Übernommen" },
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });

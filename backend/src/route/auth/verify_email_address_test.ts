@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
@@ -19,11 +20,11 @@ const {
   username,
 } = authFixture("verify");
 
-Deno.test.beforeEach(async () => {
+beforeEach(async () => {
   await clearRateLimits();
   await clearMail();
 });
-Deno.test.afterEach(() => deleteUsers([username]));
+afterEach(() => deleteUsers([username]));
 
 /** A gated route, to show what an unverified session may and may not reach. */
 const listGroups = (cookie: string) =>
@@ -40,43 +41,47 @@ async function registerAndReadLink(): Promise<
   return { cookie, token: tokenFromMail(await waitForMail(emailAddress)) };
 }
 
-Deno.test("registering leaves the address unverified and sends a link", async () => {
+test("registering leaves the address unverified and sends a link", async () => {
   const { token } = await registerAndReadLink();
 
-  assertExists(token);
+  assert.ok(token);
   const user = await db
     .selectFrom("user")
     .select(["emailAddressVerifiedAt"])
     .where("username", "=", username)
     .executeTakeFirstOrThrow();
-  assertEquals(user.emailAddressVerifiedAt, null);
+  assert.equal(user.emailAddressVerifiedAt, null);
 });
 
-Deno.test("a gated route is refused until the address is verified", async () => {
+test("a gated route is refused until the address is verified", async () => {
   const { cookie, token } = await registerAndReadLink();
 
   const before = await listGroups(cookie);
-  assertEquals(before.status, STATUS_CODE.Forbidden);
-  assertEquals(await before.json(), { error: "Email address not verified" });
+  assert.equal(before.status, STATUS_CODE.Forbidden);
+  assert.deepEqual(await before.json(), {
+    error: "Email address not verified",
+  });
 
-  assertEquals((await verify(token)).status, STATUS_CODE.OK);
+  assert.equal((await verify(token)).status, STATUS_CODE.OK);
 
   // The same session, unchanged — only the account's state moved.
   const after = await listGroups(cookie);
-  assertEquals(after.status, STATUS_CODE.OK);
+  assert.equal(after.status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/auth/verify-email-address spends the token exactly once", async () => {
+test("POST /api/auth/verify-email-address spends the token exactly once", async () => {
   const { token } = await registerAndReadLink();
 
-  assertEquals((await verify(token)).status, STATUS_CODE.OK);
+  assert.equal((await verify(token)).status, STATUS_CODE.OK);
 
   const second = await verify(token);
-  assertEquals(second.status, STATUS_CODE.Gone);
-  assertEquals(await second.json(), { error: "The link is no longer valid" });
+  assert.equal(second.status, STATUS_CODE.Gone);
+  assert.deepEqual(await second.json(), {
+    error: "The link is no longer valid",
+  });
 });
 
-Deno.test("POST /api/auth/verify-email-address rejects an expired token", async () => {
+test("POST /api/auth/verify-email-address rejects an expired token", async () => {
   const { cookie, token } = await registerAndReadLink();
 
   await write((transaction) =>
@@ -89,12 +94,12 @@ Deno.test("POST /api/auth/verify-email-address rejects an expired token", async 
       .execute()
   );
 
-  assertEquals((await verify(token)).status, STATUS_CODE.Gone);
+  assert.equal((await verify(token)).status, STATUS_CODE.Gone);
   // Still walled, rather than let through by a link that no longer counts.
-  assertEquals((await listGroups(cookie)).status, STATUS_CODE.Forbidden);
+  assert.equal((await listGroups(cookie)).status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/auth/verify-email-address rejects a reset token", async () => {
+test("POST /api/auth/verify-email-address rejects a reset token", async () => {
   const { cookie } = await registerAndReadLink();
   await clearMail();
 
@@ -103,11 +108,11 @@ Deno.test("POST /api/auth/verify-email-address rejects a reset token", async () 
   const resetToken = tokenFromMail(await waitForMail(emailAddress));
 
   // Purpose is part of the match: a token issued for one thing cannot be spent on another.
-  assertEquals((await verify(resetToken)).status, STATUS_CODE.Gone);
-  assertEquals((await listGroups(cookie)).status, STATUS_CODE.Forbidden);
+  assert.equal((await verify(resetToken)).status, STATUS_CODE.Gone);
+  assert.equal((await listGroups(cookie)).status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/auth/resend-email-address-verification sends another link", async () => {
+test("POST /api/auth/resend-email-address-verification sends another link", async () => {
   const { cookie } = await registerAndReadLink();
   await clearMail();
 
@@ -127,10 +132,10 @@ Deno.test("POST /api/auth/resend-email-address-verification sends another link",
     undefined,
     cookie,
   );
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
   await flushBackgroundWork();
-  assertEquals(
+  assert.equal(
     (await verify(tokenFromMail(await waitForMail(emailAddress))))
       .status,
     STATUS_CODE.OK,

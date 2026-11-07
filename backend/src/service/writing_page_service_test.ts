@@ -1,5 +1,6 @@
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { type GroupId, mint, type PageId } from "@/src/scope/scoped_id.ts";
-import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
   clearRateLimits,
@@ -16,8 +17,8 @@ const OWNER = "page-service-owner";
 const OTHER = "page-service-other";
 const USERNAMES = [OWNER, OTHER];
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers(USERNAMES));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers(USERNAMES));
 
 /** A group with one page in it, and the ids of both members. */
 async function groupWithPage(title = "Weltenbau") {
@@ -47,28 +48,28 @@ async function groupWithPage(title = "Weltenbau") {
   };
 }
 
-Deno.test("a page carries its author, its editor and the prose of its document", async () => {
+test("a page carries its author, its editor and the prose of its document", async () => {
   const { page } = await groupWithPage();
 
-  assertEquals(page.title, "Weltenbau");
-  assertEquals(page.createdByUsername, OWNER);
+  assert.equal(page.title, "Weltenbau");
+  assert.equal(page.createdByUsername, OWNER);
   // The creator counts as the first editor, so a refusal can always name somebody.
-  assertEquals(page.updatedByUsername, OWNER);
-  assertEquals(page.document.type, "doc");
+  assert.equal(page.updatedByUsername, OWNER);
+  assert.equal(page.document.type, "doc");
 });
 
-Deno.test("a page is scoped to its group", async () => {
+test("a page is scoped to its group", async () => {
   const { groupId, page, cookie } = await groupWithPage();
   const otherGroup = await createGroup(cookie, "Die Verwandtschaft");
 
-  assertExists(await WritingPageService.selectPage(groupId, page.id));
-  assertEquals(
+  assert.ok(await WritingPageService.selectPage(groupId, page.id));
+  assert.equal(
     await WritingPageService.selectPage(mint(otherGroup.id), page.id),
     undefined,
   );
 });
 
-Deno.test("an edit against the loaded time is written", async () => {
+test("an edit against the loaded time is written", async () => {
   const { groupId, page, authorId } = await groupWithPage();
 
   const outcome = await write((transaction) =>
@@ -85,16 +86,16 @@ Deno.test("an edit against the loaded time is written", async () => {
     )
   );
 
-  assertEquals(outcome?.kind, "updated");
+  assert.equal(outcome?.kind, "updated");
   // The trigger moved it on, which is what the next editor will be checked against.
-  assertNotEquals(outcome?.page.lastActivityAt, page.lastActivityAt);
+  assert.notEqual(outcome?.page.lastActivityAt, page.lastActivityAt);
 });
 
 /**
  * The point of the whole mechanism: the second editor loaded the page before the first one
  * saved, and their write is refused rather than quietly replacing it.
  */
-Deno.test("an edit against a time that has moved on is refused", async () => {
+test("an edit against a time that has moved on is refused", async () => {
   const { groupId, page, authorId, otherId } = await groupWithPage();
   const loadedByBoth = page.lastActivityAt;
 
@@ -111,7 +112,7 @@ Deno.test("an edit against a time that has moved on is refused", async () => {
       authorId,
     )
   );
-  assertEquals(first?.kind, "updated");
+  assert.equal(first?.kind, "updated");
 
   const second = await write((transaction) =>
     WritingPageService.updatePage(
@@ -127,19 +128,19 @@ Deno.test("an edit against a time that has moved on is refused", async () => {
     )
   );
 
-  assertEquals(second?.kind, "stale");
+  assert.equal(second?.kind, "stale");
   // And it says whose work would have been overwritten, for the message.
-  assertEquals(second?.page.updatedByUsername, OWNER);
+  assert.equal(second?.page.updatedByUsername, OWNER);
   // The first version stands.
   const stored = await WritingPageService.selectPage(groupId, page.id);
-  assertEquals(stored?.document, first?.page.document);
+  assert.deepEqual(stored?.document, first?.page.document);
 });
 
-Deno.test("updating a page that is not in the group answers nothing", async () => {
+test("updating a page that is not in the group answers nothing", async () => {
   const { page, cookie } = await groupWithPage();
   const otherGroup = await createGroup(cookie, "Effi Briefe");
 
-  assertEquals(
+  assert.equal(
     await write(async (transaction) =>
       WritingPageService.updatePage(
         transaction,
@@ -154,21 +155,21 @@ Deno.test("updating a page that is not in the group answers nothing", async () =
   );
 });
 
-Deno.test("a deleted page is gone", async () => {
+test("a deleted page is gone", async () => {
   const { groupId, page, authorId } = await groupWithPage();
 
   await write((transaction) =>
     WritingPageService.deletePage(transaction, groupId, page.id)
   );
 
-  assertEquals(
+  assert.equal(
     await WritingPageService.selectPage(groupId, page.id),
     undefined,
   );
-  assertEquals(await WritingPageService.listPages(groupId, authorId), []);
+  assert.deepEqual(await WritingPageService.listPages(groupId, authorId), []);
 });
 
-Deno.test("pages are listed by activity, and ties by id", async () => {
+test("pages are listed by activity, and ties by id", async () => {
   const { groupId, authorId } = await groupWithPage("Zuerst");
 
   // Written in one statement, so all three share a timestamp — which is what the seed does and
@@ -189,18 +190,18 @@ Deno.test("pages are listed by activity, and ties by id", async () => {
 
   const listed = await WritingPageService.listPages(groupId, authorId);
   const tied = listed.filter((page) => page.title !== "Zuerst");
-  assertEquals(tied.length, 2);
-  assertEquals(
+  assert.equal(tied.length, 2);
+  assert.equal(
     tied[0]?.lastActivityAt,
     tied[1]?.lastActivityAt,
     "the two written together should tie",
   );
 
   // Newest id first, and the same on every call.
-  assertEquals(
+  assert.deepEqual(
     tied.map((page) => page.id),
     [...tied.map((page) => page.id)].sort().reverse(),
   );
   const again = await WritingPageService.listPages(groupId, authorId);
-  assertEquals(again.map((page) => page.id), listed.map((page) => page.id));
+  assert.deepEqual(again.map((page) => page.id), listed.map((page) => page.id));
 });

@@ -1,4 +1,5 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   cleanUp,
   client,
@@ -8,8 +9,8 @@ import {
   TEST_PREFIX,
 } from "./support.ts";
 
-Deno.test.beforeEach(connect);
-Deno.test.afterEach(async () => {
+beforeEach(connect);
+afterEach(async () => {
   // A forum folder belongs to no group, so nothing cascades it away. Children before parents,
   // because the self-reference is RESTRICT and that is checked per row rather than at the end of
   // the statement; these tests nest one level, so two statements cover it.
@@ -83,7 +84,7 @@ async function insertLeaf(
   return firstRow<{ id: string }>(rows).id;
 }
 
-Deno.test("a folder of the forum may hold another folder of the forum", async () => {
+test("a folder of the forum may hold another folder of the forum", async () => {
   const parent = await insertFolder("forum-parent", FORUM);
   const child = await insertFolder("forum-child", FORUM, parent);
 
@@ -91,55 +92,48 @@ Deno.test("a folder of the forum may hold another folder of the forum", async ()
     `SELECT parent_folder_id FROM public.writing_folder WHERE id = $1`,
     [child],
   );
-  assertEquals(
+  assert.equal(
     firstRow<{ parent_folder_id: string }>(rows).parent_folder_id,
     parent,
   );
 });
 
-Deno.test("a folder of the forum cannot be nested under a group's", async () => {
+test("a folder of the forum cannot be nested under a group's", async () => {
   const groupId = await insertGroup("scope-group");
   const groupFolder = await insertFolder("group-parent", {
     writingGroupId: groupId,
   });
 
-  await assertRejects(
-    () => insertFolder("forum-child", FORUM, groupFolder),
-    Error,
-    "its parent",
-  );
+  await assert.rejects(() => insertFolder("forum-child", FORUM, groupFolder), {
+    message: /its parent/u,
+  });
 });
 
-Deno.test("a group's folder cannot be nested under the forum's", async () => {
+test("a group's folder cannot be nested under the forum's", async () => {
   const groupId = await insertGroup("scope-group-2");
   const forumFolder = await insertFolder("forum-parent", FORUM);
 
-  await assertRejects(
+  await assert.rejects(
     () => insertFolder("group-child", { writingGroupId: groupId }, forumFolder),
-    Error,
-    "its parent",
+    { message: /its parent/u },
   );
 });
 
-Deno.test("a folder cannot be moved into the other scope either", async () => {
+test("a folder cannot be moved into the other scope either", async () => {
   const groupId = await insertGroup("scope-group-3");
   const groupFolder = await insertFolder("group-parent", {
     writingGroupId: groupId,
   });
   const forumChild = await insertFolder("forum-child", FORUM);
 
-  await assertRejects(
-    () =>
-      client.query(
-        `UPDATE public.writing_folder SET parent_folder_id = $1 WHERE id = $2`,
-        [groupFolder, forumChild],
-      ),
-    Error,
-    "its parent",
-  );
+  await assert.rejects(() =>
+    client.query(
+      `UPDATE public.writing_folder SET parent_folder_id = $1 WHERE id = $2`,
+      [groupFolder, forumChild],
+    ), { message: /its parent/u });
 });
 
-Deno.test("a rename does not pay for the parent lookup", async () => {
+test("a rename does not pay for the parent lookup", async () => {
   // The trigger is scoped to the two columns that can break the invariant, so a folder whose
   // parent is legitimate stays writable through every other column.
   const parent = await insertFolder("forum-parent", FORUM);
@@ -154,13 +148,13 @@ Deno.test("a rename does not pay for the parent lookup", async () => {
     `SELECT title FROM public.writing_folder WHERE id = $1`,
     [child],
   );
-  assertEquals(
+  assert.equal(
     firstRow<{ title: string }>(rows).title,
     `${TEST_PREFIX}renamed`,
   );
 });
 
-Deno.test("a thread of the forum may sit in a folder of the forum", async () => {
+test("a thread of the forum may sit in a folder of the forum", async () => {
   const folder = await insertFolder("forum-room", FORUM);
   const thread = await insertLeaf(
     "writing_thread",
@@ -173,10 +167,10 @@ Deno.test("a thread of the forum may sit in a folder of the forum", async () => 
     `SELECT folder_id FROM public.writing_thread WHERE id = $1`,
     [thread],
   );
-  assertEquals(firstRow<{ folder_id: string }>(rows).folder_id, folder);
+  assert.equal(firstRow<{ folder_id: string }>(rows).folder_id, folder);
 });
 
-Deno.test("a thread of the forum cannot sit in a group's folder", async () => {
+test("a thread of the forum cannot sit in a group's folder", async () => {
   // Where it would read as being at the forum's root: a group folder carries no effective
   // permission, and that null is what the forum's queries take for "nothing above this".
   const groupId = await insertGroup("leaf-scope-group");
@@ -184,57 +178,47 @@ Deno.test("a thread of the forum cannot sit in a group's folder", async () => {
     writingGroupId: groupId,
   });
 
-  await assertRejects(
+  await assert.rejects(
     () => insertLeaf("writing_thread", "forum-thread", FORUM, groupFolder),
-    Error,
-    "its folder",
+    { message: /its folder/u },
   );
 });
 
-Deno.test("a group's thread cannot sit in a folder of the forum", async () => {
+test("a group's thread cannot sit in a folder of the forum", async () => {
   const groupId = await insertGroup("leaf-scope-group-2");
   const forumFolder = await insertFolder("forum-room", FORUM);
 
-  await assertRejects(
-    () =>
-      insertLeaf(
-        "writing_thread",
-        "group-thread",
-        { writingGroupId: groupId },
-        forumFolder,
-      ),
-    Error,
-    "its folder",
-  );
+  await assert.rejects(() =>
+    insertLeaf(
+      "writing_thread",
+      "group-thread",
+      { writingGroupId: groupId },
+      forumFolder,
+    ), { message: /its folder/u });
 });
 
 /** Its own trigger, so a page needs its own case: one function, two tables to attach it to. */
-Deno.test("a page cannot cross the scope either, in either direction", async () => {
+test("a page cannot cross the scope either, in either direction", async () => {
   const groupId = await insertGroup("leaf-scope-group-3");
   const groupFolder = await insertFolder("group-room", {
     writingGroupId: groupId,
   });
   const forumFolder = await insertFolder("forum-room", FORUM);
 
-  await assertRejects(
+  await assert.rejects(
     () => insertLeaf("writing_page", "forum-page", FORUM, groupFolder),
-    Error,
-    "its folder",
+    { message: /its folder/u },
   );
-  await assertRejects(
-    () =>
-      insertLeaf(
-        "writing_page",
-        "group-page",
-        { writingGroupId: groupId },
-        forumFolder,
-      ),
-    Error,
-    "its folder",
-  );
+  await assert.rejects(() =>
+    insertLeaf(
+      "writing_page",
+      "group-page",
+      { writingGroupId: groupId },
+      forumFolder,
+    ), { message: /its folder/u });
 });
 
-Deno.test("a leaf cannot be moved into the other scope", async () => {
+test("a leaf cannot be moved into the other scope", async () => {
   const groupId = await insertGroup("leaf-scope-group-4");
   const groupFolder = await insertFolder("group-room", {
     writingGroupId: groupId,
@@ -246,18 +230,14 @@ Deno.test("a leaf cannot be moved into the other scope", async () => {
     null,
   );
 
-  await assertRejects(
-    () =>
-      client.query(
-        `UPDATE public.writing_thread SET folder_id = $1 WHERE id = $2`,
-        [groupFolder, thread],
-      ),
-    Error,
-    "its folder",
-  );
+  await assert.rejects(() =>
+    client.query(
+      `UPDATE public.writing_thread SET folder_id = $1 WHERE id = $2`,
+      [groupFolder, thread],
+    ), { message: /its folder/u });
 });
 
-Deno.test("a leaf at the root is not held to it, and a rename pays nothing", async () => {
+test("a leaf at the root is not held to it, and a rename pays nothing", async () => {
   // No folder means nothing to disagree with, which is what the `WHEN` clause skips. And the
   // column list is what keeps every other write off the lookup.
   const thread = await insertLeaf("writing_thread", "root-thread", FORUM, null);
@@ -271,7 +251,7 @@ Deno.test("a leaf at the root is not held to it, and a rename pays nothing", asy
     `SELECT title FROM public.writing_thread WHERE id = $1`,
     [thread],
   );
-  assertEquals(
+  assert.equal(
     firstRow<{ title: string }>(rows).title,
     `${TEST_PREFIX}renamed`,
   );

@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import type { DocumentNode } from "@/src/document/document_schema.ts";
 import {
   DOCUMENT_SCHEMA,
@@ -309,10 +310,10 @@ const FIXTURE = {
   ],
 };
 
-Deno.test("the schema accepts every node and mark the editor emits", () => {
+test("the schema accepts every node and mark the editor emits", () => {
   const result = DOCUMENT_SCHEMA.safeParse(FIXTURE);
 
-  assertEquals(
+  assert.deepEqual(
     result.success
       ? []
       : result.error.issues.map((issue) =>
@@ -322,16 +323,16 @@ Deno.test("the schema accepts every node and mark the editor emits", () => {
   );
 });
 
-Deno.test("the projection of that fixture reads as prose", () => {
+test("the projection of that fixture reads as prose", () => {
   const text = documentToPlainText(FIXTURE);
 
   // Blocks separated by blank lines, and no serialised nodes in it.
-  assertEquals(text.includes("Überschrift"), true);
-  assertEquals(text.includes("\n\n"), true);
-  assertEquals(text.includes('"type"'), false);
+  assert.equal(text.includes("Überschrift"), true);
+  assert.equal(text.includes("\n\n"), true);
+  assert.equal(text.includes('"type"'), false);
 });
 
-Deno.test("the schema refuses what it does not know", () => {
+test("the schema refuses what it does not know", () => {
   const cases: Array<[string, unknown]> = [
     ["an unknown node", { type: "doc", content: [{ type: "script" }] }],
     ["an unknown mark", {
@@ -451,7 +452,7 @@ Deno.test("the schema refuses what it does not know", () => {
 
   // Asserted as a set rather than a step each: `safeParse` is synchronous, so stepping would
   // only add an `await` in a loop, and this names every case that wrongly passed at once.
-  assertEquals(
+  assert.deepEqual(
     cases.filter(([, value]) => DOCUMENT_SCHEMA.safeParse(value).success).map(
       ([name]) => name,
     ),
@@ -468,7 +469,7 @@ Deno.test("the schema refuses what it does not know", () => {
  * editor. They stay here anyway: the guard is a courtesy to the member, and the schema is what
  * actually decides.
  */
-Deno.test("the schema accepts a paste out of another program", () => {
+test("the schema accepts a paste out of another program", () => {
   function styled(attrs: Record<string, unknown>): unknown {
     return {
       type: "doc",
@@ -522,7 +523,7 @@ Deno.test("the schema accepts a paste out of another program", () => {
     ],
   ];
 
-  assertEquals(
+  assert.deepEqual(
     cases.filter(([, value]) => !DOCUMENT_SCHEMA.safeParse(value).success).map((
       [name],
     ) => name),
@@ -530,14 +531,14 @@ Deno.test("the schema accepts a paste out of another program", () => {
   );
 });
 
-Deno.test("the schema refuses a tree too deep to walk", () => {
+test("the schema refuses a tree too deep to walk", () => {
   // Twenty-one levels of nesting, one past the bound.
   let node: unknown = { type: "text", text: "deep" };
   for (let index = 0; index < 21; index += 1) {
     node = { type: "blockquote", content: [node] };
   }
 
-  assertEquals(
+  assert.equal(
     DOCUMENT_SCHEMA.safeParse({ type: "doc", content: [node] }).success,
     false,
   );
@@ -563,8 +564,8 @@ function doc(...content: DocumentNode[]): DocumentNode {
   return { type: "doc", content };
 }
 
-Deno.test("the projection keeps the text of a nested list", () => {
-  assertEquals(
+test("the projection keeps the text of a nested list", () => {
+  assert.equal(
     documentToPlainText(doc({
       type: "bulletList",
       content: [{
@@ -579,8 +580,8 @@ Deno.test("the projection keeps the text of a nested list", () => {
   );
 });
 
-Deno.test("the projection keeps a quotation and what follows it", () => {
-  assertEquals(
+test("the projection keeps a quotation and what follows it", () => {
+  assert.equal(
     documentToPlainText(
       doc(
         { type: "blockquote", content: [paragraph("Zitat")] },
@@ -591,8 +592,8 @@ Deno.test("the projection keeps a quotation and what follows it", () => {
   );
 });
 
-Deno.test("the projection reads a table row as one line", () => {
-  assertEquals(
+test("the projection reads a table row as one line", () => {
+  assert.equal(
     documentToPlainText(doc({
       type: "table",
       content: [{
@@ -604,8 +605,8 @@ Deno.test("the projection reads a table row as one line", () => {
   );
 });
 
-Deno.test("the projection keeps both blocks of a cell holding two", () => {
-  assertEquals(
+test("the projection keeps both blocks of a cell holding two", () => {
+  assert.equal(
     documentToPlainText(doc({
       type: "table",
       content: [{
@@ -627,7 +628,7 @@ Deno.test("the projection keeps both blocks of a cell holding two", () => {
  * Adding a node or mark to the schema therefore fails here until the fixture carries one too, and
  * the only way to put it in the fixture is to produce it from the editor.
  */
-Deno.test("the schema accepts nothing the fixture does not carry", () => {
+test("the schema accepts nothing the fixture does not carry", () => {
   const used = { nodes: new Set<string>(), marks: new Set<string>() };
 
   const walk = (node: DocumentNode) => {
@@ -639,6 +640,6 @@ Deno.test("the schema accepts nothing the fixture does not carry", () => {
   };
   walk(FIXTURE as DocumentNode);
 
-  assertEquals(DOCUMENT_VOCABULARY.nodes, [...used.nodes].toSorted());
-  assertEquals(DOCUMENT_VOCABULARY.marks, [...used.marks].toSorted());
+  assert.deepEqual(DOCUMENT_VOCABULARY.nodes, [...used.nodes].toSorted());
+  assert.deepEqual(DOCUMENT_VOCABULARY.marks, [...used.marks].toSorted());
 });

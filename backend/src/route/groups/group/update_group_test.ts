@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -10,8 +11,8 @@ import {
 const owner = "update-group-owner";
 const outsider = "update-group-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([owner, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([owner, outsider]));
 
 function createGroup(cookie: string, visibility: "public" | "private") {
   return request("POST", "/api/groups", cookie, {
@@ -21,7 +22,7 @@ function createGroup(cookie: string, visibility: "public" | "private") {
   }).then((response) => response.json());
 }
 
-Deno.test("PATCH /api/groups/{groupId} updates a group the user administers", async () => {
+test("PATCH /api/groups/{groupId} updates a group the user administers", async () => {
   const cookie = await registerUser(owner);
   const created = await createGroup(cookie, "private");
 
@@ -30,15 +31,15 @@ Deno.test("PATCH /api/groups/{groupId} updates a group the user administers", as
     visibility: "public",
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const updated = await response.json();
-  assertEquals(updated.title, "Nachher");
-  assertEquals(updated.visibility, "public");
+  assert.equal(updated.title, "Nachher");
+  assert.equal(updated.visibility, "public");
   // Untouched fields keep their values.
-  assertEquals(updated.synopsis, created.synopsis);
+  assert.equal(updated.synopsis, created.synopsis);
 });
 
-Deno.test("PATCH /api/groups/{groupId} refuses a non-administrator of a public group", async () => {
+test("PATCH /api/groups/{groupId} refuses a non-administrator of a public group", async () => {
   const ownerCookie = await registerUser(owner);
   const created = await createGroup(ownerCookie, "public");
 
@@ -51,13 +52,13 @@ Deno.test("PATCH /api/groups/{groupId} refuses a non-administrator of a public g
   );
 
   // 403 rather than 404: the group is public, so its existence is not a secret.
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals(await response.json(), {
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.deepEqual(await response.json(), {
     error: "Only administrators can update a group",
   });
 });
 
-Deno.test("PATCH /api/groups/{groupId} changes the story metadata", async () => {
+test("PATCH /api/groups/{groupId} changes the story metadata", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -68,15 +69,15 @@ Deno.test("PATCH /api/groups/{groupId} changes the story metadata", async () => 
     tense: "present",
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const updated = await response.json();
-  assertEquals(updated.subtitle, "Ein Untertitel");
-  assertEquals(updated.storyStatus, "finished");
-  assertEquals(updated.genres, ["crime"]);
-  assertEquals(updated.tense, "present");
+  assert.equal(updated.subtitle, "Ein Untertitel");
+  assert.equal(updated.storyStatus, "finished");
+  assert.deepEqual(updated.genres, ["crime"]);
+  assert.equal(updated.tense, "present");
 });
 
-Deno.test("PATCH /api/groups/{groupId} clears an optional field with null", async () => {
+test("PATCH /api/groups/{groupId} clears an optional field with null", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -86,11 +87,11 @@ Deno.test("PATCH /api/groups/{groupId} clears an optional field with null", asyn
   });
 
   // Absent means unchanged, null means cleared — a typo in a subtitle has to be removable.
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).subtitle, null);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).subtitle, null);
 });
 
-Deno.test("PATCH /api/groups/{groupId} leaves untouched fields alone", async () => {
+test("PATCH /api/groups/{groupId} leaves untouched fields alone", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -99,17 +100,17 @@ Deno.test("PATCH /api/groups/{groupId} leaves untouched fields alone", async () 
     title: "Neuer Titel",
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const updated = await response.json();
-  assertEquals(updated.title, "Neuer Titel");
-  assertEquals(updated.genres, ["fantasy"]);
+  assert.equal(updated.title, "Neuer Titel");
+  assert.deepEqual(updated.genres, ["fantasy"]);
 });
 
 /**
  * Checked against the row the update produces rather than against the request: changing only the
  * genres would otherwise leave whatever subgenres are stored sitting under none of them.
  */
-Deno.test("PATCH /api/groups/{groupId} refuses genres that orphan the stored subgenres", async () => {
+test("PATCH /api/groups/{groupId} refuses genres that orphan the stored subgenres", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -117,24 +118,24 @@ Deno.test("PATCH /api/groups/{groupId} refuses genres that orphan the stored sub
     genres: ["fantasy"],
     subgenres: ["dark_fantasy"],
   });
-  assertEquals(set.status, STATUS_CODE.OK);
+  assert.equal(set.status, STATUS_CODE.OK);
 
   // The subgenre is not in this request at all; it is already on the row.
   const response = await request("PATCH", `/api/groups/${id}`, cookie, {
     genres: ["western"],
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 
   // And the group is untouched, so nothing was half-written.
   const after = await (await request("PATCH", `/api/groups/${id}`, cookie, {
     subtitle: "unverändert",
   })).json();
-  assertEquals(after.genres, ["fantasy"]);
-  assertEquals(after.subgenres, ["dark_fantasy"]);
+  assert.deepEqual(after.genres, ["fantasy"]);
+  assert.deepEqual(after.subgenres, ["dark_fantasy"]);
 });
 
-Deno.test("PATCH /api/groups/{groupId} takes genres and subgenres that agree", async () => {
+test("PATCH /api/groups/{groupId} takes genres and subgenres that agree", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -143,7 +144,7 @@ Deno.test("PATCH /api/groups/{groupId} takes genres and subgenres that agree", a
     subgenres: ["weird_western"],
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 });
 
 /**
@@ -151,7 +152,7 @@ Deno.test("PATCH /api/groups/{groupId} takes genres and subgenres that agree", a
  * values become a row" — and for a while the update did not go through it, so a padded title and
  * a whitespace-only subtitle survived a PATCH and the group page drew an empty row for the latter.
  */
-Deno.test("PATCH /api/groups/{groupId} trims and empties what it stores", async () => {
+test("PATCH /api/groups/{groupId} trims and empties what it stores", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -161,13 +162,13 @@ Deno.test("PATCH /api/groups/{groupId} trims and empties what it stores", async 
     storyThemes: "   ",
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const updated = await response.json();
-  assertEquals(updated.title, "Nach dem Rand");
+  assert.equal(updated.title, "Nach dem Rand");
   // Whitespace is nothing written, and nothing written is null — a blank string is truthy and
   // would render as a row with no value in it.
-  assertEquals(updated.subtitle, null);
-  assertEquals(updated.storyThemes, null);
+  assert.equal(updated.subtitle, null);
+  assert.equal(updated.storyThemes, null);
 });
 
 /**
@@ -175,7 +176,7 @@ Deno.test("PATCH /api/groups/{groupId} trims and empties what it stores", async 
  * string: one edit could leave a group with no title at all. The browser never sends it — its
  * `titleSchema` trims before checking — which is exactly why the API had to be asked directly.
  */
-Deno.test("PATCH /api/groups/{groupId} refuses a title of only whitespace", async () => {
+test("PATCH /api/groups/{groupId} refuses a title of only whitespace", async () => {
   const cookie = await registerUser(owner);
   const { id } = await createGroup(cookie, "private");
 
@@ -183,9 +184,9 @@ Deno.test("PATCH /api/groups/{groupId} refuses a title of only whitespace", asyn
     title: "   ",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
     "title",
   ]);
 });

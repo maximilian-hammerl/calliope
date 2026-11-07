@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -12,10 +13,10 @@ import {
 const administrator = "create-membership-admin";
 const invitee = "create-membership-invitee";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, invitee]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, invitee]));
 
-Deno.test("POST /api/groups/{groupId}/memberships invites a user", async () => {
+test("POST /api/groups/{groupId}/memberships invites a user", async () => {
   const adminCookie = await registerUser(administrator);
   await registerUser(invitee);
   const group = await createGroup(adminCookie, "Einladung");
@@ -27,14 +28,14 @@ Deno.test("POST /api/groups/{groupId}/memberships invites a user", async () => {
     { userId: await getUserId(invitee) },
   );
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const membership = await response.json();
   // Always an invitation, never a membership, whatever the request asked for.
-  assertEquals(membership.status, "invited");
-  assertEquals(membership.role, "writer");
+  assert.equal(membership.status, "invited");
+  assert.equal(membership.role, "writer");
 });
 
-Deno.test("POST /api/groups/{groupId}/memberships refuses a non-administrator", async () => {
+test("POST /api/groups/{groupId}/memberships refuses a non-administrator", async () => {
   const adminCookie = await registerUser(administrator);
   const inviteeCookie = await registerUser(invitee);
   const group = await createGroup(adminCookie, "Einladung", "public");
@@ -47,8 +48,8 @@ Deno.test("POST /api/groups/{groupId}/memberships refuses a non-administrator", 
     { userId: await getUserId(invitee) },
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals(await response.json(), {
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.deepEqual(await response.json(), {
     error: "Only administrators can invite users",
   });
 });

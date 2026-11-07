@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import openApi from "@/open-api.json" with { type: "json" };
 import {
@@ -27,8 +28,8 @@ const VICTIM = "parent-scope-victim";
 const ATTACKER = "parent-scope-attacker";
 const ATTACKERS_MEMBER = "parent-scope-member";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum([VICTIM, ATTACKER, ATTACKERS_MEMBER]);
   await deleteUsers([VICTIM, ATTACKER, ATTACKERS_MEMBER]);
 });
@@ -168,7 +169,7 @@ function probes(names: string[], scope: Scope, found: Fixture): Probe[] {
 for (const { operation, method, path, names } of nestedOperations()) {
   const scope: Scope = path.startsWith("/api/forum/") ? "forum" : "group";
 
-  Deno.test(`${operation} answers 404 for a child of another parent`, async () => {
+  test(`${operation} answers 404 for a child of another parent`, async () => {
     const found = await fixture();
     const body = REQUEST_BODIES[operation];
     const each = probes(names, scope, found);
@@ -185,7 +186,7 @@ for (const { operation, method, path, names } of nestedOperations()) {
     for (const probe of each) {
       // deno-lint-ignore no-await-in-loop -- sequential: a probe that got through changes rows
       const tried = await ask(probe.ids, probe.source.ids);
-      assertEquals(
+      assert.equal(
         tried.status,
         STATUS_CODE.NotFound,
         `${operation} with ${probe.label}`,

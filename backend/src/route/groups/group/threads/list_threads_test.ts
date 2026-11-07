@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -13,10 +14,10 @@ const administrator = "list-threads-admin";
 const reader = "list-threads-reader";
 const outsider = "list-threads-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, reader, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, reader, outsider]));
 
-Deno.test("GET /api/groups/{groupId}/threads lists threads for any member", async () => {
+test("GET /api/groups/{groupId}/threads lists threads for any member", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Fäden");
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
@@ -31,12 +32,12 @@ Deno.test("GET /api/groups/{groupId}/threads lists threads for any member", asyn
     readerCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assertEquals(page.results[0].title, "Kapitel 1");
+  assert.equal(page.results[0].title, "Kapitel 1");
 });
 
-Deno.test("GET /api/groups/{groupId}/threads shows a public group's threads to a non-member", async () => {
+test("GET /api/groups/{groupId}/threads shows a public group's threads to a non-member", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Fäden", "public");
@@ -46,7 +47,7 @@ Deno.test("GET /api/groups/{groupId}/threads shows a public group's threads to a
     adminCookie,
     { title: "Kapitel 1" },
   );
-  assertEquals(thread.status, STATUS_CODE.Created);
+  assert.equal(thread.status, STATUS_CODE.Created);
 
   // §23's "community-visible" is a promise about the writing, not only about the title, and
   // the discovery page states it outright: "Mitlesen kannst du sofort". This once answered
@@ -57,14 +58,14 @@ Deno.test("GET /api/groups/{groupId}/threads shows a public group's threads to a
     outsiderCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assertEquals(page.results.map((one: { title: string }) => one.title), [
+  assert.deepEqual(page.results.map((one: { title: string }) => one.title), [
     "Kapitel 1",
   ]);
 });
 
-Deno.test("GET /api/groups/{groupId}/threads still hides a private group's threads", async () => {
+test("GET /api/groups/{groupId}/threads still hides a private group's threads", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Verschlossen", "private");
@@ -76,5 +77,5 @@ Deno.test("GET /api/groups/{groupId}/threads still hides a private group's threa
   );
 
   // 404 rather than 403: a private group's existence is nobody else's business.
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });

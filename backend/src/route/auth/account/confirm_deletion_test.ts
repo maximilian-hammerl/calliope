@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import {
@@ -29,34 +30,34 @@ const {
 
 const other = "account-deletion-test-witness";
 
-Deno.test.beforeEach(async () => {
+beforeEach(async () => {
   await clearRateLimits();
   await clearMail();
 });
-Deno.test.afterEach(() => deleteUsers([username, other]));
+afterEach(() => deleteUsers([username, other]));
 
 /** Asks for deletion and returns the token the mail carried. */
 async function requestAndReadToken(cookie: string): Promise<string> {
   const response = await requestDeletion(cookie);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const token = await deletionToken();
   await clearMail();
   return token;
 }
 
-Deno.test("POST /api/auth/account/deletion/confirm deletes the account and its sessions", async () => {
+test("POST /api/auth/account/deletion/confirm deletes the account and its sessions", async () => {
   const cookie = await registerDeletable();
   const token = await requestAndReadToken(cookie);
 
   const response = await confirmDeletion(token);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
-  assertEquals(await accountExists(), false);
+  assert.equal(await accountExists(), false);
   // Cascaded, not cleaned up by hand: the session that asked cannot outlive the account.
-  assertEquals(await sessionCount(), 0);
+  assert.equal(await sessionCount(), 0);
 });
 
-Deno.test("POST /api/auth/account/deletion/confirm keeps the writing and drops the name", async () => {
+test("POST /api/auth/account/deletion/confirm keeps the writing and drops the name", async () => {
   const cookie = await registerDeletable();
   const group = await createGroup(cookie, "Bleibt bestehen");
   await addMember(cookie, group.id, other, "writer");
@@ -67,7 +68,7 @@ Deno.test("POST /api/auth/account/deletion/confirm keeps the writing and drops t
     cookie,
     { title: "Ein Kapitel" },
   );
-  assertEquals(thread.status, STATUS_CODE.Created);
+  assert.equal(thread.status, STATUS_CODE.Created);
   const { id: threadId } = await thread.json();
 
   const post = await request(
@@ -76,7 +77,7 @@ Deno.test("POST /api/auth/account/deletion/confirm keeps the writing and drops t
     cookie,
     postBody("Was geschrieben wurde, bleibt."),
   );
-  assertEquals(post.status, STATUS_CODE.Created);
+  assert.equal(post.status, STATUS_CODE.Created);
   const { id: postId } = await post.json();
 
   await confirmDeletion(await requestAndReadToken(cookie));
@@ -89,9 +90,9 @@ Deno.test("POST /api/auth/account/deletion/confirm keeps the writing and drops t
     .where("id", "=", postId)
     .executeTakeFirst();
 
-  assertExists(survivor);
-  assertEquals(survivor.text, "Was geschrieben wurde, bleibt.");
-  assertEquals(survivor.createdBy, null);
+  assert.ok(survivor);
+  assert.equal(survivor.text, "Was geschrieben wurde, bleibt.");
+  assert.equal(survivor.createdBy, null);
 
   // The group had another member, so it is still there.
   const stillThere = await db
@@ -100,11 +101,11 @@ Deno.test("POST /api/auth/account/deletion/confirm keeps the writing and drops t
     .where("id", "=", group.id)
     .executeTakeFirst();
 
-  assertExists(stillThere);
-  assertEquals(stillThere.createdBy, null);
+  assert.ok(stillThere);
+  assert.equal(stillThere.createdBy, null);
 });
 
-Deno.test("POST /api/auth/account/deletion/confirm lets the trigger remove a group nobody is left in", async () => {
+test("POST /api/auth/account/deletion/confirm lets the trigger remove a group nobody is left in", async () => {
   const cookie = await registerDeletable();
   const group = await createGroup(cookie, "Bleibt nicht bestehen");
 
@@ -118,10 +119,10 @@ Deno.test("POST /api/auth/account/deletion/confirm lets the trigger remove a gro
     .where("id", "=", group.id)
     .executeTakeFirst();
 
-  assertEquals(gone, undefined);
+  assert.equal(gone, undefined);
 });
 
-Deno.test("POST /api/auth/account/deletion/confirm takes the member's story ideas with it", async () => {
+test("POST /api/auth/account/deletion/confirm takes the member's story ideas with it", async () => {
   const cookie = await registerDeletable();
   const created = await request("POST", "/api/story-ideas", cookie, {
     title: "Stirbt mit dem Konto",
@@ -139,10 +140,10 @@ Deno.test("POST /api/auth/account/deletion/confirm takes the member's story idea
     .where("id", "=", id)
     .executeTakeFirst();
 
-  assertEquals(gone, undefined);
+  assert.equal(gone, undefined);
 });
 
-Deno.test("POST /api/auth/account/deletion/confirm tells the address it is done", async () => {
+test("POST /api/auth/account/deletion/confirm tells the address it is done", async () => {
   const cookie = await registerDeletable();
   const token = await requestAndReadToken(cookie);
 
@@ -151,21 +152,21 @@ Deno.test("POST /api/auth/account/deletion/confirm tells the address it is done"
 
   // Sent after the row is gone, so the address has to be read before the delete.
   const mail = await waitForMail(emailAddress);
-  assertEquals(await mailCount(), 1);
-  assertEquals(mail.to, emailAddress);
+  assert.equal(await mailCount(), 1);
+  assert.equal(mail.to, emailAddress);
 });
 
-Deno.test("POST /api/auth/account/deletion/confirm spends the link once", async () => {
+test("POST /api/auth/account/deletion/confirm spends the link once", async () => {
   const cookie = await registerDeletable();
   const token = await requestAndReadToken(cookie);
 
-  assertEquals((await confirmDeletion(token)).status, STATUS_CODE.OK);
+  assert.equal((await confirmDeletion(token)).status, STATUS_CODE.OK);
 
   const second = await confirmDeletion(token);
-  assertEquals(second.status, STATUS_CODE.Gone);
+  assert.equal(second.status, STATUS_CODE.Gone);
 });
 
-Deno.test("POST /api/auth/account/deletion/confirm refuses a token it never issued", async () => {
+test("POST /api/auth/account/deletion/confirm refuses a token it never issued", async () => {
   const cookie = await registerDeletable();
   await requestAndReadToken(cookie);
 
@@ -176,7 +177,7 @@ Deno.test("POST /api/auth/account/deletion/confirm refuses a token it never issu
   );
 
   for (const response of responses) {
-    assertEquals(
+    assert.equal(
       response.status === STATUS_CODE.Gone ||
         response.status === STATUS_CODE.BadRequest,
       true,
@@ -184,5 +185,5 @@ Deno.test("POST /api/auth/account/deletion/confirm refuses a token it never issu
     );
   }
 
-  assertEquals(await accountExists(), true);
+  assert.equal(await accountExists(), true);
 });

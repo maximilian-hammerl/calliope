@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
@@ -11,8 +12,8 @@ import {
 
 const USER = "cross-site-probe";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([USER]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([USER]));
 
 const GROUP = { title: "t", synopsis: "s", visibility: "private" };
 
@@ -22,7 +23,7 @@ const GROUP = { title: "t", synopsis: "s", visibility: "private" };
  * `application/json`, a type no form can produce and no `fetch` can send without a preflight.
  * Anything else is refused as an unsupported media type before a schema is reached.
  */
-Deno.test("a write refuses every body a cross-site request could send", async () => {
+test("a write refuses every body a cross-site request could send", async () => {
   const cookie = await registerUser(USER);
   const body = JSON.stringify(GROUP);
 
@@ -43,7 +44,7 @@ Deno.test("a write refuses every body a cross-site request could send", async ()
       body,
     });
 
-    assertEquals(
+    assert.equal(
       response.status,
       STATUS_CODE.UnsupportedMediaType,
       `${contentType} reached the handler`,
@@ -52,7 +53,7 @@ Deno.test("a write refuses every body a cross-site request could send", async ()
 });
 
 /** The control: the same body the interface sends is accepted, so the test above proves something. */
-Deno.test("the same write succeeds as JSON", async () => {
+test("the same write succeeds as JSON", async () => {
   const cookie = await registerUser(USER);
   const response = await app.request("/api/groups", {
     method: "POST",
@@ -60,7 +61,7 @@ Deno.test("the same write succeeds as JSON", async () => {
     body: JSON.stringify({ ...GROUP, title: "real" }),
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
 });
 
 function forgeable(cookie: string, headers: Record<string, string>) {
@@ -81,56 +82,56 @@ function forgeable(cookie: string, headers: Record<string, string>) {
  * `SameSite=Lax` calls a sibling subdomain same-site and sends it the cookie; `Sec-Fetch-Site` is
  * the only thing that tells the two apart, and script cannot set it.
  */
-Deno.test("a forgeable write is refused from anywhere but this origin", async () => {
+test("a forgeable write is refused from anywhere but this origin", async () => {
   const cookie = await registerUser(USER);
 
   for (const site of ["cross-site", "same-site", "none"]) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await forgeable(cookie, { "sec-fetch-site": site });
-    assertEquals(response.status, STATUS_CODE.Forbidden, `${site} was allowed`);
+    assert.equal(response.status, STATUS_CODE.Forbidden, `${site} was allowed`);
   }
 });
 
 /** Neither signal: the shape a cross-site page sends when the browser is too old for either. */
-Deno.test("a forgeable write is refused when it proves no origin at all", async () => {
+test("a forgeable write is refused when it proves no origin at all", async () => {
   const cookie = await registerUser(USER);
   const response = await forgeable(cookie, {});
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
   // `csrf()` throws with a response and no message, which reaches the client as an empty error
   // unless `onError` names the status itself.
-  assertEquals((await response.json()).error, "Forbidden");
+  assert.equal((await response.json()).error, "Forbidden");
 });
 
 /** Safari sent no `Sec-Fetch-Site` before 16.4, so `Origin` alone has to be enough. */
-Deno.test("a forgeable write is allowed on Origin alone", async () => {
+test("a forgeable write is allowed on Origin alone", async () => {
   const cookie = await registerUser(USER);
   const response = await forgeable(cookie, {
     origin: getRequiredEnvVariable("HOST_URL"),
   });
 
   // Past the guard and refused for its media type instead, which is the next line of defence.
-  assertEquals(response.status, STATUS_CODE.UnsupportedMediaType);
+  assert.equal(response.status, STATUS_CODE.UnsupportedMediaType);
 });
 
-Deno.test("a forgeable write is allowed from this origin", async () => {
+test("a forgeable write is allowed from this origin", async () => {
   const cookie = await registerUser(USER);
   const response = await forgeable(cookie, SAME_ORIGIN);
 
-  assertEquals(response.status, STATUS_CODE.UnsupportedMediaType);
+  assert.equal(response.status, STATUS_CODE.UnsupportedMediaType);
 });
 
 /** Reads are untouched, and a cross-site read still cannot be *read* — CORS sees to that. */
-Deno.test("a read is not refused by origin", async () => {
+test("a read is not refused by origin", async () => {
   const cookie = await registerUser(USER);
   const response = await app.request("/api/auth/me", {
     headers: { cookie, "sec-fetch-site": "cross-site" },
   });
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 });
 
 /** The ordering trap: a preflight is `cross-site` by nature and must reach `cors`, not this. */
-Deno.test("a CORS preflight still succeeds", async () => {
+test("a CORS preflight still succeeds", async () => {
   const response = await app.request("/api/groups", {
     method: "OPTIONS",
     headers: {
@@ -140,7 +141,7 @@ Deno.test("a CORS preflight still succeeds", async () => {
       "access-control-request-headers": "content-type",
     },
   });
-  assertEquals(
+  assert.equal(
     response.status < 400,
     true,
     `preflight answered ${response.status}`,

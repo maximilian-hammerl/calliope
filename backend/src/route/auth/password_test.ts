@@ -1,6 +1,6 @@
-import { assertSpyCall, stub } from "@std/testing/mock";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import {
@@ -27,11 +27,11 @@ const newPassword = "an-entirely-different-password";
 /** Only this file's mail, so it cannot empty a mailbox another file is waiting on. */
 const clearMail = () => deleteMailFor([emailAddress]);
 
-Deno.test.beforeEach(async () => {
+beforeEach(async () => {
   await clearRateLimits();
   await clearMail();
 });
-Deno.test.afterEach(() => deleteUsers([username]));
+afterEach(() => deleteUsers([username]));
 
 async function signedIn(): Promise<string> {
   const cookie = await registerUser(username);
@@ -53,35 +53,35 @@ const changePassword = (
 const login = (password: string) =>
   postJson("/api/auth/login", { login: username, password });
 
-Deno.test("PATCH /api/auth/password replaces the password", async () => {
+test("PATCH /api/auth/password replaces the password", async () => {
   const cookie = await signedIn();
 
-  assertEquals((await changePassword(cookie)).status, STATUS_CODE.OK);
+  assert.equal((await changePassword(cookie)).status, STATUS_CODE.OK);
 
-  assertEquals((await login(newPassword)).status, STATUS_CODE.OK);
-  assertEquals((await login(currentPassword)).status, STATUS_CODE.Unauthorized);
+  assert.equal((await login(newPassword)).status, STATUS_CODE.OK);
+  assert.equal((await login(currentPassword)).status, STATUS_CODE.Unauthorized);
 });
 
-Deno.test("PATCH /api/auth/password refuses a wrong current password", async () => {
+test("PATCH /api/auth/password refuses a wrong current password", async () => {
   const cookie = await signedIn();
 
   const response = await changePassword(cookie, "not-the-password");
 
   // The point of asking: a session that was not the member's must not be able to lock them out.
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
   // The frontend tells a wrong password from a lost session by this code, not the message.
-  assertEquals((await response.json()).code, "invalid_credentials");
-  assertEquals((await login(currentPassword)).status, STATUS_CODE.OK);
+  assert.equal((await response.json()).code, "invalid_credentials");
+  assert.equal((await login(currentPassword)).status, STATUS_CODE.OK);
 });
 
-Deno.test("PATCH /api/auth/password keeps this session and ends the others", async () => {
+test("PATCH /api/auth/password keeps this session and ends the others", async () => {
   const cookie = await signedIn();
 
   const other = await login(currentPassword);
   const setCookie = other.headers.get("set-cookie");
-  assertExists(setCookie, "the second login should have started a session");
+  assert.ok(setCookie, "the second login should have started a session");
   const otherCookie = setCookie.split(";")[0] ?? setCookie;
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie: otherCookie } }))
       .status,
     STATUS_CODE.OK,
@@ -90,18 +90,18 @@ Deno.test("PATCH /api/auth/password keeps this session and ends the others", asy
   await changePassword(cookie);
 
   // The tab doing the work survives; everything else is evicted.
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie } })).status,
     STATUS_CODE.OK,
   );
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie: otherCookie } }))
       .status,
     STATUS_CODE.Unauthorized,
   );
 });
 
-Deno.test("PATCH /api/auth/password kills an outstanding reset link", async () => {
+test("PATCH /api/auth/password kills an outstanding reset link", async () => {
   const cookie = await signedIn();
 
   await postJson("/api/auth/forgot-password", { login: username });
@@ -116,30 +116,30 @@ Deno.test("PATCH /api/auth/password kills an outstanding reset link", async () =
     token: resetToken,
     password: "a-third-password",
   });
-  assertEquals(reset.status, STATUS_CODE.Gone);
-  assertEquals((await login(newPassword)).status, STATUS_CODE.OK);
+  assert.equal(reset.status, STATUS_CODE.Gone);
+  assert.equal((await login(newPassword)).status, STATUS_CODE.OK);
 });
 
-Deno.test("PATCH /api/auth/password writes to the member", async () => {
+test("PATCH /api/auth/password writes to the member", async () => {
   const cookie = await signedIn();
 
   await changePassword(cookie);
   await flushBackgroundWork();
 
   // A password changed behind somebody's back must not happen quietly.
-  assertEquals((await waitForMail(emailAddress)).to, emailAddress);
+  assert.equal((await waitForMail(emailAddress)).to, emailAddress);
 });
 
-Deno.test("PATCH /api/auth/password needs a session", async () => {
+test("PATCH /api/auth/password needs a session", async () => {
   const response = await sendJson("PATCH", "/api/auth/password", {
     currentPassword,
     newPassword,
   });
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
 });
 
-Deno.test("PATCH /api/auth/password is refused while the address is unverified", async () => {
+test("PATCH /api/auth/password is refused while the address is unverified", async () => {
   const cookie = await signedIn();
 
   await write((transaction) =>
@@ -150,14 +150,14 @@ Deno.test("PATCH /api/auth/password is refused while the address is unverified",
       .execute()
   );
 
-  assertEquals((await changePassword(cookie)).status, STATUS_CODE.Forbidden);
+  assert.equal((await changePassword(cookie)).status, STATUS_CODE.Forbidden);
 });
 
 /**
  * The minimum is on the password being chosen, not on the one being proved: an account made
  * before the rule can still re-authenticate to change away from a short password.
  */
-Deno.test("PATCH /api/auth/password refuses a new password below the minimum", async () => {
+test("PATCH /api/auth/password refuses a new password below the minimum", async () => {
   const cookie = await signedIn();
 
   const response = await changePassword(
@@ -166,30 +166,29 @@ Deno.test("PATCH /api/auth/password refuses a new password below the minimum", a
     "x".repeat(TEXT_MINIMUM.password - 1),
   );
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
   const issues: { path: string }[] = (await response.json()).issues;
-  assertEquals(issues.some((issue) => issue.path === "newPassword"), true);
+  assert.equal(issues.some((issue) => issue.path === "newPassword"), true);
   // Refused on the way in, so the old password still works.
-  assertEquals((await login(currentPassword)).status, STATUS_CODE.OK);
+  assert.equal((await login(currentPassword)).status, STATUS_CODE.OK);
 });
 
-Deno.test("PATCH /api/auth/password refuses a new password from a known breach", async () => {
+test("PATCH /api/auth/password refuses a new password from a known breach", async (t) => {
   const cookie = await signedIn();
 
-  {
-    using isBreached = stub(
-      BreachedPasswordService,
-      "isBreached",
-      () => Promise.resolve(true),
-    );
+  const isBreached = t.mock.method(
+    BreachedPasswordService,
+    "isBreached",
+    () => Promise.resolve(true),
+  );
 
-    const response = await changePassword(cookie, currentPassword, newPassword);
+  const response = await changePassword(cookie, currentPassword, newPassword);
 
-    assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
-    assertEquals((await response.json()).code, PASSWORD_BREACHED);
-    // The new one is what is checked, never the one being proved.
-    assertSpyCall(isBreached, 0, { args: [newPassword] });
-  }
+  assert.equal(response.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await response.json()).code, PASSWORD_BREACHED);
+  // The new one is what is checked, never the one being proved.
+  assert.deepEqual(isBreached.mock.calls[0]?.arguments, [newPassword]);
+  isBreached.mock.restore();
 
-  assertEquals((await login(currentPassword)).status, STATUS_CODE.OK);
+  assert.equal((await login(currentPassword)).status, STATUS_CODE.OK);
 });

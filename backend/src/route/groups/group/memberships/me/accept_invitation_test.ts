@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -12,10 +13,10 @@ import {
 const administrator = "accept-invitation-admin";
 const invitee = "accept-invitation-invitee";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, invitee]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, invitee]));
 
-Deno.test("POST /api/groups/{groupId}/memberships/me/accept joins the group", async () => {
+test("POST /api/groups/{groupId}/memberships/me/accept joins the group", async () => {
   const adminCookie = await registerUser(administrator);
   const inviteeCookie = await registerUser(invitee);
   const group = await createGroup(adminCookie, "Annahme");
@@ -29,11 +30,11 @@ Deno.test("POST /api/groups/{groupId}/memberships/me/accept joins the group", as
     inviteeCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).status, "joined");
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).status, "joined");
 });
 
-Deno.test("POST /api/groups/{groupId}/memberships/me/accept needs an invitation", async () => {
+test("POST /api/groups/{groupId}/memberships/me/accept needs an invitation", async () => {
   const adminCookie = await registerUser(administrator);
   const inviteeCookie = await registerUser(invitee);
   const group = await createGroup(adminCookie, "Annahme", "public");
@@ -45,6 +46,6 @@ Deno.test("POST /api/groups/{groupId}/memberships/me/accept needs an invitation"
     inviteeCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
-  assertEquals(await response.json(), { error: "Invitation not found" });
+  assert.equal(response.status, STATUS_CODE.NotFound);
+  assert.deepEqual(await response.json(), { error: "Invitation not found" });
 });

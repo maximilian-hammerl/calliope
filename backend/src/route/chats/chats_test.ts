@@ -1,4 +1,5 @@
-import { assertEquals, assertFalse } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -12,8 +13,8 @@ const founder = "chats-founder";
 const invited = "chats-invited";
 const outsider = "chats-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([founder, invited, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([founder, invited, outsider]));
 
 /** A chat with its founder, and somebody invited who has not accepted yet. */
 async function chat() {
@@ -31,7 +32,7 @@ async function chat() {
     founderCookie,
     { userId: invitedId },
   );
-  assertEquals(invitation.status, STATUS_CODE.Created);
+  assert.equal(invitation.status, STATUS_CODE.Created);
 
   return { founderCookie, invitedCookie, invitedId, chat: created };
 }
@@ -45,21 +46,21 @@ const listMessages = async (
   body: unknown = {},
 ) => await request("QUERY", `/api/chats/${chatId}/messages`, cookie, body);
 
-Deno.test("a new chat has its founder in it and nobody else", async () => {
+test("a new chat has its founder in it and nobody else", async () => {
   const founderCookie = await registerUser(founder);
 
   const response = await request("POST", "/api/chats", founderCookie, {
     title: "Nachtmarkt",
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const created = await response.json();
-  assertEquals(created.title, "Nachtmarkt");
-  assertEquals(created.createdByUsername, founder);
-  assertEquals(created.unreadMessages, 0);
+  assert.equal(created.title, "Nachtmarkt");
+  assert.equal(created.createdByUsername, founder);
+  assert.equal(created.unreadMessages, 0);
 });
 
-Deno.test("an invitation is told about, and does not join anybody", async () => {
+test("an invitation is told about, and does not join anybody", async () => {
   const { invitedCookie } = await chat();
 
   const notifications = await (await request(
@@ -68,18 +69,18 @@ Deno.test("an invitation is told about, and does not join anybody", async () => 
     invitedCookie,
     {},
   )).json();
-  assertEquals(notifications.totalResults, 1);
-  assertEquals(notifications.results[0].type, "invited_to_chat_group");
-  assertEquals(notifications.results[0].chatGroupTitle, "Nachtmarkt");
+  assert.equal(notifications.totalResults, 1);
+  assert.equal(notifications.results[0].type, "invited_to_chat_group");
+  assert.equal(notifications.results[0].chatGroupTitle, "Nachtmarkt");
 
   // Visible, because they have to see what they are being asked to join.
-  assertEquals((await listChats(invitedCookie)).totalResults, 1);
+  assert.equal((await listChats(invitedCookie)).totalResults, 1);
 });
 
-Deno.test("an invitation may not read or write until it is accepted", async () => {
+test("an invitation may not read or write until it is accepted", async () => {
   const { invitedCookie, chat: created } = await chat();
 
-  assertEquals(
+  assert.equal(
     (await listMessages(invitedCookie, created.id)).status,
     STATUS_CODE.Forbidden,
   );
@@ -90,10 +91,10 @@ Deno.test("an invitation may not read or write until it is accepted", async () =
     invitedCookie,
     { text: "Hallo?" },
   );
-  assertEquals(sent.status, STATUS_CODE.Forbidden);
+  assert.equal(sent.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("accepting lets the member take part", async () => {
+test("accepting lets the member take part", async () => {
   const { invitedCookie, chat: created } = await chat();
 
   const accepted = await request(
@@ -101,28 +102,28 @@ Deno.test("accepting lets the member take part", async () => {
     `/api/chats/${created.id}/memberships/me/accept`,
     invitedCookie,
   );
-  assertEquals(accepted.status, STATUS_CODE.OK);
-  assertEquals((await accepted.json()).status, "joined");
+  assert.equal(accepted.status, STATUS_CODE.OK);
+  assert.equal((await accepted.json()).status, "joined");
 
-  assertEquals(
+  assert.equal(
     (await listMessages(invitedCookie, created.id)).status,
     STATUS_CODE.OK,
   );
 });
 
-Deno.test("somebody outside the chat is told it does not exist", async () => {
+test("somebody outside the chat is told it does not exist", async () => {
   const { chat: created } = await chat();
   const outsiderCookie = await registerUser(outsider);
 
   // 404 rather than 403: its existence is not theirs to learn.
-  assertEquals(
+  assert.equal(
     (await listMessages(outsiderCookie, created.id)).status,
     STATUS_CODE.NotFound,
   );
-  assertEquals((await listChats(outsiderCookie)).totalResults, 0);
+  assert.equal((await listChats(outsiderCookie)).totalResults, 0);
 });
 
-Deno.test("unread counts the other person's messages, not your own", async () => {
+test("unread counts the other person's messages, not your own", async () => {
   const { founderCookie, invitedCookie, chat: created } = await chat();
   await request(
     "POST",
@@ -135,20 +136,20 @@ Deno.test("unread counts the other person's messages, not your own", async () =>
   });
 
   const forInvited = await listChats(invitedCookie);
-  assertEquals(forInvited.results[0].unreadMessages, 1);
+  assert.equal(forInvited.results[0].unreadMessages, 1);
 
   const forFounder = await listChats(founderCookie);
-  assertEquals(
+  assert.equal(
     forFounder.results[0].unreadMessages,
     0,
     "your own words are not news",
   );
 
   await request("POST", `/api/chats/${created.id}/read`, invitedCookie);
-  assertEquals((await listChats(invitedCookie)).results[0].unreadMessages, 0);
+  assert.equal((await listChats(invitedCookie)).results[0].unreadMessages, 0);
 });
 
-Deno.test("messages page by cursor, oldest reachable from newest", async () => {
+test("messages page by cursor, oldest reachable from newest", async () => {
   const { founderCookie, chat: created } = await chat();
 
   for (const text of ["eins", "zwei", "drei"]) {
@@ -160,7 +161,7 @@ Deno.test("messages page by cursor, oldest reachable from newest", async () => {
 
   const first =
     await (await listMessages(founderCookie, created.id, { limit: 2 })).json();
-  assertEquals(first.results.map((m: { text: string }) => m.text), [
+  assert.deepEqual(first.results.map((m: { text: string }) => m.text), [
     "drei",
     "zwei",
   ]);
@@ -169,11 +170,13 @@ Deno.test("messages page by cursor, oldest reachable from newest", async () => {
     limit: 2,
     before: first.nextCursor,
   })).json();
-  assertEquals(second.results.map((m: { text: string }) => m.text), ["eins"]);
-  assertEquals(second.nextCursor, null, "the beginning has been reached");
+  assert.deepEqual(second.results.map((m: { text: string }) => m.text), [
+    "eins",
+  ]);
+  assert.equal(second.nextCursor, null, "the beginning has been reached");
 });
 
-Deno.test("leaving takes the chat with the last member out", async () => {
+test("leaving takes the chat with the last member out", async () => {
   const { founderCookie, invitedCookie, chat: created } = await chat();
   await request(
     "POST",
@@ -186,7 +189,7 @@ Deno.test("leaving takes the chat with the last member out", async () => {
     `/api/chats/${created.id}/memberships/me`,
     founderCookie,
   );
-  assertEquals(
+  assert.equal(
     (await listChats(invitedCookie)).totalResults,
     1,
     "one member is still in it",
@@ -197,10 +200,10 @@ Deno.test("leaving takes the chat with the last member out", async () => {
     `/api/chats/${created.id}/memberships/me`,
     invitedCookie,
   );
-  assertEquals((await listChats(invitedCookie)).totalResults, 0);
+  assert.equal((await listChats(invitedCookie)).totalResults, 0);
 });
 
-Deno.test("declining an invitation removes its notification too", async () => {
+test("declining an invitation removes its notification too", async () => {
   const { invitedCookie, chat: created } = await chat();
 
   await request(
@@ -215,10 +218,10 @@ Deno.test("declining an invitation removes its notification too", async () => {
     invitedCookie,
     {},
   )).json();
-  assertEquals(notifications.totalResults, 0);
+  assert.equal(notifications.totalResults, 0);
 });
 
-Deno.test("the member list shows who is in a chat and who is still deciding", async () => {
+test("the member list shows who is in a chat and who is still deciding", async () => {
   const { founderCookie, chat: created } = await chat();
 
   const response = await request(
@@ -228,10 +231,10 @@ Deno.test("the member list shows who is in a chat and who is still deciding", as
     {},
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assertEquals(page.totalResults, 2);
-  assertEquals(
+  assert.equal(page.totalResults, 2);
+  assert.deepEqual(
     page.results.map((m: { username: string; status: string }) =>
       `${m.username}:${m.status}`
     ).toSorted(),
@@ -239,7 +242,7 @@ Deno.test("the member list shows who is in a chat and who is still deciding", as
   );
 });
 
-Deno.test("an invitation may see who it would be joining", async () => {
+test("an invitation may see who it would be joining", async () => {
   const { invitedCookie, chat: created } = await chat();
 
   // Visibility, not membership: deciding whether to accept needs to know who is there.
@@ -250,11 +253,11 @@ Deno.test("an invitation may see who it would be joining", async () => {
     {},
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).totalResults, 2);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).totalResults, 2);
 });
 
-Deno.test("somebody outside the chat cannot see who is in it", async () => {
+test("somebody outside the chat cannot see who is in it", async () => {
   const { chat: created } = await chat();
   const outsiderCookie = await registerUser(outsider);
 
@@ -265,10 +268,10 @@ Deno.test("somebody outside the chat cannot see who is in it", async () => {
     {},
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("a member may invite, and inviting twice conflicts", async () => {
+test("a member may invite, and inviting twice conflicts", async () => {
   const { founderCookie, invitedCookie, chat: created } = await chat();
   await request(
     "POST",
@@ -285,8 +288,8 @@ Deno.test("a member may invite, and inviting twice conflicts", async () => {
     invitedCookie,
     { userId: outsiderId },
   );
-  assertEquals(invitation.status, STATUS_CODE.Created);
-  assertEquals((await invitation.json()).status, "invited");
+  assert.equal(invitation.status, STATUS_CODE.Created);
+  assert.equal((await invitation.json()).status, "invited");
 
   const again = await request(
     "POST",
@@ -294,7 +297,7 @@ Deno.test("a member may invite, and inviting twice conflicts", async () => {
     founderCookie,
     { userId: outsiderId },
   );
-  assertEquals(again.status, STATUS_CODE.Conflict);
+  assert.equal(again.status, STATUS_CODE.Conflict);
 
   // And they were told, once.
   const notifications = await (await request(
@@ -303,13 +306,13 @@ Deno.test("a member may invite, and inviting twice conflicts", async () => {
     outsiderCookie,
     {},
   )).json();
-  assertEquals(notifications.totalResults, 1);
-  assertEquals(notifications.results[0].type, "invited_to_chat_group");
+  assert.equal(notifications.totalResults, 1);
+  assert.equal(notifications.results[0].type, "invited_to_chat_group");
 });
 
-Deno.test("QUERY /api/chats needs a session", async () => {
+test("QUERY /api/chats needs a session", async () => {
   const response = await request("QUERY", "/api/chats", "", {});
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertFalse(response.headers.has("set-cookie"));
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.ok(!response.headers.has("set-cookie"));
 });

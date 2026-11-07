@@ -1,4 +1,5 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
@@ -15,71 +16,72 @@ const {
   username,
 } = authFixture("forgot");
 
-Deno.test.beforeEach(async () => {
+beforeEach(async () => {
   await clearRateLimits();
   await clearMail();
 });
-Deno.test.afterEach(() => deleteUsers([username]));
+afterEach(() => deleteUsers([username]));
 
 const forgotPassword = (login: string) =>
   postJson("/api/auth/forgot-password", { login });
 
-Deno.test("POST /api/auth/forgot-password mails a link to a registered address", async () => {
+test("POST /api/auth/forgot-password mails a link to a registered address", async () => {
   await registerAndDiscardVerificationMail();
 
   const response = await forgotPassword(emailAddress);
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals(await response.json(), { ok: true });
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.deepEqual(await response.json(), { ok: true });
 
   await flushBackgroundWork();
   const mail = await waitForMail(emailAddress);
 
-  assertStringIncludes(mail.subject, "Calliope");
-  assertStringIncludes(mail.text, username);
+  assert.ok(mail.subject.includes("Calliope"));
+  assert.ok(mail.text.includes(username));
   // The link has to point at the frontend route that spends the token, not at the API.
-  assertStringIncludes(
-    mail.text,
-    `${getRequiredEnvVariable("HOST_URL")}/reset-password?token=`,
+  assert.ok(
+    mail.text.includes(
+      `${getRequiredEnvVariable("HOST_URL")}/reset-password?token=`,
+    ),
   );
 });
 
-Deno.test("POST /api/auth/forgot-password answers the same way for an unknown address", async () => {
+test("POST /api/auth/forgot-password answers the same way for an unknown address", async () => {
   await registerAndDiscardVerificationMail();
 
   const response = await forgotPassword("nobody-has-this@example.com");
 
   // Byte-for-byte the response a registered address gets: anything else would say whether
   // the address is in use.
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals(await response.json(), { ok: true });
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.deepEqual(await response.json(), { ok: true });
 
   await flushBackgroundWork();
-  assertEquals(await mailCount(), 0);
+  assert.equal(await mailCount(), 0);
 });
 
-Deno.test("POST /api/auth/forgot-password matches the address in any case", async () => {
+test("POST /api/auth/forgot-password matches the address in any case", async () => {
   await registerAndDiscardVerificationMail();
 
   const response = await forgotPassword(emailAddress.toUpperCase());
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
   await flushBackgroundWork();
-  assertEquals((await waitForMail(emailAddress)).to, emailAddress);
+  assert.equal((await waitForMail(emailAddress)).to, emailAddress);
 });
 
-Deno.test("POST /api/auth/forgot-password also takes the username", async () => {
+test("POST /api/auth/forgot-password also takes the username", async () => {
   await registerAndDiscardVerificationMail();
 
   // Whoever cannot sign in may not remember which of the two they registered with; the mail
   // still goes to the address on the account either way.
   const response = await forgotPassword(username);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
   await flushBackgroundWork();
-  assertEquals((await waitForMail(emailAddress)).to, emailAddress);
+  assert.equal((await waitForMail(emailAddress)).to, emailAddress);
 });
 
-Deno.test("POST /api/auth/forgot-password sends only one link within the cooldown", async () => {
+test("POST /api/auth/forgot-password sends only one link within the cooldown", async () => {
   await registerAndDiscardVerificationMail();
 
   await forgotPassword(emailAddress);
@@ -87,9 +89,9 @@ Deno.test("POST /api/auth/forgot-password sends only one link within the cooldow
   await waitForMail(emailAddress);
 
   const second = await forgotPassword(emailAddress);
-  assertEquals(second.status, STATUS_CODE.OK);
+  assert.equal(second.status, STATUS_CODE.OK);
 
   await flushBackgroundWork();
   // Without the cooldown, repeating this request is a way to fill somebody else's inbox.
-  assertEquals(await mailCount(), 1);
+  assert.equal(await mailCount(), 1);
 });

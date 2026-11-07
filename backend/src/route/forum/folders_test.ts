@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -14,8 +15,8 @@ import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
 const member = "forum-folders-member";
 const operator = "forum-folders-operator";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum([member, operator]);
   await deleteUsers([member, operator]);
 });
@@ -41,25 +42,25 @@ async function operatorAndMember(): Promise<[string, string]> {
   return [operatorCookie, memberCookie];
 }
 
-Deno.test("POST /api/forum/folders: an operator's alone, since the forum has no administrators", async () => {
+test("POST /api/forum/folders: an operator's alone, since the forum has no administrators", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
 
-  assertEquals(
+  assert.equal(
     (await create(memberCookie, "Mein Ordner", "write")).status,
     STATUS_CODE.Forbidden,
   );
 
   const created = await create(operatorCookie, "Forenspiele", "write");
-  assertEquals(created.status, STATUS_CODE.Created);
+  assert.equal(created.status, STATUS_CODE.Created);
 
   const folder = await created.json();
-  assertEquals(folder.title, "Forenspiele");
-  assertEquals(folder.depth, 1);
-  assertEquals(folder.effectiveMemberPermission, "write");
-  assertEquals(folder.createdByUsername, operator);
+  assert.equal(folder.title, "Forenspiele");
+  assert.equal(folder.depth, 1);
+  assert.equal(folder.effectiveMemberPermission, "write");
+  assert.equal(folder.createdByUsername, operator);
 });
 
-Deno.test("a folder cannot widen the one it is created in", async () => {
+test("a folder cannot widen the one it is created in", async () => {
   const [operatorCookie] = await operatorAndMember();
 
   const closed = await (await create(operatorCookie, "Ankündigungen", "read"))
@@ -73,12 +74,12 @@ Deno.test("a folder cannot widen the one it is created in", async () => {
 
   // Both are sent, and they differ: `write` is what was asked for and is kept, so re-opening the
   // folder above restores it; `read` is what the path answers, derived by the database.
-  assertEquals(inside.memberPermission, "write");
-  assertEquals(inside.effectiveMemberPermission, "read");
-  assertEquals(inside.depth, 2);
+  assert.equal(inside.memberPermission, "write");
+  assert.equal(inside.effectiveMemberPermission, "read");
+  assert.equal(inside.depth, 2);
 });
 
-Deno.test("a folder of a writing group is not a parent the forum will accept", async () => {
+test("a folder of a writing group is not a parent the forum will accept", async () => {
   const [operatorCookie] = await operatorAndMember();
   // Through the helper, which asserts the group was made: hand-rolling the body left `groupFolder`
   // undefined, and an undefined parent is simply absent once `JSON.stringify` has dropped it - so
@@ -90,20 +91,20 @@ Deno.test("a folder of a writing group is not a parent the forum will accept", a
     operatorCookie,
     { title: "Weltenbau" },
   )).json();
-  assertEquals(typeof groupFolder.id, "string");
+  assert.equal(typeof groupFolder.id, "string");
 
-  assertEquals(
+  assert.equal(
     (await create(operatorCookie, "Geliehen", "write", groupFolder.id)).status,
     STATUS_CODE.NotFound,
   );
 });
 
-Deno.test("PUT /api/forum/folders/{folderId}: a rename leaves the permission alone", async () => {
+test("PUT /api/forum/folders/{folderId}: a rename leaves the permission alone", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const folder = await (await create(operatorCookie, "Forenspiele", "read"))
     .json();
 
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/folders/${folder.id}`,
@@ -119,15 +120,15 @@ Deno.test("PUT /api/forum/folders/{folderId}: a rename leaves the permission alo
     operatorCookie,
     { title: "Spiele", description: "Reihum, ohne Ende." },
   );
-  assertEquals(renamed.status, STATUS_CODE.OK);
+  assert.equal(renamed.status, STATUS_CODE.OK);
 
   const updated = await renamed.json();
-  assertEquals(updated.title, "Spiele");
-  assertEquals(updated.description, "Reihum, ohne Ende.");
-  assertEquals(updated.effectiveMemberPermission, "read");
+  assert.equal(updated.title, "Spiele");
+  assert.equal(updated.description, "Reihum, ohne Ende.");
+  assert.equal(updated.effectiveMemberPermission, "read");
 });
 
-Deno.test("PUT /api/forum/folders/{folderId}/parent: a move closes what it takes with it", async () => {
+test("PUT /api/forum/folders/{folderId}/parent: a move closes what it takes with it", async () => {
   const [operatorCookie] = await operatorAndMember();
 
   const open = await (await create(operatorCookie, "Forenspiele", "write"))
@@ -147,8 +148,8 @@ Deno.test("PUT /api/forum/folders/{folderId}/parent: a move closes what it takes
     operatorCookie,
     { parentFolderId: closed.id },
   );
-  assertEquals(moved.status, STATUS_CODE.OK);
-  assertEquals((await moved.json()).effectiveMemberPermission, "read");
+  assert.equal(moved.status, STATUS_CODE.OK);
+  assert.equal((await moved.json()).effectiveMemberPermission, "read");
 
   // To the root, where its own setting answers again.
   const toRoot = await request(
@@ -157,10 +158,10 @@ Deno.test("PUT /api/forum/folders/{folderId}/parent: a move closes what it takes
     operatorCookie,
     { parentFolderId: null },
   );
-  assertEquals((await toRoot.json()).effectiveMemberPermission, "write");
+  assert.equal((await toRoot.json()).effectiveMemberPermission, "write");
 });
 
-Deno.test("a folder cannot move into something it holds", async () => {
+test("a folder cannot move into something it holds", async () => {
   const [operatorCookie] = await operatorAndMember();
   const top = await (await create(operatorCookie, "Forenspiele", "write"))
     .json();
@@ -177,11 +178,11 @@ Deno.test("a folder cannot move into something it holds", async () => {
     operatorCookie,
     { parentFolderId: inside.id },
   );
-  assertEquals(refused.status, STATUS_CODE.UnprocessableEntity);
-  assertEquals((await refused.json()).code, "folder_cycle");
+  assert.equal(refused.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await refused.json()).code, "folder_cycle");
 });
 
-Deno.test(`a folder nests at most ${MAX_FOLDER_DEPTH} levels deep`, async () => {
+test(`a folder nests at most ${MAX_FOLDER_DEPTH} levels deep`, async () => {
   const [operatorCookie] = await operatorAndMember();
 
   let parentFolderId: string | undefined = undefined;
@@ -193,7 +194,7 @@ Deno.test(`a folder nests at most ${MAX_FOLDER_DEPTH} levels deep`, async () => 
       "write",
       parentFolderId,
     );
-    assertEquals(response.status, STATUS_CODE.Created);
+    assert.equal(response.status, STATUS_CODE.Created);
     // deno-lint-ignore no-await-in-loop -- as above
     const folder = await response.json();
     parentFolderId = folder.id;
@@ -205,17 +206,17 @@ Deno.test(`a folder nests at most ${MAX_FOLDER_DEPTH} levels deep`, async () => 
     "write",
     parentFolderId,
   );
-  assertEquals(tooDeep.status, STATUS_CODE.UnprocessableEntity);
-  assertEquals((await tooDeep.json()).code, "folder_too_deep");
+  assert.equal(tooDeep.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await tooDeep.json()).code, "folder_too_deep");
 });
 
-Deno.test("DELETE /api/forum/folders/{folderId}: only an empty one goes", async () => {
+test("DELETE /api/forum/folders/{folderId}: only an empty one goes", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const folder = await (await create(operatorCookie, "Forenspiele", "write"))
     .json();
   await createForumThread("Wortkette", "write", folder.id);
 
-  assertEquals(
+  assert.equal(
     (await request(
       "DELETE",
       `/api/forum/folders/${folder.id}`,
@@ -229,18 +230,18 @@ Deno.test("DELETE /api/forum/folders/{folderId}: only an empty one goes", async 
     `/api/forum/folders/${folder.id}`,
     operatorCookie,
   );
-  assertEquals(holding.status, STATUS_CODE.Conflict);
-  assertEquals((await holding.json()).code, "folder_not_empty");
+  assert.equal(holding.status, STATUS_CODE.Conflict);
+  assert.equal((await holding.json()).code, "folder_not_empty");
 
   const empty = await (await create(operatorCookie, "Leer", "write")).json();
-  assertEquals(
+  assert.equal(
     (await request("DELETE", `/api/forum/folders/${empty.id}`, operatorCookie))
       .status,
     STATUS_CODE.OK,
   );
 
   // Gone rather than emptied: the second attempt says which.
-  assertEquals(
+  assert.equal(
     (await request("DELETE", `/api/forum/folders/${empty.id}`, operatorCookie))
       .status,
     STATUS_CODE.NotFound,

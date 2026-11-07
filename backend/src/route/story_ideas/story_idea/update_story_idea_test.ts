@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -14,24 +15,24 @@ import {
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author, bystander } = storyIdeaUsers("update");
 
-Deno.test.beforeEach(() => clearRateLimits());
-Deno.test.afterEach(() => deleteUsers([author, bystander]));
+beforeEach(() => clearRateLimits());
+afterEach(() => deleteUsers([author, bystander]));
 
-Deno.test("PATCH /api/story-ideas/{id} moves the status without touching the rest", async () => {
+test("PATCH /api/story-ideas/{id} moves the status without touching the rest", async () => {
   const cookie = await registerUser(author);
   const idea = await (await createIdea(cookie, { genres: ["fantasy"] })).json();
 
   const response = await patchIdea(cookie, idea.id, { status: "closed" });
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
   const updated = await response.json();
-  assertEquals(updated.status, "closed");
+  assert.equal(updated.status, "closed");
   // Absent means unchanged — the defaulted-PATCH trap the group update once had.
-  assertEquals(updated.genres, ["fantasy"]);
-  assertEquals(updated.language, "german");
+  assert.deepEqual(updated.genres, ["fantasy"]);
+  assert.equal(updated.language, "german");
 });
 
-Deno.test("PATCH /api/story-ideas/{id} is the author's alone", async () => {
+test("PATCH /api/story-ideas/{id} is the author's alone", async () => {
   const cookie = await registerUser(author);
   const other = await registerUser(bystander);
   const idea = await (await createIdea(cookie)).json();
@@ -39,10 +40,10 @@ Deno.test("PATCH /api/story-ideas/{id} is the author's alone", async () => {
   const response = await patchIdea(other, idea.id, { status: "closed" });
 
   // Everyone may read every idea, so 403 is honest here where a private group answers 404.
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async () => {
+test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async () => {
   const cookie = await registerUser(author);
 
   const response = await patchIdea(
@@ -51,7 +52,7 @@ Deno.test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async 
     { status: "closed" },
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
 /**
@@ -59,7 +60,7 @@ Deno.test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async 
  * genres orphans whatever subgenres are already stored. The group's update is tested for this;
  * the idea's was not, and the guard could have been dropped without a single test noticing.
  */
-Deno.test("PATCH /api/story-ideas/{ideaId} refuses genres that orphan the stored subgenres", async () => {
+test("PATCH /api/story-ideas/{ideaId} refuses genres that orphan the stored subgenres", async () => {
   const cookie = await registerUser(author);
   const idea = await (await createIdea(cookie, {
     genres: ["fantasy"],
@@ -69,17 +70,17 @@ Deno.test("PATCH /api/story-ideas/{ideaId} refuses genres that orphan the stored
   // The subgenre is not in this request at all; it is already on the row.
   const response = await patchIdea(cookie, idea.id, { genres: ["western"] });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 
   // And the idea is untouched, so the transaction rolled back rather than half-writing.
   const after =
     await (await patchIdea(cookie, idea.id, { subtitle: "unverändert" }))
       .json();
-  assertEquals(after.genres, ["fantasy"]);
-  assertEquals(after.subgenres, ["dark_fantasy"]);
+  assert.deepEqual(after.genres, ["fantasy"]);
+  assert.deepEqual(after.subgenres, ["dark_fantasy"]);
 });
 
-Deno.test("PATCH /api/story-ideas/{ideaId} takes genres and subgenres that agree", async () => {
+test("PATCH /api/story-ideas/{ideaId} takes genres and subgenres that agree", async () => {
   const cookie = await registerUser(author);
   const idea = await (await createIdea(cookie)).json();
 
@@ -88,5 +89,5 @@ Deno.test("PATCH /api/story-ideas/{ideaId} takes genres and subgenres that agree
     subgenres: ["weird_western"],
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 });

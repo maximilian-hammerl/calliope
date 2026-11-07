@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import type { User } from "@/src/service/user_service.ts";
 import {
   effectiveMemberPermission,
@@ -18,35 +19,35 @@ const member: User = {
 
 const operator: User = { ...member, platformRole: "moderator" };
 
-Deno.test("the most restrictive setting wins, whichever side it is on", () => {
-  assertEquals(mostRestrictive("write", "read"), "read");
-  assertEquals(mostRestrictive("read", "write"), "read");
-  assertEquals(mostRestrictive("read", "hidden"), "hidden");
-  assertEquals(mostRestrictive("hidden", "write"), "hidden");
-  assertEquals(mostRestrictive("write", "write"), "write");
+test("the most restrictive setting wins, whichever side it is on", () => {
+  assert.equal(mostRestrictive("write", "read"), "read");
+  assert.equal(mostRestrictive("read", "write"), "read");
+  assert.equal(mostRestrictive("read", "hidden"), "hidden");
+  assert.equal(mostRestrictive("hidden", "write"), "hidden");
+  assert.equal(mostRestrictive("write", "write"), "write");
 });
 
-Deno.test("a thread at the root is readable, not writable", () => {
+test("a thread at the root is readable, not writable", () => {
   // `write` on a leaf means "I add no restriction of my own", so at the root, with nothing above
   // to answer, the forum's constant is what does.
-  assertEquals(effectiveMemberPermission("write", null), "read");
-  assertEquals(FORUM_ROOT_PERMISSION, "read");
+  assert.equal(effectiveMemberPermission("write", null), "read");
+  assert.equal(FORUM_ROOT_PERMISSION, "read");
 });
 
-Deno.test("a leaf takes the folder's answer, and cannot widen it", () => {
-  assertEquals(effectiveMemberPermission("write", "write"), "write");
-  assertEquals(effectiveMemberPermission("write", "read"), "read");
-  assertEquals(effectiveMemberPermission("read", "write"), "read");
+test("a leaf takes the folder's answer, and cannot widen it", () => {
+  assert.equal(effectiveMemberPermission("write", "write"), "write");
+  assert.equal(effectiveMemberPermission("write", "read"), "read");
+  assert.equal(effectiveMemberPermission("read", "write"), "read");
 });
 
-Deno.test("a leaf's own `hidden` hides it inside a folder anyone may write", () => {
-  assertEquals(effectiveMemberPermission("hidden", "write"), "hidden");
-  assertEquals(mayReadForumContent(member, "hidden", "write"), false);
+test("a leaf's own `hidden` hides it inside a folder anyone may write", () => {
+  assert.equal(effectiveMemberPermission("hidden", "write"), "hidden");
+  assert.equal(mayReadForumContent(member, "hidden", "write"), false);
 });
 
-Deno.test("an operator reads everything, and is told what members get", () => {
-  assertEquals(mayReadForumContent(operator, "hidden", "hidden"), true);
-  assertEquals(
+test("an operator reads everything, and is told what members get", () => {
+  assert.equal(mayReadForumContent(operator, "hidden", "hidden"), true);
+  assert.equal(
     mayReadForumContent(
       { ...member, platformRole: "administrator" },
       "hidden",
@@ -57,18 +58,18 @@ Deno.test("an operator reads everything, and is told what members get", () => {
 
   // The value itself is the members', whoever asked: it is what tells an operator that a folder
   // is hidden from everyone else, which is the whole reason it says nothing about the reader.
-  assertEquals(effectiveMemberPermission("hidden", "hidden"), "hidden");
-  assertEquals(effectiveMemberPermission("write", "read"), "read");
+  assert.equal(effectiveMemberPermission("hidden", "hidden"), "hidden");
+  assert.equal(effectiveMemberPermission("write", "read"), "read");
 });
 
-Deno.test("administering a writing group is not being an operator", () => {
+test("administering a writing group is not being an operator", () => {
   // `platform_role` is the site's; `user_in_writing_group_role` is one group's and reaches
   // nothing here.
-  assertEquals(mayReadForumContent(member, "hidden", null), false);
+  assert.equal(mayReadForumContent(member, "hidden", null), false);
 });
 
-Deno.test("reading is refused only by `hidden`", () => {
-  assertEquals(mayReadForumContent(member, "read", null), true);
-  assertEquals(mayReadForumContent(member, "write", "read"), true);
-  assertEquals(mayReadForumContent(member, "read", "hidden"), false);
+test("reading is refused only by `hidden`", () => {
+  assert.equal(mayReadForumContent(member, "read", null), true);
+  assert.equal(mayReadForumContent(member, "write", "read"), true);
+  assert.equal(mayReadForumContent(member, "read", "hidden"), false);
 });

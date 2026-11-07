@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertFalse } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
@@ -22,8 +23,8 @@ const outsider = "search-outsider";
 
 const TERM = "nachtmarkt";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum([owner, outsider]);
   await deleteUsers([owner, outsider]);
 });
@@ -41,7 +42,7 @@ type SearchResults = {
 
 async function search(cookie: string, body: unknown): Promise<SearchResults> {
   const response = await request("QUERY", "/api/search", cookie, body);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   return await response.json();
 }
 
@@ -52,7 +53,7 @@ async function thread(cookie: string, groupId: string, title: string) {
     cookie,
     { title },
   );
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
 
@@ -73,7 +74,7 @@ function totals(found: SearchResults) {
 const titles = (section: Section) =>
   section.results.map((result) => result.title);
 
-Deno.test("QUERY /api/search finds each kind in one request", async () => {
+test("QUERY /api/search finds each kind in one request", async () => {
   const cookie = await registerUser(owner);
   const before = totals(await search(cookie, { search: TERM }));
 
@@ -82,15 +83,15 @@ Deno.test("QUERY /api/search finds each kind in one request", async () => {
 
   const found = await search(cookie, { search: TERM });
 
-  assertEquals(found.groups.totalResults, before.groups + 1);
-  assertEquals(found.threads.totalResults, before.threads + 1);
+  assert.equal(found.groups.totalResults, before.groups + 1);
+  assert.equal(found.threads.totalResults, before.threads + 1);
   assert(titles(found.groups).includes(`${TERM} Gruppe`));
   assert(titles(found.threads).includes(`${TERM} Thread`));
   // The searcher's own name does not contain the term, so no member matched it.
-  assertEquals(found.users.totalResults, before.users);
+  assert.equal(found.users.totalResults, before.users);
 });
 
-Deno.test("QUERY /api/search says which group a thread came from", async () => {
+test("QUERY /api/search says which group a thread came from", async () => {
   const cookie = await registerUser(owner);
   const group = await createGroup(cookie, `${TERM} Gruppe`);
   await thread(cookie, group.id, `${TERM} Thread`);
@@ -101,10 +102,10 @@ Deno.test("QUERY /api/search says which group a thread came from", async () => {
   );
 
   // A result that can come from anywhere has to say where it came from.
-  assertEquals(foundThread?.writingGroupTitle, `${TERM} Gruppe`);
+  assert.equal(foundThread?.writingGroupTitle, `${TERM} Gruppe`);
 });
 
-Deno.test("QUERY /api/search hides threads in a private group you are not in", async () => {
+test("QUERY /api/search hides threads in a private group you are not in", async () => {
   const ownerCookie = await registerUser(owner);
   const outsiderCookie = await registerUser(outsider);
   const before = totals(await search(outsiderCookie, { search: TERM }));
@@ -117,10 +118,13 @@ Deno.test("QUERY /api/search hides threads in a private group you are not in", a
   await thread(ownerCookie, privateGroup.id, `${TERM} Geheim`);
 
   // Nothing the outsider can see changed, because none of it is theirs to see.
-  assertEquals(totals(await search(outsiderCookie, { search: TERM })), before);
+  assert.deepEqual(
+    totals(await search(outsiderCookie, { search: TERM })),
+    before,
+  );
 });
 
-Deno.test("QUERY /api/search finds threads in a public group you have not joined", async () => {
+test("QUERY /api/search finds threads in a public group you have not joined", async () => {
   const ownerCookie = await registerUser(owner);
   const outsiderCookie = await registerUser(outsider);
   const before = totals(await search(outsiderCookie, { search: TERM }));
@@ -134,11 +138,11 @@ Deno.test("QUERY /api/search finds threads in a public group you have not joined
   );
 
   // The same rule the group list uses, applied one level down.
-  assertEquals(found.threads.totalResults, before.threads + 1);
-  assertEquals(foundThread?.writingGroupTitle, `${TERM} Offen`);
+  assert.equal(found.threads.totalResults, before.threads + 1);
+  assert.equal(foundThread?.writingGroupTitle, `${TERM} Offen`);
 });
 
-Deno.test("QUERY /api/search reports how many more there are", async () => {
+test("QUERY /api/search reports how many more there are", async () => {
   const cookie = await registerUser(owner);
   const before = totals(await search(cookie, { search: TERM }));
 
@@ -150,11 +154,11 @@ Deno.test("QUERY /api/search reports how many more there are", async () => {
   const found = await search(cookie, { search: TERM, limit: 5 });
 
   // Five shown however many were found: the interface says „N weitere" from the difference.
-  assertEquals(found.groups.results.length, 5);
-  assertEquals(found.groups.totalResults, before.groups + 7);
+  assert.equal(found.groups.results.length, 5);
+  assert.equal(found.groups.totalResults, before.groups + 7);
 });
 
-Deno.test("QUERY /api/search finds story ideas, the reader's own included", async () => {
+test("QUERY /api/search finds story ideas, the reader's own included", async () => {
   const cookie = await registerUser(owner);
   const before = totals(await search(cookie, { search: TERM }));
 
@@ -164,11 +168,11 @@ Deno.test("QUERY /api/search finds story ideas, the reader's own included", asyn
 
   // The board deliberately never shows an author their own ideas; searching for one you wrote
   // has to find it, or the field cannot answer "where is that idea I had".
-  assertEquals(found.storyIdeas.totalResults, before.storyIdeas + 1);
+  assert.equal(found.storyIdeas.totalResults, before.storyIdeas + 1);
   assert(titles(found.storyIdeas).includes(`${TERM} Idee`));
 });
 
-Deno.test("QUERY /api/search finds a closed story idea", async () => {
+test("QUERY /api/search finds a closed story idea", async () => {
   const cookie = await registerUser(owner);
   const before = totals(await search(cookie, { search: TERM }));
 
@@ -179,36 +183,36 @@ Deno.test("QUERY /api/search finds a closed story idea", async () => {
 
   // Closed on the board means "stops cluttering it", not "cannot be found": the page is still
   // readable, and the interface labels the result.
-  assertEquals(found.storyIdeas.totalResults, before.storyIdeas + 1);
+  assert.equal(found.storyIdeas.totalResults, before.storyIdeas + 1);
   assert(titles(found.storyIdeas).includes(`${TERM} Zu`));
 });
 
-Deno.test("QUERY /api/search finds members by name", async () => {
+test("QUERY /api/search finds members by name", async () => {
   const cookie = await registerUser(owner);
   const before = totals(await search(cookie, { search: "search-outsi" }));
 
   await registerUser(outsider);
 
   const found = await search(cookie, { search: "search-outsi" });
-  assertEquals(found.users.totalResults, before.users + 1);
+  assert.equal(found.users.totalResults, before.users + 1);
   assert(found.users.results.some((result) => result.username === outsider));
 });
 
-Deno.test("QUERY /api/search refuses a term shorter than three characters", async () => {
+test("QUERY /api/search refuses a term shorter than three characters", async () => {
   const cookie = await registerUser(owner);
 
   const response = await request("QUERY", "/api/search", cookie, {
     search: "na",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });
 
-Deno.test("QUERY /api/search needs a session", async () => {
+test("QUERY /api/search needs a session", async () => {
   const response = await request("QUERY", "/api/search", "", { search: TERM });
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertFalse(response.headers.has("set-cookie"));
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.ok(!response.headers.has("set-cookie"));
 });
 
 async function page(
@@ -226,11 +230,11 @@ async function page(
       document: plainTextToDocument(text),
     },
   );
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
 
-Deno.test("a page is found by its title and by its prose", async () => {
+test("a page is found by its title and by its prose", async () => {
   const cookie = await registerUser(owner);
   const group = await createGroup(cookie, "Suchgruppe", "public");
 
@@ -241,22 +245,22 @@ Deno.test("a page is found by its title and by its prose", async () => {
 
   // Both: a title match and a body match. The body is the whole point — a page is the one leaf
   // that can match on something its own row does not show.
-  assertEquals(found.pages.totalResults, 2);
-  assertEquals(titles(found.pages).includes(`Der ${TERM}`), true);
-  assertEquals(titles(found.pages).includes("Ein anderer Ort"), true);
+  assert.equal(found.pages.totalResults, 2);
+  assert.equal(titles(found.pages).includes(`Der ${TERM}`), true);
+  assert.equal(titles(found.pages).includes("Ein anderer Ort"), true);
 });
 
-Deno.test("a page in a private group is not found by an outsider", async () => {
+test("a page in a private group is not found by an outsider", async () => {
   const cookie = await registerUser(owner);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(cookie, "Geheim", "private");
   await page(cookie, group.id, `Der ${TERM}`, `Und der ${TERM} noch einmal.`);
 
-  assertEquals(
+  assert.equal(
     (await search(outsiderCookie, { search: TERM })).pages.totalResults,
     0,
   );
-  assertEquals((await search(cookie, { search: TERM })).pages.totalResults, 1);
+  assert.equal((await search(cookie, { search: TERM })).pages.totalResults, 1);
 });
 
 /**
@@ -264,7 +268,7 @@ Deno.test("a page in a private group is not found by an outsider", async () => {
  * slots would be shared, and a busy forum could take all of them — which is what these two assert
  * cannot happen: the same term matches in both scopes, and each section answers with its own.
  */
-Deno.test("QUERY /api/search keeps the forum's threads and pages in their own sections", async () => {
+test("QUERY /api/search keeps the forum's threads and pages in their own sections", async () => {
   const cookie = await registerUser(owner);
   const group = await createGroup(cookie, `Gruppe ${TERM}`);
   await thread(cookie, group.id, `Thema ${TERM}`);
@@ -280,20 +284,20 @@ Deno.test("QUERY /api/search keeps the forum's threads and pages in their own se
 
   const found = await search(cookie, { search: TERM });
 
-  assertEquals(titles(found.threads), [`Thema ${TERM}`]);
-  assertEquals(titles(found.forumThreads), [`Forumsthema ${TERM}`]);
-  assertEquals(titles(found.forumPages), [`Forumsseite ${TERM}`]);
+  assert.deepEqual(titles(found.threads), [`Thema ${TERM}`]);
+  assert.deepEqual(titles(found.forumThreads), [`Forumsthema ${TERM}`]);
+  assert.deepEqual(titles(found.forumPages), [`Forumsseite ${TERM}`]);
 
   // Its own total, which is what „und N weitere" reads: three left joins per query, and a count
   // that multiplied over any of them would report more than the section holds.
-  assertEquals(found.forumThreads.totalResults, 1);
-  assertEquals(found.forumPages.totalResults, 1);
+  assert.equal(found.forumThreads.totalResults, 1);
+  assert.equal(found.forumPages.totalResults, 1);
   // The group's sections carry the group's rows and nothing else, which is the whole point of
   // keeping them apart.
-  assertEquals(titles(found.pages), []);
+  assert.deepEqual(titles(found.pages), []);
 });
 
-Deno.test("QUERY /api/search matches a forum page's prose, not only its title", async () => {
+test("QUERY /api/search matches a forum page's prose, not only its title", async () => {
   const cookie = await registerUser(owner);
   const folder = await createForumFolder("Ankündigungen", "read");
   await createForumPage(
@@ -305,10 +309,10 @@ Deno.test("QUERY /api/search matches a forum page's prose, not only its title", 
 
   const found = await search(cookie, { search: TERM });
 
-  assertEquals(titles(found.forumPages), ["Regeln"]);
+  assert.deepEqual(titles(found.forumPages), ["Regeln"]);
 });
 
-Deno.test("QUERY /api/search hides what the forum hides, and shows an operator more", async () => {
+test("QUERY /api/search hides what the forum hides, and shows an operator more", async () => {
   const memberCookie = await registerUser(owner);
   const operatorCookie = await makeOperator(
     outsider,
@@ -320,7 +324,7 @@ Deno.test("QUERY /api/search hides what the forum hides, and shows an operator m
 
   // The same filter the tree applies, inherited rather than restated - so search cannot come to
   // disagree with it about what a member may see.
-  assertEquals(
+  assert.deepEqual(
     titles(
       await search(memberCookie, { search: TERM }).then((f) => f.forumThreads),
     ),
@@ -328,7 +332,7 @@ Deno.test("QUERY /api/search hides what the forum hides, and shows an operator m
   );
 
   // An operator sees it here for the same reason they see it in the tree (#21).
-  assertEquals(
+  assert.deepEqual(
     titles(
       await search(operatorCookie, { search: TERM }).then((f) =>
         f.forumThreads

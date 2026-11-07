@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   addChatMember,
   cleanUp,
@@ -10,8 +11,8 @@ import {
   insertUser,
 } from "./support.ts";
 
-Deno.test.beforeEach(connect);
-Deno.test.afterEach(cleanUp);
+beforeEach(connect);
+afterEach(cleanUp);
 
 async function chat(
   name: string,
@@ -41,7 +42,7 @@ async function lastActivityOfChat(chatGroupId: string): Promise<number> {
   return firstRow(rows).last_activity_at;
 }
 
-Deno.test("an invitation records when it was sent, and nothing else", async () => {
+test("an invitation records when it was sent, and nothing else", async () => {
   const userId = await insertUser("chat-invited");
   const chatGroupId = await insertChatGroup("chat-invited-chat");
 
@@ -55,10 +56,10 @@ Deno.test("an invitation records when it was sent, and nothing else", async () =
     [chatGroupId, userId],
   );
   assert(firstRow(rows).invited_at !== null);
-  assertEquals(firstRow(rows).joined_at, null, "nobody has accepted yet");
+  assert.equal(firstRow(rows).joined_at, null, "nobody has accepted yet");
 });
 
-Deno.test("accepting an invitation records when it was accepted", async () => {
+test("accepting an invitation records when it was accepted", async () => {
   const userId = await insertUser("chat-accept");
   const chatGroupId = await insertChatGroup("chat-accept-chat");
   await addChatMember(chatGroupId, userId, "invited");
@@ -77,7 +78,7 @@ Deno.test("accepting an invitation records when it was accepted", async () => {
   assert(firstRow(rows).joined_at !== null);
 });
 
-Deno.test("a message moves the chat's last activity", async () => {
+test("a message moves the chat's last activity", async () => {
   const { memberId, chatGroupId } = await chat("chat-activity");
   const before = await lastActivityOfChat(chatGroupId);
 
@@ -86,7 +87,7 @@ Deno.test("a message moves the chat's last activity", async () => {
   assert(await lastActivityOfChat(chatGroupId) > before);
 });
 
-Deno.test("the chat goes when the last member leaves, not before", async () => {
+test("the chat goes when the last member leaves, not before", async () => {
   const { memberId, otherId, chatGroupId } = await chat("chat-empty");
   await insertChatMessage(chatGroupId, memberId);
 
@@ -94,7 +95,7 @@ Deno.test("the chat goes when the last member leaves, not before", async () => {
     `DELETE FROM public.user_in_chat_group WHERE chat_group_id = $1 AND user_id = $2`,
     [chatGroupId, memberId],
   );
-  assertEquals(
+  assert.equal(
     await countChatGroups(chatGroupId),
     1,
     "one member is still in it",
@@ -104,10 +105,10 @@ Deno.test("the chat goes when the last member leaves, not before", async () => {
     `DELETE FROM public.user_in_chat_group WHERE chat_group_id = $1 AND user_id = $2`,
     [chatGroupId, otherId],
   );
-  assertEquals(await countChatGroups(chatGroupId), 0);
+  assert.equal(await countChatGroups(chatGroupId), 0);
 });
 
-Deno.test("messages go with the chat, and survive their author", async () => {
+test("messages go with the chat, and survive their author", async () => {
   const { memberId, chatGroupId } = await chat("chat-cascade");
   await insertChatMessage(chatGroupId, memberId);
 
@@ -121,11 +122,11 @@ Deno.test("messages go with the chat, and survive their author", async () => {
      FROM public.chat_message WHERE chat_group_id = $1`,
     [chatGroupId],
   );
-  assertEquals(Number(firstRow(rows).count), 1);
-  assertEquals(firstRow(rows).created_by, null);
+  assert.equal(Number(firstRow(rows).count), 1);
+  assert.equal(firstRow(rows).created_by, null);
 });
 
-Deno.test("a chat notification does not outlive the membership", async () => {
+test("a chat notification does not outlive the membership", async () => {
   const { memberId, otherId, chatGroupId } = await chat("chat-notification");
 
   await client.query(
@@ -143,36 +144,28 @@ Deno.test("a chat notification does not outlive the membership", async () => {
     `SELECT count(*) FROM public.notification WHERE recipient_id = $1`,
     [memberId],
   );
-  assertEquals(Number(firstRow(rows).count), 0);
+  assert.equal(Number(firstRow(rows).count), 0);
 });
 
-Deno.test("a notification carries one group, never both and never neither", async () => {
+test("a notification carries one group, never both and never neither", async () => {
   const { memberId, otherId, chatGroupId } = await chat("chat-one-group");
   const writingGroupId = await insertChatGroup("chat-one-group-decoy");
 
   // Neither.
-  await assertRejects(
-    () =>
-      client.query(
-        `INSERT INTO public.notification (recipient_id, type, actor_id)
+  await assert.rejects(() =>
+    client.query(
+      `INSERT INTO public.notification (recipient_id, type, actor_id)
          VALUES ($1, 'invited_to_chat_group', $2)`,
-        [memberId, otherId],
-      ),
-    Error,
-    "notification_subject_matches_type",
-  );
+      [memberId, otherId],
+    ), { message: /notification_subject_matches_type/u });
 
   // A chat invitation pointing at a writing group.
-  await assertRejects(
-    () =>
-      client.query(
-        `INSERT INTO public.notification (recipient_id, writing_group_id, type, actor_id)
+  await assert.rejects(() =>
+    client.query(
+      `INSERT INTO public.notification (recipient_id, writing_group_id, type, actor_id)
          VALUES ($1, $2, 'invited_to_chat_group', $3)`,
-        [memberId, writingGroupId, otherId],
-      ),
-    Error,
-    "notification",
-  );
+      [memberId, writingGroupId, otherId],
+    ), { message: /notification/u });
 
   // And the right one is accepted.
   await client.query(

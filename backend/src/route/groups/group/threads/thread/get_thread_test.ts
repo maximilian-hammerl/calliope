@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -13,8 +14,8 @@ const administrator = "get-thread-admin";
 const reader = "get-thread-reader";
 const outsider = "get-thread-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, reader, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, reader, outsider]));
 
 async function groupWithThread() {
   const adminCookie = await registerUser(administrator);
@@ -29,7 +30,7 @@ async function groupWithThread() {
   return { adminCookie, group, thread };
 }
 
-Deno.test("GET /api/groups/{groupId}/threads/{threadId} returns the thread to a reader", async () => {
+test("GET /api/groups/{groupId}/threads/{threadId} returns the thread to a reader", async () => {
   const { adminCookie, group, thread } = await groupWithThread();
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
@@ -39,11 +40,11 @@ Deno.test("GET /api/groups/{groupId}/threads/{threadId} returns the thread to a 
     readerCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).id, thread.id);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).id, thread.id);
 });
 
-Deno.test("GET /api/groups/{groupId}/threads/{threadId} hides the thread from a non-member", async () => {
+test("GET /api/groups/{groupId}/threads/{threadId} hides the thread from a non-member", async () => {
   const { group, thread } = await groupWithThread();
   const outsiderCookie = await registerUser(outsider);
 
@@ -53,5 +54,5 @@ Deno.test("GET /api/groups/{groupId}/threads/{threadId} hides the thread from a 
     outsiderCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });

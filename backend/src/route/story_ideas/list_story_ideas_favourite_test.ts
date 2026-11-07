@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { clearRateLimits, registerUser } from "@/src/test/support.ts";
 import { createIdea, listIdeas } from "@/src/test/story_ideas.ts";
 import {
@@ -14,9 +15,9 @@ import {
  */
 const { owner, member } = favouriteFixture("ideas");
 
-Deno.test.beforeEach(clearRateLimits);
+beforeEach(clearRateLimits);
 
-Deno.test.afterEach(() => cleanUpFavourites([owner, member]));
+afterEach(() => cleanUpFavourites([owner, member]));
 
 type Row = { id: string; title: string; isFavourite: boolean };
 
@@ -40,7 +41,7 @@ async function twoIdeas(cookie: string) {
   return { first, second };
 }
 
-Deno.test("an idea's favourite is the reader's own", async () => {
+test("an idea's favourite is the reader's own", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first } = await twoIdeas(ownerCookie);
@@ -48,13 +49,13 @@ Deno.test("an idea's favourite is the reader's own", async () => {
   await setFavourite(memberCookie, "story_idea", first.id);
 
   const theirs = await rowsFor(ownerCookie, { author: "mine" });
-  assertEquals(theirs.find((row) => row.id === first.id)?.isFavourite, false);
+  assert.equal(theirs.find((row) => row.id === first.id)?.isFavourite, false);
 
   const mine = await rowsFor(memberCookie, { author: "others" });
-  assertEquals(mine.find((row) => row.id === first.id)?.isFavourite, true);
+  assert.equal(mine.find((row) => row.id === first.id)?.isFavourite, true);
 });
 
-Deno.test("the board puts a favourite first, and narrows to it", async () => {
+test("the board puts a favourite first, and narrows to it", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first } = await twoIdeas(ownerCookie);
@@ -75,12 +76,12 @@ Deno.test("the board puts a favourite first, and narrows to it", async () => {
     sortAttribute: "createdAt",
     sortOrder: "desc",
   });
-  assertEquals(after[0]?.id, first.id);
+  assert.equal(after[0]?.id, first.id);
 
   const only = await rowsFor(memberCookie, {
     author: "others",
     favourite: "only",
   });
   assert(only.every((row) => row.isFavourite));
-  assertEquals(only.map((row) => row.id), [first.id]);
+  assert.deepEqual(only.map((row) => row.id), [first.id]);
 });

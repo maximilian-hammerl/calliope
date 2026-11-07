@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -14,8 +15,8 @@ const administrator = "get-post-admin";
 const writer = "get-post-writer";
 const outsider = "get-post-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, writer, outsider]));
 
 async function postsByWriter(visibility: "private" | "public" = "private") {
   const adminCookie = await registerUser(administrator);
@@ -46,7 +47,7 @@ async function postsByWriter(visibility: "private" | "public" = "private") {
   return { adminCookie, writerCookie, posts, published, draft };
 }
 
-Deno.test("GET …/posts/{postId} returns a published post to another member", async () => {
+test("GET …/posts/{postId} returns a published post to another member", async () => {
   const { adminCookie, posts, published } = await postsByWriter();
 
   const response = await request(
@@ -55,24 +56,24 @@ Deno.test("GET …/posts/{postId} returns a published post to another member", a
     adminCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).text, "Veröffentlicht");
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).text, "Veröffentlicht");
 });
 
-Deno.test("GET …/posts/{postId} reports another member's draft as missing", async () => {
+test("GET …/posts/{postId} reports another member's draft as missing", async () => {
   const { adminCookie, writerCookie, posts, draft } = await postsByWriter();
 
   // Its author can still read it.
-  assertEquals(
+  assert.equal(
     (await request("GET", `${posts}/${draft.id}`, writerCookie)).status,
     STATUS_CODE.OK,
   );
 
   const response = await request("GET", `${posts}/${draft.id}`, adminCookie);
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("GET …/posts/{postId} lets anyone signed in read a public group's post", async () => {
+test("GET …/posts/{postId} lets anyone signed in read a public group's post", async () => {
   const { posts, published } = await postsByWriter("public");
   const outsiderCookie = await registerUser(outsider);
 
@@ -82,19 +83,19 @@ Deno.test("GET …/posts/{postId} lets anyone signed in read a public group's po
     outsiderCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).text, "Veröffentlicht");
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).text, "Veröffentlicht");
 });
 
-Deno.test("GET …/posts/{postId} keeps a public group's draft with its author", async () => {
+test("GET …/posts/{postId} keeps a public group's draft with its author", async () => {
   const { posts, draft } = await postsByWriter("public");
   const outsiderCookie = await registerUser(outsider);
 
   const response = await request("GET", `${posts}/${draft.id}`, outsiderCookie);
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("GET …/posts/{postId} hides a private group's post from a non-member", async () => {
+test("GET …/posts/{postId} hides a private group's post from a non-member", async () => {
   const { posts, published } = await postsByWriter();
   const outsiderCookie = await registerUser(outsider);
 
@@ -103,5 +104,5 @@ Deno.test("GET …/posts/{postId} hides a private group's post from a non-member
     `${posts}/${published.id}`,
     outsiderCookie,
   );
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });

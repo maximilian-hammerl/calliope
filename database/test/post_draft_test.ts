@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
@@ -11,8 +12,8 @@ import {
   lastActivityOf,
 } from "./support.ts";
 
-Deno.test.beforeEach(connect);
-Deno.test.afterEach(cleanUp);
+beforeEach(connect);
+afterEach(cleanUp);
 
 /** A member, their group and a thread in it: the setting every test here needs. */
 async function scenario(
@@ -25,7 +26,7 @@ async function scenario(
   return { userId, groupId, threadId };
 }
 
-Deno.test("writing a draft leaves the thread and its group untouched", async () => {
+test("writing a draft leaves the thread and its group untouched", async () => {
   const { userId, groupId, threadId } = await scenario("draft-quiet");
 
   const threadBefore = await lastActivityOf("writing_thread", threadId);
@@ -36,12 +37,12 @@ Deno.test("writing a draft leaves the thread and its group untouched", async () 
     authorId: userId,
   });
 
-  assertEquals(
+  assert.equal(
     await lastActivityOf("writing_thread", threadId),
     threadBefore,
     "a draft nobody can see must not make the thread look active",
   );
-  assertEquals(
+  assert.equal(
     await lastActivityOf("writing_group", groupId),
     groupBefore,
     "and it must not reach the group either",
@@ -53,14 +54,14 @@ Deno.test("writing a draft leaves the thread and its group untouched", async () 
     [postId],
   );
 
-  assertEquals(
+  assert.equal(
     await lastActivityOf("writing_thread", threadId),
     threadBefore,
     "editing a draft is still writing a draft",
   );
 });
 
-Deno.test("publishing a draft moves the thread and its group", async () => {
+test("publishing a draft moves the thread and its group", async () => {
   const { userId, groupId, threadId } = await scenario("draft-publish");
   const postId = await insertPost(threadId, {
     isDraft: true,
@@ -85,7 +86,7 @@ Deno.test("publishing a draft moves the thread and its group", async () => {
   );
 });
 
-Deno.test("discarding a draft leaves the thread untouched", async () => {
+test("discarding a draft leaves the thread untouched", async () => {
   const { userId, threadId } = await scenario("draft-discard");
   const postId = await insertPost(threadId, {
     isDraft: true,
@@ -95,10 +96,10 @@ Deno.test("discarding a draft leaves the thread untouched", async () => {
   const before = await lastActivityOf("writing_thread", threadId);
   await client.query(`DELETE FROM public.writing_post WHERE id = $1`, [postId]);
 
-  assertEquals(await lastActivityOf("writing_thread", threadId), before);
+  assert.equal(await lastActivityOf("writing_thread", threadId), before);
 });
 
-Deno.test("deleting a published post still moves the thread", async () => {
+test("deleting a published post still moves the thread", async () => {
   const { userId, threadId } = await scenario("draft-delete-published");
   const postId = await insertPost(threadId, { authorId: userId });
 
@@ -111,18 +112,17 @@ Deno.test("deleting a published post still moves the thread", async () => {
   );
 });
 
-Deno.test("a member has at most one draft per thread", async () => {
+test("a member has at most one draft per thread", async () => {
   const { userId, threadId } = await scenario("draft-unique");
   await insertPost(threadId, { isDraft: true, authorId: userId });
 
-  await assertRejects(
+  await assert.rejects(
     () => insertPost(threadId, { isDraft: true, authorId: userId }),
-    Error,
-    "writing_post_one_draft_per_author",
+    { message: /writing_post_one_draft_per_author/u },
   );
 });
 
-Deno.test("the one-draft rule is per member and per thread", async () => {
+test("the one-draft rule is per member and per thread", async () => {
   const { userId, groupId, threadId } = await scenario("draft-scope");
   const otherThreadId = await insertThread(groupId, "Kapitel 2", userId);
   const otherUserId = await insertUser("draft-scope-second");
@@ -135,7 +135,7 @@ Deno.test("the one-draft rule is per member and per thread", async () => {
   await insertPost(threadId, { isDraft: true, authorId: otherUserId });
 });
 
-Deno.test("published posts are not subject to the one-draft rule", async () => {
+test("published posts are not subject to the one-draft rule", async () => {
   const { userId, threadId } = await scenario("draft-published-many");
 
   await insertPost(threadId, { authorId: userId });

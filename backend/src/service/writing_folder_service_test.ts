@@ -1,5 +1,6 @@
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { type FolderId, type GroupId, mint } from "@/src/scope/scoped_id.ts";
-import { assertEquals, assertExists } from "@std/assert";
 import { plainTextToDocument } from "@/src/document/document_text.ts";
 import {
   clearRateLimits,
@@ -19,8 +20,8 @@ import {
 const OWNER = "folder-service-owner";
 const USERNAMES = [OWNER];
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers(USERNAMES));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers(USERNAMES));
 
 async function aGroup() {
   const cookie = await registerUser(OWNER);
@@ -46,25 +47,25 @@ async function make(
       parentFolderId,
     }, ownerId)
   );
-  assertEquals(outcome.kind, "created");
+  assert.equal(outcome.kind, "created");
   if (outcome.kind !== "created") throw new Error("unreachable");
   return { ...outcome.folder, id: mint<FolderId>(outcome.folder.id) };
 }
 
-Deno.test("a root folder is depth 1 and a child counts up from its parent", async () => {
+test("a root folder is depth 1 and a child counts up from its parent", async () => {
   const { groupId, ownerId } = await aGroup();
 
   const root = await make(groupId, ownerId, "Weltenbau");
   const child = await make(groupId, ownerId, "Stadt A", root.id);
 
-  assertEquals(root.depth, 1);
-  assertEquals(root.parentFolderId, null);
-  assertEquals(child.depth, 2);
-  assertEquals(child.parentFolderId, root.id);
-  assertEquals(root.createdByUsername, OWNER);
+  assert.equal(root.depth, 1);
+  assert.equal(root.parentFolderId, null);
+  assert.equal(child.depth, 2);
+  assert.equal(child.parentFolderId, root.id);
+  assert.equal(root.createdByUsername, OWNER);
 });
 
-Deno.test("nesting stops at the maximum depth", async () => {
+test("nesting stops at the maximum depth", async () => {
   const { groupId, ownerId } = await aGroup();
 
   // One chain down to the deepest level the member is allowed.
@@ -73,7 +74,7 @@ Deno.test("nesting stops at the maximum depth", async () => {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose: each level needs the one above
     deepest = await make(groupId, ownerId, `Ebene ${level}`, deepest.id);
   }
-  assertEquals(deepest.depth, MAX_FOLDER_DEPTH);
+  assert.equal(deepest.depth, MAX_FOLDER_DEPTH);
 
   const refused = await write((transaction) =>
     WritingFolderService.insertFolder(
@@ -83,10 +84,10 @@ Deno.test("nesting stops at the maximum depth", async () => {
       ownerId,
     )
   );
-  assertEquals(refused.kind, "tooDeep");
+  assert.equal(refused.kind, "tooDeep");
 });
 
-Deno.test("a parent in another group is not a parent", async () => {
+test("a parent in another group is not a parent", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
   const theirs = await make(mint(elsewhere.id), ownerId, "Fremder Ordner");
@@ -99,10 +100,10 @@ Deno.test("a parent in another group is not a parent", async () => {
       ownerId,
     )
   );
-  assertEquals(refused.kind, "noSuchParent");
+  assert.equal(refused.kind, "noSuchParent");
 });
 
-Deno.test("folders are listed in creation order, scoped to their group", async () => {
+test("folders are listed in creation order, scoped to their group", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
 
@@ -111,10 +112,10 @@ Deno.test("folders are listed in creation order, scoped to their group", async (
   await make(mint(elsewhere.id), ownerId, "Woanders");
 
   const folders = await WritingFolderService.listFolders(groupId);
-  assertEquals(folders.map((folder) => folder.id), [first.id, second.id]);
+  assert.deepEqual(folders.map((folder) => folder.id), [first.id, second.id]);
 });
 
-Deno.test("a title and a description can be changed", async () => {
+test("a title and a description can be changed", async () => {
   const { groupId, ownerId } = await aGroup();
   const folder = await make(groupId, ownerId, "Weltenbau");
 
@@ -130,42 +131,42 @@ Deno.test("a title and a description can be changed", async () => {
     )
   );
 
-  assertEquals(updated?.title, "Welt");
-  assertEquals(updated?.description, "Was in der Welt gilt.");
-  assertEquals(updated?.depth, 1);
+  assert.equal(updated?.title, "Welt");
+  assert.equal(updated?.description, "Was in der Welt gilt.");
+  assert.equal(updated?.depth, 1);
 });
 
-Deno.test("an empty folder is deleted", async () => {
+test("an empty folder is deleted", async () => {
   const { groupId, ownerId } = await aGroup();
   const folder = await make(groupId, ownerId, "Leer");
 
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(transaction, groupId, folder.id)
     ),
     "deleted",
   );
-  assertEquals(
+  assert.equal(
     await WritingFolderService.selectFolder(groupId, folder.id),
     undefined,
   );
 });
 
-Deno.test("a folder holding another folder is refused", async () => {
+test("a folder holding another folder is refused", async () => {
   const { groupId, ownerId } = await aGroup();
   const root = await make(groupId, ownerId, "Weltenbau");
   await make(groupId, ownerId, "Stadt A", root.id);
 
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(transaction, groupId, root.id)
     ),
     "notEmpty",
   );
-  assertExists(await WritingFolderService.selectFolder(groupId, root.id));
+  assert.ok(await WritingFolderService.selectFolder(groupId, root.id));
 });
 
-Deno.test("a folder holding a page is refused", async () => {
+test("a folder holding a page is refused", async () => {
   const { groupId, ownerId } = await aGroup();
   const folder = await make(groupId, ownerId, "Weltenbau");
   await write((transaction) =>
@@ -179,7 +180,7 @@ Deno.test("a folder holding a page is refused", async () => {
     )
   );
 
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(transaction, groupId, folder.id)
     ),
@@ -187,7 +188,7 @@ Deno.test("a folder holding a page is refused", async () => {
   );
 });
 
-Deno.test("a folder holding a thread is refused", async () => {
+test("a folder holding a thread is refused", async () => {
   const { groupId, ownerId } = await aGroup();
   const folder = await make(groupId, ownerId, "Weltenbau");
   await write((transaction) =>
@@ -202,7 +203,7 @@ Deno.test("a folder holding a thread is refused", async () => {
       .execute()
   );
 
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(transaction, groupId, folder.id)
     ),
@@ -223,7 +224,7 @@ async function chain(groupId: GroupId, ownerId: string, titles: string[]) {
   return made;
 }
 
-Deno.test("moving a folder takes its subtree and rewrites every depth", async () => {
+test("moving a folder takes its subtree and rewrites every depth", async () => {
   const { groupId, ownerId } = await aGroup();
   const [weltenbau, stadt, viertel] = await chain(groupId, ownerId, [
     "Weltenbau",
@@ -231,39 +232,39 @@ Deno.test("moving a folder takes its subtree and rewrites every depth", async ()
     "Viertel",
   ]);
   const figuren = await make(groupId, ownerId, "Figuren");
-  assertExists(weltenbau);
-  assertExists(stadt);
-  assertExists(viertel);
+  assert.ok(weltenbau);
+  assert.ok(stadt);
+  assert.ok(viertel);
 
   // Stadt A carries Viertel with it, from depth 2 to depth 2 under Figuren — no change for
   // Stadt A itself, so the test moves it somewhere that does change the depths.
   const outcome = await write((transaction) =>
     WritingFolderService.moveFolder(transaction, groupId, stadt.id, figuren.id)
   );
-  assertEquals(outcome?.kind, "moved");
+  assert.equal(outcome?.kind, "moved");
 
   const byTitle = new Map(
     (await WritingFolderService.listFolders(groupId)).map((f) => [f.title, f]),
   );
-  assertEquals(byTitle.get("Stadt A")?.parentFolderId, figuren.id);
-  assertEquals(byTitle.get("Stadt A")?.depth, 2);
+  assert.equal(byTitle.get("Stadt A")?.parentFolderId, figuren.id);
+  assert.equal(byTitle.get("Stadt A")?.depth, 2);
   // The descendant moved with it and kept its distance.
-  assertEquals(byTitle.get("Viertel")?.parentFolderId, stadt.id);
-  assertEquals(byTitle.get("Viertel")?.depth, 3);
-  assertEquals(byTitle.get("Weltenbau")?.depth, 1);
+  assert.equal(byTitle.get("Viertel")?.parentFolderId, stadt.id);
+  assert.equal(byTitle.get("Viertel")?.depth, 3);
+  assert.equal(byTitle.get("Weltenbau")?.depth, 1);
 });
 
-Deno.test("a folder moved to the root sits at depth 1 with its subtree behind it", async () => {
+test("a folder moved to the root sits at depth 1 with its subtree behind it", async () => {
   const { groupId, ownerId } = await aGroup();
   const [, stadt, viertel] = await chain(groupId, ownerId, [
     "Weltenbau",
     "Stadt A",
     "Viertel",
   ]);
-  assertExists(stadt);
-  assertExists(viertel);
+  assert.ok(stadt);
+  assert.ok(viertel);
 
-  assertEquals(
+  assert.equal(
     (await write((transaction) =>
       WritingFolderService.moveFolder(
         transaction,
@@ -278,12 +279,12 @@ Deno.test("a folder moved to the root sits at depth 1 with its subtree behind it
   const byTitle = new Map(
     (await WritingFolderService.listFolders(groupId)).map((f) => [f.title, f]),
   );
-  assertEquals(byTitle.get("Stadt A")?.parentFolderId, null);
-  assertEquals(byTitle.get("Stadt A")?.depth, 1);
-  assertEquals(byTitle.get("Viertel")?.depth, 2);
+  assert.equal(byTitle.get("Stadt A")?.parentFolderId, null);
+  assert.equal(byTitle.get("Stadt A")?.depth, 1);
+  assert.equal(byTitle.get("Viertel")?.depth, 2);
 });
 
-Deno.test("a folder cannot move into itself", async () => {
+test("a folder cannot move into itself", async () => {
   const { groupId, ownerId } = await aGroup();
   const folder = await make(groupId, ownerId, "Weltenbau");
 
@@ -295,18 +296,18 @@ Deno.test("a folder cannot move into itself", async () => {
       folder.id,
     )
   );
-  assertEquals(outcome?.kind, "cycle");
+  assert.equal(outcome?.kind, "cycle");
 });
 
-Deno.test("a folder cannot move into something it holds, however deep", async () => {
+test("a folder cannot move into something it holds, however deep", async () => {
   const { groupId, ownerId } = await aGroup();
   const [weltenbau, , viertel] = await chain(groupId, ownerId, [
     "Weltenbau",
     "Stadt A",
     "Viertel",
   ]);
-  assertExists(weltenbau);
-  assertExists(viertel);
+  assert.ok(weltenbau);
+  assert.ok(viertel);
 
   // Two levels down, so the check has to walk rather than compare the parent.
   const outcome = await write((transaction) =>
@@ -317,26 +318,26 @@ Deno.test("a folder cannot move into something it holds, however deep", async ()
       viertel.id,
     )
   );
-  assertEquals(outcome?.kind, "cycle");
+  assert.equal(outcome?.kind, "cycle");
 
   // And nothing moved.
   const byTitle = new Map(
     (await WritingFolderService.listFolders(groupId)).map((f) => [f.title, f]),
   );
-  assertEquals(byTitle.get("Weltenbau")?.parentFolderId, null);
-  assertEquals(byTitle.get("Viertel")?.depth, 3);
+  assert.equal(byTitle.get("Weltenbau")?.parentFolderId, null);
+  assert.equal(byTitle.get("Viertel")?.depth, 3);
 });
 
-Deno.test("the refusal is about the deepest descendant, not the folder", async () => {
+test("the refusal is about the deepest descendant, not the folder", async () => {
   const { groupId, ownerId } = await aGroup();
   // A subtree three levels tall, and somewhere four levels down to put it.
   const [top, , ,] = await chain(groupId, ownerId, ["Oben", "Mitte", "Unten"]);
   const [, , , tief] = await chain(groupId, ownerId, ["E1", "E2", "E3", "E4"]);
-  assertExists(top);
-  assertExists(tief);
+  assert.ok(top);
+  assert.ok(tief);
 
   // `top` alone would land at 5, which is allowed — its subtree would reach 7, which is not.
-  assertEquals(tief.depth, 4);
+  assert.equal(tief.depth, 4);
   const refused = await write((transaction) =>
     WritingFolderService.moveFolder(
       transaction,
@@ -345,13 +346,13 @@ Deno.test("the refusal is about the deepest descendant, not the folder", async (
       tief.id,
     )
   );
-  assertEquals(refused?.kind, "tooDeep");
+  assert.equal(refused?.kind, "tooDeep");
 
   // One level higher there is room for exactly the three of them.
   const room = await WritingFolderService.listFolders(groupId);
   const e2 = room.find((f) => f.title === "E2");
-  assertExists(e2);
-  assertEquals(
+  assert.ok(e2);
+  assert.equal(
     (await write((transaction) =>
       WritingFolderService.moveFolder(
         transaction,
@@ -364,15 +365,15 @@ Deno.test("the refusal is about the deepest descendant, not the folder", async (
     "moved",
   );
   const after = await WritingFolderService.listFolders(groupId);
-  assertEquals(after.find((f) => f.title === "Unten")?.depth, MAX_FOLDER_DEPTH);
+  assert.equal(after.find((f) => f.title === "Unten")?.depth, MAX_FOLDER_DEPTH);
 });
 
-Deno.test("moving a folder that is not in the group answers nothing", async () => {
+test("moving a folder that is not in the group answers nothing", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
   const theirs = await make(mint(elsewhere.id), ownerId, "Fremd");
 
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.moveFolder(
         transaction,
@@ -385,7 +386,7 @@ Deno.test("moving a folder that is not in the group answers nothing", async () =
   );
 });
 
-Deno.test("a target in another group is not a target", async () => {
+test("a target in another group is not a target", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
   const theirs = await make(mint(elsewhere.id), ownerId, "Fremd");
@@ -399,17 +400,17 @@ Deno.test("a target in another group is not a target", async () => {
       theirs.id,
     )
   );
-  assertEquals(outcome?.kind, "noSuchParent");
+  assert.equal(outcome?.kind, "noSuchParent");
 });
 
-Deno.test("deleting a folder that is not there says so, rather than blaming its contents", async () => {
+test("deleting a folder that is not there says so, rather than blaming its contents", async () => {
   const { groupId, ownerId, cookie } = await aGroup();
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
   const theirs = await make(mint(elsewhere.id), ownerId, "Fremd");
 
   // Never existed here, and existing-but-elsewhere: both are "no such folder in this group",
   // and neither is a claim that it still holds something.
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(
         transaction,
@@ -419,7 +420,7 @@ Deno.test("deleting a folder that is not there says so, rather than blaming its 
     ),
     undefined,
   );
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(transaction, groupId, theirs.id)
     ),
@@ -429,7 +430,7 @@ Deno.test("deleting a folder that is not there says so, rather than blaming its 
   // And the one it is really about still answers `notEmpty`.
   const root = await make(groupId, ownerId, "Weltenbau");
   await make(groupId, ownerId, "Stadt A", root.id);
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       WritingFolderService.deleteFolder(transaction, groupId, root.id)
     ),

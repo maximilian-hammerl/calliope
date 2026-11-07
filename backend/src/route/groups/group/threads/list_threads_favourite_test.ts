@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   clearRateLimits,
   createGroup,
@@ -19,9 +20,9 @@ import {
  */
 const { owner, member, outsider } = favouriteFixture("threads");
 
-Deno.test.beforeEach(clearRateLimits);
+beforeEach(clearRateLimits);
 
-Deno.test.afterEach(() => cleanUpFavourites([owner, member, outsider]));
+afterEach(() => cleanUpFavourites([owner, member, outsider]));
 
 type Row = { id: string; title: string; isFavourite: boolean };
 
@@ -49,24 +50,32 @@ async function aGroupWithThreads(cookie: string) {
   };
 }
 
-Deno.test("a favourite marks a thread without moving it", async () => {
+test("a favourite marks a thread without moving it", async () => {
   const ownerCookie = await registerUser(owner);
   const { group, oldest, middle, newest } = await aGroupWithThreads(
     ownerCookie,
   );
 
   const before = await threadsOf(ownerCookie, group.id);
-  assertEquals(before.map((row) => row.id), [newest.id, middle.id, oldest.id]);
+  assert.deepEqual(before.map((row) => row.id), [
+    newest.id,
+    middle.id,
+    oldest.id,
+  ]);
 
   await setFavourite(ownerCookie, "writing_thread", oldest.id);
 
   const after = await threadsOf(ownerCookie, group.id);
   // Most recently written in first, favourite or not: the mark is the only thing that changed.
-  assertEquals(after.map((row) => row.id), [newest.id, middle.id, oldest.id]);
-  assertEquals(after.find((row) => row.id === oldest.id)?.isFavourite, true);
+  assert.deepEqual(after.map((row) => row.id), [
+    newest.id,
+    middle.id,
+    oldest.id,
+  ]);
+  assert.equal(after.find((row) => row.id === oldest.id)?.isFavourite, true);
 });
 
-Deno.test("the favourite mark is the reader's own", async () => {
+test("the favourite mark is the reader's own", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group, oldest } = await aGroupWithThreads(ownerCookie);
@@ -76,13 +85,13 @@ Deno.test("the favourite mark is the reader's own", async () => {
   const theirs = await threadsOf(memberCookie, group.id);
   const ours = await threadsOf(ownerCookie, group.id);
 
-  assertEquals(theirs.find((row) => row.id === oldest.id)?.isFavourite, true);
-  assertEquals(ours.find((row) => row.id === oldest.id)?.isFavourite, false);
+  assert.equal(theirs.find((row) => row.id === oldest.id)?.isFavourite, true);
+  assert.equal(ours.find((row) => row.id === oldest.id)?.isFavourite, false);
   // Nobody's favourite changes anybody's order, including their own.
-  assertEquals(theirs.map((row) => row.id), ours.map((row) => row.id));
+  assert.deepEqual(theirs.map((row) => row.id), ours.map((row) => row.id));
 });
 
-Deno.test("a thread's own page carries the flag", async () => {
+test("a thread's own page carries the flag", async () => {
   const ownerCookie = await registerUser(owner);
   const { group, oldest } = await aGroupWithThreads(ownerCookie);
 
@@ -93,5 +102,5 @@ Deno.test("a thread's own page carries the flag", async () => {
     `/api/groups/${group.id}/threads/${oldest.id}`,
     ownerCookie,
   )).json();
-  assertEquals(thread.isFavourite, true);
+  assert.equal(thread.isFavourite, true);
 });

@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -22,8 +23,8 @@ import {
 const administrator = "demotion-test-admin";
 const member = "demotion-test-member";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, member]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, member]));
 
 /** A member who wrote a thread, a post and a step, then lost the ability to write. */
 async function demotedAfterWriting() {
@@ -65,12 +66,12 @@ async function demotedAfterWriting() {
     adminCookie,
     { role: "reader" },
   );
-  assertEquals(demoted.status, STATUS_CODE.OK);
+  assert.equal(demoted.status, STATUS_CODE.OK);
 
   return { group, thread, post, step, theirCookie, adminCookie };
 }
 
-Deno.test("a demoted member cannot delete the post they wrote", async () => {
+test("a demoted member cannot delete the post they wrote", async () => {
   const { group, thread, post, theirCookie } = await demotedAfterWriting();
 
   const response = await request(
@@ -79,10 +80,10 @@ Deno.test("a demoted member cannot delete the post they wrote", async () => {
     theirCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("a demoted member cannot edit the post they wrote", async () => {
+test("a demoted member cannot edit the post they wrote", async () => {
   const { group, thread, post, theirCookie } = await demotedAfterWriting();
 
   const response = await request(
@@ -92,10 +93,10 @@ Deno.test("a demoted member cannot edit the post they wrote", async () => {
     postBody("Umgeschrieben."),
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("a demoted member cannot rename or delete the thread they started", async () => {
+test("a demoted member cannot rename or delete the thread they started", async () => {
   const { group, thread, theirCookie } = await demotedAfterWriting();
 
   const renamed = await request(
@@ -104,17 +105,17 @@ Deno.test("a demoted member cannot rename or delete the thread they started", as
     theirCookie,
     { title: "Umbenannt" },
   );
-  assertEquals(renamed.status, STATUS_CODE.Forbidden);
+  assert.equal(renamed.status, STATUS_CODE.Forbidden);
 
   const deleted = await request(
     "DELETE",
     `/api/groups/${group.id}/threads/${thread.id}`,
     theirCookie,
   );
-  assertEquals(deleted.status, STATUS_CODE.Forbidden);
+  assert.equal(deleted.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("a demoted member cannot delete the step they wrote", async () => {
+test("a demoted member cannot delete the step they wrote", async () => {
   const { group, step, theirCookie } = await demotedAfterWriting();
 
   const response = await request(
@@ -123,10 +124,10 @@ Deno.test("a demoted member cannot delete the step they wrote", async () => {
     theirCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("what they wrote is still there, and an administrator can still act on it", async () => {
+test("what they wrote is still there, and an administrator can still act on it", async () => {
   const { group, thread, post, adminCookie } = await demotedAfterWriting();
 
   // The point of freezing rather than deleting: the writing stays with the group.
@@ -135,12 +136,12 @@ Deno.test("what they wrote is still there, and an administrator can still act on
     `/api/groups/${group.id}/threads/${thread.id}`,
     adminCookie,
   );
-  assertEquals(read.status, STATUS_CODE.OK);
+  assert.equal(read.status, STATUS_CODE.OK);
 
   const removed = await request(
     "DELETE",
     `/api/groups/${group.id}/threads/${thread.id}/posts/${post.id}`,
     adminCookie,
   );
-  assertEquals(removed.status, STATUS_CODE.OK);
+  assert.equal(removed.status, STATUS_CODE.OK);
 });

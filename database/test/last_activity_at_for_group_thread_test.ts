@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
@@ -13,10 +14,10 @@ import {
   lastActivityOf,
 } from "./support.ts";
 
-Deno.test.beforeEach(connect);
-Deno.test.afterEach(cleanUp);
+beforeEach(connect);
+afterEach(cleanUp);
 
-Deno.test("a new post moves the last activity of its thread and group", async () => {
+test("a new post moves the last activity of its thread and group", async () => {
   const userId = await insertUser("activity-author");
   const groupId = await insertGroup("activity-group");
   await addMember(groupId, userId);
@@ -38,14 +39,14 @@ Deno.test("a new post moves the last activity of its thread and group", async ()
     await lastActivityOf("writing_group", groupId) > groupBefore,
     "the activity should propagate up to the group",
   );
-  assertEquals(
+  assert.equal(
     await lastActivityOf("writing_thread", otherThreadId),
     otherBefore,
     "a sibling thread should be untouched",
   );
 });
 
-Deno.test("activity is recorded for a thread whose author is gone", async () => {
+test("activity is recorded for a thread whose author is gone", async () => {
   const userId = await insertUser("activity-orphan");
   const groupId = await insertGroup("activity-orphan-group");
   await addMember(groupId, userId);
@@ -61,7 +62,7 @@ Deno.test("activity is recorded for a thread whose author is gone", async () => 
   assert(await lastActivityOf("writing_thread", threadId) > before);
 });
 
-Deno.test("deleting a post counts as activity too", async () => {
+test("deleting a post counts as activity too", async () => {
   const userId = await insertUser("activity-delete");
   const groupId = await insertGroup("activity-delete-group");
   await addMember(groupId, userId);
@@ -74,7 +75,7 @@ Deno.test("deleting a post counts as activity too", async () => {
   assert(await lastActivityOf("writing_thread", threadId) > before);
 });
 
-Deno.test("deleting a group with content does not error on the way down", async () => {
+test("deleting a group with content does not error on the way down", async () => {
   const userId = await insertUser("activity-cascade");
   const groupId = await insertGroup("activity-cascade-group");
   await addMember(groupId, userId);
@@ -91,7 +92,7 @@ Deno.test("deleting a group with content does not error on the way down", async 
     `SELECT count(*)::text AS count FROM public.writing_thread WHERE writing_group_id = $1`,
     [groupId],
   );
-  assertEquals(Number(firstRow(rows).count), 0);
+  assert.equal(Number(firstRow(rows).count), 0);
 });
 
 // The pool would otherwise hold the process open after the last test.

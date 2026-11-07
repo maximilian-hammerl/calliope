@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import {
@@ -14,10 +15,10 @@ const administrator = "delete-membership-admin";
 const member = "delete-membership-member";
 const outsider = "delete-membership-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, member, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, member, outsider]));
 
-Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} removes a member", async () => {
+test("DELETE /api/groups/{groupId}/memberships/{userId} removes a member", async () => {
   const adminCookie = await registerUser(administrator);
   await registerUser(member);
   const group = await createGroup(adminCookie, "Entfernen");
@@ -32,12 +33,12 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} removes a member", 
     adminCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   // The administrator is still there, so the group survives.
-  assertEquals(await response.json(), { ok: true });
+  assert.deepEqual(await response.json(), { ok: true });
 });
 
-Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} refuses a non-administrator", async () => {
+test("DELETE /api/groups/{groupId}/memberships/{userId} refuses a non-administrator", async () => {
   const adminCookie = await registerUser(administrator);
   const memberCookie = await registerUser(member);
   const group = await createGroup(adminCookie, "Entfernen", "public");
@@ -58,13 +59,13 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} refuses a non-admin
     memberCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
 // The four below were `DELETE …/memberships/me/leave` until the two endpoints became one:
 // "an administrator, or whoever it belongs to" is the rule `mayModify` already gives content.
 
-Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} lets a member leave", async () => {
+test("DELETE /api/groups/{groupId}/memberships/{userId} lets a member leave", async () => {
   const adminCookie = await registerUser(administrator);
   const memberCookie = await registerUser(member);
   const group = await createGroup(adminCookie, "Verlassen", "public");
@@ -85,16 +86,16 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} lets a member leave
     memberCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const remaining = await db
     .selectFrom("userInWritingGroup")
     .select("userId")
     .where("writingGroupId", "=", group.id)
     .execute();
-  assertEquals(remaining.length, 1);
+  assert.equal(remaining.length, 1);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} declines an invitation", async () => {
+test("DELETE /api/groups/{groupId}/memberships/{userId} declines an invitation", async () => {
   const adminCookie = await registerUser(administrator);
   const memberCookie = await registerUser(member);
   const group = await createGroup(adminCookie, "Ablehnen", "public");
@@ -110,10 +111,10 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} declines an invitat
     memberCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} takes the group with the last member", async () => {
+test("DELETE /api/groups/{groupId}/memberships/{userId} takes the group with the last member", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Letztes Mitglied");
 
@@ -123,7 +124,7 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} takes the group wit
     adminCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   // Asserted against the table rather than the API: a private group answers 404 to a
   // non-member whether or not it still exists. The trigger removes it, not this endpoint.
   const groups = await db
@@ -131,10 +132,10 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} takes the group wit
     .select("id")
     .where("id", "=", group.id)
     .execute();
-  assertEquals(groups.length, 0);
+  assert.equal(groups.length, 0);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} needs a membership to leave", async () => {
+test("DELETE /api/groups/{groupId}/memberships/{userId} needs a membership to leave", async () => {
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Verlassen", "public");
@@ -145,5 +146,5 @@ Deno.test("DELETE /api/groups/{groupId}/memberships/{userId} needs a membership 
     outsiderCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });

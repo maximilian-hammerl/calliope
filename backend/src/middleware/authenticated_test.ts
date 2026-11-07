@@ -1,4 +1,5 @@
-import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
+import { afterEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { write } from "@/src/test/support.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { Hono } from "hono";
@@ -23,7 +24,7 @@ async function createUserWithSession({ verified = true } = {}) {
   const user = await write((transaction) =>
     UserService.insertUser(transaction, username, password, emailAddress)
   );
-  assertExists(user, "fixture user could not be created");
+  assert.ok(user, "fixture user could not be created");
 
   // Registering leaves the address unverified, which every gated route now refuses, so the
   // ordinary fixture confirms it and the unverified case is asked for explicitly.
@@ -47,26 +48,26 @@ async function createUserWithSession({ verified = true } = {}) {
   return { user, session };
 }
 
-Deno.test.afterEach(async () => {
+afterEach(async () => {
   await write((transaction) =>
     transaction
       .deleteFrom("user").where("username", "=", username).execute()
   );
 });
 
-Deno.test("authenticated passes a valid session through to the handler", async () => {
+test("authenticated passes a valid session through to the handler", async () => {
   const { session } = await createUserWithSession();
 
   const response = await app.request("/probe", {
     headers: { cookie: `session=${session.id}.${session.token}` },
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   // The handler only sees a username because the middleware resolved and set the user.
-  assertEquals(await response.json(), { username });
+  assert.deepEqual(await response.json(), { username });
 });
 
-Deno.test("authenticated rejects a forged token for a real session", async () => {
+test("authenticated rejects a forged token for a real session", async () => {
   const { session } = await createUserWithSession();
 
   // The session id is real; only the token is wrong. Knowing an id must not be enough.
@@ -74,16 +75,16 @@ Deno.test("authenticated rejects a forged token for a real session", async () =>
     headers: { cookie: `session=${session.id}.${crypto.randomUUID()}` },
   });
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertEquals(await response.json(), { error: "Unauthorized" });
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.deepEqual(await response.json(), { error: "Unauthorized" });
 
   // The unusable cookie is cleared rather than left for the browser to keep sending.
   const setCookie = response.headers.get("set-cookie");
-  assertExists(setCookie);
-  assertStringIncludes(setCookie, "session=;");
+  assert.ok(setCookie);
+  assert.ok(setCookie.includes("session=;"));
 });
 
-Deno.test("authenticated refuses a session whose address is unverified", async () => {
+test("authenticated refuses a session whose address is unverified", async () => {
   const { session } = await createUserWithSession({ verified: false });
 
   const response = await app.request("/probe", {
@@ -92,11 +93,13 @@ Deno.test("authenticated refuses a session whose address is unverified", async (
 
   // 403, not 401: the session is perfectly good, and answering "unauthorised" would send the
   // member back to the sign-in page they just came from.
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals(await response.json(), { error: "Email address not verified" });
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.deepEqual(await response.json(), {
+    error: "Email address not verified",
+  });
 });
 
-Deno.test("the permissive middleware lets an unverified session through", async () => {
+test("the permissive middleware lets an unverified session through", async () => {
   const { session } = await createUserWithSession({ verified: false });
 
   // Without it there is no way to correct a mistyped address, and a typo orphans the account.
@@ -104,6 +107,6 @@ Deno.test("the permissive middleware lets an unverified session through", async 
     headers: { cookie: `session=${session.id}.${session.token}` },
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals(await response.json(), { username });
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.deepEqual(await response.json(), { username });
 });

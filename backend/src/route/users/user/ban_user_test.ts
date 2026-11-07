@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertFalse } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import app from "@/src/app.ts";
@@ -20,8 +21,8 @@ const bystander = "ban-test-bystander";
 
 const PASSWORD = "a-complex-password";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([operator, offender, bystander]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([operator, offender, bystander]));
 
 async function registerOperator(
   platformRole: "moderator" | "administrator" = "moderator",
@@ -52,39 +53,39 @@ async function signIn(login: string, password = PASSWORD): Promise<Response> {
   });
 }
 
-Deno.test("POST /api/users/{userId}/ban ends every session the account has", async () => {
+test("POST /api/users/{userId}/ban ends every session the account has", async () => {
   const operatorCookie = await registerOperator();
   const offenderCookie = await registerUser(offender);
   const offenderId = await getUserId(offender);
 
   // The session works before the ban, so the assertion after it means something.
-  assertEquals(
+  assert.equal(
     (await request("GET", "/api/auth/me", offenderCookie, undefined)).status,
     STATUS_CODE.OK,
   );
 
-  assertEquals((await ban(operatorCookie, offenderId)).status, STATUS_CODE.OK);
+  assert.equal((await ban(operatorCookie, offenderId)).status, STATUS_CODE.OK);
 
   const sessions = await db
     .selectFrom("userSession")
     .select("id")
     .where("userId", "=", offenderId)
     .execute();
-  assertEquals(sessions.length, 0, "the ban left a session alive");
+  assert.equal(sessions.length, 0, "the ban left a session alive");
 });
 
-Deno.test("a banned account is refused at sign-in, and told so", async () => {
+test("a banned account is refused at sign-in, and told so", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   await ban(operatorCookie, await getUserId(offender));
 
   const response = await signIn(offender);
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals((await response.json()).code, ACCOUNT_BANNED);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.equal((await response.json()).code, ACCOUNT_BANNED);
 });
 
-Deno.test("a wrong password on a banned account still says only invalid credentials", async () => {
+test("a wrong password on a banned account still says only invalid credentials", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   await ban(operatorCookie, await getUserId(offender));
@@ -93,11 +94,11 @@ Deno.test("a wrong password on a banned account still says only invalid credenti
   // that this address belongs to an account, banned or otherwise.
   const response = await signIn(offender, "not-the-password");
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertEquals((await response.json()).code, INVALID_CREDENTIALS);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.equal((await response.json()).code, INVALID_CREDENTIALS);
 });
 
-Deno.test("a session that outlived a ban is refused", async () => {
+test("a session that outlived a ban is refused", async () => {
   const offenderCookie = await registerUser(offender);
   const offenderId = await getUserId(offender);
 
@@ -118,11 +119,11 @@ Deno.test("a session that outlived a ban is refused", async () => {
     undefined,
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals((await response.json()).code, ACCOUNT_BANNED);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.equal((await response.json()).code, ACCOUNT_BANNED);
 });
 
-Deno.test("the banned address stays held, so it cannot register again", async () => {
+test("the banned address stays held, so it cannot register again", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   await ban(operatorCookie, await getUserId(offender));
@@ -138,11 +139,11 @@ Deno.test("the banned address stays held, so it cannot register again", async ()
     }),
   });
 
-  assertEquals(response.status, STATUS_CODE.Conflict);
+  assert.equal(response.status, STATUS_CODE.Conflict);
   await response.body?.cancel();
 });
 
-Deno.test("an operator cannot be banned", async () => {
+test("an operator cannot be banned", async () => {
   const operatorCookie = await registerOperator("administrator");
   await registerUser(bystander);
   await write((transaction) =>
@@ -157,37 +158,37 @@ Deno.test("an operator cannot be banned", async () => {
   // until an administrator revokes it.
   const response = await ban(operatorCookie, await getUserId(bystander));
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("an ordinary member cannot ban anybody", async () => {
+test("an ordinary member cannot ban anybody", async () => {
   const memberCookie = await registerUser(bystander);
   await registerUser(offender);
 
   const response = await ban(memberCookie, await getUserId(offender));
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("lifting a ban restores sign-in", async () => {
+test("lifting a ban restores sign-in", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   const offenderId = await getUserId(offender);
 
   await ban(operatorCookie, offenderId);
-  assertEquals((await signIn(offender)).status, STATUS_CODE.Forbidden);
+  assert.equal((await signIn(offender)).status, STATUS_CODE.Forbidden);
 
-  assertEquals(
+  assert.equal(
     (await liftBan(operatorCookie, offenderId)).status,
     STATUS_CODE.OK,
   );
 
   const response = await signIn(offender);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   await response.body?.cancel();
 });
 
-Deno.test("a banned account drops out of the member list and the search", async () => {
+test("a banned account drops out of the member list and the search", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   const offenderId = await getUserId(offender);
@@ -214,11 +215,11 @@ Deno.test("a banned account drops out of the member list and the search", async 
 
   await ban(operatorCookie, offenderId);
 
-  assertFalse((await listed()).includes(offenderId));
-  assertFalse((await searched()).includes(offenderId));
+  assert.ok(!(await listed()).includes(offenderId));
+  assert.ok(!(await searched()).includes(offenderId));
 });
 
-Deno.test("a banned account's profile still answers", async () => {
+test("a banned account's profile still answers", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   const offenderId = await getUserId(offender);
@@ -233,11 +234,11 @@ Deno.test("a banned account's profile still answers", async () => {
     undefined,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).username, offender);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).username, offender);
 });
 
-Deno.test("only an operator is told that an account is banned", async () => {
+test("only an operator is told that an account is banned", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   const offenderId = await getUserId(offender);
@@ -257,12 +258,12 @@ Deno.test("only an operator is told that an account is banned", async () => {
     undefined,
   )).json();
 
-  assertEquals(asOperator.isBanned, true);
+  assert.equal(asOperator.isBanned, true);
   // Absent, not false: an ordinary member is told nothing either way.
-  assertFalse("isBanned" in asMember);
+  assert.ok(!("isBanned" in asMember));
 });
 
-Deno.test("a banned account cannot be invited to a group", async () => {
+test("a banned account cannot be invited to a group", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   const offenderId = await getUserId(offender);
@@ -280,17 +281,17 @@ Deno.test("a banned account cannot be invited to a group", async () => {
     { userId: offenderId, role: "writer" },
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals((await response.json()).error, "Contact is not possible");
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.equal((await response.json()).error, "Contact is not possible");
 });
 
-Deno.test("banning an already banned account is a conflict", async () => {
+test("banning an already banned account is a conflict", async () => {
   const operatorCookie = await registerOperator();
   await registerUser(offender);
   const offenderId = await getUserId(offender);
 
-  assertEquals((await ban(operatorCookie, offenderId)).status, STATUS_CODE.OK);
-  assertEquals(
+  assert.equal((await ban(operatorCookie, offenderId)).status, STATUS_CODE.OK);
+  assert.equal(
     (await ban(operatorCookie, offenderId)).status,
     STATUS_CODE.Conflict,
   );

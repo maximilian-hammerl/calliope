@@ -1,4 +1,5 @@
-import { assertEquals, assertLessOrEqual } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import {
   STORY_CONTENT_WARNINGS,
   STORY_GENRES,
@@ -20,7 +21,7 @@ import {
  * round added twenty-six subgenres in one go, so "seventy-six will not reach a hundred" is an
  * assumption with a history of moving.
  */
-Deno.test("a filter may ask for every value its vocabulary holds", () => {
+test("a filter may ask for every value its vocabulary holds", () => {
   const vocabularies = {
     genres: STORY_GENRES,
     subgenres: STORY_SUBGENRES,
@@ -29,9 +30,8 @@ Deno.test("a filter may ask for every value its vocabulary holds", () => {
   };
 
   for (const [name, values] of Object.entries(vocabularies)) {
-    assertLessOrEqual(
-      values.length,
-      LIST_LIMIT.storyVocabularyFilter,
+    assert.ok(
+      values.length <= LIST_LIMIT.storyVocabularyFilter,
       `${name} has outgrown the bound a filter may ask under`,
     );
   }
@@ -41,22 +41,22 @@ Deno.test("a filter may ask for every value its vocabulary holds", () => {
  * Every subgenre is placed, which the `satisfies` on the map already guarantees, and placed under
  * a genre that exists — which it does not: a typo'd genre would be a string the enum never had.
  */
-Deno.test("every subgenre sits under a genre that exists", () => {
+test("every subgenre sits under a genre that exists", () => {
   const genres = new Set<string>(STORY_GENRES);
 
-  assertEquals(Object.keys(SUBGENRE_GENRE).length, STORY_SUBGENRES.length);
+  assert.equal(Object.keys(SUBGENRE_GENRE).length, STORY_SUBGENRES.length);
 
   for (const [subgenre, genre] of Object.entries(SUBGENRE_GENRE)) {
-    assertEquals(genres.has(genre), true, `${subgenre} names no genre`);
+    assert.equal(genres.has(genre), true, `${subgenre} names no genre`);
   }
 });
 
-Deno.test("subgenresOutsideGenres names only what is unaccounted for", () => {
-  assertEquals(
+test("subgenresOutsideGenres names only what is unaccounted for", () => {
+  assert.deepEqual(
     subgenresOutsideGenres(["fantasy"], ["dark_fantasy"]),
     [],
   );
-  assertEquals(
+  assert.deepEqual(
     subgenresOutsideGenres(["romance"], [
       "space_opera",
       "contemporary_romance",
@@ -64,5 +64,5 @@ Deno.test("subgenresOutsideGenres names only what is unaccounted for", () => {
     ["space_opera"],
   );
   // Nothing chosen narrows nothing, which is what an untouched form sends.
-  assertEquals(subgenresOutsideGenres([], []), []);
+  assert.deepEqual(subgenresOutsideGenres([], []), []);
 });

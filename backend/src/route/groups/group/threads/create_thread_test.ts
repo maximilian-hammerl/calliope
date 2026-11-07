@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -12,10 +13,10 @@ import {
 const administrator = "create-thread-admin";
 const reader = "create-thread-reader";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, reader]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, reader]));
 
-Deno.test("POST /api/groups/{groupId}/threads starts a thread", async () => {
+test("POST /api/groups/{groupId}/threads starts a thread", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Fäden");
 
@@ -26,13 +27,13 @@ Deno.test("POST /api/groups/{groupId}/threads starts a thread", async () => {
     { title: "Kapitel 1" },
   );
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const thread = await response.json();
-  assertEquals(thread.title, "Kapitel 1");
-  assertEquals(thread.writingGroupId, group.id);
+  assert.equal(thread.title, "Kapitel 1");
+  assert.equal(thread.writingGroupId, group.id);
 });
 
-Deno.test("POST /api/groups/{groupId}/threads refuses a reader", async () => {
+test("POST /api/groups/{groupId}/threads refuses a reader", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Fäden");
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
@@ -44,5 +45,5 @@ Deno.test("POST /api/groups/{groupId}/threads refuses a reader", async () => {
     { title: "Kapitel 1" },
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });

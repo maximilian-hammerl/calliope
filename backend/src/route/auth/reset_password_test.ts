@@ -1,6 +1,6 @@
-import { assertSpyCall, stub } from "@std/testing/mock";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
@@ -22,11 +22,11 @@ const {
   username,
 } = authFixture("reset");
 
-Deno.test.beforeEach(async () => {
+beforeEach(async () => {
   await clearRateLimits();
   await clearMail();
 });
-Deno.test.afterEach(() => deleteUsers([username]));
+afterEach(() => deleteUsers([username]));
 
 const newPassword = "an-entirely-different-password";
 
@@ -43,54 +43,54 @@ const resetPassword = (token: string, to: string) =>
 const login = (withPassword: string) =>
   postJson("/api/auth/login", { login: username, password: withPassword });
 
-Deno.test("POST /api/auth/reset-password replaces the password", async () => {
+test("POST /api/auth/reset-password replaces the password", async () => {
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
   const response = await resetPassword(token, newPassword);
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals(await response.json(), { ok: true });
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.deepEqual(await response.json(), { ok: true });
 
-  assertEquals((await login(newPassword)).status, STATUS_CODE.OK);
+  assert.equal((await login(newPassword)).status, STATUS_CODE.OK);
   // The point of the whole flow: whoever knew the old password no longer gets in.
-  assertEquals((await login(password)).status, STATUS_CODE.Unauthorized);
+  assert.equal((await login(password)).status, STATUS_CODE.Unauthorized);
 });
 
-Deno.test("POST /api/auth/reset-password ends every existing session", async () => {
+test("POST /api/auth/reset-password ends every existing session", async () => {
   const cookie = sessionCookie(await registerAndDiscardVerificationMail());
 
   // The session works before the reset, so the assertion afterwards fails for the right
   // reason rather than because the cookie was never valid.
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie } })).status,
     STATUS_CODE.OK,
   );
 
   await resetPassword(await requestResetToken(), newPassword);
 
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie } })).status,
     STATUS_CODE.Unauthorized,
   );
 });
 
-Deno.test("POST /api/auth/reset-password spends the token exactly once", async () => {
+test("POST /api/auth/reset-password spends the token exactly once", async () => {
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
-  assertEquals(
+  assert.equal(
     (await resetPassword(token, newPassword)).status,
     STATUS_CODE.OK,
   );
 
   const second = await resetPassword(token, "a-third-password");
-  assertEquals(second.status, STATUS_CODE.Gone);
+  assert.equal(second.status, STATUS_CODE.Gone);
 
   // The second attempt changed nothing, rather than merely reporting an error.
-  assertEquals((await login(newPassword)).status, STATUS_CODE.OK);
+  assert.equal((await login(newPassword)).status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/auth/reset-password rejects an expired token", async () => {
+test("POST /api/auth/reset-password rejects an expired token", async () => {
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
@@ -104,14 +104,14 @@ Deno.test("POST /api/auth/reset-password rejects an expired token", async () => 
       .execute()
   );
 
-  assertEquals(
+  assert.equal(
     (await resetPassword(token, newPassword)).status,
     STATUS_CODE.Gone,
   );
-  assertEquals((await login(password)).status, STATUS_CODE.OK);
+  assert.equal((await login(password)).status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/auth/reset-password rejects an unknown token", async () => {
+test("POST /api/auth/reset-password rejects an unknown token", async () => {
   await registerAndDiscardVerificationMail();
 
   const response = await resetPassword(
@@ -119,11 +119,13 @@ Deno.test("POST /api/auth/reset-password rejects an unknown token", async () => 
     newPassword,
   );
 
-  assertEquals(response.status, STATUS_CODE.Gone);
-  assertEquals(await response.json(), { error: "The link is no longer valid" });
+  assert.equal(response.status, STATUS_CODE.Gone);
+  assert.deepEqual(await response.json(), {
+    error: "The link is no longer valid",
+  });
 });
 
-Deno.test("POST /api/auth/reset-password rejects a real id with the wrong secret", async () => {
+test("POST /api/auth/reset-password rejects a real id with the wrong secret", async () => {
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
   const [id] = token.split(".");
@@ -132,11 +134,11 @@ Deno.test("POST /api/auth/reset-password rejects a real id with the wrong secret
   // proves the link was the one that was mailed.
   const response = await resetPassword(`${id}.${"a".repeat(43)}`, newPassword);
 
-  assertEquals(response.status, STATUS_CODE.Gone);
-  assertEquals((await login(password)).status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.Gone);
+  assert.equal((await login(password)).status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/auth/reset-password rejects a malformed token", async () => {
+test("POST /api/auth/reset-password rejects a malformed token", async () => {
   await registerAndDiscardVerificationMail();
 
   // The id reaches a uuid column, so this must be a miss rather than a database error.
@@ -145,30 +147,31 @@ Deno.test("POST /api/auth/reset-password rejects a malformed token", async () =>
     newPassword,
   );
 
-  assertEquals(response.status, STATUS_CODE.Gone);
-  assertEquals(await response.json(), { error: "The link is no longer valid" });
+  assert.equal(response.status, STATUS_CODE.Gone);
+  assert.deepEqual(await response.json(), {
+    error: "The link is no longer valid",
+  });
 });
 
-Deno.test("POST /api/auth/reset-password refuses a password from a known breach", async () => {
+test("POST /api/auth/reset-password refuses a password from a known breach", async (t) => {
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
-  {
-    using isBreached = stub(
-      BreachedPasswordService,
-      "isBreached",
-      () => Promise.resolve(true),
-    );
+  const isBreached = t.mock.method(
+    BreachedPasswordService,
+    "isBreached",
+    () => Promise.resolve(true),
+  );
 
-    const response = await resetPassword(token, newPassword);
+  const response = await resetPassword(token, newPassword);
 
-    assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
-    assertEquals((await response.json()).code, PASSWORD_BREACHED);
-    assertSpyCall(isBreached, 0, { args: [newPassword] });
-  }
+  assert.equal(response.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await response.json()).code, PASSWORD_BREACHED);
+  assert.deepEqual(isBreached.mock.calls[0]?.arguments, [newPassword]);
+  isBreached.mock.restore();
 
   // Refused before the token was spent, so the link still works.
-  assertEquals(
+  assert.equal(
     (await resetPassword(token, newPassword)).status,
     STATUS_CODE.OK,
   );

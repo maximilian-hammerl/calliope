@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
@@ -13,8 +14,8 @@ import {
   notificationTimestamps,
 } from "./support.ts";
 
-Deno.test.beforeEach(connect);
-Deno.test.afterEach(cleanUp);
+beforeEach(connect);
+afterEach(cleanUp);
 
 /** An administrator, a member they can act on, and the group both belong to. */
 async function group(
@@ -28,7 +29,7 @@ async function group(
   return { actorId, recipientId, groupId };
 }
 
-Deno.test("a notification does not outlive the membership it is about", async () => {
+test("a notification does not outlive the membership it is about", async () => {
   const { actorId, recipientId, groupId } = await group(
     "notification-membership",
   );
@@ -40,25 +41,23 @@ Deno.test("a notification does not outlive the membership it is about", async ()
     [groupId, recipientId],
   );
 
-  assertEquals(
+  assert.equal(
     await countNotifications(recipientId),
     0,
     "an invitation that no longer exists must not still be announced",
   );
 });
 
-Deno.test("a notification for a group you do not belong to cannot be stored", async () => {
+test("a notification for a group you do not belong to cannot be stored", async () => {
   const { groupId } = await group("notification-outsider");
   const outsiderId = await insertUser("notification-outsider-user");
 
-  await assertRejects(
-    () => insertNotification(groupId, outsiderId),
-    Error,
-    "notification_recipient_id_writing_group_id_fkey",
-  );
+  await assert.rejects(() => insertNotification(groupId, outsiderId), {
+    message: /notification_recipient_id_writing_group_id_fkey/u,
+  });
 });
 
-Deno.test("deleting the group takes its notifications with it", async () => {
+test("deleting the group takes its notifications with it", async () => {
   const { actorId, recipientId, groupId } = await group(
     "notification-group-gone",
   );
@@ -68,10 +67,10 @@ Deno.test("deleting the group takes its notifications with it", async () => {
     groupId,
   ]);
 
-  assertEquals(await countNotifications(recipientId), 0);
+  assert.equal(await countNotifications(recipientId), 0);
 });
 
-Deno.test("a deleted account leaves its notifications readable", async () => {
+test("a deleted account leaves its notifications readable", async () => {
   const { actorId, recipientId, groupId } = await group(
     "notification-actor-gone",
   );
@@ -80,57 +79,48 @@ Deno.test("a deleted account leaves its notifications readable", async () => {
   await client.query(`DELETE FROM public.user WHERE id = $1`, [actorId]);
 
   // The recipient still needs to know they were invited, even by a since-deleted account.
-  assertEquals(await countNotifications(recipientId), 1);
+  assert.equal(await countNotifications(recipientId), 1);
   const { rows } = await client.query<{ actor_id: string | null }>(
     `SELECT actor_id FROM public.notification WHERE recipient_id = $1`,
     [recipientId],
   );
-  assertEquals(firstRow(rows).actor_id, null);
+  assert.equal(firstRow(rows).actor_id, null);
 });
 
-Deno.test("nobody is told about their own doing", async () => {
+test("nobody is told about their own doing", async () => {
   const { recipientId, groupId } = await group("notification-self");
 
-  await assertRejects(
+  await assert.rejects(
     () => insertNotification(groupId, recipientId, { actorId: recipientId }),
-    Error,
-    "notification_actor_is_not_recipient",
+    { message: /notification_actor_is_not_recipient/u },
   );
 });
 
-Deno.test("a type may only carry the subjects it is about", async () => {
+test("a type may only carry the subjects it is about", async () => {
   const { actorId, recipientId, groupId } = await group(
     "notification-subjects",
   );
   const threadId = await insertThread(groupId, "Kapitel 1", actorId);
 
   // An invitation has nothing to do with a thread.
-  await assertRejects(
-    () =>
-      client.query(
-        `INSERT INTO public.notification
+  await assert.rejects(() =>
+    client.query(
+      `INSERT INTO public.notification
            (recipient_id, writing_group_id, type, writing_thread_id)
          VALUES ($1, $2, 'invited_to_writing_group', $3)`,
-        [recipientId, groupId, threadId],
-      ),
-    Error,
-    "notification_subject_matches_type",
-  );
+      [recipientId, groupId, threadId],
+    ), { message: /notification_subject_matches_type/u });
 
   // And one about a thread cannot leave it out.
-  await assertRejects(
-    () =>
-      client.query(
-        `INSERT INTO public.notification (recipient_id, writing_group_id, type)
+  await assert.rejects(() =>
+    client.query(
+      `INSERT INTO public.notification (recipient_id, writing_group_id, type)
          VALUES ($1, $2, 'new_writing_thread')`,
-        [recipientId, groupId],
-      ),
-    Error,
-    "notification_subject_matches_type",
-  );
+      [recipientId, groupId],
+    ), { message: /notification_subject_matches_type/u });
 });
 
-Deno.test("a role change collapses onto one notification per membership", async () => {
+test("a role change collapses onto one notification per membership", async () => {
   const { actorId, recipientId, groupId } = await group("notification-role");
   const secondActorId = await insertUser("notification-role-second");
   await addMember(groupId, secondActorId);
@@ -157,21 +147,21 @@ Deno.test("a role change collapses onto one notification per membership", async 
     [recipientId, groupId, secondActorId],
   );
 
-  assertEquals(await countNotifications(recipientId), 1);
-  assertEquals(firstRow(rows).actor_id, secondActorId);
+  assert.equal(await countNotifications(recipientId), 1);
+  assert.equal(firstRow(rows).actor_id, secondActorId);
 
   const { rows: read } = await client.query<{ read_at: string | null }>(
     `SELECT read_at FROM public.notification WHERE recipient_id = $1`,
     [recipientId],
   );
-  assertEquals(firstRow(read).read_at, null, "a fresh change is unread again");
+  assert.equal(firstRow(read).read_at, null, "a fresh change is unread again");
 
   // created_at is when the row appeared and does not move; occurred_at is the event.
   const { createdAt, occurredAt } = await notificationTimestamps(recipientId);
   assert(occurredAt > createdAt);
 });
 
-Deno.test("occurrence notifications are not collapsed", async () => {
+test("occurrence notifications are not collapsed", async () => {
   const { actorId, recipientId, groupId } = await group(
     "notification-occurrences",
   );
@@ -187,5 +177,5 @@ Deno.test("occurrence notifications are not collapsed", async () => {
     );
   }
 
-  assertEquals(await countNotifications(recipientId), 2);
+  assert.equal(await countNotifications(recipientId), 2);
 });

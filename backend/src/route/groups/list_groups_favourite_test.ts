@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -18,9 +19,9 @@ import {
  */
 const { owner, member, outsider } = favouriteFixture("groups");
 
-Deno.test.beforeEach(clearRateLimits);
+beforeEach(clearRateLimits);
 
-Deno.test.afterEach(() => cleanUpFavourites([owner, member, outsider]));
+afterEach(() => cleanUpFavourites([owner, member, outsider]));
 
 const listGroups = (cookie: string, body: Record<string, unknown> = {}) =>
   request("QUERY", "/api/groups", cookie, {
@@ -50,7 +51,7 @@ async function threeGroups(cookie: string) {
   };
 }
 
-Deno.test("the list carries the reader's own favourite, and nobody else's", async () => {
+test("the list carries the reader's own favourite, and nobody else's", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first } = await threeGroups(ownerCookie);
@@ -58,17 +59,17 @@ Deno.test("the list carries the reader's own favourite, and nobody else's", asyn
   await setFavourite(memberCookie, "writing_group", first.id);
 
   const mine = await rowsFor(memberCookie);
-  assertEquals(mine.find((row) => row.id === first.id)?.isFavourite, true);
+  assert.equal(mine.find((row) => row.id === first.id)?.isFavourite, true);
   assert(
     mine.filter((row) => row.id !== first.id).every((row) => !row.isFavourite),
   );
 
   // The join is bound to one member's id, so the owner sees their own answer rather than theirs.
   const theirs = await rowsFor(ownerCookie, { membership: "any" });
-  assertEquals(theirs.find((row) => row.id === first.id)?.isFavourite, false);
+  assert.equal(theirs.find((row) => row.id === first.id)?.isFavourite, false);
 });
 
-Deno.test("a favourite floats to the top whatever the list is sorted by", async () => {
+test("a favourite floats to the top whatever the list is sorted by", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first, middle, last } = await threeGroups(ownerCookie);
@@ -82,19 +83,19 @@ Deno.test("a favourite floats to the top whatever the list is sorted by", async 
   const ascending = mine(
     await rowsFor(memberCookie, { sortAttribute: "title", sortOrder: "asc" }),
   );
-  assertEquals(ascending[0]?.id, last.id);
+  assert.equal(ascending[0]?.id, last.id);
 
   // And it is a term *before* the sort rather than one of its options: reversing the sort keeps
   // the favourite first and reorders everything under it.
   const descending = mine(
     await rowsFor(memberCookie, { sortAttribute: "title", sortOrder: "desc" }),
   );
-  assertEquals(descending[0]?.id, last.id);
-  assertEquals(descending[1]?.id, middle.id);
-  assertEquals(ascending[1]?.id, first.id);
+  assert.equal(descending[0]?.id, last.id);
+  assert.equal(descending[1]?.id, middle.id);
+  assert.equal(ascending[1]?.id, first.id);
 });
 
-Deno.test("the list can be narrowed to favourites, and counts what it shows", async () => {
+test("the list can be narrowed to favourites, and counts what it shows", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first, middle } = await threeGroups(ownerCookie);
@@ -107,16 +108,16 @@ Deno.test("the list can be narrowed to favourites, and counts what it shows", as
   const rows = page.results as Row[];
 
   assert(rows.every((row) => row.isFavourite));
-  assertEquals(
+  assert.deepEqual(
     rows.map((row) => row.id).toSorted(),
     [first.id, middle.id].toSorted(),
   );
   // The page and its total come off one builder, so the filter cannot narrow one without the
   // other — never a global count, since another test's groups are in the table too.
-  assertEquals(page.totalResults, rows.length);
+  assert.equal(page.totalResults, rows.length);
 });
 
-Deno.test("without the filter nothing is hidden", async () => {
+test("without the filter nothing is hidden", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first, middle, last } = await threeGroups(ownerCookie);
@@ -129,7 +130,7 @@ Deno.test("without the filter nothing is hidden", async () => {
   }
 });
 
-Deno.test("a group's own page carries the flag too", async () => {
+test("a group's own page carries the flag too", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first } = await threeGroups(ownerCookie);
@@ -141,6 +142,6 @@ Deno.test("a group's own page carries the flag too", async () => {
     `/api/groups/${first.id}`,
     memberCookie,
   );
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).isFavourite, true);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).isFavourite, true);
 });

@@ -1,8 +1,8 @@
+import assert from "node:assert/strict";
 /**
  * Fixtures shared across the suite. Everything in `test/` is test-only: files ending in
  * `_test.ts` announce themselves, these do not, so the directory says it instead of the name.
  */
-import { assertEquals, assertExists } from "@std/assert";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { db, type Transaction } from "@/src/database/client.ts";
@@ -41,7 +41,7 @@ export async function registerUser(username: string): Promise<string> {
   });
 
   const setCookie = response.headers.get("set-cookie");
-  assertExists(setCookie, `could not register ${username}`);
+  assert.ok(setCookie, `could not register ${username}`);
 
   await write((transaction) =>
     transaction
@@ -92,7 +92,7 @@ export async function createGroup(
     visibility,
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
 
@@ -111,14 +111,14 @@ export async function addMember(
     administratorCookie,
     { userId: await getUserId(username), role },
   );
-  assertEquals(invitation.status, STATUS_CODE.Created);
+  assert.equal(invitation.status, STATUS_CODE.Created);
 
   const acceptance = await request(
     "POST",
     `/api/groups/${groupId}/memberships/me/accept`,
     cookie,
   );
-  assertEquals(acceptance.status, STATUS_CODE.OK);
+  assert.equal(acceptance.status, STATUS_CODE.OK);
 
   return cookie;
 }

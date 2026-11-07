@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import {
   type ChatEvent,
   countChatListeners,
@@ -17,17 +18,17 @@ const event: ChatEvent = {
   },
 };
 
-Deno.test("a subscriber receives what is published to it", () => {
+test("a subscriber receives what is published to it", () => {
   const received: Array<ChatEvent> = [];
   const unsubscribe = subscribeToChatEvents("annelie", (e) => received.push(e));
 
   publishChatEvent(["annelie"], event);
 
-  assertEquals(received, [event]);
+  assert.deepEqual(received, [event]);
   unsubscribe();
 });
 
-Deno.test("one member may have several streams, and each gets it", () => {
+test("one member may have several streams, and each gets it", () => {
   const received: Array<string> = [];
   const first = subscribeToChatEvents("annelie", () => received.push("phone"));
   const second = subscribeToChatEvents(
@@ -37,34 +38,34 @@ Deno.test("one member may have several streams, and each gets it", () => {
 
   publishChatEvent(["annelie"], event);
 
-  assertEquals(received.toSorted(), ["laptop", "phone"]);
+  assert.deepEqual(received.toSorted(), ["laptop", "phone"]);
   first();
   second();
 });
 
-Deno.test("unsubscribing stops delivery and leaves nothing behind", () => {
+test("unsubscribing stops delivery and leaves nothing behind", () => {
   const received: Array<ChatEvent> = [];
   const unsubscribe = subscribeToChatEvents("annelie", (e) => received.push(e));
 
   unsubscribe();
   publishChatEvent(["annelie"], event);
 
-  assertEquals(received, []);
+  assert.deepEqual(received, []);
   // The map would otherwise keep an empty set per member who ever connected.
-  assertEquals(countChatListeners("annelie"), 0);
+  assert.equal(countChatListeners("annelie"), 0);
 });
 
-Deno.test("nobody else is told", () => {
+test("nobody else is told", () => {
   const received: Array<ChatEvent> = [];
   const unsubscribe = subscribeToChatEvents("tomas", (e) => received.push(e));
 
   publishChatEvent(["annelie"], event);
 
-  assertEquals(received, []);
+  assert.deepEqual(received, []);
   unsubscribe();
 });
 
-Deno.test("a listener that throws does not stop the others", () => {
+test("a listener that throws does not stop the others", () => {
   const received: Array<string> = [];
   const broken = subscribeToChatEvents("annelie", () => {
     throw new Error("this stream is gone");
@@ -74,7 +75,7 @@ Deno.test("a listener that throws does not stop the others", () => {
   // The message is already stored by the time this runs; a dead stream must not undo it.
   publishChatEvent(["annelie"], event);
 
-  assertEquals(received, ["ok"]);
+  assert.deepEqual(received, ["ok"]);
   broken();
   working();
 });

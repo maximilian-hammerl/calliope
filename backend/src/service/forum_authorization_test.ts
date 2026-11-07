@@ -1,4 +1,5 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import type { User } from "@/src/service/user_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
 
@@ -17,56 +18,56 @@ const operator: User = { ...member, platformRole: "moderator" };
 const theirs = { createdBy: member.id, userId: member.id };
 const somebodyElses = { createdBy: other, userId: member.id };
 
-Deno.test("making something needs the row to grant `write`", () => {
-  assertEquals(mayActInForum(member, "write", "thread:create"), true);
-  assertEquals(mayActInForum(member, "read", "thread:create"), false);
-  assertEquals(mayActInForum(member, "hidden", "thread:create"), false);
+test("making something needs the row to grant `write`", () => {
+  assert.equal(mayActInForum(member, "write", "thread:create"), true);
+  assert.equal(mayActInForum(member, "read", "thread:create"), false);
+  assert.equal(mayActInForum(member, "hidden", "thread:create"), false);
 
-  assertEquals(mayActInForum(member, "write", "post:create"), true);
-  assertEquals(mayActInForum(member, "read", "post:create"), false);
+  assert.equal(mayActInForum(member, "write", "post:create"), true);
+  assert.equal(mayActInForum(member, "read", "post:create"), false);
 
-  assertEquals(mayActInForum(member, "write", "page:create"), true);
-  assertEquals(mayActInForum(member, "read", "page:create"), false);
+  assert.equal(mayActInForum(member, "write", "page:create"), true);
+  assert.equal(mayActInForum(member, "read", "page:create"), false);
 });
 
-Deno.test("a page is changed by whoever may write there, not by whoever wrote it", () => {
+test("a page is changed by whoever may write there, not by whoever wrote it", () => {
   // The forum's counterpart of the group's `writer` rule for pages: material a community keeps
   // cannot be held to the first person who typed it.
-  assertEquals(mayActInForum(member, "write", "page:change"), true);
-  assertEquals(mayActInForum(member, "read", "page:change"), false);
+  assert.equal(mayActInForum(member, "write", "page:change"), true);
+  assert.equal(mayActInForum(member, "read", "page:change"), false);
 });
 
-Deno.test("a post belongs to whoever wrote it", () => {
-  assertEquals(mayActInForum(member, "write", "post:change", theirs), true);
-  assertEquals(
+test("a post belongs to whoever wrote it", () => {
+  assert.equal(mayActInForum(member, "write", "post:change", theirs), true);
+  assert.equal(
     mayActInForum(member, "write", "post:change", somebodyElses),
     false,
   );
-  assertEquals(mayActInForum(member, "write", "post:delete", theirs), true);
-  assertEquals(
+  assert.equal(mayActInForum(member, "write", "post:delete", theirs), true);
+  assert.equal(
     mayActInForum(member, "write", "post:delete", somebodyElses),
     false,
   );
 });
 
-Deno.test("closing a folder freezes what was written in it", () => {
+test("closing a folder freezes what was written in it", () => {
   // The containment the group's table has for demotion: losing write here stops somebody
   // changing and deleting their own posts as well as writing new ones.
-  assertEquals(mayActInForum(member, "read", "post:change", theirs), false);
-  assertEquals(mayActInForum(member, "read", "post:delete", theirs), false);
-  assertEquals(mayActInForum(member, "hidden", "post:change", theirs), false);
+  assert.equal(mayActInForum(member, "read", "post:change", theirs), false);
+  assert.equal(mayActInForum(member, "read", "post:delete", theirs), false);
+  assert.equal(mayActInForum(member, "hidden", "post:change", theirs), false);
 });
 
-Deno.test("a post whose author is gone is left to the operators", () => {
+test("a post whose author is gone is left to the operators", () => {
   // `createdBy` is null once that account is deleted, and null never equals a user id.
-  assertEquals(
+  assert.equal(
     mayActInForum(member, "write", "post:change", {
       createdBy: null,
       userId: member.id,
     }),
     false,
   );
-  assertEquals(
+  assert.equal(
     mayActInForum(operator, "write", "post:change", {
       createdBy: null,
       userId: operator.id,
@@ -75,14 +76,14 @@ Deno.test("a post whose author is gone is left to the operators", () => {
   );
 });
 
-Deno.test("an operator passes either rule, whatever the row grants", () => {
-  assertEquals(mayActInForum(operator, "hidden", "thread:create"), true);
-  assertEquals(mayActInForum(operator, "read", "page:change"), true);
-  assertEquals(
+test("an operator passes either rule, whatever the row grants", () => {
+  assert.equal(mayActInForum(operator, "hidden", "thread:create"), true);
+  assert.equal(mayActInForum(operator, "read", "page:change"), true);
+  assert.equal(
     mayActInForum(operator, "hidden", "post:delete", somebodyElses),
     true,
   );
-  assertEquals(
+  assert.equal(
     mayActInForum(
       { ...member, platformRole: "administrator" },
       "read",
@@ -92,44 +93,43 @@ Deno.test("an operator passes either rule, whatever the row grants", () => {
   );
 });
 
-Deno.test("an author act asked without its content is a bug, not a case", () => {
-  assertThrows(
+test("an author act asked without its content is a bug, not a case", () => {
+  assert.throws(
     // deno-lint-ignore no-explicit-any -- the overloads refuse this, which is the point
     () => (mayActInForum as any)(member, "write", "post:change"),
-    Error,
-    "decided by its author",
+    { message: /decided by its author/u },
   );
 });
 
-Deno.test("the forum's own shape is nobody's but an operator's", () => {
-  assertEquals(mayActInForum(member, "folder:create"), false);
-  assertEquals(mayActInForum(member, "folder:move"), false);
-  assertEquals(mayActInForum(member, "folder:delete"), false);
-  assertEquals(mayActInForum(member, "permission:change"), false);
+test("the forum's own shape is nobody's but an operator's", () => {
+  assert.equal(mayActInForum(member, "folder:create"), false);
+  assert.equal(mayActInForum(member, "folder:move"), false);
+  assert.equal(mayActInForum(member, "folder:delete"), false);
+  assert.equal(mayActInForum(member, "permission:change"), false);
 
-  assertEquals(mayActInForum(operator, "folder:create"), true);
-  assertEquals(mayActInForum(operator, "permission:change"), true);
+  assert.equal(mayActInForum(operator, "folder:create"), true);
+  assert.equal(mayActInForum(operator, "permission:change"), true);
 });
 
 /**
  * The forum has no administrators, so the operator is the group administrator's counterpart: the
  * `author` rule already answers for both, which is why renaming needed no rule of its own.
  */
-Deno.test("a thread is renamed by its author, or by an operator", () => {
+test("a thread is renamed by its author, or by an operator", () => {
   const somebodyElses = { createdBy: "someone-else", userId: member.id };
 
-  assertEquals(
+  assert.equal(
     mayActInForum(member, "write", "thread:change", {
       createdBy: member.id,
       userId: member.id,
     }),
     true,
   );
-  assertEquals(
+  assert.equal(
     mayActInForum(member, "write", "thread:change", somebodyElses),
     false,
   );
-  assertEquals(
+  assert.equal(
     mayActInForum(operator, "write", "thread:change", somebodyElses),
     true,
   );
