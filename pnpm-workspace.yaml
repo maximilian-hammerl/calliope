@@ -1,8 +1,16 @@
 packages:
+  - database
   - frontend
 
 # Exact versions, as everywhere in this repository: `pnpm add` writes no caret.
 savePrefix: ""
+
+# A version more than one project uses, named `catalog:` in each of them.
+catalog:
+  "@types/node": 26.6.6
+  oxfmt: 0.76.0
+  oxlint: 1.91.0
+  typescript: 6.0.3
 
 # No dependency runs install scripts unless listed `true`. These three work without theirs: esbuild
 # and fsevents ship prebuilt binaries, and vue-demi's only switches between Vue 2 and 3 builds.

@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
   client,
+  close,
   connect,
   countNotifications,
   firstRow,
@@ -15,6 +16,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 /** An administrator, a member they can act on, and the group both belong to. */
@@ -158,7 +160,7 @@ test("occurrence notifications are not collapsed", async () => {
   const threadId = await insertThread(groupId, "Kapitel 1", actorId);
 
   for (let index = 0; index < 2; index++) {
-    // deno-lint-ignore no-await-in-loop -- the second insert must land after the first
+    // oxlint-disable-next-line no-await-in-loop -- the second insert must land after the first
     await client.query(
       `INSERT INTO public.notification
          (recipient_id, writing_group_id, type, actor_id, writing_thread_id)

@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanUp, client, connect, firstRow, insertGroup, TEST_PREFIX } from "./support.ts";
+import { cleanUp, client, close, connect, firstRow, insertGroup, TEST_PREFIX } from "./support.ts";
 
 /**
  * `effective_member_permission` is derived by the database, not by whoever inserts (#32). These
@@ -9,11 +9,12 @@ import { cleanUp, client, connect, firstRow, insertGroup, TEST_PREFIX } from "./
  */
 
 beforeEach(connect);
+after(close);
 afterEach(async () => {
   // Children before parents: the self-reference is RESTRICT, checked per row. Three levels here.
   const forumFolders = `DELETE FROM public.writing_folder WHERE writing_group_id IS NULL AND title LIKE $1`;
   for (const depth of [3, 2]) {
-    // deno-lint-ignore no-await-in-loop -- one level at a time, deepest first: that is the point
+    // oxlint-disable-next-line no-await-in-loop -- one level at a time, deepest first: that is the point
     await client.query(`${forumFolders} AND depth = ${depth}`, [`${TEST_PREFIX}%`]);
   }
   await client.query(forumFolders, [`${TEST_PREFIX}%`]);

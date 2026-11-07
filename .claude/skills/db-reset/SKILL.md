@@ -17,7 +17,7 @@ session — so say so before running it against a database somebody else is usin
    ```
 2. **Rebuild and regenerate**, from `database/`:
    ```bash
-   deno task db:reset && deno task types:generate
+   pnpm run db:reset && pnpm run types:generate
    ```
 3. **Format the generated types and seed**, from `backend/`:
    ```bash

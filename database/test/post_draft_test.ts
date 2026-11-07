@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
   client,
+  close,
   connect,
   insertGroup,
   insertPost,
@@ -13,6 +14,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 /** A member, their group and a thread in it: the setting every test here needs. */

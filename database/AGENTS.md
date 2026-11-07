@@ -1,15 +1,16 @@
 # Database
 
 Postgres 18, migrated with [dbmate](https://github.com/amacneil/dbmate), typed with
-`kysely-codegen`. The shared conventions are in the root [AGENTS.md](../AGENTS.md).
+`kysely-codegen`, tested and linted on Node. The shared conventions are in the root
+[AGENTS.md](../AGENTS.md).
 
 ```bash
-deno task migrations:migrate      # apply what is pending
-deno task migrations:new <name>   # a new file
-deno task db:reset                # drop, recreate, migrate — wipes every row
-deno task types:generate          # regenerate backend/src/database/schema.ts
-deno task test                    # against the database in .env; needs the stack up
-deno task validate:check
+pnpm run migrations:migrate      # apply what is pending
+pnpm run migrations:new <name>   # a new file
+pnpm run db:reset                # drop, recreate, migrate — wipes every row
+pnpm run types:generate          # regenerate backend/src/database/schema.ts
+pnpm run test                    # against the database in .env; needs the stack up
+pnpm run validate:check          # oxfmt, oxlint with type-aware rules, tsc
 ```
 
 ## Migrations are edited in place — until a staging or production instance exists
@@ -69,5 +70,8 @@ Bodies carry `set search_path to ''`. The rest is in `.claude/rules/database/mig
 behaviour and a failure should point at the SQL. Rows carry a `db-test-` prefix and are removed
 afterwards, so the suite runs against a development database. Give every query its row type and read
 the first row through `firstRow()`; compare timestamps as `extract(epoch …)`, never as a Date.
-`deno lint` here enforces `prefer-ascii` and `no-await-in-loop`; a sequential loop that has to be one
-carries a `deno-lint-ignore` with its reason as the **last** comment line before the statement.
+The files run **one at a time**: each one's cleanup deletes every `db-test-` row, so two at once
+would delete each other's. Each file closes the client in `after(close)`, because Node runs it in a
+process of its own that an open connection would keep alive. oxlint here enforces
+`no-await-in-loop`; a sequential loop that has to be one carries an `oxlint-disable-next-line`
+with its reason as the **last** comment line before the statement.

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
@@ -15,6 +15,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 test("a new post moves the last activity of its thread and group", async () => {
@@ -92,6 +93,3 @@ test("deleting a group with content does not error on the way down", async () =>
   );
   assert.equal(Number(firstRow(rows).count), 0);
 });
-
-// The pool would otherwise hold the process open after the last test.
-globalThis.addEventListener("unload", () => void close());

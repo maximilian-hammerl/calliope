@@ -9,7 +9,7 @@ The database is the origin of the types, so a change to one link has to be regen
 link after it. Run the whole chain, in order, and report the diff at each step rather than stopping
 at the first — a changed `schema.ts` means the two downstream links are stale too.
 
-1. `database/`: `deno task types:generate`
+1. `database/`: `pnpm run types:generate`
 2. `backend/`: `deno fmt src/database/schema.ts` — the generator's output is not fmt-clean, and
    without this step the file always shows as changed. Then `git diff --stat src/database/schema.ts`.
 3. `backend/`: `deno task open-api:generate`, then `git diff --stat open-api.json`. Generate with

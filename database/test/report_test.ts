@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   cleanUp,
   client,
+  close,
   connect,
   firstRow,
   insertReport,
@@ -11,6 +12,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 /** A reporter and the member they reported, which is all a report needs. */
@@ -101,7 +103,7 @@ test("a report that is not closed carries neither outcome nor note", async () =>
     { category: "spam", closingOutcome: "no_violation" },
     { category: "hate", closingNote: "Etwas entschieden." },
   ]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await assert.rejects(() => insertReport(reporterId, reportedId, extra), {
       message: /report_closed_has_an_outcome/u,
     });

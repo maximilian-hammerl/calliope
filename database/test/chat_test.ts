@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addChatMember,
   cleanUp,
   client,
+  close,
   connect,
   firstRow,
   insertChatGroup,
@@ -12,6 +13,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 async function chat(

@@ -1,13 +1,12 @@
-// @ts-types="@types/pg"
-import pg from "pg";
+import { Client } from "pg";
 
-const DATABASE_URL = Deno.env.get("DATABASE_URL");
+const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   throw new Error("Missing DATABASE_URL, cannot run tests");
 }
 
-export const client = new pg.Client({
+export const client = new Client({
   connectionString: DATABASE_URL,
 });
 

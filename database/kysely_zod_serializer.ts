@@ -105,8 +105,11 @@ export class ZodSerializer implements Serializer {
         options.overrides.columns[`${schema}.${table}.${column.name}`] ??
         options.overrides.columns[`${table}.${column.name}`] ??
         options.overrides.columns[column.name];
+      if (typeof override === "string") {
+        return override;
+      }
       if (override !== undefined) {
-        return String(override);
+        throw new Error(`The override for ${column.name} must be a Zod schema written out`);
       }
     }
 
@@ -191,7 +194,7 @@ export class ZodSerializer implements Serializer {
     const enumName = this.getEnumName(enumNameWithSchema);
 
     let enumPluralName: string;
-    switch (enumName.at(-1)) {
+    switch (enumName.slice(-1)) {
       case "s":
         enumPluralName = `${enumName}es`;
         break;
@@ -235,7 +238,11 @@ export class ZodSerializer implements Serializer {
   }
 
   private getEnumName(enumNameWithSchema: string): string {
-    const [_schemaName, enumName] = enumNameWithSchema.split(".") as [string, string];
+    const [, enumName] = enumNameWithSchema.split(".");
+
+    if (enumName === undefined) {
+      throw new Error(`Not a schema-qualified enum: ${enumNameWithSchema}`);
+    }
 
     return enumName;
   }

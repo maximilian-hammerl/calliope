@@ -40,7 +40,8 @@ Requires [Deno](https://deno.com), [Node](https://nodejs.org), [pnpm](https://pn
 cp .example.env .env
 cp .claude/launch.example.json .claude/launch.json
 docker compose up -d --wait
-cd database && deno task migrations:migrate
+pnpm install
+cd database && pnpm run migrations:migrate
 ```
 
 Then the backend on <http://localhost:8000>:
@@ -52,7 +53,7 @@ cd backend && deno task dev
 and the frontend on <http://localhost:5173>:
 
 ```bash
-pnpm install && cd frontend && pnpm run dev
+cd frontend && pnpm run dev
 ```
 
 The compose file publishes Postgres on `54322` and Redis on `63792`, so it does not collide with anything already

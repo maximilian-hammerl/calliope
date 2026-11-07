@@ -1,0 +1,42 @@
+{
+  "name": "database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:create": "dbmate --env-file ../.env create",
+    "db:up": "dbmate --env-file ../.env up",
+    "db:drop": "dbmate --env-file ../.env drop",
+    "db:reset": "pnpm run db:drop && pnpm run db:up",
+    "db:wait": "dbmate --env-file ../.env wait",
+    "migrations:migrate": "dbmate --env-file ../.env migrate",
+    "migrations:up": "pnpm run migrations:migrate",
+    "migrations:rollback": "dbmate --env-file ../.env rollback",
+    "migrations:down": "pnpm run migrations:rollback",
+    "migrations:new": "dbmate --env-file ../.env new",
+    "migrations:reset": "pnpm run migrations:down && pnpm run migrations:up",
+    "migrations:status": "dbmate --env-file ../.env status",
+    "types:generate": "kysely-codegen --env-file ../.env",
+    "test": "node --test --test-concurrency=1 --env-file=../.env \"test/**/*_test.ts\"",
+    "format:fix": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint:fix": "oxlint --type-aware --fix",
+    "lint:check": "oxlint --type-aware",
+    "type-check": "tsc",
+    "validate:fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run type-check",
+    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "8.23.1",
+    "kysely-codegen": "0.20.0",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "7.0.2006",
+    "pg": "8.23.1",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=26.0.0"
+  }
+}

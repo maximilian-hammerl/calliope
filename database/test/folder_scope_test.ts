@@ -1,16 +1,19 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanUp, client, connect, firstRow, insertGroup, TEST_PREFIX } from "./support.ts";
+import { cleanUp, client, close, connect, firstRow, insertGroup, TEST_PREFIX } from "./support.ts";
 
 beforeEach(connect);
+after(close);
+
+const forumLeaves = (table: string): string =>
+  `DELETE FROM public.${table} WHERE writing_group_id IS NULL AND title LIKE $1`;
+
 afterEach(async () => {
   // A forum folder belongs to no group, so nothing cascades it away. Children before parents,
   // because the self-reference is RESTRICT and that is checked per row rather than at the end of
   // the statement; these tests nest one level, so two statements cover it.
   // Leaves first: `folder_id` is RESTRICT, so a folder still holding one refuses to go. Written
   // out per table rather than looped, as the two folder statements below are.
-  const forumLeaves = (table: string) =>
-    `DELETE FROM public.${table} WHERE writing_group_id IS NULL AND title LIKE $1`;
   await client.query(forumLeaves("writing_thread"), [`${TEST_PREFIX}%`]);
   await client.query(forumLeaves("writing_page"), [`${TEST_PREFIX}%`]);
 
