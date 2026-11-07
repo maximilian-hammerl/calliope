@@ -33,7 +33,7 @@
     "npm:kysely@0.29.7": "0.29.7",
     "npm:nodemailer@10.1.2": "10.1.2",
     "npm:openapi3-ts@4.6.2": "4.6.2",
-    "npm:postgres@3.4.9": "3.4.9",
+    "npm:postgres@4.0.0": "4.0.0",
     "npm:sharp@0.35.5": "0.35.5",
     "npm:zod@4.6.7": "4.6.7"
   },
@@ -386,10 +386,10 @@
       "integrity": "sha512-3qY2qzXJszS35CMuknpon79CE5G7MfcTMoIQHuFmGsaQQ2rau3rwx7eNaRJkO9nhli8yQedQroBZ/VehzNJy4w==",
       "dependencies": [
         "kysely",
-        "postgres"
+        "postgres@3.4.9"
       ],
       "optionalPeers": [
-        "postgres"
+        "postgres@3.4.9"
       ]
     },
     "kysely@0.29.7": {
@@ -409,6 +409,9 @@
     },
     "postgres@3.4.9": {
       "integrity": "sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw=="
+    },
+    "postgres@4.0.0": {
+      "integrity": "sha512-kBh8qXtcvvIAc00DftQyOxz7M/3Zxww1tRMXZPLzipNXXl5PIzHml+9zB3Mrge2U8ldc0WF1ZdLp1iYQi7Kh3A=="
     },
     "redis-errors@1.2.0": {
       "integrity": "sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w=="
@@ -487,7 +490,7 @@
       "npm:kysely@0.29.7",
       "npm:nodemailer@10.1.2",
       "npm:openapi3-ts@4.6.2",
-      "npm:postgres@3.4.9",
+      "npm:postgres@4.0.0",
       "npm:sharp@0.35.5",
       "npm:zod@4.6.7"
     ]
