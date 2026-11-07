@@ -34,12 +34,14 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 
 ## Shared conventions
 
-- **Deno for `backend/` and `database/`, Node for `frontend/`.** `deno task …` versus `npm run …`;
-  `deno task` will happily run a `package.json` script and then fail confusingly.
+- **Deno for `backend/` and `database/`, Node for `frontend/`.** `deno task …` versus `pnpm run …`;
+  `deno task` will happily run a `package.json` script and then fail confusingly. The frontend is a
+  member of the pnpm workspace at the root, so `pnpm install` runs there, against the one lockfile.
 - **Run `/workflow-validate`** before considering anything done: what CI runs, for the projects
   you changed.
-- **Pin exact dependency versions.** No `^` or `~`, in `deno.jsonc` or `package.json`. `deno add`
-  and `shadcn-vue add` both write a caret; rewrite it.
+- **Pin exact dependency versions.** No `^` or `~`, in `deno.jsonc` or `package.json`. `pnpm add`
+  writes an exact version (`savePrefix` in `pnpm-workspace.yaml`); `deno add` writes a caret, so
+  rewrite it, and check what `shadcn-vue add` wrote.
 - **`type`, never `interface`.**
 - **Imports use each project's `@/` alias**: the backend's points at the project root, the
   frontend's at `src/`.

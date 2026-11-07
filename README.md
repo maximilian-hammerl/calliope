@@ -32,7 +32,7 @@ the letter C and stay as they are — renaming is not yet a full rebrand.
 
 ## Running it locally
 
-Requires [Deno](https://deno.com), [Node](https://nodejs.org),
+Requires [Deno](https://deno.com), [Node](https://nodejs.org), [pnpm](https://pnpm.io),
 [Docker](https://docs.docker.com/engine/install/) and
 [dbmate](https://github.com/amacneil/dbmate).
 
@@ -52,7 +52,7 @@ cd backend && deno task dev
 and the frontend on <http://localhost:5173>:
 
 ```bash
-cd frontend && npm install && npm run dev
+pnpm install && cd frontend && pnpm run dev
 ```
 
 The compose file publishes Postgres on `54322` and Redis on `63792`, so it does not collide with anything already
@@ -68,7 +68,7 @@ to repair what can be repaired:
 ```bash
 cd backend  && deno task validate:check   # format, lint, type-check
 cd database && deno task validate:check
-cd frontend && npm run validate:check
+cd frontend && pnpm run validate:check
 ```
 
 The backend has two more. CI runs only the first, because Spectral does not yet read OpenAPI 3.2:

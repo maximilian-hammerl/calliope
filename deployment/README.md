@@ -195,7 +195,7 @@ start. A build that *replaced* that directory rather than refilling it would lea
 holding the old inode: an empty `/srv`, served by a container that is perfectly healthy.
 Recreating Caddy every time would close that off for about a second of CPU.
 
-We do not, for two measured reasons. `npm run build` empties `dist` and keeps it — the
+We do not, for two measured reasons. `pnpm run build` empties `dist` and keeps it — the
 inode is unchanged across a build — and nothing else in the deploy path replaces it:
 `dist` is gitignored, so a pull cannot, and no script removes it. On a first deploy Caddy
 waits for `frontend-build` to finish, so it never mounts a directory that is not there yet.

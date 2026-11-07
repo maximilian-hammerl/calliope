@@ -14,8 +14,8 @@
     "lint:check": "oxlint",
     "format:fix": "oxfmt",
     "format:check": "oxfmt --check",
-    "validate:fix": "npm run format:fix && npm run lint:fix && npm run type-check",
-    "validate:check": "npm run format:check && npm run lint:check && npm run type-check && npm run knip:check",
+    "validate:fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run type-check",
+    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check && pnpm run knip:check",
     "open-api:generate-client": "orval --config ./orval.config.ts && node scripts/generateTextLimit.ts",
     "knip:check": "knip --treat-config-hints-as-errors",
     "knip:fix": "knip --fix"
@@ -81,6 +81,6 @@
     "vue-tsc": "3.3.14"
   },
   "engines": {
-    "node": "^22.18.0 || >=24.12.0"
+    "node": ">=26.0.0"
   }
 }

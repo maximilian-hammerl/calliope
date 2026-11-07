@@ -15,8 +15,8 @@ at the first — a changed `schema.ts` means the two downstream links are stale 
 3. `backend/`: `deno task open-api:generate`, then `git diff --stat open-api.json`. Generate with
    `.example.env`'s values, as CI does: `PUBLIC_APP_NAME` and `APP_DESCRIPTION` become the
    document's title and description.
-4. `frontend/`: `npm run open-api:generate-client` — writes the git-ignored `src/api/` and
-   `src/api/textLimit.ts`, so there is nothing to diff; run `npm run type-check` instead to see
+4. `frontend/`: `pnpm run open-api:generate-client` — writes the git-ignored `src/api/` and
+   `src/api/textLimit.ts`, so there is nothing to diff; run `pnpm run type-check` instead to see
    whether the client's shape moved under the code.
 
 Report one line per link: unchanged, or what changed (a column, a path, a schema). A change in

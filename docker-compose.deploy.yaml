@@ -39,10 +39,17 @@ services:
   # Built on the server, because the output is not committed. Runs to completion and exits.
   frontend-build:
     image: node:26-alpine
-    working_dir: /app
-    # The API client is generated rather than committed, so it has to be produced here or
-    # the type check fails on imports that do not exist yet in a fresh checkout.
-    command: sh -c "npm ci && npm run open-api:generate-client && npm run build"
+    working_dir: /app/frontend
+    # pnpm at the root package.json's version, since Node no longer ships Corepack. The API client
+    # is not committed, so it is generated here or the type check fails on the missing imports.
+    command:
+      - sh
+      - -c
+      - >-
+        npm install --global "$$(node --print 'require("/app/package.json").packageManager')"
+        && pnpm install --frozen-lockfile --filter frontend
+        && pnpm run open-api:generate-client
+        && pnpm run build
     environment:
       # `PUBLIC_` marks a value the browser may see, so the build container is handed those and
       # nothing else. Baked into the bundle: renaming means rebuilding, which a deploy does anyway.
@@ -65,12 +72,18 @@ services:
       PUBLIC_HOSTER_POSTAL_CODE: ${PUBLIC_HOSTER_POSTAL_CODE:-}
       PUBLIC_HOSTER_CITY: ${PUBLIC_HOSTER_CITY:-}
     volumes:
-      - ./frontend:/app
-      # orval reads the specification at ../backend/open-api.json, which is outside the
-      # mount above; this puts it where that relative path resolves to.
-      - ./backend/open-api.json:/backend/open-api.json:ro
-      # Keeps the container's dependencies out of the checkout.
-      - frontend-node-modules:/app/node_modules
+      # The workspace root file by file, not the whole checkout, which would hand the build
+      # container `.env` and every secret in it.
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./frontend:/app/frontend
+      # orval reads the specification at ../backend/open-api.json.
+      - ./backend/open-api.json:/app/backend/open-api.json:ro
+      # Keep the container's dependencies out of the checkout: pnpm puts the packages in the
+      # root's node_modules and links the frontend's to them.
+      - pnpm-root-node-modules:/app/node_modules
+      - pnpm-frontend-node-modules:/app/frontend/node_modules
 
   backend:
     build:
@@ -195,7 +208,8 @@ volumes:
   redis-data:
   caddy-data:
   caddy-config:
-  frontend-node-modules:
+  pnpm-root-node-modules:
+  pnpm-frontend-node-modules:
 
 # Declared only to carry IPv6. Without it an IPv6 client has no DNAT path to an IPv4-only
 # container, so `docker-proxy` bridges the connection and every request arrives from the bridge
