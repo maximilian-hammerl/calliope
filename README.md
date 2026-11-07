@@ -62,15 +62,16 @@ reaches a real mail server.
 
 ## Checks
 
-Both projects have the same two entry points, `validate:check` to verify and `validate:fix`
+All three projects have the same two entry points, `validate:check` to verify and `validate:fix`
 to repair what can be repaired:
 
 ```bash
 cd backend  && deno task validate:check   # format, lint, type-check
+cd database && deno task validate:check
 cd frontend && npm run validate:check
 ```
 
-The backend has two more, both run in CI:
+The backend has two more. CI runs only the first, because Spectral does not yet read OpenAPI 3.2:
 
 ```bash
 deno task open-api:check   # regenerates open-api.json and fails if it changed
@@ -86,7 +87,8 @@ cd backend && deno task test
 
 ## Deployment
 
-`git pull` and `docker compose -f docker-compose.deploy.yaml up -d --build` on the server.
+`./deployment/deploy.sh --environment testing` on the server. Besides pulling and rebuilding, it rebuilds the database
+after an edited migration and recreates containers when the compose file or the `Caddyfile` changed.
 The [deployment runbook](deployment/README.md) covers provisioning a fresh machine, the backup timer, and how to restore
 a dump.
 
