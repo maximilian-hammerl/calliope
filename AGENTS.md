@@ -14,7 +14,7 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   forum's permissions are shaped as they are. Each file is scoped by `paths:` and loads only when
   you open a matching file. When you change how an area works, change its rule in the same commit.
 - `.claude/skills/`: the workflows worth doing the same way every time — `/db-reset`,
-  `/regenerate`, `/workflow-review`, `/workflow-validate`.
+  `/regenerate`, `/workflow-issues`, `/workflow-review`, `/workflow-ship`, `/workflow-validate`.
 - `frontend/.claude/skills/design-system/`: the visual and verbal rules, from member research.
 
 ## How to work here
@@ -30,7 +30,8 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 - **Commit only after a confirmed review**: once the human has said in the conversation that they
   reviewed the change ("reviewed, commit it"); asking for a review is not that. Until then, leave
   the changes in the working tree and say what they are. Stage by path. The confirmation also
-  covers pushing the branch and its pull request; rebasing, or any other push, only when asked.
+  covers pushing the branch and its pull request (`/workflow-ship`); rebasing, or any other push,
+  only when asked.
   Syncing (`git fetch`, `git pull`, `git merge`) is always fine.
 
 ## Shared conventions
@@ -78,14 +79,8 @@ next saved file restarts it. `lsof -nP -iTCP:$BACKEND_PORT -sTCP:LISTEN`, then `
 
 ## The issue tracker
 
-Work is GitHub issues, and **a milestone means accepted**: `status: proposed` and a milestone are
-mutually exclusive, so putting an issue into `v1` or `v2` takes the label off in the same edit.
-Sections of `docs/product-requirements-feature-specification.md` are cited as `§N`, issues as `#N`.
-Quote the section before citing it. The specification is an inspiration, not a fixed specification:
-a section says where an idea came from, and an issue says what is decided.
-
-An issue is short: what the problem is, why it matters, what is decided, and an „Open questions" list
-for what is not. Labels say type and area; nothing else goes in the title.
+Work is GitHub issues, run as `/workflow-issues` says. `§N` is a section of
+`docs/product-requirements-feature-specification.md`, `#N` an issue.
 
 ## Deployment
 

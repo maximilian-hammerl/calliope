@@ -3,8 +3,9 @@ name: Validate
 on:
   push:
     branches: [main]
+  # Every pull request, not only those into main: a stacked one targets the branch below it, and
+  # the checks it gets there count once GitHub points it at main.
   pull_request:
-    branches: [main]
 
 jobs:
   backend:
