@@ -68,7 +68,7 @@ to repair what can be repaired:
 
 ```bash
 cd backend  && deno task validate:check   # format, lint, type-check
-cd database && deno task validate:check
+cd database && pnpm run validate:check
 cd frontend && pnpm run validate:check
 ```
 
