@@ -2,7 +2,7 @@ import {
   getOptionalEnvVariable,
   getRequiredEnvVariable,
 } from "@/src/util/env.ts";
-import { retry } from "@std/async/retry";
+import { retry } from "@/src/util/async.ts";
 
 /**
  * Reads what the tests actually sent. A reset token is stored hashed, so the message is the

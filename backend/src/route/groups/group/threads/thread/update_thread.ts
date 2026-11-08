@@ -4,7 +4,7 @@ import { notBlank } from "@/src/http/request_schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
 import { THREADS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { JOINED_GROUP_THREAD } from "@/src/scope/chains.ts";
 import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";

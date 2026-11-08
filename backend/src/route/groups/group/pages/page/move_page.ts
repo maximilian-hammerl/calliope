@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
 import { PAGES_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { JOINED_GROUP_PAGE } from "@/src/scope/chains.ts";
 import { folderOf } from "@/src/scope/group_scope.ts";
 import { WritingPageService } from "@/src/service/writing_page_service.ts";

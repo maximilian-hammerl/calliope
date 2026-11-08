@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { JOINED_GROUP_FOLDER } from "@/src/scope/chains.ts";
 import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";

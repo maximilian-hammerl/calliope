@@ -3,7 +3,7 @@ import {
   assertGreaterOrEqual,
   assertLessOrEqual,
 } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,

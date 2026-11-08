@@ -1,5 +1,5 @@
 import { HTTPException } from "hono/http-exception";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import type { ErrorResponse } from "@/src/http/response.ts";
 import type { StoryGenre, StorySubgenre } from "@/src/database/schema.ts";
 import {

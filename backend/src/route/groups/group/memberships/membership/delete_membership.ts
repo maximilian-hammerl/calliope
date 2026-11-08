@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import { VISIBLE_GROUP_MEMBER } from "@/src/scope/chains.ts";
 import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";

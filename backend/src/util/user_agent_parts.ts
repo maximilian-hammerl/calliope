@@ -1,4 +1,4 @@
-import { UserAgent } from "@std/http/user-agent";
+import { UAParser } from "ua-parser-js";
 
 /** A user agent as parts, never a sentence: the interface writes that in its own language. */
 export type UserAgentParts = {
@@ -20,7 +20,7 @@ export function userAgentParts(userAgent: string | null): UserAgentParts {
     };
   }
 
-  const parsed = new UserAgent(userAgent);
+  const parsed = new UAParser(userAgent).getResult();
 
   return {
     // Without the parser's "Mobile " prefix: `deviceType` already says that.

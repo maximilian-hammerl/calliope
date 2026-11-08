@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { db } from "@/src/database/client.ts";
 import { notBlank } from "@/src/http/request_schema.ts";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { REPORTS_TAG } from "@/src/open_api_specification.ts";
 import { REPORT_OUTCOME_SCHEMA, REPORT_SCHEMA } from "@/src/database/schema.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";

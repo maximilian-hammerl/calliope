@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import type { User } from "@/src/service/user_service.ts";
 import type { UserInWritingGroupRole } from "@/src/database/schema.ts";
 import {

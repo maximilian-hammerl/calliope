@@ -3,7 +3,7 @@
  * `_test.ts` announce themselves, these do not, so the directory says it instead of the name.
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { redis } from "@/src/redis/client.ts";

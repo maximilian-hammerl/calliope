@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { structuredLogger } from "@hono/structured-logger";
-import { STATUS_CODE, STATUS_TEXT } from "@std/http/status";
+import { STATUS_CODES } from "node:http";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
@@ -143,9 +144,6 @@ app.use(writeRateLimit);
 // mirrors it, so both stay a single rule.
 app.route("/api", api);
 
-/** `STATUS_TEXT` is keyed by the codes it knows; Hono's status type includes ones it does not. */
-const STATUS_NAME: Record<number, string> = STATUS_TEXT;
-
 app.onError((error, c) => {
   // Hono and its middleware report expected failures as HTTPException, so those messages
   // are safe to pass on. Without this the response would be plain text.
@@ -163,7 +161,7 @@ app.onError((error, c) => {
     return c.json(
       // `csrf()` throws carrying a response rather than a message, so an empty one needs a name.
       {
-        error: error.message || STATUS_NAME[error.status] || "Error",
+        error: error.message || STATUS_CODES[error.status] || "Error",
       } satisfies ErrorResponse,
       error.status,
     );

@@ -95,8 +95,6 @@
     "@hono/zod-openapi": "npm:@hono/zod-openapi@1.6.3",
     "@logtape/logtape": "jsr:@logtape/logtape@2.4.2",
     "@std/assert": "jsr:@std/assert@1.0.19",
-    "@std/async": "jsr:@std/async@1.5.1",
-    "@std/http": "jsr:@std/http@1.1.4",
     "@std/testing": "jsr:@std/testing@1.0.21",
     "@std/uuid/v7": "jsr:@std/uuid@1.1.2/v7",
     "sharp": "npm:sharp@0.35.5",
@@ -109,6 +107,7 @@
     "nodemailer": "npm:nodemailer@10.3.1",
     "openapi3-ts": "npm:openapi3-ts@4.6.2",
     "postgres": "npm:postgres@4.0.0",
+    "ua-parser-js": "npm:ua-parser-js@2.0.10",
     "zod": "npm:zod@4.6.7"
   },
   "fmt": {

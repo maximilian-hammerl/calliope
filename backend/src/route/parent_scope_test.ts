@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import openApi from "@/open-api.json" with { type: "json" };
 import {
   addMember,

@@ -1,6 +1,6 @@
 import { APP_NAME } from "@/src/branding.ts";
 import { assertEquals, assertExists, assertMatch } from "@std/assert";
-import { STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { API_VERSION } from "@/src/open_api_specification.ts";
 import type { DatabaseHealth } from "@/src/operations/database_health.ts";
