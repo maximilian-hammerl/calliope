@@ -24,7 +24,7 @@
     "lint:check": "oxlint --type-aware",
     "type-check": "tsc",
     "validate:fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run type-check",
-    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check"
+    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check && pnpm --workspace-root run knip:check --workspace database"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -67,7 +67,7 @@ to repair what can be repaired:
 
 ```bash
 cd backend  && pnpm run validate:check   # format, lint, type-check, knip over the backend
-cd database && pnpm run validate:check
+cd database && pnpm run validate:check   # format, lint, type-check, knip over the database
 cd frontend && pnpm run validate:check   # format, lint, type-check, knip over the whole workspace
 ```
 

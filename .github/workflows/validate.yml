@@ -89,7 +89,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check formatting, lints and types
+      - name: Check formatting, lints, types and unused code
         run: pnpm run validate:check
 
       - name: Start the database
