@@ -16,7 +16,7 @@ function link(path: string, token: string): string {
   return url.toString();
 }
 
-export type RequestAccountDeletionResult = "requested" | "wrong_password";
+type RequestAccountDeletionResult = "requested" | "wrong_password";
 
 /**
  * Asks; does not delete. The password re-authenticates and the mailed link confirms, so
@@ -65,7 +65,7 @@ async function requestAccountDeletion(
   return "requested";
 }
 
-export type ConfirmAccountDeletionResult = "deleted" | "invalid_token";
+type ConfirmAccountDeletionResult = "deleted" | "invalid_token";
 
 /**
  * Deletes the account. One statement does nearly all of it: the foreign keys cascade sessions,

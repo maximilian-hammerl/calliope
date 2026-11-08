@@ -51,8 +51,9 @@ async function listOf(cookie: string, what: "folders" | "threads" | "pages"): Pr
 }
 
 /**
- * Only the rows this test made: there is one forum, so the seed's are in every list and an
- * assertion over the whole of it would turn on whatever else is there.
+ * Only the rows this test made: there is one forum, so the seed's and those of every test file
+ * running at the same time are in every list, and an assertion over the whole of it would turn on
+ * whatever else is there.
  */
 function titles(rows: Row[], made: ReadonlyArray<{ id: string }>): string[] {
   const ids = new Set(made.map((row) => row.id));
@@ -84,11 +85,11 @@ test("GET /api/forum/folders hides a hidden folder from a member and shows it to
 
   // And what an operator is *told* is what members get, not their own authority: it is the only
   // thing that can say „Werkstatt" is hidden from everyone else.
+  const ids = new Set(mine.map((row) => row.id));
   const asOperator = new Map(
-    (await listOf(operatorCookie, "folders")).map((row) => [
-      row.title,
-      row.effectiveMemberPermission,
-    ]),
+    (await listOf(operatorCookie, "folders"))
+      .filter((row) => ids.has(row.id))
+      .map((row) => [row.title, row.effectiveMemberPermission]),
   );
   assert.equal(asOperator.get("Werkstatt"), "hidden");
   assert.equal(asOperator.get("Ankündigungen"), "read");
@@ -120,15 +121,17 @@ test("GET /api/forum/threads reports what a member may do, and the root is read-
   const readable = await createForumFolder("Ankündigungen", "read");
 
   // Each of these asks for `write`, so what differs in the answers is only what is above them.
-  await createForumThread("Am Wurzelknoten", "write");
-  await createForumThread("Im Spielforum", "write", writable.id);
-  await createForumThread("Bei den Ankündigungen", "write", readable.id);
+  const mine = [
+    await createForumThread("Am Wurzelknoten", "write"),
+    await createForumThread("Im Spielforum", "write", writable.id),
+    await createForumThread("Bei den Ankündigungen", "write", readable.id),
+  ];
 
+  const ids = new Set(mine.map((row) => row.id));
   const byTitle = new Map(
-    (await listOf(memberCookie, "threads")).map((row) => [
-      row.title,
-      row.effectiveMemberPermission,
-    ]),
+    (await listOf(memberCookie, "threads"))
+      .filter((row) => ids.has(row.id))
+      .map((row) => [row.title, row.effectiveMemberPermission]),
   );
 
   assert.equal(byTitle.get("Am Wurzelknoten"), "read");

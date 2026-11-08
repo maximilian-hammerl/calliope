@@ -4,13 +4,13 @@ import type { AvatarOrigin } from "#/src/database/schema.ts";
 import { toAvatar } from "#/src/image/avatar_image.ts";
 import { FileStore } from "#/src/storage/file_store.ts";
 
-export type Avatar = {
+type Avatar = {
   fileId: string;
   origin: AvatarOrigin;
   credit: string | null;
 };
 
-export type SetAvatarResult = { kind: "set"; fileId: string } | { kind: "not_an_image" };
+type SetAvatarResult = { kind: "set"; fileId: string } | { kind: "not_an_image" };
 
 async function selectAvatar(userId: string): Promise<Avatar | undefined> {
   return await db

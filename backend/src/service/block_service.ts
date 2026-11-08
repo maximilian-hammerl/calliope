@@ -2,7 +2,7 @@ import { db, type Transaction } from "#/src/database/client.ts";
 import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
 import { listResultsWithCount } from "#/src/list/list_endpoint_query.ts";
 
-export type Block = {
+type Block = {
   blockedId: string;
   /** Never null: the row is cascade-deleted with either account. */
   username: string;

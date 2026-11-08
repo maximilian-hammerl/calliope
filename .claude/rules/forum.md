@@ -77,5 +77,7 @@ Operators edit a leaf's permission from its own page (`ForumPermissionDialog`) a
 The seed's forum follows a member's draft of the real structure and exercises every case: a `read`
 room of pages, a `read` leaf inside a `write` room („Abschiede", „Infos & Regeln"), a `read` folder
 inside a `write` one, three levels, a hidden room with a page and a thread, one member-editable page
-(„Linksammlung"), and two forum favourites. There is one forum, so its seeded rows are in **every**
-list: a test asserting on titles scopes them, and `clearForum` sweeps by the id prefix, never by title.
+(„Linksammlung"), and two forum favourites. There is one forum, so its seeded rows, and those of
+every test file running at the same time, are in **every** list: a test asserting on titles scopes
+them to its own ids, and `clearForum` deletes what the fixtures recorded and what the given accounts
+wrote, never by title.

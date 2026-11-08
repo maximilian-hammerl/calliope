@@ -10,7 +10,7 @@ import {
   listResultsWithCount,
 } from "#/src/list/list_endpoint_query.ts";
 
-export type UserInChatGroup = Pick<
+type UserInChatGroup = Pick<
   Selectable<DatabaseUserInChatGroup>,
   "userId" | "chatGroupId" | "status" | "invitedAt" | "joinedAt"
 > &

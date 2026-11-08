@@ -21,7 +21,7 @@ const RESEND_COOLDOWN = Temporal.Duration.from({ minutes: 2 });
  * the other two cannot. Adding a purpose that needs its own data is a compile error at every
  * call site rather than a constraint violation at run time.
  */
-export type TokenRequest =
+type TokenRequest =
   | {
       userId: string;
       purpose: "password_reset" | "email_address_verification" | "account_deletion";
