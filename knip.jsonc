@@ -18,9 +18,5 @@
       // `PaginationFirst` and `PaginationLast` went, and how `skeleton` did.
       "ignore": [".claude/**", "src/components/ui/**/index.ts"],
     },
-    "database": {
-      // A binary installed beside Node, not a package: see the README.
-      "ignoreBinaries": ["dbmate"],
-    },
   },
 }
