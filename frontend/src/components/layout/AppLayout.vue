@@ -3,17 +3,17 @@
  * The frame around every page, mounted once by `App.vue`: a page that rendered its own tore the
  * bars down on every navigation, taking the chat stream with them. Groups belong to `GroupLayout`.
  */
-import { computed } from 'vue'
-import type { GetCurrentUser200 } from '@/api/models'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import TopBar from '@/components/layout/TopBar.vue'
-import BottomBar from '@/components/layout/BottomBar.vue'
-import SiteFooter from '@/components/layout/SiteFooter.vue'
+import { computed } from "vue";
+import type { GetCurrentUser200 } from "@/api/models";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import TopBar from "@/components/layout/TopBar.vue";
+import BottomBar from "@/components/layout/BottomBar.vue";
+import SiteFooter from "@/components/layout/SiteFooter.vue";
 
-const { data: userData } = useGetCurrentUser()
+const { data: userData } = useGetCurrentUser();
 const user = computed<GetCurrentUser200 | undefined>(() =>
   userData.value?.status === 200 ? userData.value.data : undefined,
-)
+);
 </script>
 
 <template>

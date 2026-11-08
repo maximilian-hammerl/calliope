@@ -4,37 +4,37 @@
  * `mine` is the member's own ideas regardless of status — closing one must not hide it from
  * its author.
  */
-import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { watchDebounced } from '@vueuse/core'
-import { keepPreviousData } from '@tanstack/vue-query'
-import { Plus } from '@lucide/vue'
-import { useListStoryIdeas } from '@/api/story-ideas/story-ideas'
-import type { ListStoryIdeas200ResultsItem } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { IDEA_STATUS_LABELS } from '@/lib/format/storyIdea'
-import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
-import { usePagedList } from '@/composables/usePagedList'
-import FilterStrip from '@/components/common/FilterStrip.vue'
-import FilterStrips from '@/components/common/FilterStrips.vue'
-import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
-import FilterReset from '@/components/common/FilterReset.vue'
-import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
-import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
-import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import StoryIdeaDialog from '@/components/story-idea/StoryIdeaDialog.vue'
-import StoryIdeaRow from '@/components/story-idea/StoryIdeaRow.vue'
-import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { computed, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { watchDebounced } from "@vueuse/core";
+import { keepPreviousData } from "@tanstack/vue-query";
+import { Plus } from "@lucide/vue";
+import { useListStoryIdeas } from "@/api/story-ideas/story-ideas";
+import type { ListStoryIdeas200ResultsItem } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { IDEA_STATUS_LABELS } from "@/lib/format/storyIdea";
+import { FAVOURITE_FILTER_LABELS } from "@/lib/format/favourite";
+import { usePagedList } from "@/composables/usePagedList";
+import FilterStrip from "@/components/common/FilterStrip.vue";
+import FilterStrips from "@/components/common/FilterStrips.vue";
+import StoryVocabularyFilters from "@/components/story/StoryVocabularyFilters.vue";
+import FilterReset from "@/components/common/FilterReset.vue";
+import { emptySelection, isNarrowed } from "@/lib/story/storyVocabulary";
+import type { StoryVocabularySelection } from "@/lib/story/storyVocabulary";
+import StoryIdeasViewStrip from "@/components/story-idea/StoryIdeasViewStrip.vue";
+import ListPagination from "@/components/common/ListPagination.vue";
+import StoryIdeaDialog from "@/components/story-idea/StoryIdeaDialog.vue";
+import StoryIdeaRow from "@/components/story-idea/StoryIdeaRow.vue";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
-const props = defineProps<{ mine?: boolean }>()
+const props = defineProps<{ mine?: boolean }>();
 
-const LIMIT = TEXT_LIMIT.listStoryIdeas.search
+const LIMIT = TEXT_LIMIT.listStoryIdeas.search;
 
 /** Ten to a page, as everywhere a list is hunted through rather than read. */
-const IDEAS_PER_PAGE = 10
+const IDEAS_PER_PAGE = 10;
 
 /**
  * Only on the discovery board: a member cannot mark their own idea, so the filter would have
@@ -43,61 +43,61 @@ const IDEAS_PER_PAGE = 10
  * Defaults to `unread`, which is what the filter is for — reading what has not been read.
  * The endpoint's own default is `any`, so no other caller inherits this choice.
  */
-const readerState = ref<'unread' | 'read' | 'any'>('unread')
+const readerState = ref<"unread" | "read" | "any">("unread");
 
 /**
  * Explicit rather than inferred from the reading filter: a member who removes a mark from a
  * closed idea has to be able to find it again, and a board that widened itself silently would
  * leave them no way to ask.
  */
-const status = ref<'open' | 'closed' | 'any'>('open')
+const status = ref<"open" | "closed" | "any">("open");
 
 /**
  * Offered on both boards, unlike the reading filter: a member's own ideas cannot be unread, but
  * they can certainly be favourites.
  */
-const favourite = ref<'any' | 'only'>('any')
+const favourite = ref<"any" | "only">("any");
 
 const STATUS_FILTERS = [
-  { value: 'open', label: IDEA_STATUS_LABELS.open },
-  { value: 'closed', label: IDEA_STATUS_LABELS.closed },
-  { value: 'any', label: 'Alle' },
-] as const
+  { value: "open", label: IDEA_STATUS_LABELS.open },
+  { value: "closed", label: IDEA_STATUS_LABELS.closed },
+  { value: "any", label: "Alle" },
+] as const;
 
 const FAVOURITE_FILTERS = [
-  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
-  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
-] as const
+  { value: "any", label: FAVOURITE_FILTER_LABELS.any },
+  { value: "only", label: FAVOURITE_FILTER_LABELS.only },
+] as const;
 
 const READER_STATE_FILTERS = [
-  { value: 'unread', label: 'Ungelesen' },
-  { value: 'read', label: 'Gelesen' },
-  { value: 'any', label: 'Alle' },
-] as const
+  { value: "unread", label: "Ungelesen" },
+  { value: "read", label: "Gelesen" },
+  { value: "any", label: "Alle" },
+] as const;
 
-const term = ref<string>('')
-const settled = ref<string>('')
-const trimmed = computed<string>(() => term.value.trim())
+const term = ref<string>("");
+const settled = ref<string>("");
+const trimmed = computed<string>(() => term.value.trim());
 
 watchDebounced(
   trimmed,
   (value) => {
-    settled.value = value.length >= LIMIT.minLength ? value : ''
+    settled.value = value.length >= LIMIT.minLength ? value : "";
   },
   { debounce: 300 },
-)
+);
 
 // Before the query: the request needs `offset` while its key is built, and the total it pages
 // over comes back from that same query, so the composable reads the total lazily.
 const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   IDEAS_PER_PAGE,
   () => totalResults.value,
-)
+);
 
 /** Absent rather than empty, so an untouched filter asks for everything. */
-const vocabulary = ref<StoryVocabularySelection>(emptySelection())
+const vocabulary = ref<StoryVocabularySelection>(emptySelection());
 
-const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
+const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value));
 
 /**
  * Whether anything is narrowing the list, and how to stop it. Both are the view's because only
@@ -110,65 +110,65 @@ const filtersActive = computed<boolean>(
     // refs survive the navigation between them: a reading filter set on the discovery board was
     // still counted on „Meine Ideen", where the strip is hidden and the query forces `any` — the
     // reset button appeared with nothing marked anywhere and clearing it changed nothing.
-    (!props.mine && (readerState.value !== 'unread' || status.value !== 'open')) ||
-    favourite.value !== 'any' ||
+    (!props.mine && (readerState.value !== "unread" || status.value !== "open")) ||
+    favourite.value !== "any" ||
     narrowed.value,
-)
+);
 
 function resetFilters() {
-  readerState.value = 'unread'
-  status.value = 'open'
-  favourite.value = 'any'
-  vocabulary.value = emptySelection()
+  readerState.value = "unread";
+  status.value = "open";
+  favourite.value = "any";
+  vocabulary.value = emptySelection();
 }
 
-const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
+const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values);
 
 // A search or a filter narrows the board, so whatever page was open is about a different set.
 watch([settled, readerState, status, favourite, vocabulary], () => goToPage(1), {
   deep: true,
-})
+});
 
 const { data, isPending, isError } = useListStoryIdeas(
   () => ({
     limit: IDEAS_PER_PAGE,
     offset: offset.value,
-    author: props.mine ? ('mine' as const) : ('others' as const),
-    readerState: props.mine ? ('any' as const) : readerState.value,
+    author: props.mine ? ("mine" as const) : ("others" as const),
+    readerState: props.mine ? ("any" as const) : readerState.value,
     favourite: favourite.value,
     status: props.mine ? undefined : status.value,
-    search: settled.value === '' ? undefined : settled.value,
+    search: settled.value === "" ? undefined : settled.value,
     genres: chosen(vocabulary.value.genres),
     subgenres: chosen(vocabulary.value.subgenres),
     tropes: chosen(vocabulary.value.tropes),
   }),
   { query: { placeholderData: keepPreviousData } },
-)
+);
 
 const totalResults = computed<number | undefined>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : undefined,
-)
+);
 
 const ideas = computed<ListStoryIdeas200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
-const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+const hasLoaded = computed<boolean>(() => data.value?.status === 200);
 
 /**
  * The filters and the search outlast a failed request. They were gated on `hasLoaded` alone, so a
  * refused list took them off the page with it — and since a filter is what refuses a list, that
  * left nothing to click to undo it and no way back but a reload.
  */
-const showsControls = computed<boolean>(() => hasLoaded.value || isError.value)
+const showsControls = computed<boolean>(() => hasLoaded.value || isError.value);
 
-const router = useRouter()
+const router = useRouter();
 
 function openIdea(ideaId: string) {
-  void router.push({ name: 'storyIdea', params: { ideaId } })
+  void router.push({ name: "storyIdea", params: { ideaId } });
 }
 
-const creating = ref<boolean>(false)
+const creating = ref<boolean>(false);
 </script>
 
 <template>

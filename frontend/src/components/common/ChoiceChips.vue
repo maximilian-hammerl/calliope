@@ -12,18 +12,18 @@
  * Raw buttons rather than `Button`, as the strip does: these are options on a shared baseline
  * rather than controls, so they carry the 44px phone rule themselves.
  */
-const selected = defineModel<T[]>({ required: true })
+const selected = defineModel<T[]>({ required: true });
 
 defineProps<{
-  options: ReadonlyArray<{ value: T; label: string }>
+  options: ReadonlyArray<{ value: T; label: string }>;
   /** Names the group for a screen reader, since the chips carry no label of their own. */
-  label: string
-}>()
+  label: string;
+}>();
 
 function toggle(value: T) {
   selected.value = selected.value.includes(value)
     ? selected.value.filter((each) => each !== value)
-    : [...selected.value, value]
+    : [...selected.value, value];
 }
 </script>
 

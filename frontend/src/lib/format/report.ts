@@ -1,6 +1,6 @@
-import type { CreateReportBody, ListReports200ResultsItem } from '@/api/models'
+import type { CreateReportBody, ListReports200ResultsItem } from "@/api/models";
 
-type Category = CreateReportBody['category']
+type Category = CreateReportBody["category"];
 
 /**
  * German labels for the report categories, one place so the dialog and the operators' queue
@@ -15,24 +15,24 @@ type Category = CreateReportBody['category']
  * likeliest real reports on a site where people publish prose.
  */
 export const REPORT_CATEGORIES: ReadonlyArray<{ value: Category; label: string }> = [
-  { value: 'harassment', label: 'Belästigung oder Mobbing' },
-  { value: 'hate', label: 'Hass oder Herabwürdigung' },
-  { value: 'violence', label: 'Gewalt oder Drohung' },
-  { value: 'sexual_content', label: 'Sexuelle Inhalte' },
-  { value: 'self_harm', label: 'Selbstverletzung oder Suizid' },
-  { value: 'illegal_content', label: 'Illegale Inhalte' },
-  { value: 'missing_content_warning', label: 'Fehlende Inhaltswarnung' },
-  { value: 'plagiarism', label: 'Plagiat oder Urheberrecht' },
-  { value: 'spam', label: 'Spam oder Werbung' },
-  { value: 'legal_issue', label: 'Rechtliches Problem' },
-  { value: 'other', label: 'Etwas anderes' },
-]
+  { value: "harassment", label: "Belästigung oder Mobbing" },
+  { value: "hate", label: "Hass oder Herabwürdigung" },
+  { value: "violence", label: "Gewalt oder Drohung" },
+  { value: "sexual_content", label: "Sexuelle Inhalte" },
+  { value: "self_harm", label: "Selbstverletzung oder Suizid" },
+  { value: "illegal_content", label: "Illegale Inhalte" },
+  { value: "missing_content_warning", label: "Fehlende Inhaltswarnung" },
+  { value: "plagiarism", label: "Plagiat oder Urheberrecht" },
+  { value: "spam", label: "Spam oder Werbung" },
+  { value: "legal_issue", label: "Rechtliches Problem" },
+  { value: "other", label: "Etwas anderes" },
+];
 
 export const REPORT_CATEGORY_LABELS: Record<Category, string> = Object.fromEntries(
   REPORT_CATEGORIES.map((category) => [category.value, category.label]),
-) as Record<Category, string>
+) as Record<Category, string>;
 
-type Outcome = NonNullable<ListReports200ResultsItem['closingOutcome']>
+type Outcome = NonNullable<ListReports200ResultsItem["closingOutcome"]>;
 
 /**
  * German labels for how a closing turned out. Ordered as they are offered rather than
@@ -45,17 +45,17 @@ type Outcome = NonNullable<ListReports200ResultsItem['closingOutcome']>
  * which of these an operator reaches for most.
  */
 export const REPORT_OUTCOMES: ReadonlyArray<{ value: Outcome; label: string }> = [
-  { value: 'content_removed', label: 'Inhalt entfernt' },
-  { value: 'account_banned', label: 'Konto gesperrt' },
-  { value: 'warning_given', label: 'Verwarnung ausgesprochen' },
-  { value: 'content_warning_added', label: 'Inhaltswarnung ergänzt' },
-  { value: 'no_violation', label: 'Kein Regelverstoß' },
-  { value: 'duplicate', label: 'Doppelte Meldung' },
-  { value: 'insufficient_information', label: 'Zu wenig Angaben' },
-  { value: 'target_gone', label: 'Inhalt war schon gelöscht' },
-  { value: 'other', label: 'Etwas anderes' },
-]
+  { value: "content_removed", label: "Inhalt entfernt" },
+  { value: "account_banned", label: "Konto gesperrt" },
+  { value: "warning_given", label: "Verwarnung ausgesprochen" },
+  { value: "content_warning_added", label: "Inhaltswarnung ergänzt" },
+  { value: "no_violation", label: "Kein Regelverstoß" },
+  { value: "duplicate", label: "Doppelte Meldung" },
+  { value: "insufficient_information", label: "Zu wenig Angaben" },
+  { value: "target_gone", label: "Inhalt war schon gelöscht" },
+  { value: "other", label: "Etwas anderes" },
+];
 
 export const REPORT_OUTCOME_LABELS: Record<Outcome, string> = Object.fromEntries(
   REPORT_OUTCOMES.map((outcome) => [outcome.value, outcome.label]),
-) as Record<Outcome, string>
+) as Record<Outcome, string>;

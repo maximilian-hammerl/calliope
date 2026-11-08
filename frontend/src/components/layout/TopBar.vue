@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import { DESTINATIONS, isCurrent } from '@/lib/navigation/destinations'
+import { DESTINATIONS, isCurrent } from "@/lib/navigation/destinations";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from '@/components/ui/navigation-menu'
-import { APP_NAME } from '@/lib/branding'
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { LogOut, Search } from '@lucide/vue'
-import { useLogoutUser } from '@/api/auth/auth'
-import type { GetCurrentUser200 } from '@/api/models'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import type { EnvironmentNotice } from '@/lib/environment'
-import { ENVIRONMENT, environmentNotice } from '@/lib/environment'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import SearchField from '@/components/search/SearchField.vue'
-import { requestedChatId } from '@/lib/chat/openChatDialog'
-import NotificationsDialog from '@/components/notification/NotificationsDialog.vue'
-import ChatsDialog from '@/components/chat/ChatsDialog.vue'
-import SettingsDialog from '@/components/settings/SettingsDialog.vue'
-import UserAvatar from '@/components/user/UserAvatar.vue'
+} from "@/components/ui/navigation-menu";
+import { APP_NAME } from "@/lib/branding";
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { LogOut, Search } from "@lucide/vue";
+import { useLogoutUser } from "@/api/auth/auth";
+import type { GetCurrentUser200 } from "@/api/models";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import type { EnvironmentNotice } from "@/lib/environment";
+import { ENVIRONMENT, environmentNotice } from "@/lib/environment";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import SearchField from "@/components/search/SearchField.vue";
+import { requestedChatId } from "@/lib/chat/openChatDialog";
+import NotificationsDialog from "@/components/notification/NotificationsDialog.vue";
+import ChatsDialog from "@/components/chat/ChatsDialog.vue";
+import SettingsDialog from "@/components/settings/SettingsDialog.vue";
+import UserAvatar from "@/components/user/UserAvatar.vue";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,67 +31,67 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 
-const props = defineProps<{ user: GetCurrentUser200 }>()
+const props = defineProps<{ user: GetCurrentUser200 }>();
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 /** The menu is the only way in, so this is what makes the moderation queue reachable at all. */
-const isOperator = computed<boolean>(() => props.user.platformRole !== null)
+const isOperator = computed<boolean>(() => props.user.platformRole !== null);
 
-const environment = computed<EnvironmentNotice | undefined>(() => environmentNotice(ENVIRONMENT))
+const environment = computed<EnvironmentNotice | undefined>(() => environmentNotice(ENVIRONMENT));
 
-const unread = computed<number>(() => props.user.unreadNotifications)
+const unread = computed<number>(() => props.user.unreadNotifications);
 
 // Personal things open where you are. Reading a long post and wanting to answer something
 // should not cost you your place on the page.
 /** Below `md` the field is summoned rather than always present; see the button above. */
-const searchOpen = ref<boolean>(false)
-const searchRow = useTemplateRef<HTMLDivElement>('searchRow')
+const searchOpen = ref<boolean>(false);
+const searchRow = useTemplateRef<HTMLDivElement>("searchRow");
 
 /** The keyboard has to follow the row, or opening the field takes a second tap. */
 watch(searchOpen, async (isOpen) => {
   if (!isOpen) {
-    return
+    return;
   }
-  await nextTick()
-  searchRow.value?.querySelector('input')?.focus()
-})
+  await nextTick();
+  searchRow.value?.querySelector("input")?.focus();
+});
 
-const showingNotifications = ref<boolean>(false)
-const showingChats = ref<boolean>(false)
+const showingNotifications = ref<boolean>(false);
+const showingChats = ref<boolean>(false);
 /** Set when a chat invitation was followed out of the notifications dialog. */
-const startChatAt = ref<string | undefined>(undefined)
+const startChatAt = ref<string | undefined>(undefined);
 
 /**
  * A chat has no URL, so following its notification means swapping one dialog for the other.
  * Both live here, which is the only place that can do it.
  */
 function openChat(chatGroupId: string) {
-  startChatAt.value = chatGroupId
-  showingChats.value = true
+  startChatAt.value = chatGroupId;
+  showingChats.value = true;
 }
 
 // Pages request a chat through this ref when they start a conversation; see openChatDialog.ts.
 watch(requestedChatId, (chatGroupId) => {
   if (chatGroupId === undefined) {
-    return
+    return;
   }
-  openChat(chatGroupId)
-  requestedChatId.value = undefined
-})
-const showingSettings = ref<boolean>(false)
+  openChat(chatGroupId);
+  requestedChatId.value = undefined;
+});
+const showingSettings = ref<boolean>(false);
 
-const { mutateAsync: logout, isPending } = useLogoutUser()
+const { mutateAsync: logout, isPending } = useLogoutUser();
 
 async function signOut() {
   // The cookie is cleared by the response, so the cached user has to go with it or the
   // guard would keep letting this browser through.
-  await logout().catch(() => undefined)
-  forgetCurrentUser()
-  await router.push({ name: 'login' })
+  await logout().catch(() => undefined);
+  forgetCurrentUser();
+  await router.push({ name: "login" });
 }
 </script>
 

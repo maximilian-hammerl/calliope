@@ -1,11 +1,11 @@
 /* Global entry point, imported once by main.ts. Import lines only — the pieces live in
    styles/, mirroring how the design system splits its own tokens.
    Tailwind first: it establishes the layer order everything below relies on. */
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@import './styles/fonts.css';
-@import './styles/theme.css';
-@import './styles/colors.css';
-@import './styles/base.css';
-@import './styles/prose.css';
+@import "./styles/fonts.css";
+@import "./styles/theme.css";
+@import "./styles/colors.css";
+@import "./styles/base.css";
+@import "./styles/prose.css";

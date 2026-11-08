@@ -70,9 +70,9 @@
      system's — 6px is `1.5`, 14px is `3.5`, and so on. */
   --spacing-gutter: 18px;
 
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   /* Headings and everything members write are Newsreader, not the UI sans. */
   --font-heading: var(--font-serif);
 

@@ -10,8 +10,8 @@
  * rule this file follows anyway. What would be left of the generated component is the four
  * `DialogPortal` lines below. Reaching for reka here is the cheaper of the two.
  */
-import { useId } from 'vue'
-import { X } from '@lucide/vue'
+import { useId } from "vue";
+import { X } from "@lucide/vue";
 import {
   DialogClose,
   DialogContent,
@@ -20,19 +20,19 @@ import {
   DialogPortal,
   DialogRoot,
   DialogTitle,
-} from 'reka-ui'
+} from "reka-ui";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 
 /**
  * Both required, with no default: the sheet said „Gruppen-Kontext" wherever it was used, so the
  * forum's rail introduced itself as a group's. A default would have been the same bug with a
  * fallback under it.
  */
-defineProps<{ label: string; description: string }>()
+defineProps<{ label: string; description: string }>();
 
 // reka only fills the content's id in for a `DialogTrigger`, and this opens from `open`.
-const contentId = useId()
+const contentId = useId();
 </script>
 
 <template>

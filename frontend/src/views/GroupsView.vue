@@ -1,110 +1,110 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue'
-import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useListGroups } from '@/api/groups/groups'
-import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
-import FilterStrip from '@/components/common/FilterStrip.vue'
-import FilterStrips from '@/components/common/FilterStrips.vue'
-import StoryVocabularyFilters from '@/components/story/StoryVocabularyFilters.vue'
-import FilterReset from '@/components/common/FilterReset.vue'
-import { emptySelection, isNarrowed } from '@/lib/story/storyVocabulary'
-import type { StoryVocabularySelection } from '@/lib/story/storyVocabulary'
-import GroupsViewStrip from '@/components/group/GroupsViewStrip.vue'
-import type { ListGroups200ResultsItem } from '@/api/models'
-import { keepPreviousData } from '@tanstack/vue-query'
-import { usePagedList } from '@/composables/usePagedList'
-import ListPagination from '@/components/common/ListPagination.vue'
-import GroupDialog from '@/components/group/GroupDialog.vue'
-import GroupInvitationRow from '@/components/group/GroupInvitationRow.vue'
-import GroupRow from '@/components/group/GroupRow.vue'
-import { watchDebounced } from '@vueuse/core'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { pluralize } from '@/lib/format/formatText'
+import { Plus } from "@lucide/vue";
+import { computed, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useListGroups } from "@/api/groups/groups";
+import { FAVOURITE_FILTER_LABELS } from "@/lib/format/favourite";
+import FilterStrip from "@/components/common/FilterStrip.vue";
+import FilterStrips from "@/components/common/FilterStrips.vue";
+import StoryVocabularyFilters from "@/components/story/StoryVocabularyFilters.vue";
+import FilterReset from "@/components/common/FilterReset.vue";
+import { emptySelection, isNarrowed } from "@/lib/story/storyVocabulary";
+import type { StoryVocabularySelection } from "@/lib/story/storyVocabulary";
+import GroupsViewStrip from "@/components/group/GroupsViewStrip.vue";
+import type { ListGroups200ResultsItem } from "@/api/models";
+import { keepPreviousData } from "@tanstack/vue-query";
+import { usePagedList } from "@/composables/usePagedList";
+import ListPagination from "@/components/common/ListPagination.vue";
+import GroupDialog from "@/components/group/GroupDialog.vue";
+import GroupInvitationRow from "@/components/group/GroupInvitationRow.vue";
+import GroupRow from "@/components/group/GroupRow.vue";
+import { watchDebounced } from "@vueuse/core";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { pluralize } from "@/lib/format/formatText";
 
-const LIMIT = TEXT_LIMIT.listGroups.search
+const LIMIT = TEXT_LIMIT.listGroups.search;
 
 /** Ten to a page: enough to scan at once, few enough that a page number means something. */
-const GROUPS_PER_PAGE = 10
+const GROUPS_PER_PAGE = 10;
 
-const term = ref<string>('')
+const term = ref<string>("");
 
 /** What the request asks for, which only follows the field once typing pauses. */
-const settled = ref<string>('')
-const trimmed = computed<string>(() => term.value.trim())
+const settled = ref<string>("");
+const trimmed = computed<string>(() => term.value.trim());
 
 watchDebounced(
   trimmed,
   (value) => {
-    settled.value = value.length >= LIMIT.minLength ? value : ''
+    settled.value = value.length >= LIMIT.minLength ? value : "";
   },
   { debounce: 300 },
-)
+);
 
 // The default is the groups this member has joined; being allowed to read a public group is
 // not the same as belonging to it, and this page is called Meine Gruppen.
 const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   GROUPS_PER_PAGE,
   () => totalResults.value,
-)
+);
 // A search narrows the list, so whatever page was open is about a different set of groups.
 /** Offered on every list that shows a favouritable kind, so none of them can drift apart. */
-const favourite = ref<'any' | 'only'>('any')
+const favourite = ref<"any" | "only">("any");
 
 const FAVOURITE_FILTERS = [
-  { value: 'any', label: FAVOURITE_FILTER_LABELS.any },
-  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
-] as const
+  { value: "any", label: FAVOURITE_FILTER_LABELS.any },
+  { value: "only", label: FAVOURITE_FILTER_LABELS.only },
+] as const;
 
 /** Absent rather than empty, so an untouched filter asks for everything. */
-const vocabulary = ref<StoryVocabularySelection>(emptySelection())
+const vocabulary = ref<StoryVocabularySelection>(emptySelection());
 
-const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value))
+const narrowed = computed<boolean>(() => isNarrowed(vocabulary.value));
 
 /**
  * Whether anything is narrowing the list, and how to stop it. Both are the view's because only
  * the view knows every filter — the reset lived inside the vocabularies and cleared just those,
  * leaving the strips beside it still set.
  */
-const filtersActive = computed<boolean>(() => favourite.value !== 'any' || narrowed.value)
+const filtersActive = computed<boolean>(() => favourite.value !== "any" || narrowed.value);
 
 function resetFilters() {
-  favourite.value = 'any'
-  vocabulary.value = emptySelection()
+  favourite.value = "any";
+  vocabulary.value = emptySelection();
 }
 
-const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values)
+const chosen = <T>(values: T[]): T[] | undefined => (values.length === 0 ? undefined : values);
 
-watch([settled, favourite, vocabulary], () => goToPage(1), { deep: true })
+watch([settled, favourite, vocabulary], () => goToPage(1), { deep: true });
 
 const { data, isPending, isError } = useListGroups(
   () => ({
     limit: GROUPS_PER_PAGE,
     offset: offset.value,
-    search: settled.value === '' ? undefined : settled.value,
+    search: settled.value === "" ? undefined : settled.value,
     // Most recently written in first: people come back to continue a story, not to look one up
     // alphabetically — and the row already dates itself by this column.
-    sortAttribute: 'lastActivityAt' as const,
+    sortAttribute: "lastActivityAt" as const,
     favourite: favourite.value,
-    sortOrder: 'desc' as const,
+    sortOrder: "desc" as const,
     genres: chosen(vocabulary.value.genres),
     subgenres: chosen(vocabulary.value.subgenres),
     tropes: chosen(vocabulary.value.tropes),
   }),
   // Keeps the page strip and the count on screen while the next page loads.
   { query: { placeholderData: keepPreviousData } },
-)
+);
 
 const totalResults = computed<number | undefined>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : undefined,
-)
+);
 
 const groups = computed<ListGroups200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
 /**
  * Whether a load has ever succeeded. A query keeps its last data when a later fetch fails, so
@@ -112,14 +112,14 @@ const groups = computed<ListGroups200ResultsItem[]>(() =>
  * and what keeps the empty state, which is a statement about the data, from being shown when
  * there is no data to make it about.
  */
-const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+const hasLoaded = computed<boolean>(() => data.value?.status === 200);
 
 /**
  * The filters and the search outlast a failed request. They were gated on `hasLoaded` alone, so a
  * refused list took them off the page with it — and since a filter is what refuses a list, that
  * left nothing to click to undo it and no way back but a reload.
  */
-const showsControls = computed<boolean>(() => hasLoaded.value || isError.value)
+const showsControls = computed<boolean>(() => hasLoaded.value || isError.value);
 
 /**
  * Invitations are a separate ask, so they are a separate query rather than a filter over one
@@ -127,24 +127,24 @@ const showsControls = computed<boolean>(() => hasLoaded.value || isError.value)
  */
 const { data: invitationsData } = useListGroups({
   limit: 100,
-  membership: 'invited',
+  membership: "invited",
   // The membership's own column, not the group's: what orders an unanswered ask is when it
   // was made. Newest first, because that is the one still fresh in mind.
-  sortAttribute: 'invitedAt',
-  sortOrder: 'desc',
-})
+  sortAttribute: "invitedAt",
+  sortOrder: "desc",
+});
 
 const invitations = computed<ListGroups200ResultsItem[]>(() =>
   invitationsData.value?.status === 200 ? invitationsData.value.data.results : [],
-)
+);
 
-const router = useRouter()
+const router = useRouter();
 
 function openGroup(groupId: string) {
-  void router.push({ name: 'group', params: { groupId } })
+  void router.push({ name: "group", params: { groupId } });
 }
 
-const creating = ref<boolean>(false)
+const creating = ref<boolean>(false);
 </script>
 
 <template>
@@ -155,7 +155,7 @@ const creating = ref<boolean>(false)
       <div class="flex flex-wrap items-baseline gap-3 border-b border-line-3 pb-2.5">
         <h2 class="text-[15px] leading-[1.3] font-semibold text-ink-2">Einladungen</h2>
         <span class="text-[11.5px] text-ink-5">
-          {{ pluralize(invitations.length, 'Einladung', 'Einladungen') }}
+          {{ pluralize(invitations.length, "Einladung", "Einladungen") }}
         </span>
       </div>
 

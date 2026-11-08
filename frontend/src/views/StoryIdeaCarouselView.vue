@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { ArrowLeft, ArrowRight } from '@lucide/vue'
-import { getListStoryIdeasQueryKey } from '@/api/story-ideas/story-ideas'
-import { queryClient } from '@/lib/api/queryClient'
-import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { useStoryIdeaCarousel } from '@/composables/useStoryIdeaCarousel'
-import StoryIdeaDetail from '@/components/story-idea/StoryIdeaDetail.vue'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import { Button } from '@/components/ui/button'
-import StoryIdeasViewStrip from '@/components/story-idea/StoryIdeasViewStrip.vue'
+import { ref, watch } from "vue";
+import { ArrowLeft, ArrowRight } from "@lucide/vue";
+import { getListStoryIdeasQueryKey } from "@/api/story-ideas/story-ideas";
+import { queryClient } from "@/lib/api/queryClient";
+import { listOnlyFilter } from "@/lib/api/queryKeys";
+import { useStoryIdeaCarousel } from "@/composables/useStoryIdeaCarousel";
+import StoryIdeaDetail from "@/components/story-idea/StoryIdeaDetail.vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import { Button } from "@/components/ui/button";
+import StoryIdeasViewStrip from "@/components/story-idea/StoryIdeasViewStrip.vue";
 
 const {
   track,
@@ -22,7 +22,7 @@ const {
   goTo,
   setReadLocally,
   setFavouriteLocally,
-} = useStoryIdeaCarousel()
+} = useStoryIdeaCarousel();
 
 /**
  * Whether the next change of `index` is a step the reader took, and so worth animating.
@@ -32,14 +32,14 @@ const {
  * transition off in a `pre` watcher gets it out of the way before the render that re-anchors,
  * and the reader's next step turns it back on — no waiting on a frame to be sure of the order.
  */
-const animating = ref<boolean>(true)
+const animating = ref<boolean>(true);
 watch(prepends, () => {
-  animating.value = false
-})
+  animating.value = false;
+});
 
 function step(by: number) {
-  animating.value = true
-  goTo(index.value + by)
+  animating.value = true;
+  goTo(index.value + by);
 }
 
 /**
@@ -49,14 +49,14 @@ function step(by: number) {
  * The board is invalidated instead, since that is where the change has to show.
  */
 async function markIdea(ideaId: string, isRead: boolean) {
-  setReadLocally(ideaId, isRead)
-  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+  setReadLocally(ideaId, isRead);
+  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()));
 }
 
 /** The same rule as reading, minus the total: favouriting moves nothing in or out of the set. */
 async function favouriteChanged(ideaId: string, isFavourite: boolean) {
-  setFavouriteLocally(ideaId, isFavourite)
-  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()))
+  setFavouriteLocally(ideaId, isFavourite);
+  await queryClient.invalidateQueries(listOnlyFilter(getListStoryIdeasQueryKey()));
 }
 
 /**
@@ -67,12 +67,12 @@ async function favouriteChanged(ideaId: string, isFavourite: boolean) {
  * opening. `ReportDialog` resets its own form whenever `open` changes, so a second report starts
  * clean whichever idea it is about.
  */
-const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined)
-const reportingOpen = ref<boolean>(false)
+const reportingIdea = ref<{ id: string; title: string } | undefined>(undefined);
+const reportingOpen = ref<boolean>(false);
 
 function reportIdea(idea: { id: string; title: string }) {
-  reportingIdea.value = { id: idea.id, title: idea.title }
-  reportingOpen.value = true
+  reportingIdea.value = { id: idea.id, title: idea.title };
+  reportingOpen.value = true;
 }
 </script>
 
@@ -117,10 +117,10 @@ function reportIdea(idea: { id: string; title: string }) {
             Das war die letzte ungelesene Storyidee.
           </template>
           <template v-else-if="startReached && index === 0">
-            Die neueste von {{ total }} ungelesenen {{ total === 1 ? 'Storyidee' : 'Storyideen' }}.
+            Die neueste von {{ total }} ungelesenen {{ total === 1 ? "Storyidee" : "Storyideen" }}.
           </template>
           <template v-else>
-            Noch {{ total }} ungelesene {{ total === 1 ? 'Storyidee' : 'Storyideen' }}
+            Noch {{ total }} ungelesene {{ total === 1 ? "Storyidee" : "Storyideen" }}
           </template>
         </div>
 

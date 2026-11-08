@@ -6,10 +6,10 @@
  * The word costs about 55px and the star 25, which is what lets the tab strip, the chats rail and
  * the search popover carry it.
  */
-import StateMark from '@/components/common/StateMark.vue'
-import { FAVOURITE_ICONS, FAVOURITE_LABELS } from '@/lib/format/favourite'
+import StateMark from "@/components/common/StateMark.vue";
+import { FAVOURITE_ICONS, FAVOURITE_LABELS } from "@/lib/format/favourite";
 
-defineProps<{ interactive?: boolean }>()
+defineProps<{ interactive?: boolean }>();
 </script>
 
 <template>

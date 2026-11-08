@@ -12,25 +12,25 @@
  * Inside a `FilterStrips` the section dissolves into that grid so a run of filters shares one
  * label column; alone it opens a two-column grid of its own.
  */
-import { computed } from 'vue'
-import FilterSection from './FilterSection.vue'
+import { computed } from "vue";
+import FilterSection from "./FilterSection.vue";
 
-const model = defineModel<Value>({ required: true })
+const model = defineModel<Value>({ required: true });
 
 const props = defineProps<{
-  label: string
-  options: ReadonlyArray<{ value: Value; label: string }>
+  label: string;
+  options: ReadonlyArray<{ value: Value; label: string }>;
   /**
    * What the page opens with. Given it, the strip can say when it has been moved off it — a strip
    * always has something selected, so "chosen" alone would mark every filter as narrowing.
    */
-  defaultValue?: Value
+  defaultValue?: Value;
   /**
    * Draw the label for screen readers only. For a strip that chooses a *view* the heading above it
    * already says what it is about, and the word is one too many — but the group still needs a name.
    */
-  hideLabel?: boolean
-}>()
+  hideLabel?: boolean;
+}>();
 
 /**
  * A word rather than the chosen option's own label: „Offen oder geschlossen · Geschlossen" is
@@ -38,8 +38,8 @@ const props = defineProps<{
  * changed. What matters when a section is shut is that it is narrowing at all.
  */
 const chosen = computed<string | undefined>(() =>
-  props.defaultValue !== undefined && model.value !== props.defaultValue ? 'aktiv' : undefined,
-)
+  props.defaultValue !== undefined && model.value !== props.defaultValue ? "aktiv" : undefined,
+);
 </script>
 
 <template>

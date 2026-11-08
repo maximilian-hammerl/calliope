@@ -6,59 +6,59 @@
  * No password is asked for, unlike the other sections here: this is the defensive act, and
  * demanding a password blocks exactly the case it exists for.
  */
-import { computed, ref } from 'vue'
+import { computed, ref } from "vue";
 import {
   getListSessionsQueryKey,
   useListSessions,
   useRevokeOtherSessions,
   useRevokeSession,
-} from '@/api/auth/auth'
-import type { ListSessions200ResultsItem } from '@/api/models'
-import { queryClient } from '@/lib/api/queryClient'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { pluralize } from '@/lib/format/formatText'
-import { sessionDevice } from '@/lib/format/sessionDevice'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/api/auth/auth";
+import type { ListSessions200ResultsItem } from "@/api/models";
+import { queryClient } from "@/lib/api/queryClient";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { pluralize } from "@/lib/format/formatText";
+import { sessionDevice } from "@/lib/format/sessionDevice";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const { data, isPending } = useListSessions()
+const { data, isPending } = useListSessions();
 
 const sessions = computed<ListSessions200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
-const others = computed<number>(() => sessions.value.filter((one) => !one.current).length)
+const others = computed<number>(() => sessions.value.filter((one) => !one.current).length);
 
-const { mutateAsync: revokeSession } = useRevokeSession()
-const { mutateAsync: revokeOthers, isPending: endingOthers } = useRevokeOtherSessions()
+const { mutateAsync: revokeSession } = useRevokeSession();
+const { mutateAsync: revokeOthers, isPending: endingOthers } = useRevokeOtherSessions();
 
 /** Per row, so one slow request does not disable every other button in the list. */
-const pendingId = ref<string | undefined>(undefined)
-const error = ref<string | undefined>(undefined)
+const pendingId = ref<string | undefined>(undefined);
+const error = ref<string | undefined>(undefined);
 
-const refresh = () => queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() })
+const refresh = () => queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
 
 async function end(sessionId: string) {
-  error.value = undefined
-  pendingId.value = sessionId
+  error.value = undefined;
+  pendingId.value = sessionId;
   try {
-    await revokeSession({ sessionId })
-    await refresh()
+    await revokeSession({ sessionId });
+    await refresh();
   } catch {
-    error.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    error.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
   } finally {
-    pendingId.value = undefined
+    pendingId.value = undefined;
   }
 }
 
 async function endEverywhereElse() {
-  error.value = undefined
+  error.value = undefined;
   try {
-    await revokeOthers()
-    await refresh()
+    await revokeOthers();
+    await refresh();
   } catch {
-    error.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+    error.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
   }
 }
 </script>
@@ -82,7 +82,7 @@ async function endEverywhereElse() {
       <p class="text-row text-ink-5">
         <template v-if="others === 0">Du bist nur hier angemeldet.</template>
         <template v-else>
-          Neben dieser gibt es {{ pluralize(others, 'weitere Anmeldung', 'weitere Anmeldungen') }}.
+          Neben dieser gibt es {{ pluralize(others, "weitere Anmeldung", "weitere Anmeldungen") }}.
         </template>
       </p>
 
@@ -111,7 +111,7 @@ async function endEverywhereElse() {
             :disabled="pendingId === session.id"
             @click="end(session.id)"
           >
-            {{ session.current ? 'Hier abmelden' : 'Abmelden' }}
+            {{ session.current ? "Hier abmelden" : "Abmelden" }}
           </Button>
         </li>
       </ul>

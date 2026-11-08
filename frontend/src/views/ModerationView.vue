@@ -8,75 +8,79 @@
  * several reports about one thing — one per category — because a second category is a second
  * claim rather than a correction.
  */
-import { computed, ref, watch } from 'vue'
-import { getListReportsQueryKey, useListReports, useMoveReport } from '@/api/reports/reports'
-import type { ListReports200ResultsItem, ListReportsBody, MoveReportBody } from '@/api/models'
-import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { pluralize } from '@/lib/format/formatText'
-import { REPORT_CATEGORY_LABELS, REPORT_OUTCOME_LABELS, REPORT_OUTCOMES } from '@/lib/format/report'
-import { usePagedList } from '@/composables/usePagedList'
-import ListPagination from '@/components/common/ListPagination.vue'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import CloseReportDialog from '@/components/report/CloseReportDialog.vue'
-import { Button } from '@/components/ui/button'
+import { computed, ref, watch } from "vue";
+import { getListReportsQueryKey, useListReports, useMoveReport } from "@/api/reports/reports";
+import type { ListReports200ResultsItem, ListReportsBody, MoveReportBody } from "@/api/models";
+import { queryClient } from "@/lib/api/queryClient";
+import { listKeyPrefix } from "@/lib/api/queryKeys";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { pluralize } from "@/lib/format/formatText";
+import {
+  REPORT_CATEGORY_LABELS,
+  REPORT_OUTCOME_LABELS,
+  REPORT_OUTCOMES,
+} from "@/lib/format/report";
+import { usePagedList } from "@/composables/usePagedList";
+import ListPagination from "@/components/common/ListPagination.vue";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import CloseReportDialog from "@/components/report/CloseReportDialog.vue";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 20;
 
-type Status = NonNullable<ListReportsBody['status']>
-type Category = NonNullable<ListReportsBody['category']>
-type Outcome = NonNullable<ListReportsBody['closingOutcome']>
-type Report = ListReports200ResultsItem
+type Status = NonNullable<ListReportsBody["status"]>;
+type Category = NonNullable<ListReportsBody["category"]>;
+type Outcome = NonNullable<ListReportsBody["closingOutcome"]>;
+type Report = ListReports200ResultsItem;
 
-const status = ref<Status>('open')
-const category = ref<Category | 'all'>('all')
-const outcome = ref<Outcome | 'all'>('all')
+const status = ref<Status>("open");
+const category = ref<Category | "all">("all");
+const outcome = ref<Outcome | "all">("all");
 
 // Declared before the query it pages, and reading the total through a getter, because the
 // total comes back from that same query — see the composable's own note.
 const { page, offset, total, itemsPerPage, goToPage } = usePagedList(
   PAGE_SIZE,
   () => totalResults.value,
-)
+);
 
 const body = computed<ListReportsBody>(() => ({
   limit: PAGE_SIZE,
   offset: offset.value,
   status: status.value,
-  ...(category.value === 'all' ? {} : { category: category.value }),
+  ...(category.value === "all" ? {} : { category: category.value }),
   // Only meaningful on the closed queue, and only sent from there: an outcome filter with any
   // other status asks for reports that cannot exist.
-  ...(status.value !== 'closed' || outcome.value === 'all'
+  ...(status.value !== "closed" || outcome.value === "all"
     ? {}
     : { closingOutcome: outcome.value }),
-}))
+}));
 
-const { data, isPending } = useListReports(body)
+const { data, isPending } = useListReports(body);
 
 const reports = computed<Report[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 const totalResults = computed<number>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : 0,
-)
+);
 
 // A filter narrows the queue, so whatever page was open is about a different set.
-watch([status, category, outcome], () => goToPage(1))
+watch([status, category, outcome], () => goToPage(1));
 
-const { mutateAsync: move, isPending: isMoving } = useMoveReport()
-const movingId = ref<string | undefined>(undefined)
-const error = ref<string | undefined>(undefined)
-const closing = ref<Report | undefined>(undefined)
+const { mutateAsync: move, isPending: isMoving } = useMoveReport();
+const movingId = ref<string | undefined>(undefined);
+const error = ref<string | undefined>(undefined);
+const closing = ref<Report | undefined>(undefined);
 
-const isBusy = (report: Report) => isMoving.value && movingId.value === report.id
+const isBusy = (report: Report) => isMoving.value && movingId.value === report.id;
 
 /**
  * Both moves go through here, because they differ only in the body. Every refusal means the report
@@ -84,48 +88,48 @@ const isBusy = (report: Report) => isMoving.value && movingId.value === report.i
  * the explanation, and the queue is invalidated either way.
  */
 async function moveReport(report: Report, to: MoveReportBody): Promise<boolean> {
-  error.value = undefined
-  movingId.value = report.id
+  error.value = undefined;
+  movingId.value = report.id;
 
   try {
-    await move({ reportId: report.id, data: to })
+    await move({ reportId: report.id, data: to });
   } catch {
-    error.value = 'Die Meldung hat sich inzwischen geändert. Sie wird neu geladen.'
-    return false
+    error.value = "Die Meldung hat sich inzwischen geändert. Sie wird neu geladen.";
+    return false;
   } finally {
-    movingId.value = undefined
-    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListReportsQueryKey()) })
+    movingId.value = undefined;
+    await queryClient.invalidateQueries({ queryKey: listKeyPrefix(getListReportsQueryKey()) });
   }
 
-  return true
+  return true;
 }
 
-async function closeReport(chosen: NonNullable<Report['closingOutcome']>, note: string) {
-  const report = closing.value
-  if (report === undefined) return
+async function closeReport(chosen: NonNullable<Report["closingOutcome"]>, note: string) {
+  const report = closing.value;
+  if (report === undefined) return;
 
-  if (await moveReport(report, { status: 'closed', outcome: chosen, note })) {
-    closing.value = undefined
+  if (await moveReport(report, { status: "closed", outcome: chosen, note })) {
+    closing.value = undefined;
   }
 }
 
 const STATUS_LABELS: Record<Status, string> = {
-  open: 'Offen',
-  in_progress: 'In Arbeit',
-  closed: 'Geschlossen',
-}
+  open: "Offen",
+  in_progress: "In Arbeit",
+  closed: "Geschlossen",
+};
 
 /** What the report is about, in words rather than the enum's. */
-const TARGET_LABELS: Record<Report['targetType'], string> = {
-  writing_group: 'Gruppe',
-  writing_thread: 'Thema',
-  writing_post: 'Beitrag',
-  writing_page: 'Seite',
-  story_idea: 'Storyidee',
-  chat_group: 'Chat',
-  chat_message: 'Nachricht',
-  user: 'Mitglied',
-}
+const TARGET_LABELS: Record<Report["targetType"], string> = {
+  writing_group: "Gruppe",
+  writing_thread: "Thema",
+  writing_post: "Beitrag",
+  writing_page: "Seite",
+  story_idea: "Storyidee",
+  chat_group: "Chat",
+  chat_message: "Nachricht",
+  user: "Mitglied",
+};
 
 /**
  * Who is dealing with it and since when, as one line. It names a deleted account rather than
@@ -133,8 +137,8 @@ const TARGET_LABELS: Record<Report['targetType'], string> = {
  * says the claim is free for anybody to take over.
  */
 function operatorAt(report: Report, at: string): string {
-  const who = report.operatorUsername ?? 'ein gelöschtes Konto'
-  return `${who}, ${formatActivityTime(at)}`
+  const who = report.operatorUsername ?? "ein gelöschtes Konto";
+  return `${who}, ${formatActivityTime(at)}`;
 }
 </script>
 
@@ -201,7 +205,7 @@ function operatorAt(report: Report, at: string): string {
 
     <template v-else>
       <p class="mt-6 text-[12.5px] text-ink-5">
-        {{ pluralize(totalResults, 'Meldung', 'Meldungen') }}
+        {{ pluralize(totalResults, "Meldung", "Meldungen") }}
       </p>
 
       <ul class="mt-2 flex flex-col">
@@ -252,7 +256,7 @@ function operatorAt(report: Report, at: string): string {
           <!-- Named where it is said, rather than pooled in a line below both texts. -->
           <p class="mt-2.5 max-w-[60ch] text-row text-ink-4">
             <span class="text-ink-5">
-              {{ report.reporterUsername ?? 'Ein gelöschtes Konto' }} meldet:
+              {{ report.reporterUsername ?? "Ein gelöschtes Konto" }} meldet:
             </span>
             {{ report.reason }}
           </p>
@@ -274,7 +278,7 @@ function operatorAt(report: Report, at: string): string {
               <template v-else-if="report.closedAt">
                 Geschlossen als
                 <span class="text-ink-4">
-                  {{ report.closingOutcome ? REPORT_OUTCOME_LABELS[report.closingOutcome] : '—' }}
+                  {{ report.closingOutcome ? REPORT_OUTCOME_LABELS[report.closingOutcome] : "—" }}
                 </span>
                 von {{ operatorAt(report, report.closedAt) }}
               </template>
@@ -294,7 +298,7 @@ function operatorAt(report: Report, at: string): string {
               :disabled="isBusy(report)"
               @click="moveReport(report, { status: 'in_progress' })"
             >
-              {{ report.status === 'open' ? 'Übernehmen' : 'An mich übernehmen' }}
+              {{ report.status === "open" ? "Übernehmen" : "An mich übernehmen" }}
             </Button>
 
             <Button

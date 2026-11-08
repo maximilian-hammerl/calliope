@@ -10,7 +10,7 @@ paths:
 **Use the CLI anyway.** A hand-written copy is a copy of what you *remember* the component being —
 a replicated popover came out missing `inheritAttrs: false`, the `$attrs` spread, the root's
 `v-slot` forwarding and its available-width `max-w`. Run `add`, restore what the checklist names,
-reapply the patches. Decline every overwrite prompt: `yes n | npx shadcn-vue@latest add …`.
+reapply the patches. Decline every overwrite prompt: `yes n | pnpm dlx shadcn-vue@latest add …`.
 
 Reaching past a component to reka is right when what you build is not the component (`SearchField`,
 `ContextSheet` say so in a docblock) and wrong when the thing you want *is* the component.

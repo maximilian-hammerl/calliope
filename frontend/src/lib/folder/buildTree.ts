@@ -2,8 +2,8 @@ import type {
   ListFolders200ResultsItem,
   ListPages200ResultsItem,
   ListThreads200ResultsItem,
-} from '@/api/models'
-import type { ForumPermission } from '@/lib/format/forum'
+} from "@/api/models";
+import type { ForumPermission } from "@/lib/format/forum";
 
 /**
  * What the tree reads off a row, and no more. Derived from the generated models rather than
@@ -12,57 +12,57 @@ import type { ForumPermission } from '@/lib/format/forum'
  */
 export type FolderRow = Pick<
   ListFolders200ResultsItem,
-  'id' | 'parentFolderId' | 'depth' | 'title' | 'description' | 'createdBy'
+  "id" | "parentFolderId" | "depth" | "title" | "description" | "createdBy"
 > & {
   /** The forum's rows carry it and a group's do not, which is why it is optional (#32). */
-  effectiveMemberPermission?: ForumPermission
+  effectiveMemberPermission?: ForumPermission;
   /** A folder's own setting, which the operator's dialog shows rather than the reduced one. */
-  memberPermission?: ForumPermission
-}
+  memberPermission?: ForumPermission;
+};
 
 export type LeafRow = Pick<
   ListThreads200ResultsItem & ListPages200ResultsItem,
-  'id' | 'title' | 'lastActivityAt' | 'isFavourite' | 'createdBy' | 'folderId'
-> & { effectiveMemberPermission?: ForumPermission }
+  "id" | "title" | "lastActivityAt" | "isFavourite" | "createdBy" | "folderId"
+> & { effectiveMemberPermission?: ForumPermission };
 
 /**
  * A thread or a page: both are leaves, and the tree treats them alike apart from where a click
  * goes and which word marks the row.
  */
 type TreeLeaf = {
-  kind: 'thread' | 'page'
-  id: string
-  title: string
-  lastActivityAt: string
-  isFavourite: boolean
+  kind: "thread" | "page";
+  id: string;
+  title: string;
+  lastActivityAt: string;
+  isFavourite: boolean;
   /** For `mayModify`, so a row only offers what the endpoint would allow. */
-  createdBy: string | null
+  createdBy: string | null;
   /** Where it sits now, so a move can mark the current place and skip a pointless request. */
-  folderId: string | null
+  folderId: string | null;
   /** What members may do with it, in the forum. Absent in a group, which has no permissions. */
-  effectiveMemberPermission?: ForumPermission
-}
+  effectiveMemberPermission?: ForumPermission;
+};
 
 export type TreeFolder = {
-  kind: 'folder'
-  id: string
-  title: string
-  description: string | null
-  depth: number
+  kind: "folder";
+  id: string;
+  title: string;
+  description: string | null;
+  depth: number;
   /** For `mayModify`, so a row only offers what the endpoint would allow. */
-  createdBy: string | null
-  effectiveMemberPermission?: ForumPermission
+  createdBy: string | null;
+  effectiveMemberPermission?: ForumPermission;
   /** Its own setting, unreduced — what an operator chose, which is what their dialog shows. */
-  memberPermission?: ForumPermission
-  children: TreeNode[]
-}
+  memberPermission?: ForumPermission;
+  children: TreeNode[];
+};
 
-export type TreeNode = TreeFolder | TreeLeaf
+export type TreeNode = TreeFolder | TreeLeaf;
 
 /** The root's bucket. Not a uuid, so it cannot collide with a folder's id. */
-const ROOT = 'root'
+const ROOT = "root";
 
-function leafOf(kind: 'thread' | 'page', row: LeafRow): TreeLeaf {
+function leafOf(kind: "thread" | "page", row: LeafRow): TreeLeaf {
   return {
     kind,
     id: row.id,
@@ -72,13 +72,13 @@ function leafOf(kind: 'thread' | 'page', row: LeafRow): TreeLeaf {
     createdBy: row.createdBy,
     folderId: row.folderId,
     effectiveMemberPermission: row.effectiveMemberPermission,
-  }
+  };
 }
 
 function push<T>(map: Map<string, T[]>, key: string, value: T): void {
-  const bucket = map.get(key)
-  if (bucket === undefined) map.set(key, [value])
-  else bucket.push(value)
+  const bucket = map.get(key);
+  if (bucket === undefined) map.set(key, [value]);
+  else bucket.push(value);
 }
 
 /**
@@ -97,19 +97,19 @@ function push<T>(map: Map<string, T[]>, key: string, value: T): void {
  * on the next refresh; hiding it looks like the writing is gone.
  */
 export function buildTree(folders: FolderRow[], pages: LeafRow[], threads: LeafRow[]): TreeNode[] {
-  const leavesByParent = new Map<string, TreeLeaf[]>()
-  const foldersByParent = new Map<string, FolderRow[]>()
+  const leavesByParent = new Map<string, TreeLeaf[]>();
+  const foldersByParent = new Map<string, FolderRow[]>();
 
-  const known = new Set<string>(folders.map((folder) => folder.id))
+  const known = new Set<string>(folders.map((folder) => folder.id));
   const bucketFor = (parent: string | null) =>
-    parent !== null && known.has(parent) ? parent : ROOT
+    parent !== null && known.has(parent) ? parent : ROOT;
 
   for (const thread of threads) {
-    push(leavesByParent, bucketFor(thread.folderId), leafOf('thread', thread))
+    push(leavesByParent, bucketFor(thread.folderId), leafOf("thread", thread));
   }
-  for (const page of pages) push(leavesByParent, bucketFor(page.folderId), leafOf('page', page))
+  for (const page of pages) push(leavesByParent, bucketFor(page.folderId), leafOf("page", page));
   for (const folder of folders) {
-    push(foldersByParent, bucketFor(folder.parentFolderId), folder)
+    push(foldersByParent, bucketFor(folder.parentFolderId), folder);
   }
 
   /**
@@ -125,13 +125,13 @@ export function buildTree(folders: FolderRow[], pages: LeafRow[], threads: LeafR
   for (const leaves of leavesByParent.values()) {
     leaves.sort(
       (a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt) || b.id.localeCompare(a.id),
-    )
+    );
   }
 
   const childrenOf = (key: string): TreeNode[] => [
     ...(leavesByParent.get(key) ?? []),
     ...(foldersByParent.get(key) ?? []).map((folder): TreeFolder => ({
-      kind: 'folder',
+      kind: "folder",
       id: folder.id,
       title: folder.title,
       description: folder.description,
@@ -141,7 +141,7 @@ export function buildTree(folders: FolderRow[], pages: LeafRow[], threads: LeafR
       memberPermission: folder.memberPermission,
       children: childrenOf(folder.id),
     })),
-  ]
+  ];
 
-  return childrenOf(ROOT)
+  return childrenOf(ROOT);
 }

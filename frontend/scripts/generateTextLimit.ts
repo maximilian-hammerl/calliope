@@ -12,43 +12,43 @@
 // checking them, so `tsconfig.node.json` covers this file for `vue-tsc --build`, and its
 // `erasableSyntaxOnly` rejects the syntax stripping cannot handle (enum, namespace,
 // parameter properties) at check time rather than at run time.
-import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 /**
  * Only the corner of OpenAPI this reads. Request-body properties are inline except where a schema
  * is registered as a component — the post document is, because it is described once and referred
  * to from both routes — so a `$ref` has to be followed to find the bound behind it.
  */
-type Bound = { minLength?: number; maxLength?: number; $ref?: string }
+type Bound = { minLength?: number; maxLength?: number; $ref?: string };
 
 type Schema = {
-  properties?: Record<string, Bound>
-  oneOf?: Schema[]
-  anyOf?: Schema[]
-}
+  properties?: Record<string, Bound>;
+  oneOf?: Schema[];
+  anyOf?: Schema[];
+};
 
 type Operation = {
-  operationId?: string
-  requestBody?: { content?: Record<string, { schema?: Schema }> }
-}
+  operationId?: string;
+  requestBody?: { content?: Record<string, { schema?: Schema }> };
+};
 
 type OpenApiDocument = {
-  paths: Record<string, Record<string, Operation | undefined>>
-  components?: { schemas?: Record<string, Bound> }
-}
+  paths: Record<string, Record<string, Operation | undefined>>;
+  components?: { schemas?: Record<string, Bound> };
+};
 
-const here = import.meta.dirname
-const SPECIFICATION = resolve(here, '../../backend/open-api.json')
-const OUTPUT = resolve(here, '../src/api/textLimit.ts')
+const here = import.meta.dirname;
+const SPECIFICATION = resolve(here, "../../backend/open-api.json");
+const OUTPUT = resolve(here, "../src/api/textLimit.ts");
 
-const specification = JSON.parse(readFileSync(SPECIFICATION, 'utf8')) as OpenApiDocument
+const specification = JSON.parse(readFileSync(SPECIFICATION, "utf8")) as OpenApiDocument;
 
 /** A `$ref` only ever points into `components.schemas` here, and never at another `$ref`. */
 function resolveReference(definition: Bound): Bound {
-  if (definition.$ref === undefined) return definition
-  const name = definition.$ref.replace('#/components/schemas/', '')
-  return specification.components?.schemas?.[name] ?? {}
+  if (definition.$ref === undefined) return definition;
+  const name = definition.$ref.replace("#/components/schemas/", "");
+  return specification.components?.schemas?.[name] ?? {};
 }
 
 /**
@@ -65,30 +65,30 @@ function collectBounds(
   operationId: string,
   into: Record<string, Bound>,
 ): void {
-  if (schema === undefined) return
+  if (schema === undefined) return;
 
   for (const [property, reference] of Object.entries(schema.properties ?? {})) {
     // Resolved first: a property may be a component reference rather than an inline schema, which
     // is how `createPost`'s document carries its bound.
-    const definition = resolveReference(reference)
-    const bound: Bound = {}
-    if (typeof definition.minLength === 'number') bound.minLength = definition.minLength
-    if (typeof definition.maxLength === 'number') bound.maxLength = definition.maxLength
-    if (Object.keys(bound).length === 0) continue
+    const definition = resolveReference(reference);
+    const bound: Bound = {};
+    if (typeof definition.minLength === "number") bound.minLength = definition.minLength;
+    if (typeof definition.maxLength === "number") bound.maxLength = definition.maxLength;
+    if (Object.keys(bound).length === 0) continue;
 
-    const existing = into[property]
+    const existing = into[property];
     if (existing !== undefined && JSON.stringify(existing) !== JSON.stringify(bound)) {
       throw new Error(
         `${operationId}.${property} is bounded two ways across the branches of its request body: ` +
           `${JSON.stringify(existing)} and ${JSON.stringify(bound)}`,
-      )
+      );
     }
 
-    into[property] = bound
+    into[property] = bound;
   }
 
   for (const branch of [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])]) {
-    collectBounds(branch, operationId, into)
+    collectBounds(branch, operationId, into);
   }
 }
 
@@ -98,31 +98,31 @@ function collectBounds(
  * prevent, in the one shape that had not come up before.
  */
 function boundsOf(operation: Operation, operationId: string): Record<string, Bound> {
-  const bounds: Record<string, Bound> = {}
+  const bounds: Record<string, Bound> = {};
   for (const { schema } of Object.values(operation.requestBody?.content ?? {})) {
-    collectBounds(schema, operationId, bounds)
+    collectBounds(schema, operationId, bounds);
   }
-  return bounds
+  return bounds;
 }
 
-const operations: Record<string, Record<string, Bound>> = {}
+const operations: Record<string, Record<string, Bound>> = {};
 for (const methods of Object.values(specification.paths)) {
   for (const operation of Object.values(methods)) {
-    if (operation?.operationId === undefined) continue
-    const bounds = boundsOf(operation, operation.operationId)
-    if (Object.keys(bounds).length > 0) operations[operation.operationId] = bounds
+    if (operation?.operationId === undefined) continue;
+    const bounds = boundsOf(operation, operation.operationId);
+    if (Object.keys(bounds).length > 0) operations[operation.operationId] = bounds;
   }
 }
 
 const body = Object.entries(operations)
   .map(([operationId, properties]) => {
     const lines = Object.entries(properties).map(([property, bound]) => {
-      const parts = Object.entries(bound).map(([key, value]) => `${key}: ${value}`)
-      return `    ${property}: { ${parts.join(', ')} },`
-    })
-    return `  ${operationId}: {\n${lines.join('\n')}\n  },`
+      const parts = Object.entries(bound).map(([key, value]) => `${key}: ${value}`);
+      return `    ${property}: { ${parts.join(", ")} },`;
+    });
+    return `  ${operationId}: {\n${lines.join("\n")}\n  },`;
   })
-  .join('\n')
+  .join("\n");
 
 writeFileSync(
   OUTPUT,
@@ -137,6 +137,6 @@ export const TEXT_LIMIT = {
 ${body}
 } as const
 `,
-)
+);
 
-console.log(`Wrote ${Object.keys(operations).length} operations to src/api/textLimit.ts`)
+console.log(`Wrote ${Object.keys(operations).length} operations to src/api/textLimit.ts`);

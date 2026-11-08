@@ -7,10 +7,10 @@
  *
  * The post count is named because "dieses Thema löschen" understates what happens.
  */
-import { computed } from 'vue'
-import { pluralize } from '@/lib/format/formatText'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { computed } from "vue";
+import { pluralize } from "@/lib/format/formatText";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,17 +18,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 const props = defineProps<{
-  title: string
-  postCount?: number
-  pending: boolean
-  error?: string
-}>()
-defineEmits<{ confirmed: [] }>()
+  title: string;
+  postCount?: number;
+  pending: boolean;
+  error?: string;
+}>();
+defineEmits<{ confirmed: [] }>();
 
 /**
  * Absent while the posts are still loading, and left unsaid at zero rather than read
@@ -36,12 +36,12 @@ defineEmits<{ confirmed: [] }>()
  */
 const posts = computed<string | undefined>(() => {
   if (props.postCount === undefined || props.postCount === 0) {
-    return undefined
+    return undefined;
   }
   return props.postCount === 1
-    ? 'sein Beitrag'
-    : `seine ${pluralize(props.postCount, 'Beitrag', 'Beiträge')}`
-})
+    ? "sein Beitrag"
+    : `seine ${pluralize(props.postCount, "Beitrag", "Beiträge")}`;
+});
 </script>
 
 <template>

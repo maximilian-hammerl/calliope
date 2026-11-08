@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { APP_NAME } from '@/lib/branding'
-import { computed } from 'vue'
-import markRegular from '@/assets/logo/calliope-c.svg'
-import markSmall from '@/assets/logo/calliope-c-small.svg'
-import markRegularInverse from '@/assets/logo/calliope-c-inverse.svg'
-import markSmallInverse from '@/assets/logo/calliope-c-small-inverse.svg'
-import { useTheme } from '@/composables/useTheme'
+import { APP_NAME } from "@/lib/branding";
+import { computed } from "vue";
+import markRegular from "@/assets/logo/calliope-c.svg";
+import markSmall from "@/assets/logo/calliope-c-small.svg";
+import markRegularInverse from "@/assets/logo/calliope-c-inverse.svg";
+import markSmallInverse from "@/assets/logo/calliope-c-small-inverse.svg";
+import { useTheme } from "@/composables/useTheme";
 
 const props = withDefaults(defineProps<{ size?: number; wordmark?: boolean }>(), {
   size: 22,
   wordmark: false,
-})
+});
 
-const { isDark } = useTheme()
+const { isDark } = useTheme();
 
 /**
  * Two cuts of the same letter, both outlined from Newsreader itself: the regular one at
@@ -23,23 +23,23 @@ const { isDark } = useTheme()
  * Each cut is drawn twice rather than tinted: the dark one is cream, not the ink one recoloured.
  */
 const mark = computed<string>(() => {
-  const small = props.size <= 32
+  const small = props.size <= 32;
   if (isDark.value) {
-    return small ? markSmallInverse : markRegularInverse
+    return small ? markSmallInverse : markRegularInverse;
   }
-  return small ? markSmall : markRegular
-})
+  return small ? markSmall : markRegular;
+});
 
 /** The lockup geometry the asset set specifies, stated once here rather than at each use. */
-const gap = computed<number>(() => props.size * 0.45)
-const wordmarkSize = computed<number>(() => props.size * 0.73)
+const gap = computed<number>(() => props.size * 0.45);
+const wordmarkSize = computed<number>(() => props.size * 0.73);
 
 /**
  * The letter's own baseline sits 57.14 down its 64-unit box, so the box extends below it by
  * the C's overshoot. Baseline alignment puts the box's *bottom* on the text baseline, which
  * would float the mark; this drops it by the difference so the two baselines meet.
  */
-const baselineOffset = computed<number>(() => props.size * ((64 - 57.14) / 64))
+const baselineOffset = computed<number>(() => props.size * ((64 - 57.14) / 64));
 </script>
 
 <template>

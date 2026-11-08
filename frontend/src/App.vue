@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import AppLayout from '@/components/layout/AppLayout.vue'
-import ConnectionLost from '@/components/common/ConnectionLost.vue'
-import RateLimited from '@/components/common/RateLimited.vue'
-import { backendReachable, rateLimited } from '@/lib/api/queryClient'
+import { RouterView } from "vue-router";
+import AppLayout from "@/components/layout/AppLayout.vue";
+import ConnectionLost from "@/components/common/ConnectionLost.vue";
+import RateLimited from "@/components/common/RateLimited.vue";
+import { backendReachable, rateLimited } from "@/lib/api/queryClient";
 </script>
 
 <template>

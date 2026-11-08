@@ -1,4 +1,4 @@
-import type { PostDocument } from '@/api/models'
+import type { PostDocument } from "@/api/models";
 
 /**
  * Every node and mark the format allows, as HTML in and as the document Tiptap makes of it.
@@ -12,139 +12,139 @@ import type { PostDocument } from '@/api/models'
  */
 export const EVERY_NODE_AND_MARK =
   '<h2 style="text-align: center">Überschrift</h2>' +
-  '<p><strong>fett</strong> <em>kursiv</em> <u>unterstrichen</u> <s>durchgestrichen</s> ' +
+  "<p><strong>fett</strong> <em>kursiv</em> <u>unterstrichen</u> <s>durchgestrichen</s> " +
   '<code>code</code> <a href="https://example.org">Link</a></p>' +
-  '<ul><li><p>Punkt</p></li></ul>' +
+  "<ul><li><p>Punkt</p></li></ul>" +
   '<ol start="3"><li><p>Nummer</p></li></ol>' +
-  '<blockquote><p>Zitat</p></blockquote>' +
+  "<blockquote><p>Zitat</p></blockquote>" +
   '<pre><code class="language-ts">const x = 1</code></pre>' +
-  '<hr>' +
-  '<p>Zeile<br>danach</p>' +
+  "<hr>" +
+  "<p>Zeile<br>danach</p>" +
   '<img src="/api/files/karte.png" alt="Karte" title="Titel">' +
-  '<table><tbody><tr><th>Kopf</th><td>Zelle</td></tr></tbody></table>' +
+  "<table><tbody><tr><th>Kopf</th><td>Zelle</td></tr></tbody></table>" +
   '<p><span style="color: #aa3311; background-color: #f0e8d8; font-family: Newsreader; ' +
-  'font-size: 18px; line-height: 1.6">gestaltet</span></p>'
+  'font-size: 18px; line-height: 1.6">gestaltet</span></p>';
 
 export const EXPECTED = {
-  type: 'doc',
+  type: "doc",
   content: [
     {
-      type: 'heading',
+      type: "heading",
       attrs: {
-        textAlign: 'center',
+        textAlign: "center",
         level: 2,
       },
       content: [
         {
-          type: 'text',
-          text: 'Überschrift',
+          type: "text",
+          text: "Überschrift",
         },
       ],
     },
     {
-      type: 'paragraph',
+      type: "paragraph",
       attrs: {
         textAlign: null,
       },
       content: [
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'bold',
+              type: "bold",
             },
           ],
-          text: 'fett',
+          text: "fett",
         },
         {
-          type: 'text',
-          text: ' ',
+          type: "text",
+          text: " ",
         },
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'italic',
+              type: "italic",
             },
           ],
-          text: 'kursiv',
+          text: "kursiv",
         },
         {
-          type: 'text',
-          text: ' ',
+          type: "text",
+          text: " ",
         },
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'underline',
+              type: "underline",
             },
           ],
-          text: 'unterstrichen',
+          text: "unterstrichen",
         },
         {
-          type: 'text',
-          text: ' ',
+          type: "text",
+          text: " ",
         },
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'strike',
+              type: "strike",
             },
           ],
-          text: 'durchgestrichen',
+          text: "durchgestrichen",
         },
         {
-          type: 'text',
-          text: ' ',
+          type: "text",
+          text: " ",
         },
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'code',
+              type: "code",
             },
           ],
-          text: 'code',
+          text: "code",
         },
         {
-          type: 'text',
-          text: ' ',
+          type: "text",
+          text: " ",
         },
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'link',
+              type: "link",
               attrs: {
-                href: 'https://example.org',
-                target: '_blank',
-                rel: 'noopener noreferrer nofollow',
+                href: "https://example.org",
+                target: "_blank",
+                rel: "noopener noreferrer nofollow",
                 class: null,
                 title: null,
               },
             },
           ],
-          text: 'Link',
+          text: "Link",
         },
       ],
     },
     {
-      type: 'bulletList',
+      type: "bulletList",
       content: [
         {
-          type: 'listItem',
+          type: "listItem",
           content: [
             {
-              type: 'paragraph',
+              type: "paragraph",
               attrs: {
                 textAlign: null,
               },
               content: [
                 {
-                  type: 'text',
-                  text: 'Punkt',
+                  type: "text",
+                  text: "Punkt",
                 },
               ],
             },
@@ -153,24 +153,24 @@ export const EXPECTED = {
       ],
     },
     {
-      type: 'orderedList',
+      type: "orderedList",
       attrs: {
         start: 3,
         type: null,
       },
       content: [
         {
-          type: 'listItem',
+          type: "listItem",
           content: [
             {
-              type: 'paragraph',
+              type: "paragraph",
               attrs: {
                 textAlign: null,
               },
               content: [
                 {
-                  type: 'text',
-                  text: 'Nummer',
+                  type: "text",
+                  text: "Nummer",
                 },
               ],
             },
@@ -179,74 +179,74 @@ export const EXPECTED = {
       ],
     },
     {
-      type: 'blockquote',
+      type: "blockquote",
       content: [
         {
-          type: 'paragraph',
+          type: "paragraph",
           attrs: {
             textAlign: null,
           },
           content: [
             {
-              type: 'text',
-              text: 'Zitat',
+              type: "text",
+              text: "Zitat",
             },
           ],
         },
       ],
     },
     {
-      type: 'codeBlock',
+      type: "codeBlock",
       attrs: {
-        language: 'ts',
+        language: "ts",
       },
       content: [
         {
-          type: 'text',
-          text: 'const x = 1',
+          type: "text",
+          text: "const x = 1",
         },
       ],
     },
     {
-      type: 'horizontalRule',
+      type: "horizontalRule",
     },
     {
-      type: 'paragraph',
+      type: "paragraph",
       attrs: {
         textAlign: null,
       },
       content: [
         {
-          type: 'text',
-          text: 'Zeile',
+          type: "text",
+          text: "Zeile",
         },
         {
-          type: 'hardBreak',
+          type: "hardBreak",
         },
         {
-          type: 'text',
-          text: 'danach',
+          type: "text",
+          text: "danach",
         },
       ],
     },
     {
-      type: 'image',
+      type: "image",
       attrs: {
-        src: '/api/files/karte.png',
-        alt: 'Karte',
-        title: 'Titel',
+        src: "/api/files/karte.png",
+        alt: "Karte",
+        title: "Titel",
         width: null,
         height: null,
       },
     },
     {
-      type: 'table',
+      type: "table",
       content: [
         {
-          type: 'tableRow',
+          type: "tableRow",
           content: [
             {
-              type: 'tableHeader',
+              type: "tableHeader",
               attrs: {
                 colspan: 1,
                 rowspan: 1,
@@ -255,21 +255,21 @@ export const EXPECTED = {
               },
               content: [
                 {
-                  type: 'paragraph',
+                  type: "paragraph",
                   attrs: {
                     textAlign: null,
                   },
                   content: [
                     {
-                      type: 'text',
-                      text: 'Kopf',
+                      type: "text",
+                      text: "Kopf",
                     },
                   ],
                 },
               ],
             },
             {
-              type: 'tableCell',
+              type: "tableCell",
               attrs: {
                 colspan: 1,
                 rowspan: 1,
@@ -278,14 +278,14 @@ export const EXPECTED = {
               },
               content: [
                 {
-                  type: 'paragraph',
+                  type: "paragraph",
                   attrs: {
                     textAlign: null,
                   },
                   content: [
                     {
-                      type: 'text',
-                      text: 'Zelle',
+                      type: "text",
+                      text: "Zelle",
                     },
                   ],
                 },
@@ -296,28 +296,28 @@ export const EXPECTED = {
       ],
     },
     {
-      type: 'paragraph',
+      type: "paragraph",
       attrs: {
         textAlign: null,
       },
       content: [
         {
-          type: 'text',
+          type: "text",
           marks: [
             {
-              type: 'textStyle',
+              type: "textStyle",
               attrs: {
-                color: '#aa3311',
-                backgroundColor: '#f0e8d8',
-                fontFamily: 'Newsreader',
-                fontSize: '18px',
-                lineHeight: '1.6',
+                color: "#aa3311",
+                backgroundColor: "#f0e8d8",
+                fontFamily: "Newsreader",
+                fontSize: "18px",
+                lineHeight: "1.6",
               },
             },
           ],
-          text: 'gestaltet',
+          text: "gestaltet",
         },
       ],
     },
   ],
-} satisfies PostDocument
+} satisfies PostDocument;

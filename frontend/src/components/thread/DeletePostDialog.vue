@@ -7,8 +7,8 @@
  * The name is there when it is somebody else's, because removing your own paragraph and
  * moderating another member's are not the same act and the confirmation is where that registers.
  */
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,17 +16,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 const props = defineProps<{
   /** Absent for your own post, and for one whose author deleted their account. */
-  authorName?: string
-  pending: boolean
-  error?: string
-}>()
-defineEmits<{ confirmed: [] }>()
+  authorName?: string;
+  pending: boolean;
+  error?: string;
+}>();
+defineEmits<{ confirmed: [] }>();
 </script>
 
 <template>

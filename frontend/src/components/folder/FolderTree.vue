@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useQueryClient } from '@tanstack/vue-query'
-import { Plus } from '@lucide/vue'
-import { getListFoldersQueryKey, useDeleteFolder } from '@/api/folders/folders'
-import { failureMessage } from '@/lib/format/failure'
-import { useFolderTree } from '@/composables/useFolderTree'
-import type { TreeFolder, TreeNode } from '@/lib/folder/buildTree'
-import FolderTreeNode from '@/components/folder/FolderTreeNode.vue'
-import CreateKindItems from '@/components/folder/CreateKindItems.vue'
-import FolderDialog from '@/components/folder/FolderDialog.vue'
-import MoveDialog from '@/components/folder/MoveDialog.vue'
-import type { Movable } from '@/components/folder/MoveDialog.vue'
-import type { EditableFolder } from '@/components/folder/FolderDialog.vue'
-import PageDialog from '@/components/page/PageDialog.vue'
-import ThreadDialog from '@/components/thread/ThreadDialog.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { computed, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useQueryClient } from "@tanstack/vue-query";
+import { Plus } from "@lucide/vue";
+import { getListFoldersQueryKey, useDeleteFolder } from "@/api/folders/folders";
+import { failureMessage } from "@/lib/format/failure";
+import { useFolderTree } from "@/composables/useFolderTree";
+import type { TreeFolder, TreeNode } from "@/lib/folder/buildTree";
+import FolderTreeNode from "@/components/folder/FolderTreeNode.vue";
+import CreateKindItems from "@/components/folder/CreateKindItems.vue";
+import FolderDialog from "@/components/folder/FolderDialog.vue";
+import MoveDialog from "@/components/folder/MoveDialog.vue";
+import type { Movable } from "@/components/folder/MoveDialog.vue";
+import type { EditableFolder } from "@/components/folder/FolderDialog.vue";
+import PageDialog from "@/components/page/PageDialog.vue";
+import ThreadDialog from "@/components/thread/ThreadDialog.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 
 /**
  * The group's structure, where it is changed. The only editable copy: the rails elsewhere read
@@ -30,124 +30,124 @@ import {
  * each mount their own.
  */
 const props = defineProps<{
-  groupId: string
-  mayWrite: boolean
-  mayAdminister: boolean
-  currentUserId?: string
-}>()
+  groupId: string;
+  mayWrite: boolean;
+  mayAdminister: boolean;
+  currentUserId?: string;
+}>();
 
-const router = useRouter()
-const queryClient = useQueryClient()
+const router = useRouter();
+const queryClient = useQueryClient();
 
-const { tree } = useFolderTree(computed<string>(() => props.groupId))
+const { tree } = useFolderTree(computed<string>(() => props.groupId));
 
 /** Collapsed rather than expanded, so a folder somebody just made is open. */
-const collapsed = reactive<Set<string>>(new Set())
+const collapsed = reactive<Set<string>>(new Set());
 
 function toggle(folderId: string) {
-  if (collapsed.has(folderId)) collapsed.delete(folderId)
-  else collapsed.add(folderId)
+  if (collapsed.has(folderId)) collapsed.delete(folderId);
+  else collapsed.add(folderId);
 }
 
 /** Which dialog is open, and where it would create. Null means the root. */
-const creatingFolderUnder = ref<string | null | undefined>(undefined)
-const creatingPageUnder = ref<string | null | undefined>(undefined)
-const creatingThreadUnder = ref<string | null | undefined>(undefined)
-const editing = ref<EditableFolder | undefined>(undefined)
+const creatingFolderUnder = ref<string | null | undefined>(undefined);
+const creatingPageUnder = ref<string | null | undefined>(undefined);
+const creatingThreadUnder = ref<string | null | undefined>(undefined);
+const editing = ref<EditableFolder | undefined>(undefined);
 
 const folderDialogOpen = computed<boolean>({
   get: () => creatingFolderUnder.value !== undefined || editing.value !== undefined,
   set: (open) => {
     if (!open) {
-      creatingFolderUnder.value = undefined
-      editing.value = undefined
+      creatingFolderUnder.value = undefined;
+      editing.value = undefined;
     }
   },
-})
+});
 
 const pageDialogOpen = computed<boolean>({
   get: () => creatingPageUnder.value !== undefined,
   set: (open) => {
-    if (!open) creatingPageUnder.value = undefined
+    if (!open) creatingPageUnder.value = undefined;
   },
-})
+});
 
 const threadDialogOpen = computed<boolean>({
   get: () => creatingThreadUnder.value !== undefined,
   set: (open) => {
-    if (!open) creatingThreadUnder.value = undefined
+    if (!open) creatingThreadUnder.value = undefined;
   },
-})
+});
 
-function createAtRoot(kind: 'folder' | 'page' | 'thread') {
-  if (kind === 'folder') creatingFolderUnder.value = null
-  else if (kind === 'page') creatingPageUnder.value = null
-  else creatingThreadUnder.value = null
+function createAtRoot(kind: "folder" | "page" | "thread") {
+  if (kind === "folder") creatingFolderUnder.value = null;
+  else if (kind === "page") creatingPageUnder.value = null;
+  else creatingThreadUnder.value = null;
 }
 
 /** What the move dialog is working on, which is also what opens it. */
-const moving = ref<Movable | undefined>(undefined)
+const moving = ref<Movable | undefined>(undefined);
 
 const moveDialogOpen = computed<boolean>({
   get: () => moving.value !== undefined,
   set: (open) => {
-    if (!open) moving.value = undefined
+    if (!open) moving.value = undefined;
   },
-})
+});
 
 function startMove(node: TreeNode) {
   moving.value = {
     kind: node.kind,
     id: node.id,
     title: node.title,
-    parentId: node.kind === 'folder' ? parentOf(node.id) : node.folderId,
-  }
+    parentId: node.kind === "folder" ? parentOf(node.id) : node.folderId,
+  };
 }
 
 /** A folder's own parent is not on its node, so it is read back out of the tree. */
 function parentOf(folderId: string): string | null {
   const walk = (nodes: TreeNode[], parent: string | null): string | null | undefined => {
     for (const node of nodes) {
-      if (node.kind !== 'folder') continue
-      if (node.id === folderId) return parent
-      const found = walk(node.children, node.id)
-      if (found !== undefined) return found
+      if (node.kind !== "folder") continue;
+      if (node.id === folderId) return parent;
+      const found = walk(node.children, node.id);
+      if (found !== undefined) return found;
     }
-    return undefined
-  }
-  return walk(tree.value, null) ?? null
+    return undefined;
+  };
+  return walk(tree.value, null) ?? null;
 }
 
-const deleteError = ref<string | undefined>(undefined)
-const { mutateAsync: deleteFolder } = useDeleteFolder()
+const deleteError = ref<string | undefined>(undefined);
+const { mutateAsync: deleteFolder } = useDeleteFolder();
 
 /**
  * No confirmation: only an empty folder offers this, so there is nothing to lose by pressing it.
  * The 409 is still handled — somebody else may have put something in it a moment ago.
  */
 async function remove(folder: TreeFolder) {
-  deleteError.value = undefined
+  deleteError.value = undefined;
   try {
-    await deleteFolder({ groupId: props.groupId, folderId: folder.id })
+    await deleteFolder({ groupId: props.groupId, folderId: folder.id });
   } catch (error) {
     deleteError.value = failureMessage(
       error,
       `„${folder.title}" konnte nicht gelöscht werden. Inzwischen liegt vielleicht etwas darin.`,
-    )
-    return
+    );
+    return;
   }
-  await queryClient.invalidateQueries({ queryKey: getListFoldersQueryKey(props.groupId) })
+  await queryClient.invalidateQueries({ queryKey: getListFoldersQueryKey(props.groupId) });
 }
 
 function openThread(threadId: string) {
-  void router.push({ name: 'thread', params: { groupId: props.groupId, threadId } })
+  void router.push({ name: "thread", params: { groupId: props.groupId, threadId } });
 }
 
 function openPage(pageId: string) {
-  void router.push({ name: 'page', params: { groupId: props.groupId, pageId } })
+  void router.push({ name: "page", params: { groupId: props.groupId, pageId } });
 }
 
-const nodes = computed<TreeNode[]>(() => tree.value)
+const nodes = computed<TreeNode[]>(() => tree.value);
 </script>
 
 <template>

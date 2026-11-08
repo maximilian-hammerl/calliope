@@ -139,24 +139,27 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Before setup-node, whose pnpm cache asks pnpm where its store is. Installs the version
+      # `packageManager` in the root package.json names.
+      - uses: pnpm/action-setup@v6
+
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          node-version: 26
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # The generated client is git-ignored, so a fresh checkout has none and the type check
       # would fail on the missing imports. Generating from the committed spec also means a
       # client that no longer matches it breaks the build here.
       - name: Generate the API client
-        run: npm run open-api:generate-client
+        run: pnpm run open-api:generate-client
 
       # Includes knip, which detects unused dependencies, exports and files — see knip.jsonc.
       - name: Check formatting, lints, types and unused code
-        run: npm run validate:check
+        run: pnpm run validate:check
 
       - name: Run tests
-        run: npm run test:unit -- --run
+        run: pnpm run test:unit --run

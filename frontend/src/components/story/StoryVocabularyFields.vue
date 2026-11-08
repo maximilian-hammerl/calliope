@@ -12,7 +12,7 @@
  * settings stayed free text on purpose — beta testers added nothing to either list and asked for
  * a plain field, so those two describe rather than filter.
  */
-import { computed } from 'vue'
+import { computed } from "vue";
 import {
   CONTENT_WARNING_LABELS,
   afterChoosingGenres,
@@ -21,7 +21,7 @@ import {
   TENSE_LABELS,
   TROPE_LABELS,
   subgenresFor,
-} from '@/lib/story/storyVocabulary'
+} from "@/lib/story/storyVocabulary";
 import type {
   ContentWarning,
   Genre,
@@ -29,48 +29,48 @@ import type {
   Subgenre,
   Tense,
   Trope,
-} from '@/lib/story/storyVocabulary'
-import ChoiceChips from '@/components/common/ChoiceChips.vue'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/lib/story/storyVocabulary";
+import ChoiceChips from "@/components/common/ChoiceChips.vue";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
 
 export type StoryVocabulary = {
-  genres: Genre[]
-  subgenres: Subgenre[]
-  tropes: Trope[]
-  contentWarnings: ContentWarning[]
-  storyThemes: string
-  storySettings: string
+  genres: Genre[];
+  subgenres: Subgenre[];
+  tropes: Trope[];
+  contentWarnings: ContentWarning[];
+  storyThemes: string;
+  storySettings: string;
   /** Empty string for "not said", which is what a select's placeholder option carries. */
-  tense: Tense | ''
-  perspective: Perspective | ''
-}
+  tense: Tense | "";
+  perspective: Perspective | "";
+};
 
-const metadata = defineModel<StoryVocabulary>({ required: true })
+const metadata = defineModel<StoryVocabulary>({ required: true });
 
 const options = <T extends string>(labels: Record<T, string>) =>
-  (Object.entries(labels) as Array<[T, string]>).map(([value, label]) => ({ value, label }))
+  (Object.entries(labels) as Array<[T, string]>).map(([value, label]) => ({ value, label }));
 
-const GENRE_OPTIONS = options(GENRE_LABELS)
-const TROPE_OPTIONS = options(TROPE_LABELS)
-const CONTENT_WARNING_OPTIONS = options(CONTENT_WARNING_LABELS)
+const GENRE_OPTIONS = options(GENRE_LABELS);
+const TROPE_OPTIONS = options(TROPE_LABELS);
+const CONTENT_WARNING_OPTIONS = options(CONTENT_WARNING_LABELS);
 
 /**
  * Only the subgenres of the genres actually picked — eight at most instead of seventy-six. Choosing
  * a genre is what opens them, which is also why a subgenre already chosen is dropped when its
  * genre goes: it would otherwise be stored while being invisible to the person who set it.
  */
-const subgenreOptions = computed(() => subgenresFor(metadata.value.genres))
+const subgenreOptions = computed(() => subgenresFor(metadata.value.genres));
 
 const genres = computed<Genre[]>({
   get: () => metadata.value.genres,
   set: (chosen) => (metadata.value = afterChoosingGenres(metadata.value, chosen)),
-})
+});
 
-const props = defineProps<{ idPrefix: string }>()
+const props = defineProps<{ idPrefix: string }>();
 
 const selectClass =
-  'h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9'
+  "h-11 w-full rounded-lg border border-line-4 bg-paper-0 px-[11px] text-[13.5px] text-ink-2 md:h-9";
 </script>
 
 <template>

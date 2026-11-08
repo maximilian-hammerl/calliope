@@ -1,6 +1,6 @@
-import type { MaybeRefOrGetter } from 'vue'
-import { computed, onMounted, ref, toValue, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import type { MaybeRefOrGetter } from "vue";
+import { computed, onMounted, ref, toValue, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 /**
  * The page a list is showing, kept in the URL.
@@ -22,38 +22,38 @@ export function usePagedList(
    * `false`: its page is not what the address describes, it would collide with the page of the
    * list behind it, and it should start at one again the next time the dialog is opened.
    */
-  parameter: string | false = 'page',
+  parameter: string | false = "page",
 ) {
-  const route = useRoute()
-  const router = useRouter()
+  const route = useRoute();
+  const router = useRouter();
 
-  const pageInMemory = ref<number>(1)
+  const pageInMemory = ref<number>(1);
 
   /** Writable so a view can bind it with `v-model:page`; the setter is `goToPage`. */
   const page = computed<number>({
     get() {
       if (parameter === false) {
-        return pageInMemory.value
+        return pageInMemory.value;
       }
-      const asked = Number(route.query[parameter])
-      return Number.isInteger(asked) && asked >= 1 ? asked : 1
+      const asked = Number(route.query[parameter]);
+      return Number.isInteger(asked) && asked >= 1 ? asked : 1;
     },
     set(next) {
-      goToPage(next)
+      goToPage(next);
     },
-  })
+  });
 
-  const offset = computed<number>(() => (page.value - 1) * pageSize)
+  const offset = computed<number>(() => (page.value - 1) * pageSize);
 
   /**
    * `ListPagination` takes these two rather than a page count, because reka does. Returning them
    * from here is what keeps them the same numbers the `offset` above was computed from — a view
    * passing its own would be free to pass a different page size and quietly page twice.
    */
-  const total = computed<number>(() => toValue(totalResults) ?? 0)
-  const itemsPerPage = pageSize
+  const total = computed<number>(() => toValue(totalResults) ?? 0);
+  const itemsPerPage = pageSize;
 
-  const pageCount = computed<number>(() => Math.max(1, Math.ceil(total.value / pageSize)))
+  const pageCount = computed<number>(() => Math.max(1, Math.ceil(total.value / pageSize)));
 
   /**
    * Merges into the query rather than replacing it, so a list's page and whatever else a view
@@ -61,15 +61,15 @@ export function usePagedList(
    * stays absent from the address and a plain link stays plain.
    */
   function navigate(patch: Record<string, string | undefined>): void {
-    void router.push({ query: { ...route.query, ...patch } })
+    void router.push({ query: { ...route.query, ...patch } });
   }
 
   function goToPage(next: number): void {
     if (parameter === false) {
-      pageInMemory.value = next
-      return
+      pageInMemory.value = next;
+      return;
     }
-    navigate({ [parameter]: next === 1 ? undefined : String(next) })
+    navigate({ [parameter]: next === 1 ? undefined : String(next) });
   }
 
   /**
@@ -81,10 +81,10 @@ export function usePagedList(
   onMounted(() => {
     watch([() => toValue(totalResults), pageCount, page], ([known, pages, current]) => {
       if (known !== undefined && current > pages) {
-        goToPage(pages)
+        goToPage(pages);
       }
-    })
-  })
+    });
+  });
 
-  return { page, offset, total, itemsPerPage, pageCount, goToPage, navigate }
+  return { page, offset, total, itemsPerPage, pageCount, goToPage, navigate };
 }

@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { defineComponent, h, ref } from 'vue'
-import SearchResults from '@/components/search/SearchResults.vue'
-import type { Search200 } from '@/api/models'
+import { describe, expect, it, vi } from "vitest";
+import { mount } from "@vue/test-utils";
+import { defineComponent, h, ref } from "vue";
+import SearchResults from "@/components/search/SearchResults.vue";
+import type { Search200 } from "@/api/models";
 
 /**
  * The forum's matches are their own sections rather than rows in the group's, and each sits
@@ -17,16 +17,16 @@ import type { Search200 } from '@/api/models'
  * `fetch` — which would make the test about the session rather than about the sections. Every
  * other component spec here tests a component that takes props only and needs none of this.
  */
-vi.mock('@/api/auth/auth', () => ({
+vi.mock("@/api/auth/auth", () => ({
   useGetCurrentUser: () => ({ data: { value: undefined } }),
-}))
+}));
 
 /**
  * A real `ref`, not a `{ value }` object: a template unwraps only an actual ref, so a plain object
  * is always truthy in `v-if` — which made the mark look unconditional when it is not.
  */
-const operator = ref<boolean>(false)
-vi.mock('@/composables/useIsOperator', () => ({ useIsOperator: () => operator }))
+const operator = ref<boolean>(false);
+vi.mock("@/composables/useIsOperator", () => ({ useIsOperator: () => operator }));
 
 const stubs = {
   RouterLink: defineComponent({
@@ -34,7 +34,7 @@ const stubs = {
     setup:
       (props, { slots }) =>
       () =>
-        h('a', { 'data-to': JSON.stringify(props.to) }, slots.default?.()),
+        h("a", { "data-to": JSON.stringify(props.to) }, slots.default?.()),
   }),
   FavouriteMark: true,
   ForumPermissionMark: true,
@@ -42,9 +42,9 @@ const stubs = {
   StatusMark: true,
   ReadMark: true,
   CalliopeBadge: true,
-}
+};
 
-const empty = { results: [], totalResults: 0 }
+const empty = { results: [], totalResults: 0 };
 
 function section(...titles: Array<string>) {
   return {
@@ -52,12 +52,12 @@ function section(...titles: Array<string>) {
       id: `id-${index}-${title}`,
       title,
       isFavourite: false,
-      writingGroupId: 'g-1',
-      writingGroupTitle: 'Der Zauberzwerg',
-      effectiveMemberPermission: 'write',
+      writingGroupId: "g-1",
+      writingGroupTitle: "Der Zauberzwerg",
+      effectiveMemberPermission: "write",
     })),
     totalResults: titles.length,
-  }
+  };
 }
 
 function mountResults(found: Record<string, unknown>) {
@@ -69,12 +69,12 @@ function mountResults(found: Record<string, unknown>) {
       minimumLength: 3,
     },
     global: { stubs },
-  })
+  });
 }
 
 /** The stub renders as its own element, so counting them is how the mark is observed. */
 function marks(found: Record<string, unknown>): number {
-  return mountResults(found).findAll('forum-permission-mark-stub').length
+  return mountResults(found).findAll("forum-permission-mark-stub").length;
 }
 
 /** What each rendered mark was handed, which is all this level decides. */
@@ -82,11 +82,11 @@ function markProps(
   found: Record<string, unknown>,
 ): Array<{ permission: string | undefined; isOperator: string | undefined }> {
   return mountResults(found)
-    .findAll('forum-permission-mark-stub')
+    .findAll("forum-permission-mark-stub")
     .map((mark) => ({
-      permission: mark.attributes('permission'),
-      isOperator: mark.attributes('isoperator'),
-    }))
+      permission: mark.attributes("permission"),
+      isOperator: mark.attributes("isoperator"),
+    }));
 }
 
 function headings(found: Record<string, unknown>): Array<string> {
@@ -104,38 +104,38 @@ function headings(found: Record<string, unknown>): Array<string> {
       minimumLength: 3,
     },
     global: { stubs },
-  })
+  });
 
   return wrapper
-    .findAll('div.font-semibold')
+    .findAll("div.font-semibold")
     .map((node) => node.text())
-    .filter((text) => text.length > 0)
+    .filter((text) => text.length > 0);
 }
 
-describe('the search popover keeps the forum in its own sections', () => {
-  it('puts each forum section directly after its counterpart', () => {
+describe("the search popover keeps the forum in its own sections", () => {
+  it("puts each forum section directly after its counterpart", () => {
     expect(
       headings({
-        threads: section('Kapitel 1'),
-        forumThreads: section('Wortkette'),
-        pages: section('Stadt A'),
-        forumPages: section('Regeln'),
+        threads: section("Kapitel 1"),
+        forumThreads: section("Wortkette"),
+        pages: section("Stadt A"),
+        forumPages: section("Regeln"),
       }),
-    ).toEqual(['Themen', 'Themen im Forum', 'Seiten', 'Seiten im Forum'])
-  })
+    ).toEqual(["Themen", "Themen im Forum", "Seiten", "Seiten im Forum"]);
+  });
 
   /** The common case, and the reason the group's two need no qualifier. */
-  it('leaves the forum out entirely when it matched nothing', () => {
-    expect(headings({ threads: section('Kapitel 1'), forumThreads: empty })).toEqual(['Themen'])
-  })
+  it("leaves the forum out entirely when it matched nothing", () => {
+    expect(headings({ threads: section("Kapitel 1"), forumThreads: empty })).toEqual(["Themen"]);
+  });
 
-  it('shows the forum alone when only it matched', () => {
-    expect(headings({ threads: empty, forumThreads: section('Wortkette') })).toEqual([
-      'Themen im Forum',
-    ])
-  })
+  it("shows the forum alone when only it matched", () => {
+    expect(headings({ threads: empty, forumThreads: section("Wortkette") })).toEqual([
+      "Themen im Forum",
+    ]);
+  });
 
-  it('links a forum result into the forum, not into a group', () => {
+  it("links a forum result into the forum, not into a group", () => {
     const wrapper = mount(SearchResults, {
       props: {
         results: {
@@ -144,24 +144,24 @@ describe('the search popover keeps the forum in its own sections', () => {
           users: empty,
           threads: empty,
           pages: empty,
-          forumThreads: section('Wortkette'),
-          forumPages: section('Regeln'),
+          forumThreads: section("Wortkette"),
+          forumPages: section("Regeln"),
         } as unknown as Search200,
         isSearching: false,
         termIsLongEnough: true,
         minimumLength: 3,
       },
       global: { stubs },
-    })
+    });
 
     // The rows carry a `writingGroupId` a group's row would route by, so this fails if the
     // section's own scope is not what decides.
-    const targets = wrapper.findAll('a').map((node) => node.attributes('data-to'))
+    const targets = wrapper.findAll("a").map((node) => node.attributes("data-to"));
     expect(targets).toEqual([
-      JSON.stringify({ name: 'forumThread', params: { threadId: 'id-0-Wortkette' } }),
-      JSON.stringify({ name: 'forumPage', params: { pageId: 'id-0-Regeln' } }),
-    ])
-  })
+      JSON.stringify({ name: "forumThread", params: { threadId: "id-0-Wortkette" } }),
+      JSON.stringify({ name: "forumPage", params: { pageId: "id-0-Regeln" } }),
+    ]);
+  });
 
   /**
    * A forum row carries the mark for either reader — an operator's search reaches rows members
@@ -169,20 +169,20 @@ describe('the search popover keeps the forum in its own sections', () => {
    * before opening it. Which word it says is `permissionMark.spec.ts`; what this level owes is
    * the mark on forum rows only, and the reader's role handed to it.
    */
-  it('marks forum rows for either reader, and tells the mark which one is reading', () => {
+  it("marks forum rows for either reader, and tells the mark which one is reading", () => {
     const found = {
-      threads: section('Kapitel 3'),
+      threads: section("Kapitel 3"),
       pages: empty,
-      forumThreads: section('Wortkette'),
+      forumThreads: section("Wortkette"),
       forumPages: empty,
-    }
+    };
 
-    operator.value = false
-    expect(marks(found)).toBe(1)
-    expect(markProps(found)).toEqual([{ permission: 'write', isOperator: 'false' }])
+    operator.value = false;
+    expect(marks(found)).toBe(1);
+    expect(markProps(found)).toEqual([{ permission: "write", isOperator: "false" }]);
 
-    operator.value = true
-    expect(markProps(found)).toEqual([{ permission: 'write', isOperator: 'true' }])
-    operator.value = false
-  })
-})
+    operator.value = true;
+    expect(markProps(found)).toEqual([{ permission: "write", isOperator: "true" }]);
+    operator.value = false;
+  });
+});

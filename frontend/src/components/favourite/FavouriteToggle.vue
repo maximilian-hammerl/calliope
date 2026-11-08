@@ -7,28 +7,28 @@
  *
  * No level prop: this only sits on a thing's own page, which is always Quiet.
  */
-import { computed } from 'vue'
-import type { SetFavouriteTargetType } from '@/components/favourite/targetType'
-import { favouriteToggle } from '@/lib/format/favourite'
-import { useFavourite } from '@/composables/useFavourite'
-import { Button } from '@/components/ui/button'
+import { computed } from "vue";
+import type { SetFavouriteTargetType } from "@/components/favourite/targetType";
+import { favouriteToggle } from "@/lib/format/favourite";
+import { useFavourite } from "@/composables/useFavourite";
+import { Button } from "@/components/ui/button";
 
 const props = defineProps<{
-  targetType: SetFavouriteTargetType
-  targetId: string
-  isFavourite: boolean
-}>()
+  targetType: SetFavouriteTargetType;
+  targetId: string;
+  isFavourite: boolean;
+}>();
 
-const emit = defineEmits<{ changed: [isFavourite: boolean] }>()
+const emit = defineEmits<{ changed: [isFavourite: boolean] }>();
 
-const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite();
 
-const toggle = computed(() => favouriteToggle(props.isFavourite))
+const toggle = computed(() => favouriteToggle(props.isFavourite));
 
 async function change() {
-  const { next } = toggle.value
+  const { next } = toggle.value;
   if (await changeFavourite(props.targetType, props.targetId, next)) {
-    emit('changed', next)
+    emit("changed", next);
   }
 }
 </script>

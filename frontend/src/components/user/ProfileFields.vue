@@ -1,14 +1,14 @@
 <script setup lang="ts">
 /** Only the fields answered: a label over nothing reads as the page being broken. */
-import { computed } from 'vue'
-import type { ProfileFieldKey } from '@/lib/profile/profileFields'
-import { answeredFields } from '@/lib/profile/profileFields'
+import { computed } from "vue";
+import type { ProfileFieldKey } from "@/lib/profile/profileFields";
+import { answeredFields } from "@/lib/profile/profileFields";
 
 const props = defineProps<{
-  profile: Partial<Record<ProfileFieldKey, string | null>>
-}>()
+  profile: Partial<Record<ProfileFieldKey, string | null>>;
+}>();
 
-const answered = computed(() => answeredFields(props.profile))
+const answered = computed(() => answeredFields(props.profile));
 </script>
 
 <template>

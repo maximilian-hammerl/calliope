@@ -1,7 +1,7 @@
-import type { Component } from 'vue'
-import { Star, StarOff } from '@lucide/vue'
+import type { Component } from "vue";
+import { Star, StarOff } from "@lucide/vue";
 
-type FavouriteState = 'favourite' | 'notFavourite'
+type FavouriteState = "favourite" | "notFavourite";
 
 /**
  * The word and the glyph for each state, in one place across all five kinds the favourite covers.
@@ -13,35 +13,35 @@ type FavouriteState = 'favourite' | 'notFavourite'
  * story idea's alone; the reversal and its argument are written down there.
  */
 export const FAVOURITE_LABELS: Record<FavouriteState, string> = {
-  favourite: 'Favorit',
-  notFavourite: 'Kein Favorit',
-}
+  favourite: "Favorit",
+  notFavourite: "Kein Favorit",
+};
 
 export const FAVOURITE_ICONS: Record<FavouriteState, Component> = {
   favourite: Star,
   notFavourite: StarOff,
-}
+};
 
 export function favouriteToggle(isFavourite: boolean): {
-  label: string
-  title: string
-  icon: Component
-  next: boolean
+  label: string;
+  title: string;
+  icon: Component;
+  next: boolean;
 } {
   // The state it will put the thing in, never the act — the same rule the read toggle follows,
   // and the reason the long phrasing lives in `title` instead.
-  const next: FavouriteState = isFavourite ? 'notFavourite' : 'favourite'
+  const next: FavouriteState = isFavourite ? "notFavourite" : "favourite";
 
   return {
     label: FAVOURITE_LABELS[next],
-    title: isFavourite ? 'Aus den Favoriten entfernen' : 'Als Favorit markieren',
+    title: isFavourite ? "Aus den Favoriten entfernen" : "Als Favorit markieren",
     icon: FAVOURITE_ICONS[next],
     next: !isFavourite,
-  }
+  };
 }
 
 /** What every list calls the filter, so no two of them can word it differently. */
 export const FAVOURITE_FILTER_LABELS = {
-  any: 'Alle',
-  only: 'Favoriten',
-} as const
+  any: "Alle",
+  only: "Favoriten",
+} as const;

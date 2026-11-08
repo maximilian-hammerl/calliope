@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useCancelEmailAddressChange } from '@/api/auth/auth'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { onMounted, ref } from "vue";
+import { useCancelEmailAddressChange } from "@/api/auth/auth";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const token = new URLSearchParams(window.location.search).get('token') ?? undefined
+const token = new URLSearchParams(window.location.search).get("token") ?? undefined;
 
-const status = ref<'cancelling' | 'done' | 'expired'>(
-  token === undefined ? 'expired' : 'cancelling',
-)
+const status = ref<"cancelling" | "done" | "expired">(
+  token === undefined ? "expired" : "cancelling",
+);
 
-const { mutateAsync: cancel } = useCancelEmailAddressChange()
+const { mutateAsync: cancel } = useCancelEmailAddressChange();
 
 onMounted(async () => {
   if (token === undefined) {
-    return
+    return;
   }
 
   try {
-    await cancel({ data: { token } })
+    await cancel({ data: { token } });
   } catch {
-    status.value = 'expired'
-    return
+    status.value = "expired";
+    return;
   }
 
-  status.value = 'done'
-})
+  status.value = "done";
+});
 </script>
 
 <template>
@@ -35,7 +35,7 @@ onMounted(async () => {
     <div class="flex flex-col gap-2">
       <CalliopeLogo :size="40" wordmark class="mb-1" />
       <h1 class="text-h1">
-        {{ status === 'done' ? 'Änderung abgebrochen' : 'Änderung abbrechen' }}
+        {{ status === "done" ? "Änderung abgebrochen" : "Änderung abbrechen" }}
       </h1>
     </div>
 

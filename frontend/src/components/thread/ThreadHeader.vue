@@ -1,35 +1,35 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Flag, Pencil, Trash2 } from '@lucide/vue'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { Button } from '@/components/ui/button'
-import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
-import { pluralize } from '@/lib/format/formatText'
+import { computed } from "vue";
+import { Flag, Pencil, Trash2 } from "@lucide/vue";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { Button } from "@/components/ui/button";
+import FavouriteToggle from "@/components/favourite/FavouriteToggle.vue";
+import { pluralize } from "@/lib/format/formatText";
 
 const props = defineProps<{
-  title: string
-  postCount?: number
-  lastActivityAt?: string
+  title: string;
+  postCount?: number;
+  lastActivityAt?: string;
   /** Whoever started the thread, or an administrator: the rule `mayModify` gives content. */
-  mayModify?: boolean
+  mayModify?: boolean;
   /** The thread itself, so the reader's own favourite has somewhere to hang. */
-  threadId?: string
-  isFavourite?: boolean
-}>()
+  threadId?: string;
+  isFavourite?: boolean;
+}>();
 
-defineEmits<{ rename: []; delete: []; report: []; favouriteChanged: [] }>()
+defineEmits<{ rename: []; delete: []; report: []; favouriteChanged: [] }>();
 
 // Numbers always carry a noun: a bare badge number was tested and misread.
 const meta = computed<string>(() =>
   [
-    props.postCount === undefined ? undefined : pluralize(props.postCount, 'Beitrag', 'Beiträge'),
+    props.postCount === undefined ? undefined : pluralize(props.postCount, "Beitrag", "Beiträge"),
     props.lastActivityAt === undefined
       ? undefined
       : `zuletzt ${formatActivityTime(props.lastActivityAt)}`,
   ]
     .filter((part) => part !== undefined)
-    .join(' · '),
-)
+    .join(" · "),
+);
 </script>
 
 <template>

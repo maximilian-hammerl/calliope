@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { keepPreviousData, useQueryClient } from '@tanstack/vue-query'
-import { failureMessage } from '@/lib/format/failure'
-import { firstMessage, postSchema } from '@/lib/validation/fieldSchemas'
-import { useGetCurrentUser } from '@/api/auth/auth'
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { keepPreviousData, useQueryClient } from "@tanstack/vue-query";
+import { failureMessage } from "@/lib/format/failure";
+import { firstMessage, postSchema } from "@/lib/validation/fieldSchemas";
+import { useGetCurrentUser } from "@/api/auth/auth";
 import {
   getGetThreadQueryKey,
   getListThreadsQueryKey,
   useDeleteThread,
   useGetThread,
-} from '@/api/threads/threads'
+} from "@/api/threads/threads";
 import {
   createPost as createPostRequest,
   deletePost as deletePostRequest,
@@ -21,55 +21,55 @@ import {
   useDeletePost,
   useListPosts,
   useUpdatePost,
-} from '@/api/posts/posts'
-import type { GetThread200, ListPosts200ResultsItem, PostDocument } from '@/api/models'
-import GroupHeader from '@/components/group/GroupHeader.vue'
-import DeleteThreadDialog from '@/components/thread/DeleteThreadDialog.vue'
-import ThreadDialog from '@/components/thread/ThreadDialog.vue'
-import ThreadHeader from '@/components/thread/ThreadHeader.vue'
-import PathToHere from '@/components/folder/PathToHere.vue'
-import { useFolderTree } from '@/composables/useFolderTree'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import DeletePostDialog from '@/components/thread/DeletePostDialog.vue'
-import PostItem from '@/components/thread/PostItem.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import PostSortToggle from '@/components/thread/PostSortToggle.vue'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { emptyDocument } from '@/lib/document/emptyDocument'
-import { exactKeyFilter, listKeyPrefix } from '@/lib/api/queryKeys'
-import { FAVOURITE_FILTER_LABELS } from '@/lib/format/favourite'
-import FilterStrip from '@/components/common/FilterStrip.vue'
-import { useDraft } from '@/composables/useDraft'
-import { useGroupContext } from '@/composables/useGroupContext'
-import { usePagedList } from '@/composables/usePagedList'
-import PostComposer from '@/components/thread/PostComposer.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+} from "@/api/posts/posts";
+import type { GetThread200, ListPosts200ResultsItem, PostDocument } from "@/api/models";
+import GroupHeader from "@/components/group/GroupHeader.vue";
+import DeleteThreadDialog from "@/components/thread/DeleteThreadDialog.vue";
+import ThreadDialog from "@/components/thread/ThreadDialog.vue";
+import ThreadHeader from "@/components/thread/ThreadHeader.vue";
+import PathToHere from "@/components/folder/PathToHere.vue";
+import { useFolderTree } from "@/composables/useFolderTree";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import DeletePostDialog from "@/components/thread/DeletePostDialog.vue";
+import PostItem from "@/components/thread/PostItem.vue";
+import ListPagination from "@/components/common/ListPagination.vue";
+import PostSortToggle from "@/components/thread/PostSortToggle.vue";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { emptyDocument } from "@/lib/document/emptyDocument";
+import { exactKeyFilter, listKeyPrefix } from "@/lib/api/queryKeys";
+import { FAVOURITE_FILTER_LABELS } from "@/lib/format/favourite";
+import FilterStrip from "@/components/common/FilterStrip.vue";
+import { useDraft } from "@/composables/useDraft";
+import { useGroupContext } from "@/composables/useGroupContext";
+import { usePagedList } from "@/composables/usePagedList";
+import PostComposer from "@/components/thread/PostComposer.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
-const route = useRoute()
-const router = useRouter()
-const queryClient = useQueryClient()
+const route = useRoute();
+const router = useRouter();
+const queryClient = useQueryClient();
 
-const { data: currentUserData } = useGetCurrentUser()
+const { data: currentUserData } = useGetCurrentUser();
 const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
-)
+);
 
-const { groupId, group, mayWrite, mayAdminister } = useGroupContext()
+const { groupId, group, mayWrite, mayAdminister } = useGroupContext();
 
 // For the breadcrumb, which takes the tree rather than fetching one: the three queries behind
 // it are already loaded by the rail, so this costs no request.
-const { tree } = useFolderTree(groupId)
+const { tree } = useFolderTree(groupId);
 
-const threadId = computed<string>(() => String(route.params.threadId))
+const threadId = computed<string>(() => String(route.params.threadId));
 
-const { data: threadData, isPending, isError } = useGetThread(groupId, threadId)
+const { data: threadData, isPending, isError } = useGetThread(groupId, threadId);
 
 /** The page of posts this one is on, which carries the flag the row draws. */
 async function refreshPosts() {
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
-  })
+  });
 }
 
 /**
@@ -79,18 +79,18 @@ async function refreshPosts() {
 async function refreshThread() {
   await queryClient.invalidateQueries({
     queryKey: getGetThreadQueryKey(groupId.value, threadId.value),
-  })
-  await queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId.value)))
+  });
+  await queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId.value)));
 }
 const thread = computed<GetThread200 | undefined>(() =>
   threadData.value?.status === 200 ? threadData.value.data : undefined,
-)
+);
 
 /**
  * Twenty is the endpoint's own default, and a page of prose that size stays scannable — the
  * number of pages is what makes a known post quick to reach.
  */
-const POSTS_PER_PAGE = 20
+const POSTS_PER_PAGE = 20;
 
 /**
  * Which end of the thread to start at. The pages themselves are the composable's business.
@@ -99,22 +99,22 @@ const POSTS_PER_PAGE = 20
  * button and a second tab opened on the passage being referenced all keep their place.
  * Route keys are English like every other path; only what the member reads is German.
  */
-const order = computed<'oldest' | 'newest'>(() =>
-  route.query.order === 'newest' ? 'newest' : 'oldest',
-)
+const order = computed<"oldest" | "newest">(() =>
+  route.query.order === "newest" ? "newest" : "oldest",
+);
 
 const postCount = computed<number | undefined>(() =>
   postsData.value?.status === 200 ? postsData.value.data.totalResults : undefined,
-)
+);
 
 const { page, offset, total, itemsPerPage, pageCount, goToPage, navigate } = usePagedList(
   POSTS_PER_PAGE,
   () => postCount.value,
-)
+);
 
 /** One push, not two: switching the order also returns to the first page. */
-function showOrder(next: 'oldest' | 'newest') {
-  navigate({ order: next === 'oldest' ? undefined : next, page: undefined })
+function showOrder(next: "oldest" | "newest") {
+  navigate({ order: next === "oldest" ? undefined : next, page: undefined });
 }
 
 /**
@@ -125,32 +125,32 @@ function showOrder(next: 'oldest' | 'newest') {
  * A filter, never a reordering: a thread reads in the order it was written, so a favourited post
  * stays where it is and this narrows to them instead.
  */
-const postFilter = ref<'any' | 'only'>('any')
+const postFilter = ref<"any" | "only">("any");
 
 const POST_FILTERS = [
-  { value: 'any', label: 'Alle Beiträge' },
-  { value: 'only', label: FAVOURITE_FILTER_LABELS.only },
-] as const
+  { value: "any", label: "Alle Beiträge" },
+  { value: "only", label: FAVOURITE_FILTER_LABELS.only },
+] as const;
 
 // A filter is about a different set, so whatever page was open is about something else.
-watch(postFilter, () => goToPage(1))
+watch(postFilter, () => goToPage(1));
 
 const postsQuery = computed(() => ({
   limit: POSTS_PER_PAGE,
   offset: offset.value,
-  sortAttribute: 'createdAt' as const,
-  sortOrder: order.value === 'newest' ? ('desc' as const) : ('asc' as const),
+  sortAttribute: "createdAt" as const,
+  sortOrder: order.value === "newest" ? ("desc" as const) : ("asc" as const),
   favourite: postFilter.value,
-}))
+}));
 
 const { data: postsData } = useListPosts(groupId, threadId, postsQuery, {
   // Without this the strip vanishes between pages: a new page is a new query key, so the count
   // it is built from is briefly unknown.
   query: { placeholderData: keepPreviousData },
-})
+});
 const posts = computed<ListPosts200ResultsItem[]>(() =>
   postsData.value?.status === 200 ? postsData.value.data.results : [],
-)
+);
 
 /**
  * The rule `mayModify` gives content: an administrator of the group, or whoever started it.
@@ -161,86 +161,86 @@ const mayModifyThread = computed<boolean>(
     mayWrite.value &&
     (mayAdminister.value ||
       (thread.value?.createdBy !== null && thread.value?.createdBy === currentUserId.value)),
-)
+);
 
-const reportingThread = ref<boolean>(false)
+const reportingThread = ref<boolean>(false);
 /** The post being reported, which is also what opens the dialog. */
-const reportedPost = ref<ListPosts200ResultsItem | undefined>(undefined)
+const reportedPost = ref<ListPosts200ResultsItem | undefined>(undefined);
 const reportingPost = computed<boolean>({
   get: () => reportedPost.value !== undefined,
   set: (open) => {
     if (!open) {
-      reportedPost.value = undefined
+      reportedPost.value = undefined;
     }
   },
-})
-const renamingThread = ref<boolean>(false)
-const deletingThread = ref<boolean>(false)
-const deletionError = ref<string | undefined>(undefined)
+});
+const renamingThread = ref<boolean>(false);
+const deletingThread = ref<boolean>(false);
+const deletionError = ref<string | undefined>(undefined);
 
-const { mutateAsync: deleteThread, isPending: isDeletingThread } = useDeleteThread()
+const { mutateAsync: deleteThread, isPending: isDeletingThread } = useDeleteThread();
 
 async function confirmDeleteThread() {
-  deletionError.value = undefined
+  deletionError.value = undefined;
   try {
-    await deleteThread({ groupId: groupId.value, threadId: threadId.value })
+    await deleteThread({ groupId: groupId.value, threadId: threadId.value });
   } catch (error) {
     deletionError.value = failureMessage(
       error,
-      'Das Thema konnte nicht gelöscht werden. Versuche es noch einmal.',
-    )
-    return
+      "Das Thema konnte nicht gelöscht werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
-  await queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId.value)))
-  deletingThread.value = false
+  await queryClient.invalidateQueries(exactKeyFilter(getListThreadsQueryKey(groupId.value)));
+  deletingThread.value = false;
   // The thread this page is about no longer exists.
-  void router.push({ name: 'group', params: { groupId: groupId.value } })
+  void router.push({ name: "group", params: { groupId: groupId.value } });
 }
 
 /** The composer holds a document; `draftText` is its prose, which the editor supplies. */
-const draft = ref<PostDocument>(emptyDocument())
-const draftText = ref<string>('')
-const sendError = ref<string | undefined>(undefined)
+const draft = ref<PostDocument>(emptyDocument());
+const draftText = ref<string>("");
+const sendError = ref<string | undefined>(undefined);
 function goToGroup() {
-  void router.push({ name: 'group', params: { groupId: groupId.value } })
+  void router.push({ name: "group", params: { groupId: groupId.value } });
 }
 
-const { mutateAsync: createPost, isPending: sending } = useCreatePost()
-const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost()
+const { mutateAsync: createPost, isPending: sending } = useCreatePost();
+const { mutateAsync: publishDraft, isPending: publishing } = useUpdatePost();
 
 /**
  * A second instance of the same mutation, so editing a published post and publishing a draft
  * do not share one `isPending` — the composer and a post can be busy independently.
  */
-const { mutateAsync: savePost, isPending: savingPost } = useUpdatePost()
+const { mutateAsync: savePost, isPending: savingPost } = useUpdatePost();
 
 // The two operations carry their own bounds; an empty edit is a mistake, an empty composer is
 // just a composer nobody has typed in yet.
-const NEW_POST = postSchema(TEXT_LIMIT.createPost.document)
-const EDITED_POST = postSchema(TEXT_LIMIT.updatePost.document, 'Ein Beitrag braucht Text.')
+const NEW_POST = postSchema(TEXT_LIMIT.createPost.document);
+const EDITED_POST = postSchema(TEXT_LIMIT.updatePost.document, "Ein Beitrag braucht Text.");
 
-const editingPostId = ref<string | undefined>(undefined)
-const editError = ref<string | undefined>(undefined)
+const editingPostId = ref<string | undefined>(undefined);
+const editError = ref<string | undefined>(undefined);
 
 function startEditing(postId: string) {
-  editError.value = undefined
-  editingPostId.value = postId
+  editError.value = undefined;
+  editingPostId.value = postId;
 }
 
 function stopEditing() {
-  editError.value = undefined
-  editingPostId.value = undefined
+  editError.value = undefined;
+  editingPostId.value = undefined;
 }
 
 async function saveEdit(postId: string, document: PostDocument, text: string) {
-  editError.value = undefined
+  editError.value = undefined;
 
   // Checked here rather than with `maxlength`, for the reason the composer states: prose that
   // stops dead mid-word is worse than being told why.
-  editError.value = firstMessage(EDITED_POST.safeParse(text))
+  editError.value = firstMessage(EDITED_POST.safeParse(text));
   if (editError.value !== undefined) {
-    return
+    return;
   }
 
   try {
@@ -249,56 +249,56 @@ async function saveEdit(postId: string, document: PostDocument, text: string) {
       threadId: threadId.value,
       postId,
       data: { document },
-    })
+    });
   } catch (error) {
     editError.value = failureMessage(
       error,
-      'Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.',
-    )
-    return
+      "Der Beitrag konnte nicht gespeichert werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
-  })
-  stopEditing()
+  });
+  stopEditing();
 }
 
-const deletingPost = ref<ListPosts200ResultsItem | undefined>(undefined)
-const deletePostError = ref<string | undefined>(undefined)
+const deletingPost = ref<ListPosts200ResultsItem | undefined>(undefined);
+const deletePostError = ref<string | undefined>(undefined);
 
-const { mutateAsync: removePost, isPending: removingPost } = useDeletePost()
+const { mutateAsync: removePost, isPending: removingPost } = useDeletePost();
 
 /** Named only when it is somebody else's and that account still exists. */
 const deletingPostAuthor = computed<string | undefined>(() =>
   deletingPost.value !== undefined && deletingPost.value.createdBy !== currentUserId.value
     ? (deletingPost.value.createdByUsername ?? undefined)
     : undefined,
-)
+);
 
 async function confirmDeletePost() {
-  const post = deletingPost.value
-  if (post === undefined) return
+  const post = deletingPost.value;
+  if (post === undefined) return;
 
-  deletePostError.value = undefined
+  deletePostError.value = undefined;
 
   try {
-    await removePost({ groupId: groupId.value, threadId: threadId.value, postId: post.id })
+    await removePost({ groupId: groupId.value, threadId: threadId.value, postId: post.id });
   } catch (error) {
     deletePostError.value = failureMessage(
       error,
-      'Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.',
-    )
-    return
+      "Der Beitrag konnte nicht gelöscht werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
   // The header's count is the list's own totalResults, so one invalidation covers both.
   // The post being edited may be the one just deleted.
-  if (editingPostId.value === post.id) stopEditing()
+  if (editingPostId.value === post.id) stopEditing();
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
-  })
-  deletingPost.value = undefined
+  });
+  deletingPost.value = undefined;
 }
 
 // Owns the composer's text between visits: loads any existing draft into it, saves as it is
@@ -314,15 +314,15 @@ const {
       const response = await listPostsRequest(groupId.value, threadId.value, {
         isDraft: true,
         limit: 1,
-      })
-      return response.status === 200 ? response.data.results[0] : undefined
+      });
+      return response.status === 200 ? response.data.results[0] : undefined;
     },
     create: async (document) => {
       const created = await createPostRequest(groupId.value, threadId.value, {
         document,
         isDraft: true,
-      })
-      return created.status === 201 ? created.data.id : undefined
+      });
+      return created.status === 201 ? created.data.id : undefined;
     },
     update: (postId, document, options) =>
       updatePostRequest(groupId.value, threadId.value, postId, { document }, options),
@@ -330,19 +330,19 @@ const {
   },
   draft,
   draftText,
-)
+);
 
 async function submit() {
-  sendError.value = undefined
+  sendError.value = undefined;
   if (draftText.value.trim().length === 0) {
-    return
+    return;
   }
 
   // Checked here rather than with `maxlength` on the composer: prose stopping dead mid-word
   // with no explanation is worse than being told why, and the draft is kept either way.
-  sendError.value = firstMessage(NEW_POST.safeParse(draftText.value))
+  sendError.value = firstMessage(NEW_POST.safeParse(draftText.value));
   if (sendError.value !== undefined) {
-    return
+    return;
   }
 
   try {
@@ -354,37 +354,37 @@ async function submit() {
         threadId: threadId.value,
         postId: draftId.value,
         data: { document: draft.value, isDraft: false },
-      })
-      forgetDraft()
+      });
+      forgetDraft();
     } else {
       await createPost({
         groupId: groupId.value,
         threadId: threadId.value,
         data: { document: draft.value },
-      })
+      });
     }
   } catch (error) {
     // The draft is kept either way, which is what the clearing below guarantees.
     sendError.value = failureMessage(
       error,
-      'Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.',
-    )
-    return
+      "Der Beitrag konnte nicht gesendet werden. Versuche es noch einmal.",
+    );
+    return;
   }
 
   // Only cleared once the post is really stored, so nothing a member wrote is lost.
-  draft.value = emptyDocument()
-  draftText.value = ''
+  draft.value = emptyDocument();
+  draftText.value = "";
 
   // Every page, not the one being shown: the new post changes the count, and with it which
   // page anything sits on. The exact key would also miss, since it carries this page's body.
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListPostsQueryKey(groupId.value, threadId.value)),
-  })
+  });
 
   // Land where the new post is. Reading page two for reference is worth interrupting to show
   // somebody their own writing; not showing it at all would be worse.
-  goToPage(order.value === 'newest' ? 1 : Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE))
+  goToPage(order.value === "newest" ? 1 : Math.ceil(((postCount.value ?? 0) + 1) / POSTS_PER_PAGE));
 }
 </script>
 

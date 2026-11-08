@@ -4,8 +4,8 @@
  * ordinary chats and stay — so the confirmation stops at Solid. Red is for taking other people's
  * writing with you.
  */
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,16 +13,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 const props = defineProps<{
-  title: string
-  pending: boolean
-  error?: string
-}>()
-defineEmits<{ confirmed: [] }>()
+  title: string;
+  pending: boolean;
+  error?: string;
+}>();
+defineEmits<{ confirmed: [] }>();
 </script>
 
 <template>

@@ -12,22 +12,22 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion'
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import DeleteAccountSection from '@/components/settings/DeleteAccountSection.vue'
-import AppearanceSection from '@/components/settings/AppearanceSection.vue'
-import EmailAddressSection from '@/components/settings/EmailAddressSection.vue'
-import PasswordSection from '@/components/settings/PasswordSection.vue'
-import BlockedMembersSection from '@/components/settings/BlockedMembersSection.vue'
-import SessionsSection from '@/components/settings/SessionsSection.vue'
+} from "@/components/ui/dialog";
+import DeleteAccountSection from "@/components/settings/DeleteAccountSection.vue";
+import AppearanceSection from "@/components/settings/AppearanceSection.vue";
+import EmailAddressSection from "@/components/settings/EmailAddressSection.vue";
+import PasswordSection from "@/components/settings/PasswordSection.vue";
+import BlockedMembersSection from "@/components/settings/BlockedMembersSection.vue";
+import SessionsSection from "@/components/settings/SessionsSection.vue";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 </script>
 
 <template>

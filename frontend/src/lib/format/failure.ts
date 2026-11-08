@@ -1,9 +1,9 @@
-import { ApiError } from '@/lib/api/apiFetch'
-import { rateLimitMessage } from '@/lib/format/rateLimit'
+import { ApiError } from "@/lib/api/apiFetch";
+import { rateLimitMessage } from "@/lib/format/rateLimit";
 
 /** Said on the field: this password is *known*, which is not a judgement about the member. */
 export const PASSWORD_BREACHED_MESSAGE =
-  'Dieses Passwort steht in bekannten Datenlecks. Wähle bitte ein anderes.'
+  "Dieses Passwort steht in bekannten Datenlecks. Wähle bitte ein anderes.";
 
 /**
  * What a control says when its request failed and it has nothing more specific to offer. „Versuche
@@ -23,11 +23,11 @@ export const PASSWORD_BREACHED_MESSAGE =
 export function failureMessage(error: unknown, fallback?: string): string {
   if (error instanceof ApiError) {
     if (error.status === 429) {
-      return rateLimitMessage(error.retryAfterSeconds)
+      return rateLimitMessage(error.retryAfterSeconds);
     }
     if (error.status === 400) {
-      return 'Die Angaben sind nicht gültig. Lade die Seite neu und versuche es noch einmal.'
+      return "Die Angaben sind nicht gültig. Lade die Seite neu und versuche es noch einmal.";
     }
   }
-  return fallback ?? 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
+  return fallback ?? "Das ist gerade nicht möglich. Versuche es später noch einmal.";
 }

@@ -1,12 +1,12 @@
-import type { TreeFolder, TreeNode } from '@/lib/folder/buildTree'
+import type { TreeFolder, TreeNode } from "@/lib/folder/buildTree";
 
 export type MoveTarget = {
   /** Null is the root of the group's tree. */
-  id: string | null
-  title: string
+  id: string | null;
+  title: string;
   /** 0 for the root, then one step per level, so the picker can indent. */
-  level: number
-}
+  level: number;
+};
 
 /**
  * Every place a thing can go, flattened in the order the tree reads.
@@ -17,17 +17,17 @@ export type MoveTarget = {
  * dialog reports when it refuses.
  */
 export function moveTargets(tree: TreeNode[], excludeSubtreeOf?: string): MoveTarget[] {
-  const targets: MoveTarget[] = [{ id: null, title: 'Oberste Ebene', level: 0 }]
+  const targets: MoveTarget[] = [{ id: null, title: "Oberste Ebene", level: 0 }];
 
   const walk = (nodes: TreeNode[], level: number) => {
     for (const node of nodes) {
-      if (node.kind !== 'folder') continue
-      if (node.id === excludeSubtreeOf) continue
-      targets.push({ id: node.id, title: node.title, level })
-      walk((node as TreeFolder).children, level + 1)
+      if (node.kind !== "folder") continue;
+      if (node.id === excludeSubtreeOf) continue;
+      targets.push({ id: node.id, title: node.title, level });
+      walk((node as TreeFolder).children, level + 1);
     }
-  }
+  };
 
-  walk(tree, 1)
-  return targets
+  walk(tree, 1);
+  return targets;
 }

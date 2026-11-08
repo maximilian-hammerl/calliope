@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { updatePost } from '@/api/posts/posts'
+import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+import { updatePost } from "@/api/posts/posts";
 
 /**
  * `useDraft`'s last save happens on `pagehide`, and it only arrives because the request is made
@@ -12,39 +12,39 @@ import { updatePost } from '@/api/posts/posts'
  * flag disappears silently and drafts are lost only on tab close — the hardest kind of bug to
  * notice.
  */
-describe('the draft flush', () => {
+describe("the draft flush", () => {
   afterEach(() => {
-    vi.unstubAllGlobals()
-  })
+    vi.unstubAllGlobals();
+  });
 
-  it('reaches fetch with keepalive, through the generated function', async () => {
-    const calls: RequestInit[] = []
-    vi.stubGlobal('fetch', (_url: string, init: RequestInit) => {
-      calls.push(init)
-      return Promise.resolve(new Response('{}', { status: 200 }))
-    })
+  it("reaches fetch with keepalive, through the generated function", async () => {
+    const calls: RequestInit[] = [];
+    vi.stubGlobal("fetch", (_url: string, init: RequestInit) => {
+      calls.push(init);
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
 
     await updatePost(
-      'a-group',
-      'a-thread',
-      'a-post',
-      { document: { type: 'doc', content: [{ type: 'paragraph' }] } },
+      "a-group",
+      "a-thread",
+      "a-post",
+      { document: { type: "doc", content: [{ type: "paragraph" }] } },
       { keepalive: true },
-    )
+    );
 
-    expect(calls).toHaveLength(1)
-    expect(calls[0]?.keepalive).toBe(true)
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.keepalive).toBe(true);
     // The method and the body still come from the client, not from a hand-written call.
-    expect(calls[0]?.method).toBe('PATCH')
-    expect(JSON.parse(String(calls[0]?.body))).toHaveProperty('document')
-  })
+    expect(calls[0]?.method).toBe("PATCH");
+    expect(JSON.parse(String(calls[0]?.body))).toHaveProperty("document");
+  });
 
-  it('will not compile a body the API stopped accepting', () => {
-    type Body = Parameters<typeof updatePost>[3]
+  it("will not compile a body the API stopped accepting", () => {
+    type Body = Parameters<typeof updatePost>[3];
 
     // `text` was the body until the document replaced it, and a hand-written `fetch` went on
     // sending it because nothing checked. This is the check that hand-written call could not make.
-    expectTypeOf<Body>().not.toHaveProperty('text')
-    expectTypeOf<Body>().toHaveProperty('document')
-  })
-})
+    expectTypeOf<Body>().not.toHaveProperty("text");
+    expectTypeOf<Body>().toHaveProperty("document");
+  });
+});

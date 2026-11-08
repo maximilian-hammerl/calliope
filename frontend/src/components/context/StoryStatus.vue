@@ -3,46 +3,46 @@
  * Where the story is, and the one place to move it. A select rather than a dialog: this is the
  * field that changes most often, and opening a form to change one enum was the friction.
  */
-import { computed, ref } from 'vue'
-import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from '@/api/groups/groups'
-import type { GetGroup200, GetGroup200StoryStatus } from '@/api/models'
-import { queryClient } from '@/lib/api/queryClient'
-import { listOnlyFilter } from '@/lib/api/queryKeys'
-import { STORY_STATUS, storyStatusLabel } from '@/lib/format/storyStatus'
+import { computed, ref } from "vue";
+import { getGetGroupQueryKey, getListGroupsQueryKey, useUpdateGroup } from "@/api/groups/groups";
+import type { GetGroup200, GetGroup200StoryStatus } from "@/api/models";
+import { queryClient } from "@/lib/api/queryClient";
+import { listOnlyFilter } from "@/lib/api/queryKeys";
+import { STORY_STATUS, storyStatusLabel } from "@/lib/format/storyStatus";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
-const props = defineProps<{ group: GetGroup200; mayEdit: boolean }>()
+const props = defineProps<{ group: GetGroup200; mayEdit: boolean }>();
 
-const { mutateAsync: updateGroup, isPending } = useUpdateGroup()
+const { mutateAsync: updateGroup, isPending } = useUpdateGroup();
 
-const failed = ref<boolean>(false)
+const failed = ref<boolean>(false);
 
-const status = computed<GetGroup200StoryStatus>(() => props.group.storyStatus)
+const status = computed<GetGroup200StoryStatus>(() => props.group.storyStatus);
 
 async function change(next: GetGroup200StoryStatus) {
   if (next === props.group.storyStatus) {
-    return
+    return;
   }
 
-  failed.value = false
+  failed.value = false;
 
   try {
-    await updateGroup({ groupId: props.group.id, data: { storyStatus: next } })
+    await updateGroup({ groupId: props.group.id, data: { storyStatus: next } });
   } catch {
-    failed.value = true
-    return
+    failed.value = true;
+    return;
   }
 
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(props.group.id) }),
     queryClient.invalidateQueries(listOnlyFilter(getListGroupsQueryKey())),
-  ])
+  ]);
 }
 </script>
 

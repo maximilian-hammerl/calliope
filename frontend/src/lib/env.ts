@@ -7,14 +7,14 @@
  * fields.
  */
 export function getOptionalEnvVariable(value: string | undefined): string | undefined {
-  const trimmedValue = value?.trim()
-  return trimmedValue ? trimmedValue : undefined
+  const trimmedValue = value?.trim();
+  return trimmedValue ? trimmedValue : undefined;
 }
 
 export function getRequiredEnvVariable(value: string | undefined, key: string): string {
-  const present = getOptionalEnvVariable(value)
+  const present = getOptionalEnvVariable(value);
   if (present === undefined) {
-    throw new Error(`Environment variable ${key} is not set`)
+    throw new Error(`Environment variable ${key} is not set`);
   }
-  return present
+  return present;
 }

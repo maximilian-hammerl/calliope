@@ -1,52 +1,52 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue'
-import { Plus } from '@lucide/vue'
-import { useQueryClient } from '@tanstack/vue-query'
-import { getListChatMembershipsQueryKey, useInviteToChat } from '@/api/chats/chats'
-import type { ListUsers200ResultsItem } from '@/api/models'
-import { ApiError } from '@/lib/api/apiFetch'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import UserPicker from '@/components/user/UserPicker.vue'
+import { ref, useTemplateRef, watch } from "vue";
+import { Plus } from "@lucide/vue";
+import { useQueryClient } from "@tanstack/vue-query";
+import { getListChatMembershipsQueryKey, useInviteToChat } from "@/api/chats/chats";
+import type { ListUsers200ResultsItem } from "@/api/models";
+import { ApiError } from "@/lib/api/apiFetch";
+import { listKeyPrefix } from "@/lib/api/queryKeys";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import UserPicker from "@/components/user/UserPicker.vue";
 
-const props = defineProps<{ chatGroupId: string; memberIds: string[] }>()
+const props = defineProps<{ chatGroupId: string; memberIds: string[] }>();
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
-const picker = useTemplateRef('picker')
-const open = ref<boolean>(false)
-const formError = ref<string | undefined>(undefined)
+const picker = useTemplateRef("picker");
+const open = ref<boolean>(false);
+const formError = ref<string | undefined>(undefined);
 
 // A different conversation is a different invitation.
 watch(
   () => props.chatGroupId,
   () => {
-    open.value = false
-    picker.value?.reset()
-    formError.value = undefined
+    open.value = false;
+    picker.value?.reset();
+    formError.value = undefined;
   },
-)
+);
 
-const { mutateAsync: inviteToChat, isPending } = useInviteToChat()
+const { mutateAsync: inviteToChat, isPending } = useInviteToChat();
 
 async function invite(user: ListUsers200ResultsItem) {
-  formError.value = undefined
+  formError.value = undefined;
 
   try {
-    await inviteToChat({ chatId: props.chatGroupId, data: { userId: user.id } })
+    await inviteToChat({ chatId: props.chatGroupId, data: { userId: user.id } });
   } catch (error) {
     formError.value =
       error instanceof ApiError && error.status === 409
         ? `${user.username} ist schon eingeladen oder schon dabei.`
-        : 'Die Einladung wurde nicht verschickt. Versuche es noch einmal.'
-    return
+        : "Die Einladung wurde nicht verschickt. Versuche es noch einmal.";
+    return;
   }
 
-  picker.value?.reset()
-  open.value = false
+  picker.value?.reset();
+  open.value = false;
   await queryClient.invalidateQueries({
     queryKey: listKeyPrefix(getListChatMembershipsQueryKey(props.chatGroupId)),
-  })
+  });
 }
 </script>
 

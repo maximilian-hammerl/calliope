@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/lib/utils'
+import type { HTMLAttributes } from "vue";
+import { cn } from "@/lib/utils";
 
 /**
  * What to expect after we mail a link, in one place: a tester found an empty inbox and had no
@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
  * Minuten dauern" read as the deletion taking minutes. "Nachricht" is not available — that is
  * what chat messages are called.
  */
-const props = defineProps<{ class?: HTMLAttributes['class'] }>()
+const props = defineProps<{ class?: HTMLAttributes["class"] }>();
 </script>
 
 <template>

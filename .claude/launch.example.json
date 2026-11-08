@@ -13,7 +13,7 @@
     },
     {
       "name": "frontend",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "run",
         "dev"

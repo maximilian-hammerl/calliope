@@ -6,10 +6,10 @@
  *
  * A single strip does not need this — it lays itself out. Reach for it when there are two or more.
  */
-import { provide } from 'vue'
-import { FILTER_STRIP_GROUP } from './filterStripGroup'
+import { provide } from "vue";
+import { FILTER_STRIP_GROUP } from "./filterStripGroup";
 
-provide(FILTER_STRIP_GROUP, true)
+provide(FILTER_STRIP_GROUP, true);
 </script>
 
 <template>

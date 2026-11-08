@@ -1,48 +1,48 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
-import { Flag, Pencil, Trash2 } from '@lucide/vue'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { favouriteToggle } from '@/lib/format/favourite'
-import { useFavourite } from '@/composables/useFavourite'
-import type { ListPosts200ResultsItem, PostDocument } from '@/api/models'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { emptyDocument } from '@/lib/document/emptyDocument'
-import { sameDocument } from '@/lib/document/sameDocument'
-import PostBody from '@/components/thread/PostBody.vue'
-import PostEditor from '@/components/thread/PostEditor.vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { Flag, Pencil, Trash2 } from "@lucide/vue";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { favouriteToggle } from "@/lib/format/favourite";
+import { useFavourite } from "@/composables/useFavourite";
+import type { ListPosts200ResultsItem, PostDocument } from "@/api/models";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { emptyDocument } from "@/lib/document/emptyDocument";
+import { sameDocument } from "@/lib/document/sameDocument";
+import PostBody from "@/components/thread/PostBody.vue";
+import PostEditor from "@/components/thread/PostEditor.vue";
 
 const props = defineProps<{
-  post: ListPosts200ResultsItem
-  divider: boolean
-  first: boolean
+  post: ListPosts200ResultsItem;
+  divider: boolean;
+  first: boolean;
   /** Absent while the reader is unknown; reporting your own post is not a thing. */
-  currentUserId?: string
-  mayAdminister?: boolean
+  currentUserId?: string;
+  mayAdminister?: boolean;
   /** Whether the reader may write in this group at all — see `mayModify` below. */
-  mayWrite?: boolean
+  mayWrite?: boolean;
   /** The thread decides which post is open, so two cannot be edited at once. */
-  editing?: boolean
-  saving?: boolean
-  error?: string
-}>()
+  editing?: boolean;
+  saving?: boolean;
+  error?: string;
+}>();
 
 const emit = defineEmits<{
-  report: []
-  edit: []
-  cancel: []
-  save: [document: PostDocument, text: string]
-  delete: []
-  favouriteChanged: []
-}>()
+  report: [];
+  edit: [];
+  cancel: [];
+  save: [document: PostDocument, text: string];
+  delete: [];
+  favouriteChanged: [];
+}>();
 
-const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite();
 
-const favourite = computed(() => favouriteToggle(props.post.isFavourite))
+const favourite = computed(() => favouriteToggle(props.post.isFavourite));
 
 async function toggleFavourite() {
-  const { next } = favourite.value
-  if (await changeFavourite('writing_post', props.post.id, next)) {
-    emit('favouriteChanged')
+  const { next } = favourite.value;
+  if (await changeFavourite("writing_post", props.post.id, next)) {
+    emit("favouriteChanged");
   }
 }
 
@@ -50,7 +50,7 @@ async function toggleFavourite() {
 // is still there, and removing it is still something an operator can do.
 const mayReport = computed<boolean>(
   () => props.currentUserId !== undefined && props.post.createdBy !== props.currentUserId,
-)
+);
 
 /**
  * The API's own rule, so the row never offers what the endpoint would refuse. `mayWrite` comes
@@ -62,55 +62,55 @@ const mayModify = computed<boolean>(
     props.mayWrite === true &&
     (props.mayAdminister === true ||
       (props.post.createdBy !== null && props.post.createdBy === props.currentUserId)),
-)
+);
 
 /**
  * Edited where it sits rather than in the composer: that one is bound to the member's draft,
  * which the database allows exactly one of per thread, so borrowing it would put a half-written
  * post at risk to fix a typo.
  */
-const draft = ref<PostDocument>(emptyDocument())
-const draftText = ref<string>('')
+const draft = ref<PostDocument>(emptyDocument());
+const draftText = ref<string>("");
 
-const postEditor = useTemplateRef<{ focus: () => void }>('postEditor')
+const postEditor = useTemplateRef<{ focus: () => void }>("postEditor");
 
 watch(
   () => props.editing,
   async (open) => {
-    if (!open) return
+    if (!open) return;
     // The stored document, not a rebuild from `post.text`: that projection has no marks in it,
     // so editing a post with a heading or a bold word would silently flatten it.
-    draft.value = props.post.document
-    draftText.value = props.post.text
-    await nextTick()
+    draft.value = props.post.document;
+    draftText.value = props.post.text;
+    await nextTick();
     // Focus follows the opening, as it does for the composer: open and type is one gesture.
-    postEditor.value?.focus()
+    postEditor.value?.focus();
   },
   { immediate: true },
-)
+);
 
 /** Compared as documents: re-bolding a word changes no prose, and Speichern must still light up. */
-const unchanged = computed<boolean>(() => sameDocument(draft.value, props.post.document))
+const unchanged = computed<boolean>(() => sameDocument(draft.value, props.post.document));
 
 /**
  * Named only when somebody other than the author edited it — an administrator may, and that is
  * the one case worth saying out loud. "bearbeitet von federkiel" beside "federkiel" is noise.
  */
 const editedNote = computed<string | undefined>(() => {
-  if (props.post.editedAt === null) return undefined
+  if (props.post.editedAt === null) return undefined;
 
-  const editor = props.post.editedByUsername
-  const byAnother = editor !== null && editor !== props.post.createdByUsername
-  return byAnother ? `bearbeitet von ${editor}` : 'bearbeitet'
-})
+  const editor = props.post.editedByUsername;
+  const byAnother = editor !== null && editor !== props.post.createdByUsername;
+  return byAnother ? `bearbeitet von ${editor}` : "bearbeitet";
+});
 
 // Metadata is deliberately recessed: post headers were competing with the writing.
 const meta = computed<string>(() => {
-  const author = props.post.createdByUsername ?? 'Gelöschtes Konto'
+  const author = props.post.createdByUsername ?? "Gelöschtes Konto";
   return [author, formatActivityTime(props.post.createdAt), editedNote.value]
     .filter((part) => part !== undefined)
-    .join(' · ')
-})
+    .join(" · ");
+});
 </script>
 
 <template>
@@ -152,7 +152,7 @@ const meta = computed<string>(() => {
           :disabled="saving || unchanged"
           @click="emit('save', draft, draftText)"
         >
-          {{ saving ? 'Wird gespeichert …' : 'Speichern' }}
+          {{ saving ? "Wird gespeichert …" : "Speichern" }}
         </button>
         <button
           type="button"

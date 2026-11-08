@@ -1,58 +1,58 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useForm } from '@tanstack/vue-form'
-import { useRequestPasswordReset } from '@/api/auth/auth'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { ApiError } from '@/lib/api/apiFetch'
-import { failureMessage } from '@/lib/format/failure'
-import { focusFirstInvalid, loginSchema, parsed } from '@/lib/validation/fieldSchemas'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
-import { Button } from '@/components/ui/button'
-import FormTextField from '@/components/common/FormTextField.vue'
-import { FieldGroup } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
+import { ref } from "vue";
+import { useForm } from "@tanstack/vue-form";
+import { useRequestPasswordReset } from "@/api/auth/auth";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { ApiError } from "@/lib/api/apiFetch";
+import { failureMessage } from "@/lib/format/failure";
+import { focusFirstInvalid, loginSchema, parsed } from "@/lib/validation/fieldSchemas";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import MailedLinkNote from "@/components/common/MailedLinkNote.vue";
+import { Button } from "@/components/ui/button";
+import FormTextField from "@/components/common/FormTextField.vue";
+import { FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 
-const LIMIT = TEXT_LIMIT.requestPasswordReset
+const LIMIT = TEXT_LIMIT.requestPasswordReset;
 
 // Rules and wording from `lib/validation/fieldSchemas`; only the empty-field wording is this
 // form's own, because it names what is being asked for.
-const LOGIN = loginSchema(LIMIT.login, 'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.')
+const LOGIN = loginSchema(LIMIT.login, "Gib deinen Benutzernamen oder deine E-Mail-Adresse ein.");
 
-const formError = ref<string | undefined>(undefined)
-const requested = ref<boolean>(false)
+const formError = ref<string | undefined>(undefined);
+const requested = ref<boolean>(false);
 
-const { mutateAsync: requestReset, isPending } = useRequestPasswordReset()
+const { mutateAsync: requestReset, isPending } = useRequestPasswordReset();
 
-const formElement = ref<HTMLFormElement | null>(null)
+const formElement = ref<HTMLFormElement | null>(null);
 
 const form = useForm({
-  defaultValues: { login: '' },
+  defaultValues: { login: "" },
   // Focus follows the first thing that is wrong; without it focus stays on the button.
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
-    formError.value = undefined
+    formError.value = undefined;
 
     try {
-      await requestReset({ data: { login: parsed(LOGIN, value.login) } })
+      await requestReset({ data: { login: parsed(LOGIN, value.login) } });
     } catch (error) {
       if (error instanceof ApiError) {
       }
-      formError.value = failureMessage(error)
-      return
+      formError.value = failureMessage(error);
+      return;
     }
 
-    requested.value = true
+    requested.value = true;
   },
-})
+});
 
 /** Lets someone who mistyped correct it without navigating away and losing the page. */
 function startOver() {
-  requested.value = false
-  formError.value = undefined
-  form.reset()
+  requested.value = false;
+  formError.value = undefined;
+  form.reset();
 }
 </script>
 

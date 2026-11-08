@@ -3,7 +3,7 @@
  * wait a member can read. Four sign-in views each wrote their own sentence before this, and two of
  * them had already drifted apart.
  */
-const MINUTE_SECONDS = 60
+const MINUTE_SECONDS = 60;
 
 /**
  * Rounded up, so the wait is never understated: told "in 1 Minute" at 61 seconds, a member tries
@@ -11,15 +11,15 @@ const MINUTE_SECONDS = 60
  */
 export function rateLimitWait(retryAfterSeconds: number | undefined): string | undefined {
   if (retryAfterSeconds === undefined || retryAfterSeconds <= 0) {
-    return undefined
+    return undefined;
   }
 
   if (retryAfterSeconds < MINUTE_SECONDS) {
-    return retryAfterSeconds === 1 ? 'in einer Sekunde' : `in ${retryAfterSeconds} Sekunden`
+    return retryAfterSeconds === 1 ? "in einer Sekunde" : `in ${retryAfterSeconds} Sekunden`;
   }
 
-  const minutes = Math.ceil(retryAfterSeconds / MINUTE_SECONDS)
-  return minutes === 1 ? 'in einer Minute' : `in ${minutes} Minuten`
+  const minutes = Math.ceil(retryAfterSeconds / MINUTE_SECONDS);
+  return minutes === 1 ? "in einer Minute" : `in ${minutes} Minuten`;
 }
 
 /**
@@ -27,8 +27,8 @@ export function rateLimitWait(retryAfterSeconds: number | undefined): string | u
  * member who reads "300 pro 15 Minuten" learns only that they cannot fix it.
  */
 export function rateLimitMessage(retryAfterSeconds?: number): string {
-  const wait = rateLimitWait(retryAfterSeconds)
+  const wait = rateLimitWait(retryAfterSeconds);
   return wait === undefined
-    ? 'Zu viele Anfragen. Versuche es in einigen Minuten noch einmal.'
-    : `Zu viele Anfragen. Versuche es ${wait} noch einmal.`
+    ? "Zu viele Anfragen. Versuche es in einigen Minuten noch einmal."
+    : `Zu viele Anfragen. Versuche es ${wait} noch einmal.`;
 }

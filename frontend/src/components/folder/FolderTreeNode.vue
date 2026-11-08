@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
-import { FolderInput, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { computed, inject } from "vue";
+import { FolderInput, Pencil, Plus, Trash2 } from "@lucide/vue";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion'
-import type { TreeFolder, TreeNode } from '@/lib/folder/buildTree'
-import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
+} from "@/components/ui/accordion";
+import type { TreeFolder, TreeNode } from "@/lib/folder/buildTree";
+import FavouriteMark from "@/components/favourite/FavouriteMark.vue";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import CreateKindItems from '@/components/folder/CreateKindItems.vue'
-import ForumPermissionMark from '@/components/forum/ForumPermissionMark.vue'
-import { leafRoute, START_FORUM_CREATE } from '@/lib/folder/treeScope'
-import type { TreeScope } from '@/lib/folder/treeScope'
-import { mayWriteInForum } from '@/lib/forum/permission'
+} from "@/components/ui/dropdown-menu";
+import CreateKindItems from "@/components/folder/CreateKindItems.vue";
+import ForumPermissionMark from "@/components/forum/ForumPermissionMark.vue";
+import { leafRoute, START_FORUM_CREATE } from "@/lib/folder/treeScope";
+import type { TreeScope } from "@/lib/folder/treeScope";
+import { mayWriteInForum } from "@/lib/forum/permission";
 
 /**
  * One row of a tree on its own page — a group's or the forum's — and its children under it.
@@ -31,52 +31,52 @@ import { mayWriteInForum } from '@/lib/forum/permission'
  * by the folder's permission and by whether a create handler was provided at all.
  */
 const props = defineProps<{
-  node: TreeNode
-  scope: TreeScope
+  node: TreeNode;
+  scope: TreeScope;
   /** A group's answer for the whole tree. The forum asks each folder instead. */
-  mayWrite?: boolean
+  mayWrite?: boolean;
   /** Which folders are collapsed, owned by the tree so the state survives a re-render. */
-  collapsed: Set<string>
-}>()
+  collapsed: Set<string>;
+}>();
 
 const emit = defineEmits<{
-  toggle: [folderId: string]
-  addFolder: [parentFolderId: string]
-  addPage: [folderId: string]
-  addThread: [folderId: string]
-  edit: [folder: TreeFolder]
-  move: [node: TreeNode]
-  remove: [folder: TreeFolder]
-}>()
+  toggle: [folderId: string];
+  addFolder: [parentFolderId: string];
+  addPage: [folderId: string];
+  addThread: [folderId: string];
+  edit: [folder: TreeFolder];
+  move: [node: TreeNode];
+  remove: [folder: TreeFolder];
+}>();
 
 const folder = computed<TreeFolder | undefined>(() =>
-  props.node.kind === 'folder' ? props.node : undefined,
-)
+  props.node.kind === "folder" ? props.node : undefined,
+);
 
-function createIn(folderId: string, kind: 'folder' | 'page' | 'thread') {
-  if (kind === 'folder') emit('addFolder', folderId)
-  else if (kind === 'page') emit('addPage', folderId)
-  else emit('addThread', folderId)
+function createIn(folderId: string, kind: "folder" | "page" | "thread") {
+  if (kind === "folder") emit("addFolder", folderId);
+  else if (kind === "page") emit("addPage", folderId);
+  else emit("addThread", folderId);
 }
 
 /** Only an empty folder goes, so a full one does not offer it at all. */
-const isEmpty = computed<boolean>(() => (folder.value?.children.length ?? 0) === 0)
+const isEmpty = computed<boolean>(() => (folder.value?.children.length ?? 0) === 0);
 
 /**
  * Who may reshape the tree: a group's writers, and the forum's operators — it has no
  * administrators, so its structure is theirs alone (#32).
  */
 const mayChangeStructure = computed<boolean>(() =>
-  props.scope.kind === 'group' ? props.mayWrite === true : props.scope.isOperator,
-)
+  props.scope.kind === "group" ? props.mayWrite === true : props.scope.isOperator,
+);
 
 /**
  * A room reads as a section at the top and as a row further in — the same fall-off a heading
  * scale has, which is what stops a folder at level four looking like a page title.
  */
 const titleClass = computed<string>(() =>
-  folder.value?.depth === 1 ? 'text-h3 text-ink-1' : 'text-body font-medium text-ink-2',
-)
+  folder.value?.depth === 1 ? "text-h3 text-ink-1" : "text-body font-medium text-ink-2",
+);
 
 /**
  * Space above a room, not between the things in one: that is what opens a section. On the `li`,
@@ -84,11 +84,11 @@ const titleClass = computed<string>(() =>
  * child, so the reset cancelled the margin everywhere.
  */
 const spacing = computed<string>(() => {
-  if (folder.value === undefined) return ''
-  return folder.value.depth === 1 ? 'mt-6 first:mt-0' : 'mt-4'
-})
+  if (folder.value === undefined) return "";
+  return folder.value.depth === 1 ? "mt-6 first:mt-0" : "mt-4";
+});
 
-const startForumCreate = inject(START_FORUM_CREATE, undefined)
+const startForumCreate = inject(START_FORUM_CREATE, undefined);
 
 /**
  * A *member* with `write` in this folder, offered threads and pages. An operator's create is the
@@ -96,10 +96,10 @@ const startForumCreate = inject(START_FORUM_CREATE, undefined)
  * button twice, and only one of them could make a room.
  */
 const mayCreateHere = computed<boolean>(() => {
-  if (startForumCreate === undefined || folder.value === undefined) return false
-  if (props.scope.kind !== 'forum' || props.scope.isOperator) return false
-  return mayWriteInForum(folder.value.effectiveMemberPermission, false)
-})
+  if (startForumCreate === undefined || folder.value === undefined) return false;
+  if (props.scope.kind !== "forum" || props.scope.isOperator) return false;
+  return mayWriteInForum(folder.value.effectiveMemberPermission, false);
+});
 </script>
 
 <template>
@@ -116,7 +116,7 @@ const mayCreateHere = computed<boolean>(() => {
              navigating by link list has neither, and „Wortkette, Link" does not say whether it
              is a discussion or a document. `sr-only` and not `aria-label`, which would replace
              the whole link and silence the marks beside it. The rail has always been this way. -->
-        <span class="sr-only">{{ node.kind === 'thread' ? 'Thema' : 'Seite' }}</span>
+        <span class="sr-only">{{ node.kind === "thread" ? "Thema" : "Seite" }}</span>
         <ForumPermissionMark
           v-if="scope.kind === 'forum' && node.effectiveMemberPermission"
           :permission="node.effectiveMemberPermission"

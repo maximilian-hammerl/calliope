@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { AccordionTriggerProps } from 'reka-ui'
-import type { HTMLAttributes } from 'vue'
-import { ChevronDown, ChevronRight } from '@lucide/vue'
-import { reactiveOmit } from '@vueuse/core'
-import { AccordionHeader, AccordionTrigger, injectCollapsibleRootContext, useId } from 'reka-ui'
-import { cn } from '@/lib/utils'
+import type { AccordionTriggerProps } from "reka-ui";
+import type { HTMLAttributes } from "vue";
+import { ChevronDown, ChevronRight } from "@lucide/vue";
+import { reactiveOmit } from "@vueuse/core";
+import { AccordionHeader, AccordionTrigger, injectCollapsibleRootContext, useId } from "reka-ui";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<AccordionTriggerProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<AccordionTriggerProps & { class?: HTMLAttributes["class"] }>();
 
-const delegatedProps = reactiveOmit(props, 'class')
+const delegatedProps = reactiveOmit(props, "class");
 
 /**
  * Patched: the trigger rendered `aria-controls=""`, an IDREF pointing at nothing.
@@ -19,8 +19,8 @@ const delegatedProps = reactiveOmit(props, 'class')
  * same one: the content assigns with `||=` and so keeps it. Same fix as `DialogContent`'s
  * `contentId`, and the same cause.
  */
-const collapsible = injectCollapsibleRootContext()
-collapsible.contentId ||= useId(undefined, 'reka-collapsible-content')
+const collapsible = injectCollapsibleRootContext();
+collapsible.contentId ||= useId(undefined, "reka-collapsible-content");
 </script>
 
 <template>

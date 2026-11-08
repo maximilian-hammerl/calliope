@@ -1,83 +1,83 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { useQueryClient } from '@tanstack/vue-query'
-import { Flag, LogOut } from '@lucide/vue'
+import { computed, nextTick, ref, watch } from "vue";
+import { useQueryClient } from "@tanstack/vue-query";
+import { Flag, LogOut } from "@lucide/vue";
 import {
   getListChatsQueryKey,
   useCreateMessage,
   useListChatMemberships,
   useReadChat,
-} from '@/api/chats/chats'
-import { favouriteToggle } from '@/lib/format/favourite'
-import { useFavourite } from '@/composables/useFavourite'
-import { useChatMessages } from '@/composables/useChatMessages'
-import { useOwnChatMembership } from '@/composables/useOwnChatMembership'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import type { ListMessages200ResultsItem } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { listOnlyFilter } from '@/lib/api/queryKeys'
-import ChatInvite from '@/components/chat/ChatInvite.vue'
-import LeaveChatDialog from '@/components/chat/LeaveChatDialog.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/api/chats/chats";
+import { favouriteToggle } from "@/lib/format/favourite";
+import { useFavourite } from "@/composables/useFavourite";
+import { useChatMessages } from "@/composables/useChatMessages";
+import { useOwnChatMembership } from "@/composables/useOwnChatMembership";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import type { ListMessages200ResultsItem } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { listOnlyFilter } from "@/lib/api/queryKeys";
+import ChatInvite from "@/components/chat/ChatInvite.vue";
+import LeaveChatDialog from "@/components/chat/LeaveChatDialog.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 const props = defineProps<{
-  chatGroupId: string
-  title: string
-  live: ListMessages200ResultsItem[]
-  isFavourite?: boolean
-}>()
+  chatGroupId: string;
+  title: string;
+  live: ListMessages200ResultsItem[];
+  isFavourite?: boolean;
+}>();
 
-const emit = defineEmits<{ favouriteChanged: [] }>()
+const emit = defineEmits<{ favouriteChanged: [] }>();
 
-const { savingFavourite, favouriteError, changeFavourite } = useFavourite()
+const { savingFavourite, favouriteError, changeFavourite } = useFavourite();
 
-const favourite = computed(() => favouriteToggle(props.isFavourite ?? false))
+const favourite = computed(() => favouriteToggle(props.isFavourite ?? false));
 
 async function toggleFavourite() {
-  const { next } = favourite.value
-  if (await changeFavourite('chat_group', props.chatGroupId, next)) {
-    emit('favouriteChanged')
+  const { next } = favourite.value;
+  if (await changeFavourite("chat_group", props.chatGroupId, next)) {
+    emit("favouriteChanged");
   }
 }
 
-const { data: currentUserData } = useGetCurrentUser()
+const { data: currentUserData } = useGetCurrentUser();
 const currentUserId = computed<string | undefined>(() =>
   currentUserData.value?.status === 200 ? currentUserData.value.data.id : undefined,
-)
+);
 
 /** The message being reported, which is also what opens the dialog. */
-const reportingChat = ref<boolean>(false)
-const reportedMessage = ref<ListMessages200ResultsItem | undefined>(undefined)
+const reportingChat = ref<boolean>(false);
+const reportedMessage = ref<ListMessages200ResultsItem | undefined>(undefined);
 const reportingMessage = computed<boolean>({
   get: () => reportedMessage.value !== undefined,
   set: (open) => {
     if (!open) {
-      reportedMessage.value = undefined
+      reportedMessage.value = undefined;
     }
   },
-})
+});
 
 /** Only your own message is excluded; one from a deleted account is still reportable. */
 function mayReport(message: ListMessages200ResultsItem): boolean {
-  return currentUserId.value !== undefined && message.createdBy !== currentUserId.value
+  return currentUserId.value !== undefined && message.createdBy !== currentUserId.value;
 }
 
-const queryClient = useQueryClient()
+const queryClient = useQueryClient();
 
 const { fetched, hasLoaded, isPending, isError, hasOlder, isLoadingOlder, loadOlder, refetch } =
-  useChatMessages(() => props.chatGroupId)
+  useChatMessages(() => props.chatGroupId);
 
 /**
  * Messages the reader sent themselves. The send response carries the message and the stream
  * deliberately leaves the sender out, so this is where their own line comes from — and it is
  * why sending does not refetch: with pages loaded, a refetch would refire every one of them.
  */
-const justSent = ref<ListMessages200ResultsItem[]>([])
+const justSent = ref<ListMessages200ResultsItem[]>([]);
 
 /**
  * Oldest at the bottom, from three sources: the pages fetched, what the stream delivered, and
@@ -86,19 +86,19 @@ const justSent = ref<ListMessages200ResultsItem[]>([])
  * message that reached the list twice.
  */
 const messages = computed<ListMessages200ResultsItem[]>(() => {
-  const byId = new Map<string, ListMessages200ResultsItem>()
+  const byId = new Map<string, ListMessages200ResultsItem>();
   for (const message of [...fetched.value, ...props.live, ...justSent.value]) {
-    byId.set(message.id, message)
+    byId.set(message.id, message);
   }
-  return [...byId.values()].sort((one, other) => one.id.localeCompare(other.id))
-})
+  return [...byId.values()].sort((one, other) => one.id.localeCompare(other.id));
+});
 
 /**
  * How long a run may span. The name and the time are written once for the whole run, and
  * `formatActivityTime` counts in minutes, so a wider window would let one header say something
  * untrue about the lines under it.
  */
-const RUN_WINDOW_MS = 5 * 60 * 1000
+const RUN_WINDOW_MS = 5 * 60 * 1000;
 
 /**
  * Consecutive lines from one person keep a single name and time — somebody writing three short
@@ -109,7 +109,7 @@ const RUN_WINDOW_MS = 5 * 60 * 1000
  */
 const rows = computed<Array<{ message: ListMessages200ResultsItem; startsRun: boolean }>>(() =>
   messages.value.map((message, index) => {
-    const previous = messages.value[index - 1]
+    const previous = messages.value[index - 1];
     return {
       message,
       startsRun:
@@ -117,17 +117,17 @@ const rows = computed<Array<{ message: ListMessages200ResultsItem; startsRun: bo
         message.createdBy === null ||
         previous.createdBy !== message.createdBy ||
         Date.parse(message.createdAt) - Date.parse(previous.createdAt) > RUN_WINDOW_MS,
-    }
+    };
   }),
-)
+);
 
-const { data: membersData } = useListChatMemberships(() => props.chatGroupId, { limit: 50 })
+const { data: membersData } = useListChatMemberships(() => props.chatGroupId, { limit: 50 });
 
 const members = computed(() =>
   membersData.value?.status === 200 ? membersData.value.data.results : [],
-)
+);
 
-const memberIds = computed<string[]>(() => members.value.map((member) => member.userId))
+const memberIds = computed<string[]>(() => members.value.map((member) => member.userId));
 
 /**
  * Who is in the conversation, with anybody still deciding marked. A chat is small, so this is
@@ -136,46 +136,46 @@ const memberIds = computed<string[]>(() => members.value.map((member) => member.
 const participants = computed<string>(() =>
   members.value
     .map((member) =>
-      member.status === 'invited' ? `${member.username} (eingeladen)` : member.username,
+      member.status === "invited" ? `${member.username} (eingeladen)` : member.username,
     )
-    .join(', '),
-)
+    .join(", "),
+);
 
 const {
   leave,
   isBusy: isLeaving,
   error: leaveError,
-} = useOwnChatMembership(() => props.chatGroupId)
-const askingToLeave = ref<boolean>(false)
+} = useOwnChatMembership(() => props.chatGroupId);
+const askingToLeave = ref<boolean>(false);
 
 /**
  * An invitation is a membership row too, so an unanswered one keeps the conversation alive
  * after the last joined member walks out — the trigger only fires when no row is left.
  */
-const leavingDeletesTheChat = computed<boolean>(() => members.value.length === 1)
+const leavingDeletesTheChat = computed<boolean>(() => members.value.length === 1);
 
 /** Offered only once the memberships are known, or the confirmation would guess at the above. */
-const knowsWhoIsHere = computed<boolean>(() => members.value.length > 0)
+const knowsWhoIsHere = computed<boolean>(() => members.value.length > 0);
 
 async function confirmLeave() {
   if (await leave()) {
     // Nothing further to close: the chat leaves the list, which takes this pane with it.
-    askingToLeave.value = false
+    askingToLeave.value = false;
   }
 }
 
-const text = ref<string>('')
-const sendError = ref<string | undefined>(undefined)
-const scroller = ref<HTMLElement | null>(null)
+const text = ref<string>("");
+const sendError = ref<string | undefined>(undefined);
+const scroller = ref<HTMLElement | null>(null);
 
-const { mutateAsync: sendMessage, isPending: sending } = useCreateMessage()
-const { mutateAsync: markRead } = useReadChat()
+const { mutateAsync: sendMessage, isPending: sending } = useCreateMessage();
+const { mutateAsync: markRead } = useReadChat();
 
 async function scrollToLatest() {
-  await nextTick()
-  const element = scroller.value
+  await nextTick();
+  const element = scroller.value;
   if (element !== null) {
-    element.scrollTop = element.scrollHeight
+    element.scrollTop = element.scrollHeight;
   }
 }
 
@@ -185,15 +185,15 @@ async function scrollToLatest() {
  * exactly how much taller it became keeps the line somebody was reading under their eyes.
  */
 async function loadOlderKeepingPlace() {
-  const element = scroller.value
-  const heightBefore = element?.scrollHeight ?? 0
-  const offsetBefore = element?.scrollTop ?? 0
+  const element = scroller.value;
+  const heightBefore = element?.scrollHeight ?? 0;
+  const offsetBefore = element?.scrollTop ?? 0;
 
-  await loadOlder()
-  await nextTick()
+  await loadOlder();
+  await nextTick();
 
   if (element !== null) {
-    element.scrollTop = offsetBefore + (element.scrollHeight - heightBefore)
+    element.scrollTop = offsetBefore + (element.scrollHeight - heightBefore);
   }
 }
 
@@ -206,53 +206,53 @@ async function loadOlderKeepingPlace() {
  * a new array, which fires the watcher again — a loop that ran until the rate limiter stopped
  * it. A string cannot do that.
  */
-const latestMessageId = computed<string | undefined>(() => messages.value.at(-1)?.id)
+const latestMessageId = computed<string | undefined>(() => messages.value.at(-1)?.id);
 
 // Opening a chat, and every message after it, counts as read.
 watch(
   [() => props.chatGroupId, latestMessageId],
   async () => {
-    await scrollToLatest()
-    await markRead({ chatId: props.chatGroupId }).catch(() => undefined)
+    await scrollToLatest();
+    await markRead({ chatId: props.chatGroupId }).catch(() => undefined);
     // The list only: its prefix also matches this conversation's own pages.
-    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()))
+    await queryClient.invalidateQueries(listOnlyFilter(getListChatsQueryKey()));
   },
   { immediate: true },
-)
+);
 
 // A message written while the composer was closed is not worth keeping; a chat switched away
 // from is a different conversation.
 watch(
   () => props.chatGroupId,
   () => {
-    text.value = ''
-    sendError.value = undefined
+    text.value = "";
+    sendError.value = undefined;
     // Another conversation's sends are not this one's; the query key changes with the id.
-    justSent.value = []
-    void refetch()
+    justSent.value = [];
+    void refetch();
   },
-)
+);
 
 async function submit() {
-  const written = text.value.trim()
+  const written = text.value.trim();
   if (written.length === 0) {
-    return
+    return;
   }
 
-  sendError.value = undefined
+  sendError.value = undefined;
   try {
-    const sent = await sendMessage({ chatId: props.chatGroupId, data: { text: written } })
+    const sent = await sendMessage({ chatId: props.chatGroupId, data: { text: written } });
     if (sent.status === 201) {
-      justSent.value = [...justSent.value, sent.data]
+      justSent.value = [...justSent.value, sent.data];
     }
   } catch {
-    sendError.value = 'Die Nachricht wurde nicht gesendet. Versuche es noch einmal.'
-    return
+    sendError.value = "Die Nachricht wurde nicht gesendet. Versuche es noch einmal.";
+    return;
   }
 
   // Cleared only once it is really sent, so nothing anybody wrote is lost.
-  text.value = ''
-  await scrollToLatest()
+  text.value = "";
+  await scrollToLatest();
 }
 </script>
 
@@ -338,7 +338,7 @@ async function submit() {
         >
           <div v-if="row.startsRun" class="flex items-baseline gap-2">
             <span class="text-[12.5px] font-semibold text-ink-3">
-              {{ row.message.createdByUsername ?? 'Gelöschtes Konto' }}
+              {{ row.message.createdByUsername ?? "Gelöschtes Konto" }}
             </span>
             <span class="text-[11.5px] text-ink-6">
               {{ formatActivityTime(row.message.createdAt) }}
@@ -348,7 +348,7 @@ async function submit() {
                nothing to a screen reader, so it still gets the name. Outside the paragraph:
                the name is not part of what was written. -->
           <span v-if="!row.startsRun" class="sr-only">
-            {{ row.message.createdByUsername ?? 'Gelöschtes Konto' }}:
+            {{ row.message.createdByUsername ?? "Gelöschtes Konto" }}:
           </span>
           <!-- Plain text, deliberately: a chat is remarks, not prose. The interpolation touches
                both tags because `whitespace-pre-wrap` keeps whatever it is given, and on its own

@@ -4,12 +4,12 @@
  * what I saw, and here is why. The kind and the id go to the API; the copy of what was reported
  * is made by the server, so nothing here decides what the operators will read.
  */
-import { ref, useId, watch } from 'vue'
-import { useCreateReport } from '@/api/reports/reports'
-import type { CreateReportBody, CreateReportBodyTargetType } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { ref, useId, watch } from "vue";
+import { useCreateReport } from "@/api/reports/reports";
+import type { CreateReportBody, CreateReportBodyTargetType } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,60 +17,60 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { REPORT_CATEGORIES } from '@/lib/format/report'
-import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/components/ui/select";
+import { REPORT_CATEGORIES } from "@/lib/format/report";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
-const open = defineModel<boolean>('open', { required: true })
+const open = defineModel<boolean>("open", { required: true });
 /**
  * Per instance, because two of these are in the DOM at once: `ThreadView` and `ChatConversation`
  * each mount one for the post or message and one for the thread or chat, and reka *keeps* a closed
  * dialog's content — `data-state="closed"`, hidden. With a fixed id both carried `reportCategory`,
  * and every `<label for>` resolved to the first match, which is the closed one.
  */
-const categoryId = useId()
-const reasonId = useId()
+const categoryId = useId();
+const reasonId = useId();
 
 const props = defineProps<{
-  targetType: CreateReportBodyTargetType
-  targetId: string
+  targetType: CreateReportBodyTargetType;
+  targetId: string;
   /** What is being reported, so the dialog can say it back rather than "diesen Inhalt". */
-  subject: string
-}>()
+  subject: string;
+}>();
 
-const { mutateAsync: createReport, isPending } = useCreateReport()
-const category = ref<CreateReportBody['category'] | undefined>(undefined)
-const reason = ref<string>('')
-const error = ref<string | undefined>(undefined)
-const sent = ref<boolean>(false)
+const { mutateAsync: createReport, isPending } = useCreateReport();
+const category = ref<CreateReportBody["category"] | undefined>(undefined);
+const reason = ref<string>("");
+const error = ref<string | undefined>(undefined);
+const sent = ref<boolean>(false);
 
 watch(open, () => {
-  category.value = undefined
-  reason.value = ''
-  error.value = undefined
-  sent.value = false
-})
+  category.value = undefined;
+  reason.value = "";
+  error.value = undefined;
+  sent.value = false;
+});
 
 async function confirm() {
-  error.value = undefined
+  error.value = undefined;
 
   if (category.value === undefined) {
-    error.value = 'Wähle aus, worum es geht.'
-    return
+    error.value = "Wähle aus, worum es geht.";
+    return;
   }
 
-  if (reason.value.trim() === '') {
-    error.value = 'Schreib kurz, worum es geht.'
-    return
+  if (reason.value.trim() === "") {
+    error.value = "Schreib kurz, worum es geht.";
+    return;
   }
 
   try {
@@ -81,13 +81,13 @@ async function confirm() {
         category: category.value,
         reason: reason.value.trim(),
       },
-    })
+    });
   } catch {
-    error.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
+    error.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
+    return;
   }
 
-  sent.value = true
+  sent.value = true;
 }
 </script>
 
@@ -95,7 +95,7 @@ async function confirm() {
   <Dialog v-model:open="open">
     <DialogContent class="sm:max-w-dialog-form">
       <DialogHeader>
-        <DialogTitle>{{ sent ? 'Danke' : `„${props.subject}“ melden` }}</DialogTitle>
+        <DialogTitle>{{ sent ? "Danke" : `„${props.subject}“ melden` }}</DialogTitle>
         <DialogDescription>
           <template v-if="sent">
             Die Moderation sieht deine Meldung. Was daraus wird, erfährst du nicht — wir sagen

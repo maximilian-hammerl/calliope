@@ -1,46 +1,46 @@
 <script setup lang="ts">
 /** Thin on purpose: the fields that answer "would this person suit me" come next. */
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { getGetUserQueryKey, useGetUser, useLiftUserBan } from '@/api/users/users'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import { useUnblockMember } from '@/api/blocks/blocks'
-import { GetCurrentUser200PlatformRole } from '@/api/models'
-import { queryClient } from '@/lib/api/queryClient'
-import type { GetUser200 } from '@/api/models'
-import { Flag, Pencil, ShieldBan, ShieldCheck, UserCheck, UserX } from '@lucide/vue'
-import { ApiError } from '@/lib/api/apiFetch'
-import { formatJoinedDate } from '@/lib/format/formatTime'
-import BanMemberDialog from '@/components/user/BanMemberDialog.vue'
-import ReportDialog from '@/components/report/ReportDialog.vue'
-import BlockMemberDialog from '@/components/user/BlockMemberDialog.vue'
-import UserAvatar from '@/components/user/UserAvatar.vue'
-import { platformRoleLabel } from '@/lib/format/platformRole'
-import ProfileFields from '@/components/user/ProfileFields.vue'
-import ProfileDialog from '@/components/user/ProfileDialog.vue'
-import { answeredFields } from '@/lib/profile/profileFields'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { getGetUserQueryKey, useGetUser, useLiftUserBan } from "@/api/users/users";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import { useUnblockMember } from "@/api/blocks/blocks";
+import { GetCurrentUser200PlatformRole } from "@/api/models";
+import { queryClient } from "@/lib/api/queryClient";
+import type { GetUser200 } from "@/api/models";
+import { Flag, Pencil, ShieldBan, ShieldCheck, UserCheck, UserX } from "@lucide/vue";
+import { ApiError } from "@/lib/api/apiFetch";
+import { formatJoinedDate } from "@/lib/format/formatTime";
+import BanMemberDialog from "@/components/user/BanMemberDialog.vue";
+import ReportDialog from "@/components/report/ReportDialog.vue";
+import BlockMemberDialog from "@/components/user/BlockMemberDialog.vue";
+import UserAvatar from "@/components/user/UserAvatar.vue";
+import { platformRoleLabel } from "@/lib/format/platformRole";
+import ProfileFields from "@/components/user/ProfileFields.vue";
+import ProfileDialog from "@/components/user/ProfileDialog.vue";
+import { answeredFields } from "@/lib/profile/profileFields";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const route = useRoute()
-const userId = computed<string>(() => String(route.params.userId))
+const route = useRoute();
+const userId = computed<string>(() => String(route.params.userId));
 
-const { data, isPending, error } = useGetUser(userId)
+const { data, isPending, error } = useGetUser(userId);
 
 const member = computed<GetUser200 | undefined>(() =>
   data.value?.status === 200 ? data.value.data : undefined,
-)
+);
 
 // From `error`, not `data`: the mutator throws on any non-2xx, so no status reaches `data`.
 const notFound = computed<boolean>(
   () => error.value instanceof ApiError && error.value.status === 404,
-)
+);
 
 /** Nobody blocks themselves, so their own profile shows no such button. */
-const { data: currentUserData } = useGetCurrentUser()
+const { data: currentUserData } = useGetCurrentUser();
 const isOwnProfile = computed<boolean>(
   () => currentUserData.value?.status === 200 && currentUserData.value.data.id === userId.value,
-)
+);
 
 /**
  * Operator-only, and never on one's own profile — the API refuses to ban an account holding a
@@ -48,51 +48,51 @@ const isOwnProfile = computed<boolean>(
  */
 const mayModerate = computed<boolean>(() => {
   if (currentUserData.value?.status !== 200) {
-    return false
+    return false;
   }
-  const role = currentUserData.value.data.platformRole
+  const role = currentUserData.value.data.platformRole;
   return (
     role === GetCurrentUser200PlatformRole.moderator ||
     role === GetCurrentUser200PlatformRole.administrator
-  )
-})
+  );
+});
 
-const banning = ref<boolean>(false)
-const banError = ref<string | undefined>(undefined)
-const { mutateAsync: liftBan, isPending: liftingBan } = useLiftUserBan()
+const banning = ref<boolean>(false);
+const banError = ref<string | undefined>(undefined);
+const { mutateAsync: liftBan, isPending: liftingBan } = useLiftUserBan();
 
 async function liftTheBan() {
-  banError.value = undefined
+  banError.value = undefined;
   try {
-    await liftBan({ userId: userId.value })
+    await liftBan({ userId: userId.value });
   } catch {
-    banError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
+    banError.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
+    return;
   }
-  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) });
 }
 
-const editingProfile = ref<boolean>(false)
+const editingProfile = ref<boolean>(false);
 
 async function refreshProfile() {
-  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) });
 }
 
-const reporting = ref<boolean>(false)
-const blocking = ref<boolean>(false)
-const blockError = ref<string | undefined>(undefined)
+const reporting = ref<boolean>(false);
+const blocking = ref<boolean>(false);
+const blockError = ref<string | undefined>(undefined);
 
-const { mutateAsync: unblock, isPending: unblocking } = useUnblockMember()
+const { mutateAsync: unblock, isPending: unblocking } = useUnblockMember();
 
 async function allowContactAgain() {
-  blockError.value = undefined
+  blockError.value = undefined;
   try {
-    await unblock({ userId: userId.value })
+    await unblock({ userId: userId.value });
   } catch {
-    blockError.value = 'Das ist gerade nicht möglich. Versuche es später noch einmal.'
-    return
+    blockError.value = "Das ist gerade nicht möglich. Versuche es später noch einmal.";
+    return;
   }
-  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) })
+  await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId.value) });
 }
 </script>
 

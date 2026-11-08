@@ -15,7 +15,7 @@
  * which matches every other nested GET of that group. Invalidate those with the key itself.
  */
 export function listKeyPrefix(queryKey: readonly unknown[]): unknown[] {
-  return queryKey.slice(0, -1)
+  return queryKey.slice(0, -1);
 }
 
 /**
@@ -33,7 +33,7 @@ export function listOnlyFilter(queryKey: readonly unknown[]) {
     queryKey: queryKey.slice(0, -1),
     predicate: (query: { queryKey: readonly unknown[] }) =>
       query.queryKey.length === queryKey.length,
-  }
+  };
 }
 
 /**
@@ -50,5 +50,5 @@ export function exactKeyFilter(queryKey: readonly unknown[]) {
     queryKey,
     predicate: (query: { queryKey: readonly unknown[] }) =>
       query.queryKey.length === queryKey.length,
-  }
+  };
 }

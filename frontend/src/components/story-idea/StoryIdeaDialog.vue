@@ -4,95 +4,95 @@
  * until the duplication had cost the same field twice. Nothing differs between the flows but
  * the words and the mutation, and every field is the member's own.
  */
-import { computed, ref, watch } from 'vue'
-import { useForm } from '@tanstack/vue-form'
+import { computed, ref, watch } from "vue";
+import { useForm } from "@tanstack/vue-form";
 import {
   getGetStoryIdeaQueryKey,
   getListStoryIdeasQueryKey,
   useCreateStoryIdea,
   useUpdateStoryIdea,
-} from '@/api/story-ideas/story-ideas'
-import type { GetStoryIdea200 } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { formatCount } from '@/lib/format/formatNumber'
-import { failureMessage } from '@/lib/format/failure'
-import { focusFirstInvalid, parsed, proseSchema, titleSchema } from '@/lib/validation/fieldSchemas'
-import { queryClient } from '@/lib/api/queryClient'
-import { listKeyPrefix } from '@/lib/api/queryKeys'
-import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from '@/lib/format/storyIdea'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import FormTextField from '@/components/common/FormTextField.vue'
-import StoryVocabularyFields from '@/components/story/StoryVocabularyFields.vue'
-import type { StoryVocabulary } from '@/components/story/StoryVocabularyFields.vue'
+} from "@/api/story-ideas/story-ideas";
+import type { GetStoryIdea200 } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { formatCount } from "@/lib/format/formatNumber";
+import { failureMessage } from "@/lib/format/failure";
+import { focusFirstInvalid, parsed, proseSchema, titleSchema } from "@/lib/validation/fieldSchemas";
+import { queryClient } from "@/lib/api/queryClient";
+import { listKeyPrefix } from "@/lib/api/queryKeys";
+import { IDEA_STATUS_LABELS, LANGUAGE_LABELS, PARTY_SIZE_LABELS } from "@/lib/format/storyIdea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import FormTextField from "@/components/common/FormTextField.vue";
+import StoryVocabularyFields from "@/components/story/StoryVocabularyFields.vue";
+import type { StoryVocabulary } from "@/components/story/StoryVocabularyFields.vue";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 
-const open = defineModel<boolean>('open', { required: true })
-const props = defineProps<{ idea?: GetStoryIdea200 }>()
+const open = defineModel<boolean>("open", { required: true });
+const props = defineProps<{ idea?: GetStoryIdea200 }>();
 /** Only on posting, as `ThreadDialog` does: an edit leaves the reader where they were. */
-const emit = defineEmits<{ created: [id: string] }>()
+const emit = defineEmits<{ created: [id: string] }>();
 
-const LIMIT = TEXT_LIMIT.createStoryIdea
+const LIMIT = TEXT_LIMIT.createStoryIdea;
 
-const TITLE = titleSchema(LIMIT.title, 'Gib deiner Idee einen Titel.')
+const TITLE = titleSchema(LIMIT.title, "Gib deiner Idee einen Titel.");
 const TEASER = proseSchema(
   LIMIT.teaser,
   `Die kurze Fassung darf höchstens ${formatCount(LIMIT.teaser.maxLength)} Zeichen lang sein.`,
-  'Fass deine Idee in ein paar Sätzen zusammen.',
-)
+  "Fass deine Idee in ein paar Sätzen zusammen.",
+);
 const SYNOPSIS = proseSchema(
   LIMIT.synopsis,
   `Die ausführliche Fassung darf höchstens ${formatCount(LIMIT.synopsis.maxLength)} Zeichen lang sein.`,
-  'Erzähl deine Idee ausführlich.',
-)
+  "Erzähl deine Idee ausführlich.",
+);
 
-const { mutateAsync: create, isPending: isCreating } = useCreateStoryIdea()
-const { mutateAsync: update, isPending: isUpdating } = useUpdateStoryIdea()
-const isPending = computed<boolean>(() => isCreating.value || isUpdating.value)
+const { mutateAsync: create, isPending: isCreating } = useCreateStoryIdea();
+const { mutateAsync: update, isPending: isUpdating } = useUpdateStoryIdea();
+const isPending = computed<boolean>(() => isCreating.value || isUpdating.value);
 
 // The three selects stay outside the form: they carry no validation and their own type, which a
 // form field of strings would have to cast back.
-const language = ref<GetStoryIdea200['language']>('german')
-const partySize = ref<string>('')
-const status = ref<GetStoryIdea200['status']>('open')
+const language = ref<GetStoryIdea200["language"]>("german");
+const partySize = ref<string>("");
+const status = ref<GetStoryIdea200["status"]>("open");
 
-const formError = ref<string | undefined>(undefined)
-const formElement = ref<HTMLFormElement | null>(null)
+const formError = ref<string | undefined>(undefined);
+const formElement = ref<HTMLFormElement | null>(null);
 
-const blank = (value: string) => (value.trim().length === 0 ? null : value.trim())
+const blank = (value: string) => (value.trim().length === 0 ? null : value.trim());
 
 const emptyVocabulary = (): StoryVocabulary => ({
   genres: [],
   subgenres: [],
   tropes: [],
   contentWarnings: [],
-  storyThemes: '',
-  storySettings: '',
-  tense: '',
-  perspective: '',
-})
+  storyThemes: "",
+  storySettings: "",
+  tense: "",
+  perspective: "",
+});
 
-const vocabulary = ref<StoryVocabulary>(emptyVocabulary())
+const vocabulary = ref<StoryVocabulary>(emptyVocabulary());
 
 const form = useForm({
   defaultValues: {
-    title: '',
-    subtitle: '',
-    teaser: '',
-    synopsis: '',
-    lookingFor: '',
+    title: "",
+    subtitle: "",
+    teaser: "",
+    synopsis: "",
+    lookingFor: "",
   },
   onSubmitInvalid: () => focusFirstInvalid(formElement.value),
   onSubmit: async ({ value }) => {
-    formError.value = undefined
+    formError.value = undefined;
 
     const values = {
       title: parsed(TITLE, value.title),
@@ -105,27 +105,27 @@ const form = useForm({
       contentWarnings: vocabulary.value.contentWarnings,
       storyThemes: blank(vocabulary.value.storyThemes),
       storySettings: blank(vocabulary.value.storySettings),
-      tense: vocabulary.value.tense === '' ? null : vocabulary.value.tense,
-      perspective: vocabulary.value.perspective === '' ? null : vocabulary.value.perspective,
+      tense: vocabulary.value.tense === "" ? null : vocabulary.value.tense,
+      perspective: vocabulary.value.perspective === "" ? null : vocabulary.value.perspective,
       language: language.value,
       lookingFor: blank(value.lookingFor),
-      partySize: partySize.value === '' ? null : (partySize.value as GetStoryIdea200['partySize']),
+      partySize: partySize.value === "" ? null : (partySize.value as GetStoryIdea200["partySize"]),
       status: status.value,
-    }
+    };
 
-    let createdId: string | undefined
+    let createdId: string | undefined;
     try {
       if (props.idea === undefined) {
-        const created = await create({ data: values })
+        const created = await create({ data: values });
         // 201 is the only documented success and `apiFetch` throws on the rest, so this narrows
         // rather than handles: no id, no event — the idea is posted either way.
-        createdId = created.status === 201 ? created.data.id : undefined
+        createdId = created.status === 201 ? created.data.id : undefined;
       } else {
-        await update({ ideaId: props.idea.id, data: values })
+        await update({ ideaId: props.idea.id, data: values });
       }
     } catch (error) {
-      formError.value = failureMessage(error)
-      return
+      formError.value = failureMessage(error);
+      return;
     }
 
     await Promise.all([
@@ -133,43 +133,43 @@ const form = useForm({
       ...(props.idea === undefined
         ? []
         : [queryClient.invalidateQueries({ queryKey: getGetStoryIdeaQueryKey(props.idea.id) })]),
-    ])
+    ]);
 
-    open.value = false
+    open.value = false;
     if (createdId !== undefined) {
-      emit('created', createdId)
+      emit("created", createdId);
     }
   },
-})
+});
 
 watch(open, (isOpen) => {
   if (!isOpen) {
-    return
+    return;
   }
-  formError.value = undefined
+  formError.value = undefined;
   form.reset({
-    title: props.idea?.title ?? '',
-    subtitle: props.idea?.subtitle ?? '',
-    teaser: props.idea?.teaser ?? '',
-    synopsis: props.idea?.synopsis ?? '',
-    lookingFor: props.idea?.lookingFor ?? '',
-  })
+    title: props.idea?.title ?? "",
+    subtitle: props.idea?.subtitle ?? "",
+    teaser: props.idea?.teaser ?? "",
+    synopsis: props.idea?.synopsis ?? "",
+    lookingFor: props.idea?.lookingFor ?? "",
+  });
   vocabulary.value = props.idea
     ? {
         genres: [...props.idea.genres],
         subgenres: [...props.idea.subgenres],
         tropes: [...props.idea.tropes],
         contentWarnings: [...props.idea.contentWarnings],
-        storyThemes: props.idea.storyThemes ?? '',
-        storySettings: props.idea.storySettings ?? '',
-        tense: props.idea.tense ?? '',
-        perspective: props.idea.perspective ?? '',
+        storyThemes: props.idea.storyThemes ?? "",
+        storySettings: props.idea.storySettings ?? "",
+        tense: props.idea.tense ?? "",
+        perspective: props.idea.perspective ?? "",
       }
-    : emptyVocabulary()
-  language.value = props.idea?.language ?? 'german'
-  partySize.value = props.idea?.partySize ?? ''
-  status.value = props.idea?.status ?? 'open'
-})
+    : emptyVocabulary();
+  language.value = props.idea?.language ?? "german";
+  partySize.value = props.idea?.partySize ?? "";
+  status.value = props.idea?.status ?? "open";
+});
 </script>
 
 <template>
@@ -177,7 +177,7 @@ watch(open, (isOpen) => {
     <DialogContent class="sm:max-w-dialog-wide">
       <DialogHeader>
         <DialogTitle>{{
-          props.idea ? 'Storyidee bearbeiten' : 'Storyidee vorstellen'
+          props.idea ? "Storyidee bearbeiten" : "Storyidee vorstellen"
         }}</DialogTitle>
         <DialogDescription>
           Eine Idee, die Mitschreibende sucht. Nötig sind der Titel und beide Fassungen der Idee —
@@ -312,7 +312,7 @@ watch(open, (isOpen) => {
 
         <Button type="submit" :disabled="isPending">
           <Spinner v-if="isPending" />
-          {{ props.idea ? 'Änderungen speichern' : 'Idee vorstellen' }}
+          {{ props.idea ? "Änderungen speichern" : "Idee vorstellen" }}
         </Button>
       </form>
     </DialogContent>

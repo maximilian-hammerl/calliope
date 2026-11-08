@@ -1,8 +1,8 @@
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/vue-query'
-import { computed, ref } from 'vue'
-import { getGetCurrentUserQueryKey } from '@/api/auth/auth'
-import { LoginUser401Code } from '@/api/models'
-import { ApiError } from './apiFetch'
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/vue-query";
+import { computed, ref } from "vue";
+import { getGetCurrentUserQueryKey } from "@/api/auth/auth";
+import { LoginUser401Code } from "@/api/models";
+import { ApiError } from "./apiFetch";
 
 /**
  * Whether the API answered at all, last time anything asked it. False during a deploy or a
@@ -11,7 +11,7 @@ import { ApiError } from './apiFetch'
  * This is the one place that already sees every query and every mutation, so it is where the
  * question is cheapest to answer honestly.
  */
-export const backendReachable = ref<boolean>(true)
+export const backendReachable = ref<boolean>(true);
 
 /**
  * Only the reverse proxy failing to reach the application counts. Caddy answers 502 when
@@ -27,16 +27,16 @@ export const backendReachable = ref<boolean>(true)
  * A rejected fetch has no status at all — nothing listening, DNS, TLS, the whole stack down —
  * and surfaces as a `TypeError`.
  */
-const GATEWAY_FAILURE_STATUSES: ReadonlySet<number> = new Set([502, 504])
+const GATEWAY_FAILURE_STATUSES: ReadonlySet<number> = new Set([502, 504]);
 
 function isUnreachable(error: unknown): boolean {
   if (error instanceof ApiError) {
-    return GATEWAY_FAILURE_STATUSES.has(error.status)
+    return GATEWAY_FAILURE_STATUSES.has(error.status);
   }
-  return error instanceof TypeError
+  return error instanceof TypeError;
 }
 
-export type RateLimitScope = 'read' | 'write'
+export type RateLimitScope = "read" | "write";
 
 /**
  * When each rate-limit budget lifts, as epoch milliseconds. Global for the reason
@@ -52,43 +52,43 @@ export type RateLimitScope = 'read' | 'write'
  * Set from `Retry-After`, which the limiter sends and which counts down honestly. Without the
  * header there is still a limit to report, just no wait to name.
  */
-export const rateLimitedUntil = ref<Partial<Record<RateLimitScope, number>>>({})
+export const rateLimitedUntil = ref<Partial<Record<RateLimitScope, number>>>({});
 
 /** A limit reported without a wait, so the banner can still say what happened. */
-const RATE_LIMIT_FALLBACK_MS = 60_000
+const RATE_LIMIT_FALLBACK_MS = 60_000;
 
 function noteRateLimit(error: unknown): void {
   if (!(error instanceof ApiError) || error.status !== 429) {
-    return
+    return;
   }
 
   // The body says which budget refused it. Reading it off the request's own method would give the
   // same answer for a query or a mutation, but not for the draft's direct calls.
-  const scope: RateLimitScope = error.body.scope ?? 'read'
+  const scope: RateLimitScope = error.body.scope ?? "read";
 
   const until =
     Date.now() +
     (error.retryAfterSeconds === undefined
       ? RATE_LIMIT_FALLBACK_MS
-      : error.retryAfterSeconds * 1000)
+      : error.retryAfterSeconds * 1000);
 
   // The furthest answer wins: two requests refused a minute apart report different waits, and the
   // later one is the one that has to pass.
-  const known = rateLimitedUntil.value[scope]
+  const known = rateLimitedUntil.value[scope];
   if (known === undefined || until > known) {
-    rateLimitedUntil.value = { ...rateLimitedUntil.value, [scope]: until }
+    rateLimitedUntil.value = { ...rateLimitedUntil.value, [scope]: until };
   }
 }
 
 /** Whether either budget is spent, which is what decides that the notice is on screen at all. */
 export const rateLimited = computed<boolean>(
   () => rateLimitedUntil.value.read !== undefined || rateLimitedUntil.value.write !== undefined,
-)
+);
 
 /** A budget is spent until something it governs succeeds again. */
 function clearRateLimit(scope: RateLimitScope): void {
   if (rateLimitedUntil.value[scope] !== undefined) {
-    rateLimitedUntil.value = { ...rateLimitedUntil.value, [scope]: undefined }
+    rateLimitedUntil.value = { ...rateLimitedUntil.value, [scope]: undefined };
   }
 }
 
@@ -100,10 +100,10 @@ function clearRateLimit(scope: RateLimitScope): void {
  *
  * Assigned by the router rather than imported, because the router imports this module.
  */
-let onSessionLost: (() => void) | undefined
+let onSessionLost: (() => void) | undefined;
 
 export function setSessionLostHandler(handler: () => void): void {
-  onSessionLost = handler
+  onSessionLost = handler;
 }
 
 /**
@@ -119,13 +119,13 @@ export function setSessionLostHandler(handler: () => void): void {
  * The value comes from the generated client rather than a literal, so renaming it in the
  * backend breaks compilation here instead of behaviour.
  */
-const INVALID_CREDENTIALS = LoginUser401Code.invalid_credentials
+const INVALID_CREDENTIALS = LoginUser401Code.invalid_credentials;
 
 /**
  * Signing out is the one 401 that genuinely *is* a lost session and still must not be treated
  * as one: the session was already gone, which is exactly what was being asked for.
  */
-const EXPECTED_401_MUTATIONS = new Set(['logoutUser'])
+const EXPECTED_401_MUTATIONS = new Set(["logoutUser"]);
 
 /**
  * The guard's own session check, which asks whether there is a session at all — a 401 is its
@@ -136,27 +136,27 @@ const EXPECTED_401_MUTATIONS = new Set(['logoutUser'])
  * lost session and redirects to the page it is already on, which re-runs the guard. That loop
  * fired several hundred requests before the rate limiter stopped it.
  */
-const SESSION_CHECK_KEY = JSON.stringify(getGetCurrentUserQueryKey())
+const SESSION_CHECK_KEY = JSON.stringify(getGetCurrentUserQueryKey());
 
 function isExpected(error: ApiError, key: readonly unknown[] | undefined): boolean {
   if (error.body.code === INVALID_CREDENTIALS) {
-    return true
+    return true;
   }
   if (key === undefined) {
-    return false
+    return false;
   }
   return (
     JSON.stringify(key) === SESSION_CHECK_KEY ||
-    (typeof key[0] === 'string' && EXPECTED_401_MUTATIONS.has(key[0]))
-  )
+    (typeof key[0] === "string" && EXPECTED_401_MUTATIONS.has(key[0]))
+  );
 }
 
 function handleError(error: unknown, key: readonly unknown[] | undefined): void {
-  backendReachable.value = !isUnreachable(error)
-  noteRateLimit(error)
+  backendReachable.value = !isUnreachable(error);
+  noteRateLimit(error);
 
   if (error instanceof ApiError && error.status === 401 && !isExpected(error, key)) {
-    onSessionLost?.()
+    onSessionLost?.();
   }
 }
 
@@ -169,16 +169,16 @@ export const queryClient = new QueryClient({
     onError: (error, query) => handleError(error, query.queryKey),
     // Any answer at all means the API is back, and that it is answering this client again.
     onSuccess: () => {
-      backendReachable.value = true
-      clearRateLimit('read')
+      backendReachable.value = true;
+      clearRateLimit("read");
     },
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) =>
       handleError(error, mutation.options.mutationKey),
     onSuccess: () => {
-      backendReachable.value = true
-      clearRateLimit('write')
+      backendReachable.value = true;
+      clearRateLimit("write");
     },
   }),
   defaultOptions: {
@@ -198,10 +198,10 @@ export const queryClient = new QueryClient({
       // situation worse. Only genuine transport failures are worth a second attempt.
       retry: (failureCount, error) => {
         if (error instanceof ApiError && error.status < 500) {
-          return false
+          return false;
         }
-        return failureCount < 2
+        return failureCount < 2;
       },
     },
   },
-})
+});

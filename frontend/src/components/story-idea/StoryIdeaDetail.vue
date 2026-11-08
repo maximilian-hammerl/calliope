@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { GetStoryIdea200 } from '@/api/models'
-import { formatActivityTime } from '@/lib/format/formatTime'
-import { paragraphs } from '@/lib/format/formatText'
+import { computed } from "vue";
+import type { GetStoryIdea200 } from "@/api/models";
+import { formatActivityTime } from "@/lib/format/formatTime";
+import { paragraphs } from "@/lib/format/formatText";
 import {
   PERSPECTIVE_LABELS,
   TENSE_LABELS,
@@ -10,30 +10,30 @@ import {
   genreLine,
   subgenreLine,
   tropeLine,
-} from '@/lib/story/storyVocabulary'
+} from "@/lib/story/storyVocabulary";
 import {
   IDEA_STATUS_ICONS,
   IDEA_STATUS_LABELS,
   LANGUAGE_LABELS,
   PARTY_SIZE_LABELS,
   readToggle,
-} from '@/lib/format/storyIdea'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import FavouriteToggle from '@/components/favourite/FavouriteToggle.vue'
-import { useStoryIdeaActions } from '@/composables/useStoryIdeaActions'
-import { Button } from '@/components/ui/button'
-import { Flag, MessageCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
+} from "@/lib/format/storyIdea";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import FavouriteToggle from "@/components/favourite/FavouriteToggle.vue";
+import { useStoryIdeaActions } from "@/composables/useStoryIdeaActions";
+import { Button } from "@/components/ui/button";
+import { Flag, MessageCircle, Pencil, Plus, Trash2 } from "@lucide/vue";
 
 const props = withDefaults(
   defineProps<{
-    idea: GetStoryIdea200
+    idea: GetStoryIdea200;
     /** `h2` in the carousel, where three slides would otherwise each claim to be the page. */
-    heading?: 'h1' | 'h2'
+    heading?: "h1" | "h2";
     /** Whether the reader wrote it, which changes only what the closed notice says. */
-    own?: boolean
+    own?: boolean;
   }>(),
-  { heading: 'h1', own: false },
-)
+  { heading: "h1", own: false },
+);
 
 /**
  * The actions live here rather than in a slot, and the slot is gone rather than left as an override:
@@ -43,57 +43,57 @@ const props = withDefaults(
  * dialogs stay with the callers too — the carousel keys its report dialog by id.
  */
 const emit = defineEmits<{
-  readChanged: [isRead: boolean]
-  favouriteChanged: [isFavourite: boolean]
-  report: []
-  edit: []
-  remove: []
-  foundGroup: []
-}>()
+  readChanged: [isRead: boolean];
+  favouriteChanged: [isFavourite: boolean];
+  report: [];
+  edit: [];
+  remove: [];
+  foundGroup: [];
+}>();
 
 const { savingRead, changeRead, startingConversation, conversationError, askAboutIdea } =
-  useStoryIdeaActions()
+  useStoryIdeaActions();
 
 async function markRead(isRead: boolean) {
-  await changeRead(props.idea.id, isRead)
-  emit('readChanged', isRead)
+  await changeRead(props.idea.id, isRead);
+  emit("readChanged", isRead);
 }
 
 /** The long version, as the paragraphs its author typed. */
-const synopsis = computed<string[]>(() => paragraphs(props.idea.synopsis))
+const synopsis = computed<string[]>(() => paragraphs(props.idea.synopsis));
 
 /** The seeking block, only the lines that were filled in. */
 const seeking = computed<Array<{ label: string; value: string }>>(() =>
   [
-    { label: 'Gesucht', value: props.idea.lookingFor ?? undefined },
+    { label: "Gesucht", value: props.idea.lookingFor ?? undefined },
     {
-      label: 'Konstellation',
+      label: "Konstellation",
       value: props.idea.partySize ? PARTY_SIZE_LABELS[props.idea.partySize] : undefined,
     },
-    { label: 'Sprache', value: LANGUAGE_LABELS[props.idea.language] },
+    { label: "Sprache", value: LANGUAGE_LABELS[props.idea.language] },
   ].filter((entry): entry is { label: string; value: string } => entry.value !== undefined),
-)
+);
 
 /** The story block, mirroring the group's reference card. */
 const story = computed<Array<{ label: string; value: string }>>(() => {
   return [
-    { label: 'Genre', value: genreLine(props.idea.genres) },
-    { label: 'Subgenre', value: subgenreLine(props.idea.subgenres) },
-    { label: 'Tropes', value: tropeLine(props.idea.tropes) },
-    { label: 'Themen', value: props.idea.storyThemes ?? undefined },
-    { label: 'Schauplätze', value: props.idea.storySettings ?? undefined },
+    { label: "Genre", value: genreLine(props.idea.genres) },
+    { label: "Subgenre", value: subgenreLine(props.idea.subgenres) },
+    { label: "Tropes", value: tropeLine(props.idea.tropes) },
+    { label: "Themen", value: props.idea.storyThemes ?? undefined },
+    { label: "Schauplätze", value: props.idea.storySettings ?? undefined },
     {
-      label: 'Zeitform',
+      label: "Zeitform",
       value: props.idea.tense === null ? undefined : TENSE_LABELS[props.idea.tense],
     },
     {
-      label: 'Perspektive',
+      label: "Perspektive",
       value:
         props.idea.perspective === null ? undefined : PERSPECTIVE_LABELS[props.idea.perspective],
     },
-    { label: 'Inhaltswarnungen', value: contentWarningLine(props.idea.contentWarnings) },
-  ].filter((entry): entry is { label: string; value: string } => entry.value !== undefined)
-})
+    { label: "Inhaltswarnungen", value: contentWarningLine(props.idea.contentWarnings) },
+  ].filter((entry): entry is { label: string; value: string } => entry.value !== undefined);
+});
 </script>
 
 <template>
@@ -183,7 +183,7 @@ const story = computed<Array<{ label: string; value: string }>>(() => {
 
   <p v-if="idea.status === 'closed'" class="mt-3 max-w-[60ch] text-row text-ink-5">
     Diese Storyidee ist geschlossen. Sie bleibt lesbar, aber
-    {{ own ? 'niemand kann sie mehr beantworten' : 'du kannst sie nicht mehr beantworten' }}.
+    {{ own ? "niemand kann sie mehr beantworten" : "du kannst sie nicht mehr beantworten" }}.
   </p>
 
   <p v-if="idea.subtitle" class="mt-1 max-w-[60ch] text-note text-ink-3">

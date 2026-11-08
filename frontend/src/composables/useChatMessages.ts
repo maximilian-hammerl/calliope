@@ -1,8 +1,8 @@
-import type { MaybeRefOrGetter } from 'vue'
-import { computed, toValue } from 'vue'
-import { useInfiniteQuery } from '@tanstack/vue-query'
-import { getListMessagesQueryKey, listMessages } from '@/api/chats/chats'
-import type { ListMessages200ResultsItem } from '@/api/models'
+import type { MaybeRefOrGetter } from "vue";
+import { computed, toValue } from "vue";
+import { useInfiniteQuery } from "@tanstack/vue-query";
+import { getListMessagesQueryKey, listMessages } from "@/api/chats/chats";
+import type { ListMessages200ResultsItem } from "@/api/models";
 
 /**
  * A conversation's history, paged backwards by cursor.
@@ -12,7 +12,7 @@ import type { ListMessages200ResultsItem } from '@/api/models'
  * function is called directly instead. `getListMessagesQueryKey` still supplies the key, so
  * an invalidation written against the generated key reaches this query too.
  */
-const PAGE_SIZE = 50
+const PAGE_SIZE = 50;
 
 export function useChatMessages(chatGroupId: MaybeRefOrGetter<string>) {
   const query = useInfiniteQuery({
@@ -28,19 +28,19 @@ export function useChatMessages(chatGroupId: MaybeRefOrGetter<string>) {
     // Null means the beginning of the conversation has been reached.
     getNextPageParam: (lastPage) =>
       lastPage.status === 200 ? (lastPage.data.nextCursor ?? undefined) : undefined,
-  })
+  });
 
   /** Every page flattened. Each page is newest-first, and pages run newest to oldest. */
   const fetched = computed<ListMessages200ResultsItem[]>(() =>
     (query.data.value?.pages ?? []).flatMap((page) =>
       page.status === 200 ? page.data.results : [],
     ),
-  )
+  );
 
   /** Whether a load has ever succeeded, which is not the same as having any messages. */
   const hasLoaded = computed<boolean>(() =>
     (query.data.value?.pages ?? []).some((page) => page.status === 200),
-  )
+  );
 
   return {
     fetched,
@@ -51,5 +51,5 @@ export function useChatMessages(chatGroupId: MaybeRefOrGetter<string>) {
     isLoadingOlder: query.isFetchingNextPage,
     loadOlder: query.fetchNextPage,
     refetch: query.refetch,
-  }
+  };
 }

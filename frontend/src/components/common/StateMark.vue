@@ -17,15 +17,15 @@
  * the browser unnests. Forgetting the flag there costs a tooltip; a default of on would cost a
  * broken row.
  */
-import type { Component } from 'vue'
-import CalliopeBadge from '@/components/common/CalliopeBadge.vue'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import type { Component } from "vue";
+import CalliopeBadge from "@/components/common/CalliopeBadge.vue";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-defineProps<{ icon: Component; label: string; interactive?: boolean }>()
+defineProps<{ icon: Component; label: string; interactive?: boolean }>();
 
 // Reka's `Popover` renders no element of its own, so a class from the row would evaporate rather
 // than fall through. The rows space these with `ml-3`.
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 </script>
 
 <template>

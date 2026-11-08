@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useConfirmEmailAddressChange } from '@/api/auth/auth'
-import { ApiError } from '@/lib/api/apiFetch'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { onMounted, ref } from "vue";
+import { useConfirmEmailAddressChange } from "@/api/auth/auth";
+import { ApiError } from "@/lib/api/apiFetch";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const token = new URLSearchParams(window.location.search).get('token') ?? undefined
+const token = new URLSearchParams(window.location.search).get("token") ?? undefined;
 
-const status = ref<'confirming' | 'done' | 'in_use' | 'expired'>(
-  token === undefined ? 'expired' : 'confirming',
-)
+const status = ref<"confirming" | "done" | "in_use" | "expired">(
+  token === undefined ? "expired" : "confirming",
+);
 
-const { mutateAsync: confirm } = useConfirmEmailAddressChange()
+const { mutateAsync: confirm } = useConfirmEmailAddressChange();
 
 onMounted(async () => {
   if (token === undefined) {
-    return
+    return;
   }
 
   try {
-    await confirm({ data: { token } })
+    await confirm({ data: { token } });
   } catch (error) {
     // Somebody may have registered the address while the link sat in an inbox.
-    status.value = error instanceof ApiError && error.status === 409 ? 'in_use' : 'expired'
-    return
+    status.value = error instanceof ApiError && error.status === 409 ? "in_use" : "expired";
+    return;
   }
 
   // Confirming ended every session, this browser's included.
-  forgetCurrentUser()
-  status.value = 'done'
-})
+  forgetCurrentUser();
+  status.value = "done";
+});
 
 const HEADINGS = {
-  confirming: 'E-Mail-Adresse ändern',
-  done: 'E-Mail-Adresse geändert',
-  in_use: 'Adresse nicht mehr frei',
-  expired: 'E-Mail-Adresse ändern',
-} as const
+  confirming: "E-Mail-Adresse ändern",
+  done: "E-Mail-Adresse geändert",
+  in_use: "Adresse nicht mehr frei",
+  expired: "E-Mail-Adresse ändern",
+} as const;
 </script>
 
 <template>

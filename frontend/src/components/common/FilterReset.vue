@@ -7,11 +7,11 @@
  * The state belongs to the view, so the view decides what "cleared" means and says whether
  * anything is set; this owns the wording and the placement, which were the parts worth sharing.
  */
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 
-defineProps<{ active: boolean }>()
+defineProps<{ active: boolean }>();
 
-defineEmits<{ reset: [] }>()
+defineEmits<{ reset: [] }>();
 </script>
 
 <template>

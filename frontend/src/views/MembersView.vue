@@ -1,44 +1,44 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { watchDebounced } from '@vueuse/core'
-import { useListUsers } from '@/api/users/users'
-import type { ListUsers200ResultsItem } from '@/api/models'
-import { TEXT_LIMIT } from '@/api/textLimit'
-import { pluralize } from '@/lib/format/formatText'
-import { keepPreviousData } from '@tanstack/vue-query'
-import { usePagedList } from '@/composables/usePagedList'
-import ListPagination from '@/components/common/ListPagination.vue'
-import UserAvatar from '@/components/user/UserAvatar.vue'
-import { platformRoleLabel } from '@/lib/format/platformRole'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { computed, ref, watch } from "vue";
+import { watchDebounced } from "@vueuse/core";
+import { useListUsers } from "@/api/users/users";
+import type { ListUsers200ResultsItem } from "@/api/models";
+import { TEXT_LIMIT } from "@/api/textLimit";
+import { pluralize } from "@/lib/format/formatText";
+import { keepPreviousData } from "@tanstack/vue-query";
+import { usePagedList } from "@/composables/usePagedList";
+import ListPagination from "@/components/common/ListPagination.vue";
+import UserAvatar from "@/components/user/UserAvatar.vue";
+import { platformRoleLabel } from "@/lib/format/platformRole";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
-const LIMIT = TEXT_LIMIT.listUsers.search
+const LIMIT = TEXT_LIMIT.listUsers.search;
 
 /** A name per row, so a screenful is about twenty rather than the ten a paragraph row gets. */
-const PAGE_SIZE = 20
+const PAGE_SIZE = 20;
 
-const term = ref<string>('')
+const term = ref<string>("");
 
 /** What the request asks for, which only follows the field once typing pauses. */
-const settled = ref<string>('')
-const trimmed = computed<string>(() => term.value.trim())
+const settled = ref<string>("");
+const trimmed = computed<string>(() => term.value.trim());
 
 watchDebounced(
   trimmed,
   (value) => {
-    settled.value = value.length >= LIMIT.minLength ? value : ''
+    settled.value = value.length >= LIMIT.minLength ? value : "";
   },
   { debounce: 300 },
-)
+);
 
 const { page, offset, total, itemsPerPage, pageCount, goToPage } = usePagedList(
   PAGE_SIZE,
   () => totalResults.value,
-)
+);
 
 // A search narrows the directory, so whatever page was open is about different people.
-watch(settled, () => goToPage(1))
+watch(settled, () => goToPage(1));
 
 /**
  * Alphabetical, because the rows show a name and nothing else: any other order would be
@@ -49,22 +49,22 @@ const { data, isPending, isError } = useListUsers(
   () => ({
     limit: PAGE_SIZE,
     offset: offset.value,
-    search: settled.value === '' ? undefined : settled.value,
-    sortAttribute: 'username' as const,
-    sortOrder: 'asc' as const,
+    search: settled.value === "" ? undefined : settled.value,
+    sortAttribute: "username" as const,
+    sortOrder: "asc" as const,
   }),
   { query: { placeholderData: keepPreviousData } },
-)
+);
 
 const members = computed<ListUsers200ResultsItem[]>(() =>
   data.value?.status === 200 ? data.value.data.results : [],
-)
+);
 
 const totalResults = computed<number | undefined>(() =>
   data.value?.status === 200 ? data.value.data.totalResults : undefined,
-)
+);
 
-const hasLoaded = computed<boolean>(() => data.value?.status === 200)
+const hasLoaded = computed<boolean>(() => data.value?.status === 200);
 </script>
 
 <template>
@@ -96,7 +96,7 @@ const hasLoaded = computed<boolean>(() => data.value?.status === 200)
 
     <template v-else-if="hasLoaded">
       <p class="mb-1 text-[11.5px] text-ink-5">
-        {{ pluralize(totalResults ?? 0, 'Mitglied', 'Mitglieder') }}
+        {{ pluralize(totalResults ?? 0, "Mitglied", "Mitglieder") }}
       </p>
 
       <ul>

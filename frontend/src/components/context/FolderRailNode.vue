@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { ChevronDown, ChevronRight } from '@lucide/vue'
-import type { TreeNode } from '@/lib/folder/buildTree'
-import { leafRoute } from '@/lib/folder/treeScope'
-import type { TreeScope } from '@/lib/folder/treeScope'
-import FavouriteMark from '@/components/favourite/FavouriteMark.vue'
-import ForumPermissionMark from '@/components/forum/ForumPermissionMark.vue'
+import { ref } from "vue";
+import { ChevronDown, ChevronRight } from "@lucide/vue";
+import type { TreeNode } from "@/lib/folder/buildTree";
+import { leafRoute } from "@/lib/folder/treeScope";
+import type { TreeScope } from "@/lib/folder/treeScope";
+import FavouriteMark from "@/components/favourite/FavouriteMark.vue";
+import ForumPermissionMark from "@/components/forum/ForumPermissionMark.vue";
 
 /**
  * One row, and its children under it. Recursive by name — a component may render itself, and the
  * depth is bounded at five by the API.
  */
-defineProps<{ node: TreeNode; scope: TreeScope }>()
+defineProps<{ node: TreeNode; scope: TreeScope }>();
 
 // Open to start: a member who nested something wants to see it, and the whole tree is small.
-const open = ref<boolean>(true)
+const open = ref<boolean>(true);
 </script>
 
 <template>

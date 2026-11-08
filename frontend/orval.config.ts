@@ -1,19 +1,19 @@
-import { defineConfig } from 'orval'
+import { defineConfig } from "orval";
 
 export default defineConfig({
   calliope: {
     input: {
-      target: '../backend/open-api.json',
+      target: "../backend/open-api.json",
     },
 
     output: {
-      client: 'vue-query',
-      httpClient: 'fetch',
+      client: "vue-query",
+      httpClient: "fetch",
 
-      mode: 'tags-split',
+      mode: "tags-split",
 
-      target: 'src/api/calliope.ts',
-      schemas: 'src/api/models',
+      target: "src/api/calliope.ts",
+      schemas: "src/api/models",
 
       override: {
         // The list endpoints use the HTTP QUERY method, and Orval classifies anything that
@@ -38,10 +38,10 @@ export default defineConfig({
         // success. The mutator throws instead. It lives outside src/api because that whole
         // directory is generated and git-ignored.
         mutator: {
-          path: 'src/lib/api/apiFetch.ts',
-          name: 'apiFetch',
+          path: "src/lib/api/apiFetch.ts",
+          name: "apiFetch",
         },
       },
     },
   },
-})
+});

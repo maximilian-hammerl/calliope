@@ -9,19 +9,19 @@
  * sits on every page of a test instance stops meaning anything by the time a real deletion
  * dialog needs it. The Quiet surface reads as chrome, which is what this is.
  */
-import { computed } from 'vue'
-import { ENVIRONMENT, PASSWORD_REUSE_WARNING, environmentNotice } from '@/lib/environment'
+import { computed } from "vue";
+import { ENVIRONMENT, PASSWORD_REUSE_WARNING, environmentNotice } from "@/lib/environment";
 
 const props = defineProps<{
   /** Set where a password is chosen or typed; silent about passwords everywhere else. */
-  aboutPasswords?: boolean
-}>()
+  aboutPasswords?: boolean;
+}>();
 
-const notice = computed(() => environmentNotice(ENVIRONMENT))
+const notice = computed(() => environmentNotice(ENVIRONMENT));
 
 const warnAboutPasswords = computed<boolean>(
   () => props.aboutPasswords && notice.value?.publiclyReachable === true,
-)
+);
 </script>
 
 <template>

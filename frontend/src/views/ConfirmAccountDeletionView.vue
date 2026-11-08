@@ -1,50 +1,50 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useConfirmAccountDeletion } from '@/api/auth/auth'
-import { forgetCurrentUser } from '@/lib/auth/session'
-import NarrowPage from '@/components/layout/NarrowPage.vue'
-import CalliopeLogo from '@/components/common/CalliopeLogo.vue'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { ref } from "vue";
+import { useConfirmAccountDeletion } from "@/api/auth/auth";
+import { forgetCurrentUser } from "@/lib/auth/session";
+import NarrowPage from "@/components/layout/NarrowPage.vue";
+import CalliopeLogo from "@/components/common/CalliopeLogo.vue";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-const token = new URLSearchParams(window.location.search).get('token') ?? undefined
+const token = new URLSearchParams(window.location.search).get("token") ?? undefined;
 
 /**
  * Deleting waits for a click, where confirming an address change happens on mount: this is
  * the last step and cannot be undone, and a mail client that prefetches links would
  * otherwise delete the account before anybody read the page.
  */
-const status = ref<'asking' | 'deleting' | 'done' | 'expired'>(
-  token === undefined ? 'expired' : 'asking',
-)
+const status = ref<"asking" | "deleting" | "done" | "expired">(
+  token === undefined ? "expired" : "asking",
+);
 
-const { mutateAsync: confirm } = useConfirmAccountDeletion()
+const { mutateAsync: confirm } = useConfirmAccountDeletion();
 
 async function deleteAccount() {
   if (token === undefined) {
-    return
+    return;
   }
 
-  status.value = 'deleting'
+  status.value = "deleting";
 
   try {
-    await confirm({ data: { token } })
+    await confirm({ data: { token } });
   } catch {
-    status.value = 'expired'
-    return
+    status.value = "expired";
+    return;
   }
 
   // The account is gone, and with it every session — this browser's included.
-  forgetCurrentUser()
-  status.value = 'done'
+  forgetCurrentUser();
+  status.value = "done";
 }
 
 const HEADINGS = {
-  asking: 'Konto endgültig löschen?',
-  deleting: 'Konto wird gelöscht',
-  done: 'Konto gelöscht',
-  expired: 'Konto löschen',
-} as const
+  asking: "Konto endgültig löschen?",
+  deleting: "Konto wird gelöscht",
+  done: "Konto gelöscht",
+  expired: "Konto löschen",
+} as const;
 </script>
 
 <template>

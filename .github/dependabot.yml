@@ -19,8 +19,9 @@ updates:
           - "patch"
           - "minor"
 
+  # The pnpm workspace: its root holds the one lockfile and the catalog.
   - package-ecosystem: "npm"
-    directory: "/frontend"
+    directory: "/"
     schedule:
       interval: "daily"
     ignore:

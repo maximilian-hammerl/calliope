@@ -7,56 +7,56 @@
  * A library would earn its place once times have to be shown in a zone other than the reader's,
  * or once differences have to be counted in calendar days rather than elapsed milliseconds.
  */
-const LOCALE = 'de-DE'
+const LOCALE = "de-DE";
 
-const RELATIVE = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'always' })
+const RELATIVE = new Intl.RelativeTimeFormat(LOCALE, { numeric: "always" });
 
 const WEEKDAY_AND_TIME = new Intl.DateTimeFormat(LOCALE, {
-  weekday: 'long',
-  hour: '2-digit',
-  minute: '2-digit',
-})
+  weekday: "long",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
-const DAY_AND_MONTH = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long' })
+const DAY_AND_MONTH = new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "long" });
 
 const DAY_MONTH_AND_YEAR = new Intl.DateTimeFormat(LOCALE, {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-})
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
-const MONTH_AND_YEAR = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' })
+const MONTH_AND_YEAR = new Intl.DateTimeFormat(LOCALE, { month: "long", year: "numeric" });
 
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
-const DAY = 24 * HOUR
-const WEEK = 7 * DAY
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+const WEEK = 7 * DAY;
 
 export function formatActivityTime(isoTimestamp: string, now: Date = new Date()): string {
-  const at = new Date(isoTimestamp)
-  const elapsed = now.getTime() - at.getTime()
+  const at = new Date(isoTimestamp);
+  const elapsed = now.getTime() - at.getTime();
 
   // A clock that is slightly behind the server must not produce "in 3 Sekunden", and Intl
   // would render the sub-minute case as "vor 0 Minuten".
   if (elapsed < MINUTE) {
-    return 'gerade eben'
+    return "gerade eben";
   }
   if (elapsed < HOUR) {
-    return RELATIVE.format(-Math.floor(elapsed / MINUTE), 'minute')
+    return RELATIVE.format(-Math.floor(elapsed / MINUTE), "minute");
   }
   if (elapsed < DAY) {
-    return RELATIVE.format(-Math.floor(elapsed / HOUR), 'hour')
+    return RELATIVE.format(-Math.floor(elapsed / HOUR), "hour");
   }
   if (elapsed < WEEK) {
-    return WEEKDAY_AND_TIME.format(at)
+    return WEEKDAY_AND_TIME.format(at);
   }
   // Within the same year the year itself carries no information.
   return at.getFullYear() === now.getFullYear()
     ? DAY_AND_MONTH.format(at)
-    : DAY_MONTH_AND_YEAR.format(at)
+    : DAY_MONTH_AND_YEAR.format(at);
 }
 
 /** Absolute, and only to the month: `formatActivityTime` would say "gerade eben" here. */
 export function formatJoinedDate(isoTimestamp: string): string {
-  return MONTH_AND_YEAR.format(new Date(isoTimestamp))
+  return MONTH_AND_YEAR.format(new Date(isoTimestamp));
 }

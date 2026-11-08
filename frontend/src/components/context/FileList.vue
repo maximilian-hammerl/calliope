@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Placeholder: there is no file storage yet. File types are mono text, never an icon.
 const PLACEHOLDER_FILES = [
-  { name: 'stadtkarte.png', type: 'PNG' },
-  { name: 'zeitleiste.md', type: 'MD' },
-] as const
+  { name: "stadtkarte.png", type: "PNG" },
+  { name: "zeitleiste.md", type: "MD" },
+] as const;
 </script>
 
 <template>

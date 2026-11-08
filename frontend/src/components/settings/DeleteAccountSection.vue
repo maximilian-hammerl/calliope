@@ -3,17 +3,17 @@
  * The settings dialog's account-deletion section. Only the copy lives here: a member with
  * groups has to be told what happens to what they wrote, which the verification wall does not.
  */
-import MailedLinkNote from '@/components/common/MailedLinkNote.vue'
-import { computed, ref } from 'vue'
-import { useGetCurrentUser } from '@/api/auth/auth'
-import DeleteAccountForm from '@/components/settings/DeleteAccountForm.vue'
+import MailedLinkNote from "@/components/common/MailedLinkNote.vue";
+import { computed, ref } from "vue";
+import { useGetCurrentUser } from "@/api/auth/auth";
+import DeleteAccountForm from "@/components/settings/DeleteAccountForm.vue";
 
-const { data: currentUser } = useGetCurrentUser()
+const { data: currentUser } = useGetCurrentUser();
 const currentAddress = computed<string>(() =>
-  currentUser.value?.status === 200 ? currentUser.value.data.emailAddress : '',
-)
+  currentUser.value?.status === 200 ? currentUser.value.data.emailAddress : "",
+);
 
-const requested = ref<boolean>(false)
+const requested = ref<boolean>(false);
 </script>
 
 <template>

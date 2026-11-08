@@ -3,8 +3,8 @@
  * Where signing in and registering land. What belongs here is not decided yet, so it says so
  * rather than showing an empty page. The bars come from `App.vue`, which wraps every route.
  */
-import { APP_NAME } from '@/lib/branding'
-import EnvironmentNotice from '@/components/common/EnvironmentNotice.vue'
+import { APP_NAME } from "@/lib/branding";
+import EnvironmentNotice from "@/components/common/EnvironmentNotice.vue";
 </script>
 
 <template>
