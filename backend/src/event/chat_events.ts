@@ -1,3 +1,5 @@
+import { logger } from "#/src/logging.ts";
+
 /**
  * How a sent message reaches the streams of everyone else in the chat.
  *
@@ -56,7 +58,7 @@ export function publishChatEvent(recipientIds: Array<string>, event: ChatEvent):
       try {
         listener(event);
       } catch (error) {
-        console.error("Failed to deliver a chat event", error);
+        logger.error("Failed to deliver a chat event", { error });
       }
     }
   }

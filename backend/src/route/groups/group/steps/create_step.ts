@@ -28,6 +28,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [STEPS_TAG],
     summary: "Add a next step",
+    description: "Any writer or administrator may add one.",
     operationId: "createStep",
     middleware: JOINED_GROUP,
     request: {

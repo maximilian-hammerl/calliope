@@ -25,6 +25,8 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [PAGES_TAG],
     summary: "Delete a page",
+    description:
+      "Any writer or administrator, not only whoever made it: a page is material the group keeps. There is no history to recover it from.",
     operationId: "deletePage",
     middleware: JOINED_GROUP_PAGE,
     request: { params: PAGE_PARAMS },

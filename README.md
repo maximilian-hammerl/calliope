@@ -76,7 +76,7 @@ cd database && pnpm run validate:check   # format, lint, type-check, knip over t
 cd frontend && pnpm run validate:check   # format, lint, type-check, knip over the whole workspace
 ```
 
-The backend has two more. CI runs only the first, because Spectral does not yet read OpenAPI 3.2:
+The backend has two more, which CI runs as well:
 
 ```bash
 pnpm run open-api:check   # regenerates open-api.json and fails if it changed

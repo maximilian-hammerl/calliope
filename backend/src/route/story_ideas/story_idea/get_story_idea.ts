@@ -21,6 +21,8 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [STORY_IDEAS_TAG],
     summary: "Read one story idea",
+    description:
+      "Whatever its status or author, the reader's own and a blocked author's included: the board's filters do not apply to an idea asked for by id. Reading somebody else's idea does not mark it read; `markStoryIdeaRead` does.",
     operationId: "getStoryIdea",
     middleware: authenticated,
     request: { params: IDEA_PARAMS },

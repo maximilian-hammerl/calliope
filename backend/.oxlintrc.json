@@ -33,6 +33,8 @@
     "eslint/one-var": ["error", "never"],
     "eslint/require-unicode-regexp": "error",
     "typescript/triple-slash-reference": "error",
+    // The server logs through `src/logging.ts`, so every line it writes is JSON.
+    "eslint/no-console": "error",
     // What it could not: these need the types, which `--type-aware` brings.
     // `node:test` runs a top-level `test()` without anyone awaiting the promise it returns.
     "typescript/no-floating-promises": [
@@ -76,6 +78,13 @@
       "files": ["**/*_test.ts"],
       "rules": {
         "typescript/no-unsafe-type-assertion": "off"
+      }
+    },
+    {
+      // Command-line scripts, whose output is what they print.
+      "files": ["grant_role.ts", "seed.ts", "generate_open_api_spec.ts"],
+      "rules": {
+        "eslint/no-console": "off"
       }
     }
   ]
