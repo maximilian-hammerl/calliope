@@ -29,6 +29,8 @@
     "eslint/no-useless-rename": "error",
     "eslint/one-var": ["error", "never"],
     "typescript/triple-slash-reference": "error",
+    // The server logs through `src/logging.ts`, so every line it writes is JSON.
+    "eslint/no-console": "error",
     // What it could not: these need the types, which `--type-aware` brings.
     // `node:test` runs a top-level `test()` without anyone awaiting the promise it returns.
     "typescript/no-floating-promises": [
@@ -48,5 +50,14 @@
     //   added to satisfy it would change the document.
     // `camelcase` and `prefer-ascii` have no oxlint equivalent; the latter had 160 hits, all
     //   correct, since Calliope is German.
-  }
+  },
+  "overrides": [
+    {
+      // Command-line scripts, whose output is what they print.
+      "files": ["grant_role.ts", "seed.ts", "generate_open_api_spec.ts"],
+      "rules": {
+        "eslint/no-console": "off"
+      }
+    }
+  ]
 }

@@ -5,6 +5,7 @@ import type { DB } from "./schema.ts";
 import { postgresTypes } from "./postgres_types.ts";
 import { getRequiredEnvVariable } from "#/src/util/env.ts";
 import { addShutdownSignalListener } from "#/src/util/shutdown_signal.ts";
+import { logger } from "#/src/logging.ts";
 import { type DatabaseHealth, probeDatabase } from "#/src/operations/database_health.ts";
 
 export type Database = Kysely<DB>;
@@ -26,10 +27,10 @@ const driver = postgres(getRequiredEnvVariable("DATABASE_URL"), {
 });
 
 export async function closeDatabaseConnections(): Promise<void> {
-  console.log("Closing database connection before shutdown");
+  logger.info("Closing database connection before shutdown");
   // 5 seconds is the recommended value by the library
   await driver.end({ timeout: 5 });
-  console.log("Successfully closed database connection");
+  logger.info("Successfully closed database connection");
 }
 
 addShutdownSignalListener(closeDatabaseConnections);

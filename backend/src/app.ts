@@ -9,7 +9,7 @@ import { csrf } from "hono/csrf";
 import { methodNotAllowed } from "hono/method-not-allowed";
 import { bodyLimit } from "hono/body-limit";
 import corsOptions from "./cors_options.ts";
-import { describeError, logger } from "#/src/logging.ts";
+import { logger } from "#/src/logging.ts";
 import openApiSpecification from "./open_api_specification.ts";
 import { readRateLimit, writeRateLimit } from "./middleware/rate_limit.ts";
 import { REQUEST_BODY_LIMIT_BYTES, UPLOAD_BODY_LIMIT_BYTES } from "./text_limit.ts";
@@ -107,7 +107,7 @@ app.use(
       requestLogger.error("Request failed", {
         ...request,
         status: STATUS_CODE.InternalServerError,
-        ...describeError(error),
+        error,
       });
     },
   }),
