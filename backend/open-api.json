@@ -12598,6 +12598,7 @@
       "delete": {
         "tags": ["pages"],
         "summary": "Delete a page",
+        "description": "Any writer or administrator, not only whoever made it: a page is material the group keeps. There is no history to recover it from.",
         "operationId": "deletePage",
         "parameters": [
           {
@@ -13227,6 +13228,7 @@
       "post": {
         "tags": ["steps"],
         "summary": "Add a next step",
+        "description": "Any writer or administrator may add one.",
         "operationId": "createStep",
         "parameters": [
           {
@@ -19046,6 +19048,7 @@
       "post": {
         "tags": ["story-ideas"],
         "summary": "Post a story idea seeking writers",
+        "description": "A subgenre needs its genre among `genres`, or the idea is refused with 400.",
         "operationId": "createStoryIdea",
         "requestBody": {
           "required": true,
@@ -20750,6 +20753,7 @@
       "get": {
         "tags": ["story-ideas"],
         "summary": "Read one story idea",
+        "description": "Whatever its status or author, the reader's own and a blocked author's included: the board's filters do not apply to an idea asked for by id. Reading somebody else's idea does not mark it read; `markStoryIdeaRead` does.",
         "operationId": "getStoryIdea",
         "parameters": [
           {
@@ -22016,6 +22020,7 @@
       "delete": {
         "tags": ["story-ideas"],
         "summary": "Take one's own story idea off the board",
+        "description": "Only its author may. Chats started from it stay: they took its title, not a link to it.",
         "operationId": "deleteStoryIdea",
         "parameters": [
           {
@@ -30058,6 +30063,7 @@
       "post": {
         "tags": ["chats"],
         "summary": "Accept an invitation to a chat",
+        "description": "Until then the member sees the invitation but can neither read nor write in the chat. A second accept answers 404: there is no invitation left.",
         "operationId": "acceptChatInvitation",
         "parameters": [
           {
@@ -30905,6 +30911,7 @@
       "post": {
         "tags": ["chats"],
         "summary": "Send a message",
+        "description": "Only a joined member may write; an invited one accepts first. The other members get the message over the chat event stream; the sender has it in the response and is not sent it again.",
         "operationId": "createMessage",
         "parameters": [
           {

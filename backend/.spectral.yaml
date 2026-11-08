@@ -1,16 +1,19 @@
 extends:
   - "spectral:oas"
 
-# The list endpoints use the HTTP QUERY method (RFC 10008). A `query` operation on a path
-# item is OpenAPI 3.2, and Spectral validates against 3.1, so it reports every path item
-# that has one as having unevaluated properties.
-#
-# Scoped to `#/paths` rather than to the four offending path items, because an override
-# whose pointer contains a path parameter (`{groupId}`) never matches. `info`, `servers`,
-# `tags` and `components` are still schema-checked, and the path items themselves are
-# generated from typed route definitions rather than written by hand.
-overrides:
-  - files:
-      - "open-api.json#/paths"
-    rules:
-      oas3-schema: off
+rules:
+  # `generate_open_api_spec.ts` drops both from this file, since they come from `.env`; the served
+  # document has them.
+  oas3-api-servers: off
+  info-contact: off
+
+  # `spectral:oas` checks the description and tags of every operation except a `query` one.
+  query-operation-documented:
+    message: "{{property}} must be present and non-empty."
+    given: "$.paths.*.query"
+    severity: warn
+    then:
+      - field: description
+        function: truthy
+      - field: tags
+        function: truthy

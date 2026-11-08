@@ -50,8 +50,8 @@ before parameters, or `/me` is swallowed by `/:userId`.
   how the frontend tells a wrong password from a lost session; a bare 401 signs the member out.
 - **After changing a route, run `/regenerate`**, which does the document and the frontend's client
   in order. Generate with `.example.env`'s values, as CI does: its app name and description become
-  the document's. `open-api:lint` is disabled in CI — Spectral does not read the 3.2 document that
-  the QUERY method requires.
+  the document's. `open-api:lint` fails on any Spectral warning, an operation without a `description`
+  or `tags` among them.
 
 ## Schemas
 

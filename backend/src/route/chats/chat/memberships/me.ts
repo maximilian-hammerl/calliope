@@ -21,6 +21,8 @@ const accept = new OpenAPIHono().openapi(
     path: "/",
     tags: [CHATS_TAG],
     summary: "Accept an invitation to a chat",
+    description:
+      "Until then the member sees the invitation but can neither read nor write in the chat. A second accept answers 404: there is no invitation left.",
     operationId: "acceptChatInvitation",
     middleware: authenticated,
     request: { params: CHAT_PARAMS },
