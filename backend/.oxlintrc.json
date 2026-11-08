@@ -20,6 +20,8 @@
     "eslint/eqeqeq": "error",
     "eslint/guard-for-in": "error",
     "eslint/no-await-in-loop": "error",
+    // `import type` counts too, unlike the default: `query/favourite.ts` imports nothing but types.
+    "import/no-cycle": ["error", { "ignoreTypes": false }],
     "eslint/no-eval": "error",
     "typescript/no-non-null-asserted-optional-chain": "error",
     "typescript/no-non-null-assertion": "error",

@@ -2,7 +2,7 @@ import { db } from "#/src/database/client.ts";
 import { write } from "#/src/test/support.ts";
 import type { ForumPermission } from "#/src/database/schema.ts";
 import { plainTextToDocument } from "#/src/document/document_text.ts";
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
 
 /**
  * Forum content is inserted straight into the tables: no endpoint creates a folder yet (#32's
