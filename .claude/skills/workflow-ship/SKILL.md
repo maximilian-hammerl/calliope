@@ -53,11 +53,11 @@ If the human committed or pushed themselves, ask once before opening the pull re
 
 ## 4. Follow it
 
-In the desktop app, bind the pull request to the session and turn Auto-fix on for it, unasked
-(`set_monitor` with `auto_fix` and `address_comments`): the app then wakes the session on a failed
-check, a conflict or a comment, and nothing has to watch. Elsewhere, one background
-`gh pr checks <number> --watch`, not repeated polling. When an Auto-fix event says to commit and
-push without asking, the rules below still decide.
+In the desktop app, bind the pull request to the session and end the turn by offering Auto-fix: the
+app turns it on (`set_monitor` with `auto_fix` and `address_comments`) only when the human asks.
+With it on, the app wakes the session on a failed check, a conflict or a comment, and nothing has to
+watch. Elsewhere, one background `gh pr checks <number> --watch`, not repeated polling. When an
+Auto-fix event says to commit and push without asking, the rules below still decide.
 
 - **A failed check:** `gh run view <run> --log-failed`. A failure the change causes is fixed on the
   branch and handed over again (step 2), since the fix is reviewed like any change. One it doesn't
