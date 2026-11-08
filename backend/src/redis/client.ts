@@ -15,7 +15,7 @@ export function redisHealthCheck(): Promise<DatabaseHealth> {
   return probeDatabase("redis", true, () => redis.ping());
 }
 
-export async function closeRedisConnection(): Promise<void> {
+async function closeRedisConnection(): Promise<void> {
   console.log("Closing Redis connection before shutdown");
   await redis.quit();
   console.log("Successfully closed Redis connection");
@@ -29,10 +29,10 @@ addShutdownSignalListener(closeRedisConnection);
  */
 export const rateLimiterRedisClient = {
   scriptLoad: (script: string) => redis.script("LOAD", script) as Promise<string>,
-  evalsha: <TArgs extends unknown[], TData = unknown>(
+  evalsha: <TData = unknown>(
     sha1: string,
     keys: string[],
-    args: TArgs,
+    args: unknown[],
     // Redis sends every argument as a string anyway, so widening them here is lossless.
   ) =>
     redis.evalsha(

@@ -516,7 +516,7 @@ async function reportTree(people: People): Promise<Tree> {
   };
 }
 
-async function tree(key: Key, people: People): Promise<Tree> {
+async function treeFor(key: Key, people: People): Promise<Tree> {
   switch (key) {
     case "private":
     case "public":
@@ -572,7 +572,7 @@ async function fixture(keys: readonly Key[]): Promise<Fixture> {
   const trees: Tree[] = [];
   for (const key of keys) {
     // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: trees share the owner
-    trees.push(await tree(key, people));
+    trees.push(await treeFor(key, people));
   }
 
   return {
@@ -592,8 +592,8 @@ test("every route with an id in its path has a case", () => {
     "Add these paths' prefix to SCOPES, with the rows their routes are tried on",
   );
   assert.deepEqual(
-    found.map(({ operation }) => operation).sort(),
-    Object.keys(CASES).sort(),
+    found.map(({ operation }) => operation).toSorted(),
+    Object.keys(CASES).toSorted(),
     "Add a case for each new route, and remove the case of a route that is gone",
   );
   const withoutBody = found
@@ -618,12 +618,12 @@ for (const { operation, method, path, keys } of operations()) {
 
   test(`${operation}, tried by a stranger`, async () => {
     const found = await fixture(keys);
-    const test = CASES[operation];
-    assert(test !== undefined, `${operation} has no case`);
+    const testCase = CASES[operation];
+    assert(testCase !== undefined, `${operation} has no case`);
 
     const body = (tree: Tree) =>
-      test.body !== undefined
-        ? test.body(tree)
+      testCase.body !== undefined
+        ? testCase.body(tree)
         : REQUEST_BODIES[operation]?.({
             ...tree.ids,
             inviteeId: found.strangerId,
@@ -635,7 +635,7 @@ for (const { operation, method, path, keys } of operations()) {
     const telling: string[] = [];
     const refused: string[] = [];
     for (const tree of found.trees) {
-      const ids = { ...tree.ids, ...test.params?.(tree) };
+      const ids = { ...tree.ids, ...testCase.params?.(tree) };
 
       // oxlint-disable-next-line no-await-in-loop -- sequential: a control may change the rows
       const tried = await ask(tree, ids, found.strangerCookie);
@@ -656,7 +656,7 @@ for (const { operation, method, path, keys } of operations()) {
       const controller = tree.controller === "owner" ? found.ownerCookie : found.operatorCookie;
       // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, as above
       const control = await ask(tree, ids, controller);
-      const expected = test.control?.[tree.key];
+      const expected = testCase.control?.[tree.key];
       if (
         expected === undefined
           ? control.status < 200 || control.status >= 300
@@ -666,7 +666,7 @@ for (const { operation, method, path, keys } of operations()) {
       }
     }
 
-    assert.deepEqual(actual, test.stranger, `${operation}: what a stranger gets, per tree`);
+    assert.deepEqual(actual, testCase.stranger, `${operation}: what a stranger gets, per tree`);
     assert.deepEqual(
       telling,
       [],

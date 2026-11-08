@@ -19,11 +19,11 @@ test("QUERY /api/story-ideas hides closed ideas by default", async () => {
   await patchIdea(cookie, closed.id, { status: "closed" });
 
   const page = await (await listIdeas(reader, {})).json();
-  const titles = page.results.map((idea: { title: string }) => idea.title);
+  const titles = new Set(page.results.map((idea: { title: string }) => idea.title));
 
   // §8.3's point: what is settled stops cluttering the board, but stays reachable by asking.
-  assert.equal(titles.includes("Offen"), true);
-  assert.equal(titles.includes("Zu"), false);
+  assert.equal(titles.has("Offen"), true);
+  assert.equal(titles.has("Zu"), false);
   assert.equal(open.status, "open");
 
   const closedPage = await (await listIdeas(reader, { status: "closed" })).json();
@@ -39,12 +39,12 @@ test("QUERY /api/story-ideas never shows the reader their own ideas", async () =
   await createIdea(reader, { title: "Eigene Idee" });
 
   const page = await (await listIdeas(reader, {})).json();
-  const titles = page.results.map((idea: { title: string }) => idea.title);
+  const titles = new Set(page.results.map((idea: { title: string }) => idea.title));
 
   // The board is discovery: like a public group the reader is already in, their own idea is
   // not something to find. It lives on Meine Storyideen instead.
-  assert.equal(titles.includes("Fremde Idee"), true);
-  assert.equal(titles.includes("Eigene Idee"), false);
+  assert.equal(titles.has("Fremde Idee"), true);
+  assert.equal(titles.has("Eigene Idee"), false);
 });
 
 test("QUERY /api/story-ideas filters by language and searches the idea text", async () => {
@@ -64,14 +64,14 @@ test("QUERY /api/story-ideas filters by language and searches the idea text", as
   // Included and excluded, never counted: a count asserts on the whole board, which any
   // other idea — seeded, or from a test running beside this one — makes wrong.
   const english = await (await listIdeas(reader, { language: "english" })).json();
-  const englishTitles = english.results.map((idea: { title: string }) => idea.title);
-  assert.equal(englishTitles.includes("English"), true);
-  assert.equal(englishTitles.includes("Deutsch"), false);
+  const englishTitles = new Set(english.results.map((idea: { title: string }) => idea.title));
+  assert.equal(englishTitles.has("English"), true);
+  assert.equal(englishTitles.has("Deutsch"), false);
 
   const search = await (await listIdeas(reader, { search: "Turm aus Glas" })).json();
-  const searchTitles = search.results.map((idea: { title: string }) => idea.title);
-  assert.equal(searchTitles.includes("Deutsch"), true);
-  assert.equal(searchTitles.includes("English"), false);
+  const searchTitles = new Set(search.results.map((idea: { title: string }) => idea.title));
+  assert.equal(searchTitles.has("Deutsch"), true);
+  assert.equal(searchTitles.has("English"), false);
 });
 
 test("QUERY /api/story-ideas with author mine shows only one's own, closed included", async () => {
@@ -123,10 +123,10 @@ test("QUERY /api/story-ideas narrows the board to the genres asked for", async (
       limit: 100,
     })
   ).json();
-  const ids = page.results.map((idea: { id: string }) => idea.id);
+  const ids = new Set(page.results.map((idea: { id: string }) => idea.id));
 
-  assert.equal(ids.includes(fantasy.id), true);
-  assert.equal(ids.includes(western.id), false);
+  assert.equal(ids.has(fantasy.id), true);
+  assert.equal(ids.has(western.id), false);
 });
 
 test("QUERY /api/story-ideas widens within a field and narrows across two", async () => {
@@ -153,9 +153,9 @@ test("QUERY /api/story-ideas widens within a field and narrows across two", asyn
       limit: 100,
     })
   ).json();
-  const eitherIds = either.results.map((idea: { id: string }) => idea.id);
-  assert.equal(eitherIds.includes(fantasy.id), true);
-  assert.equal(eitherIds.includes(western.id), true);
+  const eitherIds = new Set(either.results.map((idea: { id: string }) => idea.id));
+  assert.equal(eitherIds.has(fantasy.id), true);
+  assert.equal(eitherIds.has(western.id), true);
 
   const both = await (
     await listIdeas(reader, {
@@ -164,9 +164,9 @@ test("QUERY /api/story-ideas widens within a field and narrows across two", asyn
       limit: 100,
     })
   ).json();
-  const bothIds = both.results.map((idea: { id: string }) => idea.id);
-  assert.equal(bothIds.includes(fantasy.id), true);
-  assert.equal(bothIds.includes(western.id), false);
+  const bothIds = new Set(both.results.map((idea: { id: string }) => idea.id));
+  assert.equal(bothIds.has(fantasy.id), true);
+  assert.equal(bothIds.has(western.id), false);
 });
 
 test("QUERY /api/story-ideas/carousel is not narrowed by a board filter", async () => {

@@ -17,7 +17,7 @@ is the whole API — one pair of routes rather than six.
 - **`query/favourite.ts` imports nothing from `service/`.** Every service that joins `favourite`
   imports it, and `favourite_service` reaches them back through `visible_target`; an import the other
   way closes a cycle, which TypeScript answers with `any` on a join column rather than an error.
-  The backend's lint does not run `import/no-cycle`, which finds two cycles today.
+  `import/no-cycle` in the backend's lint catches it, `import type` included.
 - **`withFavourite()` is the only place the join is written.** Its
   `.on("favourite.userId", "=", readerId)` scopes a favourite to the reader; spread over five
   services it was eight copies. The helper is generic over the builder, so its references are

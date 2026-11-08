@@ -5,7 +5,8 @@ import { FOLDERS_TAG } from "#/src/open_api_specification.ts";
 import { STATUS_CODE } from "#/src/http/status.ts";
 import { JOINED_GROUP } from "#/src/scope/chains.ts";
 import { folderOf } from "#/src/scope/group_scope.ts";
-import { MAX_FOLDER_DEPTH, WritingFolderService } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
+import { WritingFolderService } from "#/src/service/writing_folder_service.ts";
 import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,

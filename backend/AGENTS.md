@@ -7,7 +7,7 @@ which loads when you open that area's files.
 ```bash
 pnpm run dev                  # --watch, on $BACKEND_PORT, under Node's permission model
 pnpm run test                 # every file in its own process, in parallel, against the compose stack
-pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc  (validate:fix repairs what it can)
+pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc, knip  (validate:fix repairs what it can)
 pnpm run db:seed              # the fixture: nine accounts, password `calliope`
 ```
 
@@ -116,7 +116,7 @@ a send**: `Mailer.sendInBackground`, or the response time becomes an account ora
 One positive and one negative case per route, against real Postgres, Redis and Mailpit. **The suite
 runs every file at once**, each in a process of its own, so every file owns its identities: a shared fixture is a **factory taking a
 scope** (`authFixture("login")`), never module-level constants. Never empty shared state
-(`deleteMailFor([address])`, not `deleteAllMail()`), never assert a global count (`includes`, or a
+(`deleteMailFor([address])`, not `deleteAllMail()`), never assert a global count (a membership check, or a
 baseline delta), scope every fixture query to its own account. `clearRateLimits()` spares
 `RATE_LIMIT_TEST_CLIENTS`. Auth tests go through the app by hand, since registering is the thing under
 test. Prefer assertions that fail for the right reason — a *different* user still sees the group, not

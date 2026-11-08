@@ -31,7 +31,7 @@ export const FAVOURITE_COLUMN = {
 } as const satisfies Record<FavouriteTargetType, keyof Favourite>;
 
 /** One constant, because the select alias and the sort term have to agree and nothing checks. */
-export const IS_FAVOURITE = "isFavourite";
+const IS_FAVOURITE = "isFavourite";
 
 /** Ahead of whatever a list is sorted by — `true` sorts above `false`, so descending. */
 export const FAVOURITES_FIRST: SortTerm = {

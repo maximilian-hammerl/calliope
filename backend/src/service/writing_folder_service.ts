@@ -1,11 +1,8 @@
 import type { FolderId, GroupId } from "#/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
 import { db, type Transaction } from "#/src/database/client.ts";
-import { planFolderMove } from "#/src/service/folder_move.ts";
+import { MAX_FOLDER_DEPTH, planFolderMove } from "#/src/service/folder_move.ts";
 import type { WritingFolder as DatabaseWritingFolder } from "#/src/database/schema.ts";
-
-/** The deepest a member may nest: Weltenbau → Stadt → Viertel → Gebäude → Raum. */
-export const MAX_FOLDER_DEPTH = 5;
 
 export type Folder =
   // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
@@ -60,7 +57,7 @@ async function selectFolder(
     .executeTakeFirst();
 }
 
-export type CreateOutcome =
+type CreateOutcome =
   | { kind: "created"; folder: Folder }
   /** No such parent in this group — a folder cannot be the child of another group's. */
   | { kind: "noSuchParent" }
@@ -138,7 +135,7 @@ async function updateFolder(
   return await selectFolder(writingGroupId, folderId, transaction);
 }
 
-export type DeleteOutcome = "deleted" | "notEmpty";
+type DeleteOutcome = "deleted" | "notEmpty";
 
 /**
  * Only an empty folder goes: deleting a subtree is unrecoverable with no edit history behind it.
@@ -205,7 +202,7 @@ async function deleteFolder(
   return stillThere === undefined ? undefined : "notEmpty";
 }
 
-export type MoveOutcome =
+type MoveOutcome =
   | { kind: "moved"; folder: Folder }
   /** No such target in this group — a folder cannot move under another group's. */
   | { kind: "noSuchParent" }

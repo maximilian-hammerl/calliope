@@ -52,7 +52,7 @@ const OWN_MEMBERSHIP = {
  * table, because it is a fact about the reader and the thing rather than about the thing —
  * `favourite` holds it, and nobody else's is ever visible here.
  */
-export const OWN_FAVOURITE = { isFavourite: z.boolean() };
+const OWN_FAVOURITE = { isFavourite: z.boolean() };
 
 export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA.extend(CREATED_BY_USERNAME)
   .extend(OWN_MEMBERSHIP)
@@ -188,7 +188,7 @@ export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA.pick({
  * A username is public within the platform — it is what members type to invite one another.
  * An email address never is.
  */
-export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true }).extend({
+const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true }).extend({
   avatarUrl: AVATAR_URL,
 });
 

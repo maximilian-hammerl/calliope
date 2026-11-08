@@ -11,7 +11,8 @@ import {
   write,
 } from "#/src/test/support.ts";
 import { WritingPageService } from "./writing_page_service.ts";
-import { MAX_FOLDER_DEPTH, WritingFolderService } from "./writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "./folder_move.ts";
+import { WritingFolderService } from "./writing_folder_service.ts";
 
 // Scoped to this file, so a file running beside it cannot register or delete them.
 const OWNER = "folder-service-owner";

@@ -6,7 +6,7 @@ import { STATUS_CODE } from "#/src/http/status.ts";
 import { FORUM_FOLDER } from "#/src/scope/chains.ts";
 import { forumFolderOf } from "#/src/scope/forum_scope.ts";
 import { ForumService } from "#/src/service/forum_service.ts";
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
 import { mayActInForum } from "#/src/service/forum_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
