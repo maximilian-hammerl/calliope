@@ -1,7 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { formatToken, generateToken, hashToken, parseToken } from "#/src/util/token.ts";
-import { Buffer } from "node:buffer";
 
 test("every token is different", () => {
   const tokens = new Set(Array.from({ length: 100 }, () => generateToken()));
@@ -15,21 +14,21 @@ test("a token is 256 bits, url-safe", () => {
   assert(/^[A-Za-z0-9_-]+$/u.test(token), token);
 });
 
-test("hashing is deterministic and matches SHA-256", async () => {
+test("hashing is deterministic and matches SHA-256", () => {
   // The value pgcrypto's digest(…, 'sha256') produced for the same input, so what is stored
   // has not changed shape by moving the hashing out of the database.
-  const hash = await hashToken("abc");
+  const hash = hashToken("abc");
   assert.equal(
-    Buffer.from(hash).toString("hex"),
+    hash.toString("hex"),
     "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
   );
   assert.equal(hash.length, 32);
 });
 
-test("different tokens hash differently", async () => {
+test("different tokens hash differently", () => {
   assert.notEqual(
-    Buffer.from(await hashToken(generateToken())).toString("hex"),
-    Buffer.from(await hashToken(generateToken())).toString("hex"),
+    hashToken(generateToken()).toString("hex"),
+    hashToken(generateToken()).toString("hex"),
   );
 });
 

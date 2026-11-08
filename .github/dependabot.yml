@@ -6,6 +6,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    # The `minimumReleaseAge` in pnpm-workspace.yaml, so a proposed version is one pnpm installs.
+    cooldown:
+      default-days: 1
     ignore:
       # vue-tsc and kysely-codegen need the classic TypeScript API, which 7.0 no longer exports;
       # 7.1 is meant to bring a stable one. Only 7.0.x, so 7.1 is still proposed when it ships (#6).

@@ -637,7 +637,6 @@ async function insertPost(
     .insertInto("writingPost")
     .values({
       writingThreadId: threadId,
-      // An object, not a string: `JSON.stringify` here would store a jsonb *string*.
       document,
       text: documentToPlainText(document),
       isDraft,

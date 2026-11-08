@@ -22,10 +22,14 @@ workspace keeps its lockfile; `Dockerfile.dockerignore` narrows that context to 
 
 **The server runs under Node's permission model**, in the image's entrypoint and in `pnpm run dev`
 and `start`: it may read the app and the uploads, write only the uploads, load `sharp`'s native
-addon (#94, `--allow-addons`) and use the network. Two of those are real widenings — an addon can
-step around the model, which Node warns about at every start, and `--allow-net` is all or nothing
-and still experimental — and environment variables and system information are not restricted at
-all. Weigh the next request for a permission the same way rather than by precedent. `pnpm run dev`
+addon (#94, `--allow-addons`) and use the network. **It is a seat belt, not a sandbox**: Node's
+documentation promises nothing against malicious code, an addon can step around it (Node warns at
+every start), `--allow-net` is all or nothing and still in active development, and environment
+variables and system information are not restricted at all. It keeps our own code from writing or
+spawning where it should not. What confines a compromised dependency is the container:
+`docker-compose.deploy.yaml` gives the backend a read-only root file system, no capabilities and
+`no-new-privileges`. The seed, the role scripts, the tests and the compose healthcheck run without
+the model. Weigh the next request for a permission the same way rather than by precedent. `pnpm run dev`
 adds `--allow-child-process`, because `--watch` starts the server as its child. A refused access
 throws `ERR_ACCESS_DENIED` naming the resource; nothing prompts. The entrypoint names `/data/files`
 because an exec-form entrypoint cannot read `FILE_STORAGE_PATH`, so the variable stays that in the
@@ -42,9 +46,7 @@ line carries the mapped `{path, message}` issues and no value a member typed. JS
 environment, for everything the server says: `console` is for the command-line scripts only, which
 the lint enforces. An `Error` goes in as a property, and `logging.ts` writes its name, message,
 stack, code and cause and nothing else: drivers keep row values and query parameters in fields of
-their own (a unique violation's `detail` names the address), and postgres.js's `toJSON` drops the
-stack. The
-level comes from `PUBLIC_ENVIRONMENT`: `trace` in development, `debug` on testing, `info` beyond — a
+their own (a unique violation's `detail` names the address). The level comes from `PUBLIC_ENVIRONMENT`: `trace` in development, `debug` on testing, `info` beyond — a
 healthy `/api/health` logs at `trace` because the container polls it every ten seconds. LogTape's
 meta logger is pinned to `warning`.
 

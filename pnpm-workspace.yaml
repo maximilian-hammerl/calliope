@@ -6,12 +6,19 @@ packages:
 # Exact versions, as everywhere in this repository: `pnpm add` writes no caret.
 savePrefix: ""
 
+# A release is installed once it is a day old, as Dependabot's cooldown says too. Not strict, so a
+# younger version pinned on purpose, for an upstream fix, still installs.
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: false
+
 # A version more than one project uses, named `catalog:` in each of them.
 catalog:
   "@types/node": 26.6.6
+  "@types/pg": 8.23.1
   oxfmt: 0.76.0
   oxlint: 1.91.0
   oxlint-tsgolint: 7.0.2006
+  pg: 8.23.1
   typescript: 6.0.3
   zod: 4.6.7
 

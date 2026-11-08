@@ -1,54 +1,35 @@
-import type postgres from "postgres";
-
-const int8: postgres.PostgresType<number> = {
-  to: 20,
-  from: [20],
-  parse: (x: string) => Number(x),
-  serialize: (x: number) => String(x),
-};
-
-const numeric: postgres.PostgresType<number> = {
-  to: 1700,
-  from: [1700],
-  parse: (value: string) => Number(value),
-  serialize: (value: number) => String(value),
-};
+import { TypeOverrides, types } from "pg";
 
 /**
- * Converts a PostgreSQL timestamp to ISO 8601 format.
- * @param value - PostgreSQL timestamp (e.g., "2025-05-20 08:43:17.025289")
- * @returns ISO 8601 formatted string (e.g., "2025-05-20T08:43:17.025289")
+ * The column types the generated schema reads differently from pg's defaults: `int8` and
+ * `numeric` as numbers, and timestamps as ISO 8601 strings rather than a `Date`, which would drop
+ * the microseconds.
  */
-function parsePostgresTimestampToIsoString(value: string): string {
-  return value.replace(" ", "T");
-}
+export const postgresTypes = new TypeOverrides();
 
-const timestamp = {
-  to: 1114,
-  from: [1114],
-  parse: (value: string) => parsePostgresTimestampToIsoString(value),
-  serialize: (value: string) => value,
-};
+postgresTypes.setTypeParser(types.builtins.INT8, Number);
+postgresTypes.setTypeParser(types.builtins.NUMERIC, Number);
+
+// "2025-05-20 08:43:17.025289" becomes "2025-05-20T08:43:17.025289".
+postgresTypes.setTypeParser(types.builtins.TIMESTAMP, (value: string) => value.replace(" ", "T"));
+
+// "2025-05-20 08:43:17.025289+00" becomes "2025-05-20T08:43:17.025289+00:00".
+postgresTypes.setTypeParser(
+  types.builtins.TIMESTAMPTZ,
+  (value: string) => `${value.replace(" ", "T")}:00`,
+);
+
+// The parser of `text[]` (1009), which reads an enum array's labels as well as it reads text. pg's
+// typings name only scalar types, hence the cast.
+// oxlint-disable-next-line typescript/no-unsafe-enum-assignment -- 1009 is a real type id
+const parseTextArray = types.getTypeParser(1009 as Parameters<typeof types.getTypeParser>[0]);
 
 /**
- * Converts a PostgreSQL timestamptz to ISO 8601 format.
- * @param value - PostgreSQL timestamp (e.g., "2025-05-20 08:43:17.025289+00")
- * @returns ISO 8601 formatted string (e.g., "2025-05-20T08:43:17.025289+00:00")
+ * An enum array's type id is assigned when its migration runs, so pg cannot know it in advance
+ * and would hand `{fantasy,mystery}` back as one string. `client.ts` reads the ids per connection.
  */
-function parsePostgresTimestamptzToIsoString(value: string): string {
-  return value.replace(" ", "T") + ":00";
+export function registerEnumArrays(typeIds: Array<number>): void {
+  for (const typeId of typeIds) {
+    postgresTypes.setTypeParser(typeId, parseTextArray);
+  }
 }
-
-const timestamptz = {
-  to: 1184,
-  from: [1184],
-  parse: (value: string) => parsePostgresTimestamptzToIsoString(value),
-  serialize: (value: string) => value,
-};
-
-export const postgresTypes = {
-  int8,
-  numeric,
-  timestamp,
-  timestamptz,
-};
