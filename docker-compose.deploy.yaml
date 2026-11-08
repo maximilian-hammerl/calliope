@@ -77,6 +77,8 @@ services:
       - ./package.json:/app/package.json:ro
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
       - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      # Every patch in `pnpm-workspace.yaml`, which pnpm reads even for the frontend's install.
+      - ./patches:/app/patches:ro
       - ./frontend:/app/frontend
       # orval reads the specification at ../backend/open-api.json.
       - ./backend/open-api.json:/app/backend/open-api.json:ro
@@ -147,6 +149,7 @@ services:
       start_period: 15s
 
   migrate:
+    # The version database/package.json pins, so CI migrates with the dbmate deployed here.
     image: amacneil/dbmate:2.37.0
     command: migrate
 

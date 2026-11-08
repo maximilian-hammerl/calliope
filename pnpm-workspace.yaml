@@ -21,3 +21,9 @@ allowBuilds:
   esbuild: false
   fsevents: false
   vue-demi: false
+
+# Until asteasolutions/zod-to-openapi#401 is released: a regex's `pattern` from its `.source`,
+# since `toString()` leaves the flags in. `backend/Dockerfile` (and its `.dockerignore`) and
+# `docker-compose.deploy.yaml` copy `patches/` too; remove them with it.
+patchedDependencies:
+  '@asteasolutions/zod-to-openapi@9.1.0': patches/@asteasolutions__zod-to-openapi@9.1.0.patch

@@ -6,6 +6,7 @@ import { STATUS_CODE } from "#/src/http/status.ts";
 import authenticated from "#/src/middleware/authenticated.ts";
 import { UserInChatGroupService } from "#/src/service/user_in_chat_group_service.ts";
 import {
+  BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
@@ -37,6 +38,7 @@ const accept = new OpenAPIHono().openapi(
         description: "No invitation to accept",
         content: jsonContent(ERROR_RESPONSE),
       },
+      ...BAD_REQUEST_RESPONSE,
       ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },
@@ -82,6 +84,7 @@ const leave = new OpenAPIHono().openapi(
         description: "Not in that chat",
         content: jsonContent(ERROR_RESPONSE),
       },
+      ...BAD_REQUEST_RESPONSE,
       ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },

@@ -18,7 +18,7 @@ test("GET /api/health reports a healthy application without a session", async ()
   assert.equal(body.application.version, API_VERSION);
   assert.equal(body.application.hostname, "localhost");
   // An ISO 8601 duration, so the value stays parseable by whatever polls this.
-  assert.match(body.application.uptime, /^PT[\d.]+S$/);
+  assert.match(body.application.uptime, /^PT[\d.]+S$/u);
   assert.ok(Temporal.Instant.from(body.application.datetime));
 });
 

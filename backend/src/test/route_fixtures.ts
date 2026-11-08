@@ -148,7 +148,7 @@ export const REQUEST_BODIES: Record<string, (ids: Ids) => unknown> = {
 
 /** A name without an id stays in braces, which the route refuses as malformed. */
 export function address(path: string, ids: Ids): string {
-  return path.replace(/\{(\w+)\}/g, (whole, name) => ids[name] ?? whole);
+  return path.replace(/\{(\w+)\}/gu, (whole, name) => ids[name] ?? whole);
 }
 
 /** A well-formed id that nothing has. */

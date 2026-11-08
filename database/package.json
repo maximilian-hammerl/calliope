@@ -29,6 +29,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "8.23.1",
+    "dbmate": "2.37.0",
     "kysely-codegen": "0.20.0",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

@@ -36,7 +36,7 @@ export const EMAIL_ADDRESS_SCHEMA = z
  * the client cannot see — where `pattern` is a rule the document can state plainly.
  */
 export const notBlank = <T extends z.ZodString>(schema: T) =>
-  schema.regex(/\S/, "Must not be only whitespace");
+  schema.regex(/\S/u, "Must not be only whitespace");
 
 /**
  * The story vocabularies — genres, subgenres, tropes, content warnings. Chosen from the database's

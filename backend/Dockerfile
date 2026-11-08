@@ -5,6 +5,7 @@ FROM node:26-trixie-slim AS build
 WORKDIR /workspace
 
 COPY --link package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY --link patches patches/
 COPY --link backend/package.json backend/
 
 # pnpm at the version the root package.json pins, since Node no longer ships Corepack.
