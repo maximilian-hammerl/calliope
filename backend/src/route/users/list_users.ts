@@ -34,7 +34,7 @@ export default new OpenAPIHono().openapi(
     tags: [USERS_TAG],
     summary: "Find members by name",
     description:
-      "Returns a page of members, narrowed to those whose username contains the search term when one is given. Only the id and the username are returned, never an email address.",
+      "Returns a page of members, narrowed to those whose username contains the search term when one is given. A member's email address is never returned.",
     operationId: "listUsers",
     middleware: authenticated,
     // Required, so that an absent body cannot skip validation and lose the defaults.
