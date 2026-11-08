@@ -4,7 +4,10 @@
   "packageManager": "pnpm@12.14.0",
   "scripts": {
     "knip:check": "knip --treat-config-hints-as-errors",
-    "knip:fix": "knip --fix"
+    "knip:fix": "knip --fix",
+    "stack:up": "scripts/stack.sh up",
+    "stack:down": "scripts/stack.sh down",
+    "stack:prune": "scripts/stack.sh prune"
   },
   "devDependencies": {
     "knip": "6.44.1"

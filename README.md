@@ -29,6 +29,7 @@ the letter C and stay as they are — renaming is not yet a full rebrand.
 | `database/`   | dbmate migrations, and the code generator for the backend's types               |
 | `deployment/` | Backup script, systemd units and the [deployment runbook](deployment/README.md) |
 | `docs/`       | Product requirements and the research behind them                               |
+| `scripts/`    | A Compose stack of its own for each worktree: `pnpm run stack:*`                |
 
 ## Running it locally
 
@@ -43,6 +44,10 @@ docker compose up -d --wait
 pnpm install
 cd database && pnpm run migrations:migrate
 ```
+
+A worktree runs on a stack of its own instead: `pnpm install`, then `pnpm run stack:up` at its root,
+which picks free ports, writes `.env` and `.claude/launch.json`, starts the stack and migrates it.
+Its servers and Mailpit are then on the ports it prints, not the ones below.
 
 Then the backend on <http://localhost:8000>:
 

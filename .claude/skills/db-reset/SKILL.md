@@ -9,9 +9,11 @@ this whenever the work needs it. **Everything is wiped** — hand-made accounts,
 session — so say so before running it against a database somebody else is using.
 
 1. **Stop the backend first**, or open connections block the drop. `pnpm run dev` stops on
-   SIGTERM to its process group:
+   SIGTERM to its process group. Its port is `.env`'s, which the shell doesn't load, so read it at
+   the root:
    ```bash
-   lsof -nP -iTCP:${BACKEND_PORT:-8000} -sTCP:LISTEN     # the pid
+   port=$(sed -nE 's/^BACKEND_PORT="?([0-9]+)"?$/\1/p' .env)
+   lsof -nP -iTCP:${port:-8000} -sTCP:LISTEN             # the pid
    ps -o pgid= -p <pid>                                  # its group
    kill -TERM -<pgid>
    ```

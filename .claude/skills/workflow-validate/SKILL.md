@@ -26,13 +26,15 @@ failure, so the report is complete.
    Then note its `git hash-object`, run `pnpm run open-api:generate` and check the hash didn't
    move.
 3. **The setup**, before anything that needs it:
-   - **A worktree** (one the desktop app made, or a review's) has no `.env`: copy the main
-     checkout's (`git worktree list` names it first). If the change edits migrations, the copy's
-     `DATABASE_URL` names a database of the worktree's own, which `pnpm run db:up` in `database/`
-     creates and migrates. Without `node_modules` at the root, `pnpm install` there.
-   - **The containers** are the main checkout's: Compose names its project after the directory, so
-     from a worktree check them with `docker compose -p <main checkout's directory name> ps`. If
-     they're down, `docker compose up -d --wait` in the main checkout.
+   - **Without `node_modules`** at the root, `pnpm install` there.
+   - **A worktree** (one the desktop app made, or a review's) runs on a stack of its own, set up at
+     its root every time: `pnpm run stack:prune`, which removes the stacks of worktrees that are
+     gone, then `pnpm run stack:up`, which writes the worktree's ports to `.env` (copied from
+     `.example.env` when there is none), starts its containers and migrates its database. A tree
+     older than `scripts/stack.sh` runs the main checkout's copy from its root instead
+     (`<main checkout>/scripts/stack.sh prune`, then `up`; `git worktree list` names it first).
+   - **The main checkout:** if `docker compose ps` lists its containers as down,
+     `docker compose up -d --wait`.
    - **The migrations applied:** `pnpm run migrations:status` in `database/`, else
      `pnpm run migrations:migrate`. A migration edited in place leaves the database stale and the
      tests fail on the old schema: ask before `/db-reset`, which wipes it. Rows a test leaves behind
