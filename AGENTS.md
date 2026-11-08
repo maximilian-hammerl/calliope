@@ -28,9 +28,10 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   has not been considered, say so before doing the work.
 - **Commit only after the human confirms they reviewed the change** ("reviewed, commit it"; asking
   for a review is not that); until then, leave it in the working tree. The confirmation covers the
-  push, the pull request and its merge once Validate passes, and a reviewed fix rebased up its
-  stack (`/workflow-ship`); any other rebase or push only when asked. Syncing (`git fetch`,
-  `git pull`, `git merge`) is always fine.
+  push, the pull request and its merge once Validate passes, a reviewed fix rebased up its stack,
+  and merging `main` into its branch where a conflict has one clear resolution (`/workflow-ship`);
+  any other rebase or push only when asked. Syncing (`git fetch`, `git pull`, `git merge`) is always
+  fine.
 
 ## Shared conventions
 
