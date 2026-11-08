@@ -1,13 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { REPORTS_TAG } from "@/src/open_api_specification.ts";
-import { REPORT_SCHEMA } from "@/src/database/schema.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { ReportService } from "@/src/service/report_service.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { REPORTS_TAG } from "#/src/open_api_specification.ts";
+import { REPORT_SCHEMA } from "#/src/database/schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { ReportService } from "#/src/service/report_service.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -15,7 +15,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const CREATE_REPORT_BODY = z.object({
   targetType: REPORT_SCHEMA.shape.targetType,
@@ -60,30 +60,26 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId, category, reason } = c.req.valid("json");
 
-    const refusal = await db.transaction().execute((transaction) =>
-      ReportService.insertReport(
-        transaction,
-        c.get("user"),
-        targetType,
-        targetId,
-        category,
-        reason,
-      )
-    );
+    const refusal = await db
+      .transaction()
+      .execute((transaction) =>
+        ReportService.insertReport(
+          transaction,
+          c.get("user"),
+          targetType,
+          targetId,
+          category,
+          reason,
+        ),
+      );
 
     switch (refusal) {
       case "not_found":
         return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
       case "own_account":
-        return c.json(
-          { error: "You cannot report your own account" },
-          STATUS_CODE.Forbidden,
-        );
+        return c.json({ error: "You cannot report your own account" }, STATUS_CODE.Forbidden);
       case "own_content":
-        return c.json(
-          { error: "You cannot report your own content" },
-          STATUS_CODE.Forbidden,
-        );
+        return c.json({ error: "You cannot report your own content" }, STATUS_CODE.Forbidden);
       case undefined:
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       default:

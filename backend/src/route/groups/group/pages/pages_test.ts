@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,10 +8,10 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { PAGE_CHANGED } from "@/src/http/response.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+} from "#/src/test/support.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { PAGE_CHANGED } from "#/src/http/response.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 const administrator = "pages-test-admin";
 const writer = "pages-test-writer";
@@ -72,12 +72,10 @@ test("POST /api/groups/{groupId}/pages accepts a page with an empty body", async
   const group = await createGroup(adminCookie, "Weltenbau");
 
   // How a page is made: the title is asked for, and the body is written afterwards.
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/pages`,
-    adminCookie,
-    { title: "Stadt A", document: EMPTY_DOCUMENT },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/pages`, adminCookie, {
+    title: "Stadt A",
+    document: EMPTY_DOCUMENT,
+  });
 
   assert.equal(response.status, STATUS_CODE.Created);
   assert.equal((await response.json()).title, "Stadt A");
@@ -102,11 +100,7 @@ test("GET /api/groups/{groupId}/pages lists titles without their prose", async (
   const { group } = await groupWithPage(adminCookie);
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/pages`,
-    readerCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/pages`, readerCookie);
 
   assert.equal(response.status, STATUS_CODE.OK);
   const { results } = await response.json();
@@ -122,11 +116,7 @@ test("GET /api/groups/{groupId}/pages answers 404 for a stranger to a private gr
   const { group } = await groupWithPage(adminCookie);
   const strangerCookie = await registerUser(stranger);
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/pages`,
-    strangerCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/pages`, strangerCookie);
 
   assert.equal(response.status, STATUS_CODE.NotFound);
 });
@@ -135,18 +125,11 @@ test("GET /api/groups/{groupId}/pages/{pageId} answers with the prose", async ()
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/pages/${page.id}`,
-    adminCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/pages/${page.id}`, adminCookie);
 
   assert.equal(response.status, STATUS_CODE.OK);
   const read = await response.json();
-  assert.equal(
-    read.document.content[0].content[0].text,
-    "Ein Hafen im Norden.",
-  );
+  assert.equal(read.document.content[0].content[0].text, "Ein Hafen im Norden.");
   assert.equal(read.lastActivityAt, page.lastActivityAt);
 });
 
@@ -155,11 +138,7 @@ test("GET /api/groups/{groupId}/pages/{pageId} answers 404 for a page of another
   const { page } = await groupWithPage(adminCookie);
   const other = await createGroup(adminCookie, "Andere Gruppe");
 
-  const response = await request(
-    "GET",
-    `/api/groups/${other.id}/pages/${page.id}`,
-    adminCookie,
-  );
+  const response = await request("GET", `/api/groups/${other.id}/pages/${page.id}`, adminCookie);
 
   assert.equal(response.status, STATUS_CODE.NotFound);
 });
@@ -172,11 +151,7 @@ test("PUT /api/groups/{groupId}/pages/{pageId} saves against the time it was loa
     "PUT",
     `/api/groups/${group.id}/pages/${page.id}`,
     adminCookie,
-    pageBody(
-      "Stadt A am Meer",
-      "Ein Hafen weit im Norden.",
-      page.lastActivityAt,
-    ),
+    pageBody("Stadt A am Meer", "Ein Hafen weit im Norden.", page.lastActivityAt),
   );
 
   // Also proves the timestamp survives the round trip: it is compared for equality, and a
@@ -215,15 +190,8 @@ test("PUT /api/groups/{groupId}/pages/{pageId} refuses a save against a time tha
   assert.equal(refusal.updatedByUsername, administrator);
 
   // The first version stands: a refused save writes nothing.
-  const read = await request(
-    "GET",
-    `/api/groups/${group.id}/pages/${page.id}`,
-    writerCookie,
-  );
-  assert.equal(
-    (await read.json()).document.content[0].content[0].text,
-    "Die erste Fassung.",
-  );
+  const read = await request("GET", `/api/groups/${group.id}/pages/${page.id}`, writerCookie);
+  assert.equal((await read.json()).document.content[0].content[0].text, "Die erste Fassung.");
 });
 
 test("PUT /api/groups/{groupId}/pages/{pageId} lets any writer save it", async () => {
@@ -262,18 +230,10 @@ test("DELETE /api/groups/{groupId}/pages/{pageId} removes it for its author", as
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
 
-  const deleted = await request(
-    "DELETE",
-    `/api/groups/${group.id}/pages/${page.id}`,
-    adminCookie,
-  );
+  const deleted = await request("DELETE", `/api/groups/${group.id}/pages/${page.id}`, adminCookie);
   assert.equal(deleted.status, STATUS_CODE.OK);
 
-  const read = await request(
-    "GET",
-    `/api/groups/${group.id}/pages/${page.id}`,
-    adminCookie,
-  );
+  const read = await request("GET", `/api/groups/${group.id}/pages/${page.id}`, adminCookie);
   assert.equal(read.status, STATUS_CODE.NotFound);
 });
 
@@ -289,11 +249,7 @@ test("DELETE /api/groups/{groupId}/pages/{pageId} lets any writer delete it", as
   );
   assert.equal(response.status, STATUS_CODE.OK);
 
-  const read = await request(
-    "GET",
-    `/api/groups/${group.id}/pages/${page.id}`,
-    adminCookie,
-  );
+  const read = await request("GET", `/api/groups/${group.id}/pages/${page.id}`, adminCookie);
   assert.equal(read.status, STATUS_CODE.NotFound);
 });
 
@@ -314,12 +270,9 @@ test("DELETE /api/groups/{groupId}/pages/{pageId} still refuses a reader", async
 test("PUT /pages/{pageId}/folder moves it and leaves its activity alone", async () => {
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
-  const folder = await (await request(
-    "POST",
-    `/api/groups/${group.id}/folders`,
-    adminCookie,
-    { title: "Weltenbau" },
-  )).json();
+  const folder = await (
+    await request("POST", `/api/groups/${group.id}/folders`, adminCookie, { title: "Weltenbau" })
+  ).json();
 
   const response = await request(
     "PUT",
@@ -340,12 +293,9 @@ test("PUT /pages/{pageId}/folder refuses a folder from another group", async () 
   const adminCookie = await registerUser(administrator);
   const { group, page } = await groupWithPage(adminCookie);
   const elsewhere = await createGroup(adminCookie, "Andere Gruppe");
-  const theirs = await (await request(
-    "POST",
-    `/api/groups/${elsewhere.id}/folders`,
-    adminCookie,
-    { title: "Fremd" },
-  )).json();
+  const theirs = await (
+    await request("POST", `/api/groups/${elsewhere.id}/folders`, adminCookie, { title: "Fremd" })
+  ).json();
 
   const response = await request(
     "PUT",

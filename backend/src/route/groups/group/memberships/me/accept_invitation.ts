@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { MEMBERSHIPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserInWritingGroupService } from "#/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
@@ -54,27 +54,23 @@ export default new OpenAPIHono().openapi(
     const { groupId } = c.req.valid("param");
     const user = c.get("user");
 
-    const accepted = await db.transaction().execute((transaction) =>
-      UserInWritingGroupService.acceptInvitation(transaction, groupId, user.id)
-    );
+    const accepted = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInWritingGroupService.acceptInvitation(transaction, groupId, user.id),
+      );
 
     if (accepted !== undefined) {
       return c.json(accepted, STATUS_CODE.OK);
     }
 
     // Nothing was updated: either there is no membership, or it is already joined.
-    const membership = await UserInWritingGroupService.selectMembership(
-      groupId,
-      user.id,
-    );
+    const membership = await UserInWritingGroupService.selectMembership(groupId, user.id);
 
     if (membership === undefined) {
       return c.json({ error: "Invitation not found" }, STATUS_CODE.NotFound);
     }
 
-    return c.json(
-      { error: "The invitation has already been accepted" },
-      STATUS_CODE.Conflict,
-    );
+    return c.json({ error: "The invitation has already been accepted" }, STATUS_CODE.Conflict);
   },
 );

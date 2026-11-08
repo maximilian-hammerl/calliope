@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,7 +8,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "list-threads-admin";
 const reader = "list-threads-reader";
@@ -26,11 +26,7 @@ test("GET /api/groups/{groupId}/threads lists threads for any member", async () 
   });
 
   // A reader may not write, but may read.
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/threads`,
-    readerCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/threads`, readerCookie);
 
   assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
@@ -41,28 +37,22 @@ test("GET /api/groups/{groupId}/threads shows a public group's threads to a non-
   const adminCookie = await registerUser(administrator);
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Fäden", "public");
-  const thread = await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  );
+  const thread = await request("POST", `/api/groups/${group.id}/threads`, adminCookie, {
+    title: "Kapitel 1",
+  });
   assert.equal(thread.status, STATUS_CODE.Created);
 
   // §23's "community-visible" is a promise about the writing, not only about the title, and
   // the discovery page states it outright: "Mitlesen kannst du sofort". This once answered
   // 404 while the same group's members and next steps were already readable.
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/threads`,
-    outsiderCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/threads`, outsiderCookie);
 
   assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assert.deepEqual(page.results.map((one: { title: string }) => one.title), [
-    "Kapitel 1",
-  ]);
+  assert.deepEqual(
+    page.results.map((one: { title: string }) => one.title),
+    ["Kapitel 1"],
+  );
 });
 
 test("GET /api/groups/{groupId}/threads still hides a private group's threads", async () => {
@@ -70,11 +60,7 @@ test("GET /api/groups/{groupId}/threads still hides a private group's threads", 
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Verschlossen", "private");
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/threads`,
-    outsiderCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/threads`, outsiderCookie);
 
   // 404 rather than 403: a private group's existence is nobody else's business.
   assert.equal(response.status, STATUS_CODE.NotFound);

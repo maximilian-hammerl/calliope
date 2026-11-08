@@ -2,9 +2,7 @@ export function pickFromObject<T extends object, K extends keyof T>(
   obj: T,
   ...keys: Array<K>
 ): Pick<T, K> {
-  return Object.fromEntries(
-    keys.filter((key) => key in obj).map((key) => [key, obj[key]]),
-  ) as Pick<
+  return Object.fromEntries(keys.filter((key) => key in obj).map((key) => [key, obj[key]])) as Pick<
     T,
     K
   >;

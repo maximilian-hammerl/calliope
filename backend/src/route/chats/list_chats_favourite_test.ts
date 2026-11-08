@@ -1,16 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  clearRateLimits,
-  getUserId,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
-import {
-  cleanUpFavourites,
-  favouriteFixture,
-  setFavourite,
-} from "@/src/test/favourites.ts";
+import { clearRateLimits, getUserId, registerUser, request } from "#/src/test/support.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "#/src/test/favourites.ts";
 
 /**
  * The chats list's favourite: the flag, the ordering and that it is the reader's own. A chat is the
@@ -26,23 +17,20 @@ afterEach(() => cleanUpFavourites([owner, member]));
 type Row = { id: string; title: string; isFavourite: boolean };
 
 const rowsFor = async (cookie: string, body: Record<string, unknown> = {}) =>
-  (await (await request("QUERY", "/api/chats", cookie, { limit: 50, ...body }))
-    .json()).results as Row[];
+  (await (await request("QUERY", "/api/chats", cookie, { limit: 50, ...body })).json())
+    .results as Row[];
 
 /** Two chats the other member is in, so both have the same rows to disagree about. */
 async function twoChats(ownerCookie: string, memberName: string) {
   const otherId = await getUserId(memberName);
 
   const make = async (title: string) => {
-    const chat = await (await request("POST", "/api/chats", ownerCookie, {
-      title,
-    })).json();
-    await request(
-      "POST",
-      `/api/chats/${chat.id}/memberships`,
-      ownerCookie,
-      { userId: otherId },
-    );
+    const chat = await (
+      await request("POST", "/api/chats", ownerCookie, {
+        title,
+      })
+    ).json();
+    await request("POST", `/api/chats/${chat.id}/memberships`, ownerCookie, { userId: otherId });
     return chat;
   };
 
@@ -78,5 +66,8 @@ test("the chats list puts a favourite first, and narrows to it", async () => {
 
   const only = await rowsFor(memberCookie, { favourite: "only" });
   assert(only.every((row) => row.isFavourite));
-  assert.deepEqual(only.map((row) => row.id), [first.id]);
+  assert.deepEqual(
+    only.map((row) => row.id),
+    [first.id],
+  );
 });

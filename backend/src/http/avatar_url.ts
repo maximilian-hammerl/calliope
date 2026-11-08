@@ -7,9 +7,7 @@ export function avatarUrl(fileId: string): string {
 }
 
 /** What a row carrying `AVATAR_FILE_ID` turns into for a client. */
-export function avatarUrlOf(
-  row: { avatarFileId: string | null },
-): string | null {
+export function avatarUrlOf(row: { avatarFileId: string | null }): string | null {
   return row.avatarFileId === null ? null : avatarUrl(row.avatarFileId);
 }
 

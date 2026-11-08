@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import sharp from "sharp";
 import { AVATAR_SIZE, toAvatar } from "./avatar_image.ts";
 
-async function picture(
-  options: { width: number; height: number; format: "png" | "jpeg" | "webp" },
-): Promise<Uint8Array> {
+async function picture(options: {
+  width: number;
+  height: number;
+  format: "png" | "jpeg" | "webp";
+}): Promise<Uint8Array> {
   const base = sharp({
     create: {
       width: options.width,
@@ -14,18 +16,17 @@ async function picture(
       background: "#8a6a3a",
     },
   });
-  const encoded = options.format === "png"
-    ? await base.png().toBuffer()
-    : options.format === "jpeg"
-    ? await base.jpeg().toBuffer()
-    : await base.webp().toBuffer();
+  const encoded =
+    options.format === "png"
+      ? await base.png().toBuffer()
+      : options.format === "jpeg"
+        ? await base.jpeg().toBuffer()
+        : await base.webp().toBuffer();
   return new Uint8Array(encoded);
 }
 
 test("a photograph becomes one square WebP", async () => {
-  const result = await toAvatar(
-    await picture({ width: 800, height: 600, format: "jpeg" }),
-  );
+  const result = await toAvatar(await picture({ width: 800, height: 600, format: "jpeg" }));
   assert.notEqual(result, undefined);
 
   const { format, width, height } = await sharp(result).metadata();
@@ -36,9 +37,9 @@ test("a photograph becomes one square WebP", async () => {
 
 test("every accepted format is accepted", async () => {
   for (const format of ["png", "jpeg", "webp"] as const) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const source = await picture({ width: 300, height: 300, format });
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const result = await toAvatar(source);
     assert.notEqual(result, undefined, `${format} was refused`);
   }
@@ -56,10 +57,7 @@ test("an SVG is refused", async () => {
 });
 
 test("something that is not a picture is refused", async () => {
-  assert.equal(
-    await toAvatar(new TextEncoder().encode("not an image at all")),
-    undefined,
-  );
+  assert.equal(await toAvatar(new TextEncoder().encode("not an image at all")), undefined);
 });
 
 /** A few hundred bytes declaring billions of pixels, refused before anything is drawn. */
@@ -96,7 +94,8 @@ test("a picture is turned the way its EXIF says", async () => {
   const half = (colour: string) =>
     sharp({
       create: { width: 200, height: 200, channels: 3, background: colour },
-    }).png()
+    })
+      .png()
       .toBuffer();
 
   // Wide, red beside blue, tagged "display me rotated 90° clockwise" — so red belongs on top.
@@ -117,7 +116,8 @@ test("a picture is turned the way its EXIF says", async () => {
   });
 
   const redness = (from: number, to: number) => {
-    let red = 0, blue = 0;
+    let red = 0;
+    let blue = 0;
     for (let y = from; y < to; y++) {
       for (let x = 0; x < info.width; x++) {
         const at = (y * info.width + x) * info.channels;

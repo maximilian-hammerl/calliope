@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
-import {
-  authFixture,
-  postJson,
-  sendJson,
-  sessionCookie,
-} from "@/src/test/auth.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import { clearRateLimits, deleteUsers, write } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { tokenFromMail, waitForMail } from "#/src/test/mailpit.ts";
+import { authFixture, postJson, sendJson, sessionCookie } from "#/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { clearMail, emailAddress, register, username } = authFixture(
@@ -27,12 +22,7 @@ afterEach(() => deleteUsers([username]));
 const corrected = "corrected-address@example.com";
 
 const changeAddress = (cookie: string, address: string) =>
-  sendJson(
-    "PATCH",
-    "/api/auth/email-address",
-    { emailAddress: address },
-    cookie,
-  );
+  sendJson("PATCH", "/api/auth/email-address", { emailAddress: address }, cookie);
 
 async function storedAddress(): Promise<string> {
   const user = await db
@@ -49,7 +39,7 @@ async function markVerified(): Promise<void> {
       .updateTable("user")
       .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
       .where("username", "=", username)
-      .execute()
+      .execute(),
   );
 }
 

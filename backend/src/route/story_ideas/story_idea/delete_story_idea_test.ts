@@ -1,13 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
-import { createIdea, storyIdeaUsers } from "@/src/test/story_ideas.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser, request } from "#/src/test/support.ts";
+import { createIdea, storyIdeaUsers } from "#/src/test/story_ideas.ts";
 
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author, bystander } = storyIdeaUsers("delete");
@@ -19,11 +14,7 @@ test("DELETE /api/story-ideas/{id} removes one's own idea", async () => {
   const cookie = await registerUser(author);
   const idea = await (await createIdea(cookie)).json();
 
-  const response = await request(
-    "DELETE",
-    `/api/story-ideas/${idea.id}`,
-    cookie,
-  );
+  const response = await request("DELETE", `/api/story-ideas/${idea.id}`, cookie);
   assert.equal(response.status, STATUS_CODE.OK);
 
   const gone = await request("GET", `/api/story-ideas/${idea.id}`, cookie);
@@ -35,11 +26,7 @@ test("DELETE /api/story-ideas/{id} refuses somebody else's", async () => {
   const other = await registerUser(bystander);
   const idea = await (await createIdea(cookie)).json();
 
-  const response = await request(
-    "DELETE",
-    `/api/story-ideas/${idea.id}`,
-    other,
-  );
+  const response = await request("DELETE", `/api/story-ideas/${idea.id}`, other);
   assert.equal(response.status, STATUS_CODE.Forbidden);
 
   const still = await request("GET", `/api/story-ideas/${idea.id}`, cookie);

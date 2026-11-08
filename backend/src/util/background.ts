@@ -8,10 +8,7 @@
  */
 const pending = new Set<Promise<void>>();
 
-export function runInBackground(
-  description: string,
-  work: () => Promise<void>,
-): void {
+export function runInBackground(description: string, work: () => Promise<void>): void {
   const task = work()
     .catch((error: unknown) => {
       console.error(`${description} failed:`, error);
@@ -30,7 +27,7 @@ export function runInBackground(
  */
 export async function flushBackgroundWork(): Promise<void> {
   while (pending.size > 0) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, each round can add tasks
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, each round can add tasks
     await Promise.all(pending);
   }
 }

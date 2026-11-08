@@ -34,19 +34,16 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
 
 ## Shared conventions
 
-- **Deno for `backend/`, Node for `frontend/` and `database/`.** `deno task …` versus `pnpm run …`;
-  `deno task` will happily run a `package.json` script and then fail confusingly. The Node projects
-  are members of the pnpm workspace at the root, so `pnpm install` runs there, against the one
-  lockfile.
+- **Node for every project, in one pnpm workspace.** `pnpm install` runs at the root, against the
+  one lockfile; each project's scripts run with `pnpm run …` from its own directory.
 - **Run `/workflow-validate`** before considering anything done: what CI runs, for the projects
   you changed.
-- **Pin exact dependency versions.** No `^` or `~`, in `deno.jsonc` or `package.json`. `pnpm add`
-  writes an exact version (`savePrefix` in `pnpm-workspace.yaml`); `deno add` writes a caret, so
-  rewrite it, and check what `shadcn-vue add` wrote. A version more than one project uses goes in
+- **Pin exact dependency versions.** No `^` or `~` in a `package.json`. `pnpm add` writes an exact
+  version (`savePrefix` in `pnpm-workspace.yaml`); check what `shadcn-vue add` wrote. A version more than one project uses goes in
   the workspace's `catalog`, and each project names it `catalog:`.
 - **`type`, never `interface`.**
-- **Imports use each project's `@/` alias**: the backend's points at the project root, the
-  frontend's at `src/`.
+- **Imports use each project's alias**: the backend's `#/` (Node's subpath imports) points at the
+  project root, the frontend's `@/` at `src/`.
 - **Comment the non-obvious, and only that.** Say why a thing is the way it is where it would
   otherwise read as arbitrary, in one or two lines. What was tried and measured belongs in the
   commit message; a convention written down here is not repeated at each use site.
@@ -74,10 +71,9 @@ one that matters, or a second frontend quietly talks to the first checkout's dat
 launch.json` needs the same two ports again — the preview tooling reads neither `.env` nor a variable
 — and is gitignored for that reason, with `launch.example.json` carrying the defaults.
 
-**Stopping `deno task dev` takes `kill -KILL` on its process group.** SIGTERM makes the `--watch`
-child release the port while the task runner survives, so a free port is not proof it stopped: the
-next saved file restarts it. `lsof -nP -iTCP:$BACKEND_PORT -sTCP:LISTEN`, then `ps -o pgid= -p
-<pid>`, then signal `-<pgid>`.
+**Stopping the backend's `pnpm run dev` is SIGTERM to its process group**, which `node --watch`
+passes on to the server, so every step of the shutdown runs once. `lsof -nP -iTCP:$BACKEND_PORT
+-sTCP:LISTEN`, then `ps -o pgid= -p <pid>`, then `kill -TERM -<pgid>`, and check the port again.
 
 ## The issue tracker
 

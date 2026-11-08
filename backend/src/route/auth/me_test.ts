@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import { authFixture, sessionCookie } from "@/src/test/auth.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers } from "#/src/test/support.ts";
+import { authFixture, sessionCookie } from "#/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("me");
@@ -45,15 +45,13 @@ test("GET /api/auth/me rejects a request without a session", async () => {
 test("GET /api/auth/me treats a malformed session cookie as no session", async () => {
   // The id half reaches a uuid column. Passing it through unchecked made every request with
   // a corrupted cookie answer 500 rather than simply being unauthenticated.
-  for (
-    const cookie of [
-      "session=abc",
-      "session=abc.def",
-      "session=.only-a-secret",
-      "session=01a019ee-ab02-7a82-9796-3767b50ed584",
-    ]
-  ) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+  for (const cookie of [
+    "session=abc",
+    "session=abc.def",
+    "session=.only-a-secret",
+    "session=01a019ee-ab02-7a82-9796-3767b50ed584",
+  ]) {
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await app.request("/api/auth/me", { headers: { cookie } });
 
     assert.equal(
@@ -61,7 +59,7 @@ test("GET /api/auth/me treats a malformed session cookie as no session", async (
       STATUS_CODE.Unauthorized,
       `expected ${cookie} to be unauthorised`,
     );
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await response.body?.cancel();
   }
 });

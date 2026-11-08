@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import openApi from "@/open-api.json" with { type: "json" };
+import { STATUS_CODE } from "#/src/http/status.ts";
+import openApi from "#/open-api.json" with { type: "json" };
 import {
   addMember,
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
-} from "@/src/test/support.ts";
-import { clearForum } from "@/src/test/forum.ts";
+} from "#/src/test/support.ts";
+import { clearForum } from "#/src/test/forum.ts";
 import {
   address,
   answer,
@@ -17,7 +17,7 @@ import {
   groupWithChildren,
   type Ids,
   REQUEST_BODIES,
-} from "@/src/test/route_fixtures.ts";
+} from "#/src/test/route_fixtures.ts";
 
 /**
  * Every route with a parent and a child in its path must refuse a child from somewhere else. The
@@ -48,7 +48,7 @@ function idNames(path: string, parameters: Parameter[]): string[] {
       .map((parameter) => parameter.name),
   );
   return [...path.matchAll(/\{(\w+)\}/g)].flatMap(([, name]) =>
-    name === undefined || kinds.has(name) ? [] : [name]
+    name === undefined || kinds.has(name) ? [] : [name],
   );
 }
 
@@ -63,8 +63,7 @@ function nestedOperations(): Nested[] {
   const operations: Nested[] = [];
   for (const [path, item] of Object.entries(openApi.paths)) {
     for (const [method, operation] of Object.entries(item)) {
-      const parameters = (operation as { parameters?: Parameter[] })
-        .parameters ?? [];
+      const parameters = (operation as { parameters?: Parameter[] }).parameters ?? [];
       const names = idNames(path, parameters);
       if (names.length >= 2) {
         const upper = method.toUpperCase();
@@ -93,16 +92,8 @@ async function fixture(): Promise<Fixture> {
   const attackerCookie = await registerUser(ATTACKER);
   const attackerId = await getUserId(ATTACKER);
 
-  const ownGroup = await groupWithChildren(
-    attackerCookie,
-    "the attacker's group",
-  );
-  await addMember(
-    attackerCookie,
-    ownGroup.groupId ?? "",
-    ATTACKERS_MEMBER,
-    "writer",
-  );
+  const ownGroup = await groupWithChildren(attackerCookie, "the attacker's group");
+  await addMember(attackerCookie, ownGroup.groupId ?? "", ATTACKERS_MEMBER, "writer");
   const otherGroup = await groupWithChildren(victimCookie, "another group");
 
   return {
@@ -147,9 +138,7 @@ function probes(names: string[], scope: Scope, found: Fixture): Probe[] {
     for (let level = first; level < names.length; level++) {
       const ids: Ids = {};
       for (const [index, name] of names.entries()) {
-        const id = index < level
-          ? found.own[scope].ids[name]
-          : source.ids[name];
+        const id = index < level ? found.own[scope].ids[name] : source.ids[name];
         if (id !== undefined) {
           ids[name] = id;
         }
@@ -176,21 +165,12 @@ for (const { operation, method, path, names } of nestedOperations()) {
     assert(each.length > 0, `${operation} has nothing to probe`);
 
     const ask = async (ids: Ids, rows: Ids) =>
-      await answer(
-        method,
-        address(path, ids),
-        found.attackerCookie,
-        await body?.(rows),
-      );
+      await answer(method, address(path, ids), found.attackerCookie, await body?.(rows));
 
     for (const probe of each) {
-      // deno-lint-ignore no-await-in-loop -- sequential: a probe that got through changes rows
+      // oxlint-disable-next-line no-await-in-loop -- sequential: a probe that got through changes rows
       const tried = await ask(probe.ids, probe.source.ids);
-      assert.equal(
-        tried.status,
-        STATUS_CODE.NotFound,
-        `${operation} with ${probe.label}`,
-      );
+      assert.equal(tried.status, STATUS_CODE.NotFound, `${operation} with ${probe.label}`);
     }
 
     // The attacker's own chain succeeds, so the 404s are the scope's, not a malformed request's.

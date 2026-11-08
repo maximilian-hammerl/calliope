@@ -1,26 +1,17 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
-import { PASSWORD_BREACHED } from "@/src/http/response.ts";
-import {
-  authFixture,
-  password,
-  postJson,
-  sessionCookie,
-} from "@/src/test/auth.ts";
+import { BreachedPasswordService } from "#/src/service/breached_password_service.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers, write } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { tokenFromMail, waitForMail } from "#/src/test/mailpit.ts";
+import { PASSWORD_BREACHED } from "#/src/http/response.ts";
+import { authFixture, password, postJson, sessionCookie } from "#/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
-const {
-  clearMail,
-  emailAddress,
-  registerAndDiscardVerificationMail,
-  username,
-} = authFixture("reset");
+const { clearMail, emailAddress, registerAndDiscardVerificationMail, username } =
+  authFixture("reset");
 
 beforeEach(async () => {
   await clearRateLimits();
@@ -61,10 +52,7 @@ test("POST /api/auth/reset-password ends every existing session", async () => {
 
   // The session works before the reset, so the assertion afterwards fails for the right
   // reason rather than because the cookie was never valid.
-  assert.equal(
-    (await app.request("/api/auth/me", { headers: { cookie } })).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await app.request("/api/auth/me", { headers: { cookie } })).status, STATUS_CODE.OK);
 
   await resetPassword(await requestResetToken(), newPassword);
 
@@ -78,10 +66,7 @@ test("POST /api/auth/reset-password spends the token exactly once", async () => 
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
-  assert.equal(
-    (await resetPassword(token, newPassword)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await resetPassword(token, newPassword)).status, STATUS_CODE.OK);
 
   const second = await resetPassword(token, "a-third-password");
   assert.equal(second.status, STATUS_CODE.Gone);
@@ -101,23 +86,17 @@ test("POST /api/auth/reset-password rejects an expired token", async () => {
         expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
       })
       .where("purpose", "=", "password_reset")
-      .execute()
+      .execute(),
   );
 
-  assert.equal(
-    (await resetPassword(token, newPassword)).status,
-    STATUS_CODE.Gone,
-  );
+  assert.equal((await resetPassword(token, newPassword)).status, STATUS_CODE.Gone);
   assert.equal((await login(password)).status, STATUS_CODE.OK);
 });
 
 test("POST /api/auth/reset-password rejects an unknown token", async () => {
   await registerAndDiscardVerificationMail();
 
-  const response = await resetPassword(
-    "not-a-token-anyone-issued",
-    newPassword,
-  );
+  const response = await resetPassword("not-a-token-anyone-issued", newPassword);
 
   assert.equal(response.status, STATUS_CODE.Gone);
   assert.deepEqual(await response.json(), {
@@ -142,10 +121,7 @@ test("POST /api/auth/reset-password rejects a malformed token", async () => {
   await registerAndDiscardVerificationMail();
 
   // The id reaches a uuid column, so this must be a miss rather than a database error.
-  const response = await resetPassword(
-    "not-a-token-anyone-issued",
-    newPassword,
-  );
+  const response = await resetPassword("not-a-token-anyone-issued", newPassword);
 
   assert.equal(response.status, STATUS_CODE.Gone);
   assert.deepEqual(await response.json(), {
@@ -157,10 +133,8 @@ test("POST /api/auth/reset-password refuses a password from a known breach", asy
   await registerAndDiscardVerificationMail();
   const token = await requestResetToken();
 
-  const isBreached = t.mock.method(
-    BreachedPasswordService,
-    "isBreached",
-    () => Promise.resolve(true),
+  const isBreached = t.mock.method(BreachedPasswordService, "isBreached", () =>
+    Promise.resolve(true),
   );
 
   const response = await resetPassword(token, newPassword);
@@ -171,8 +145,5 @@ test("POST /api/auth/reset-password refuses a password from a known breach", asy
   isBreached.mock.restore();
 
   // Refused before the token was spent, so the link still works.
-  assert.equal(
-    (await resetPassword(token, newPassword)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await resetPassword(token, newPassword)).status, STATUS_CODE.OK);
 });

@@ -1,15 +1,12 @@
-import { db } from "@/src/database/client.ts";
-import { verifyPassword } from "@/src/util/password.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { Mailer } from "@/src/mail/mailer.ts";
+import { db } from "#/src/database/client.ts";
+import { verifyPassword } from "#/src/util/password.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { Mailer } from "#/src/mail/mailer.ts";
 import {
   accountDeletionCompletedMail,
   accountDeletionConfirmationMail,
-} from "@/src/mail/account_deletion_mail.ts";
-import {
-  TOKEN_LIFETIME,
-  UserTokenService,
-} from "@/src/service/user_token_service.ts";
+} from "#/src/mail/account_deletion_mail.ts";
+import { TOKEN_LIFETIME, UserTokenService } from "#/src/service/user_token_service.ts";
 
 const HOST_URL = getRequiredEnvVariable("HOST_URL");
 
@@ -40,7 +37,7 @@ async function requestAccountDeletion(
     .where("id", "=", userId)
     .executeTakeFirstOrThrow();
 
-  if (!await verifyPassword(password, user.hashedPassword)) {
+  if (!(await verifyPassword(password, user.hashedPassword))) {
     return "wrong_password";
   }
 
@@ -48,7 +45,7 @@ async function requestAccountDeletion(
     UserTokenService.issueToken(transaction, {
       userId,
       purpose: "account_deletion",
-    })
+    }),
   );
 
   // The cooldown swallowed it, so a link is already on its way.
@@ -56,12 +53,14 @@ async function requestAccountDeletion(
     return "requested";
   }
 
-  Mailer.sendInBackground(accountDeletionConfirmationMail({
-    username: user.username,
-    emailAddress: user.emailAddress,
-    link: link("/confirm-account-deletion", token),
-    lifetime: TOKEN_LIFETIME,
-  }));
+  Mailer.sendInBackground(
+    accountDeletionConfirmationMail({
+      username: user.username,
+      emailAddress: user.emailAddress,
+      link: link("/confirm-account-deletion", token),
+      lifetime: TOKEN_LIFETIME,
+    }),
+  );
 
   return "requested";
 }
@@ -76,15 +75,9 @@ export type ConfirmAccountDeletionResult = "deleted" | "invalid_token";
  * The name and address are read first, because after the delete there is nothing left to
  * address the final mail to.
  */
-async function confirmAccountDeletion(
-  token: string,
-): Promise<ConfirmAccountDeletionResult> {
+async function confirmAccountDeletion(token: string): Promise<ConfirmAccountDeletionResult> {
   const deleted = await db.transaction().execute(async (transaction) => {
-    const consumed = await UserTokenService.consumeToken(
-      transaction,
-      token,
-      "account_deletion",
-    );
+    const consumed = await UserTokenService.consumeToken(transaction, token, "account_deletion");
 
     if (consumed === undefined) {
       return undefined;
@@ -96,10 +89,7 @@ async function confirmAccountDeletion(
       .where("id", "=", consumed.userId)
       .executeTakeFirstOrThrow();
 
-    await transaction
-      .deleteFrom("user")
-      .where("id", "=", consumed.userId)
-      .execute();
+    await transaction.deleteFrom("user").where("id", "=", consumed.userId).execute();
 
     return user;
   });

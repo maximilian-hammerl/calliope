@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { GROUPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
-import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { conversationTitle } from "@/src/util/conversation_title.ts";
+import { db } from "#/src/database/client.ts";
+import { CHAT_GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { GROUPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP } from "#/src/scope/chains.ts";
+import { UserInWritingGroupService } from "#/src/service/user_in_writing_group_service.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { conversationTitle } from "#/src/util/conversation_title.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
@@ -64,10 +64,7 @@ export default new OpenAPIHono().openapi(
     // A member has the group itself to talk in, and an invited person has an invitation to
     // answer — a conversation on top would ask for what is already offered.
     if (group.status !== null) {
-      return c.json(
-        { error: "Already part of this group" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Already part of this group" }, STATUS_CODE.Forbidden);
     }
 
     // Blocked administrators are skipped rather than refused: one administrator's block must
@@ -83,20 +80,19 @@ export default new OpenAPIHono().openapi(
 
     // The ungoverned-group hole (roadmap item 1) seen from outside: nobody left to ask.
     if (administratorIds.length === 0) {
-      return c.json(
-        { error: "Nobody administers this group" },
-        STATUS_CODE.Conflict,
-      );
+      return c.json({ error: "Nobody administers this group" }, STATUS_CODE.Conflict);
     }
 
-    const chat = await db.transaction().execute((transaction) =>
-      ChatGroupService.insertChatGroup(
-        transaction,
-        user,
-        conversationTitle("Gruppe", group.title),
-        administratorIds,
-      )
-    );
+    const chat = await db
+      .transaction()
+      .execute((transaction) =>
+        ChatGroupService.insertChatGroup(
+          transaction,
+          user,
+          conversationTitle("Gruppe", group.title),
+          administratorIds,
+        ),
+      );
 
     return c.json(chat, STATUS_CODE.Created);
   },

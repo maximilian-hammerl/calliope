@@ -1,11 +1,6 @@
-import type { Transaction } from "@/src/database/client.ts";
-import type { UserTokenPurpose } from "@/src/database/schema.ts";
-import {
-  formatToken,
-  generateToken,
-  hashToken,
-  parseToken,
-} from "@/src/util/token.ts";
+import type { Transaction } from "#/src/database/client.ts";
+import type { UserTokenPurpose } from "#/src/database/schema.ts";
+import { formatToken, generateToken, hashToken, parseToken } from "#/src/util/token.ts";
 
 /**
  * One lifetime for every purpose. A verification link could reasonably live longer than a
@@ -28,17 +23,14 @@ const RESEND_COOLDOWN = Temporal.Duration.from({ minutes: 2 });
  */
 export type TokenRequest =
   | {
-    userId: string;
-    purpose:
-      | "password_reset"
-      | "email_address_verification"
-      | "account_deletion";
-  }
+      userId: string;
+      purpose: "password_reset" | "email_address_verification" | "account_deletion";
+    }
   | {
-    userId: string;
-    purpose: "email_address_change";
-    newEmailAddress: string;
-  };
+      userId: string;
+      purpose: "email_address_change";
+      newEmailAddress: string;
+    };
 
 /**
  * Returns the token to put in the link, or undefined when the cooldown swallowed the request
@@ -50,9 +42,8 @@ async function issueToken(
   request: TokenRequest,
 ): Promise<string | undefined> {
   const { userId, purpose } = request;
-  const newEmailAddress = request.purpose === "email_address_change"
-    ? request.newEmailAddress
-    : null;
+  const newEmailAddress =
+    request.purpose === "email_address_change" ? request.newEmailAddress : null;
   const secret = generateToken();
   const now = Temporal.Now.instant();
 
@@ -93,10 +84,7 @@ async function issueToken(
       expiresAt: now.add(TOKEN_LIFETIME).toString(),
     })
     .onConflict((oc) =>
-      oc
-        .columns(["userId", "purpose"])
-        .where("consumedAt", "is", null)
-        .doNothing()
+      oc.columns(["userId", "purpose"]).where("consumedAt", "is", null).doNothing(),
     )
     .returning(["id"])
     .executeTakeFirst();
@@ -165,9 +153,7 @@ async function revokeToken(
 }
 
 /** Expired rows are only filtered out when they are read, so nothing removes them on its own. */
-async function deleteExpiredTokens(
-  transaction: Transaction,
-): Promise<number> {
+async function deleteExpiredTokens(transaction: Transaction): Promise<number> {
   const result = await transaction
     .deleteFrom("userToken")
     .where("expiresAt", "<", Temporal.Now.instant().toString())

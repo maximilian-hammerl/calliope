@@ -1,10 +1,7 @@
 import type { Selectable } from "kysely";
-import type {
-  StoryIdea as DatabaseStoryIdea,
-  StoryLanguage,
-} from "@/src/database/schema.ts";
-import { USER } from "@/seed/accounts.ts";
-import { storyIdeaId } from "@/seed/ids.ts";
+import type { StoryIdea as DatabaseStoryIdea, StoryLanguage } from "#/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { storyIdeaId } from "#/seed/ids.ts";
 
 /**
  * A fixture omits a column rather than writing null into it, so what it may leave out is optional
@@ -19,9 +16,8 @@ type StoryIdeaColumns = Selectable<DatabaseStoryIdea>;
  * vocabulary is a compile error here rather than a field the seed quietly stops filling. `by` is
  * the only thing written out, because it is a username where the column is an id.
  */
-export type StoryIdeaFixture =
-  & Pick<StoryIdeaColumns, "id" | "title" | "teaser" | "synopsis">
-  & Given<
+export type StoryIdeaFixture = Pick<StoryIdeaColumns, "id" | "title" | "teaser" | "synopsis"> &
+  Given<
     StoryIdeaColumns,
     | "subtitle"
     | "status"
@@ -36,8 +32,7 @@ export type StoryIdeaFixture =
     | "perspective"
     | "lookingFor"
     | "partySize"
-  >
-  & { by: string };
+  > & { by: string };
 
 /**
  * Six written-out ideas from six people, plus the run below. Only `open` and `closed` exist,
@@ -75,8 +70,7 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
   {
     id: storyIdeaId(2),
     title: "Die Leiden des jungen Lektors",
-    teaser:
-      "Ein Lektorat, das nur nach Einbruch der Dunkelheit öffnet — inzwischen eine Gruppe.",
+    teaser: "Ein Lektorat, das nur nach Einbruch der Dunkelheit öffnet — inzwischen eine Gruppe.",
     synopsis:
       "Das Lektorat im Erdgeschoss öffnet um zehn Uhr abends und schließt, wenn das letzte " +
       "Manuskript gelesen ist. Wer dort arbeitet, hat sich nie beworben: die Stellen werden " +
@@ -175,19 +169,16 @@ const WRITTEN_IDEAS: StoryIdeaFixture[] = [
  * One-line teasers with a synopsis of a sentence or two, which is the ordinary shape: the
  * six above are the ones written out at length.
  */
-const FURTHER_IDEAS: ReadonlyArray<
-  {
-    title: string;
-    teaser: string;
-    synopsis: string;
-    by: string;
-    language?: StoryLanguage;
-  }
-> = [
+const FURTHER_IDEAS: ReadonlyArray<{
+  title: string;
+  teaser: string;
+  synopsis: string;
+  by: string;
+  language?: StoryLanguage;
+}> = [
   {
     title: "Der Kartograf der Nebentäler",
-    teaser:
-      "Er zeichnet Täler, die es erst gibt, wenn sie auf der Karte stehen.",
+    teaser: "Er zeichnet Täler, die es erst gibt, wenn sie auf der Karte stehen.",
     synopsis:
       "Er beliefert eine Behörde, die Karten kauft, ohne sie zu prüfen. Was er einzeichnet, " +
       "wird begangen, besiedelt und irgendwann besteuert; was er weglässt, findet niemand " +
@@ -196,8 +187,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Sieben Briefe an den Süden",
-    teaser:
-      "Sieben Absender, ein Empfänger, der nie antwortet. Jeder Brief ein Beitrag.",
+    teaser: "Sieben Absender, ein Empfänger, der nie antwortet. Jeder Brief ein Beitrag.",
     synopsis:
       "Sieben Menschen schreiben an dieselbe Adresse in einer Stadt, die keiner von ihnen " +
       "gesehen hat. Der Empfänger antwortet nie, und mit jedem Brief wird deutlicher, dass " +
@@ -206,8 +196,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Das Haus, das sich erinnert",
-    teaser:
-      "Wer einzieht, findet die Möbel dort, wo er sie als Kind gelassen hätte.",
+    teaser: "Wer einzieht, findet die Möbel dort, wo er sie als Kind gelassen hätte.",
     synopsis:
       "Das Haus stellt die Möbel so, wie der Einziehende sie als Kind hatte — auch die, an " +
       "die er sich nicht erinnern will. Es meint das freundlich, und es hört nicht auf, wenn " +
@@ -216,8 +205,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Nachtschicht im Leuchtturmcafé",
-    teaser:
-      "Zwischen zwei und vier kommen nur Leute herein, die es nicht mehr gibt.",
+    teaser: "Zwischen zwei und vier kommen nur Leute herein, die es nicht mehr gibt.",
     synopsis:
       "Die Schicht zwischen zwei und vier gehört einer Kellnerin, die nie fragt und immer " +
       "aufschreibt. Die Gäste bestellen, was es seit Jahren nicht mehr gibt, und bezahlen " +
@@ -226,8 +214,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Die Sammlerin verlorener Wörter",
-    teaser:
-      "Sie kauft Wörter auf, die niemand mehr benutzt, und verkauft sie teuer weiter.",
+    teaser: "Sie kauft Wörter auf, die niemand mehr benutzt, und verkauft sie teuer weiter.",
     synopsis:
       "Sie kauft Wörter, bevor das letzte Ohr sie vergisst, und führt Buch über Preise, die " +
       "niemand kontrolliert. Ein Käufer will jetzt ein Wort zurück, das sie längst " +
@@ -236,8 +223,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Was der Fluss zurückbringt",
-    teaser:
-      "Jedes Frühjahr legt der Fluss etwas ans Ufer, das jemandem gehört hat.",
+    teaser: "Jedes Frühjahr legt der Fluss etwas ans Ufer, das jemandem gehört hat.",
     synopsis:
       "Jedes Frühjahr liegt etwas am Ufer, das jemandem gehört hat, und das Dorf hat sich " +
       "darauf geeinigt, nicht nachzufragen. Dieses Jahr trägt der Fund einen Namen.",
@@ -245,8 +231,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Zwei Uhren, eine Stadt",
-    teaser:
-      "Die Stadt hat zwei Uhren, und sie gehen seit dem Krieg verschieden.",
+    teaser: "Die Stadt hat zwei Uhren, und sie gehen seit dem Krieg verschieden.",
     synopsis:
       "Die Uhr am Rathaus und die Uhr am Bahnhof gehen elf Minuten auseinander, und beide " +
       "Seiten der Stadt richten sich nach der ihren. Wer pünktlich sein will, muss sich " +
@@ -264,8 +249,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Der Winter, der nicht kam",
-    teaser:
-      "Ein Dorf wartet auf den Schnee, der ausbleibt, und beginnt sich zu streiten.",
+    teaser: "Ein Dorf wartet auf den Schnee, der ausbleibt, und beginnt sich zu streiten.",
     synopsis:
       "Der Schnee bleibt aus, die Vorräte reichen, und weil nichts passiert, fangen die " +
       "Leute an, sich an Dinge zu erinnern, die sie einander schulden. Im März steht das " +
@@ -282,8 +266,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Die Bibliothek der ungelesenen Bücher",
-    teaser:
-      "Jedes Buch darin wartet auf genau eine Leserin. Wir schreiben, wie es sie findet.",
+    teaser: "Jedes Buch darin wartet auf genau eine Leserin. Wir schreiben, wie es sie findet.",
     synopsis:
       "Kein Buch hier ist je aufgeschlagen worden, und jedes wartet auf genau eine Leserin. " +
       "Die Bibliothekarin kennt die Zuordnung und darf sie nicht verraten; wir schreiben, " +
@@ -292,8 +275,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Zwischen zwei Seiten",
-    teaser:
-      "Was in einem geliehenen Buch liegen bleibt, erzählt die Geschichte davor.",
+    teaser: "Was in einem geliehenen Buch liegen bleibt, erzählt die Geschichte davor.",
     synopsis:
       "Ein Fahrschein, eine Haarnadel, ein halber Brief: was in geliehenen Büchern liegen " +
       "bleibt, ist die Geschichte, für die sich niemand Zeit genommen hat. Wir erzählen sie " +
@@ -311,8 +293,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Die Stadt bei Nacht, dreistimmig",
-    teaser:
-      "Dieselbe Nacht aus drei Blickwinkeln, die sich nur einmal berühren.",
+    teaser: "Dieselbe Nacht aus drei Blickwinkeln, die sich nur einmal berühren.",
     synopsis:
       "Eine Nacht, drei Erzählstimmen, ein einziger Moment, in dem sie sich berühren, ohne " +
       "es zu bemerken. Wer ihn schreibt, entscheidet, was die anderen beiden falsch " +
@@ -321,8 +302,7 @@ const FURTHER_IDEAS: ReadonlyArray<
   },
   {
     title: "Gezeitenrechnung",
-    teaser:
-      "Eine Insel, die alle sechs Stunden zur Halbinsel wird, und wer das ausnutzt.",
+    teaser: "Eine Insel, die alle sechs Stunden zur Halbinsel wird, und wer das ausnutzt.",
     synopsis:
       "Sechs Stunden Insel, sechs Stunden Halbinsel: wer den Fahrplan kennt, kann etwas " +
       "hinbringen, das dort nicht bleiben soll. Der Zoll hat den Fahrplan auch.",

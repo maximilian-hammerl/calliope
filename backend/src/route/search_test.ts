@@ -1,22 +1,22 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   clearRateLimits,
   createGroup,
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { createIdea, patchIdea } from "@/src/test/story_ideas.ts";
+} from "#/src/test/support.ts";
+import { createIdea, patchIdea } from "#/src/test/story_ideas.ts";
 import {
   clearForum,
   createForumFolder,
   createForumPage,
   createForumThread,
-} from "@/src/test/forum.ts";
-import { makeOperator } from "@/src/test/reports.ts";
+} from "#/src/test/forum.ts";
+import { makeOperator } from "#/src/test/reports.ts";
 
 const owner = "search-owner";
 const outsider = "search-outsider";
@@ -47,12 +47,7 @@ async function search(cookie: string, body: unknown): Promise<SearchResults> {
 }
 
 async function thread(cookie: string, groupId: string, title: string) {
-  const response = await request(
-    "POST",
-    `/api/groups/${groupId}/threads`,
-    cookie,
-    { title },
-  );
+  const response = await request("POST", `/api/groups/${groupId}/threads`, cookie, { title });
   assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
@@ -71,8 +66,7 @@ function totals(found: SearchResults) {
   };
 }
 
-const titles = (section: Section) =>
-  section.results.map((result) => result.title);
+const titles = (section: Section) => section.results.map((result) => result.title);
 
 test("QUERY /api/search finds each kind in one request", async () => {
   const cookie = await registerUser(owner);
@@ -97,9 +91,7 @@ test("QUERY /api/search says which group a thread came from", async () => {
   await thread(cookie, group.id, `${TERM} Thread`);
 
   const found = await search(cookie, { search: TERM });
-  const foundThread = found.threads.results.find(
-    (result) => result.title === `${TERM} Thread`,
-  );
+  const foundThread = found.threads.results.find((result) => result.title === `${TERM} Thread`);
 
   // A result that can come from anywhere has to say where it came from.
   assert.equal(foundThread?.writingGroupTitle, `${TERM} Gruppe`);
@@ -110,18 +102,11 @@ test("QUERY /api/search hides threads in a private group you are not in", async 
   const outsiderCookie = await registerUser(outsider);
   const before = totals(await search(outsiderCookie, { search: TERM }));
 
-  const privateGroup = await createGroup(
-    ownerCookie,
-    `${TERM} Privat`,
-    "private",
-  );
+  const privateGroup = await createGroup(ownerCookie, `${TERM} Privat`, "private");
   await thread(ownerCookie, privateGroup.id, `${TERM} Geheim`);
 
   // Nothing the outsider can see changed, because none of it is theirs to see.
-  assert.deepEqual(
-    totals(await search(outsiderCookie, { search: TERM })),
-    before,
-  );
+  assert.deepEqual(totals(await search(outsiderCookie, { search: TERM })), before);
 });
 
 test("QUERY /api/search finds threads in a public group you have not joined", async () => {
@@ -147,7 +132,7 @@ test("QUERY /api/search reports how many more there are", async () => {
   const before = totals(await search(cookie, { search: TERM }));
 
   for (let index = 0; index < 7; index++) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await createGroup(cookie, `${TERM} Gruppe ${index}`);
   }
 
@@ -215,21 +200,11 @@ test("QUERY /api/search needs a session", async () => {
   assert.ok(!response.headers.has("set-cookie"));
 });
 
-async function page(
-  cookie: string,
-  groupId: string,
-  title: string,
-  text: string,
-) {
-  const response = await request(
-    "POST",
-    `/api/groups/${groupId}/pages`,
-    cookie,
-    {
-      title,
-      document: plainTextToDocument(text),
-    },
-  );
+async function page(cookie: string, groupId: string, title: string, text: string) {
+  const response = await request("POST", `/api/groups/${groupId}/pages`, cookie, {
+    title,
+    document: plainTextToDocument(text),
+  });
   assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
@@ -256,10 +231,7 @@ test("a page in a private group is not found by an outsider", async () => {
   const group = await createGroup(cookie, "Geheim", "private");
   await page(cookie, group.id, `Der ${TERM}`, `Und der ${TERM} noch einmal.`);
 
-  assert.equal(
-    (await search(outsiderCookie, { search: TERM })).pages.totalResults,
-    0,
-  );
+  assert.equal((await search(outsiderCookie, { search: TERM })).pages.totalResults, 0);
   assert.equal((await search(cookie, { search: TERM })).pages.totalResults, 1);
 });
 
@@ -275,12 +247,7 @@ test("QUERY /api/search keeps the forum's threads and pages in their own section
 
   const folder = await createForumFolder("Forenspiele", "write");
   await createForumThread(`Forumsthema ${TERM}`, "write", folder.id);
-  await createForumPage(
-    `Forumsseite ${TERM}`,
-    "Nichts weiter.",
-    "write",
-    folder.id,
-  );
+  await createForumPage(`Forumsseite ${TERM}`, "Nichts weiter.", "write", folder.id);
 
   const found = await search(cookie, { search: TERM });
 
@@ -300,12 +267,7 @@ test("QUERY /api/search keeps the forum's threads and pages in their own section
 test("QUERY /api/search matches a forum page's prose, not only its title", async () => {
   const cookie = await registerUser(owner);
   const folder = await createForumFolder("Ankündigungen", "read");
-  await createForumPage(
-    "Regeln",
-    `Wir treffen uns am ${TERM}.`,
-    "read",
-    folder.id,
-  );
+  await createForumPage("Regeln", `Wir treffen uns am ${TERM}.`, "read", folder.id);
 
   const found = await search(cookie, { search: TERM });
 
@@ -314,10 +276,7 @@ test("QUERY /api/search matches a forum page's prose, not only its title", async
 
 test("QUERY /api/search hides what the forum hides, and shows an operator more", async () => {
   const memberCookie = await registerUser(owner);
-  const operatorCookie = await makeOperator(
-    outsider,
-    await registerUser(outsider),
-  );
+  const operatorCookie = await makeOperator(outsider, await registerUser(outsider));
 
   const hidden = await createForumFolder("Werkstatt", "hidden");
   await createForumThread(`Entwurf ${TERM}`, "write", hidden.id);
@@ -325,19 +284,13 @@ test("QUERY /api/search hides what the forum hides, and shows an operator more",
   // The same filter the tree applies, inherited rather than restated - so search cannot come to
   // disagree with it about what a member may see.
   assert.deepEqual(
-    titles(
-      await search(memberCookie, { search: TERM }).then((f) => f.forumThreads),
-    ),
+    titles(await search(memberCookie, { search: TERM }).then((f) => f.forumThreads)),
     [],
   );
 
   // An operator sees it here for the same reason they see it in the tree (#21).
   assert.deepEqual(
-    titles(
-      await search(operatorCookie, { search: TERM }).then((f) =>
-        f.forumThreads
-      ),
-    ),
+    titles(await search(operatorCookie, { search: TERM }).then((f) => f.forumThreads)),
     [`Entwurf ${TERM}`],
   );
 });

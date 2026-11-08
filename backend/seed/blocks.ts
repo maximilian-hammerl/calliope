@@ -1,4 +1,4 @@
-import { USER } from "@/seed/accounts.ts";
+import { USER } from "#/seed/accounts.ts";
 
 export type BlockFixture = {
   blocker: string;

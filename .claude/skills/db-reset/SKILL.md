@@ -8,12 +8,12 @@ Rebuild this checkout's database. Claude has its own checkout, containers and da
 this whenever the work needs it. **Everything is wiped** — hand-made accounts, rows under test, every
 session — so say so before running it against a database somebody else is using.
 
-1. **Stop the backend first**, or open connections block the drop. `deno task dev` needs
-   `kill -KILL` on its process group (SIGTERM leaves the task runner alive to restart it):
+1. **Stop the backend first**, or open connections block the drop. `pnpm run dev` stops on
+   SIGTERM to its process group:
    ```bash
    lsof -nP -iTCP:${BACKEND_PORT:-8000} -sTCP:LISTEN     # the pid
    ps -o pgid= -p <pid>                                  # its group
-   kill -KILL -<pgid>
+   kill -TERM -<pgid>
    ```
 2. **Rebuild and regenerate**, from `database/`:
    ```bash
@@ -21,7 +21,7 @@ session — so say so before running it against a database somebody else is usin
    ```
 3. **Format the generated types and seed**, from `backend/`:
    ```bash
-   deno fmt src/database/schema.ts && deno task db:seed
+   pnpm exec oxfmt src/database/schema.ts && pnpm run db:seed
    ```
    `schema.ts` should now be byte-identical to the committed file unless the schema changed; if it
    differs, that is the change to review.

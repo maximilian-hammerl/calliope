@@ -5,12 +5,9 @@ import {
   STORY_GENRES,
   STORY_SUBGENRES,
   STORY_TROPES,
-} from "@/src/database/schema.ts";
-import { LIST_LIMIT } from "@/src/text_limit.ts";
-import {
-  SUBGENRE_GENRE,
-  subgenresOutsideGenres,
-} from "@/src/story_metadata.ts";
+} from "#/src/database/schema.ts";
+import { LIST_LIMIT } from "#/src/text_limit.ts";
+import { SUBGENRE_GENRE, subgenresOutsideGenres } from "#/src/story_metadata.ts";
 
 /**
  * A board offers every value it has, so a filter has to be able to ask for every value. The two
@@ -52,17 +49,10 @@ test("every subgenre sits under a genre that exists", () => {
 });
 
 test("subgenresOutsideGenres names only what is unaccounted for", () => {
-  assert.deepEqual(
-    subgenresOutsideGenres(["fantasy"], ["dark_fantasy"]),
-    [],
-  );
-  assert.deepEqual(
-    subgenresOutsideGenres(["romance"], [
-      "space_opera",
-      "contemporary_romance",
-    ]),
-    ["space_opera"],
-  );
+  assert.deepEqual(subgenresOutsideGenres(["fantasy"], ["dark_fantasy"]), []);
+  assert.deepEqual(subgenresOutsideGenres(["romance"], ["space_opera", "contemporary_romance"]), [
+    "space_opera",
+  ]);
   // Nothing chosen narrows nothing, which is what an untouched form sends.
   assert.deepEqual(subgenresOutsideGenres([], []), []);
 });

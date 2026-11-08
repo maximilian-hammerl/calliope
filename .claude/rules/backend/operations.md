@@ -1,7 +1,7 @@
 ---
 paths:
   - "backend/Dockerfile"
-  - "backend/deno.jsonc"
+  - "backend/package.json"
   - "backend/main.ts"
   - "backend/src/app.ts"
   - "backend/src/logging.ts"
@@ -14,19 +14,23 @@ paths:
 
 ## The runtime
 
-The image is `gcr.io/distroless/cc-debian12:nonroot` — no shell, no package manager, so a dependency
-can never be a binary invoked through `Deno.Command`. It runs `deno run`, not `deno compile`: a
-compiled binary cannot load a native addon, and `sharp` (#94) needs one; measured against the wasm
-alternative, compiling cost 34 ms per image and 81 MB. Consequences: the image carries Deno, the
-source and `node_modules` (`"nodeModulesDir": "auto"`), and the permission set includes
-`--allow-ffi` and `--allow-sys` — a real widening, bought for a 3.6× faster image path; weigh the
-next such request the same way rather than by precedent.
+The image is `gcr.io/distroless/nodejs26-debian13:nonroot` — Node and nothing else, no shell and no
+package manager, so a dependency can never be a binary started as a child process. Node runs the
+TypeScript as it is, stripping the types, so the image carries the source and the production
+`node_modules` that `pnpm deploy` puts beside it. It is built from the repository root, where the
+workspace keeps its lockfile; `Dockerfile.dockerignore` narrows that context to the backend.
 
-`sharp` calls `detect-libc` at import, which reads `/proc/self/exe` and `/usr/bin/ldd`; both are in
-the read list for that alone. **Without a terminal Deno denies silently; with one it stops and
-asks** — so the entrypoint and the healthcheck pass `--no-prompt`, and a permission problem is
-reproduced with `docker run -t` or not at all. The dev tasks deliberately prompt. **Anything with a
-native addon has to be tried against the actual runtime**, not only `deno task dev`.
+**The server runs under Node's permission model**, in the image's entrypoint and in `pnpm run dev`
+and `start`: it may read the app and the uploads, write only the uploads, load `sharp`'s native
+addon (#94, `--allow-addons`) and use the network. Two of those are real widenings — an addon can
+step around the model, which Node warns about at every start, and `--allow-net` is all or nothing
+and still experimental — and environment variables and system information are not restricted at
+all. Weigh the next request for a permission the same way rather than by precedent. `pnpm run dev`
+adds `--allow-child-process`, because `--watch` starts the server as its child. A refused access
+throws `ERR_ACCESS_DENIED` naming the resource; nothing prompts. The entrypoint names `/data/files`
+because an exec-form entrypoint cannot read `FILE_STORAGE_PATH`, so the variable stays that in the
+image. **Anything with a native addon has to be tried against the actual image**, not only
+`pnpm run dev`: build it, run it against the dev stack and upload an avatar.
 
 ## The log
 

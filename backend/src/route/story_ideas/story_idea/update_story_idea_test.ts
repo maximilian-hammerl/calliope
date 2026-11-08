@@ -1,16 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-} from "@/src/test/support.ts";
-import {
-  createIdea,
-  patchIdea,
-  storyIdeaUsers,
-} from "@/src/test/story_ideas.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser } from "#/src/test/support.ts";
+import { createIdea, patchIdea, storyIdeaUsers } from "#/src/test/story_ideas.ts";
 
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author, bystander } = storyIdeaUsers("update");
@@ -46,11 +38,9 @@ test("PATCH /api/story-ideas/{id} is the author's alone", async () => {
 test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async () => {
   const cookie = await registerUser(author);
 
-  const response = await patchIdea(
-    cookie,
-    "01a00000-0000-7000-8000-00000000ffff",
-    { status: "closed" },
-  );
+  const response = await patchIdea(cookie, "01a00000-0000-7000-8000-00000000ffff", {
+    status: "closed",
+  });
 
   assert.equal(response.status, STATUS_CODE.NotFound);
 });
@@ -62,10 +52,12 @@ test("PATCH /api/story-ideas/{id} answers 404 for an id nobody has", async () =>
  */
 test("PATCH /api/story-ideas/{ideaId} refuses genres that orphan the stored subgenres", async () => {
   const cookie = await registerUser(author);
-  const idea = await (await createIdea(cookie, {
-    genres: ["fantasy"],
-    subgenres: ["dark_fantasy"],
-  })).json();
+  const idea = await (
+    await createIdea(cookie, {
+      genres: ["fantasy"],
+      subgenres: ["dark_fantasy"],
+    })
+  ).json();
 
   // The subgenre is not in this request at all; it is already on the row.
   const response = await patchIdea(cookie, idea.id, { genres: ["western"] });
@@ -73,9 +65,7 @@ test("PATCH /api/story-ideas/{ideaId} refuses genres that orphan the stored subg
   assert.equal(response.status, STATUS_CODE.BadRequest);
 
   // And the idea is untouched, so the transaction rolled back rather than half-writing.
-  const after =
-    await (await patchIdea(cookie, idea.id, { subtitle: "unverändert" }))
-      .json();
+  const after = await (await patchIdea(cookie, idea.id, { subtitle: "unverändert" })).json();
   assert.deepEqual(after.genres, ["fantasy"]);
   assert.deepEqual(after.subgenres, ["dark_fantasy"]);
 });

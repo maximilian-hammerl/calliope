@@ -1,9 +1,9 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { write } from "@/src/test/support.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { write } from "#/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import { Hono } from "hono";
-import { type User, UserService } from "@/src/service/user_service.ts";
+import { type User, UserService } from "#/src/service/user_service.ts";
 import authenticated from "./authenticated.ts";
 import authenticatedAllowingUnverifiedEmailAddress from "./authenticated_allowing_unverified_email_address.ts";
 
@@ -22,7 +22,7 @@ const permissiveApp = new Hono<{ Variables: { user: User } }>()
 
 async function createUserWithSession({ verified = true } = {}) {
   const user = await write((transaction) =>
-    UserService.insertUser(transaction, username, password, emailAddress)
+    UserService.insertUser(transaction, username, password, emailAddress),
   );
   assert.ok(user, "fixture user could not be created");
 
@@ -34,7 +34,7 @@ async function createUserWithSession({ verified = true } = {}) {
         .updateTable("user")
         .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
         .where("id", "=", user.id)
-        .execute()
+        .execute(),
     );
   }
 
@@ -43,15 +43,14 @@ async function createUserWithSession({ verified = true } = {}) {
     UserService.insertSessionForUser(transaction, user, {
       userAgent: undefined,
       ipAddress: undefined,
-    })
+    }),
   );
   return { user, session };
 }
 
 afterEach(async () => {
   await write((transaction) =>
-    transaction
-      .deleteFrom("user").where("username", "=", username).execute()
+    transaction.deleteFrom("user").where("username", "=", username).execute(),
   );
 });
 

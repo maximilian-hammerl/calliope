@@ -1,9 +1,9 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { USERS_TAG } from "@/src/open_api_specification.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
+import { db } from "#/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { USERS_TAG } from "#/src/open_api_specification.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserAvatarService } from "#/src/service/user_avatar_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -11,7 +11,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -38,9 +38,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    await db.transaction().execute((transaction) =>
-      UserAvatarService.deleteAvatar(transaction, c.get("user").id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => UserAvatarService.deleteAvatar(transaction, c.get("user").id));
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

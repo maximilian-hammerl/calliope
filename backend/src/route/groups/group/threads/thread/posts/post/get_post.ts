@@ -1,20 +1,20 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { POST_RESPONSE } from "@/src/http/response_schema.ts";
-import { POSTS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP_POST } from "@/src/scope/chains.ts";
+import { POST_RESPONSE } from "#/src/http/response_schema.ts";
+import { POSTS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP_POST } from "#/src/scope/chains.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 import {
   WRITING_GROUP_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 const POST_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,

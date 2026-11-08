@@ -18,10 +18,7 @@ export function generateToken(): string {
 
 /** Returned as a Buffer because that is how the generated schema types the bytea column. */
 export async function hashToken(token: string): Promise<Buffer> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(token),
-  );
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
   return Buffer.from(digest);
 }
 
@@ -41,9 +38,7 @@ export function formatToken(id: string, secret: string): string {
  * malformed one is a database error rather than a miss — a corrupted session cookie used to
  * answer 500 on every request instead of simply not being signed in.
  */
-export function parseToken(
-  token: string,
-): { id: string; secret: string } | undefined {
+export function parseToken(token: string): { id: string; secret: string } | undefined {
   const [id, secret] = token.split(".");
   const parsedId = TOKEN_ID.safeParse(id);
 

@@ -1,4 +1,4 @@
-import type { UserInWritingGroupRole } from "@/src/database/schema.ts";
+import type { UserInWritingGroupRole } from "#/src/database/schema.ts";
 
 /**
  * Who may do what inside a writing group, as one table.
@@ -58,7 +58,7 @@ type Act = keyof typeof RULE;
 
 /** The acts the author rule governs, derived from the table so the two cannot disagree. */
 type AuthorAct = {
-  [K in Act]: typeof RULE[K] extends "author" ? K : never;
+  [K in Act]: (typeof RULE)[K] extends "author" ? K : never;
 }[Act];
 type WriterAct = Exclude<Act, AuthorAct>;
 
@@ -77,16 +77,8 @@ const isWriter = (role: UserInWritingGroupRole): boolean =>
  * whose author has left is left to the administrators.
  */
 export function mayAct(role: UserInWritingGroupRole, act: WriterAct): boolean;
-export function mayAct(
-  role: UserInWritingGroupRole,
-  act: AuthorAct,
-  content: Content,
-): boolean;
-export function mayAct(
-  role: UserInWritingGroupRole,
-  act: Act,
-  content?: Content,
-): boolean {
+export function mayAct(role: UserInWritingGroupRole, act: AuthorAct, content: Content): boolean;
+export function mayAct(role: UserInWritingGroupRole, act: Act, content?: Content): boolean {
   if (RULE[act] === "writer") {
     return isWriter(role);
   }

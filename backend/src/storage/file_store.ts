@@ -1,5 +1,6 @@
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import * as z from "zod";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
 
 /**
  * Files a member uploaded, on disk rather than in a column — see #94. The database holds the
@@ -21,27 +22,33 @@ function pathFor(fileId: string): string {
   return `${DIRECTORY}/${parsed.data}`;
 }
 
+function isNotFound(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
 async function write(fileId: string, bytes: Uint8Array): Promise<void> {
   const path = pathFor(fileId);
-  await Deno.mkdir(DIRECTORY, { recursive: true });
+  await mkdir(DIRECTORY, { recursive: true });
 
   // Written aside and renamed, so a crash mid-write leaves no half a file under a name the
   // database already points at. `rename` is atomic within one filesystem.
   const partial = `${path}.partial`;
   try {
-    await Deno.writeFile(partial, bytes);
-    await Deno.rename(partial, path);
+    await writeFile(partial, bytes);
+    await rename(partial, path);
   } catch (error) {
-    await Deno.remove(partial).catch(() => {});
+    await rm(partial, { force: true });
     throw error;
   }
 }
 
 async function read(fileId: string): Promise<Uint8Array | undefined> {
   try {
-    return await Deno.readFile(pathFor(fileId));
+    // A Uint8Array rather than Node's Buffer, which compares unequal to one with the same bytes.
+    const buffer = await readFile(pathFor(fileId));
+    return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
   } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
+    if (isNotFound(error)) {
       return undefined;
     }
     throw error;
@@ -50,26 +57,20 @@ async function read(fileId: string): Promise<Uint8Array | undefined> {
 
 /** Absent is success: the sweep and a delete race, and both want the file gone. */
 async function remove(fileId: string): Promise<void> {
-  try {
-    await Deno.remove(pathFor(fileId));
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) {
-      throw error;
-    }
-  }
+  await rm(pathFor(fileId), { force: true });
 }
 
 /** What the sweep compares against the database. Partials are in-flight writes, not orphans. */
 async function listFileIds(): Promise<string[]> {
   const fileIds: string[] = [];
   try {
-    for await (const entry of Deno.readDir(DIRECTORY)) {
-      if (entry.isFile && FILE_ID_SCHEMA.safeParse(entry.name).success) {
+    for (const entry of await readdir(DIRECTORY, { withFileTypes: true })) {
+      if (entry.isFile() && FILE_ID_SCHEMA.safeParse(entry.name).success) {
         fileIds.push(entry.name);
       }
     }
   } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) {
+    if (!isNotFound(error)) {
       throw error;
     }
   }
@@ -77,16 +78,12 @@ async function listFileIds(): Promise<string[]> {
 }
 
 /** When the bytes last changed, which is how the sweep tells an orphan from an upload in flight. */
-async function modifiedAt(
-  fileId: string,
-): Promise<Temporal.Instant | undefined> {
+async function modifiedAt(fileId: string): Promise<Temporal.Instant | undefined> {
   try {
-    const { mtime } = await Deno.stat(pathFor(fileId));
-    return mtime === null
-      ? undefined
-      : Temporal.Instant.fromEpochMilliseconds(mtime.getTime());
+    const { mtime } = await stat(pathFor(fileId));
+    return Temporal.Instant.fromEpochMilliseconds(mtime.getTime());
   } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
+    if (isNotFound(error)) {
       return undefined;
     }
     throw error;

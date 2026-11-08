@@ -1,36 +1,29 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
-import { THREADS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP } from "@/src/scope/chains.ts";
-import { folderOf } from "@/src/scope/group_scope.ts";
-import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { THREAD_RESPONSE } from "#/src/http/response_schema.ts";
+import { THREADS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP } from "#/src/scope/chains.ts";
+import { folderOf } from "#/src/scope/group_scope.ts";
+import { WritingThreadService } from "#/src/service/writing_thread_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_THREAD_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
-const CREATE_THREAD_BODY = WRITING_THREAD_SCHEMA
-  .pick({ title: true })
-  .extend({
-    title: notBlank(
-      WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
-    ),
-    // Absent puts it at the root of the group's tree. Moving it later is its own operation.
-    folderId: WRITING_THREAD_SCHEMA.shape.folderId.optional(),
-  });
+const CREATE_THREAD_BODY = WRITING_THREAD_SCHEMA.pick({ title: true }).extend({
+  title: notBlank(WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle)),
+  // Absent puts it at the root of the group's tree. Moving it later is its own operation.
+  folderId: WRITING_THREAD_SCHEMA.shape.folderId.optional(),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -80,22 +73,23 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const folder = folderId === undefined || folderId === null
-      ? null
-      : await folderOf(group.id, folderId);
+    const folder =
+      folderId === undefined || folderId === null ? null : await folderOf(group.id, folderId);
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    const thread = await db.transaction().execute((transaction) =>
-      WritingThreadService.insertThread(
-        transaction,
-        group.id,
-        title,
-        user.id,
-        folder?.id ?? null,
-      )
-    );
+    const thread = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingThreadService.insertThread(
+          transaction,
+          group.id,
+          title,
+          user.id,
+          folder?.id ?? null,
+        ),
+      );
 
     return c.json(thread, STATUS_CODE.Created);
   },

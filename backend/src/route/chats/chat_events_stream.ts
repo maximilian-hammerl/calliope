@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { subscribeToChatEvents } from "@/src/event/chat_events.ts";
-import { addShutdownSignalListener } from "@/src/util/shutdown_signal.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { subscribeToChatEvents } from "#/src/event/chat_events.ts";
+import { addShutdownSignalListener } from "#/src/util/shutdown_signal.ts";
 
 /**
  * One stream per member, carrying every chat they are in.

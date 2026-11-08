@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
-import { userExists } from "@/src/service/user_in_writing_group_service.ts";
-import { checkJoinedChatMember } from "@/src/route/chats/chat/chat_membership.ts";
+import { db } from "#/src/database/client.ts";
+import { CHAT_MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { CHATS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { UserInChatGroupService } from "#/src/service/user_in_chat_group_service.ts";
+import { userExists } from "#/src/service/user_in_writing_group_service.ts";
+import { checkJoinedChatMember } from "#/src/route/chats/chat/chat_membership.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { CHAT_GROUP_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { CHAT_GROUP_SCHEMA, USER_SCHEMA } from "#/src/database/schema.ts";
 
 const CHAT_PARAMS = z.object({ chatId: CHAT_GROUP_SCHEMA.shape.id });
 const INVITE_BODY = z.object({ userId: USER_SCHEMA.shape.id });
@@ -71,7 +71,7 @@ export default new OpenAPIHono().openapi(
         : c.json({ error: access.error }, STATUS_CODE.Forbidden);
     }
 
-    if (!await userExists(userId)) {
+    if (!(await userExists(userId))) {
       return c.json({ error: "User not found" }, STATUS_CODE.NotFound);
     }
 
@@ -79,23 +79,17 @@ export default new OpenAPIHono().openapi(
     // A ban refuses contact the same way, and answers the same neutral refusal: an inviter
     // must not learn that a moderation action was taken against somebody else.
     if (
-      await BlockService.isBlockedBetween(user.id, userId) ||
-      await BanService.isBanned(userId)
+      (await BlockService.isBlockedBetween(user.id, userId)) ||
+      (await BanService.isBanned(userId))
     ) {
-      return c.json(
-        { error: "Contact is not possible" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Contact is not possible" }, STATUS_CODE.Forbidden);
     }
 
-    const invitation = await db.transaction().execute((transaction) =>
-      UserInChatGroupService.insertInvitation(
-        transaction,
-        chatId,
-        userId,
-        user.id,
-      )
-    );
+    const invitation = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInChatGroupService.insertInvitation(transaction, chatId, userId, user.id),
+      );
 
     if (invitation === undefined) {
       return c.json(

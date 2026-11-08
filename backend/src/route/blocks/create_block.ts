@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { userExists } from "@/src/service/user_in_writing_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { BLOCKS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { userExists } from "#/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,8 +12,8 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
 
 const CREATE_BLOCK_BODY = z.object({ userId: USER_SCHEMA.shape.id });
 
@@ -56,13 +56,13 @@ export default new OpenAPIHono().openapi(
     if (userId === user.id) {
       return c.json({ error: "Cannot block yourself" }, STATUS_CODE.Forbidden);
     }
-    if (!await userExists(userId)) {
+    if (!(await userExists(userId))) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    await db.transaction().execute((transaction) =>
-      BlockService.insertBlock(transaction, user.id, userId)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => BlockService.insertBlock(transaction, user.id, userId));
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   addMember,
   clearRateLimits,
@@ -11,7 +11,7 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "producers-admin";
 const writer = "producers-writer";
@@ -24,18 +24,8 @@ afterEach(() => deleteUsers([administrator, writer, reader]));
 async function group() {
   const adminCookie = await registerUser(administrator);
   const created = await createGroup(adminCookie, "Der Erinnerungsmarkt");
-  const writerCookie = await addMember(
-    adminCookie,
-    created.id,
-    writer,
-    "writer",
-  );
-  const readerCookie = await addMember(
-    adminCookie,
-    created.id,
-    reader,
-    "reader",
-  );
+  const writerCookie = await addMember(adminCookie, created.id, writer, "writer");
+  const readerCookie = await addMember(adminCookie, created.id, reader, "reader");
   return { adminCookie, writerCookie, readerCookie, group: created };
 }
 
@@ -44,9 +34,7 @@ async function notificationsOf(cookie: string) {
     limit: 50,
   });
   assert.equal(response.status, STATUS_CODE.OK);
-  return (await response.json()).results as Array<
-    { type: string; actorUsername: string }
-  >;
+  return (await response.json()).results as Array<{ type: string; actorUsername: string }>;
 }
 
 /** Only what these tests read, not the API's full union. */
@@ -61,48 +49,38 @@ const ofType = (notifications: Notification[], type: string) =>
   notifications.filter((notification) => notification.type === type);
 
 test("a new thread tells the group but not its author", async () => {
-  const { adminCookie, writerCookie, readerCookie, group: created } =
-    await group();
+  const { adminCookie, writerCookie, readerCookie, group: created } = await group();
 
-  const response = await request(
-    "POST",
-    `/api/groups/${created.id}/threads`,
-    writerCookie,
-    { title: "Kapitel 1" },
-  );
+  const response = await request("POST", `/api/groups/${created.id}/threads`, writerCookie, {
+    title: "Kapitel 1",
+  });
   assert.equal(response.status, STATUS_CODE.Created);
 
   for (const cookie of [adminCookie, readerCookie]) {
     const [notification] = ofType(
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
       await notificationsOf(cookie),
       "new_writing_thread",
     );
     assert.ok(notification);
     assert.equal(notification.actorUsername, writer);
   }
-  assert.equal(
-    ofType(await notificationsOf(writerCookie), "new_writing_thread").length,
-    0,
-  );
+  assert.equal(ofType(await notificationsOf(writerCookie), "new_writing_thread").length, 0);
 });
 
 test("a new page tells the group but not its author", async () => {
-  const { adminCookie, writerCookie, readerCookie, group: created } =
-    await group();
+  const { adminCookie, writerCookie, readerCookie, group: created } = await group();
 
-  const response = await request(
-    "POST",
-    `/api/groups/${created.id}/pages`,
-    writerCookie,
-    { title: "Die Bergstadt", document: plainTextToDocument("Ein Hafen.") },
-  );
+  const response = await request("POST", `/api/groups/${created.id}/pages`, writerCookie, {
+    title: "Die Bergstadt",
+    document: plainTextToDocument("Ein Hafen."),
+  });
   assert.equal(response.status, STATUS_CODE.Created);
   const page = await response.json();
 
   for (const cookie of [adminCookie, readerCookie]) {
     const [notification] = ofType(
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
       await notificationsOf(cookie),
       "new_writing_page",
     );
@@ -112,20 +90,14 @@ test("a new page tells the group but not its author", async () => {
     assert.equal(notification.writingPageId, page.id);
     assert.equal(notification.writingPageTitle, "Die Bergstadt");
   }
-  assert.equal(
-    ofType(await notificationsOf(writerCookie), "new_writing_page").length,
-    0,
-  );
+  assert.equal(ofType(await notificationsOf(writerCookie), "new_writing_page").length, 0);
 });
 
 test("a published post tells the group but not its author", async () => {
   const { adminCookie, writerCookie, group: created } = await group();
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${created.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${created.id}/threads`, adminCookie, { title: "Kapitel 1" })
+  ).json();
 
   await request(
     "POST",
@@ -134,76 +106,44 @@ test("a published post tells the group but not its author", async () => {
     postBody("Die Laternen gingen aus."),
   );
 
-  assert.equal(
-    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
-    1,
-  );
-  assert.equal(
-    ofType(await notificationsOf(writerCookie), "new_writing_post").length,
-    0,
-  );
+  assert.equal(ofType(await notificationsOf(adminCookie), "new_writing_post").length, 1);
+  assert.equal(ofType(await notificationsOf(writerCookie), "new_writing_post").length, 0);
 });
 
 test("a draft tells nobody until it is published", async () => {
   const { adminCookie, writerCookie, group: created } = await group();
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${created.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${created.id}/threads`, adminCookie, { title: "Kapitel 1" })
+  ).json();
   const posts = `/api/groups/${created.id}/threads/${thread.id}/posts`;
 
-  const draft = await (await request(
-    "POST",
-    posts,
-    writerCookie,
-    postBody("Noch nicht fertig.", { isDraft: true }),
-  )).json();
+  const draft = await (
+    await request("POST", posts, writerCookie, postBody("Noch nicht fertig.", { isDraft: true }))
+  ).json();
 
   // Nobody can see it, so nobody is told about it.
-  assert.equal(
-    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
-    0,
-  );
+  assert.equal(ofType(await notificationsOf(adminCookie), "new_writing_post").length, 0);
 
   await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
     isDraft: false,
   });
 
-  assert.equal(
-    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
-    1,
-  );
+  assert.equal(ofType(await notificationsOf(adminCookie), "new_writing_post").length, 1);
 });
 
 test("editing a published post does not announce it again", async () => {
   const { adminCookie, writerCookie, group: created } = await group();
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${created.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${created.id}/threads`, adminCookie, { title: "Kapitel 1" })
+  ).json();
   const posts = `/api/groups/${created.id}/threads/${thread.id}/posts`;
-  const post = await (await request(
-    "POST",
-    posts,
-    writerCookie,
-    postBody("Die Laternen gingen aus."),
-  )).json();
+  const post = await (
+    await request("POST", posts, writerCookie, postBody("Die Laternen gingen aus."))
+  ).json();
 
-  await request(
-    "PATCH",
-    `${posts}/${post.id}`,
-    writerCookie,
-    postBody("Doch anders."),
-  );
+  await request("PATCH", `${posts}/${post.id}`, writerCookie, postBody("Doch anders."));
 
-  assert.equal(
-    ofType(await notificationsOf(adminCookie), "new_writing_post").length,
-    1,
-  );
+  assert.equal(ofType(await notificationsOf(adminCookie), "new_writing_post").length, 1);
 });
 
 test("a role change tells the member, and twice leaves one notification", async () => {
@@ -214,15 +154,8 @@ test("a role change tells the member, and twice leaves one notification", async 
   await request("PATCH", membership, adminCookie, { role: "reader" });
   await request("PATCH", membership, adminCookie, { role: "writer" });
 
-  const changes = ofType(
-    await notificationsOf(writerCookie),
-    "role_changed_in_writing_group",
-  );
-  assert.equal(
-    changes.length,
-    1,
-    "a role is a state, not a series of occurrences",
-  );
+  const changes = ofType(await notificationsOf(writerCookie), "role_changed_in_writing_group");
+  assert.equal(changes.length, 1, "a role is a state, not a series of occurrences");
   const [change] = changes;
   assert.ok(change);
   assert.equal(change.actorUsername, administrator);
@@ -243,8 +176,7 @@ test("an administrator changing their own role is not told about it", async () =
 
   assert.equal(response.status, STATUS_CODE.OK);
   assert.equal(
-    ofType(await notificationsOf(adminCookie), "role_changed_in_writing_group")
-      .length,
+    ofType(await notificationsOf(adminCookie), "role_changed_in_writing_group").length,
     0,
   );
 });
@@ -274,14 +206,9 @@ test("an invited member is not told what the group is writing", async () => {
 test("turning a group public tells its members, not the administrator", async () => {
   const { adminCookie, writerCookie, group: created } = await group();
 
-  const response = await request(
-    "PATCH",
-    `/api/groups/${created.id}`,
-    adminCookie,
-    {
-      visibility: "public",
-    },
-  );
+  const response = await request("PATCH", `/api/groups/${created.id}`, adminCookie, {
+    visibility: "public",
+  });
   assert.equal(response.status, STATUS_CODE.OK);
 
   const [notification] = ofType(
@@ -291,10 +218,7 @@ test("turning a group public tells its members, not the administrator", async ()
   assert.ok(notification);
   assert.equal(notification.actorUsername, administrator);
   assert.equal(
-    ofType(
-      await notificationsOf(adminCookie),
-      "visibility_changed_in_writing_group",
-    ).length,
+    ofType(await notificationsOf(adminCookie), "visibility_changed_in_writing_group").length,
     0,
   );
 });
@@ -312,10 +236,7 @@ test("a visibility that does not move tells nobody", async () => {
   });
 
   assert.equal(
-    ofType(
-      await notificationsOf(writerCookie),
-      "visibility_changed_in_writing_group",
-    ).length,
+    ofType(await notificationsOf(writerCookie), "visibility_changed_in_writing_group").length,
     0,
   );
 });
@@ -347,23 +268,13 @@ test("accepting an invitation tells whoever sent it", async () => {
     userId: invitedId,
     role: "writer",
   });
-  await request(
-    "POST",
-    `/api/groups/${created.id}/memberships/me/accept`,
-    invitedCookie,
-  );
+  await request("POST", `/api/groups/${created.id}/memberships/me/accept`, invitedCookie);
 
-  const [notification] = ofType(
-    await notificationsOf(adminCookie),
-    "invitation_accepted",
-  );
+  const [notification] = ofType(await notificationsOf(adminCookie), "invitation_accepted");
   assert.ok(notification);
   assert.equal(notification.actorUsername, writer);
   // The person accepting is not told about their own doing.
-  assert.equal(
-    ofType(await notificationsOf(invitedCookie), "invitation_accepted").length,
-    0,
-  );
+  assert.equal(ofType(await notificationsOf(invitedCookie), "invitation_accepted").length, 0);
 });
 
 test("the member list says who did the inviting, while it is still an invitation", async () => {
@@ -377,20 +288,14 @@ test("the member list says who did the inviting, while it is still an invitation
     role: "writer",
   });
 
-  const page = await (await request(
-    "GET",
-    `/api/groups/${created.id}/memberships`,
-    adminCookie,
-  )).json();
+  const page = await (
+    await request("GET", `/api/groups/${created.id}/memberships`, adminCookie)
+  ).json();
 
-  const invited = page.results.find((m: { username: string }) =>
-    m.username === writer
-  );
+  const invited = page.results.find((m: { username: string }) => m.username === writer);
   assert.equal(invited.invitedByUsername, administrator);
 
   // The founder was invited by nobody.
-  const founder = page.results.find((m: { username: string }) =>
-    m.username === administrator
-  );
+  const founder = page.results.find((m: { username: string }) => m.username === administrator);
   assert.equal(founder.invitedByUsername, null);
 });

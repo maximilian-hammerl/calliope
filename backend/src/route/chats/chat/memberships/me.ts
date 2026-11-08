@@ -1,17 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { CHAT_MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { CHATS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserInChatGroupService } from "#/src/service/user_in_chat_group_service.ts";
 import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { CHAT_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { CHAT_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const CHAT_PARAMS = z.object({ chatId: CHAT_GROUP_SCHEMA.shape.id });
 
@@ -44,13 +44,11 @@ const accept = new OpenAPIHono().openapi(
   async (c) => {
     const { chatId } = c.req.valid("param");
 
-    const membership = await db.transaction().execute((transaction) =>
-      UserInChatGroupService.acceptInvitation(
-        transaction,
-        chatId,
-        c.get("user").id,
-      )
-    );
+    const membership = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInChatGroupService.acceptInvitation(transaction, chatId, c.get("user").id),
+      );
 
     if (membership === undefined) {
       return c.json({ error: "Invitation not found" }, STATUS_CODE.NotFound);
@@ -91,13 +89,11 @@ const leave = new OpenAPIHono().openapi(
   async (c) => {
     const { chatId } = c.req.valid("param");
 
-    const left = await db.transaction().execute((transaction) =>
-      UserInChatGroupService.deleteMembership(
-        transaction,
-        chatId,
-        c.get("user").id,
-      )
-    );
+    const left = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInChatGroupService.deleteMembership(transaction, chatId, c.get("user").id),
+      );
 
     if (!left) {
       return c.json({ error: "Membership not found" }, STATUS_CODE.NotFound);
@@ -107,6 +103,4 @@ const leave = new OpenAPIHono().openapi(
   },
 );
 
-export default new OpenAPIHono()
-  .route("/accept", accept)
-  .route("/", leave);
+export default new OpenAPIHono().route("/accept", accept).route("/", leave);

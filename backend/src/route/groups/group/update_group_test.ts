@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser, request } from "#/src/test/support.ts";
 
 const owner = "update-group-owner";
 const outsider = "update-group-outsider";
@@ -44,12 +39,9 @@ test("PATCH /api/groups/{groupId} refuses a non-administrator of a public group"
   const created = await createGroup(ownerCookie, "public");
 
   const outsiderCookie = await registerUser(outsider);
-  const response = await request(
-    "PATCH",
-    `/api/groups/${created.id}`,
-    outsiderCookie,
-    { title: "Übernommen" },
-  );
+  const response = await request("PATCH", `/api/groups/${created.id}`, outsiderCookie, {
+    title: "Übernommen",
+  });
 
   // 403 rather than 404: the group is public, so its existence is not a secret.
   assert.equal(response.status, STATUS_CODE.Forbidden);
@@ -128,9 +120,11 @@ test("PATCH /api/groups/{groupId} refuses genres that orphan the stored subgenre
   assert.equal(response.status, STATUS_CODE.BadRequest);
 
   // And the group is untouched, so nothing was half-written.
-  const after = await (await request("PATCH", `/api/groups/${id}`, cookie, {
-    subtitle: "unverändert",
-  })).json();
+  const after = await (
+    await request("PATCH", `/api/groups/${id}`, cookie, {
+      subtitle: "unverändert",
+    })
+  ).json();
   assert.deepEqual(after.genres, ["fantasy"]);
   assert.deepEqual(after.subgenres, ["dark_fantasy"]);
 });
@@ -186,7 +180,8 @@ test("PATCH /api/groups/{groupId} refuses a title of only whitespace", async () 
 
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "title",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["title"],
+  );
 });

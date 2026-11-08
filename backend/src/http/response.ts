@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 
 /**
  * Every declared response needs a content schema. A content-less one widens the handler's
@@ -66,10 +66,14 @@ const ERROR_CODE = z.enum([
  */
 export const ERROR_RESPONSE = z.object({
   error: z.string(),
-  issues: z.array(z.object({
-    path: z.string(),
-    message: z.string(),
-  })).optional(),
+  issues: z
+    .array(
+      z.object({
+        path: z.string(),
+        message: z.string(),
+      }),
+    )
+    .optional(),
   code: ERROR_CODE.optional(),
 });
 

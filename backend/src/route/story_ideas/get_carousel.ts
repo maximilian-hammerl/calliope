@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { STORY_IDEA_CAROUSEL_RESPONSE } from "@/src/http/response_schema.ts";
-import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
+import { STORY_IDEA_CAROUSEL_RESPONSE } from "#/src/http/response_schema.ts";
+import { STORY_IDEAS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { StoryIdeaService } from "#/src/service/story_idea_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { STORY_IDEA_SCHEMA } from "#/src/database/schema.ts";
 
 const CAROUSEL_BODY = z.object({
   /** Absent means the newest idea of the set, which is where the carousel opens. */

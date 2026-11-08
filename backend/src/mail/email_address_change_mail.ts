@@ -1,5 +1,5 @@
-import { APP_NAME } from "@/src/branding.ts";
-import type { Mail } from "@/src/mail/mailer.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import type { Mail } from "#/src/mail/mailer.ts";
 
 function validFor(lifetime: Temporal.Duration): string {
   const hours = lifetime.total({ unit: "hours" });
@@ -7,14 +7,17 @@ function validFor(lifetime: Temporal.Duration): string {
 }
 
 /** To the address being moved *to*: opening this link is what applies the change. */
-export function emailAddressChangeConfirmationMail(
-  { username, newEmailAddress, link, lifetime }: {
-    username: string;
-    newEmailAddress: string;
-    link: string;
-    lifetime: Temporal.Duration;
-  },
-): Mail {
+export function emailAddressChangeConfirmationMail({
+  username,
+  newEmailAddress,
+  link,
+  lifetime,
+}: {
+  username: string;
+  newEmailAddress: string;
+  link: string;
+  lifetime: Temporal.Duration;
+}): Mail {
   return {
     to: newEmailAddress,
     subject: `Neue E-Mail-Adresse für ${APP_NAME} bestätigen`,
@@ -25,9 +28,7 @@ diesem Link:
 
 ${link}
 
-Der Link gilt ${
-      validFor(lifetime)
-    }. Bis du ihn öffnest, bleibt deine bisherige Adresse
+Der Link gilt ${validFor(lifetime)}. Bis du ihn öffnest, bleibt deine bisherige Adresse
 unverändert in Kraft.
 
 Hast du das nicht angefordert, kannst du diese Nachricht ignorieren.
@@ -43,15 +44,19 @@ ${APP_NAME}
  * mail that matters if somebody else got hold of the password: it reaches the person who
  * still owns the account, and the link stops the change.
  */
-export function emailAddressChangeRequestedMail(
-  { username, currentEmailAddress, newEmailAddress, link, lifetime }: {
-    username: string;
-    currentEmailAddress: string;
-    newEmailAddress: string;
-    link: string;
-    lifetime: Temporal.Duration;
-  },
-): Mail {
+export function emailAddressChangeRequestedMail({
+  username,
+  currentEmailAddress,
+  newEmailAddress,
+  link,
+  lifetime,
+}: {
+  username: string;
+  currentEmailAddress: string;
+  newEmailAddress: string;
+  link: string;
+  lifetime: Temporal.Duration;
+}): Mail {
   return {
     to: currentEmailAddress,
     subject: `Änderung deiner E-Mail-Adresse bei ${APP_NAME}`,
@@ -64,9 +69,7 @@ Warst du das nicht, dann brich die Änderung mit diesem Link ab:
 
 ${link}
 
-Der Link gilt ${
-      validFor(lifetime)
-    }. Ändere danach bitte auch dein Passwort: wer die
+Der Link gilt ${validFor(lifetime)}. Ändere danach bitte auch dein Passwort: wer die
 Änderung angefordert hat, kannte es.
 
 Warst du das, musst du hier nichts tun.
@@ -78,13 +81,15 @@ ${APP_NAME}
 }
 
 /** To the old address once the change has gone through. Nothing to click — it is a record. */
-export function emailAddressChangeCompletedMail(
-  { username, previousEmailAddress, newEmailAddress }: {
-    username: string;
-    previousEmailAddress: string;
-    newEmailAddress: string;
-  },
-): Mail {
+export function emailAddressChangeCompletedMail({
+  username,
+  previousEmailAddress,
+  newEmailAddress,
+}: {
+  username: string;
+  previousEmailAddress: string;
+  newEmailAddress: string;
+}): Mail {
   return {
     to: previousEmailAddress,
     subject: `Deine E-Mail-Adresse bei ${APP_NAME} wurde geändert`,

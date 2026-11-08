@@ -1,31 +1,29 @@
-import type { GroupId, MemberId } from "@/src/scope/scoped_id.ts";
+import type { GroupId, MemberId } from "#/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { withAvatar } from "@/src/query/user_avatar.ts";
-import { withAvatarUrl } from "@/src/http/avatar_url.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { withAvatar } from "#/src/query/user_avatar.ts";
+import { withAvatarUrl } from "#/src/http/avatar_url.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
 import type {
   UserInWritingGroup as DatabaseUserInWritingGroup,
   UserInWritingGroupRole,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
-export type UserInWritingGroup =
-  & Pick<
-    Selectable<DatabaseUserInWritingGroup>,
-    | "userId"
-    | "writingGroupId"
-    | "role"
-    | "status"
-    | "invitedAt"
-    | "joinedAt"
-    | "invitedBy"
-    | "createdAt"
-  >
+export type UserInWritingGroup = Pick<
+  Selectable<DatabaseUserInWritingGroup>,
+  | "userId"
+  | "writingGroupId"
+  | "role"
+  | "status"
+  | "invitedAt"
+  | "joinedAt"
+  | "invitedBy"
+  | "createdAt"
+> &
   // Never null: the membership is cascade-deleted with its user.
-  & { username: string }
+  { username: string } &
   // Null for a founder, and once the inviter's account is gone.
-  & { invitedByUsername: string | null }
-  & { avatarUrl: string | null };
+  { invitedByUsername: string | null } & { avatarUrl: string | null };
 
 const SELECTED_COLUMNS = [
   "userInWritingGroup.userId",
@@ -54,20 +52,22 @@ const RETURNED_COLUMNS = [
  * a membership cannot outlive the user it belongs to.
  */
 function membershipsWithUsername(executor: typeof db | Transaction = db) {
-  return executor
-    .selectFrom("userInWritingGroup")
-    .innerJoin("user", "user.id", "userInWritingGroup.userId")
-    .select([...SELECTED_COLUMNS, "user.username"])
-    // A correlated subquery rather than a second join: an aliased table would widen the
-    // builder's table union past what the shared list helper accepts.
-    .select((eb) =>
-      eb
-        .selectFrom("user as inviter")
-        .select("inviter.username")
-        .whereRef("inviter.id", "=", "userInWritingGroup.invitedBy")
-        .as("invitedByUsername")
-    )
-    .$call((builder) => withAvatar(builder, "user.id"));
+  return (
+    executor
+      .selectFrom("userInWritingGroup")
+      .innerJoin("user", "user.id", "userInWritingGroup.userId")
+      .select([...SELECTED_COLUMNS, "user.username"])
+      // A correlated subquery rather than a second join: an aliased table would widen the
+      // builder's table union past what the shared list helper accepts.
+      .select((eb) =>
+        eb
+          .selectFrom("user as inviter")
+          .select("inviter.username")
+          .whereRef("inviter.id", "=", "userInWritingGroup.invitedBy")
+          .as("invitedByUsername"),
+      )
+      .$call((builder) => withAvatar(builder, "user.id"))
+  );
 }
 
 /**
@@ -121,15 +121,12 @@ async function insertInvitation(
   });
 
   return withAvatarUrl(
-    await membershipWithUsername(writingGroupId, userId, transaction)
-      .executeTakeFirstOrThrow(),
+    await membershipWithUsername(writingGroupId, userId, transaction).executeTakeFirstOrThrow(),
   );
 }
 
 /** Who can act on a request to get in: every administrator who has actually accepted. */
-async function selectJoinedAdministratorIds(
-  writingGroupId: GroupId,
-): Promise<Array<string>> {
+async function selectJoinedAdministratorIds(writingGroupId: GroupId): Promise<Array<string>> {
   const administrators = await db
     .selectFrom("userInWritingGroup")
     .select("userId")
@@ -145,8 +142,7 @@ async function selectMembership(
   writingGroupId: string,
   userId: string,
 ): Promise<UserInWritingGroup | undefined> {
-  const row = await membershipWithUsername(writingGroupId, userId)
-    .executeTakeFirst();
+  const row = await membershipWithUsername(writingGroupId, userId).executeTakeFirst();
 
   return row === undefined ? undefined : withAvatarUrl(row);
 }
@@ -159,9 +155,7 @@ async function selectMembership(
  * of them. Groups are a handful of people, so there is nothing to page — and if that ever stops
  * being true, this is the place to revisit.
  */
-async function selectMemberships(
-  writingGroupId: GroupId,
-): Promise<Array<UserInWritingGroup>> {
+async function selectMemberships(writingGroupId: GroupId): Promise<Array<UserInWritingGroup>> {
   const rows = await membershipsWithUsername()
     .where("userInWritingGroup.writingGroupId", "=", writingGroupId)
     .orderBy("user.username", "asc")
@@ -197,8 +191,7 @@ async function updateRole(
   });
 
   return withAvatarUrl(
-    await membershipWithUsername(writingGroupId, userId, transaction)
-      .executeTakeFirstOrThrow(),
+    await membershipWithUsername(writingGroupId, userId, transaction).executeTakeFirstOrThrow(),
   );
 }
 
@@ -221,18 +214,14 @@ async function acceptInvitation(
     return undefined;
   }
 
-  await NotificationService.insertInvitationAcceptedNotification(
-    transaction,
-    {
-      invitedBy: updated.invitedBy,
-      writingGroupId,
-      actorId: userId,
-    },
-  );
+  await NotificationService.insertInvitationAcceptedNotification(transaction, {
+    invitedBy: updated.invitedBy,
+    writingGroupId,
+    actorId: userId,
+  });
 
   return withAvatarUrl(
-    await membershipWithUsername(writingGroupId, userId, transaction)
-      .executeTakeFirstOrThrow(),
+    await membershipWithUsername(writingGroupId, userId, transaction).executeTakeFirstOrThrow(),
   );
 }
 
@@ -267,11 +256,7 @@ export const UserInWritingGroupService = {
 
 /** The user must exist before they can be invited. */
 export async function userExists(userId: string): Promise<boolean> {
-  const user = await db
-    .selectFrom("user")
-    .select("id")
-    .where("id", "=", userId)
-    .executeTakeFirst();
+  const user = await db.selectFrom("user").select("id").where("id", "=", userId).executeTakeFirst();
 
   return user !== undefined;
 }

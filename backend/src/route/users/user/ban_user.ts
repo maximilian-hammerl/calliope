@@ -1,20 +1,20 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { USERS_TAG } from "@/src/open_api_specification.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { authorizedAsModerator } from "@/src/middleware/authorized_as_platform_role.ts";
-import { BanService } from "@/src/service/ban_service.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { USERS_TAG } from "#/src/open_api_specification.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { authorizedAsModerator } from "#/src/middleware/authorized_as_platform_role.ts";
+import { BanService } from "#/src/service/ban_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const BAN_USER_BODY = z.object({
   // Recorded for the operators, never shown to the member: what they are told is one fixed
@@ -49,8 +49,7 @@ export default new OpenAPIHono()
           content: jsonContent(ERROR_RESPONSE),
         },
         [STATUS_CODE.Forbidden]: {
-          description:
-            "Not an operator, or the target holds a platform role and cannot be banned",
+          description: "Not an operator, or the target holds a platform role and cannot be banned",
           content: jsonContent(ERROR_RESPONSE),
         },
         [STATUS_CODE.NotFound]: {
@@ -69,25 +68,15 @@ export default new OpenAPIHono()
       const { userId } = c.req.valid("param");
       const { reason } = c.req.valid("json");
 
-      const refusal = await BanService.banUser(
-        userId,
-        reason,
-        c.get("user").id,
-      );
+      const refusal = await BanService.banUser(userId, reason, c.get("user").id);
 
       switch (refusal) {
         case "not_found":
           return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
         case "is_an_operator":
-          return c.json(
-            { error: "An operator cannot be banned" },
-            STATUS_CODE.Forbidden,
-          );
+          return c.json({ error: "An operator cannot be banned" }, STATUS_CODE.Forbidden);
         case "already_banned":
-          return c.json(
-            { error: "Already banned" },
-            STATUS_CODE.Conflict,
-          );
+          return c.json({ error: "Already banned" }, STATUS_CODE.Conflict);
         case undefined:
           return c.json({ ok: true } as const, STATUS_CODE.OK);
       }
@@ -129,9 +118,9 @@ export default new OpenAPIHono()
       const { userId } = c.req.valid("param");
 
       if (
-        await db.transaction().execute((transaction) =>
-          BanService.liftBan(transaction, userId)
-        ) === "not_found"
+        (await db
+          .transaction()
+          .execute((transaction) => BanService.liftBan(transaction, userId))) === "not_found"
       ) {
         return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
       }

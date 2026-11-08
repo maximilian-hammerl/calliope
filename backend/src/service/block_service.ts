@@ -1,6 +1,6 @@
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import { listResultsWithCount } from "@/src/list/list_endpoint_query.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
+import { listResultsWithCount } from "#/src/list/list_endpoint_query.ts";
 
 export type Block = {
   blockedId: string;
@@ -14,24 +14,15 @@ export type Block = {
  * blocking somebody would still leave them able to invite you, which is the one thing it is
  * for.
  */
-async function isBlockedBetween(
-  oneUserId: string,
-  otherUserId: string,
-): Promise<boolean> {
+async function isBlockedBetween(oneUserId: string, otherUserId: string): Promise<boolean> {
   const block = await db
     .selectFrom("userBlock")
     .select("blockerId")
     .where((eb) =>
       eb.or([
-        eb.and([
-          eb("blockerId", "=", oneUserId),
-          eb("blockedId", "=", otherUserId),
-        ]),
-        eb.and([
-          eb("blockerId", "=", otherUserId),
-          eb("blockedId", "=", oneUserId),
-        ]),
-      ])
+        eb.and([eb("blockerId", "=", oneUserId), eb("blockedId", "=", otherUserId)]),
+        eb.and([eb("blockerId", "=", otherUserId), eb("blockedId", "=", oneUserId)]),
+      ]),
     )
     .executeTakeFirst();
 
@@ -39,10 +30,7 @@ async function isBlockedBetween(
 }
 
 /** Only this member's own block, for a profile page deciding which button to offer. */
-async function isBlockedByUser(
-  blockerId: string,
-  blockedId: string,
-): Promise<boolean> {
+async function isBlockedByUser(blockerId: string, blockedId: string): Promise<boolean> {
   const block = await db
     .selectFrom("userBlock")
     .select("blockerId")
@@ -73,31 +61,22 @@ async function withoutBlocked(
       eb.or([
         eb.and([eb("blockerId", "=", userId), eb("blockedId", "in", userIds)]),
         eb.and([eb("blockedId", "=", userId), eb("blockerId", "in", userIds)]),
-      ])
+      ]),
     )
     .execute();
 
-  const blocked = new Set(
-    blocks.flatMap(({ blockerId, blockedId }) => [blockerId, blockedId]),
-  );
+  const blocked = new Set(blocks.flatMap(({ blockerId, blockedId }) => [blockerId, blockedId]));
 
   return userIds.filter((candidate) => !blocked.has(candidate));
 }
 
 /** Every account this member has blocked, for the list they manage in the settings. */
-function listBlocks(
-  blockerId: string,
-  query: ListQuery,
-): Promise<ListResults<Block>> {
+function listBlocks(blockerId: string, query: ListQuery): Promise<ListResults<Block>> {
   return listResultsWithCount(
     db
       .selectFrom("userBlock")
       .innerJoin("user", "user.id", "userBlock.blockedId")
-      .select([
-        "userBlock.blockedId",
-        "userBlock.createdAt",
-        "user.username",
-      ])
+      .select(["userBlock.blockedId", "userBlock.createdAt", "user.username"])
       .where("userBlock.blockerId", "=", blockerId),
     query,
   );
@@ -108,14 +87,10 @@ async function selectBlockedIds(userId: string): Promise<Array<string>> {
   const blocks = await db
     .selectFrom("userBlock")
     .select(["blockerId", "blockedId"])
-    .where((eb) =>
-      eb.or([eb("blockerId", "=", userId), eb("blockedId", "=", userId)])
-    )
+    .where((eb) => eb.or([eb("blockerId", "=", userId), eb("blockedId", "=", userId)]))
     .execute();
 
-  return blocks.map(({ blockerId, blockedId }) =>
-    blockerId === userId ? blockedId : blockerId
-  );
+  return blocks.map(({ blockerId, blockedId }) => (blockerId === userId ? blockedId : blockerId));
 }
 
 /**
@@ -140,14 +115,10 @@ async function cancelPendingInvitations(
         eb
           .selectFrom("userInWritingGroup as counterpart")
           .select("counterpart.userId")
-          .whereRef(
-            "counterpart.writingGroupId",
-            "=",
-            "userInWritingGroup.writingGroupId",
-          )
+          .whereRef("counterpart.writingGroupId", "=", "userInWritingGroup.writingGroupId")
           .where("counterpart.userId", "in", pair)
           .whereRef("counterpart.userId", "!=", "userInWritingGroup.userId"),
-      )
+      ),
     )
     .execute();
 
@@ -160,14 +131,10 @@ async function cancelPendingInvitations(
         eb
           .selectFrom("userInChatGroup as counterpart")
           .select("counterpart.userId")
-          .whereRef(
-            "counterpart.chatGroupId",
-            "=",
-            "userInChatGroup.chatGroupId",
-          )
+          .whereRef("counterpart.chatGroupId", "=", "userInChatGroup.chatGroupId")
           .where("counterpart.userId", "in", pair)
           .whereRef("counterpart.userId", "!=", "userInChatGroup.userId"),
-      )
+      ),
     )
     .execute();
 }

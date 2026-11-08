@@ -1,17 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
+import { db } from "#/src/database/client.ts";
+import { STORY_IDEAS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { StoryIdeaService } from "#/src/service/story_idea_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { STORY_IDEA_SCHEMA } from "#/src/database/schema.ts";
 
 const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
 
@@ -60,9 +60,9 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Your own idea" }, STATUS_CODE.Forbidden);
     }
 
-    await db.transaction().execute((transaction) =>
-      StoryIdeaService.markRead(transaction, ideaId, user.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => StoryIdeaService.markRead(transaction, ideaId, user.id));
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

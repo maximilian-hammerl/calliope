@@ -1,20 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import { VISIBLE_GROUP_MEMBER } from "@/src/scope/chains.ts";
-import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
+import { MEMBERSHIPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import { VISIBLE_GROUP_MEMBER } from "#/src/scope/chains.ts";
+import { UserInWritingGroupService } from "#/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import {
-  USER_IN_WRITING_GROUP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { USER_IN_WRITING_GROUP_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const MEMBERSHIP_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -42,8 +39,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.Forbidden]: {
-        description:
-          "Not the current user's own membership, and not an administrator",
+        description: "Not the current user's own membership, and not an administrator",
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.NotFound]: {
@@ -69,13 +65,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const removed = await db.transaction().execute((transaction) =>
-      UserInWritingGroupService.deleteMembership(
-        transaction,
-        group.id,
-        member.userId,
-      )
-    );
+    const removed = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInWritingGroupService.deleteMembership(transaction, group.id, member.userId),
+      );
 
     if (!removed) {
       return c.json({ error: "Membership not found" }, STATUS_CODE.NotFound);

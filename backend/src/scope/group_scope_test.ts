@@ -7,14 +7,11 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { clearForum } from "@/src/test/forum.ts";
-import {
-  forumWithChildren,
-  groupWithChildren,
-} from "@/src/test/route_fixtures.ts";
-import { type User, UserService } from "@/src/service/user_service.ts";
-import { joinedGroup, visibleGroup } from "@/src/scope/group_scope.ts";
+} from "#/src/test/support.ts";
+import { clearForum } from "#/src/test/forum.ts";
+import { forumWithChildren, groupWithChildren } from "#/src/test/route_fixtures.ts";
+import { type User, UserService } from "#/src/service/user_service.ts";
+import { joinedGroup, visibleGroup } from "#/src/scope/group_scope.ts";
 
 const OWNER = "group-scope-owner";
 
@@ -27,11 +24,7 @@ afterEach(async () => {
 test("each resolver refuses a malformed id with the validators' 400", async () => {
   const cookie = await registerUser(OWNER);
   const group = await groupWithChildren(cookie, "Gruppe");
-  const forum = await forumWithChildren(
-    "Pfad",
-    "write",
-    await getUserId(OWNER),
-  );
+  const forum = await forumWithChildren("Pfad", "write", await getUserId(OWNER));
   const inGroup = `/api/groups/${group.groupId}`;
 
   // Every position a resolver reads, with the ids before it real.
@@ -57,7 +50,7 @@ test("each resolver refuses a malformed id with the validators' 400", async () =
   };
   for (const [method, path, name] of cases) {
     assert.deepEqual(
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
       await answered(method, path),
       {
         status: 400,
@@ -83,16 +76,8 @@ test("a group's id is handed on as the database writes it, whatever case the pat
       await next();
     });
   const probes = [
-    withUser().get(
-      "/:groupId",
-      visibleGroup,
-      (c) => c.json({ id: c.get("group").id }),
-    ),
-    withUser().get(
-      "/:groupId",
-      joinedGroup,
-      (c) => c.json({ id: c.get("group").id }),
-    ),
+    withUser().get("/:groupId", visibleGroup, (c) => c.json({ id: c.get("group").id })),
+    withUser().get("/:groupId", joinedGroup, (c) => c.json({ id: c.get("group").id })),
   ];
 
   const handedOn = async (probe: (typeof probes)[number]) => {
@@ -100,7 +85,7 @@ test("a group's id is handed on as the database writes it, whatever case the pat
     return (await response.json()).id;
   };
   for (const probe of probes) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one resolver per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one resolver per iteration
     assert.equal(await handedOn(probe), groupId);
   }
 });

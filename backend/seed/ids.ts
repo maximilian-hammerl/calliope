@@ -5,8 +5,7 @@
  * same id, which is how a user once shared an id with a notification. `assertDistinct` in
  * `write.ts` is the guard that makes this class of mistake impossible rather than fixed once.
  */
-const id = (suffix: string) =>
-  `01a00000-0000-7000-8000-${suffix.padStart(12, "0")}`;
+const id = (suffix: string) => `01a00000-0000-7000-8000-${suffix.padStart(12, "0")}`;
 
 const kind = (letter: string) => (n: number) => id(`${letter}${n}`);
 

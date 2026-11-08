@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 // Imported rather than read: a module load needs no file permission, and the test
 // task runs under the same restricted set the application does.
-import document from "@/open-api.json" with { type: "json" };
+import document from "#/open-api.json" with { type: "json" };
 
 /**
  * Text a request must supply has to say something, not merely be long enough. `min(1)` counts
@@ -76,11 +76,13 @@ test("every text a request must supply refuses whitespace alone", () => {
 
   for (const operations of Object.values(document.paths)) {
     for (const operation of Object.values(operations)) {
-      const schema = (operation as {
-        requestBody?: {
-          content?: { "application/json"?: { schema?: Schema } };
-        };
-      })?.requestBody?.content?.["application/json"]?.schema;
+      const schema = (
+        operation as {
+          requestBody?: {
+            content?: { "application/json"?: { schema?: Schema } };
+          };
+        }
+      )?.requestBody?.content?.["application/json"]?.schema;
 
       if (schema !== undefined) {
         requiredTextWithoutAPattern(
@@ -92,15 +94,11 @@ test("every text a request must supply refuses whitespace alone", () => {
     }
   }
 
-  const unguarded = [...found]
-    .filter((name) => !WHITESPACE_IS_LEGITIMATE.has(name))
-    .toSorted();
+  const unguarded = [...found].filter((name) => !WHITESPACE_IS_LEGITIMATE.has(name)).toSorted();
 
   assert.deepEqual(
     unguarded,
     [],
-    `these accept whitespace alone; wrap them in notBlank(): ${
-      unguarded.join(", ")
-    }`,
+    `these accept whitespace alone; wrap them in notBlank(): ${unguarded.join(", ")}`,
   );
 });

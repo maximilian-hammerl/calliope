@@ -1,25 +1,22 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { POST_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { FORUM_THREAD } from "@/src/scope/chains.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import { db } from "#/src/database/client.ts";
+import { POST_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { FORUM_THREAD } from "#/src/scope/chains.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import {
-  WRITING_POST_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_POST_SCHEMA, WRITING_THREAD_SCHEMA } from "#/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({ threadId: WRITING_THREAD_SCHEMA.shape.id });
 
@@ -71,32 +68,22 @@ export default new OpenAPIHono().openapi(
     if (text.length === 0 || text.length > TEXT_LIMIT.documentText) {
       return c.json(
         {
-          error:
-            `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
+          error: `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
         },
         STATUS_CODE.BadRequest,
       );
     }
 
     // A post carries no permission of its own; the thread it is in is what governs it.
-    if (
-      !mayActInForum(user, thread.effectiveMemberPermission, "post:create")
-    ) {
-      return c.json(
-        { error: "You cannot write in this thread" },
-        STATUS_CODE.Forbidden,
-      );
+    if (!mayActInForum(user, thread.effectiveMemberPermission, "post:create")) {
+      return c.json({ error: "You cannot write in this thread" }, STATUS_CODE.Forbidden);
     }
 
-    const post = await db.transaction().execute((transaction) =>
-      ForumService.insertPost(
-        transaction,
-        thread.id,
-        document,
-        isDraft,
-        user.id,
-      )
-    );
+    const post = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.insertPost(transaction, thread.id, document, isDraft, user.id),
+      );
 
     return c.json(post, STATUS_CODE.Created);
   },

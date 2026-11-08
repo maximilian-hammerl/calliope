@@ -1,35 +1,30 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { POST_RESPONSE } from "@/src/http/response_schema.ts";
-import { POSTS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP_THREAD } from "@/src/scope/chains.ts";
-import { WritingPostService } from "@/src/service/writing_post_service.ts";
-import {
-  FAVOURITE_FILTER,
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { POST_RESPONSE } from "#/src/http/response_schema.ts";
+import { POSTS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP_THREAD } from "#/src/scope/chains.ts";
+import { WritingPostService } from "#/src/service/writing_post_service.ts";
+import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 import {
   WRITING_GROUP_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
   threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
-const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = WRITING_POST_SCHEMA.keyof()
   .extract(["createdAt"])
   .default("createdAt")
   // Oldest first by default, because a thread reads in the order it was written.
@@ -40,10 +35,14 @@ const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
  * Passing `true` returns the caller's own drafts — `readableBy` already makes another
  * member's draft unreachable, whatever is asked for here.
  */
-const LIST_POSTS_BODY = listQuerySchema(SORT_ATTRIBUTE, {
-  favourite: FAVOURITE_FILTER,
-  isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
-}, "asc");
+const LIST_POSTS_BODY = listQuerySchema(
+  SORT_ATTRIBUTE,
+  {
+    favourite: FAVOURITE_FILTER,
+    isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
+  },
+  "asc",
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({

@@ -1,21 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { PAGES_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP_PAGE } from "@/src/scope/chains.ts";
-import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { PAGES_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP_PAGE } from "#/src/scope/chains.ts";
+import { WritingPageService } from "#/src/service/writing_page_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_PAGE_SCHEMA } from "#/src/database/schema.ts";
 
 const PAGE_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -62,9 +59,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    await db.transaction().execute((transaction) =>
-      WritingPageService.deletePage(transaction, group.id, c.get("page").id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) =>
+        WritingPageService.deletePage(transaction, group.id, c.get("page").id),
+      );
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

@@ -19,7 +19,7 @@
  * trap is closed at the source; see the `typeMapping` note in `database/.kysely-codegenrc.ts`.
  */
 import { z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 /** A tree costs nothing to send and plenty to walk, so both dimensions are bounded. */
 const MAX_DEPTH = 20;
@@ -36,10 +36,7 @@ const MAX_NODES = 10_000;
  * refuses the whole post, which is what jammed the composer on the testing instance.
  */
 function unset<T extends z.ZodType>(schema: T) {
-  return z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    schema.nullish(),
-  );
+  return z.preprocess((value) => (value === "" ? undefined : value), schema.nullish());
 }
 
 // Free values, so each is a real predicate rather than `z.string()`. Nothing here is ever
@@ -58,38 +55,43 @@ const FUNCTIONAL = new RegExp(
 const KEYWORD = /[a-z]{3,20}/;
 
 const COLOUR = unset(
-  z.string().max(60).regex(
-    new RegExp(`^(${HEX.source}|${FUNCTIONAL.source}|${KEYWORD.source})$`, "i"),
-    "Not a colour",
-  ),
+  z
+    .string()
+    .max(60)
+    .regex(
+      new RegExp(`^(${HEX.source}|${FUNCTIONAL.source}|${KEYWORD.source})$`, "i"),
+      "Not a colour",
+    ),
 );
 
 /** A family name or a fallback list. Letters of any script, and nothing that closes a declaration. */
 const FONT_FAMILY = unset(
-  z.string().min(1).max(200).regex(
-    /^[\p{L}\p{N}\s,'"._-]+$/u,
-    "Not a font family list",
-  ),
+  z
+    .string()
+    .min(1)
+    .max(200)
+    .regex(/^[\p{L}\p{N}\s,'"._-]+$/u, "Not a font family list"),
 );
 
 const LENGTH_UNIT = "px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax";
 const FONT_SIZE = unset(
-  z.string().regex(
-    new RegExp(`^\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})$`),
-    "Not a length",
-  ),
+  z.string().regex(new RegExp(`^\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})$`), "Not a length"),
 );
 
 /** Unitless as the editor emits it, or as a paste or a stylesheet writes it. */
 const LINE_HEIGHT = unset(
-  z.string().regex(
-    new RegExp(`^(normal|\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})?)$`),
-    "Not a line height",
-  ),
+  z
+    .string()
+    .regex(new RegExp(`^(normal|\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})?)$`), "Not a line height"),
 );
 
 const TEXT_ALIGN = unset(z.enum(["left", "center", "right", "justify"]));
-const SAFE_TOKEN = unset(z.string().max(100).regex(/^[\w\s-]*$/u));
+const SAFE_TOKEN = unset(
+  z
+    .string()
+    .max(100)
+    .regex(/^[\w\s-]*$/u),
+);
 
 /**
  * The one place JSON storage does *not* remove the injection risk: a link is a URL the reader's
@@ -101,10 +103,10 @@ const SAFE_TOKEN = unset(z.string().max(100).regex(/^[\w\s-]*$/u));
 const HREF = z.httpUrl().max(2_000);
 
 /** Relative only until #31 gives an image somewhere to live. */
-const IMAGE_SRC = z.string().max(2_000).regex(
-  /^\/[\w\-./]*$/u,
-  "Only a relative path",
-);
+const IMAGE_SRC = z
+  .string()
+  .max(2_000)
+  .regex(/^\/[\w\-./]*$/u, "Only a relative path");
 
 /** One `textStyle` mark carries all five, which is how Tiptap models them — not a mark each. */
 const MARK_SCHEMA = z.discriminatedUnion("type", [
@@ -136,12 +138,14 @@ const MARK_SCHEMA = z.discriminatedUnion("type", [
 ]);
 
 /** `colwidth` is a pixel width per spanned column, which is why it is a list and not a number. */
-const CELL_ATTRIBUTES = z.strictObject({
-  colspan: unset(z.int().min(1).max(100)),
-  rowspan: unset(z.int().min(1).max(100)),
-  colwidth: unset(z.array(z.int().min(1).max(10_000)).max(100)),
-  align: TEXT_ALIGN,
-}).optional();
+const CELL_ATTRIBUTES = z
+  .strictObject({
+    colspan: unset(z.int().min(1).max(100)),
+    rowspan: unset(z.int().min(1).max(100)),
+    colwidth: unset(z.array(z.int().min(1).max(10_000)).max(100)),
+    align: TEXT_ALIGN,
+  })
+  .optional();
 
 /** `text` and `hardBreak` are the inline nodes, and ProseMirror lets either carry marks. */
 const INLINE_MARKS = z.array(MARK_SCHEMA).max(20).optional();
@@ -166,94 +170,95 @@ export type DocumentNode = {
  * the annotation — only a plain object infers without one — so it buys eleven deferral sites and
  * nothing else.
  */
-const NODE_SCHEMA: z.ZodType<DocumentNode, DocumentNode> = z.lazy(() =>
-  z.discriminatedUnion("type", [
-    z.strictObject({
-      type: z.literal("text"),
-      // A text node with no text is not something the editor produces.
-      text: z.string().min(1),
-      marks: INLINE_MARKS,
-    }),
-    z.strictObject({
-      type: z.literal("paragraph"),
-      attrs: z.strictObject({ textAlign: TEXT_ALIGN }).optional(),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("heading"),
-      // `textAlign` is a block attribute in Tiptap, not a mark — see the fixture.
-      attrs: z.strictObject({
-        level: z.int().min(1).max(6),
-        textAlign: TEXT_ALIGN,
-      }),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("bulletList"),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("orderedList"),
-      attrs: z.strictObject({
-        start: unset(z.int().min(1).max(10_000)),
-        type: unset(z.enum(["a", "A", "i", "I", "1"])),
-      }).optional(),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("listItem"),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("blockquote"),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("codeBlock"),
-      attrs: z.strictObject({ language: SAFE_TOKEN }).optional(),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({ type: z.literal("horizontalRule") }),
-    z.strictObject({ type: z.literal("hardBreak"), marks: INLINE_MARKS }),
-    z.strictObject({
-      type: z.literal("image"),
-      attrs: z.strictObject({
-        src: IMAGE_SRC,
-        alt: unset(z.string().max(1_000)),
-        title: unset(z.string().max(500)),
-        width: unset(z.int().min(1).max(10_000)),
-        height: unset(z.int().min(1).max(10_000)),
-      }),
-    }),
-    z.strictObject({
-      type: z.literal("table"),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("tableRow"),
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("tableHeader"),
-      attrs: CELL_ATTRIBUTES,
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-    z.strictObject({
-      type: z.literal("tableCell"),
-      attrs: CELL_ATTRIBUTES,
-      content: z.array(NODE_SCHEMA).optional(),
-    }),
-  ])
-  // Named at the recursion point, not only on the document: an unnamed cycle sends
-  // zod-to-openapi into infinite inlining, which is a stack overflow rather than an error.
-).openapi("DocumentNode");
+const NODE_SCHEMA: z.ZodType<DocumentNode, DocumentNode> = z
+  .lazy(
+    () =>
+      z.discriminatedUnion("type", [
+        z.strictObject({
+          type: z.literal("text"),
+          // A text node with no text is not something the editor produces.
+          text: z.string().min(1),
+          marks: INLINE_MARKS,
+        }),
+        z.strictObject({
+          type: z.literal("paragraph"),
+          attrs: z.strictObject({ textAlign: TEXT_ALIGN }).optional(),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("heading"),
+          // `textAlign` is a block attribute in Tiptap, not a mark — see the fixture.
+          attrs: z.strictObject({
+            level: z.int().min(1).max(6),
+            textAlign: TEXT_ALIGN,
+          }),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("bulletList"),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("orderedList"),
+          attrs: z
+            .strictObject({
+              start: unset(z.int().min(1).max(10_000)),
+              type: unset(z.enum(["a", "A", "i", "I", "1"])),
+            })
+            .optional(),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("listItem"),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("blockquote"),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("codeBlock"),
+          attrs: z.strictObject({ language: SAFE_TOKEN }).optional(),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({ type: z.literal("horizontalRule") }),
+        z.strictObject({ type: z.literal("hardBreak"), marks: INLINE_MARKS }),
+        z.strictObject({
+          type: z.literal("image"),
+          attrs: z.strictObject({
+            src: IMAGE_SRC,
+            alt: unset(z.string().max(1_000)),
+            title: unset(z.string().max(500)),
+            width: unset(z.int().min(1).max(10_000)),
+            height: unset(z.int().min(1).max(10_000)),
+          }),
+        }),
+        z.strictObject({
+          type: z.literal("table"),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("tableRow"),
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("tableHeader"),
+          attrs: CELL_ATTRIBUTES,
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+        z.strictObject({
+          type: z.literal("tableCell"),
+          attrs: CELL_ATTRIBUTES,
+          content: z.array(NODE_SCHEMA).optional(),
+        }),
+      ]),
+    // Named at the recursion point, not only on the document: an unnamed cycle sends
+    // zod-to-openapi into infinite inlining, which is a stack overflow rather than an error.
+  )
+  .openapi("DocumentNode");
 
 /** Counts nodes and depth in one walk, so a pathological tree is refused rather than walked twice. */
-function withinBounds(
-  node: DocumentNode,
-  depth: number,
-  counted: { nodes: number },
-): boolean {
+function withinBounds(node: DocumentNode, depth: number, counted: { nodes: number }): boolean {
   if (depth > MAX_DEPTH) {
     return false;
   }
@@ -263,9 +268,7 @@ function withinBounds(
     return false;
   }
 
-  return (node.content ?? []).every((child) =>
-    withinBounds(child, depth + 1, counted)
-  );
+  return (node.content ?? []).every((child) => withinBounds(child, depth + 1, counted));
 }
 
 /**
@@ -273,10 +276,11 @@ function withinBounds(
  * `src/api/textLimit.ts` — the interface has to be able to say a post is too long before sending
  * one. The route enforces it, since only the route can extract the text.
  */
-export const DOCUMENT_SCHEMA = z.strictObject({
-  type: z.literal("doc"),
-  content: z.array(NODE_SCHEMA).min(1),
-})
+export const DOCUMENT_SCHEMA = z
+  .strictObject({
+    type: z.literal("doc"),
+    content: z.array(NODE_SCHEMA).min(1),
+  })
   .refine(
     (document) => withinBounds(document, 0, { nodes: 0 }),
     `A document may not nest deeper than ${MAX_DEPTH} or hold more than ${MAX_NODES} nodes`,
@@ -301,9 +305,7 @@ function branchNames(union: unknown): string[] {
   const options = (union as { options?: unknown[] }).options ?? [];
 
   return options
-    .map((branch) =>
-      (branch as { shape?: { type?: { value?: unknown } } }).shape?.type?.value
-    )
+    .map((branch) => (branch as { shape?: { type?: { value?: unknown } } }).shape?.type?.value)
     .filter((name): name is string => typeof name === "string")
     .toSorted();
 }
@@ -312,9 +314,7 @@ export const DOCUMENT_VOCABULARY = {
   // `doc` is the document itself rather than a branch of the node union, so it is named here.
   nodes: [
     "doc",
-    ...branchNames(
-      (NODE_SCHEMA as unknown as { unwrap: () => unknown }).unwrap(),
-    ),
+    ...branchNames((NODE_SCHEMA as unknown as { unwrap: () => unknown }).unwrap()),
   ].toSorted(),
   marks: branchNames(MARK_SCHEMA),
 };

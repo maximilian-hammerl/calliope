@@ -1,35 +1,35 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { NOTIFICATION_RESPONSE } from "@/src/http/response_schema.ts";
-import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { NOTIFICATION_RESPONSE } from "#/src/http/response_schema.ts";
+import { NOTIFICATIONS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { NOTIFICATION_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { NOTIFICATION_SCHEMA } from "#/src/database/schema.ts";
 
 // Public attribute names are mapped to qualified columns, so the API never exposes the
 // schema, and only these values can ever reach `dynamic.ref`.
-const SORT_ATTRIBUTE = NOTIFICATION_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = NOTIFICATION_SCHEMA.keyof()
   .extract(["occurredAt"])
   .default("occurredAt")
   .transform((attribute) => `notification.${attribute}` as const);
 
-const LIST_NOTIFICATIONS_BODY = listQuerySchema(SORT_ATTRIBUTE, {
-  unreadOnly: z.boolean().default(false),
-}, "desc");
+const LIST_NOTIFICATIONS_BODY = listQuerySchema(
+  SORT_ATTRIBUTE,
+  {
+    unreadOnly: z.boolean().default(false),
+  },
+  "desc",
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({

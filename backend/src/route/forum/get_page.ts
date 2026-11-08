@@ -1,16 +1,16 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { FORUM_PAGE } from "@/src/scope/chains.ts";
+import { FORUM_PAGE_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { FORUM_PAGE } from "#/src/scope/chains.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_PAGE_SCHEMA } from "#/src/database/schema.ts";
 
 const PAGE_PARAMS = z.object({ pageId: WRITING_PAGE_SCHEMA.shape.id });
 

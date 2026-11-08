@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,7 +9,7 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "create-post-admin";
 const reader = "create-post-reader";
@@ -20,14 +20,11 @@ afterEach(() => deleteUsers([administrator, reader]));
 async function thread() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Beiträge");
-  const created = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    {
+  const created = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, {
       title: "Kapitel 1",
-    },
-  )).json();
+    })
+  ).json();
 
   return { adminCookie, group, thread: created };
 }

@@ -1,26 +1,21 @@
 import assert from "node:assert/strict";
-import { db } from "@/src/database/client.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import type { ForumPermission } from "@/src/database/schema.ts";
-import { createGroup, postBody, request } from "@/src/test/support.ts";
+import { db } from "#/src/database/client.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import { createGroup, postBody, request } from "#/src/test/support.ts";
 import {
   createForumFolder,
   createForumPage,
   createForumPost,
   createForumThread,
-} from "@/src/test/forum.ts";
+} from "#/src/test/forum.ts";
 
 /** What `parent_scope_test.ts` and `stranger_access_test.ts` build their rows and requests from. */
 
 export type Ids = Record<string, string>;
 
 /** Posts, and fails with the answer rather than later, as a row that is not there. */
-export async function createdOk(
-  cookie: string,
-  path: string,
-  body: unknown,
-  status = 201,
-) {
+export async function createdOk(cookie: string, path: string, body: unknown, status = 201) {
   const response = await request("POST", path, cookie, body);
   assert.equal(response.status, status, `POST ${path}`);
   return await response.json();
@@ -38,11 +33,7 @@ export async function groupWithChildren(
   const thread = await createdOk(cookie, `${base}/threads`, {
     title: "Kapitel",
   });
-  const post = await createdOk(
-    cookie,
-    `${base}/threads/${thread.id}/posts`,
-    postBody("Text"),
-  );
+  const post = await createdOk(cookie, `${base}/threads/${thread.id}/posts`, postBody("Text"));
   const page = await createdOk(cookie, `${base}/pages`, {
     title: "Figuren",
     document: plainTextToDocument("Liste"),
@@ -129,11 +120,9 @@ export const REQUEST_BODIES: Record<string, (ids: Ids) => unknown> = {
   "PATCH /api/groups/{groupId}/threads/{threadId}": () => ({
     title: "Umbenannt",
   }),
-  "POST /api/groups/{groupId}/threads/{threadId}/posts": () =>
-    postBody("Dazwischen"),
+  "POST /api/groups/{groupId}/threads/{threadId}/posts": () => postBody("Dazwischen"),
   "QUERY /api/groups/{groupId}/threads/{threadId}/posts": () => ({}),
-  "PATCH /api/groups/{groupId}/threads/{threadId}/posts/{postId}": () =>
-    postBody("Überschrieben"),
+  "PATCH /api/groups/{groupId}/threads/{threadId}/posts/{postId}": () => postBody("Überschrieben"),
   "PUT /api/groups/{groupId}/threads/{threadId}/folder": () => ({
     folderId: null,
   }),
@@ -145,8 +134,7 @@ export const REQUEST_BODIES: Record<string, (ids: Ids) => unknown> = {
   "PUT /api/forum/threads/{threadId}/folder": () => ({ folderId: null }),
   "QUERY /api/forum/threads/{threadId}/posts": () => ({}),
   "POST /api/forum/threads/{threadId}/posts": () => postBody("Dazwischen"),
-  "PATCH /api/forum/threads/{threadId}/posts/{postId}": () =>
-    postBody("Überschrieben"),
+  "PATCH /api/forum/threads/{threadId}/posts/{postId}": () => postBody("Überschrieben"),
   "PUT /api/forum/pages/{pageId}": pageSave,
   "PUT /api/forum/pages/{pageId}/folder": () => ({ folderId: null }),
   "POST /api/chats/{chatId}/memberships": (ids) => ({ userId: ids.inviteeId }),

@@ -1,12 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-} from "@/src/test/support.ts";
-import { createIdea, storyIdeaUsers } from "@/src/test/story_ideas.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser } from "#/src/test/support.ts";
+import { createIdea, storyIdeaUsers } from "#/src/test/story_ideas.ts";
 
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author } = storyIdeaUsers("create");
@@ -75,9 +71,10 @@ test("POST /api/story-ideas refuses a subgenre from a genre it does not carry", 
 
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "subgenres",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["subgenres"],
+  );
 });
 
 test("POST /api/story-ideas refuses a title of only whitespace", async () => {

@@ -1,20 +1,20 @@
 import { createMiddleware } from "hono/factory";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import type { User } from "@/src/service/user_service.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import type { User } from "#/src/service/user_service.ts";
 import {
   type ForumFolder,
   type ForumPage,
   ForumService,
   type ForumThread,
-} from "@/src/service/forum_service.ts";
-import { earlier, pathId } from "@/src/scope/group_scope.ts";
+} from "#/src/service/forum_service.ts";
+import { earlier, pathId } from "#/src/scope/group_scope.ts";
 import {
   type FolderId,
   type PageId,
   type Resolved,
   resolved,
   type ThreadId,
-} from "@/src/scope/scoped_id.ts";
+} from "#/src/scope/scoped_id.ts";
 
 /** The forum's resolvers, as `group_scope.ts` describes them. Its posts use `postInThread`. */
 
@@ -33,10 +33,7 @@ export const forumThread = createMiddleware<{
     return id;
   }
 
-  const thread = await ForumService.selectThread(
-    earlier(c.get("user"), "user"),
-    id,
-  );
+  const thread = await ForumService.selectThread(earlier(c.get("user"), "user"), id);
   if (thread === undefined) {
     return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
   }
@@ -71,9 +68,7 @@ export async function forumFolderOf(
   folderId: string,
 ): Promise<ScopedForumFolder | undefined> {
   const folder = await ForumService.selectFolder(user, folderId);
-  return folder === undefined
-    ? undefined
-    : resolved<ForumFolder, FolderId>(folder);
+  return folder === undefined ? undefined : resolved<ForumFolder, FolderId>(folder);
 }
 
 export const forumPage = createMiddleware<{
@@ -84,10 +79,7 @@ export const forumPage = createMiddleware<{
     return id;
   }
 
-  const page = await ForumService.selectPageForReader(
-    earlier(c.get("user"), "user"),
-    id,
-  );
+  const page = await ForumService.selectPageForReader(earlier(c.get("user"), "user"), id);
   if (page === undefined) {
     return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
   }

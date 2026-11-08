@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
 import {
   addMember,
   clearRateLimits,
@@ -10,7 +10,7 @@ import {
   registerUser,
   request,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "steps-test-admin";
 const writer = "steps-test-writer";
@@ -22,12 +22,9 @@ afterEach(() => deleteUsers([administrator, writer, reader, stranger]));
 
 async function groupWithStep(adminCookie: string) {
   const group = await createGroup(adminCookie, "Schrittmacher");
-  const created = await request(
-    "POST",
-    `/api/groups/${group.id}/steps`,
-    adminCookie,
-    { text: "Kapitel 2 anlegen" },
-  );
+  const created = await request("POST", `/api/groups/${group.id}/steps`, adminCookie, {
+    text: "Kapitel 2 anlegen",
+  });
   assert.equal(created.status, STATUS_CODE.Created);
   const step = await created.json();
   return { group, step };
@@ -48,12 +45,9 @@ test("POST /api/groups/{groupId}/steps refuses a reader with 403", async () => {
   const group = await createGroup(adminCookie, "Schrittmacher");
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/steps`,
-    readerCookie,
-    { text: "Sollte nicht gehen" },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/steps`, readerCookie, {
+    text: "Sollte nicht gehen",
+  });
 
   // 403, not 404: the reader can see the group, so its existence is no secret.
   assert.equal(response.status, STATUS_CODE.Forbidden);
@@ -64,11 +58,7 @@ test("GET /api/groups/{groupId}/steps answers 404 for a stranger to a private gr
   const { group } = await groupWithStep(adminCookie);
   const strangerCookie = await registerUser(stranger);
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/steps`,
-    strangerCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/steps`, strangerCookie);
 
   assert.equal(response.status, STATUS_CODE.NotFound);
 });
@@ -78,11 +68,7 @@ test("GET /api/groups/{groupId}/steps lets a reader read", async () => {
   const { group } = await groupWithStep(adminCookie);
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/steps`,
-    readerCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/steps`, readerCookie);
 
   assert.equal(response.status, STATUS_CODE.OK);
   const { results } = await response.json();
@@ -94,24 +80,18 @@ test("PATCH ticks a step, and the first completer wins", async () => {
   const { group, step } = await groupWithStep(adminCookie);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
 
-  const ticked = await request(
-    "PATCH",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    writerCookie,
-    { done: true },
-  );
+  const ticked = await request("PATCH", `/api/groups/${group.id}/steps/${step.id}`, writerCookie, {
+    done: true,
+  });
   assert.equal(ticked.status, STATUS_CODE.OK);
   const first = await ticked.json();
   assert.equal(first.completedByUsername, writer);
   assert.ok(first.completedAt);
 
   // The admin ticking it again must not steal the completion.
-  const again = await request(
-    "PATCH",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    adminCookie,
-    { done: true },
-  );
+  const again = await request("PATCH", `/api/groups/${group.id}/steps/${step.id}`, adminCookie, {
+    done: true,
+  });
   assert.equal(again.status, STATUS_CODE.OK);
   const second = await again.json();
   assert.equal(second.completedByUsername, writer);
@@ -122,20 +102,12 @@ test("PATCH reopens a step, clearing both completion columns", async () => {
   const adminCookie = await registerUser(administrator);
   const { group, step } = await groupWithStep(adminCookie);
 
-  await request(
-    "PATCH",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    adminCookie,
-    {
-      done: true,
-    },
-  );
-  const reopened = await request(
-    "PATCH",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    adminCookie,
-    { done: false },
-  );
+  await request("PATCH", `/api/groups/${group.id}/steps/${step.id}`, adminCookie, {
+    done: true,
+  });
+  const reopened = await request("PATCH", `/api/groups/${group.id}/steps/${step.id}`, adminCookie, {
+    done: false,
+  });
 
   assert.equal(reopened.status, STATUS_CODE.OK);
   const body = await reopened.json();
@@ -179,21 +151,13 @@ test("DELETE allows the creator and an administrator, but not another writer", a
   const group = await createGroup(adminCookie, "Schrittmacher");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
 
-  const created = await request(
-    "POST",
-    `/api/groups/${group.id}/steps`,
-    writerCookie,
-    { text: "Vom Schreiber" },
-  );
+  const created = await request("POST", `/api/groups/${group.id}/steps`, writerCookie, {
+    text: "Vom Schreiber",
+  });
   const step = await created.json();
 
   // Another member who neither created it nor administers may not delete it.
-  const readerTurnedWriter = await addMember(
-    adminCookie,
-    group.id,
-    reader,
-    "writer",
-  );
+  const readerTurnedWriter = await addMember(adminCookie, group.id, reader, "writer");
   const refused = await request(
     "DELETE",
     `/api/groups/${group.id}/steps/${step.id}`,
@@ -214,27 +178,17 @@ test("a completed step survives its completer's account deletion", async () => {
   const { group, step } = await groupWithStep(adminCookie);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
 
-  await request(
-    "PATCH",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    writerCookie,
-    {
-      done: true,
-    },
-  );
+  await request("PATCH", `/api/groups/${group.id}/steps/${step.id}`, writerCookie, {
+    done: true,
+  });
 
   // The completer's account goes; SET NULL fires, and the CHECK must allow a completion
   // time without a completer — the asymmetry the constraint exists to permit.
   await write((transaction) =>
-    transaction
-      .deleteFrom("user").where("username", "=", writer).execute()
+    transaction.deleteFrom("user").where("username", "=", writer).execute(),
   );
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/steps`,
-    adminCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/steps`, adminCookie);
   const { results } = await response.json();
   assert.equal(results.length, 1);
   assert.ok(results[0].completedAt);
@@ -251,21 +205,13 @@ test("completing and creating steps moves no lastActivityAt", async () => {
     .where("id", "=", group.id)
     .executeTakeFirstOrThrow();
 
-  const created = await request(
-    "POST",
-    `/api/groups/${group.id}/steps`,
-    adminCookie,
-    { text: "Leise bleiben" },
-  );
+  const created = await request("POST", `/api/groups/${group.id}/steps`, adminCookie, {
+    text: "Leise bleiben",
+  });
   const step = await created.json();
-  await request(
-    "PATCH",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    adminCookie,
-    {
-      done: true,
-    },
-  );
+  await request("PATCH", `/api/groups/${group.id}/steps/${step.id}`, adminCookie, {
+    done: true,
+  });
 
   const after = await db
     .selectFrom("writingGroup")
@@ -287,19 +233,11 @@ test("DELETE refuses a writer who did not write the step", async () => {
   const { group, step } = await groupWithStep(adminCookie);
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
 
-  const refused = await request(
-    "DELETE",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    writerCookie,
-  );
+  const refused = await request("DELETE", `/api/groups/${group.id}/steps/${step.id}`, writerCookie);
   assert.equal(refused.status, STATUS_CODE.Forbidden);
 
   // Still there, and its own author may remove it.
-  const byAuthor = await request(
-    "DELETE",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    adminCookie,
-  );
+  const byAuthor = await request("DELETE", `/api/groups/${group.id}/steps/${step.id}`, adminCookie);
   assert.equal(byAuthor.status, STATUS_CODE.OK);
 });
 
@@ -308,12 +246,11 @@ test("DELETE lets an administrator remove somebody else's step", async () => {
   const group = await createGroup(adminCookie, "Schrittmacher");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
 
-  const theirs = await (await request(
-    "POST",
-    `/api/groups/${group.id}/steps`,
-    writerCookie,
-    { text: "Von jemand anderem" },
-  )).json();
+  const theirs = await (
+    await request("POST", `/api/groups/${group.id}/steps`, writerCookie, {
+      text: "Von jemand anderem",
+    })
+  ).json();
 
   const response = await request(
     "DELETE",

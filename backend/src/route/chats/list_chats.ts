@@ -1,37 +1,28 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import {
-  FAVOURITE_FILTER,
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { CHAT_GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { CHATS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { CHAT_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { CHAT_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 // Public attribute names are mapped to qualified columns, so the API never exposes the
 // schema, and only these values can ever reach `dynamic.ref`.
-const SORT_ATTRIBUTE = CHAT_GROUP_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = CHAT_GROUP_SCHEMA.keyof()
   .extract(["lastActivityAt", "createdAt", "title"])
   .default("lastActivityAt")
   .transform((attribute) => `chatGroup.${attribute}` as const);
 
-const LIST_CHATS_BODY = listQuerySchema(
-  SORT_ATTRIBUTE,
-  { favourite: FAVOURITE_FILTER },
-  "desc",
-);
+const LIST_CHATS_BODY = listQuerySchema(SORT_ATTRIBUTE, { favourite: FAVOURITE_FILTER }, "desc");
 
 export default new OpenAPIHono().openapi(
   createRoute({

@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { notBlank } from "@/src/http/request_schema.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
 import {
   FORUM_PAGE_SUMMARY_RESPONSE,
   FORUM_THREAD_RESPONSE,
@@ -8,26 +8,26 @@ import {
   GROUP_RESPONSE,
   LISTED_MEMBER_RESPONSE,
   STORY_IDEA_RESPONSE,
-} from "@/src/http/response_schema.ts";
-import { SEARCH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
-import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { listResponseSchema } from "@/src/list/list_endpoint.ts";
-import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
+} from "#/src/http/response_schema.ts";
+import { SEARCH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { WritingGroupService } from "#/src/service/writing_group_service.ts";
+import { WritingThreadService } from "#/src/service/writing_thread_service.ts";
+import { WritingPageService } from "#/src/service/writing_page_service.ts";
+import { StoryIdeaService } from "#/src/service/story_idea_service.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { listResponseSchema } from "#/src/list/list_endpoint.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "#/src/text_limit.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 /**
  * Small on purpose: this fills a popover under the search field, not a page. Each section
@@ -61,8 +61,7 @@ export default new OpenAPIHono().openapi(
     method: "query",
     path: "/",
     tags: [SEARCH_TAG],
-    summary:
-      "Search groups, threads, pages, the public forum, story ideas and members at once",
+    summary: "Search groups, threads, pages, the public forum, story ideas and members at once",
     description:
       "Runs one search across everything the current user may see and returns the matches grouped by kind, each with the total number found. A writing group's threads and pages and the public forum's are separate kinds, so neither can crowd the other out of a limit they shared. Story ideas include the reader's own and closed ones, which the interface labels. Posts, chat messages and next steps are not searched.",
     operationId: "search",
@@ -94,74 +93,68 @@ export default new OpenAPIHono().openapi(
     // Read before the searches, so the member filter has it and the others are unaffected.
     const blockedIds = await BlockService.selectBlockedIds(user.id);
 
-    const [
-      groups,
-      threads,
-      pages,
-      forumThreads,
-      forumPages,
-      storyIdeas,
-      users,
-    ] = await Promise.all([
-      WritingGroupService.listVisibleWritingGroups(user, {
-        search,
-        limit,
-        offset: 0,
-        // Most recently active first: the closest thing to relevance without ranking.
-        sort: [{ attribute: "writingGroup.lastActivityAt", order: "desc" }],
-        // Search looks everywhere the reader may look, which is what the default narrows.
-        membership: "any",
-        // Search ranks by relevance to the term, not by what the reader keeps.
-        favourite: "any",
-      }),
-      WritingThreadService.listVisibleThreads(user, {
-        search,
-        limit,
-        offset: 0,
-        sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
-      }),
-      WritingPageService.listVisiblePages(user, {
-        search,
-        limit,
-        offset: 0,
-        // As threads sort: most recently written in first, which a page's own column carries.
-        sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
-      }),
-      ForumService.searchThreads(user, {
-        search,
-        limit,
-        offset: 0,
-        sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
-      }),
-      ForumService.searchPages(user, {
-        search,
-        limit,
-        offset: 0,
-        sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
-      }),
-      StoryIdeaService.listStoryIdeas({
-        search,
-        limit,
-        offset: 0,
-        readerId: user.id,
-        // Newest first, as the board sorts: an idea has no activity to be recent by.
-        sort: [{ attribute: "storyIdea.createdAt", order: "desc" }],
-        // Unlike the board, neither the reader's own ideas nor closed ones are held back —
-        // somebody searching for an idea wants the one they mean, and both carry a label.
-        status: "any",
-        // Read or marked is the reader's own bookkeeping, not a reason to hide a match.
-        readerState: "any",
-        favourite: "any",
-        hiddenAuthorIds: blockedIds,
-      }),
-      UserService.listUsers({
-        search,
-        limit,
-        offset: 0,
-        sort: [{ attribute: "user.username", order: "asc" }],
-        hiddenUserIds: blockedIds,
-      }),
-    ]);
+    const [groups, threads, pages, forumThreads, forumPages, storyIdeas, users] = await Promise.all(
+      [
+        WritingGroupService.listVisibleWritingGroups(user, {
+          search,
+          limit,
+          offset: 0,
+          // Most recently active first: the closest thing to relevance without ranking.
+          sort: [{ attribute: "writingGroup.lastActivityAt", order: "desc" }],
+          // Search looks everywhere the reader may look, which is what the default narrows.
+          membership: "any",
+          // Search ranks by relevance to the term, not by what the reader keeps.
+          favourite: "any",
+        }),
+        WritingThreadService.listVisibleThreads(user, {
+          search,
+          limit,
+          offset: 0,
+          sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
+        }),
+        WritingPageService.listVisiblePages(user, {
+          search,
+          limit,
+          offset: 0,
+          // As threads sort: most recently written in first, which a page's own column carries.
+          sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
+        }),
+        ForumService.searchThreads(user, {
+          search,
+          limit,
+          offset: 0,
+          sort: [{ attribute: "writingThread.lastActivityAt", order: "desc" }],
+        }),
+        ForumService.searchPages(user, {
+          search,
+          limit,
+          offset: 0,
+          sort: [{ attribute: "writingPage.lastActivityAt", order: "desc" }],
+        }),
+        StoryIdeaService.listStoryIdeas({
+          search,
+          limit,
+          offset: 0,
+          readerId: user.id,
+          // Newest first, as the board sorts: an idea has no activity to be recent by.
+          sort: [{ attribute: "storyIdea.createdAt", order: "desc" }],
+          // Unlike the board, neither the reader's own ideas nor closed ones are held back —
+          // somebody searching for an idea wants the one they mean, and both carry a label.
+          status: "any",
+          // Read or marked is the reader's own bookkeeping, not a reason to hide a match.
+          readerState: "any",
+          favourite: "any",
+          hiddenAuthorIds: blockedIds,
+        }),
+        UserService.listUsers({
+          search,
+          limit,
+          offset: 0,
+          sort: [{ attribute: "user.username", order: "asc" }],
+          hiddenUserIds: blockedIds,
+        }),
+      ],
+    );
 
     return c.json(
       { groups, threads, pages, forumThreads, forumPages, storyIdeas, users },

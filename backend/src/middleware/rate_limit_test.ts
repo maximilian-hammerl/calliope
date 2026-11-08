@@ -1,9 +1,9 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import { Hono } from "hono";
-import { redis } from "@/src/redis/client.ts";
-import { RATE_LIMIT_TEST_CLIENTS } from "@/src/test/support.ts";
+import { redis } from "#/src/redis/client.ts";
+import { RATE_LIMIT_TEST_CLIENTS } from "#/src/test/support.ts";
 import {
   RATE_LIMIT_KEY_PREFIX,
   READ_REQUESTS_PER_WINDOW,
@@ -32,13 +32,9 @@ function request(clientAddress: string, method: "GET" | "POST" = "GET") {
 }
 
 /** Spends a whole budget, so what is left of the other one can be asked about. */
-async function exhaust(
-  clientAddress: string,
-  method: "GET" | "POST",
-  requests: number,
-) {
+async function exhaust(clientAddress: string, method: "GET" | "POST", requests: number) {
   for (let sent = 0; sent < requests; sent++) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: the counter is the thing here
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: the counter is the thing here
     assert.equal((await request(clientAddress, method)).status, STATUS_CODE.OK);
   }
 }
@@ -55,21 +51,15 @@ test("a read reports the read budget, and a write the write budget", async () =>
   assert.ok(readHeader, "expected draft-7 RateLimit headers");
   assert.equal(
     readHeader,
-    `limit=${READ_REQUESTS_PER_WINDOW}, remaining=${
-      READ_REQUESTS_PER_WINDOW - 1
-    }, reset=900`,
+    `limit=${READ_REQUESTS_PER_WINDOW}, remaining=${READ_REQUESTS_PER_WINDOW - 1}, reset=900`,
   );
 
   // A separate address, so the read above cannot be what this one is counting.
-  const writeHeader = (await request("198.51.100.2", "POST")).headers.get(
-    "ratelimit",
-  );
+  const writeHeader = (await request("198.51.100.2", "POST")).headers.get("ratelimit");
   assert.ok(writeHeader);
   assert.equal(
     writeHeader,
-    `limit=${WRITE_REQUESTS_PER_WINDOW}, remaining=${
-      WRITE_REQUESTS_PER_WINDOW - 1
-    }, reset=900`,
+    `limit=${WRITE_REQUESTS_PER_WINDOW}, remaining=${WRITE_REQUESTS_PER_WINDOW - 1}, reset=900`,
   );
 });
 
@@ -109,9 +99,6 @@ test("a different client has its own budget", async () => {
   const clientAddress = "198.51.100.5";
   await exhaust(clientAddress, "GET", READ_REQUESTS_PER_WINDOW);
 
-  assert.equal(
-    (await request(clientAddress)).status,
-    STATUS_CODE.TooManyRequests,
-  );
+  assert.equal((await request(clientAddress)).status, STATUS_CODE.TooManyRequests);
   assert.equal((await request("198.51.100.6")).status, STATUS_CODE.OK);
 });

@@ -1,17 +1,13 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import sharp from "sharp";
-import { generate as uuidv7 } from "@std/uuid/v7";
-import { db } from "@/src/database/client.ts";
-import { FileStore } from "@/src/storage/file_store.ts";
-import { toAvatar } from "@/src/image/avatar_image.ts";
+import { randomUUIDv7 } from "node:crypto";
+import { utimes } from "node:fs/promises";
+import { db } from "#/src/database/client.ts";
+import { FileStore } from "#/src/storage/file_store.ts";
+import { toAvatar } from "#/src/image/avatar_image.ts";
 import { UserAvatarService } from "./user_avatar_service.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  write,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, write } from "#/src/test/support.ts";
 
 const USERNAMES = [
   "avatar-set",
@@ -29,7 +25,9 @@ async function picture(): Promise<Uint8Array> {
   return new Uint8Array(
     await sharp({
       create: { width: 300, height: 300, channels: 3, background: "#8a6a3a" },
-    }).png().toBuffer(),
+    })
+      .png()
+      .toBuffer(),
   );
 }
 
@@ -50,7 +48,7 @@ test("a picture is stored, and its bytes are on disk", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
 
   assert.equal(result.kind, "set");
@@ -69,15 +67,10 @@ test("what is not a picture is refused before anything is written", async () => 
   assert.equal(await toAvatar(notAnImage), undefined);
 
   const result = await write((transaction) =>
-    UserAvatarService.setAvatar(
-      transaction,
-      id,
-      notAnImage,
-      {
-        origin: "own_work",
-        credit: null,
-      },
-    )
+    UserAvatarService.setAvatar(transaction, id, notAnImage, {
+      origin: "own_work",
+      credit: null,
+    }),
   );
 
   assert.equal(result.kind, "not_an_image");
@@ -91,7 +84,7 @@ test("replacing a picture moves the row and leaves the old file", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const first = await UserAvatarService.selectAvatar(id);
   assert.ok(first);
@@ -100,7 +93,7 @@ test("replacing a picture moves the row and leaves the old file", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "licence",
       credit: "CC BY 4.0",
-    })
+    }),
   );
   const second = await UserAvatarService.selectAvatar(id);
   assert.ok(second);
@@ -117,17 +110,12 @@ test("deleting removes the row and leaves the file to the sweep", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const avatar = await UserAvatarService.selectAvatar(id);
   assert.ok(avatar);
 
-  assert.equal(
-    await write((transaction) =>
-      UserAvatarService.deleteAvatar(transaction, id)
-    ),
-    true,
-  );
+  assert.equal(await write((transaction) => UserAvatarService.deleteAvatar(transaction, id)), true);
   assert.equal(await UserAvatarService.selectAvatar(id), undefined);
   assert.notEqual(await FileStore.read(avatar.fileId), undefined);
 });
@@ -139,12 +127,12 @@ test("the sweep spares a referenced file and a recent orphan", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const avatar = await UserAvatarService.selectAvatar(id);
   assert.ok(avatar);
 
-  const orphan = uuidv7();
+  const orphan = randomUUIDv7();
   await FileStore.write(orphan, await picture());
 
   await UserAvatarService.sweepUnreferencedFiles();
@@ -157,7 +145,7 @@ test("the sweep spares a referenced file and a recent orphan", async () => {
 
 /** The other half: an orphan older than the grace period does go. */
 test("the sweep deletes an orphan past the grace period", async () => {
-  const orphan = uuidv7();
+  const orphan = randomUUIDv7();
   await FileStore.write(orphan, await picture());
 
   // Backdated rather than waited for. The sweep reads the file's own mtime, so this is the only
@@ -165,7 +153,7 @@ test("the sweep deletes an orphan past the grace period", async () => {
   // `utime` takes seconds or a `Date`, so the instant is converted only at that boundary.
   const longAgo = Temporal.Now.instant().subtract({ hours: 30 * 24 });
   const seconds = longAgo.epochMilliseconds / 1000;
-  await Deno.utime(`./.file-storage/${orphan}`, seconds, seconds);
+  await utimes(`./.file-storage/${orphan}`, seconds, seconds);
 
   const deleted = await UserAvatarService.sweepUnreferencedFiles();
 
@@ -180,14 +168,14 @@ test("the sweep spares a referenced file whatever its age", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const avatar = await UserAvatarService.selectAvatar(id);
   assert.ok(avatar);
 
   const longAgo = Temporal.Now.instant().subtract({ hours: 30 * 24 });
   const seconds = longAgo.epochMilliseconds / 1000;
-  await Deno.utime(`./.file-storage/${avatar.fileId}`, seconds, seconds);
+  await utimes(`./.file-storage/${avatar.fileId}`, seconds, seconds);
 
   await UserAvatarService.sweepUnreferencedFiles();
   assert.notEqual(await FileStore.read(avatar.fileId), undefined);

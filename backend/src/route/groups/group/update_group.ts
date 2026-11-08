@@ -1,45 +1,42 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { GROUPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { GROUPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { WritingGroupService } from "#/src/service/writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 import {
   notBlank,
   STORY_CONTENT_WARNINGS_SCHEMA,
   STORY_GENRES_SCHEMA,
   STORY_SUBGENRES_SCHEMA,
   STORY_TROPES_SCHEMA,
-} from "@/src/http/request_schema.ts";
+} from "#/src/http/request_schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
 // At least one field is required, otherwise the update would have nothing to set.
-const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
-  .pick({
-    title: true,
-    subtitle: true,
-    synopsis: true,
-    visibility: true,
-    storyStatus: true,
-    language: true,
-    tense: true,
-    perspective: true,
-  })
+const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA.pick({
+  title: true,
+  subtitle: true,
+  synopsis: true,
+  visibility: true,
+  storyStatus: true,
+  language: true,
+  tense: true,
+  perspective: true,
+})
   .extend({
     // The column only requires text; an empty title is not useful.
-    title: notBlank(
-      WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
-    ),
+    title: notBlank(WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle)),
     subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
     synopsis: WRITING_GROUP_SCHEMA.shape.synopsis.max(TEXT_LIMIT.groupSynopsis),
     // Private unless asked otherwise, per the "private by default" principle.
@@ -58,10 +55,9 @@ const UPDATE_GROUP_BODY = WRITING_GROUP_SCHEMA
     storySettings: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
   })
   .partial()
-  .refine(
-    (changes) => Object.values(changes).some((value) => value !== undefined),
-    { message: "Provide at least one field to update" },
-  );
+  .refine((changes) => Object.values(changes).some((value) => value !== undefined), {
+    message: "Provide at least one field to update",
+  });
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -105,10 +101,7 @@ export default new OpenAPIHono().openapi(
 
     // Visibility is checked first, so a group the user cannot see stays hidden rather
     // than being revealed by a 403.
-    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(
-      user,
-      groupId,
-    );
+    const writingGroup = await WritingGroupService.selectVisibleWritingGroup(user, groupId);
 
     if (writingGroup === undefined) {
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
@@ -117,20 +110,14 @@ export default new OpenAPIHono().openapi(
     const role = await WritingGroupService.selectRoleForUser(user, groupId);
 
     if (role !== "administrator") {
-      return c.json(
-        { error: "Only administrators can update a group" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Only administrators can update a group" }, STATUS_CODE.Forbidden);
     }
 
-    const updated = await db.transaction().execute((transaction) =>
-      WritingGroupService.updateWritingGroup(
-        transaction,
-        groupId,
-        changes,
-        user.id,
-      )
-    );
+    const updated = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingGroupService.updateWritingGroup(transaction, groupId, changes, user.id),
+      );
 
     if (updated === undefined) {
       return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);

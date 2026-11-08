@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { FAVOURITES_TAG } from "@/src/open_api_specification.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { FavouriteService } from "@/src/service/favourite_service.ts";
-import { FAVOURITE_TARGET_TYPES } from "@/src/query/favourite.ts";
+import { db } from "#/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { FAVOURITES_TAG } from "#/src/open_api_specification.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { FavouriteService } from "#/src/service/favourite_service.ts";
+import { FAVOURITE_TARGET_TYPES } from "#/src/query/favourite.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,7 +12,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 /**
  * One pair of routes for all five kinds rather than a `/favourite` under each of them. The act is
@@ -57,14 +57,11 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId } = c.req.valid("param");
 
-    const refusal = await db.transaction().execute((transaction) =>
-      FavouriteService.setFavourite(
-        transaction,
-        c.get("user"),
-        targetType,
-        targetId,
-      )
-    );
+    const refusal = await db
+      .transaction()
+      .execute((transaction) =>
+        FavouriteService.setFavourite(transaction, c.get("user"), targetType, targetId),
+      );
 
     return refusal === "not_found"
       ? c.json({ error: "Not found" }, STATUS_CODE.NotFound)

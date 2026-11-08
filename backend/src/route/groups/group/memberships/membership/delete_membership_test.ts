@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -9,7 +9,7 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "delete-membership-admin";
 const member = "delete-membership-member";
@@ -46,11 +46,7 @@ test("DELETE /api/groups/{groupId}/memberships/{userId} refuses a non-administra
   await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: memberId,
   });
-  await request(
-    "POST",
-    `/api/groups/${group.id}/memberships/me/accept`,
-    memberCookie,
-  );
+  await request("POST", `/api/groups/${group.id}/memberships/me/accept`, memberCookie);
 
   // A joined member is still not an administrator.
   const response = await request(
@@ -73,11 +69,7 @@ test("DELETE /api/groups/{groupId}/memberships/{userId} lets a member leave", as
   await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: memberId,
   });
-  await request(
-    "POST",
-    `/api/groups/${group.id}/memberships/me/accept`,
-    memberCookie,
-  );
+  await request("POST", `/api/groups/${group.id}/memberships/me/accept`, memberCookie);
 
   // A writer, not an administrator: allowed only because the row is their own.
   const response = await request(

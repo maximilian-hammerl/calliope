@@ -3,7 +3,8 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {
-      // A Deno project outside the workspace, with nothing here that knip could follow.
+      // Not yet: knip reports 124 unused exports and exported types here, many in the generated
+      // schema.ts.
       "ignore": ["backend/**"],
     },
     "frontend": {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,7 +8,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "move-thread-admin";
 const writer = "move-thread-writer";
@@ -18,22 +18,15 @@ afterEach(() => deleteUsers([administrator, writer]));
 
 async function aGroupWithThreadAndFolder(cookie: string) {
   const group = await createGroup(cookie, "Weltenbau");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    cookie,
-    { title: "Ankunft" },
-  )).json();
-  const folder = await (await request(
-    "POST",
-    `/api/groups/${group.id}/folders`,
-    cookie,
-    { title: "Weltenbau" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, cookie, { title: "Ankunft" })
+  ).json();
+  const folder = await (
+    await request("POST", `/api/groups/${group.id}/folders`, cookie, { title: "Weltenbau" })
+  ).json();
   // Read after the setup: creating the thread legitimately bumped the group, and the baseline
   // has to be what the group looked like immediately before the move.
-  const before = await (await request("GET", `/api/groups/${group.id}`, cookie))
-    .json();
+  const before = await (await request("GET", `/api/groups/${group.id}`, cookie)).json();
   return {
     group,
     thread,
@@ -44,8 +37,7 @@ async function aGroupWithThreadAndFolder(cookie: string) {
 
 test("PUT /threads/{threadId}/folder moves it and leaves its activity alone", async () => {
   const cookie = await registerUser(administrator);
-  const { group, thread, folder, groupActivityBefore } =
-    await aGroupWithThreadAndFolder(cookie);
+  const { group, thread, folder, groupActivityBefore } = await aGroupWithThreadAndFolder(cookie);
 
   const response = await request(
     "PUT",
@@ -60,8 +52,7 @@ test("PUT /threads/{threadId}/folder moves it and leaves its activity alone", as
   // Moving is not writing: the thread keeps its place in the order, and its group does too.
   assert.equal(moved.lastActivityAt, thread.lastActivityAt);
 
-  const groupAfter =
-    await (await request("GET", `/api/groups/${group.id}`, cookie)).json();
+  const groupAfter = await (await request("GET", `/api/groups/${group.id}`, cookie)).json();
   assert.equal(groupAfter.lastActivityAt, groupActivityBefore);
 });
 
@@ -69,12 +60,9 @@ test("PUT /threads/{threadId}/folder moves it back to the root", async () => {
   const cookie = await registerUser(administrator);
   const { group, thread, folder } = await aGroupWithThreadAndFolder(cookie);
 
-  await request(
-    "PUT",
-    `/api/groups/${group.id}/threads/${thread.id}/folder`,
-    cookie,
-    { folderId: folder.id },
-  );
+  await request("PUT", `/api/groups/${group.id}/threads/${thread.id}/folder`, cookie, {
+    folderId: folder.id,
+  });
   const response = await request(
     "PUT",
     `/api/groups/${group.id}/threads/${thread.id}/folder`,
@@ -90,12 +78,9 @@ test("PUT /threads/{threadId}/folder refuses a folder from another group", async
   const cookie = await registerUser(administrator);
   const { group, thread } = await aGroupWithThreadAndFolder(cookie);
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
-  const theirs = await (await request(
-    "POST",
-    `/api/groups/${elsewhere.id}/folders`,
-    cookie,
-    { title: "Fremd" },
-  )).json();
+  const theirs = await (
+    await request("POST", `/api/groups/${elsewhere.id}/folders`, cookie, { title: "Fremd" })
+  ).json();
 
   const response = await request(
     "PUT",

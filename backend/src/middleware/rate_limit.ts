@@ -1,9 +1,9 @@
 import type { Context } from "hono";
-import { clientAddress } from "@/src/util/client_address.ts";
+import { clientAddress } from "#/src/util/client_address.ts";
 import { rateLimiter, RedisStore } from "hono-rate-limiter";
-import { rateLimiterRedisClient } from "@/src/redis/client.ts";
-import type { RateLimitScope } from "@/src/http/response.ts";
-import { isReadMethod } from "@/src/http/method.ts";
+import { rateLimiterRedisClient } from "#/src/redis/client.ts";
+import type { RateLimitScope } from "#/src/http/response.ts";
+import { isReadMethod } from "#/src/http/method.ts";
 
 /**
  * Liveness probes run far more often than the limit allows — one every three seconds
@@ -35,11 +35,7 @@ function isRead(c: Context): boolean {
   return isReadMethod(c.req.method);
 }
 
-function budget(
-  scope: RateLimitScope,
-  limit: number,
-  countsThisRequest: (c: Context) => boolean,
-) {
+function budget(scope: RateLimitScope, limit: number, countsThisRequest: (c: Context) => boolean) {
   return rateLimiter({
     windowMs: WINDOW.total("milliseconds"),
     limit,
@@ -60,8 +56,4 @@ function budget(
 
 export const readRateLimit = budget("read", READ_REQUESTS_PER_WINDOW, isRead);
 
-export const writeRateLimit = budget(
-  "write",
-  WRITE_REQUESTS_PER_WINDOW,
-  (c) => !isRead(c),
-);
+export const writeRateLimit = budget("write", WRITE_REQUESTS_PER_WINDOW, (c) => !isRead(c));

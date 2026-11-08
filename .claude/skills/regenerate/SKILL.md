@@ -2,7 +2,7 @@
 name: regenerate
 description: Regenerate the type chain end to end — database types, the OpenAPI document, the frontend client — and report which links changed. Run after a migration or a route change.
 user-invocable: true
-allowed-tools: Bash(pnpm run types:generate), Bash(deno fmt src/database/schema.ts), Bash(git diff *), Bash(deno task open-api:generate), Bash(pnpm run open-api:generate-client), Bash(pnpm run type-check)
+allowed-tools: Bash(pnpm run types:generate), Bash(pnpm exec oxfmt src/database/schema.ts), Bash(git diff *), Bash(pnpm run open-api:generate), Bash(pnpm run open-api:generate-client), Bash(pnpm run type-check)
 ---
 
 The database is the origin of the types, so a change to one link has to be regenerated into every
@@ -10,9 +10,9 @@ link after it. Run the whole chain, in order, and report the diff at each step r
 at the first — a changed `schema.ts` means the two downstream links are stale too.
 
 1. `database/`: `pnpm run types:generate`
-2. `backend/`: `deno fmt src/database/schema.ts` — the generator's output is not fmt-clean, and
+2. `backend/`: `pnpm exec oxfmt src/database/schema.ts` — the generator's output is not oxfmt-clean, and
    without this step the file always shows as changed. Then `git diff --stat src/database/schema.ts`.
-3. `backend/`: `deno task open-api:generate`, then `git diff --stat open-api.json`. Generate with
+3. `backend/`: `pnpm run open-api:generate`, then `git diff --stat open-api.json`. Generate with
    `.example.env`'s values, as CI does: `PUBLIC_APP_NAME` and `APP_DESCRIPTION` become the
    document's title and description.
 4. `frontend/`: `pnpm run open-api:generate-client` — writes the git-ignored `src/api/` and

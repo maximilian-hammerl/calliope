@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,7 +9,7 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "delete-post-admin";
 const writer = "delete-post-writer";
@@ -22,21 +22,13 @@ async function postByWriter() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Beitrag");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    {
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, {
       title: "Kapitel 1",
-    },
-  )).json();
+    })
+  ).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
-  const post = await (await request(
-    "POST",
-    posts,
-    writerCookie,
-    postBody("Es war einmal"),
-  )).json();
+  const post = await (await request("POST", posts, writerCookie, postBody("Es war einmal"))).json();
 
   return { adminCookie, writerCookie, group, posts, post };
 }

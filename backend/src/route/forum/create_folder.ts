@@ -1,17 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf } from "@/src/scope/forum_scope.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import {
-  FOLDER_DESCRIPTION_SCHEMA,
-  FOLDER_TITLE_SCHEMA,
-} from "@/src/http/request_schema.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_FOLDER_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { forumFolderOf } from "#/src/scope/forum_scope.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "#/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -19,11 +16,8 @@ import {
   FOLDER_TOO_DEEP,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import {
-  FORUM_PERMISSION_SCHEMA,
-  WRITING_FOLDER_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { FORUM_PERMISSION_SCHEMA, WRITING_FOLDER_SCHEMA } from "#/src/database/schema.ts";
 
 const CREATE_FOLDER_BODY = z.object({
   title: FOLDER_TITLE_SCHEMA,
@@ -43,8 +37,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [FORUM_TAG],
     summary: "Add a folder to the public forum",
-    description:
-      `Operators only: the forum's structure has no owner below them, since it has no administrators. The permission it grants members is reduced by whatever is above it, so a folder cannot widen its parent. Nests at most ${MAX_FOLDER_DEPTH} levels deep.`,
+    description: `Operators only: the forum's structure has no owner below them, since it has no administrators. The permission it grants members is reduced by whatever is above it, so a folder cannot widen its parent. Nests at most ${MAX_FOLDER_DEPTH} levels deep.`,
     operationId: "createForumFolder",
     middleware: authenticated,
     request: {
@@ -73,10 +66,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const { title, description, parentFolderId, memberPermission } = c.req
-      .valid(
-        "json",
-      );
+    const { title, description, parentFolderId, memberPermission } = c.req.valid("json");
     const user = c.get("user");
 
     if (!mayActInForum(user, "folder:create")) {
@@ -86,9 +76,10 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const parent = parentFolderId === undefined || parentFolderId === null
-      ? null
-      : await forumFolderOf(user, parentFolderId);
+    const parent =
+      parentFolderId === undefined || parentFolderId === null
+        ? null
+        : await forumFolderOf(user, parentFolderId);
     if (parent === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
@@ -99,7 +90,7 @@ export default new OpenAPIHono().openapi(
         description: description ?? null,
         parentFolderId: parent?.id ?? null,
         memberPermission,
-      })
+      }),
     );
 
     if (outcome.kind === "noSuchParent") {

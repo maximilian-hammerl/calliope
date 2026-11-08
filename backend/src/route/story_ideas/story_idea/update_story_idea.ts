@@ -1,29 +1,27 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { STORY_IDEA_RESPONSE } from "@/src/http/response_schema.ts";
-import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
-import { STORY_IDEA_BODY } from "@/src/route/story_ideas/create_story_idea.ts";
+import { db } from "#/src/database/client.ts";
+import { STORY_IDEA_RESPONSE } from "#/src/http/response_schema.ts";
+import { STORY_IDEAS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { StoryIdeaService } from "#/src/service/story_idea_service.ts";
+import { STORY_IDEA_BODY } from "#/src/route/story_ideas/create_story_idea.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { STORY_IDEA_SCHEMA } from "#/src/database/schema.ts";
 
 const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
 
 // `.partial()` after the defaults, so an omitted field stays undefined and means unchanged —
 // a default materialising on PATCH is how tags once got cleared by every partial update.
-const UPDATE_STORY_IDEA_BODY = STORY_IDEA_BODY
-  .partial()
-  .refine(
-    (changes) => Object.values(changes).some((value) => value !== undefined),
-    { message: "Provide at least one field to update" },
-  );
+const UPDATE_STORY_IDEA_BODY = STORY_IDEA_BODY.partial().refine(
+  (changes) => Object.values(changes).some((value) => value !== undefined),
+  { message: "Provide at least one field to update" },
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -63,14 +61,16 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { ideaId } = c.req.valid("param");
 
-    const updated = await db.transaction().execute((transaction) =>
-      StoryIdeaService.updateStoryIdea(
-        transaction,
-        ideaId,
-        c.get("user").id,
-        c.req.valid("json"),
-      )
-    );
+    const updated = await db
+      .transaction()
+      .execute((transaction) =>
+        StoryIdeaService.updateStoryIdea(
+          transaction,
+          ideaId,
+          c.get("user").id,
+          c.req.valid("json"),
+        ),
+      );
 
     if (updated !== undefined) {
       return c.json(updated, STATUS_CODE.OK);

@@ -1,19 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  formatToken,
-  generateToken,
-  hashToken,
-  parseToken,
-} from "@/src/util/token.ts";
+import { formatToken, generateToken, hashToken, parseToken } from "#/src/util/token.ts";
 import { Buffer } from "node:buffer";
 
-test("every token is different", async () => {
-  const tokens = new Set(
-    await Promise.all(
-      Array.from({ length: 100 }, () => generateToken()),
-    ),
-  );
+test("every token is different", () => {
+  const tokens = new Set(Array.from({ length: 100 }, () => generateToken()));
   assert.equal(tokens.size, 100);
 });
 
@@ -59,23 +50,17 @@ test("a secret never contains the separator", () => {
 });
 
 test("anything that is not both halves does not parse", () => {
-  for (
-    const token of [
-      "",
-      "abc",
-      "abc.def",
-      ".only-a-secret",
-      // A valid uuid, but nothing after the separator.
-      "01a019ee-ab02-7a82-9796-3767b50ed584",
-      "01a019ee-ab02-7a82-9796-3767b50ed584.",
-      // A v4 uuid: the columns default to uuidv7, so this can never name a row.
-      "f7a3b1c2-9d4e-4f6a-8b2c-1e3d5f7a9b1c.secret",
-    ]
-  ) {
-    assert.equal(
-      parseToken(token),
-      undefined,
-      `expected ${token} not to parse`,
-    );
+  for (const token of [
+    "",
+    "abc",
+    "abc.def",
+    ".only-a-secret",
+    // A valid uuid, but nothing after the separator.
+    "01a019ee-ab02-7a82-9796-3767b50ed584",
+    "01a019ee-ab02-7a82-9796-3767b50ed584.",
+    // A v4 uuid: the columns default to uuidv7, so this can never name a row.
+    "f7a3b1c2-9d4e-4f6a-8b2c-1e3d5f7a9b1c.secret",
+  ]) {
+    assert.equal(parseToken(token), undefined, `expected ${token} not to parse`);
   }
 });

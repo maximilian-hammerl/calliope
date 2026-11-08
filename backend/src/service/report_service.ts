@@ -1,14 +1,14 @@
-import { db, type Transaction } from "@/src/database/client.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
 import type {
   ReportCategory,
   ReportOutcome,
   ReportStatus,
   ReportTargetType,
-} from "@/src/database/schema.ts";
-import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import { listResultsWithCount } from "@/src/list/list_endpoint_query.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
+} from "#/src/database/schema.ts";
+import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
+import { listResultsWithCount } from "#/src/list/list_endpoint_query.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { resolveVisibleTarget } from "#/src/service/visible_target.ts";
 
 /**
  * What a member has reported to the operators.
@@ -116,14 +116,14 @@ async function insertReport(
             // A literal, not a parameter: a prepared statement's generic plan cannot prove a
             // bound `$n` matches the index's `= 1`, and the upsert then finds no constraint.
             eb.lit(1),
-          )
+          ),
         )
         // The reason alone. The category cannot be rewritten because it is part of the key — a
         // different one is a different report — which is also what keeps this from overwriting a
         // report an operator is already holding with something about another subject entirely.
         // `target_excerpt` stays as it was first reported, so an author who edits what was
         // reported cannot overwrite the evidence through somebody else's re-report.
-        .doUpdateSet({ reason })
+        .doUpdateSet({ reason }),
     )
     .execute();
 
@@ -168,9 +168,7 @@ export type ReportFilters = {
   closingOutcome?: ReportOutcome;
 };
 
-function listReports(
-  query: ListQuery & ReportFilters,
-): Promise<ListResults<Report>> {
+function listReports(query: ListQuery & ReportFilters): Promise<ListResults<Report>> {
   return listResultsWithCount(
     db
       .selectFrom("report")
@@ -216,17 +214,21 @@ function listReports(
           .as("targetExists"),
       ])
       .$if(query.status !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
-        builder.where("report.status", "=", query.status!))
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` only runs this when it is set
+        builder.where("report.status", "=", query.status!),
+      )
       .$if(query.category !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
-        builder.where("report.category", "=", query.category!))
+        // oxlint-disable-next-line no-non-null-assertion -- as above
+        builder.where("report.category", "=", query.category!),
+      )
       .$if(query.targetType !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
-        builder.where("report.targetType", "=", query.targetType!))
+        // oxlint-disable-next-line no-non-null-assertion -- as above
+        builder.where("report.targetType", "=", query.targetType!),
+      )
       .$if(query.closingOutcome !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
-        builder.where("report.closingOutcome", "=", query.closingOutcome!)),
+        // oxlint-disable-next-line no-non-null-assertion -- as above
+        builder.where("report.closingOutcome", "=", query.closingOutcome!),
+      ),
     query,
   );
 }
@@ -239,10 +241,7 @@ export type ReportMove =
   | { toStatus: "in_progress" }
   | { toStatus: "closed"; outcome: ReportOutcome; note: string };
 
-export type ReportMoveRefusal =
-  | "not_found"
-  | "already_closed"
-  | "held_by_another";
+export type ReportMoveRefusal = "not_found" | "already_closed" | "held_by_another";
 
 /**
  * Moves a report and records the move in the same statement, because the record *is* the row: the
@@ -265,18 +264,18 @@ async function moveReport(
     .updateTable("report")
     .set(
       move.toStatus === "in_progress"
-        // Taking a report already taken is deliberately allowed, and overwrites the holder: the
-        // state says "somebody has this", and a lock nobody can pick strands a report the day its
-        // holder stops reading the queue. The cost is that only the last holder is recorded.
-        ? { operatorId, inProgressAt: now }
-        // Closing from `open` never sets `in_progress_at`, which is honest — nobody took it — and
-        // it still records who closed it, because `operator_id` is set either way.
-        : {
-          operatorId,
-          closedAt: now,
-          closingOutcome: move.outcome,
-          closingNote: move.note,
-        },
+        ? // Taking a report already taken is deliberately allowed, and overwrites the holder: the
+          // state says "somebody has this", and a lock nobody can pick strands a report the day its
+          // holder stops reading the queue. The cost is that only the last holder is recorded.
+          { operatorId, inProgressAt: now }
+        : // Closing from `open` never sets `in_progress_at`, which is honest — nobody took it — and
+          // it still records who closed it, because `operator_id` is set either way.
+          {
+            operatorId,
+            closedAt: now,
+            closingOutcome: move.outcome,
+            closingNote: move.note,
+          },
     )
     .where("id", "=", reportId)
     // Nothing moves a closed report. This is where reopening would have gone.
@@ -285,11 +284,9 @@ async function moveReport(
       // Only whoever holds it may close it, so two operators cannot both judge one case — or
       // anybody, once that account is gone, which is the whole of the escape hatch.
       builder.where((eb) =>
-        eb.or([
-          eb("operatorId", "is", null),
-          eb("operatorId", "=", operatorId),
-        ])
-      ))
+        eb.or([eb("operatorId", "is", null), eb("operatorId", "=", operatorId)]),
+      ),
+    )
     .returning("id")
     .executeTakeFirst();
 

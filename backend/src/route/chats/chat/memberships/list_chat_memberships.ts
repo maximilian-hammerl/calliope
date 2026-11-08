@@ -1,33 +1,26 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { CHAT_MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { CHATS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserInChatGroupService } from "#/src/service/user_in_chat_group_service.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import {
-  CHAT_GROUP_SCHEMA,
-  USER_IN_CHAT_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { CHAT_GROUP_SCHEMA, USER_IN_CHAT_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const CHAT_PARAMS = z.object({ chatId: CHAT_GROUP_SCHEMA.shape.id });
 
 // Public attribute names are mapped to qualified columns, so the API never exposes the
 // schema, and only these values can ever reach `dynamic.ref`.
-const SORT_ATTRIBUTE = USER_IN_CHAT_GROUP_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = USER_IN_CHAT_GROUP_SCHEMA.keyof()
   .extract(["joinedAt", "invitedAt", "status"])
   .default("invitedAt")
   .transform((attribute) => `userInChatGroup.${attribute}` as const);
@@ -80,10 +73,7 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Chat not found" }, STATUS_CODE.NotFound);
     }
 
-    const page = await UserInChatGroupService.listMembers(
-      chatId,
-      listQuery(c.req.valid("json")),
-    );
+    const page = await UserInChatGroupService.listMembers(chatId, listQuery(c.req.valid("json")));
 
     return c.json(page, STATUS_CODE.OK);
   },

@@ -1,15 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { NOTIFICATIONS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
+import { db } from "#/src/database/client.ts";
+import { NOTIFICATIONS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
 import {
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const READ_NOTIFICATIONS_RESPONSE = z.object({ read: z.number().int() });
 
@@ -37,9 +37,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const read = await db.transaction().execute((transaction) =>
-      NotificationService.markAllRead(transaction, c.get("user").id)
-    );
+    const read = await db
+      .transaction()
+      .execute((transaction) => NotificationService.markAllRead(transaction, c.get("user").id));
 
     return c.json({ read }, STATUS_CODE.OK);
   },

@@ -1,8 +1,8 @@
-import type { FolderId, GroupId } from "@/src/scope/scoped_id.ts";
+import type { FolderId, GroupId } from "#/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { planFolderMove } from "@/src/service/folder_move.ts";
-import type { WritingFolder as DatabaseWritingFolder } from "@/src/database/schema.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { planFolderMove } from "#/src/service/folder_move.ts";
+import type { WritingFolder as DatabaseWritingFolder } from "#/src/database/schema.ts";
 
 /** The deepest a member may nest: Weltenbau → Stadt → Viertel → Gebäude → Raum. */
 export const MAX_FOLDER_DEPTH = 5;
@@ -10,19 +10,12 @@ export const MAX_FOLDER_DEPTH = 5;
 export type Folder =
   // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
   // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
-  & { writingGroupId: string }
-  & Pick<
+  { writingGroupId: string } & Pick<
     Selectable<DatabaseWritingFolder>,
-    | "id"
-    | "parentFolderId"
-    | "depth"
-    | "title"
-    | "description"
-    | "createdBy"
-    | "createdAt"
-  >
-  // Null once an account is gone: `created_by` is ON DELETE SET NULL.
-  & { createdByUsername: string | null };
+    "id" | "parentFolderId" | "depth" | "title" | "description" | "createdBy" | "createdAt"
+  > &
+    // Null once an account is gone: `created_by` is ON DELETE SET NULL.
+    { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "writingFolder.id",
@@ -167,25 +160,34 @@ async function deleteFolder(
     .where("writingGroupId", "=", writingGroupId)
     .where("id", "=", folderId)
     .where((eb) =>
-      eb.not(eb.exists(
-        eb.selectFrom("writingFolder as child")
-          .select("child.id")
-          .whereRef("child.parentFolderId", "=", "writingFolder.id"),
-      ))
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("writingFolder as child")
+            .select("child.id")
+            .whereRef("child.parentFolderId", "=", "writingFolder.id"),
+        ),
+      ),
     )
     .where((eb) =>
-      eb.not(eb.exists(
-        eb.selectFrom("writingPage")
-          .select("writingPage.id")
-          .whereRef("writingPage.folderId", "=", "writingFolder.id"),
-      ))
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("writingPage")
+            .select("writingPage.id")
+            .whereRef("writingPage.folderId", "=", "writingFolder.id"),
+        ),
+      ),
     )
     .where((eb) =>
-      eb.not(eb.exists(
-        eb.selectFrom("writingThread")
-          .select("writingThread.id")
-          .whereRef("writingThread.folderId", "=", "writingFolder.id"),
-      ))
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("writingThread")
+            .select("writingThread.id")
+            .whereRef("writingThread.folderId", "=", "writingFolder.id"),
+        ),
+      ),
     )
     .executeTakeFirst();
 
@@ -263,9 +265,7 @@ async function moveFolder(
 
   const folder = await selectFolder(writingGroupId, folderId, transaction);
   if (folder === undefined) {
-    throw new Error(
-      `Folder ${folderId} could not be read back after moving it`,
-    );
+    throw new Error(`Folder ${folderId} could not be read back after moving it`);
   }
   return { kind: "moved", folder };
 }

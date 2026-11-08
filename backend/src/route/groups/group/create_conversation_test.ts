@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,7 +9,7 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const founder = "group-conversation-test-founder";
 const second = "group-conversation-test-zweite";
@@ -34,16 +34,10 @@ test("POST /api/groups/{id}/conversations invites every joined administrator", a
   assert.equal(chat.title, "Gruppe: Offene Runde");
   assert.equal(chat.status, "joined");
 
-  const members = await (await request(
-    "QUERY",
-    `/api/chats/${chat.id}/memberships`,
-    other,
-    {},
-  )).json();
-  const byStatus = Object.groupBy(
-    members.results,
-    (member: { status: string }) => member.status,
-  );
+  const members = await (
+    await request("QUERY", `/api/chats/${chat.id}/memberships`, other, {})
+  ).json();
+  const byStatus = Object.groupBy(members.results, (member: { status: string }) => member.status);
 
   // The asker, joined — plus both administrators, each holding their own invitation.
   assert.equal(byStatus.joined?.length, 1);
@@ -58,30 +52,20 @@ test("POST /api/groups/{id}/conversations does not invite writers", async () => 
   const other = await registerUser(stranger);
   const chat = await (await startConversation(other, group.id)).json();
 
-  const members = await (await request(
-    "QUERY",
-    `/api/chats/${chat.id}/memberships`,
-    other,
-    {},
-  )).json();
+  const members = await (
+    await request("QUERY", `/api/chats/${chat.id}/memberships`, other, {})
+  ).json();
 
   // Only the founder is invited: asking in is administrators' business.
   assert.equal(members.results.length, 2);
-  const invited = members.results.find(
-    (member: { status: string }) => member.status === "invited",
-  );
+  const invited = members.results.find((member: { status: string }) => member.status === "invited");
   assert.equal(invited.username, founder);
 });
 
 test("POST /api/groups/{id}/conversations skips a blocked administrator", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Zwei Verwaltende", "public");
-  const secondCookie = await addMember(
-    cookie,
-    group.id,
-    second,
-    "administrator",
-  );
+  const secondCookie = await addMember(cookie, group.id, second, "administrator");
 
   const other = await registerUser(stranger);
   // One of the two wants nothing to do with the asker; the other still can be reached.
@@ -90,12 +74,9 @@ test("POST /api/groups/{id}/conversations skips a blocked administrator", async 
   });
 
   const chat = await (await startConversation(other, group.id)).json();
-  const members = await (await request(
-    "QUERY",
-    `/api/chats/${chat.id}/memberships`,
-    other,
-    {},
-  )).json();
+  const members = await (
+    await request("QUERY", `/api/chats/${chat.id}/memberships`, other, {})
+  ).json();
   const invited = members.results.filter(
     (member: { status: string }) => member.status === "invited",
   );
@@ -145,12 +126,10 @@ test("POST /api/groups/{id}/conversations refuses somebody holding an invitation
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Schon eingeladen", "public");
   const invited = await registerUser(stranger);
-  const invitation = await request(
-    "POST",
-    `/api/groups/${group.id}/memberships`,
-    cookie,
-    { userId: await getUserId(stranger), role: "writer" },
-  );
+  const invitation = await request("POST", `/api/groups/${group.id}/memberships`, cookie, {
+    userId: await getUserId(stranger),
+    role: "writer",
+  });
   assert.equal(invitation.status, STATUS_CODE.Created);
 
   const response = await startConversation(invited, group.id);

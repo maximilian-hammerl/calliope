@@ -1,20 +1,12 @@
-import type { GroupId, StepId } from "@/src/scope/scoped_id.ts";
+import type { GroupId, StepId } from "#/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { WritingGroupNextStep as DatabaseStep } from "@/src/database/schema.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { WritingGroupNextStep as DatabaseStep } from "#/src/database/schema.ts";
 
-export type NextStep =
-  & Pick<
-    Selectable<DatabaseStep>,
-    | "id"
-    | "writingGroupId"
-    | "text"
-    | "createdBy"
-    | "completedAt"
-    | "completedBy"
-    | "createdAt"
-  >
-  & { createdByUsername: string | null; completedByUsername: string | null };
+export type NextStep = Pick<
+  Selectable<DatabaseStep>,
+  "id" | "writingGroupId" | "text" | "createdBy" | "completedAt" | "completedBy" | "createdAt"
+> & { createdByUsername: string | null; completedByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "writingGroupNextStep.id",
@@ -31,11 +23,7 @@ function stepsWithNames(executor: typeof db | Transaction = db) {
   return executor
     .selectFrom("writingGroupNextStep")
     .leftJoin("user as creator", "creator.id", "writingGroupNextStep.createdBy")
-    .leftJoin(
-      "user as completer",
-      "completer.id",
-      "writingGroupNextStep.completedBy",
-    )
+    .leftJoin("user as completer", "completer.id", "writingGroupNextStep.completedBy")
     .select([
       ...SELECTED_COLUMNS,
       "creator.username as createdByUsername",
@@ -87,9 +75,9 @@ async function setCompleted(
     .set(
       done
         ? {
-          completedAt: Temporal.Now.instant().toString(),
-          completedBy: userId,
-        }
+            completedAt: Temporal.Now.instant().toString(),
+            completedBy: userId,
+          }
         : { completedAt: null, completedBy: null },
     )
     .where("id", "=", stepId)
@@ -102,20 +90,14 @@ async function setCompleted(
 }
 
 /** Only under its own group, so a step id from another group finds nothing. */
-async function selectStep(
-  writingGroupId: GroupId,
-  stepId: string,
-): Promise<NextStep | undefined> {
+async function selectStep(writingGroupId: GroupId, stepId: string): Promise<NextStep | undefined> {
   return await stepsWithNames()
     .where("writingGroupNextStep.writingGroupId", "=", writingGroupId)
     .where("writingGroupNextStep.id", "=", stepId)
     .executeTakeFirst();
 }
 
-async function deleteStep(
-  transaction: Transaction,
-  stepId: StepId,
-): Promise<boolean> {
+async function deleteStep(transaction: Transaction, stepId: StepId): Promise<boolean> {
   const result = await transaction
     .deleteFrom("writingGroupNextStep")
     .where("id", "=", stepId)

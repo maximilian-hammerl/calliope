@@ -1,5 +1,5 @@
-import { APP_NAME } from "@/src/branding.ts";
-import type { Mail } from "@/src/mail/mailer.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import type { Mail } from "#/src/mail/mailer.ts";
 
 function validFor(lifetime: Temporal.Duration): string {
   const hours = lifetime.total({ unit: "hours" });
@@ -7,14 +7,17 @@ function validFor(lifetime: Temporal.Duration): string {
 }
 
 /** Opening this link is what deletes the account. Nothing has happened yet. */
-export function accountDeletionConfirmationMail(
-  { username, emailAddress, link, lifetime }: {
-    username: string;
-    emailAddress: string;
-    link: string;
-    lifetime: Temporal.Duration;
-  },
-): Mail {
+export function accountDeletionConfirmationMail({
+  username,
+  emailAddress,
+  link,
+  lifetime,
+}: {
+  username: string;
+  emailAddress: string;
+  link: string;
+  lifetime: Temporal.Duration;
+}): Mail {
   return {
     to: emailAddress,
     subject: `Konto bei ${APP_NAME} löschen`,
@@ -26,9 +29,7 @@ Mit diesem Link löschst du es endgültig:
 
 ${link}
 
-Der Link gilt ${
-      validFor(lifetime)
-    }. Danach ist dein Konto weg, und wir können es nicht
+Der Link gilt ${validFor(lifetime)}. Danach ist dein Konto weg, und wir können es nicht
 zurückholen.
 
 Was gelöscht wird: dein Konto, deine Mitgliedschaften, deine Einladungen, deine
@@ -49,9 +50,13 @@ ${APP_NAME}
  * The last thing this address hears from us, sent after the account is gone. A deletion
  * nobody asked for is worth telling somebody about, even when nothing can be undone.
  */
-export function accountDeletionCompletedMail(
-  { username, emailAddress }: { username: string; emailAddress: string },
-): Mail {
+export function accountDeletionCompletedMail({
+  username,
+  emailAddress,
+}: {
+  username: string;
+  emailAddress: string;
+}): Mail {
   return {
     to: emailAddress,
     subject: `Dein Konto bei ${APP_NAME} ist gelöscht`,

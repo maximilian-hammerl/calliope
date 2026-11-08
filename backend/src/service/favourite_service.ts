@@ -1,10 +1,7 @@
-import type { Transaction } from "@/src/database/client.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
-import {
-  FAVOURITE_COLUMN,
-  type FavouriteTargetType,
-} from "@/src/query/favourite.ts";
+import type { Transaction } from "#/src/database/client.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { resolveVisibleTarget } from "#/src/service/visible_target.ts";
+import { FAVOURITE_COLUMN, type FavouriteTargetType } from "#/src/query/favourite.ts";
 
 /**
  * One member marking one thing to come back to, across all five kinds that have one. The union and
@@ -39,9 +36,7 @@ async function setFavourite(
     // Favouriting twice is the same as favouriting once, so a second click is not an error.
     // Unlike `report`'s, this index carries no predicate, so there is none to restate — the one
     // coupling that has broken that insert three times cannot exist here.
-    .onConflict((conflict) =>
-      conflict.columns(["userId", ...TARGET_COLUMNS]).doNothing()
-    )
+    .onConflict((conflict) => conflict.columns(["userId", ...TARGET_COLUMNS]).doNothing())
     .execute();
 
   return undefined;

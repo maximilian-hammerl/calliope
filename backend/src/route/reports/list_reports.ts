@@ -1,21 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { REPORTS_TAG } from "@/src/open_api_specification.ts";
-import { REPORT_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { authorizedAsModerator } from "@/src/middleware/authorized_as_platform_role.ts";
-import { ReportService } from "@/src/service/report_service.ts";
-import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { REPORTS_TAG } from "#/src/open_api_specification.ts";
+import { REPORT_SCHEMA, USER_SCHEMA } from "#/src/database/schema.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { authorizedAsModerator } from "#/src/middleware/authorized_as_platform_role.ts";
+import { ReportService } from "#/src/service/report_service.ts";
+import { listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 // Oldest first by default: a queue worked newest-first lets its bottom rot, and the oldest
 // report is the one somebody has been waiting longest on.
@@ -99,9 +96,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await ReportService.listReports(
-      listQuery(c.req.valid("json")),
-    );
+    const page = await ReportService.listReports(listQuery(c.req.valid("json")));
     return c.json(page, STATUS_CODE.OK);
   },
 );

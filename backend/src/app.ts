@@ -1,7 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { structuredLogger } from "@hono/structured-logger";
 import { STATUS_CODES } from "node:http";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
@@ -9,15 +9,12 @@ import { csrf } from "hono/csrf";
 import { methodNotAllowed } from "hono/method-not-allowed";
 import { bodyLimit } from "hono/body-limit";
 import corsOptions from "./cors_options.ts";
-import { describeError, logger } from "@/src/logging.ts";
+import { describeError, logger } from "#/src/logging.ts";
 import openApiSpecification from "./open_api_specification.ts";
 import { readRateLimit, writeRateLimit } from "./middleware/rate_limit.ts";
-import {
-  REQUEST_BODY_LIMIT_BYTES,
-  UPLOAD_BODY_LIMIT_BYTES,
-} from "./text_limit.ts";
-import { type ErrorResponse } from "@/src/http/response.ts";
-import { invalidRequest } from "@/src/http/invalid_request.ts";
+import { REQUEST_BODY_LIMIT_BYTES, UPLOAD_BODY_LIMIT_BYTES } from "./text_limit.ts";
+import { type ErrorResponse } from "#/src/http/response.ts";
+import { invalidRequest } from "#/src/http/invalid_request.ts";
 import auth from "./route/auth.ts";
 import groups from "./route/groups.ts";
 import health from "./route/health.ts";
@@ -26,9 +23,9 @@ import notifications from "./route/notifications.ts";
 import search from "./route/search.ts";
 import forum from "./route/forum.ts";
 import storyIdeas from "./route/story_ideas.ts";
-import blocks from "@/src/route/blocks.ts";
-import reports from "@/src/route/reports.ts";
-import favourites from "@/src/route/favourites.ts";
+import blocks from "#/src/route/blocks.ts";
+import reports from "#/src/route/reports.ts";
+import favourites from "#/src/route/favourites.ts";
 import users from "./route/users.ts";
 import avatars from "./route/avatars.ts";
 
@@ -67,52 +64,54 @@ const api = new OpenAPIHono({
 
 const app = new OpenAPIHono();
 
-app.use(structuredLogger({
-  createLogger: () => logger,
-  // One line per request, not two: nothing tied an "incoming" line to its "completed" one, so a
-  // status could not be read back to the route that produced it.
-  onResponse: (requestLogger, c, elapsed) => {
-    const request = {
-      method: c.req.method,
-      path: c.req.path,
-      status: c.res.status,
-      durationMs: Math.round(elapsed),
-    };
+app.use(
+  structuredLogger({
+    createLogger: () => logger,
+    // One line per request, not two: nothing tied an "incoming" line to its "completed" one, so a
+    // status could not be read back to the route that produced it.
+    onResponse: (requestLogger, c, elapsed) => {
+      const request = {
+        method: c.req.method,
+        path: c.req.path,
+        status: c.res.status,
+        durationMs: Math.round(elapsed),
+      };
 
-    // Polled every ten seconds, so `info` would be 8,640 lines a day. `trace`, not `debug`: the
-    // deployed instance runs as `testing`. A 503 still logs — that is a restart about to happen.
-    if (c.req.path === "/api/health" && c.res.status === STATUS_CODE.OK) {
-      requestLogger.trace("Request", request);
-      return;
-    }
+      // Polled every ten seconds, so `info` would be 8,640 lines a day. `trace`, not `debug`: the
+      // deployed instance runs as `testing`. A 503 still logs — that is a restart about to happen.
+      if (c.req.path === "/api/health" && c.res.status === STATUS_CODE.OK) {
+        requestLogger.trace("Request", request);
+        return;
+      }
 
-    requestLogger.info("Request", request);
-  },
-  onError: (requestLogger, error, c, elapsed) => {
-    const request = {
-      method: c.req.method,
-      path: c.req.path,
-      durationMs: Math.round(elapsed),
-    };
+      requestLogger.info("Request", request);
+    },
+    onError: (requestLogger, error, c, elapsed) => {
+      const request = {
+        method: c.req.method,
+        path: c.req.path,
+        durationMs: Math.round(elapsed),
+      };
 
-    // How Hono reports an expected refusal — 401, 413, 429. No stack: there is no bug to find,
-    // and one per unauthenticated request would bury the errors that matter.
-    if (error instanceof HTTPException) {
-      requestLogger.warn("Request refused", {
+      // How Hono reports an expected refusal — 401, 413, 429. No stack: there is no bug to find,
+      // and one per unauthenticated request would bury the errors that matter.
+      if (error instanceof HTTPException) {
+        requestLogger.warn("Request refused", {
+          ...request,
+          status: error.status,
+          reason: error.message,
+        });
+        return;
+      }
+
+      requestLogger.error("Request failed", {
         ...request,
-        status: error.status,
-        reason: error.message,
+        status: STATUS_CODE.InternalServerError,
+        ...describeError(error),
       });
-      return;
-    }
-
-    requestLogger.error("Request failed", {
-      ...request,
-      status: STATUS_CODE.InternalServerError,
-      ...describeError(error),
-    });
-  },
-}));
+    },
+  }),
+);
 // Before anything reads the body, so an oversized one is refused rather than buffered.
 //
 // The limit is chosen here rather than declared on the upload route, because this middleware runs
@@ -120,15 +119,16 @@ app.use(structuredLogger({
 // executes at all.
 app.use((c, next) =>
   bodyLimit({
-    maxSize: c.req.path.endsWith("/avatar") && c.req.method === "PUT"
-      ? UPLOAD_BODY_LIMIT_BYTES
-      : REQUEST_BODY_LIMIT_BYTES,
+    maxSize:
+      c.req.path.endsWith("/avatar") && c.req.method === "PUT"
+        ? UPLOAD_BODY_LIMIT_BYTES
+        : REQUEST_BODY_LIMIT_BYTES,
     onError: (c) =>
       c.json(
         { error: "Request body too large" } satisfies ErrorResponse,
         STATUS_CODE.ContentTooLarge,
       ),
-  })(c, next)
+  })(c, next),
 );
 app.use(secureHeaders());
 app.use(cors(corsOptions));

@@ -1,15 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { AccountDeletionService } from "@/src/service/account_deletion_service.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { AccountDeletionService } from "#/src/service/account_deletion_service.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const CONFIRM_BODY = z.object({ token: z.string().min(1) });
 
@@ -45,10 +45,7 @@ export default new OpenAPIHono().openapi(
       case "deleted":
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       case "invalid_token":
-        return c.json(
-          { error: "The link is no longer valid" },
-          STATUS_CODE.Gone,
-        );
+        return c.json({ error: "The link is no longer valid" }, STATUS_CODE.Gone);
       default:
         return assertUnreachable(result);
     }

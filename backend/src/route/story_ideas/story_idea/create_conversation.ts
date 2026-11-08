@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { STORY_IDEAS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { conversationTitle } from "@/src/util/conversation_title.ts";
+import { db } from "#/src/database/client.ts";
+import { CHAT_GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { STORY_IDEAS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { StoryIdeaService } from "#/src/service/story_idea_service.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { conversationTitle } from "#/src/util/conversation_title.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { STORY_IDEA_SCHEMA } from "#/src/database/schema.ts";
 
 const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
 
@@ -53,9 +53,7 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const user = c.get("user");
-    const idea = await StoryIdeaService.selectStoryIdeaGate(
-      c.req.valid("param").ideaId,
-    );
+    const idea = await StoryIdeaService.selectStoryIdeaGate(c.req.valid("param").ideaId);
 
     if (idea === undefined) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
@@ -71,23 +69,22 @@ export default new OpenAPIHono().openapi(
     // Same neutral refusal for a banned author: a conversation with an account that cannot
     // sign in is one nobody can answer.
     if (
-      await BlockService.isBlockedBetween(user.id, idea.createdBy) ||
-      await BanService.isBanned(idea.createdBy)
+      (await BlockService.isBlockedBetween(user.id, idea.createdBy)) ||
+      (await BanService.isBanned(idea.createdBy))
     ) {
-      return c.json(
-        { error: "Contact is not possible" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Contact is not possible" }, STATUS_CODE.Forbidden);
     }
 
-    const chat = await db.transaction().execute((transaction) =>
-      ChatGroupService.insertChatGroup(
-        transaction,
-        user,
-        conversationTitle("Storyidee", idea.title),
-        [idea.createdBy],
-      )
-    );
+    const chat = await db
+      .transaction()
+      .execute((transaction) =>
+        ChatGroupService.insertChatGroup(
+          transaction,
+          user,
+          conversationTitle("Storyidee", idea.title),
+          [idea.createdBy],
+        ),
+      );
 
     return c.json(chat, STATUS_CODE.Created);
   },

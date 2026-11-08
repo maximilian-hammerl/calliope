@@ -1,4 +1,5 @@
 packages:
+  - backend
   - database
   - frontend
 
@@ -10,7 +11,9 @@ catalog:
   "@types/node": 26.6.6
   oxfmt: 0.76.0
   oxlint: 1.91.0
+  oxlint-tsgolint: 7.0.2006
   typescript: 6.0.3
+  zod: 4.6.7
 
 # No dependency runs install scripts unless listed `true`. These three work without theirs: esbuild
 # and fsevents ship prebuilt binaries, and vue-demi's only switches between Vue 2 and 3 builds.

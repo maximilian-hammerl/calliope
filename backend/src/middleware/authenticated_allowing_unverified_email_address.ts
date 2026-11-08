@@ -1,7 +1,7 @@
 import { createMiddleware } from "hono/factory";
-import type { User } from "@/src/service/user_service.ts";
-import { resolveSessionUser } from "@/src/middleware/session_user.ts";
-import { ACCOUNT_BANNED_BODY } from "@/src/http/response.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { resolveSessionUser } from "#/src/middleware/session_user.ts";
+import { ACCOUNT_BANNED_BODY } from "#/src/http/response.ts";
 
 /**
  * A session, without asking whether the address behind it has been verified.

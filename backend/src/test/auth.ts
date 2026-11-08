@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import app from "@/src/app.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
-import "@/src/test/breach_check.ts";
+import app from "#/src/app.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { countMailFor, deleteMailFor } from "#/src/test/mailpit.ts";
+import "#/src/test/breach_check.ts";
 
 /**
  * What the auth tests share. They cannot use `test/support.ts`'s `registerUser` and `request`,
@@ -11,13 +11,13 @@ import "@/src/test/breach_check.ts";
  */
 export const password = "a-complex-password";
 
-export function sendJson(
+export async function sendJson(
   method: string,
   path: string,
   body?: unknown,
   cookie?: string,
-) {
-  return app.request(path, {
+): Promise<Response> {
+  return await app.request(path, {
     method,
     headers: {
       "content-type": "application/json",
@@ -50,8 +50,7 @@ export function authFixture(scope: string, ...alsoWrites: string[]) {
   const clearMail = () => deleteMailFor(addresses);
   const mailCount = () => countMailFor(addresses);
 
-  const register = () =>
-    postJson("/api/auth/register", { username, password, emailAddress });
+  const register = () => postJson("/api/auth/register", { username, password, emailAddress });
 
   /**
    * Registers, then drops the verification mail registering sends. Both mails go to the same

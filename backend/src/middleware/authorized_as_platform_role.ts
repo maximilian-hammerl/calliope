@@ -1,9 +1,9 @@
 import { createMiddleware } from "hono/factory";
-import type { User } from "@/src/service/user_service.ts";
+import type { User } from "#/src/service/user_service.ts";
 import {
   mayAdministerPlatform,
   mayModeratePlatform,
-} from "@/src/service/platform_authorization.ts";
+} from "#/src/service/platform_authorization.ts";
 
 /**
  * Authorization only: these say what an already-authenticated member may do, and are listed

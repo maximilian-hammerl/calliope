@@ -1,13 +1,8 @@
-import { db } from "@/src/database/client.ts";
-import { registerUser, write } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import {
-  countMailFor,
-  deleteMailFor,
-  tokenFromMail,
-  waitForMail,
-} from "@/src/test/mailpit.ts";
-import { sendJson } from "@/src/test/auth.ts";
+import { db } from "#/src/database/client.ts";
+import { registerUser, write } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { countMailFor, deleteMailFor, tokenFromMail, waitForMail } from "#/src/test/mailpit.ts";
+import { sendJson } from "#/src/test/auth.ts";
 
 export const password = "a-complex-password";
 
@@ -37,20 +32,22 @@ export function accountDeletionFixture(scope: string) {
         .updateTable("user")
         .set({ emailAddressVerifiedAt: null })
         .where("username", "=", username)
-        .execute()
+        .execute(),
     );
     await flushBackgroundWork();
     await clearMail();
     return cookie;
   }
 
-  const requestDeletion = (
-    cookie: string,
-    withPassword: string = password,
-  ) =>
-    sendJson("POST", "/api/auth/account/deletion", {
-      password: withPassword,
-    }, cookie);
+  const requestDeletion = (cookie: string, withPassword: string = password) =>
+    sendJson(
+      "POST",
+      "/api/auth/account/deletion",
+      {
+        password: withPassword,
+      },
+      cookie,
+    );
 
   const confirmDeletion = (token: string) =>
     sendJson("POST", "/api/auth/account/deletion/confirm", { token });

@@ -1,20 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP_MEMBER } from "@/src/scope/chains.ts";
-import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { MEMBERSHIPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP_MEMBER } from "#/src/scope/chains.ts";
+import { UserInWritingGroupService } from "#/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import {
-  USER_IN_WRITING_GROUP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { USER_IN_WRITING_GROUP_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const MEMBERSHIP_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -67,21 +64,20 @@ export default new OpenAPIHono().openapi(
     const group = c.get("group");
 
     if (group.role !== "administrator") {
-      return c.json(
-        { error: "Only administrators can change a role" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Only administrators can change a role" }, STATUS_CODE.Forbidden);
     }
 
-    const membership = await db.transaction().execute((transaction) =>
-      UserInWritingGroupService.updateRole(
-        transaction,
-        group.id,
-        c.get("member").userId,
-        role,
-        user.id,
-      )
-    );
+    const membership = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInWritingGroupService.updateRole(
+          transaction,
+          group.id,
+          c.get("member").userId,
+          role,
+          user.id,
+        ),
+      );
 
     if (membership === undefined) {
       return c.json({ error: "Membership not found" }, STATUS_CODE.NotFound);

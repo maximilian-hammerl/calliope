@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
-import { UserService } from "@/src/service/user_service.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
+import { UserService } from "#/src/service/user_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,7 +12,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -47,13 +47,11 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Unauthorized" }, STATUS_CODE.Unauthorized);
     }
 
-    await db.transaction().execute((transaction) =>
-      UserService.deleteOtherSessions(
-        transaction,
-        c.get("user").id,
-        currentSessionId,
-      )
-    );
+    await db
+      .transaction()
+      .execute((transaction) =>
+        UserService.deleteOtherSessions(transaction, c.get("user").id, currentSessionId),
+      );
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

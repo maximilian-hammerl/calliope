@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,7 +9,7 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "list-posts-admin";
 const writer = "list-posts-writer";
@@ -22,23 +22,15 @@ async function threadWithDraft() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Beiträge");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    {
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, {
       title: "Kapitel 1",
-    },
-  )).json();
+    })
+  ).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
 
   await request("POST", posts, writerCookie, postBody("Veröffentlicht"));
-  await request(
-    "POST",
-    posts,
-    writerCookie,
-    postBody("Entwurf", { isDraft: true }),
-  );
+  await request("POST", posts, writerCookie, postBody("Entwurf", { isDraft: true }));
 
   return { adminCookie, writerCookie, posts };
 }
@@ -46,20 +38,12 @@ async function threadWithDraft() {
 test("QUERY …/posts lets a non-member read a public group's posts, but no drafts", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Offen zu lesen", "public");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, { title: "Kapitel 1" })
+  ).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
   await request("POST", posts, adminCookie, postBody("Veröffentlicht"));
-  await request(
-    "POST",
-    posts,
-    adminCookie,
-    postBody("Entwurf", { isDraft: true }),
-  );
+  await request("POST", posts, adminCookie, postBody("Entwurf", { isDraft: true }));
 
   const outsiderCookie = await registerUser(outsider);
   const response = await request("QUERY", posts, outsiderCookie, {
@@ -70,14 +54,17 @@ test("QUERY …/posts lets a non-member read a public group's posts, but no draf
   // alone, which `readableBy` enforces regardless of who is asking.
   assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assert.deepEqual(page.results.map((one: { text: string }) => one.text), [
-    "Veröffentlicht",
-  ]);
+  assert.deepEqual(
+    page.results.map((one: { text: string }) => one.text),
+    ["Veröffentlicht"],
+  );
 
-  const asked = await (await request("QUERY", posts, outsiderCookie, {
-    limit: 100,
-    isDraft: true,
-  })).json();
+  const asked = await (
+    await request("QUERY", posts, outsiderCookie, {
+      limit: 100,
+      isDraft: true,
+    })
+  ).json();
   assert.equal(asked.results.length, 0);
 });
 
@@ -137,7 +124,5 @@ test("QUERY …/posts hides another member's draft, even from an administrator",
   const page = await response.json();
   // A draft is written before publishing, so nobody else sees it yet.
   assert.equal(page.totalResults, 1);
-  assert.ok(
-    !(page.results.some((post: { text: string }) => post.text === "Entwurf")),
-  );
+  assert.ok(!page.results.some((post: { text: string }) => post.text === "Entwurf"));
 });

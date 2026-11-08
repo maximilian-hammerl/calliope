@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,7 +8,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "update-thread-admin";
 const writer = "update-thread-writer";
@@ -21,12 +21,9 @@ async function threadByWriter() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    writerCookie,
-    { title: "Vorher" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, writerCookie, { title: "Vorher" })
+  ).json();
 
   return { adminCookie, writerCookie, group, thread };
 }

@@ -1,14 +1,10 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  SAME_ORIGIN,
-} from "@/src/test/support.ts";
-import { authFixture, password } from "@/src/test/auth.ts";
-import { UPLOAD_BODY_LIMIT_BYTES } from "@/src/text_limit.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers, SAME_ORIGIN } from "#/src/test/support.ts";
+import { authFixture, password } from "#/src/test/auth.ts";
+import { UPLOAD_BODY_LIMIT_BYTES } from "#/src/text_limit.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, username } = authFixture("body-limit");
@@ -39,10 +35,7 @@ test("a body beyond the limit is refused before it is parsed", async () => {
 
 async function upload(bytes: number): Promise<Response> {
   const form = new FormData();
-  form.append(
-    "image",
-    new File([new Uint8Array(bytes)], "a.png", { type: "image/png" }),
-  );
+  form.append("image", new File([new Uint8Array(bytes)], "a.png", { type: "image/png" }));
   form.append("origin", "own_work");
   form.append("confirmed", "true");
   return await app.request("/api/users/me/avatar", {

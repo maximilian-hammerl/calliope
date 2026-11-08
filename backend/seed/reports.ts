@@ -1,10 +1,6 @@
-import { USER } from "@/seed/accounts.ts";
-import { pageId, postId, reportId, storyIdeaId } from "@/seed/ids.ts";
-import type {
-  ReportCategory,
-  ReportOutcome,
-  ReportTargetType,
-} from "@/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { pageId, postId, reportId, storyIdeaId } from "#/seed/ids.ts";
+import type { ReportCategory, ReportOutcome, ReportTargetType } from "#/src/database/schema.ts";
 
 /**
  * One report per state the queue can show, because the lifecycle is otherwise invisible: a fresh
@@ -37,11 +33,11 @@ export type ReportFixture = {
   progress?:
     | { operator: string; taken: true }
     | {
-      operator: string;
-      taken: boolean;
-      outcome: ReportOutcome;
-      note: string;
-    };
+        operator: string;
+        taken: boolean;
+        outcome: ReportOutcome;
+        note: string;
+      };
 };
 
 export const REPORTS: ReadonlyArray<ReportFixture> = [
@@ -52,11 +48,9 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     targetType: "writing_post",
     targetId: postId(6),
     author: USER.tintenfleck,
-    excerpt:
-      "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
+    excerpt: "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
     category: "harassment",
-    reason:
-      "Der Beitrag spielt auf eine Diskussion im Forum an und wird persönlich.",
+    reason: "Der Beitrag spielt auf eine Diskussion im Forum an und wird persönlich.",
   },
 
   // A second, different claim about the same post by the same member — the shape the category in
@@ -67,8 +61,7 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     targetType: "writing_post",
     targetId: postId(6),
     author: USER.tintenfleck,
-    excerpt:
-      "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
+    excerpt: "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
     category: "plagiarism",
     reason: "Die Stelle steht fast wörtlich in einem anderen Buch.",
   },
@@ -111,8 +104,7 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     targetType: "writing_post",
     targetId: postId(3),
     author: USER.randnotiz,
-    excerpt:
-      "Es ist eine allgemein anerkannte Wahrheit, dass ein Satz ohne Komma",
+    excerpt: "Es ist eine allgemein anerkannte Wahrheit, dass ein Satz ohne Komma",
     category: "missing_content_warning",
     reason: "Ich hätte hier eine Warnung erwartet.",
     // Closed straight from the queue without being taken first, which leaves `in_progress_at`
@@ -152,8 +144,7 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     targetType: "chat_message",
     targetId: null,
     author: USER.silbenmeer,
-    excerpt:
-      "Schau mal hier vorbei, lohnt sich wirklich: gewinne-jetzt.example",
+    excerpt: "Schau mal hier vorbei, lohnt sich wirklich: gewinne-jetzt.example",
     category: "spam",
     reason: "Fremder Link in einer Direktnachricht.",
   },
@@ -168,8 +159,7 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     author: USER.kommafehler,
     excerpt: "Zweiter Beitrag, damit der Thread nicht allein steht.",
     category: "other",
-    reason:
-      "Ich weiß nicht, in welche Kategorie das gehört, aber es stört mich.",
+    reason: "Ich weiß nicht, in welche Kategorie das gehört, aber es stört mich.",
   },
 
   // A page, so the queue holds the kind whose excerpt is prose rather than a title.
@@ -181,7 +171,6 @@ export const REPORTS: ReadonlyArray<ReportFixture> = [
     author: USER.tintenfleck,
     excerpt: "Ein Kino mit zwei Sälen, von denen einer immer geschlossen ist.",
     category: "other",
-    reason:
-      "Die Seite beschreibt einen Ort, den es in der Geschichte so nicht geben soll.",
+    reason: "Die Seite beschreibt einen Ort, den es in der Geschichte so nicht geben soll.",
   },
 ];

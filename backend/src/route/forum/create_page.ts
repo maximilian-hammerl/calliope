@@ -1,25 +1,25 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf } from "@/src/scope/forum_scope.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
-import { PAGE_TITLE_SCHEMA } from "@/src/route/groups/group/pages/page_schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_PAGE_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { forumFolderOf } from "#/src/scope/forum_scope.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { FORUM_ROOT_PERMISSION } from "#/src/service/forum_permission.ts";
+import { PAGE_TITLE_SCHEMA } from "#/src/route/groups/group/pages/page_schema.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_PAGE_SCHEMA } from "#/src/database/schema.ts";
 
 const CREATE_PAGE_BODY = z.object({
   title: PAGE_TITLE_SCHEMA,
@@ -63,14 +63,12 @@ export default new OpenAPIHono().openapi(
     const { title, document, folderId } = c.req.valid("json");
     const user = c.get("user");
 
-    const folder = (folderId !== undefined && folderId !== null)
-      ? await forumFolderOf(user, folderId)
-      : null;
+    const folder =
+      folderId !== undefined && folderId !== null ? await forumFolderOf(user, folderId) : null;
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
-    const permission = folder?.effectiveMemberPermission ??
-      FORUM_ROOT_PERMISSION;
+    const permission = folder?.effectiveMemberPermission ?? FORUM_ROOT_PERMISSION;
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. No minimum:
     // a page is named by its title, so an empty one is a stub somebody has yet to fill.
@@ -82,21 +80,14 @@ export default new OpenAPIHono().openapi(
     }
 
     if (!mayActInForum(user, permission, "page:create")) {
-      return c.json(
-        { error: "You cannot add a page here" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot add a page here" }, STATUS_CODE.Forbidden);
     }
 
-    const page = await db.transaction().execute((transaction) =>
-      ForumService.insertPage(
-        transaction,
-        user,
-        title,
-        document,
-        folder?.id ?? null,
-      )
-    );
+    const page = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.insertPage(transaction, user, title, document, folder?.id ?? null),
+      );
 
     return c.json(page, STATUS_CODE.Created);
   },

@@ -1,5 +1,7 @@
 import { after, test } from "node:test";
 import assert from "node:assert/strict";
+import { once } from "node:events";
+import { serve } from "@hono/node-server";
 
 // SHA1("password") = 5BAA6 1E4C9B93F3F0682250B6CF8331B7EE68FD8, as the API returned it.
 const PREFIX = "5BAA6";
@@ -11,23 +13,29 @@ const PADDING = "0164EC3D5F2C6B4E4B5F4C1B9D3F7A8C9D0:0\r\n";
 let answering: "range" | "error" = "range";
 const asked: string[] = [];
 
-const server = Deno.serve({ port: 0, onListen: () => {} }, (request) => {
-  const prefix = new URL(request.url).pathname.split("/").at(-1) ?? "";
-  asked.push(prefix);
+const server = serve({
+  hostname: "127.0.0.1",
+  port: 0,
+  fetch: (request) => {
+    const prefix = new URL(request.url).pathname.split("/").at(-1) ?? "";
+    asked.push(prefix);
 
-  if (answering === "error") {
-    return new Response("no", { status: 500 });
-  }
-  return new Response(
-    prefix === PREFIX ? `${SUFFIX}:52372427\r\n${PADDING}` : PADDING,
-  );
+    if (answering === "error") {
+      return new Response("no", { status: 500 });
+    }
+    return new Response(prefix === PREFIX ? `${SUFFIX}:52372427\r\n${PADDING}` : PADDING);
+  },
 });
+await once(server, "listening");
+
+const address = server.address();
+if (address === null || typeof address === "string") {
+  throw new Error("The stand-in for the breach service is not listening on a port");
+}
 
 // The service reads its URL once, at import, so the server has to exist before it is loaded.
-Deno.env.set("PWNED_PASSWORDS_URL", `http://localhost:${server.addr.port}`);
-const { BreachedPasswordService, parseRange } = await import(
-  "./breached_password_service.ts"
-);
+process.env.PWNED_PASSWORDS_URL = `http://127.0.0.1:${address.port}`;
+const { BreachedPasswordService, parseRange } = await import("./breached_password_service.ts");
 
 /** Shaped like the real answer: CRLF, with a padded entry among the real ones. */
 const BODY = [
@@ -65,10 +73,7 @@ test("the API answers in upper case, and so does the hash", () => {
 /** What the pure tests cannot see: that the five sent and the thirty-five kept are not swapped. */
 test("the prefix is sent and the suffix is matched", async () => {
   assert.equal(await BreachedPasswordService.isBreached("password"), true);
-  assert.equal(
-    await BreachedPasswordService.isBreached("nobody-has-leaked-this"),
-    false,
-  );
+  assert.equal(await BreachedPasswordService.isBreached("nobody-has-leaked-this"), false);
   // Five out, thirty-five kept: any other split would ask for a prefix of another length.
   assert.deepEqual(asked, [PREFIX, "6F2D5"]);
 });
@@ -85,4 +90,4 @@ test("a refusal lets the password through", async () => {
 
 // Not symmetrical with the setup above, which has to run before the tests are registered —
 // earlier than any hook.
-after(() => server.shutdown());
+after(() => server.close());

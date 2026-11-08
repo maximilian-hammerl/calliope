@@ -1,5 +1,5 @@
-import type { ForumPermission } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
 
 /**
  * What a leaf with no folder above it gets — #32's „only operators create by default", as a
@@ -16,12 +16,8 @@ const RANK = {
 } as const satisfies Record<ForumPermission, number>;
 
 /** #32's rule: the most restrictive setting on the path wins, so nothing can widen its parent. */
-export function mostRestrictive(
-  ...permissions: ReadonlyArray<ForumPermission>
-): ForumPermission {
-  return permissions.reduce((left, right) =>
-    RANK[left] <= RANK[right] ? left : right
-  );
+export function mostRestrictive(...permissions: ReadonlyArray<ForumPermission>): ForumPermission {
+  return permissions.reduce((left, right) => (RANK[left] <= RANK[right] ? left : right));
 }
 
 /** Their access is the role, not a folder's setting (#21) — unrelated to a group's roles. */
@@ -52,6 +48,5 @@ export function mayReadForumContent(
   own: ForumPermission,
   folderEffective: ForumPermission | null,
 ): boolean {
-  return isOperator(user) ||
-    effectiveMemberPermission(own, folderEffective) !== "hidden";
+  return isOperator(user) || effectiveMemberPermission(own, folderEffective) !== "hidden";
 }

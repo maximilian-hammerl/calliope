@@ -1,14 +1,14 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
-import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated_allowing_unverified_email_address.ts";
+import { EmailAddressVerificationService } from "#/src/service/email_address_verification_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 export default new OpenAPIHono().openapi(
   createRoute({

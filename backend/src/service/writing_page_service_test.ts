@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { type GroupId, mint, type PageId } from "@/src/scope/scoped_id.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { type GroupId, mint, type PageId } from "#/src/scope/scoped_id.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -9,7 +9,7 @@ import {
   getUserId,
   registerUser,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 import { WritingPageService } from "./writing_page_service.ts";
 
 // Scoped to this file, so a file running beside it cannot register or delete them.
@@ -36,7 +36,7 @@ async function groupWithPage(title = "Weltenbau") {
       title,
       plainTextToDocument("Der Berg ist hoch."),
       authorId,
-    )
+    ),
   );
   return {
     groupId,
@@ -63,10 +63,7 @@ test("a page is scoped to its group", async () => {
   const otherGroup = await createGroup(cookie, "Die Verwandtschaft");
 
   assert.ok(await WritingPageService.selectPage(groupId, page.id));
-  assert.equal(
-    await WritingPageService.selectPage(mint(otherGroup.id), page.id),
-    undefined,
-  );
+  assert.equal(await WritingPageService.selectPage(mint(otherGroup.id), page.id), undefined);
 });
 
 test("an edit against the loaded time is written", async () => {
@@ -83,7 +80,7 @@ test("an edit against the loaded time is written", async () => {
         document: plainTextToDocument("Der Berg ist steil."),
       },
       authorId,
-    )
+    ),
   );
 
   assert.equal(outcome?.kind, "updated");
@@ -110,7 +107,7 @@ test("an edit against a time that has moved on is refused", async () => {
         document: plainTextToDocument("Die erste Fassung."),
       },
       authorId,
-    )
+    ),
   );
   assert.equal(first?.kind, "updated");
 
@@ -125,7 +122,7 @@ test("an edit against a time that has moved on is refused", async () => {
         document: plainTextToDocument("Die zweite Fassung."),
       },
       otherId,
-    )
+    ),
   );
 
   assert.equal(second?.kind, "stale");
@@ -149,7 +146,7 @@ test("updating a page that is not in the group answers nothing", async () => {
         page.lastActivityAt,
         { title: "x", document: plainTextToDocument("x") },
         await getUserId(OWNER),
-      )
+      ),
     ),
     undefined,
   );
@@ -158,14 +155,9 @@ test("updating a page that is not in the group answers nothing", async () => {
 test("a deleted page is gone", async () => {
   const { groupId, page, authorId } = await groupWithPage();
 
-  await write((transaction) =>
-    WritingPageService.deletePage(transaction, groupId, page.id)
-  );
+  await write((transaction) => WritingPageService.deletePage(transaction, groupId, page.id));
 
-  assert.equal(
-    await WritingPageService.selectPage(groupId, page.id),
-    undefined,
-  );
+  assert.equal(await WritingPageService.selectPage(groupId, page.id), undefined);
   assert.deepEqual(await WritingPageService.listPages(groupId, authorId), []);
 });
 
@@ -176,7 +168,8 @@ test("pages are listed by activity, and ties by id", async () => {
   // what makes the tiebreaker the ordinary case rather than an edge.
   await write((transaction) =>
     transaction
-      .insertInto("writingPage").values(
+      .insertInto("writingPage")
+      .values(
         ["Zweitens", "Drittens"].map((title) => ({
           writingGroupId: groupId,
           title,
@@ -185,7 +178,8 @@ test("pages are listed by activity, and ties by id", async () => {
           createdBy: authorId,
           updatedBy: authorId,
         })),
-      ).execute()
+      )
+      .execute(),
   );
 
   const listed = await WritingPageService.listPages(groupId, authorId);
@@ -200,8 +194,14 @@ test("pages are listed by activity, and ties by id", async () => {
   // Newest id first, and the same on every call.
   assert.deepEqual(
     tied.map((page) => page.id),
-    [...tied.map((page) => page.id)].sort().reverse(),
+    tied
+      .map((page) => page.id)
+      .sort()
+      .reverse(),
   );
   const again = await WritingPageService.listPages(groupId, authorId);
-  assert.deepEqual(again.map((page) => page.id), listed.map((page) => page.id));
+  assert.deepEqual(
+    again.map((page) => page.id),
+    listed.map((page) => page.id),
+  );
 });

@@ -15,8 +15,8 @@ import {
   WRITING_PAGE_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+} from "#/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
 
 /**
  * What the API returns for each resource: the table's own columns plus the name behind the
@@ -54,8 +54,7 @@ const OWN_MEMBERSHIP = {
  */
 export const OWN_FAVOURITE = { isFavourite: z.boolean() };
 
-export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
-  .extend(CREATED_BY_USERNAME)
+export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA.extend(CREATED_BY_USERNAME)
   .extend(OWN_MEMBERSHIP)
   .extend(OWN_FAVOURITE);
 
@@ -67,8 +66,7 @@ export const GROUP_RESPONSE = WRITING_GROUP_SCHEMA
  */
 const IN_GROUP = { writingGroupId: z.uuidv7() };
 
-export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA
-  .omit({ memberPermission: true })
+export const THREAD_RESPONSE = WRITING_THREAD_SCHEMA.omit({ memberPermission: true })
   .extend(IN_GROUP)
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE);
@@ -101,23 +99,24 @@ const FORUM_PERMISSION = {
  * *own* setting is what an operator's dialog has to show — a room closed by the room above it
  * still remembers what was chosen for it (#32's slice 7).
  */
-export const FORUM_FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA
-  .omit({ writingGroupId: true })
+export const FORUM_FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA.omit({ writingGroupId: true })
   .extend(CREATED_BY_USERNAME)
   .extend(FORUM_PERMISSION)
   // Not nullable here, unlike the column: it is null only for a writing group's folder, which the
   // table's CHECK requires and `forumFolders`' `$narrowType` asserts.
   .extend({ memberPermission: FORUM_PERMISSION_SCHEMA });
 
-export const FORUM_THREAD_RESPONSE = WRITING_THREAD_SCHEMA
-  .omit({ writingGroupId: true })
+export const FORUM_THREAD_RESPONSE = WRITING_THREAD_SCHEMA.omit({ writingGroupId: true })
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
   .extend(FORUM_PERMISSION)
   .extend({ memberPermission: FORUM_PERMISSION_SCHEMA });
 
-export const FORUM_PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
-  .omit({ writingGroupId: true, document: true, text: true })
+export const FORUM_PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA.omit({
+  writingGroupId: true,
+  document: true,
+  text: true,
+})
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
   .extend({ memberPermission: FORUM_PERMISSION_SCHEMA })
@@ -125,8 +124,9 @@ export const FORUM_PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
   .extend(FORUM_PERMISSION);
 
 // `text` stays server-side here for the same reason it does in a group: it exists for search.
-export const FORUM_PAGE_RESPONSE = FORUM_PAGE_SUMMARY_RESPONSE
-  .extend({ document: DOCUMENT_SCHEMA });
+export const FORUM_PAGE_RESPONSE = FORUM_PAGE_SUMMARY_RESPONSE.extend({
+  document: DOCUMENT_SCHEMA,
+});
 
 /**
  * A path, resolved against this API's own origin — never absolute, so it cannot point at another
@@ -143,8 +143,10 @@ export const MEMBERSHIP_RESPONSE = USER_IN_WRITING_GROUP_SCHEMA.extend({
 });
 
 /** A folder as the tree reads it. `depth` is derived by the server and never sent by a client. */
-export const FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA
-  .omit({ memberPermission: true, effectiveMemberPermission: true })
+export const FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA.omit({
+  memberPermission: true,
+  effectiveMemberPermission: true,
+})
   .extend(IN_GROUP)
   .extend(CREATED_BY_USERNAME);
 
@@ -152,16 +154,18 @@ export const FOLDER_RESPONSE = WRITING_FOLDER_SCHEMA
  * A page without its prose, for the tree. `lastActivityAt` is also what an edit is conditional
  * on, so the client has to keep the value it loaded.
  */
-export const PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA
-  .omit({ document: true, text: true, memberPermission: true })
+export const PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA.omit({
+  document: true,
+  text: true,
+  memberPermission: true,
+})
   .extend(IN_GROUP)
   .extend(CREATED_BY_USERNAME)
   .extend(OWN_FAVOURITE)
   .extend({ updatedByUsername: z.string().nullable() });
 
 // `text` stays server-side: it exists for search, and the client renders the document.
-export const PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE
-  .extend({ document: DOCUMENT_SCHEMA });
+export const PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE.extend({ document: DOCUMENT_SCHEMA });
 
 /**
  * What one member looks like to another. Picked rather than omitted on purpose: a column
@@ -171,32 +175,31 @@ export const PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE
  * A username is public within the platform — it is what members type to invite one another.
  * An email address never is.
  */
-export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA
-  .pick({
-    id: true,
-    writingGroupId: true,
-    text: true,
-    createdBy: true,
-    completedAt: true,
-    completedBy: true,
-    createdAt: true,
-  })
-  .extend({
-    createdByUsername: z.string().nullable(),
-    completedByUsername: z.string().nullable(),
-  });
+export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA.pick({
+  id: true,
+  writingGroupId: true,
+  text: true,
+  createdBy: true,
+  completedAt: true,
+  completedBy: true,
+  createdAt: true,
+}).extend({
+  createdByUsername: z.string().nullable(),
+  completedByUsername: z.string().nullable(),
+});
 
-export const USER_RESPONSE = USER_SCHEMA
-  .pick({ id: true, username: true })
-  .extend({ avatarUrl: AVATAR_URL });
+export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true }).extend({
+  avatarUrl: AVATAR_URL,
+});
 
 /**
  * The members list, and nowhere else a person is merely mentioned. A role is a fact about
  * somebody, not a decoration on every reference to them — see #101, which keeps it off post
  * bylines and out of `USER_RESPONSE`, where the picker and search would inherit it.
  */
-export const LISTED_MEMBER_RESPONSE = USER_RESPONSE
-  .extend({ platformRole: USER_SCHEMA.shape.platformRole });
+export const LISTED_MEMBER_RESPONSE = USER_RESPONSE.extend({
+  platformRole: USER_SCHEMA.shape.platformRole,
+});
 
 /**
  * One of a member's own sessions. `lastUsedAt` is derived rather than stored: every request
@@ -373,27 +376,23 @@ export const CHAT_MESSAGE_RESPONSE = CHAT_MESSAGE_SCHEMA.extend({
   createdByUsername: z.string().nullable(),
 });
 
-export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA
-  .pick({
-    userId: true,
-    chatGroupId: true,
-    status: true,
-    invitedAt: true,
-    joinedAt: true,
-  })
-  .extend({ username: z.string(), avatarUrl: AVATAR_URL });
+export const CHAT_MEMBERSHIP_RESPONSE = USER_IN_CHAT_GROUP_SCHEMA.pick({
+  userId: true,
+  chatGroupId: true,
+  status: true,
+  invitedAt: true,
+  joinedAt: true,
+}).extend({ username: z.string(), avatarUrl: AVATAR_URL });
 
 /**
  * A thread found by a search carries the title of its group. A result that can come from
  * anywhere has to say where it came from — „Plot" alone is meaningless when it could be from
  * any group, which is the same reason a notification about a post names both.
  */
-export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE
-  .extend({ writingGroupTitle: z.string() });
+export const FOUND_THREAD_RESPONSE = THREAD_RESPONSE.extend({ writingGroupTitle: z.string() });
 
 /**
  * A page as search returns it: the summary, without its prose. The body is what the term may
  * have matched, but the row shows a title like every other kind's.
  */
-export const FOUND_PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE
-  .extend({ writingGroupTitle: z.string() });
+export const FOUND_PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE.extend({ writingGroupTitle: z.string() });

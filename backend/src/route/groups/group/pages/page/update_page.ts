@@ -1,12 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { PAGE_RESPONSE } from "@/src/http/response_schema.ts";
-import { PAGES_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP_PAGE } from "@/src/scope/chains.ts";
-import { WritingPageService } from "@/src/service/writing_page_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { PAGE_RESPONSE } from "#/src/http/response_schema.ts";
+import { PAGES_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP_PAGE } from "#/src/scope/chains.ts";
+import { WritingPageService } from "#/src/service/writing_page_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -14,13 +14,10 @@ import {
   jsonContent,
   PAGE_CHANGED,
   PAGE_CHANGED_RESPONSE,
-} from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_PAGE_SCHEMA } from "#/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
 import { PAGE_TITLE_SCHEMA } from "../page_schema.ts";
 
 const PAGE_PARAMS = z.object({
@@ -101,16 +98,18 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      WritingPageService.updatePage(
-        transaction,
-        group.id,
-        c.get("page").id,
-        loadedAt,
-        { title, document },
-        user.id,
-      )
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingPageService.updatePage(
+          transaction,
+          group.id,
+          c.get("page").id,
+          loadedAt,
+          { title, document },
+          user.id,
+        ),
+      );
     if (outcome === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }

@@ -1,6 +1,6 @@
-import { db, type Transaction } from "@/src/database/client.ts";
-import { mayModeratePlatform } from "@/src/service/platform_authorization.ts";
-import type { PlatformRole } from "@/src/database/schema.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { mayModeratePlatform } from "#/src/service/platform_authorization.ts";
+import type { PlatformRole } from "#/src/database/schema.ts";
 
 /**
  * Banning an account for breaking the platform's rules. Three things it deliberately is not:
@@ -70,10 +70,7 @@ async function banUser(
       .where("bannedAt", "is", null)
       .execute();
 
-    await transaction
-      .deleteFrom("userSession")
-      .where("userId", "=", userId)
-      .execute();
+    await transaction.deleteFrom("userSession").where("userId", "=", userId).execute();
   });
 
   return undefined;
@@ -83,10 +80,7 @@ async function banUser(
  * Lifting restores access and nothing else. The address was never released, so there is nothing
  * to reclaim; the sessions ended at the ban and are not coming back.
  */
-async function liftBan(
-  transaction: Transaction,
-  userId: string,
-): Promise<"not_found" | undefined> {
+async function liftBan(transaction: Transaction, userId: string): Promise<"not_found" | undefined> {
   const lifted = await transaction
     .updateTable("user")
     .set({ bannedAt: null, banReason: null, bannedBy: null })
@@ -118,9 +112,7 @@ async function isBanned(userId: string): Promise<boolean> {
 }
 
 /** The several-invitees form, mirroring `BlockService.withoutBlocked`. */
-async function withoutBanned(
-  userIds: ReadonlyArray<string>,
-): Promise<Array<string>> {
+async function withoutBanned(userIds: ReadonlyArray<string>): Promise<Array<string>> {
   if (userIds.length === 0) {
     return [];
   }

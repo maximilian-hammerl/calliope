@@ -1,15 +1,18 @@
-import { APP_NAME } from "@/src/branding.ts";
-import type { Mail } from "@/src/mail/mailer.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import type { Mail } from "#/src/mail/mailer.ts";
 
 /** Text only, for the same reason as the reset mail: one copy of the words to keep in step. */
-export function emailAddressVerificationMail(
-  { username, emailAddress, link, lifetime }: {
-    username: string;
-    emailAddress: string;
-    link: string;
-    lifetime: Temporal.Duration;
-  },
-): Mail {
+export function emailAddressVerificationMail({
+  username,
+  emailAddress,
+  link,
+  lifetime,
+}: {
+  username: string;
+  emailAddress: string;
+  link: string;
+  lifetime: Temporal.Duration;
+}): Mail {
   const hours = lifetime.total({ unit: "hours" });
   const validFor = hours === 1 ? "eine Stunde" : `${hours} Stunden`;
 

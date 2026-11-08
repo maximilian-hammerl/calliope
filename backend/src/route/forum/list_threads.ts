@@ -1,16 +1,16 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
+import { FORUM_THREAD_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -25,9 +25,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "The forum's threads",
-        content: jsonContent(
-          z.object({ results: z.array(FORUM_THREAD_RESPONSE) }),
-        ),
+        content: jsonContent(z.object({ results: z.array(FORUM_THREAD_RESPONSE) })),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",

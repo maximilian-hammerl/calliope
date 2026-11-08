@@ -1,15 +1,12 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { write } from "@/src/test/support.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { write } from "#/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import { Hono } from "hono";
-import type { PlatformRole } from "@/src/database/schema.ts";
-import { type User, UserService } from "@/src/service/user_service.ts";
+import type { PlatformRole } from "#/src/database/schema.ts";
+import { type User, UserService } from "#/src/service/user_service.ts";
 import authenticated from "./authenticated.ts";
-import {
-  authorizedAsAdministrator,
-  authorizedAsModerator,
-} from "./authorized_as_platform_role.ts";
+import { authorizedAsAdministrator, authorizedAsModerator } from "./authorized_as_platform_role.ts";
 
 // Its own account, because the suite runs in parallel and a shared name collides.
 const username = "require-platform-role-test-user";
@@ -33,7 +30,7 @@ const administratorApp = probe(authorizedAsAdministrator);
 
 async function createUserWithSession(platformRole: PlatformRole | null) {
   const user = await write((transaction) =>
-    UserService.insertUser(transaction, username, password, emailAddress)
+    UserService.insertUser(transaction, username, password, emailAddress),
   );
   assert.ok(user, "fixture user could not be created");
 
@@ -45,22 +42,21 @@ async function createUserWithSession(platformRole: PlatformRole | null) {
         platformRole,
       })
       .where("id", "=", user.id)
-      .execute()
+      .execute(),
   );
 
   const session = await write((transaction) =>
     UserService.insertSessionForUser(transaction, user, {
       userAgent: undefined,
       ipAddress: undefined,
-    })
+    }),
   );
   return `session=${session.id}.${session.token}`;
 }
 
 afterEach(async () => {
   await write((transaction) =>
-    transaction
-      .deleteFrom("user").where("username", "=", username).execute()
+    transaction.deleteFrom("user").where("username", "=", username).execute(),
   );
 });
 
@@ -90,17 +86,11 @@ test("authorizedAsModerator refuses a member with no role", async () => {
 
 test("authorizedAsAdministrator refuses a moderator", async () => {
   // The other half of the superset: a moderator must not reach what only an administrator may.
-  assert.equal(
-    await statusFor(administratorApp, "moderator"),
-    STATUS_CODE.Forbidden,
-  );
+  assert.equal(await statusFor(administratorApp, "moderator"), STATUS_CODE.Forbidden);
 });
 
 test("authorizedAsAdministrator lets an administrator through", async () => {
-  assert.equal(
-    await statusFor(administratorApp, "administrator"),
-    STATUS_CODE.OK,
-  );
+  assert.equal(await statusFor(administratorApp, "administrator"), STATUS_CODE.OK);
 });
 
 test("authorization alone refuses rather than throwing on an absent user", async () => {
@@ -121,7 +111,7 @@ test("an operator gate refuses when there is no session at all", async () => {
 
 test("an operator gate refuses an unverified address before the role", async () => {
   const user = await write((transaction) =>
-    UserService.insertUser(transaction, username, password, emailAddress)
+    UserService.insertUser(transaction, username, password, emailAddress),
   );
   assert.ok(user);
   // A role on an account that has never proven its address must not open the gate.
@@ -130,14 +120,14 @@ test("an operator gate refuses an unverified address before the role", async () 
       .updateTable("user")
       .set({ platformRole: "administrator" })
       .where("id", "=", user.id)
-      .execute()
+      .execute(),
   );
 
   const session = await write((transaction) =>
     UserService.insertSessionForUser(transaction, user, {
       userAgent: undefined,
       ipAddress: undefined,
-    })
+    }),
   );
 
   const response = await moderatorApp.request("/probe", {

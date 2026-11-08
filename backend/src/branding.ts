@@ -1,8 +1,9 @@
-import { getOptionalEnvVariable } from "@/src/util/env.ts";
+import { getOptionalEnvVariable } from "#/src/util/env.ts";
 
 export const APP_NAME = getOptionalEnvVariable("PUBLIC_APP_NAME") ?? "Calliope";
 
-export const APP_DESCRIPTION = getOptionalEnvVariable("APP_DESCRIPTION") ??
+export const APP_DESCRIPTION =
+  getOptionalEnvVariable("APP_DESCRIPTION") ??
   `The API of ${APP_NAME}, a community of private writing groups.`;
 
 export const APP_CONTACT = (() => {

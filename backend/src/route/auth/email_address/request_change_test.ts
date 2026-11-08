@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { waitForMail } from "@/src/test/mailpit.ts";
-import { postJson } from "@/src/test/auth.ts";
-import { emailChangeFixture } from "@/src/test/email_address_change.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { waitForMail } from "#/src/test/mailpit.ts";
+import { postJson } from "#/src/test/auth.ts";
+import { emailChangeFixture } from "#/src/test/email_address_change.ts";
 
 // Its own account and addresses, so the file next door cannot occupy them.
 const {
@@ -60,15 +60,9 @@ test("POST /api/auth/email-address/change mails paths the frontend has", async (
   // Both pointed at `/confirm-email-change` while the router only had
   // `/confirm-email-address-change`, so every link opened a blank page and nothing failed.
   // The frontend pins the same two paths in `router/__tests__/mailedPaths.spec.ts`.
+  assert.ok((await waitForMail(newAddress)).text.includes("/confirm-email-address-change?token="));
   assert.ok(
-    (await waitForMail(newAddress)).text.includes(
-      "/confirm-email-address-change?token=",
-    ),
-  );
-  assert.ok(
-    (await waitForMail(currentAddress)).text.includes(
-      "/cancel-email-address-change?token=",
-    ),
+    (await waitForMail(currentAddress)).text.includes("/cancel-email-address-change?token="),
   );
 });
 

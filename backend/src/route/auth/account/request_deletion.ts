@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
-import { AccountDeletionService } from "@/src/service/account_deletion_service.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated_allowing_unverified_email_address.ts";
+import { AccountDeletionService } from "#/src/service/account_deletion_service.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,7 +12,7 @@ import {
   INVALID_CREDENTIALS_BODY,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const REQUEST_DELETION_BODY = z.object({
   // Re-authentication, as for changing the address: a session alone must not be able to end
@@ -35,8 +35,7 @@ export default new OpenAPIHono().openapi(
     },
     responses: {
       [STATUS_CODE.OK]: {
-        description:
-          "Deletion requested, and a link sent to the address on file",
+        description: "Deletion requested, and a link sent to the address on file",
         content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
@@ -50,10 +49,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { password } = c.req.valid("json");
 
-    const result = await AccountDeletionService.requestAccountDeletion(
-      c.get("user").id,
-      password,
-    );
+    const result = await AccountDeletionService.requestAccountDeletion(c.get("user").id, password);
 
     switch (result) {
       case "requested":

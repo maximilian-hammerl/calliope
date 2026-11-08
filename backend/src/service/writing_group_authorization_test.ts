@@ -37,14 +37,14 @@ test("the two lists together are the whole table", () => {
 
 test("a reader may do nothing the writer rule governs", async (t) => {
   for (const act of WRITER_ACTS) {
-    // deno-lint-ignore no-await-in-loop -- a test step has to be awaited in order
+    // oxlint-disable-next-line no-await-in-loop -- a test step has to be awaited in order
     await t.test(act, () => assert.equal(mayAct("reader", act), false));
   }
 });
 
 test("a reader may not touch what somebody else wrote", async (t) => {
   for (const act of AUTHOR_ACTS) {
-    // deno-lint-ignore no-await-in-loop -- a test step has to be awaited in order
+    // oxlint-disable-next-line no-await-in-loop -- a test step has to be awaited in order
     await t.test(act, () => {
       const theirs = { createdBy: SOMEBODY_ELSE, userId: AUTHOR };
       assert.equal(mayAct("reader", act, theirs), false);
@@ -79,9 +79,7 @@ test("what the group keeps is any writer's, whoever made it", () => {
     assert.equal(mayAct("writer", act), true);
     assert.equal(mayAct("administrator", act), true);
   }
-  for (
-    const act of ["folder:change", "folder:move", "folder:delete"] as const
-  ) {
+  for (const act of ["folder:change", "folder:move", "folder:delete"] as const) {
     assert.equal(mayAct("writer", act), true);
   }
   // Ticking a step is the same rule: whoever writes the chapter marks it done.
@@ -110,12 +108,7 @@ test("writing whose author is gone is left to the administrators", () => {
 test("an author rule asked without its content is a bug, not a refusal", () => {
   // Unreachable through the overloads, so a throw is the honest answer: answering `false` would
   // read as "not allowed" and hide the mistake.
-  assert.throws(
-    () =>
-      (mayAct as (role: string, act: string) => boolean)(
-        "writer",
-        "post:delete",
-      ),
-    { message: /post:delete/u },
-  );
+  assert.throws(() => (mayAct as (role: string, act: string) => boolean)("writer", "post:delete"), {
+    message: /post:delete/u,
+  });
 });

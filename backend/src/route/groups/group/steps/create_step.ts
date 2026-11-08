@@ -1,33 +1,26 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
-import { STEPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP } from "@/src/scope/chains.ts";
-import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { NEXT_STEP_RESPONSE } from "#/src/http/response_schema.ts";
+import { STEPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP } from "#/src/scope/chains.ts";
+import { WritingGroupNextStepService } from "#/src/service/writing_group_next_step_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_NEXT_STEP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_NEXT_STEP_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
-const CREATE_STEP_BODY = WRITING_GROUP_NEXT_STEP_SCHEMA
-  .pick({ text: true })
-  .extend({
-    text: notBlank(
-      WRITING_GROUP_NEXT_STEP_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.stepText),
-    ),
-  });
+const CREATE_STEP_BODY = WRITING_GROUP_NEXT_STEP_SCHEMA.pick({ text: true }).extend({
+  text: notBlank(WRITING_GROUP_NEXT_STEP_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.stepText)),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -74,14 +67,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const step = await db.transaction().execute((transaction) =>
-      WritingGroupNextStepService.insertStep(
-        transaction,
-        group.id,
-        text,
-        user.id,
-      )
-    );
+    const step = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingGroupNextStepService.insertStep(transaction, group.id, text, user.id),
+      );
     return c.json(step, STATUS_CODE.Created);
   },
 );

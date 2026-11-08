@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { FORUM_FOLDER } from "@/src/scope/chains.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { FORUM_FOLDER } from "#/src/scope/chains.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -13,8 +13,8 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import { WRITING_FOLDER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_FOLDER_SCHEMA } from "#/src/database/schema.ts";
 
 const FOLDER_PARAMS = z.object({
   folderId: WRITING_FOLDER_SCHEMA.shape.id,
@@ -61,9 +61,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      ForumService.deleteFolder(transaction, c.get("folder").id)
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) => ForumService.deleteFolder(transaction, c.get("folder").id));
 
     if (outcome === "notFound") {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);

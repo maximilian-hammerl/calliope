@@ -1,20 +1,20 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { USERS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { mayModeratePlatform } from "@/src/service/platform_authorization.ts";
-import { USER_PROFILE_RESPONSE } from "@/src/http/response_schema.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
+import { USERS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { mayModeratePlatform } from "#/src/service/platform_authorization.ts";
+import { USER_PROFILE_RESPONSE } from "#/src/http/response_schema.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const USER_PARAMS = z.object({ userId: USER_SCHEMA.shape.id });
 
@@ -58,12 +58,15 @@ export default new OpenAPIHono().openapi(
     const reader = c.get("user");
     const isBlocked = await BlockService.isBlockedByUser(reader.id, userId);
 
-    return c.json({
-      ...profile,
-      isBlocked,
-      ...(mayModeratePlatform(reader.platformRole)
-        ? { isBanned: await BanService.isBanned(userId) }
-        : {}),
-    }, STATUS_CODE.OK);
+    return c.json(
+      {
+        ...profile,
+        isBlocked,
+        ...(mayModeratePlatform(reader.platformRole)
+          ? { isBanned: await BanService.isBanned(userId) }
+          : {}),
+      },
+      STATUS_CODE.OK,
+    );
   },
 );

@@ -1,22 +1,22 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { POSTS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP_POST } from "@/src/scope/chains.ts";
-import { WritingPostService } from "@/src/service/writing_post_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { POSTS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP_POST } from "#/src/scope/chains.ts";
+import { WritingPostService } from "#/src/service/writing_post_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 import {
   WRITING_GROUP_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 const POST_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -72,9 +72,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    await db.transaction().execute((transaction) =>
-      WritingPostService.deletePost(transaction, post.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => WritingPostService.deletePost(transaction, post.id));
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

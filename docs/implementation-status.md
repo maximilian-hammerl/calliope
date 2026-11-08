@@ -55,7 +55,7 @@ Around the edges: a chat invitation can be declined and a chat left (#72), conse
 from one person read as a block (#92), a member can choose a dark appearance (#60), the interface
 says which instance it is on (#61), and Impressum (#86) and Datenschutzerklärung (#87) are reachable
 from a footer that also links the source. Underneath: CSRF protection, a breached-password check
-and an eight-character minimum, tightened Deno permissions, rate limits the frontend answers to, and
+and an eight-character minimum, a narrow runtime permission set, rate limits the frontend answers to, and
 every database write inside a transaction, which the compiler now enforces.
 
 What is still missing from the first release is listed in the roadmap: data export, images and

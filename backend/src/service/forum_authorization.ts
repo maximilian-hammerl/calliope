@@ -1,6 +1,6 @@
-import type { ForumPermission } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { isOperator } from "@/src/service/forum_permission.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { isOperator } from "#/src/service/forum_permission.ts";
 
 /**
  * Who may do what in the public forum, as one table — the counterpart of
@@ -43,10 +43,10 @@ type Act = keyof typeof RULE;
 
 /** Each rule's acts, derived from the table so the two cannot disagree. */
 type AuthorAct = {
-  [K in Act]: typeof RULE[K] extends "author" ? K : never;
+  [K in Act]: (typeof RULE)[K] extends "author" ? K : never;
 }[Act];
 type OperatorAct = {
-  [K in Act]: typeof RULE[K] extends "operator" ? K : never;
+  [K in Act]: (typeof RULE)[K] extends "operator" ? K : never;
 }[Act];
 type WriteAct = Exclude<Act, AuthorAct | OperatorAct>;
 
@@ -60,11 +60,7 @@ type Content = { createdBy: string | null; userId: string };
  * Two overloads rather than an optional argument, as the group's table has them.
  */
 export function mayActInForum(user: User, act: OperatorAct): boolean;
-export function mayActInForum(
-  user: User,
-  permission: ForumPermission,
-  act: WriteAct,
-): boolean;
+export function mayActInForum(user: User, permission: ForumPermission, act: WriteAct): boolean;
 export function mayActInForum(
   user: User,
   permission: ForumPermission,
@@ -78,7 +74,7 @@ export function mayActInForum(
   content?: Content,
 ): boolean {
   // An operator act names itself in the second position, because no row's grant bears on it.
-  const named = act ?? permissionOrAct as OperatorAct;
+  const named = act ?? (permissionOrAct as OperatorAct);
 
   // The forum's equivalent of a group's administrator, and the only way in before a folder opens.
   if (isOperator(user)) {
@@ -97,9 +93,7 @@ export function mayActInForum(
 
   if (content === undefined) {
     // Unreachable through the overloads above, which is what makes this a bug rather than a case.
-    throw new Error(
-      `${named} is decided by its author, so it needs the content`,
-    );
+    throw new Error(`${named} is decided by its author, so it needs the content`);
   }
 
   // Somebody who may no longer write here changes nothing, not even their own: see above.

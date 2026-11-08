@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP_FOLDER } from "@/src/scope/chains.ts";
-import { WritingFolderService } from "@/src/service/writing_folder_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { FOLDERS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP_FOLDER } from "#/src/scope/chains.ts";
+import { WritingFolderService } from "#/src/service/writing_folder_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,11 +12,8 @@ import {
   FOLDER_NOT_EMPTY,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const FOLDER_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -69,13 +66,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      WritingFolderService.deleteFolder(
-        transaction,
-        group.id,
-        c.get("folder").id,
-      )
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingFolderService.deleteFolder(transaction, group.id, c.get("folder").id),
+      );
 
     // Gone since the read above: a 404, rather than a refusal about contents it no longer has.
     if (outcome === undefined) {

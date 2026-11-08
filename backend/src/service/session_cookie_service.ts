@@ -1,8 +1,8 @@
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { SESSION_LIFETIME, UserSession } from "./user_service.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { formatToken, parseToken } from "@/src/util/token.ts";
+import { SESSION_LIFETIME, type UserSession } from "./user_service.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { formatToken, parseToken } from "#/src/util/token.ts";
 
 const SESSION_COOKIE_KEY = "session";
 
@@ -12,8 +12,7 @@ const SESSION_COOKIE_KEY = "session";
  * silently drop the flag exactly where it matters. Over http:// the browser would refuse to
  * store the cookie at all, which is what development runs on.
  */
-const USE_SECURE_COOKIE =
-  new URL(getRequiredEnvVariable("HOST_URL")).protocol === "https:";
+const USE_SECURE_COOKIE = new URL(getRequiredEnvVariable("HOST_URL")).protocol === "https:";
 
 function getUserSession(c: Context): UserSession | undefined {
   const sessionCookie = getCookie(c, SESSION_COOKIE_KEY);

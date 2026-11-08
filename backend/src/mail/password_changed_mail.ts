@@ -1,13 +1,17 @@
-import { APP_NAME } from "@/src/branding.ts";
-import type { Mail } from "@/src/mail/mailer.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import type { Mail } from "#/src/mail/mailer.ts";
 
 /**
  * Nothing to click. Its whole job is that a password changed behind somebody's back does not
  * happen quietly — which is why it goes out even though the member just did it themselves.
  */
-export function passwordChangedMail(
-  { username, emailAddress }: { username: string; emailAddress: string },
-): Mail {
+export function passwordChangedMail({
+  username,
+  emailAddress,
+}: {
+  username: string;
+  emailAddress: string;
+}): Mail {
   return {
     to: emailAddress,
     subject: `Dein Passwort bei ${APP_NAME} wurde geändert`,

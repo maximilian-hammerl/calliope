@@ -5,7 +5,7 @@ import {
   jsonLinesFormatter,
   type LogLevel,
 } from "@logtape/logtape";
-import { ENVIRONMENT, type Environment } from "@/src/environment.ts";
+import { ENVIRONMENT, type Environment } from "#/src/environment.ts";
 
 /**
  * One logger for the backend. JSON lines everywhere, including development: an `Error` does not

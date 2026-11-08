@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,7 +8,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "get-thread-admin";
 const reader = "get-thread-reader";
@@ -20,12 +20,9 @@ afterEach(() => deleteUsers([administrator, reader, outsider]));
 async function groupWithThread() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, { title: "Kapitel 1" })
+  ).json();
 
   return { adminCookie, group, thread };
 }

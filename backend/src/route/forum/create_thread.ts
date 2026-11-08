@@ -1,28 +1,26 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf } from "@/src/scope/forum_scope.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { FORUM_THREAD_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { forumFolderOf } from "#/src/scope/forum_scope.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { FORUM_ROOT_PERMISSION } from "#/src/service/forum_permission.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_THREAD_SCHEMA } from "#/src/database/schema.ts";
 
 const CREATE_THREAD_BODY = z.object({
-  title: notBlank(
-    WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
-  ),
+  title: notBlank(WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle)),
   /** Absent puts it at the forum's root, which only an operator may write to. */
   folderId: WRITING_THREAD_SCHEMA.shape.folderId.optional(),
 });
@@ -64,25 +62,22 @@ export default new OpenAPIHono().openapi(
 
     // The folder decides, and at the root the forum's constant does — which is what makes
     // creating an operator's act until a folder opens.
-    const folder = (folderId !== undefined && folderId !== null)
-      ? await forumFolderOf(user, folderId)
-      : null;
+    const folder =
+      folderId !== undefined && folderId !== null ? await forumFolderOf(user, folderId) : null;
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
-    const permission = folder?.effectiveMemberPermission ??
-      FORUM_ROOT_PERMISSION;
+    const permission = folder?.effectiveMemberPermission ?? FORUM_ROOT_PERMISSION;
 
     if (!mayActInForum(user, permission, "thread:create")) {
-      return c.json(
-        { error: "You cannot start a thread here" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot start a thread here" }, STATUS_CODE.Forbidden);
     }
 
-    const thread = await db.transaction().execute((transaction) =>
-      ForumService.insertThread(transaction, user, title, folder?.id ?? null)
-    );
+    const thread = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.insertThread(transaction, user, title, folder?.id ?? null),
+      );
 
     return c.json(thread, STATUS_CODE.Created);
   },

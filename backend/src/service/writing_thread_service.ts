@@ -1,16 +1,16 @@
-import type { FolderId, GroupId, ThreadId } from "@/src/scope/scoped_id.ts";
+import type { FolderId, GroupId, ThreadId } from "#/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
-import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { withFavourite } from "@/src/query/favourite.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
+import type { WritingThread as DatabaseWritingThread } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { withFavourite } from "#/src/query/favourite.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
+} from "#/src/list/list_endpoint_query.ts";
 
 /**
  * A thread found by a search, which can come from any group the member may see — so it says
@@ -26,19 +26,12 @@ export type FoundThread = Thread & { writingGroupTitle: string };
 export type Thread =
   // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
   // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
-  & { writingGroupId: string }
-  & Pick<
+  { writingGroupId: string } & Pick<
     Selectable<DatabaseWritingThread>,
-    | "id"
-    | "title"
-    | "createdBy"
-    | "createdAt"
-    | "lastActivityAt"
-    | "folderId"
-  >
-  // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
-  & { createdByUsername: string | null }
-  & {
+    "id" | "title" | "createdBy" | "createdAt" | "lastActivityAt" | "folderId"
+  > &
+    // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
+    { createdByUsername: string | null } & {
     /** The reader's own favourite, visible to nobody else. */
     isFavourite: boolean;
   };
@@ -72,14 +65,10 @@ function threadsWithAuthor(executor: typeof db | Transaction = db) {
  * fact about the pair, and the join is bound to their id so no query here can see another
  * member's.
  */
-function threadsForReader(
-  readerId: string,
-  executor: typeof db | Transaction = db,
-) {
-  return threadsWithAuthor(executor)
-    .$call((builder) =>
-      withFavourite(builder, "writing_thread", "writingThread.id", readerId)
-    );
+function threadsForReader(readerId: string, executor: typeof db | Transaction = db) {
+  return threadsWithAuthor(executor).$call((builder) =>
+    withFavourite(builder, "writing_thread", "writingThread.id", readerId),
+  );
 }
 
 async function insertThread(
@@ -151,23 +140,22 @@ async function selectThreadForReader(
  * is gone. Threads do accumulate, unlike members — when a strip gets unwieldy the answer is a
  * list of its own rather than a page of tabs, and this is where to start.
  */
-function selectThreads(
-  writingGroupId: GroupId,
-  readerId: string,
-): Promise<Array<Thread>> {
-  return threadsForReader(readerId)
-    .where("writingThread.writingGroupId", "=", writingGroupId)
-    .$narrowType<{ writingGroupId: NotNull }>()
-    // Most recently written in first, and no longer favourites before that: the tree nests these
-    // by `folderId`, and a favourite jumping above its siblings makes a structure a member built
-    // themselves look unstable. `FavouriteMark` still marks the row.
-    .orderBy("writingThread.lastActivityAt", "desc")
-    // `id` breaks ties, and they are the ordinary case rather than an edge: one INSERT shares one
-    // `now()`, so everything created together carries the same timestamp — three of the seed's
-    // four pages do. Without it the order among those rows is whatever Postgres returns, which
-    // is unspecified and can shift. uuidv7 is time-ordered, so this reads as newest first.
-    .orderBy("writingThread.id", "desc")
-    .execute();
+function selectThreads(writingGroupId: GroupId, readerId: string): Promise<Array<Thread>> {
+  return (
+    threadsForReader(readerId)
+      .where("writingThread.writingGroupId", "=", writingGroupId)
+      .$narrowType<{ writingGroupId: NotNull }>()
+      // Most recently written in first, and no longer favourites before that: the tree nests these
+      // by `folderId`, and a favourite jumping above its siblings makes a structure a member built
+      // themselves look unstable. `FavouriteMark` still marks the row.
+      .orderBy("writingThread.lastActivityAt", "desc")
+      // `id` breaks ties, and they are the ordinary case rather than an edge: one INSERT shares one
+      // `now()`, so everything created together carries the same timestamp — three of the seed's
+      // four pages do. Without it the order among those rows is whatever Postgres returns, which
+      // is unspecified and can shift. uuidv7 is time-ordered, so this reads as newest first.
+      .orderBy("writingThread.id", "desc")
+      .execute()
+  );
 }
 
 /**
@@ -175,38 +163,25 @@ function selectThreads(
  * joined — the same rule the group list uses, applied one level down. Inner joins, because a
  * thread without a group cannot exist.
  */
-function listVisibleThreads(
-  user: User,
-  query: ListQuery,
-): Promise<ListResults<FoundThread>> {
+function listVisibleThreads(user: User, query: ListQuery): Promise<ListResults<FoundThread>> {
   let threads = threadsForReader(user.id)
-    .innerJoin(
-      "writingGroup",
-      "writingGroup.id",
-      "writingThread.writingGroupId",
-    )
+    .innerJoin("writingGroup", "writingGroup.id", "writingThread.writingGroupId")
     .$narrowType<{ writingGroupId: NotNull }>()
-    .leftJoin(
-      "userInWritingGroup",
-      (join) =>
-        join
-          .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
-          .on("userInWritingGroup.userId", "=", user.id),
+    .leftJoin("userInWritingGroup", (join) =>
+      join
+        .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+        .on("userInWritingGroup.userId", "=", user.id),
     )
     .where((eb) =>
       eb.or([
         eb("writingGroup.visibility", "=", "public"),
         eb("userInWritingGroup.userId", "is not", null),
-      ])
+      ]),
     )
     .select("writingGroup.title as writingGroupTitle");
 
   if (query.search !== undefined) {
-    threads = threads.where(
-      "writingThread.title",
-      "ilike",
-      searchPattern(query.search),
-    );
+    threads = threads.where("writingThread.title", "ilike", searchPattern(query.search));
   }
 
   return listResultsWithCount(threads, query);

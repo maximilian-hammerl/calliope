@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { withDeadline } from "@/src/util/async.ts";
+import { withDeadline } from "#/src/util/async.ts";
 
 // https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check
 // https://github.com/healthjson/schema
@@ -10,28 +10,16 @@ export const APPLICATION_HEALTH_STATUS = z
     name: z
       .string()
       .min(1)
-      .describe(
-        "Organization-wide unique name for identifying the application",
-      ),
-    datetime: z
-      .iso
+      .describe("Organization-wide unique name for identifying the application"),
+    datetime: z.iso
       .datetime({ offset: true })
       .describe("The application's current date and time incl. timezone"),
-    startup: z
-      .iso
+    startup: z.iso
       .datetime({ offset: true })
       .describe("The date and time of when the application instance started"),
-    uptime: z
-      .iso
-      .duration()
-      .describe("The duration how long the application instance is running"),
-    hostname: z
-      .string()
-      .describe("Name of the host which is running the application instance"),
-    version: z
-      .string()
-      .describe("Current application version")
-      .optional(),
+    uptime: z.iso.duration().describe("The duration how long the application instance is running"),
+    hostname: z.string().describe("Name of the host which is running the application instance"),
+    version: z.string().describe("Current application version").optional(),
     releaseId: z
       .string()
       .describe(
@@ -43,28 +31,12 @@ export const APPLICATION_HEALTH_STATUS = z
 
 export const DATABASE_HEALTH_STATUS = z
   .object({
-    name: z
-      .string()
-      .min(1)
-      .describe("Unique name/identifier of the database system"),
-    essential: z
-      .boolean()
-      .describe("Database is essential for overall application health"),
-    health: z
-      .boolean()
-      .describe("Connection established without any limitations"),
-    latency: z
-      .number()
-      .describe("Latency or duration for full roundtrip in milliseconds"),
-    connections: z
-      .number()
-      .int()
-      .describe("Number of connections established")
-      .optional(),
-    error: z
-      .string()
-      .describe("Connectivity error occured, if any")
-      .optional(),
+    name: z.string().min(1).describe("Unique name/identifier of the database system"),
+    essential: z.boolean().describe("Database is essential for overall application health"),
+    health: z.boolean().describe("Connection established without any limitations"),
+    latency: z.number().describe("Latency or duration for full roundtrip in milliseconds"),
+    connections: z.number().int().describe("Number of connections established").optional(),
+    error: z.string().describe("Connectivity error occured, if any").optional(),
   })
   .describe("Detailed health information about a connected database");
 

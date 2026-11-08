@@ -1,21 +1,21 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { withAvatar } from "@/src/query/user_avatar.ts";
-import { avatarUrlOf } from "@/src/http/avatar_url.ts";
-import { emptyToNull } from "@/src/util/optional_text.ts";
-import { hashPassword, verifyPassword } from "@/src/util/password.ts";
-import { generateToken, hashToken } from "@/src/util/token.ts";
-import type { SessionProvenance } from "@/src/util/session_provenance.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { withAvatar } from "#/src/query/user_avatar.ts";
+import { avatarUrlOf } from "#/src/http/avatar_url.ts";
+import { emptyToNull } from "#/src/util/optional_text.ts";
+import { hashPassword, verifyPassword } from "#/src/util/password.ts";
+import { generateToken, hashToken } from "#/src/util/token.ts";
+import type { SessionProvenance } from "#/src/util/session_provenance.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
+} from "#/src/list/list_endpoint_query.ts";
 import type {
   User as DatabaseUser,
   UserSession as DatabaseUserSession,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 export type User = Pick<
   Selectable<DatabaseUser>,
@@ -32,9 +32,9 @@ export type User = Pick<
 >;
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
-export type PublicUser =
-  & Pick<Selectable<DatabaseUser>, "id" | "username" | "platformRole">
-  & { avatarUrl: string | null };
+export type PublicUser = Pick<Selectable<DatabaseUser>, "id" | "username" | "platformRole"> & {
+  avatarUrl: string | null;
+};
 
 /** One list, so the select, the update and the response cannot drift apart. */
 export const PROFILE_COLUMNS = [
@@ -49,19 +49,12 @@ export const PROFILE_COLUMNS = [
 
 export type ProfileColumn = (typeof PROFILE_COLUMNS)[number];
 
-export type UserProfile =
-  & Pick<
-    Selectable<DatabaseUser>,
-    "id" | "username" | "createdAt" | "platformRole" | ProfileColumn
-  >
-  & { avatarUrl: string | null };
+export type UserProfile = Pick<
+  Selectable<DatabaseUser>,
+  "id" | "username" | "createdAt" | "platformRole" | ProfileColumn
+> & { avatarUrl: string | null };
 
-export type UserSession =
-  & Pick<
-    Selectable<DatabaseUserSession>,
-    "id"
-  >
-  & { token: string };
+export type UserSession = Pick<Selectable<DatabaseUserSession>, "id"> & { token: string };
 
 /** How long a session stays valid. The session cookie must not outlive this. */
 export const SESSION_LIFETIME = Temporal.Duration.from({ hours: 24 });
@@ -125,7 +118,7 @@ async function selectUser(
       eb.or([
         eb("username", "=", usernameOrEmailAddress),
         eb("emailAddress", "=", usernameOrEmailAddress.toLowerCase()),
-      ])
+      ]),
     )
     .executeTakeFirst();
 
@@ -136,7 +129,7 @@ async function selectUser(
     return undefined;
   }
 
-  if (!await verifyPassword(password, user.hashedPassword)) {
+  if (!(await verifyPassword(password, user.hashedPassword))) {
     return undefined;
   }
 
@@ -175,9 +168,7 @@ async function insertSessionForUser(
   };
 }
 
-async function selectUserForSession(
-  userSession: UserSession,
-): Promise<User | undefined> {
+async function selectUserForSession(userSession: UserSession): Promise<User | undefined> {
   const databaseUserSession = await db
     .selectFrom("userSession")
     .select(["id", "userId", "expiresAt"])
@@ -231,10 +222,7 @@ async function selectUserForSession(
  * Matching the token as well as the id means only the holder of a session can delete it.
  * Without that, knowing an id would be enough to end someone else's session.
  */
-async function deleteSession(
-  transaction: Transaction,
-  userSession: UserSession,
-): Promise<boolean> {
+async function deleteSession(transaction: Transaction, userSession: UserSession): Promise<boolean> {
   const result = await transaction
     .deleteFrom("userSession")
     .where("id", "=", userSession.id)
@@ -301,9 +289,7 @@ async function deleteSessionForUser(
  * Expired sessions are only filtered out when they are read, so nothing ever removes
  * them from the table on its own.
  */
-async function deleteExpiredSessions(
-  transaction: Transaction,
-): Promise<number> {
+async function deleteExpiredSessions(transaction: Transaction): Promise<number> {
   const result = await transaction
     .deleteFrom("userSession")
     .where("expiresAt", "<", Temporal.Now.instant().toString())
@@ -323,9 +309,7 @@ async function listUsers(
 
   const found = await listResultsWithCount(
     withAvatar(
-      db
-        .selectFrom("user")
-        .select(["user.id", "user.username", "user.platformRole"]),
+      db.selectFrom("user").select(["user.id", "user.username", "user.platformRole"]),
       "user.id",
     )
       // Banned accounts are not offered to anybody, the way a blocked one is not offered to the
@@ -338,14 +322,12 @@ async function listUsers(
         queryBuilder.where(
           "user.username",
           "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+          // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when the term is set
           searchPattern(query.search!),
-        ))
+        ),
+      )
       // Blocked in either direction: neither side is shown the other in a list they browse.
-      .$if(
-        hidden.length > 0,
-        (queryBuilder) => queryBuilder.where("user.id", "not in", hidden),
-      ),
+      .$if(hidden.length > 0, (queryBuilder) => queryBuilder.where("user.id", "not in", hidden)),
     query,
   );
 
@@ -405,11 +387,7 @@ async function updateProfile(
     return await selectUserProfile(userId, transaction);
   }
 
-  await transaction
-    .updateTable("user")
-    .set(row)
-    .where("id", "=", userId)
-    .executeTakeFirst();
+  await transaction.updateTable("user").set(row).where("id", "=", userId).executeTakeFirst();
 
   // Read back rather than returned: the picture is a join, which an UPDATE cannot carry, and one
   // place building the profile is one place to change when it grows a field.

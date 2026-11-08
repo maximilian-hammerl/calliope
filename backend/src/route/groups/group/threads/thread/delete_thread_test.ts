@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,7 +9,7 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "delete-thread-admin";
 const writer = "delete-thread-writer";
@@ -22,20 +22,19 @@ test("DELETE /api/groups/{groupId}/threads/{threadId} deletes the thread and its
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    writerCookie,
-    {
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, writerCookie, {
       title: "Kapitel 1",
-    },
-  )).json();
-  const post = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads/${thread.id}/posts`,
-    writerCookie,
-    postBody("Es war einmal"),
-  )).json();
+    })
+  ).json();
+  const post = await (
+    await request(
+      "POST",
+      `/api/groups/${group.id}/threads/${thread.id}/posts`,
+      writerCookie,
+      postBody("Es war einmal"),
+    )
+  ).json();
 
   // The author may delete their own thread.
   const response = await request(
@@ -61,14 +60,11 @@ test("DELETE /api/groups/{groupId}/threads/{threadId} refuses another writer", a
   const group = await createGroup(adminCookie, "Faden");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    writerCookie,
-    {
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, writerCookie, {
       title: "Kapitel 1",
-    },
-  )).json();
+    })
+  ).json();
 
   const response = await request(
     "DELETE",

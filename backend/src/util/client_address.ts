@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { getConnInfo } from "hono/deno";
+import { getConnInfo } from "@hono/node-server/conninfo";
 
 /**
  * The client's address, as far behind the reverse proxy as it can be trusted.
