@@ -125,10 +125,7 @@ export async function aPostBy(cookie: string, reportedText: string) {
   return { group, thread, post };
 }
 
-/**
- * Removes the fixture's reports and accounts. Scoped to the names it is given, never emptying
- * `report` — another file's rows are in there too, and the suite runs in parallel.
- */
+/** Removes the fixture's reports and accounts. */
 export async function cleanUpReports(usernames: string[]) {
   const fixtureUsers = db.selectFrom("user").select("id").where("username", "in", usernames);
 

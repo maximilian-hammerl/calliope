@@ -19,20 +19,10 @@ type MailpitMessage = {
   Subject: string;
 };
 
-export async function deleteAllMail(): Promise<void> {
-  const response = await fetch(`${MAILPIT_URL}/api/v1/messages`, {
-    method: "DELETE",
-  });
-  await response.body?.cancel();
-}
-
 const addressedTo = (addresses: string[]) => (message: MailpitMessage) =>
   message.To.some((to) => addresses.includes(to.Address));
 
-/**
- * Only these recipients' messages. `deleteAllMail` empties the whole mailbox, which is fine
- * for one test process and wipes another's pending message when two run at once.
- */
+/** Only these recipients' messages: another test file may be waiting for the rest. */
 export async function deleteMailFor(addresses: string[]): Promise<void> {
   const ids = (await listMail()).filter(addressedTo(addresses)).map((it) => it.ID);
   if (ids.length === 0) {
@@ -56,10 +46,6 @@ async function listMail(): Promise<Array<MailpitMessage>> {
   const response = await fetch(`${MAILPIT_URL}/api/v1/messages`);
   const { messages } = (await response.json()) as { messages: MailpitMessage[] };
   return messages;
-}
-
-export async function countMail(): Promise<number> {
-  return (await listMail()).length;
 }
 
 export type ReceivedMail = {
