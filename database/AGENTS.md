@@ -10,7 +10,7 @@ pnpm run migrations:new <name>   # a new file
 pnpm run db:reset                # drop, recreate, migrate — wipes every row
 pnpm run types:generate          # regenerate backend/src/database/schema.ts
 pnpm run test                    # against the database in .env; needs the stack up
-pnpm run validate:check          # oxfmt, oxlint with type-aware rules, tsc
+pnpm run validate:check          # oxfmt, oxlint with type-aware rules, tsc, knip
 ```
 
 ## Migrations are edited in place — until a staging or production instance exists
