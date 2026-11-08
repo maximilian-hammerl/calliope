@@ -33,9 +33,8 @@ the letter C and stay as they are — renaming is not yet a full rebrand.
 
 ## Running it locally
 
-Requires [Node](https://nodejs.org) 26, [pnpm](https://pnpm.io),
-[Docker](https://docs.docker.com/engine/install/) and
-[dbmate](https://github.com/amacneil/dbmate).
+Requires [Node](https://nodejs.org) 26, [pnpm](https://pnpm.io) and
+[Docker](https://docs.docker.com/engine/install/).
 
 ```bash
 cp .example.env .env

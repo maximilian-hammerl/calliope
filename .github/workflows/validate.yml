@@ -47,14 +47,6 @@ jobs:
       # - name: Lint the OpenAPI specification
       #   run: pnpm run open-api:lint
 
-      # dbmate is a plain binary rather than a package, so installing it lets the pipeline run
-      # the repository's own scripts instead of restating their configuration.
-      - name: Install dbmate
-        run: |
-          curl -fsSL -o /usr/local/bin/dbmate \
-            https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
-          chmod +x /usr/local/bin/dbmate
-
       # `--wait` blocks on the healthchecks in the compose file, so nothing races the
       # databases becoming reachable.
       - name: Start the databases and the mail catcher
@@ -96,14 +88,6 @@ jobs:
 
       - name: Check formatting, lints and types
         run: pnpm run validate:check
-
-      # dbmate is a plain binary rather than a package, so installing it lets the pipeline run
-      # the repository's own scripts instead of restating their configuration.
-      - name: Install dbmate
-        run: |
-          curl -fsSL -o /usr/local/bin/dbmate \
-            https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
-          chmod +x /usr/local/bin/dbmate
 
       - name: Start the database
         run: docker compose up -d --wait db

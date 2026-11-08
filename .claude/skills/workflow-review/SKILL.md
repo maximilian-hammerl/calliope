@@ -3,7 +3,7 @@ name: workflow-review
 description: Review a change to calliope — uncommitted changes, a branch against main, or a GitHub pull request — for bugs and for breaks of calliope's written rules (the AGENTS.md files, the .claude/rules/ notes for the touched paths, the design system), and report verified findings as must fix, should fix and can fix, each with its options and a recommendation. Use when asked to review a change, a branch or a PR, or before handing a change over.
 argument-hint: "[<branch> | pr <number>]"
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(gh pr view *), Bash(gh pr diff *), Bash(gh issue view *), Bash(grep *), Bash(dbmate --env-file ../.env --url *calliope_review*)
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(gh pr view *), Bash(gh pr diff *), Bash(gh issue view *), Bash(grep *), Bash(pnpm exec dbmate --env-file ../.env --url *calliope_review*)
 ---
 
 A review reports only what it has checked and leaves every decision to the human. It changes no

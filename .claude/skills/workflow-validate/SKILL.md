@@ -2,7 +2,7 @@
 name: workflow-validate
 description: Run what CI runs (.github/workflows/validate.yml) for the projects a change touches — format, lint, types, the OpenAPI and schema checks, the migration round trip and the tests — and report what passed, what failed and what did not run. Use before calling a change done, or when asked to check, validate or test. Pass --fix to repair what can be repaired first; backend, database or frontend to run only those.
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git merge-base *), Bash(git diff *), Bash(git ls-files *), Bash(git worktree list*), Bash(git hash-object *), Bash(docker compose ps*), Bash(docker compose -p * ps*), Bash(docker compose up -d --wait*), Bash(pnpm install), Bash(pnpm run db:up), Bash(pnpm run open-api:check), Bash(pnpm run open-api:generate), Bash(pnpm run migrations:status), Bash(pnpm run migrations:migrate), Bash(pnpm run test), Bash(pnpm exec oxfmt src/database/schema.ts), Bash(dbmate --env-file ../.env --url *calliope_scratch*), Bash(DATABASE_URL=*calliope_scratch* DBMATE_NO_DUMP_SCHEMA=true pnpm run migrations:*), Bash(DATABASE_URL=*calliope_scratch* pnpm run types:generate), Bash(pnpm run validate:*), Bash(pnpm run open-api:generate-client), Bash(pnpm run test:unit *)
+allowed-tools: Bash(git status *), Bash(git merge-base *), Bash(git diff *), Bash(git ls-files *), Bash(git worktree list*), Bash(git hash-object *), Bash(docker compose ps*), Bash(docker compose -p * ps*), Bash(docker compose up -d --wait*), Bash(pnpm install), Bash(pnpm run db:up), Bash(pnpm run open-api:check), Bash(pnpm run open-api:generate), Bash(pnpm run migrations:status), Bash(pnpm run migrations:migrate), Bash(pnpm run test), Bash(pnpm exec oxfmt src/database/schema.ts), Bash(pnpm exec dbmate --env-file ../.env --url *calliope_scratch*), Bash(DATABASE_URL=*calliope_scratch* DBMATE_NO_DUMP_SCHEMA=true pnpm run migrations:*), Bash(DATABASE_URL=*calliope_scratch* pnpm run types:generate), Bash(pnpm run validate:*), Bash(pnpm run open-api:generate-client), Bash(pnpm run test:unit *)
 ---
 
 `$ARGUMENTS` may hold `--fix` and any of `backend`, `database`, `frontend`. Keep going after a
@@ -45,8 +45,8 @@ failure, so the report is complete.
    `database/`, dropped first in case an interrupted run left it behind:
 
    ```bash
-   dbmate --env-file ../.env --url "<scratch>" drop
-   dbmate --env-file ../.env --url "<scratch>" create
+   pnpm exec dbmate --env-file ../.env --url "<scratch>" drop
+   pnpm exec dbmate --env-file ../.env --url "<scratch>" create
    DATABASE_URL="<scratch>" DBMATE_NO_DUMP_SCHEMA=true pnpm run migrations:migrate
    ```
 
@@ -64,7 +64,7 @@ failure, so the report is complete.
      failure. Then `pnpm exec oxfmt src/database/schema.ts` in `backend/` and compare the hash. If it
      moved, the file was stale: say so; the regenerated one is what to commit, and `/regenerate`
      carries it downstream.
-   - Finally `dbmate --env-file ../.env --url "<scratch>" drop`.
+   - Finally `pnpm exec dbmate --env-file ../.env --url "<scratch>" drop`.
 6. **Report** one row per command: project, command, passed or failed, and for a failure the first
    error verbatim, never "some lint errors"; for a failing test, its name and assertion message.
    End with what didn't run and why.
