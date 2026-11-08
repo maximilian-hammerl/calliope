@@ -147,6 +147,7 @@ services:
       start_period: 15s
 
   migrate:
+    # The version database/package.json pins, so CI migrates with the dbmate deployed here.
     image: amacneil/dbmate:2.37.0
     command: migrate
 
