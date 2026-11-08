@@ -26,8 +26,9 @@ Arguments: `$ARGUMENTS`
   `gh api repos/{owner}/{repo}/pulls/<number>/comments`. A point already raised isn't reported
   again.
 - A pull request, or a branch not checked out here: check its head out in a throwaway worktree
-  outside the checkout (`git fetch origin pull/<number>/head`, then
-  `git worktree add --detach <dir> FETCH_HEAD`), since the human's checkout may change meanwhile.
+  (`git fetch origin pull/<number>/head`, then `git worktree add --detach
+  <main checkout>/.claude/worktrees/review-<number> FETCH_HEAD`), since the human's checkout may
+  change meanwhile. Under the main checkout, `stack:prune` finds its stack if it is left behind.
 - **Intent:** the commit messages, the pull request's title and description, the issue they name
   (`gh issue view <n> --comments`), and the sections of the specification it cites.
 
@@ -37,11 +38,10 @@ Start `/workflow-validate` without `--fix` for the target, in the directory that
 the hunt. The only files it changes are generated ones: a `schema.ts` or `open-api.json` it
 regenerates was stale, which is a finding, and stays regenerated, since that is what to commit.
 
-A throwaway worktree is set up as `/workflow-validate` step 3 says, with one difference: its
-`.env` copy always names `calliope_review` in `DATABASE_URL` (`<review>`), so the tests run on the
-target's migrations and never on the human's database.
-`pnpm exec dbmate --env-file ../.env --url "<review>" up` in its `database/` creates and
-migrates it.
+A throwaway worktree is set up as `/workflow-validate` step 3 says: on a stack of its own, so the
+tests run on the target's migrations and never on the human's database. Once its checks are done,
+`pnpm run stack:down` at its root (or the main checkout's `scripts/stack.sh down`, for a tree older
+than the script) removes the stack; step 8's `/workflow-validate` starts it again.
 
 ## 3. Hunt: one agent per angle
 
@@ -178,5 +178,5 @@ End by asking which to apply, answered by id and option ("M1, S2: B"); the other
 2. Check again what the fixes touched, with `/workflow-validate`.
 3. Hand over as for any change, without offering another review, and commit only after a confirmed
    review (root `AGENTS.md`).
-4. Once nothing in the review's worktree waits for review or a commit, remove it, and drop its
-   database first (`pnpm exec dbmate --env-file ../.env --url "<review>" drop` in its `database/`).
+4. Once nothing in the review's worktree waits for review or a commit, remove it, after
+   `pnpm run stack:down` at its root.

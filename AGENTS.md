@@ -71,14 +71,21 @@ work with `SameSite=Lax`, and CORS goes effectively unused in production.
 
 ## Running two checkouts
 
+**Every worktree runs on a stack of its own.** Two test suites against one database delete each
+other's accounts, because every run names them the same. `pnpm run stack:up` at the worktree's root
+gives it ports and a Compose project name no other checkout uses, starts the stack and migrates it.
+`pnpm run stack:down` removes the stack before the worktree goes; `pnpm run stack:prune` removes the
+stacks of worktrees under the main checkout that are already gone.
+
 `.env` holds every port, each defaulting to the single-checkout value; the Vite proxy target is the
 one that matters, or a second frontend quietly talks to the first checkout's database. `.claude/
 launch.json` needs the same two ports again — the preview tooling reads neither `.env` nor a variable
 — and is gitignored for that reason, with `launch.example.json` carrying the defaults.
 
 **Stopping the backend's `pnpm run dev` is SIGTERM to its process group**, which `node --watch`
-passes on to the server, so every step of the shutdown runs once. `lsof -nP -iTCP:$BACKEND_PORT
--sTCP:LISTEN`, then `ps -o pgid= -p <pid>`, then `kill -TERM -<pgid>`, and check the port again.
+passes on to the server, so every step of the shutdown runs once. `lsof -nP -iTCP:<port>
+-sTCP:LISTEN` with `.env`'s `BACKEND_PORT` (8000 without one; the shell doesn't load `.env`), then
+`ps -o pgid= -p <pid>`, then `kill -TERM -<pgid>`, and check the port again.
 
 ## The issue tracker
 
