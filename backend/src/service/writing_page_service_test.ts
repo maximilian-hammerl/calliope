@@ -196,8 +196,8 @@ test("pages are listed by activity, and ties by id", async () => {
     tied.map((page) => page.id),
     tied
       .map((page) => page.id)
-      .sort()
-      .reverse(),
+      .toSorted()
+      .toReversed(),
   );
   const again = await WritingPageService.listPages(groupId, authorId);
   assert.deepEqual(

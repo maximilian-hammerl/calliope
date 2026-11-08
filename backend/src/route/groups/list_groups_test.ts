@@ -144,10 +144,10 @@ test("QUERY /api/groups hides another user's private group", async () => {
   const outsiderCookie = await registerUser(outsider);
   // "any" is the widest this endpoint goes: everything the caller may look at.
   const page = await list(outsiderCookie, { limit: 100, membership: "any" });
-  const titles = page.results.map((group) => group.title);
+  const titles = new Set(page.results.map((group) => group.title));
 
-  assert.equal(titles.includes(SECOND_TITLE), true);
-  assert.ok(!titles.includes(FIRST_TITLE));
+  assert.equal(titles.has(SECOND_TITLE), true);
+  assert.ok(!titles.has(FIRST_TITLE));
 });
 
 test("QUERY /api/groups leaves out a public group the caller is not in", async () => {
@@ -299,8 +299,8 @@ test("QUERY /api/groups rejects a search term shorter than three characters", as
 });
 
 /**
- * The point of the vocabularies being enums: a board can be narrowed by them. Asserted through
- * `includes` rather than a count, because the suite runs in parallel and the seed is there too.
+ * The point of the vocabularies being enums: a board can be narrowed by them. Asserted by
+ * membership rather than a count, because the suite runs in parallel and the seed is there too.
  */
 test("QUERY /api/groups narrows a board to the genres asked for", async () => {
   const cookie = await registerUser(owner);
@@ -327,10 +327,10 @@ test("QUERY /api/groups narrows a board to the genres asked for", async () => {
       limit: 100,
     })
   ).json();
-  const ids = page.results.map((group: { id: string }) => group.id);
+  const ids = new Set(page.results.map((group: { id: string }) => group.id));
 
-  assert.equal(ids.includes(fantasy.id), true);
-  assert.equal(ids.includes(western.id), false);
+  assert.equal(ids.has(fantasy.id), true);
+  assert.equal(ids.has(western.id), false);
 });
 
 test("QUERY /api/groups takes either of two genres, and both fields together", async () => {
@@ -359,9 +359,9 @@ test("QUERY /api/groups takes either of two genres, and both fields together", a
       limit: 100,
     })
   ).json();
-  const eitherIds = either.results.map((group: { id: string }) => group.id);
-  assert.equal(eitherIds.includes(fantasy.id), true);
-  assert.equal(eitherIds.includes(western.id), true);
+  const eitherIds = new Set(either.results.map((group: { id: string }) => group.id));
+  assert.equal(eitherIds.has(fantasy.id), true);
+  assert.equal(eitherIds.has(western.id), true);
 
   // Two *fields* narrow against each other: fantasy that is also slow burn.
   const both = await (
@@ -371,9 +371,9 @@ test("QUERY /api/groups takes either of two genres, and both fields together", a
       limit: 100,
     })
   ).json();
-  const bothIds = both.results.map((group: { id: string }) => group.id);
-  assert.equal(bothIds.includes(fantasy.id), true);
-  assert.equal(bothIds.includes(western.id), false);
+  const bothIds = new Set(both.results.map((group: { id: string }) => group.id));
+  assert.equal(bothIds.has(fantasy.id), true);
+  assert.equal(bothIds.has(western.id), false);
 });
 
 test("QUERY /api/groups leaves the board alone when no genre is asked for", async () => {

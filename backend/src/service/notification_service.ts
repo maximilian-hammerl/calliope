@@ -218,7 +218,7 @@ async function countUnread(recipientId: string): Promise<number> {
     .where("readAt", "is", null)
     .executeTakeFirstOrThrow();
 
-  return Number(count);
+  return count;
 }
 
 /**
