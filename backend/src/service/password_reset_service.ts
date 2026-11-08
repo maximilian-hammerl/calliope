@@ -67,7 +67,7 @@ async function issuePasswordReset(usernameOrEmailAddress: string): Promise<void>
   );
 }
 
-export type PasswordResetResult = "reset" | "invalid_token";
+type PasswordResetResult = "reset" | "invalid_token";
 
 /**
  * Consuming the token, setting the password and ending every session happen in one

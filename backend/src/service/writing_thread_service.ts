@@ -21,9 +21,9 @@ import {
  * it, unlike the lists: a search ranks by relevance to the term, and floating a favourite above a
  * better match would answer a question nobody asked.
  */
-export type FoundThread = Thread & { writingGroupTitle: string };
+type FoundThread = Thread & { writingGroupTitle: string };
 
-export type Thread =
+type Thread =
   // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
   // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
   { writingGroupId: string } & Pick<

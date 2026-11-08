@@ -19,7 +19,7 @@ const numeric: postgres.PostgresType<number> = {
  * @param timestamp - PostgreSQL timestamp (e.g., "2025-05-20 08:43:17.025289")
  * @returns ISO 8601 formatted string (e.g., "2025-05-20T08:43:17.025289")
  */
-export function parsePostgresTimestampToIsoString(timestamp: string): string {
+function parsePostgresTimestampToIsoString(timestamp: string): string {
   return timestamp.replace(" ", "T");
 }
 
@@ -35,7 +35,7 @@ const timestamp = {
  * @param timestamp - PostgreSQL timestamp (e.g., "2025-05-20 08:43:17.025289+00")
  * @returns ISO 8601 formatted string (e.g., "2025-05-20T08:43:17.025289+00:00")
  */
-export function parsePostgresTimestamptzToIsoString(timestamp: string): string {
+function parsePostgresTimestamptzToIsoString(timestamp: string): string {
   return timestamp.replace(" ", "T") + ":00";
 }
 

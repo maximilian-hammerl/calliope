@@ -122,12 +122,6 @@ export const SUBGENRE_GENRE = {
   experimental: "literary",
 } as const satisfies Record<StorySubgenre, StoryGenre>;
 
-export function subgenresOf(genre: StoryGenre): StorySubgenre[] {
-  return (Object.keys(SUBGENRE_GENRE) as StorySubgenre[]).filter(
-    (subgenre) => SUBGENRE_GENRE[subgenre] === genre,
-  );
-}
-
 /**
  * The subgenres that sit under no chosen genre. Empty when the pair is coherent.
  *

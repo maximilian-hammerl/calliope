@@ -21,7 +21,7 @@ import {
  * Inferred from the response schema rather than written twice: the schema is the definition, and
  * a hand-written copy is a second thing to keep in step.
  */
-export type Notification = z.infer<typeof NOTIFICATION_RESPONSE>;
+type Notification = z.infer<typeof NOTIFICATION_RESPONSE>;
 
 /**
  * The database guarantees these are present for the types that need them, but a row is only

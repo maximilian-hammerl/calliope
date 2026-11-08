@@ -15,7 +15,7 @@ import type { PostDocument } from "#/src/document/document_schema.ts";
 import { documentToPlainText } from "#/src/document/document_text.ts";
 
 /** What the rail needs: everything but the prose, so listing a group is not a bulk download. */
-export type PageSummary =
+type PageSummary =
   // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
   // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
   { writingGroupId: string } & Pick<
@@ -29,7 +29,7 @@ export type PageSummary =
   };
 
 // `document` is not picked from the table, where the column is `unknown` by design.
-export type Page = PageSummary & { document: PostDocument };
+type Page = PageSummary & { document: PostDocument };
 
 /**
  * What the gates need: the page itself, with nothing about who is reading it. Three routes use
@@ -166,7 +166,7 @@ async function selectPageForReader(
 }
 
 /** A page with the group it belongs to, which a cross-group list has to name. */
-export type FoundPage = PageSummary & { writingGroupTitle: string };
+type FoundPage = PageSummary & { writingGroupTitle: string };
 
 /**
  * Pages across every group the member may see: their own, and public ones they have not joined —
@@ -203,7 +203,7 @@ function listVisiblePages(user: User, query: ListQuery): Promise<ListResults<Fou
   return listResultsWithCount(pages, query);
 }
 
-export type UpdateOutcome =
+type UpdateOutcome =
   | { kind: "updated"; page: Page }
   /** Somebody wrote in the meantime, and `page` is what they left. */
   | { kind: "stale"; page: Page };

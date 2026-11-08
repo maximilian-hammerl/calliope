@@ -13,7 +13,7 @@ import type { StoryVocabularyFilter } from "#/src/query/story_vocabulary.ts";
 import { withStoryVocabulary } from "#/src/query/story_vocabulary.ts";
 import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "#/src/query/favourite.ts";
 
-export type StoryIdea = Pick<
+type StoryIdea = Pick<
   Selectable<DatabaseStoryIdea>,
   | "id"
   | "title"
@@ -46,13 +46,13 @@ export type StoryIdea = Pick<
   };
 
 /** The board's default is `open`: what is still worth answering. */
-export type StatusFilter = StoryIdeaStatus | "any";
+type StatusFilter = StoryIdeaStatus | "any";
 
 /**
  * `unread` is the absence of a row, which is why it is not a value of the enum itself. `marked`
  * was a third value here until favouriting became its own thing across five kinds.
  */
-export type ReaderStateFilter = "read" | "unread" | "any";
+type ReaderStateFilter = "read" | "unread" | "any";
 
 const SELECTED_COLUMNS = [
   "storyIdea.id",
@@ -77,7 +77,7 @@ const SELECTED_COLUMNS = [
 ] as const;
 
 /** What a member may set. Only the title and the two texts are required; see the request body. */
-export type StoryIdeaValues = Pick<Selectable<DatabaseStoryIdea>, "title" | "teaser" | "synopsis"> &
+type StoryIdeaValues = Pick<Selectable<DatabaseStoryIdea>, "title" | "teaser" | "synopsis"> &
   Partial<
     Pick<
       Selectable<DatabaseStoryIdea>,
@@ -144,7 +144,7 @@ function withAuthor(readerId: string, executor: typeof db | Transaction = db) {
     ]);
 }
 
-export type StoryIdeaFilters = StoryVocabularyFilter & {
+type StoryIdeaFilters = StoryVocabularyFilter & {
   /** Whose state to report, and to filter by. Always the requesting member. */
   readerId: string;
   readerState: ReaderStateFilter;
@@ -246,7 +246,7 @@ function listStoryIdeas(query: ListQuery & StoryIdeaFilters): Promise<ListResult
  * `title` is here because it is small and because it is the excerpt `resolveVisibleTarget` needs
  * for a reported idea. The page that renders an idea asks `selectStoryIdea` instead.
  */
-export type StoryIdeaGate = {
+type StoryIdeaGate = {
   id: string;
   title: string;
   createdBy: string;
@@ -376,7 +376,7 @@ async function clearRead(transaction: Transaction, ideaId: string, userId: strin
     .execute();
 }
 
-export type StoryIdeaCarousel = {
+type StoryIdeaCarousel = {
   previous: StoryIdea | null;
   storyIdea: StoryIdea | null;
   next: StoryIdea | null;

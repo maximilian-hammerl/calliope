@@ -60,7 +60,7 @@ async function selectFolder(
     .executeTakeFirst();
 }
 
-export type CreateOutcome =
+type CreateOutcome =
   | { kind: "created"; folder: Folder }
   /** No such parent in this group — a folder cannot be the child of another group's. */
   | { kind: "noSuchParent" }
@@ -138,7 +138,7 @@ async function updateFolder(
   return await selectFolder(writingGroupId, folderId, transaction);
 }
 
-export type DeleteOutcome = "deleted" | "notEmpty";
+type DeleteOutcome = "deleted" | "notEmpty";
 
 /**
  * Only an empty folder goes: deleting a subtree is unrecoverable with no edit history behind it.
@@ -205,7 +205,7 @@ async function deleteFolder(
   return stillThere === undefined ? undefined : "notEmpty";
 }
 
-export type MoveOutcome =
+type MoveOutcome =
   | { kind: "moved"; folder: Folder }
   /** No such target in this group — a folder cannot move under another group's. */
   | { kind: "noSuchParent" }

@@ -13,13 +13,13 @@ import type { PlatformRole } from "#/src/database/schema.ts";
  *   threads would develop holes. Removing particular content is its own deliberate act.
  */
 
-export type BanTarget = {
+type BanTarget = {
   id: string;
   platformRole: PlatformRole | null;
   bannedAt: string | null;
 };
 
-export type BanRefusal = "not_found" | "is_an_operator" | "already_banned";
+type BanRefusal = "not_found" | "is_an_operator" | "already_banned";
 
 async function selectTarget(userId: string): Promise<BanTarget | undefined> {
   return await db

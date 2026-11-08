@@ -7,7 +7,7 @@ which loads when you open that area's files.
 ```bash
 pnpm run dev                  # --watch, on $BACKEND_PORT, under Node's permission model
 pnpm run test                 # every file in its own process, in parallel, against the compose stack
-pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc  (validate:fix repairs what it can)
+pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc, knip  (validate:fix repairs what it can)
 pnpm run db:seed              # the fixture: nine accounts, password `calliope`
 ```
 
