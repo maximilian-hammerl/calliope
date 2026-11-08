@@ -36,5 +36,7 @@ one, and the interface groups joined above invited, which it can only do holding
 
 ## The QUERY /users response
 
-`USER_RESPONSE` is id and username only. A username is public within the platform; an email
-address never is, and the schema *picks* rather than omits so a column added later cannot leak.
+It is `LISTED_MEMBER_RESPONSE`, and everything in it must be public within the platform; an email
+address never is. `UserService.listUsers` names its columns and `list_users_test.ts` pins the
+response's keys, so a column added later cannot leak. The schema's pick only keeps it out of the
+document: nothing parses a response through its schema.

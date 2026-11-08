@@ -25732,7 +25732,7 @@
       "query": {
         "tags": ["users"],
         "summary": "Find members by name",
-        "description": "Returns a page of members, narrowed to those whose username contains the search term when one is given. Only the id and the username are returned, never an email address.",
+        "description": "Returns a page of members, narrowed to those whose username contains the search term when one is given. A member's email address is never returned.",
         "operationId": "listUsers",
         "requestBody": {
           "required": true,
@@ -26899,7 +26899,7 @@
       "get": {
         "tags": ["users"],
         "summary": "Read a member's profile",
-        "description": "The name and the date they joined. An operator additionally sees whether the account is banned; nobody else does.",
+        "description": "A member's profile, readable by every member. An operator additionally sees whether the account is banned; nobody else does.",
         "operationId": "getUser",
         "parameters": [
           {
@@ -27855,7 +27855,7 @@
       "get": {
         "tags": ["users"],
         "summary": "Read a picture",
-        "description": "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached for a year.",
+        "description": "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached as immutable, but only for an hour: that is how long a withdrawn picture can keep showing.",
         "operationId": "getAvatar",
         "parameters": [
           {

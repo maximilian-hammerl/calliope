@@ -24,7 +24,7 @@ export default new OpenAPIHono().openapi(
     tags: [USERS_TAG],
     summary: "Read a picture",
     description:
-      "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached for a year.",
+      "Served by the application rather than as a static file, so it is behind the same session check as everything else. The address changes whenever the picture does, so it is cached as immutable, but only for an hour: that is how long a withdrawn picture can keep showing.",
     operationId: "getAvatar",
     middleware: authenticated,
     request: { params: z.object({ fileId: z.uuidv7() }) },

@@ -167,14 +167,6 @@ export const PAGE_SUMMARY_RESPONSE = WRITING_PAGE_SCHEMA.omit({
 // `text` stays server-side: it exists for search, and the client renders the document.
 export const PAGE_RESPONSE = PAGE_SUMMARY_RESPONSE.extend({ document: DOCUMENT_SCHEMA });
 
-/**
- * What one member looks like to another. Picked rather than omitted on purpose: a column
- * added to the users table later joins this only if someone names it here, so a new private
- * field cannot leak by being forgotten.
- *
- * A username is public within the platform — it is what members type to invite one another.
- * An email address never is.
- */
 export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA.pick({
   id: true,
   writingGroupId: true,
@@ -188,14 +180,21 @@ export const NEXT_STEP_RESPONSE = WRITING_GROUP_NEXT_STEP_SCHEMA.pick({
   completedByUsername: z.string().nullable(),
 });
 
+/**
+ * What one member looks like to another. Picked rather than omitted, so a column added to the
+ * users table later stays out of the document. Nothing parses a response through it: what keeps
+ * such a column out of the body is the service selecting named columns.
+ *
+ * A username is public within the platform — it is what members type to invite one another.
+ * An email address never is.
+ */
 export const USER_RESPONSE = USER_SCHEMA.pick({ id: true, username: true }).extend({
   avatarUrl: AVATAR_URL,
 });
 
 /**
- * The members list, and nowhere else a person is merely mentioned. A role is a fact about
- * somebody, not a decoration on every reference to them — see #101, which keeps it off post
- * bylines and out of `USER_RESPONSE`, where the picker and search would inherit it.
+ * What `QUERY /users` (the members page and the picker) and `QUERY /search` send per member.
+ * The role stays off other mentions of a person, such as post bylines (#101).
  */
 export const LISTED_MEMBER_RESPONSE = USER_RESPONSE.extend({
   platformRole: USER_SCHEMA.shape.platformRole,
@@ -247,8 +246,9 @@ export const STORY_IDEA_CAROUSEL_RESPONSE = z.object({
 });
 
 /**
- * Separate from `USER_RESPONSE` so the picker and search keep sending two fields. The profile
- * goes to every member: there is no visibility setting, only the choice to leave a field empty.
+ * Separate from `LISTED_MEMBER_RESPONSE`, so a page of members does not carry every profile. The
+ * profile goes to every member: there is no visibility setting, only the choice to leave a field
+ * empty.
  */
 export const USER_PROFILE_RESPONSE = USER_SCHEMA.pick({
   id: true,

@@ -25,7 +25,7 @@ export default new OpenAPIHono().openapi(
     tags: [USERS_TAG],
     summary: "Read a member's profile",
     description:
-      "The name and the date they joined. An operator additionally sees whether the account is banned; nobody else does.",
+      "A member's profile, readable by every member. An operator additionally sees whether the account is banned; nobody else does.",
     operationId: "getUser",
     middleware: authenticated,
     request: { params: USER_PARAMS },
