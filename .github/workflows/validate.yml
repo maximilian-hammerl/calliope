@@ -156,3 +156,44 @@ jobs:
 
       - name: Run tests
         run: pnpm run test:unit --run
+
+  # Set up as deployment/README.md, "Deploying on a merge", says.
+  deploy:
+    name: Deploy to testing
+    needs: [backend, database, frontend]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: testing
+    # One at a time: a second start joins the running deploy and reports that deploy's result.
+    concurrency: deploy-testing
+
+    steps:
+      - name: Deploy over SSH
+        # Explicitly, because only an explicit bash adds pipefail: without it a failed ls-remote
+        # reads as an empty answer, which the check below takes for "main has moved on".
+        shell: bash
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_HOST: ${{ vars.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ vars.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          # deploy.sh deploys the newest commit on main, so this run would ship a newer commit
+          # before that commit's checks finish. Its own run deploys it once they pass.
+          latest="$(git ls-remote "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" refs/heads/main |
+            cut -f 1)"
+          [ -n "$latest" ] || { echo "::error::Could not read where main points."; exit 1; }
+          if [ "$latest" != "$GITHUB_SHA" ]; then
+            echo "::notice::main has moved on to $latest, whose own run deploys it."
+            exit 0
+          fi
+
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/deploy-key"
+          printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/known-hosts"
+
+          # The key's forced command decides what runs, so nothing is sent. It prints only once the
+          # deploy has ended; the keepalives hold the quiet connection open until then.
+          ssh -T -i "$RUNNER_TEMP/deploy-key" -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/known-hosts" -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=30 "$DEPLOY_SSH_HOST"

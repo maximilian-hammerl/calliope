@@ -27,8 +27,8 @@ file**, and needs no rebuild. dbmate records a migration by version and will not
 one, so an edit means everyone rebuilds: **`/db-reset`** (`.claude/skills/db-reset/`) does it in the
 right order — stop the backend, drop and migrate, regenerate and format the types, seed, restart. It
 drops **everything**, hand-made accounts included, and signs every browser out, so say so before
-running it against a database somebody else is using. `deployment/deploy.sh` does the same on
-`testing` when it detects an edited migration, and refuses elsewhere.
+running it against a database somebody else is using. `deployment/deploy.sh`, which every merge to
+`main` runs, does the same on `testing` when it detects an edited migration, and refuses elsewhere.
 
 **Every `migrate:down` must reverse its `migrate:up`**, enum types and trigger functions included.
 `/workflow-validate` proves it on a scratch database, as CI does; `CREATE TYPE` and

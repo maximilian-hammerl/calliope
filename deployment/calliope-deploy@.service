@@ -1,0 +1,13 @@
+# deploy.sh for the environment after the @: calliope-deploy@testing.service. Started by
+# ssh-deploy.sh, so a dropped SSH connection cannot stop a deploy halfway.
+[Unit]
+Description=Deploy Calliope to %i
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/calliope/deployment/deploy.sh --environment %i
+# A oneshot has no start timeout by default, so a hung fetch or build would hold the unit, and
+# refuse every later deploy, until someone stopped it. Below the CI job's 30 minutes.
+TimeoutStartSec=25min

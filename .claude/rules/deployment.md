@@ -24,6 +24,12 @@ any of this. Gotchas it does not carry:
   keeps the databases private.
 - **`deploy.sh` detects an edited migration and rebuilds the database — on `testing` only**, and
   refuses elsewhere. See `database/AGENTS.md` for when editing in place stops being allowed.
+- **A push to `main` deploys `testing`** (Validate's `Deploy to testing` job). A change to
+  `deploy.sh` or `ssh-deploy.sh` takes effect from the deploy after the one that pulls it: the
+  running copy was parsed before the pull. The units are copies in `/etc/systemd/system` and the
+  forced command lives in `authorized_keys`, so a change to either is redone on the server.
+- **What `deploy.sh` prints is public**: the job copies it into a public repository's Actions log.
+  Never print a value from `.env`, or `compose config`, which resolves them.
 - The backend must stay a single instance: chat fan-out is in process.
 - **The backend's root file system is read-only**, with no capabilities: anything new it has to
   write needs a volume, as the uploads have.

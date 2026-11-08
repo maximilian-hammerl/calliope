@@ -4,6 +4,9 @@
 #
 #     cd /opt/calliope && ./deployment/deploy.sh --environment testing
 #
+# On testing a push to main runs it (README.md, "Deploying on a merge"), and its output lands in
+# the public Actions log: never print a value from .env.
+#
 # The interesting decision is whether the database has to be rebuilt. Pre-release a schema
 # change edits the migration that created the table, and dbmate will not re-run a version it
 # has recorded — so an edit to an *already applied* migration means the schema on disk and the
