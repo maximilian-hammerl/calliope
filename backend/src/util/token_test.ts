@@ -12,7 +12,7 @@ test("a token is 256 bits, url-safe", () => {
   const token = generateToken();
   // base64url of 32 bytes, without padding.
   assert.equal(token.length, 43);
-  assert(/^[A-Za-z0-9_-]+$/.test(token), token);
+  assert(/^[A-Za-z0-9_-]+$/u.test(token), token);
 });
 
 test("hashing is deterministic and matches SHA-256", async () => {

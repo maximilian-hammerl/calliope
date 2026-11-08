@@ -59,10 +59,12 @@ Build request schemas from the generated `src/database/schema.ts` with `.pick()`
 `.keyof().extract()`, never by restating columns; a renamed column is then a compile error. What the
 database cannot express — an email format, a minimum — goes in `.extend()`. **A `refine` reaches
 neither the document nor the client**; where JSON Schema has a word for the rule, declare it with
-`.meta()` beside the refine, or use a discriminated union, as `moveReport` does. Responses come from
-`http/response_schema.ts` and add joined names (`createdByUsername`), never a bare id; where a
-response covers several kinds, it is a discriminated union, not a flat shape with nullable columns.
-`EMAIL_ADDRESS_SCHEMA` is the one email schema — Zod's default is stricter than the browser's.
+`.meta()` beside the refine, or use a discriminated union, as `moveReport` does. **Nor do a regex's
+flags**: `pattern` is its `.source`, so spell case out (`[a-fA-F]`) rather than use `i`, `m` or `s`,
+and use `u`, not `v`. Responses come from `http/response_schema.ts` and add joined names
+(`createdByUsername`), never a bare id; where a response covers several kinds, it is a
+discriminated union, not a flat shape with nullable columns. `EMAIL_ADDRESS_SCHEMA` is the one email
+schema — Zod's default is stricter than the browser's.
 
 ## Lists
 

@@ -19,7 +19,7 @@ the library's — an extension renaming an attribute is a data migration.
 - **Unknown nodes, marks and attributes are rejected, not stripped.** Every object is
   `z.strictObject`; a plain `z.object` *strips* silently, turning a refusal into acceptance.
   `grep -c 'z\.object(' document_schema.ts` must stay 0. Depth and node count are bounded.
-- **Free values are the validation surface**: a link is `http`/`https`/`mailto` only, an image
+- **Free values are the validation surface**: a link is `http`/`https` only, an image
   source a relative path, a class a safe token. **Loosening the schema loosens `PostBody`'s
   `v-html`**, the one `v-html` in the application — the two are named together in its docblock.
 - **`writing_post.text` is derived server-side**, `documentToPlainText`, never accepted from the

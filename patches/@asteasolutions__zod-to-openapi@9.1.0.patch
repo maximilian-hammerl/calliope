@@ -1,0 +1,28 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index b02ff5702c8c0ec9cc072f0fc7d930745694cfcd..598a92eec396be3008745de5b262d3dab6cc8331 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -889,8 +889,7 @@ class StringTransformer {
+     transform(zodSchema, mapNullableType) {
+         var _a, _b, _c, _d;
+         const regexCheck = (_a = zodSchema.def.checks) === null || _a === void 0 ? void 0 : _a.find(isZodCheckRegex);
+-        // toString generates an additional / at the beginning and end of the pattern
+-        const pattern = regexCheck === null || regexCheck === void 0 ? void 0 : regexCheck._zod.def.pattern.toString().replace(/^\/|\/$/g, '');
++        const pattern = regexCheck === null || regexCheck === void 0 ? void 0 : regexCheck._zod.def.pattern.source;
+         const check = (_b = zodSchema.def.checks) === null || _b === void 0 ? void 0 : _b.find(isZodCheckLengthEquals);
+         const length = check === null || check === void 0 ? void 0 : check._zod.def.length;
+         const maxLength = Number.isFinite(zodSchema.minLength)
+diff --git a/dist/index.mjs b/dist/index.mjs
+index e1ce9d0229cf3bd6a18fdaf49bc268422c7f73f4..ff859e6e6565407a566aa0fcf767b5eba29ba825 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -887,8 +887,7 @@ class StringTransformer {
+     transform(zodSchema, mapNullableType) {
+         var _a, _b, _c, _d;
+         const regexCheck = (_a = zodSchema.def.checks) === null || _a === void 0 ? void 0 : _a.find(isZodCheckRegex);
+-        // toString generates an additional / at the beginning and end of the pattern
+-        const pattern = regexCheck === null || regexCheck === void 0 ? void 0 : regexCheck._zod.def.pattern.toString().replace(/^\/|\/$/g, '');
++        const pattern = regexCheck === null || regexCheck === void 0 ? void 0 : regexCheck._zod.def.pattern.source;
+         const check = (_b = zodSchema.def.checks) === null || _b === void 0 ? void 0 : _b.find(isZodCheckLengthEquals);
+         const length = check === null || check === void 0 ? void 0 : check._zod.def.length;
+         const maxLength = Number.isFinite(zodSchema.minLength)
