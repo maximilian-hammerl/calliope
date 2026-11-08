@@ -30,7 +30,7 @@
     "@hono/zod-openapi": "1.6.3",
     "@logtape/logtape": "2.4.2",
     "croner": "11.0.0",
-    "hono": "4.13.16",
+    "hono": "4.13.17",
     "hono-rate-limiter": "0.5.4",
     "ioredis": "6.0.0",
     "kysely": "0.29.8",
