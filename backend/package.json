@@ -16,7 +16,7 @@
     "lint:check": "oxlint --type-aware",
     "type-check": "tsc",
     "validate:fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run type-check",
-    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check",
+    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check && pnpm --workspace-root exec knip --treat-config-hints-as-errors --workspace backend",
     "db:seed": "node --env-file=../.env main.ts --seed",
     "grant-role": "node --env-file=../.env main.ts --grant-role",
     "revoke-role": "node --env-file=../.env main.ts --revoke-role",

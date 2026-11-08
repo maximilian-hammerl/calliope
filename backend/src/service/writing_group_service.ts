@@ -20,7 +20,7 @@ import type { StoryVocabularyFilter } from "#/src/query/story_vocabulary.ts";
 import { withStoryVocabulary } from "#/src/query/story_vocabulary.ts";
 import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "#/src/query/favourite.ts";
 
-export type WritingGroup = Pick<
+type WritingGroup = Pick<
   Selectable<DatabaseWritingGroup>,
   | "id"
   | "title"
@@ -60,7 +60,7 @@ export type WritingGroup = Pick<
  * older behaviour — every public group plus your own — is `any`, which is right for a search
  * across everything and wrong for a list called mine.
  */
-export type MembershipFilter = "joined" | "invited" | "none" | "any";
+type MembershipFilter = "joined" | "invited" | "none" | "any";
 
 const SELECTED_COLUMNS = [
   "writingGroup.id",
@@ -87,7 +87,7 @@ const SELECTED_COLUMNS = [
  * What a member may set about the story. Every field optional except the two that were always
  * required, so a group created before any of this existed is still describable.
  */
-export type WritingGroupValues = Pick<Selectable<DatabaseWritingGroup>, "title" | "synopsis"> &
+type WritingGroupValues = Pick<Selectable<DatabaseWritingGroup>, "title" | "synopsis"> &
   Partial<
     Pick<
       Selectable<DatabaseWritingGroup>,

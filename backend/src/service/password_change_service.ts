@@ -3,7 +3,7 @@ import { hashPassword, verifyPassword } from "#/src/util/password.ts";
 import { Mailer } from "#/src/mail/mailer.ts";
 import { passwordChangedMail } from "#/src/mail/password_changed_mail.ts";
 
-export type ChangePasswordResult = "changed" | "wrong_password";
+type ChangePasswordResult = "changed" | "wrong_password";
 
 /**
  * Changing a password while signed in, which is the counterpart to resetting one while locked
