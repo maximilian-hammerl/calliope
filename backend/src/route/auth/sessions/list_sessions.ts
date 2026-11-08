@@ -7,7 +7,6 @@ import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
 import { SESSION_LIFETIME, UserService } from "#/src/service/user_service.ts";
 import { userAgentParts } from "#/src/util/user_agent_parts.ts";
 import {
-  BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
@@ -36,7 +35,6 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       ...FORBIDDEN_RESPONSE,
-      ...BAD_REQUEST_RESPONSE,
       ...COMMON_RESPONSES,
     },
   }),
