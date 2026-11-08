@@ -43,8 +43,8 @@ before parameters, or `/me` is swallowed by `/:userId`.
 - **Every declared response needs `content`.** One content-less response widens the handler's
   return type to `Response` and **silently disables the body and status checks for the whole
   route**. Prefer `200 { ok: true }` over a bodyless 204 for the same reason. Spread
-  `...COMMON_RESPONSES` and `...BAD_REQUEST_RESPONSE` into every route, and `...FORBIDDEN_RESPONSE`
-  where the route has no 403 of its own.
+  `...COMMON_RESPONSES` into every route, `...BAD_REQUEST_RESPONSE` into every route that validates
+  a param, query or body, and `...FORBIDDEN_RESPONSE` where the route has no 403 of its own.
 - **A wrong password is `INVALID_CREDENTIALS_BODY`**, a constant, never a helper — a helper
   returning `c.json(…)` widens the return type the same way. Its `code: "invalid_credentials"` is
   how the frontend tells a wrong password from a lost session; a bare 401 signs the member out.
