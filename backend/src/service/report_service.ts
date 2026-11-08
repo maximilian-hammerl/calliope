@@ -1,14 +1,14 @@
-import { db, type Transaction } from "@/src/database/client.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
 import type {
   ReportCategory,
   ReportOutcome,
   ReportStatus,
   ReportTargetType,
-} from "@/src/database/schema.ts";
-import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import { listResultsWithCount } from "@/src/list/list_endpoint_query.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
+} from "#/src/database/schema.ts";
+import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
+import { listResultsWithCount } from "#/src/list/list_endpoint_query.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { resolveVisibleTarget } from "#/src/service/visible_target.ts";
 
 /**
  * What a member has reported to the operators.
@@ -214,19 +214,19 @@ function listReports(query: ListQuery & ReportFilters): Promise<ListResults<Repo
           .as("targetExists"),
       ])
       .$if(query.status !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` only runs this when it is set
         builder.where("report.status", "=", query.status!),
       )
       .$if(query.category !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
+        // oxlint-disable-next-line no-non-null-assertion -- as above
         builder.where("report.category", "=", query.category!),
       )
       .$if(query.targetType !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
+        // oxlint-disable-next-line no-non-null-assertion -- as above
         builder.where("report.targetType", "=", query.targetType!),
       )
       .$if(query.closingOutcome !== undefined, (builder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
+        // oxlint-disable-next-line no-non-null-assertion -- as above
         builder.where("report.closingOutcome", "=", query.closingOutcome!),
       ),
     query,

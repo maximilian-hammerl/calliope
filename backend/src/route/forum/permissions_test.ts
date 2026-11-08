@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -8,14 +8,14 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 import {
   clearForum,
   createForumFolder,
   createForumPage,
   createForumThread,
-} from "@/src/test/forum.ts";
-import { makeOperator } from "@/src/test/reports.ts";
+} from "#/src/test/forum.ts";
+import { makeOperator } from "#/src/test/reports.ts";
 
 const member = "forum-permissions-member";
 const operator = "forum-permissions-operator";
@@ -63,12 +63,12 @@ test("PUT /api/forum/permissions: one route for all three kinds, an operator's a
     ["page", page.id],
   ] as const) {
     assert.equal(
-      // deno-lint-ignore no-await-in-loop -- three requests, one after another
+      // oxlint-disable-next-line no-await-in-loop -- three requests, one after another
       (await setPermission(memberCookie, kind, id, "hidden")).status,
       STATUS_CODE.Forbidden,
     );
     assert.equal(
-      // deno-lint-ignore no-await-in-loop -- as above
+      // oxlint-disable-next-line no-await-in-loop -- as above
       (await setPermission(operatorCookie, kind, id, "read")).status,
       STATUS_CODE.OK,
     );

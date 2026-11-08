@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { waitForMail } from "@/src/test/mailpit.ts";
-import { postJson } from "@/src/test/auth.ts";
-import { emailChangeFixture } from "@/src/test/email_address_change.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { waitForMail } from "#/src/test/mailpit.ts";
+import { postJson } from "#/src/test/auth.ts";
+import { emailChangeFixture } from "#/src/test/email_address_change.ts";
 
 // Its own account and addresses, so the file next door cannot occupy them.
 const {

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 // Imported rather than read: a module load needs no file permission, and the test
 // task runs under the same restricted set the application does.
-import document from "@/open-api.json" with { type: "json" };
+import document from "#/open-api.json" with { type: "json" };
 
 /**
  * Text a request must supply has to say something, not merely be long enough. `min(1)` counts

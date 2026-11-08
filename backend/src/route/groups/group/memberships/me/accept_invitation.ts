@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { MEMBERSHIPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserInWritingGroupService } from "#/src/service/user_in_writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 

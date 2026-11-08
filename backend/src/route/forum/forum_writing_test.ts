@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { clearForum, closeForumThread, createForumFolder } from "@/src/test/forum.ts";
-import { makeOperator } from "@/src/test/reports.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { PAGE_CHANGED } from "@/src/http/response.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+} from "#/src/test/support.ts";
+import { clearForum, closeForumThread, createForumFolder } from "#/src/test/forum.ts";
+import { makeOperator } from "#/src/test/reports.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { PAGE_CHANGED } from "#/src/http/response.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 const member = "forum-write-member";
 const operator = "forum-write-operator";

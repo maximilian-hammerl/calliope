@@ -1,0 +1,14 @@
+# The context is the repository root, and the image needs the workspace's root files and the
+# backend from it. Tests and their fixtures are not shipped.
+*
+!package.json
+!pnpm-workspace.yaml
+!pnpm-lock.yaml
+!backend
+backend/node_modules
+backend/.file-storage
+backend/**/*.md
+backend/**/*_test.ts
+backend/src/test
+backend/open-api.json
+backend/.spectral.yaml

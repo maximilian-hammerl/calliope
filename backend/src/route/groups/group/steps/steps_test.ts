@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
 import {
   addMember,
   clearRateLimits,
@@ -10,7 +10,7 @@ import {
   registerUser,
   request,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "steps-test-admin";
 const writer = "steps-test-writer";

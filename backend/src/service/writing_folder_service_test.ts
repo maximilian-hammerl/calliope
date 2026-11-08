@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { type FolderId, type GroupId, mint } from "@/src/scope/scoped_id.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { type FolderId, type GroupId, mint } from "#/src/scope/scoped_id.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -9,7 +9,7 @@ import {
   getUserId,
   registerUser,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 import { WritingPageService } from "./writing_page_service.ts";
 import { MAX_FOLDER_DEPTH, WritingFolderService } from "./writing_folder_service.ts";
 
@@ -73,7 +73,7 @@ test("nesting stops at the maximum depth", async () => {
   // One chain down to the deepest level the member is allowed.
   let deepest = await make(groupId, ownerId, "Ebene 1");
   for (let level = 2; level <= MAX_FOLDER_DEPTH; level++) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: each level needs the one above
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: each level needs the one above
     deepest = await make(groupId, ownerId, `Ebene ${level}`, deepest.id);
   }
   assert.equal(deepest.depth, MAX_FOLDER_DEPTH);
@@ -211,7 +211,7 @@ async function chain(groupId: GroupId, ownerId: string, titles: string[]) {
   const made = [];
   let parent: FolderId | null = null;
   for (const title of titles) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: each level needs the one above
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: each level needs the one above
     const folder = await make(groupId, ownerId, title, parent);
     made.push(folder);
     parent = folder.id;

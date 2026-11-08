@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import sharp from "sharp";
-import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "@/src/test/support.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "#/src/test/support.ts";
 
 const OWNER = "avatar-route-owner";
 const OTHER = "avatar-route-other";
@@ -27,7 +27,7 @@ async function upload(
 ): Promise<Response> {
   const form = new FormData();
   if (parts.image !== undefined) {
-    form.append("image", new File([parts.image as BufferSource], "a.png", { type: "image/png" }));
+    form.append("image", new File([new Uint8Array(parts.image)], "a.png", { type: "image/png" }));
   }
   form.append("origin", parts.origin ?? "own_work");
   if (parts.credit !== undefined) {

@@ -1,17 +1,17 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
 import type {
   StoryIdea as DatabaseStoryIdea,
   StoryIdeaStatus,
   StoryLanguage,
-} from "@/src/database/schema.ts";
-import { emptyToNull } from "@/src/util/optional_text.ts";
-import { refuseOrphanedSubgenres } from "@/src/http/story_metadata_refusal.ts";
-import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import { listResultsWithCount, searchPattern } from "@/src/list/list_endpoint_query.ts";
-import type { StoryVocabularyFilter } from "@/src/query/story_vocabulary.ts";
-import { withStoryVocabulary } from "@/src/query/story_vocabulary.ts";
-import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "@/src/query/favourite.ts";
+} from "#/src/database/schema.ts";
+import { emptyToNull } from "#/src/util/optional_text.ts";
+import { refuseOrphanedSubgenres } from "#/src/http/story_metadata_refusal.ts";
+import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
+import { listResultsWithCount, searchPattern } from "#/src/list/list_endpoint_query.ts";
+import type { StoryVocabularyFilter } from "#/src/query/story_vocabulary.ts";
+import { withStoryVocabulary } from "#/src/query/story_vocabulary.ts";
+import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "#/src/query/favourite.ts";
 
 export type StoryIdea = Pick<
   Selectable<DatabaseStoryIdea>,
@@ -176,7 +176,7 @@ function filtered(query: StoryIdeaFilters) {
   return (
     withStoryVocabulary(withAuthor(query.readerId), "storyIdea", query)
       .$if(query.createdBy !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!),
       )
       .$if((query.hiddenAuthorIds ?? []).length > 0, (queryBuilder) =>
@@ -186,7 +186,7 @@ function filtered(query: StoryIdeaFilters) {
         queryBuilder.where(
           "storyIdea.createdBy",
           "!=",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+          // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when it is set
           query.excludeCreatedBy!,
         ),
       )
@@ -194,7 +194,7 @@ function filtered(query: StoryIdeaFilters) {
         queryBuilder.where("storyIdea.status", "=", query.status as StoryIdeaStatus),
       )
       .$if(query.language !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.language", "=", query.language!),
       )
       // Unread is the missing row, so both directions filter on the join rather than on a value.
@@ -210,25 +210,25 @@ function filtered(query: StoryIdeaFilters) {
       .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where((eb) =>
           eb.or([
-            // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+            // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when the term is set
             eb("storyIdea.title", "ilike", searchPattern(query.search!)),
-            // deno-lint-ignore no-non-null-assertion -- as above
+            // oxlint-disable-next-line no-non-null-assertion -- as above
             eb("storyIdea.teaser", "ilike", searchPattern(query.search!)),
-            // deno-lint-ignore no-non-null-assertion -- as above
+            // oxlint-disable-next-line no-non-null-assertion -- as above
             eb("storyIdea.synopsis", "ilike", searchPattern(query.search!)),
           ]),
         ),
       )
       .$if(query.id !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when it is set
         queryBuilder.where("storyIdea.id", "=", query.id!),
       )
       .$if(query.olderThanId !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
+        // oxlint-disable-next-line no-non-null-assertion -- as above
         queryBuilder.where("storyIdea.id", "<", query.olderThanId!),
       )
       .$if(query.newerThanId !== undefined, (queryBuilder) =>
-        // deno-lint-ignore no-non-null-assertion -- as above
+        // oxlint-disable-next-line no-non-null-assertion -- as above
         queryBuilder.where("storyIdea.id", ">", query.newerThanId!),
       )
   );

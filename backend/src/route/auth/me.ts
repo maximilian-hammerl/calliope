@@ -1,13 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
-import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
-import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
-import { avatarUrl } from "@/src/http/avatar_url.ts";
-import { AVATAR_URL } from "@/src/http/response_schema.ts";
-import { COMMON_RESPONSES, ERROR_RESPONSE, jsonContent } from "@/src/http/response.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
+import authenticated from "#/src/middleware/authenticated_allowing_unverified_email_address.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
+import { UserAvatarService } from "#/src/service/user_avatar_service.ts";
+import { avatarUrl } from "#/src/http/avatar_url.ts";
+import { AVATAR_URL } from "#/src/http/response_schema.ts";
+import { COMMON_RESPONSES, ERROR_RESPONSE, jsonContent } from "#/src/http/response.ts";
 
 const CURRENT_USER_RESPONSE = USER_SCHEMA.pick({
   id: true,

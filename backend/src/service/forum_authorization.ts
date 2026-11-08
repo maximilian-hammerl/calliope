@@ -1,6 +1,6 @@
-import type { ForumPermission } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { isOperator } from "@/src/service/forum_permission.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { isOperator } from "#/src/service/forum_permission.ts";
 
 /**
  * Who may do what in the public forum, as one table — the counterpart of

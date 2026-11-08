@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { createIdea, patchIdea, storyIdeaUsers } from "@/src/test/story_ideas.ts";
+} from "#/src/test/support.ts";
+import { createIdea, patchIdea, storyIdeaUsers } from "#/src/test/story_ideas.ts";
 
 const { author, bystander } = storyIdeaUsers("carousel");
 
@@ -38,7 +38,7 @@ async function walkableIdeas(cookie: string) {
 
   for (const title of titles) {
     // Sequential, because the ids have to ascend in exactly this order.
-    // deno-lint-ignore no-await-in-loop
+    // oxlint-disable-next-line no-await-in-loop
     ideas.push(await (await createIdea(cookie, { title })).json());
   }
 

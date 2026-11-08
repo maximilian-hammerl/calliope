@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import { authFixture, postJson, sessionCookie } from "@/src/test/auth.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers } from "#/src/test/support.ts";
+import { authFixture, postJson, sessionCookie } from "#/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { register, username } = authFixture("logout");

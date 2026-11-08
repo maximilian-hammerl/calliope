@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { APP_NAME } from "@/src/branding.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { API_VERSION } from "@/src/open_api_specification.ts";
-import type { DatabaseHealth } from "@/src/operations/database_health.ts";
-import { SAME_ORIGIN } from "@/src/test/support.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { API_VERSION } from "#/src/open_api_specification.ts";
+import type { DatabaseHealth } from "#/src/operations/database_health.ts";
+import { SAME_ORIGIN } from "#/src/test/support.ts";
 
 test("GET /api/health reports a healthy application without a session", async () => {
   const response = await app.request("/api/health");

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { waitForMail } from "@/src/test/mailpit.ts";
-import { authFixture, postJson } from "@/src/test/auth.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { waitForMail } from "#/src/test/mailpit.ts";
+import { authFixture, postJson } from "#/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { clearMail, emailAddress, mailCount, registerAndDiscardVerificationMail, username } =

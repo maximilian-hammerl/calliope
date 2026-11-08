@@ -1,5 +1,5 @@
 import type { AnyColumnWithTable, SelectQueryBuilder } from "kysely";
-import type { DB } from "@/src/database/schema.ts";
+import type { DB } from "#/src/database/schema.ts";
 
 /**
  * Written once, like `withFavourite`: five queries select a person, and a join spread over five of

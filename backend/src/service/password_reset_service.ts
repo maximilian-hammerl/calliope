@@ -1,10 +1,10 @@
-import { db } from "@/src/database/client.ts";
-import { hashPassword } from "@/src/util/password.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { runInBackground } from "@/src/util/background.ts";
-import { Mailer } from "@/src/mail/mailer.ts";
-import { passwordResetMail } from "@/src/mail/password_reset_mail.ts";
-import { TOKEN_LIFETIME, UserTokenService } from "@/src/service/user_token_service.ts";
+import { db } from "#/src/database/client.ts";
+import { hashPassword } from "#/src/util/password.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { runInBackground } from "#/src/util/background.ts";
+import { Mailer } from "#/src/mail/mailer.ts";
+import { passwordResetMail } from "#/src/mail/password_reset_mail.ts";
+import { TOKEN_LIFETIME, UserTokenService } from "#/src/service/user_token_service.ts";
 
 const HOST_URL = getRequiredEnvVariable("HOST_URL");
 

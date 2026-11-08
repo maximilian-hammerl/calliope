@@ -37,14 +37,14 @@ test("the two lists together are the whole table", () => {
 
 test("a reader may do nothing the writer rule governs", async (t) => {
   for (const act of WRITER_ACTS) {
-    // deno-lint-ignore no-await-in-loop -- a test step has to be awaited in order
+    // oxlint-disable-next-line no-await-in-loop -- a test step has to be awaited in order
     await t.test(act, () => assert.equal(mayAct("reader", act), false));
   }
 });
 
 test("a reader may not touch what somebody else wrote", async (t) => {
   for (const act of AUTHOR_ACTS) {
-    // deno-lint-ignore no-await-in-loop -- a test step has to be awaited in order
+    // oxlint-disable-next-line no-await-in-loop -- a test step has to be awaited in order
     await t.test(act, () => {
       const theirs = { createdBy: SOMEBODY_ELSE, userId: AUTHOR };
       assert.equal(mayAct("reader", act, theirs), false);

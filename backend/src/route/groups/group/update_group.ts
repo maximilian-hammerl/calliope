@@ -1,25 +1,25 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { GROUPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
+import { db } from "#/src/database/client.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { GROUPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { WritingGroupService } from "#/src/service/writing_group_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 import {
   notBlank,
   STORY_CONTENT_WARNINGS_SCHEMA,
   STORY_GENRES_SCHEMA,
   STORY_SUBGENRES_SCHEMA,
   STORY_TROPES_SCHEMA,
-} from "@/src/http/request_schema.ts";
+} from "#/src/http/request_schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 

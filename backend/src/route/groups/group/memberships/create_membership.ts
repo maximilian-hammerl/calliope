@@ -1,22 +1,22 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { MEMBERSHIPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
+import { db } from "#/src/database/client.ts";
+import { MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { MEMBERSHIPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP } from "#/src/scope/chains.ts";
 import {
   userExists,
   UserInWritingGroupService,
-} from "@/src/service/user_in_writing_group_service.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
+} from "#/src/service/user_in_writing_group_service.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { USER_IN_WRITING_GROUP_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { USER_IN_WRITING_GROUP_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 

@@ -1,24 +1,24 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
 import type {
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
   WritingGroup as DatabaseWritingGroup,
   WritingGroupVisibility,
-} from "@/src/database/schema.ts";
-import { emptyToNull } from "@/src/util/optional_text.ts";
-import { refuseOrphanedSubgenres } from "@/src/http/story_metadata_refusal.ts";
+} from "#/src/database/schema.ts";
+import { emptyToNull } from "#/src/util/optional_text.ts";
+import { refuseOrphanedSubgenres } from "#/src/http/story_metadata_refusal.ts";
 import type { User } from "./user_service.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
-import type { StoryVocabularyFilter } from "@/src/query/story_vocabulary.ts";
-import { withStoryVocabulary } from "@/src/query/story_vocabulary.ts";
-import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "@/src/query/favourite.ts";
+} from "#/src/list/list_endpoint_query.ts";
+import type { StoryVocabularyFilter } from "#/src/query/story_vocabulary.ts";
+import { withStoryVocabulary } from "#/src/query/story_vocabulary.ts";
+import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "#/src/query/favourite.ts";
 
 export type WritingGroup = Pick<
   Selectable<DatabaseWritingGroup>,
@@ -296,12 +296,12 @@ function listVisibleWritingGroups(
       .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where((eb) =>
           eb.or([
-            // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+            // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when the term is set
             eb("writingGroup.title", "ilike", searchPattern(query.search!)),
             eb(
               "writingGroup.synopsis",
               "ilike",
-              // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+              // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when the term is set
               searchPattern(query.search!),
             ),
           ]),

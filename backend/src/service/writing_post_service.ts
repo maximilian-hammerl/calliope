@@ -1,17 +1,17 @@
-import type { GroupId, PostId, ThreadId } from "@/src/scope/scoped_id.ts";
+import type { GroupId, PostId, ThreadId } from "#/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
-import type { WritingPost as DatabaseWritingPost } from "@/src/database/schema.ts";
-import type { PostDocument } from "@/src/document/document_schema.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
+import type { WritingPost as DatabaseWritingPost } from "#/src/database/schema.ts";
+import type { PostDocument } from "#/src/document/document_schema.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
-import { type FavouriteFilter, withFavourite } from "@/src/query/favourite.ts";
+} from "#/src/list/list_endpoint_query.ts";
+import { type FavouriteFilter, withFavourite } from "#/src/query/favourite.ts";
 
 export type Post = Pick<
   Selectable<DatabaseWritingPost>,
@@ -181,7 +181,7 @@ function listPosts(
         queryBuilder.where(
           "writingPost.text",
           "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+          // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when the term is set
           searchPattern(query.search!),
         ),
       ),

@@ -1,5 +1,5 @@
 import type { SelectQueryBuilder } from "kysely";
-import type { DB, StoryGenre, StorySubgenre, StoryTrope } from "@/src/database/schema.ts";
+import type { DB, StoryGenre, StorySubgenre, StoryTrope } from "#/src/database/schema.ts";
 
 /**
  * What a member may narrow a board by. Absent means "not asked", never "none" — the same rule the

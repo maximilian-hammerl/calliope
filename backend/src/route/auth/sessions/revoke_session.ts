@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { USER_SESSION_SCHEMA } from "@/src/database/schema.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { USER_SESSION_SCHEMA } from "#/src/database/schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,7 +12,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const SESSION_PARAMS = z.object({ sessionId: USER_SESSION_SCHEMA.shape.id });
 

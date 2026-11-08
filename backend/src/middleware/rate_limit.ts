@@ -1,9 +1,9 @@
 import type { Context } from "hono";
-import { clientAddress } from "@/src/util/client_address.ts";
+import { clientAddress } from "#/src/util/client_address.ts";
 import { rateLimiter, RedisStore } from "hono-rate-limiter";
-import { rateLimiterRedisClient } from "@/src/redis/client.ts";
-import type { RateLimitScope } from "@/src/http/response.ts";
-import { isReadMethod } from "@/src/http/method.ts";
+import { rateLimiterRedisClient } from "#/src/redis/client.ts";
+import type { RateLimitScope } from "#/src/http/response.ts";
+import { isReadMethod } from "#/src/http/method.ts";
 
 /**
  * Liveness probes run far more often than the limit allows — one every three seconds

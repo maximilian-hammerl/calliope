@@ -1,4 +1,4 @@
-import type { StoryGenre, StorySubgenre } from "@/src/database/schema.ts";
+import type { StoryGenre, StorySubgenre } from "#/src/database/schema.ts";
 
 /**
  * Which genre each subgenre sits under. The form offers only the subgenres of the genres a member

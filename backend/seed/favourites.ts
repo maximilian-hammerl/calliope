@@ -1,6 +1,6 @@
-import { USER } from "@/seed/accounts.ts";
-import { chatId, favouriteId, groupId, pageId, postId, storyIdeaId, threadId } from "@/seed/ids.ts";
-import type { FavouriteTargetType } from "@/src/query/favourite.ts";
+import { USER } from "#/seed/accounts.ts";
+import { chatId, favouriteId, groupId, pageId, postId, storyIdeaId, threadId } from "#/seed/ids.ts";
+import type { FavouriteTargetType } from "#/src/query/favourite.ts";
 
 /**
  * All six kinds, because every filter is otherwise an empty list on a fresh checkout and the flag

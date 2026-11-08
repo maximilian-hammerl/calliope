@@ -1,17 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { THREAD_RESPONSE } from "@/src/http/response_schema.ts";
-import { THREADS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP_THREAD } from "@/src/scope/chains.ts";
-import { WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { THREAD_RESPONSE } from "#/src/http/response_schema.ts";
+import { THREADS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP_THREAD } from "#/src/scope/chains.ts";
+import { WritingThreadService } from "#/src/service/writing_thread_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_THREAD_SCHEMA } from "#/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,

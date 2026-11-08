@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { FORUM_PERMISSION_TARGET_TYPES, ForumService } from "@/src/service/forum_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { FORUM_PERMISSION_TARGET_TYPES, ForumService } from "#/src/service/forum_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -12,8 +12,8 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import { FORUM_PERMISSION_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { FORUM_PERMISSION_SCHEMA } from "#/src/database/schema.ts";
 
 /**
  * One route for the three kinds that carry a permission, rather than a `/permission` under each.

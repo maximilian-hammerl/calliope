@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { sendJson } from "@/src/test/auth.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+} from "#/src/test/support.ts";
+import { sendJson } from "#/src/test/auth.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 const author = "update-profile-test-author";
 const reader = "update-profile-test-reader";

@@ -1,8 +1,7 @@
-// @ts-types="@types/nodemailer"
 import nodemailer from "nodemailer";
-import { APP_NAME } from "@/src/branding.ts";
-import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
-import { runInBackground } from "@/src/util/background.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import { getOptionalEnvVariable, getRequiredEnvVariable } from "#/src/util/env.ts";
+import { runInBackground } from "#/src/util/background.ts";
 
 /** Read at startup, so a misconfigured deployment fails then rather than on the first send. */
 const SMTP_HOST = getRequiredEnvVariable("SMTP_HOST");

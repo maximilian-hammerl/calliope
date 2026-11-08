@@ -1,22 +1,22 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { REPORTS_TAG } from "@/src/open_api_specification.ts";
-import { REPORT_OUTCOME_SCHEMA, REPORT_SCHEMA } from "@/src/database/schema.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { authorizedAsModerator } from "@/src/middleware/authorized_as_platform_role.ts";
-import type { ReportMove } from "@/src/service/report_service.ts";
-import { ReportService } from "@/src/service/report_service.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { REPORTS_TAG } from "#/src/open_api_specification.ts";
+import { REPORT_OUTCOME_SCHEMA, REPORT_SCHEMA } from "#/src/database/schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { authorizedAsModerator } from "#/src/middleware/authorized_as_platform_role.ts";
+import type { ReportMove } from "#/src/service/report_service.ts";
+import { ReportService } from "#/src/service/report_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+} from "#/src/http/response.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 
 /**
  * A discriminated union rather than one flat shape with optional fields, so the document itself

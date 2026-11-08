@@ -1,6 +1,6 @@
-import type { Transaction } from "@/src/database/client.ts";
-import type { UserTokenPurpose } from "@/src/database/schema.ts";
-import { formatToken, generateToken, hashToken, parseToken } from "@/src/util/token.ts";
+import type { Transaction } from "#/src/database/client.ts";
+import type { UserTokenPurpose } from "#/src/database/schema.ts";
+import { formatToken, generateToken, hashToken, parseToken } from "#/src/util/token.ts";
 
 /**
  * One lifetime for every purpose. A verification link could reasonably live longer than a

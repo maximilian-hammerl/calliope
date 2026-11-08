@@ -1,22 +1,22 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   clearRateLimits,
   createGroup,
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { createIdea, patchIdea } from "@/src/test/story_ideas.ts";
+} from "#/src/test/support.ts";
+import { createIdea, patchIdea } from "#/src/test/story_ideas.ts";
 import {
   clearForum,
   createForumFolder,
   createForumPage,
   createForumThread,
-} from "@/src/test/forum.ts";
-import { makeOperator } from "@/src/test/reports.ts";
+} from "#/src/test/forum.ts";
+import { makeOperator } from "#/src/test/reports.ts";
 
 const owner = "search-owner";
 const outsider = "search-outsider";
@@ -132,7 +132,7 @@ test("QUERY /api/search reports how many more there are", async () => {
   const before = totals(await search(cookie, { search: TERM }));
 
   for (let index = 0; index < 7; index++) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await createGroup(cookie, `${TERM} Gruppe ${index}`);
   }
 

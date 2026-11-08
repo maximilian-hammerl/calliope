@@ -1,4 +1,4 @@
-import { getOptionalEnvVariable } from "@/src/util/env.ts";
+import { getOptionalEnvVariable } from "#/src/util/env.ts";
 
 export const APP_NAME = getOptionalEnvVariable("PUBLIC_APP_NAME") ?? "Calliope";
 

@@ -1,6 +1,6 @@
 import type { Context } from "hono";
-import { type User, UserService } from "@/src/service/user_service.ts";
-import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
+import { type User, UserService } from "#/src/service/user_service.ts";
+import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
 
 /**
  * Shared by the two session middlewares, which differ only in whether they also insist the

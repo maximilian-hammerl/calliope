@@ -1,7 +1,7 @@
-import { db } from "@/src/database/client.ts";
-import { hashPassword, verifyPassword } from "@/src/util/password.ts";
-import { Mailer } from "@/src/mail/mailer.ts";
-import { passwordChangedMail } from "@/src/mail/password_changed_mail.ts";
+import { db } from "#/src/database/client.ts";
+import { hashPassword, verifyPassword } from "#/src/util/password.ts";
+import { Mailer } from "#/src/mail/mailer.ts";
+import { passwordChangedMail } from "#/src/mail/password_changed_mail.ts";
 
 export type ChangePasswordResult = "changed" | "wrong_password";
 

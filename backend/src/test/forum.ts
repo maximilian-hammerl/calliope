@@ -1,8 +1,8 @@
-import { db } from "@/src/database/client.ts";
-import { write } from "@/src/test/support.ts";
-import type { ForumPermission } from "@/src/database/schema.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
+import { db } from "#/src/database/client.ts";
+import { write } from "#/src/test/support.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
 
 /**
  * Forum content is inserted straight into the tables: no endpoint creates a folder yet (#32's
@@ -165,7 +165,7 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
   // Newest first, which is children before parents here: `parent_folder_id` is RESTRICT, and it
   // is checked per row rather than at the end of the statement, so one `in` would refuse.
   for (const folderId of [...made.folders].reverse()) {
-    // deno-lint-ignore no-await-in-loop
+    // oxlint-disable-next-line no-await-in-loop
     await write((transaction) =>
       transaction.deleteFrom("writingFolder").where("id", "=", folderId).execute(),
     );
@@ -176,7 +176,7 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
   // for the RESTRICT above.
   if (usernames.length > 0) {
     for (let depth = MAX_FOLDER_DEPTH; depth >= 1; depth--) {
-      // deno-lint-ignore no-await-in-loop
+      // oxlint-disable-next-line no-await-in-loop
       await write((transaction) =>
         transaction
           .deleteFrom("writingFolder")

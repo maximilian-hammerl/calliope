@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "#/src/text_limit.ts";
 
 export const SORT_ORDER = z.enum(["asc", "desc"]);
 

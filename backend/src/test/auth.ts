@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import app from "@/src/app.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
-import "@/src/test/breach_check.ts";
+import app from "#/src/app.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { countMailFor, deleteMailFor } from "#/src/test/mailpit.ts";
+import "#/src/test/breach_check.ts";
 
 /**
  * What the auth tests share. They cannot use `test/support.ts`'s `registerUser` and `request`,
@@ -11,8 +11,13 @@ import "@/src/test/breach_check.ts";
  */
 export const password = "a-complex-password";
 
-export function sendJson(method: string, path: string, body?: unknown, cookie?: string) {
-  return app.request(path, {
+export async function sendJson(
+  method: string,
+  path: string,
+  body?: unknown,
+  cookie?: string,
+): Promise<Response> {
+  return await app.request(path, {
     method,
     headers: {
       "content-type": "application/json",

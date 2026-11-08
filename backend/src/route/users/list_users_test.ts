@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers, registerUser, request, write } from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser, request, write } from "#/src/test/support.ts";
 
 const searcher = "list-users-searcher";
 // The distinctive middle syllable is what the substring tests look for; no prefix of it
@@ -72,7 +72,7 @@ test("QUERY /api/users treats a wildcard as a literal character", async () => {
 
   // Unescaped, `%` and `_` would match anything and return the whole table.
   for (const term of ["%%%", "___"]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const page = await searchOk(cookie, { search: term });
     assert.equal(page.totalResults, 0, `${term} should match nothing`);
   }

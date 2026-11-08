@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers, registerUser, write } from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { TEXT_MINIMUM } from "@/src/text_limit.ts";
-import { PASSWORD_BREACHED } from "@/src/http/response.ts";
-import { deleteMailFor, tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
-import { postJson, sendJson } from "@/src/test/auth.ts";
+import { BreachedPasswordService } from "#/src/service/breached_password_service.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers, registerUser, write } from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { TEXT_MINIMUM } from "#/src/text_limit.ts";
+import { PASSWORD_BREACHED } from "#/src/http/response.ts";
+import { deleteMailFor, tokenFromMail, waitForMail } from "#/src/test/mailpit.ts";
+import { postJson, sendJson } from "#/src/test/auth.ts";
 
 const username = "password-change-test-user";
 const emailAddress = `${username}@example.com`;

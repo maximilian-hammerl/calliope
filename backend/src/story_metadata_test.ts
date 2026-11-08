@@ -5,9 +5,9 @@ import {
   STORY_GENRES,
   STORY_SUBGENRES,
   STORY_TROPES,
-} from "@/src/database/schema.ts";
-import { LIST_LIMIT } from "@/src/text_limit.ts";
-import { SUBGENRE_GENRE, subgenresOutsideGenres } from "@/src/story_metadata.ts";
+} from "#/src/database/schema.ts";
+import { LIST_LIMIT } from "#/src/text_limit.ts";
+import { SUBGENRE_GENRE, subgenresOutsideGenres } from "#/src/story_metadata.ts";
 
 /**
  * A board offers every value it has, so a filter has to be able to ask for every value. The two

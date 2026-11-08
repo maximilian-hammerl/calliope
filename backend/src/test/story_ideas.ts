@@ -1,6 +1,6 @@
-import { request } from "@/src/test/support.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import type { StoryIdeaStatus } from "@/src/database/schema.ts";
+import { request } from "#/src/test/support.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import type { StoryIdeaStatus } from "#/src/database/schema.ts";
 
 /**
  * Two names per test file, named by `scope`. Six files use these, and shared names had each

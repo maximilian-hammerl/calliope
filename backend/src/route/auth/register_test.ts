@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
-import { authFixture, password, postJson } from "@/src/test/auth.ts";
-import { TEXT_MINIMUM } from "@/src/text_limit.ts";
-import { PASSWORD_BREACHED } from "@/src/http/response.ts";
+import { BreachedPasswordService } from "#/src/service/breached_password_service.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { clearRateLimits, deleteUsers } from "#/src/test/support.ts";
+import { authFixture, password, postJson } from "#/src/test/auth.ts";
+import { TEXT_MINIMUM } from "#/src/text_limit.ts";
+import { PASSWORD_BREACHED } from "#/src/http/response.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("register");
@@ -47,7 +47,9 @@ test("POST /api/auth/register reports every schema violation", async () => {
   // the order follows the schema's keys and carries no meaning, and one field may fail more than
   // one check — an empty username is both too short and blank.
   assert.deepEqual(
-    [...new Set(body.issues.map((issue: { path: string }) => issue.path))].toSorted(),
+    [...new Set<string>(body.issues.map((issue: { path: string }) => issue.path))].toSorted(
+      (a, b) => a.localeCompare(b),
+    ),
     ["emailAddress", "password", "username"],
   );
 });

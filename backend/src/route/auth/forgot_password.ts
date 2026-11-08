@@ -1,14 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { PasswordResetService } from "@/src/service/password_reset_service.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { PasswordResetService } from "#/src/service/password_reset_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const FORGOT_PASSWORD_BODY = z.object({
   // Either identifier, exactly as the login route accepts them: somebody who cannot sign in

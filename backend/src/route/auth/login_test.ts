@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
-import { authFixture, password, postJson } from "@/src/test/auth.ts";
-import { INVALID_CREDENTIALS_MESSAGE } from "@/src/http/response.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { TEXT_MINIMUM } from "@/src/text_limit.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, write } from "#/src/test/support.ts";
+import { authFixture, password, postJson } from "#/src/test/auth.ts";
+import { INVALID_CREDENTIALS_MESSAGE } from "#/src/http/response.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { TEXT_MINIMUM } from "#/src/text_limit.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
 const { emailAddress, register, username } = authFixture("login");

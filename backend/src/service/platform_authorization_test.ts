@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PLATFORM_ROLES } from "@/src/database/schema.ts";
+import { PLATFORM_ROLES } from "#/src/database/schema.ts";
 import { mayAdministerPlatform, mayModeratePlatform } from "./platform_authorization.ts";
 
 test("no role may do nothing", () => {

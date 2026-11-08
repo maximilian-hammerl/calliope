@@ -1,6 +1,6 @@
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
-import type { User } from "@/src/service/user_service.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { UserInChatGroupService } from "#/src/service/user_in_chat_group_service.ts";
+import type { User } from "#/src/service/user_service.ts";
 
 /**
  * The two checks every chat route makes, in the order the rest of the API uses: what the

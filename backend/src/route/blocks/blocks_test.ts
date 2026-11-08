@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -8,8 +8,8 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { blocked, blocker, blockMember, listBlocks, unblockMember } from "@/src/test/blocks.ts";
+} from "#/src/test/support.ts";
+import { blocked, blocker, blockMember, listBlocks, unblockMember } from "#/src/test/blocks.ts";
 
 beforeEach(() => clearRateLimits());
 afterEach(() => deleteUsers([blocker, blocked]));

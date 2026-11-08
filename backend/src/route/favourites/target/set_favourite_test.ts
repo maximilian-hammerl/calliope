@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   createGroup,
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 import {
   aPublicGroup,
   cleanUpFavourites,
   favouriteFixture,
   favouritesOf,
   setFavourite,
-} from "@/src/test/favourites.ts";
+} from "#/src/test/favourites.ts";
 
 const { owner, member, outsider } = favouriteFixture("set");
 
@@ -42,7 +42,7 @@ test("PUT /api/favourites marks each kind, in the column that kind belongs to", 
     ["writing_page", page.id],
     ["story_idea", idea.id],
   ] as const) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const { status } = await setFavourite(memberCookie, targetType, targetId);
     assert.equal(status, STATUS_CODE.OK, `${targetType} was refused`);
   }

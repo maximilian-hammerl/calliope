@@ -1,0 +1,56 @@
+{
+  "name": "backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./*"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file=../.env --permission --allow-child-process --allow-fs-read=.. --allow-fs-write=./.file-storage --allow-addons --allow-net main.ts",
+    "start": "node --env-file=../.env --permission --allow-fs-read=.. --allow-fs-write=./.file-storage --allow-addons --allow-net main.ts",
+    "test": "PWNED_PASSWORDS_URL=http://127.0.0.1:1 node --test --test-force-exit --env-file=../.env \"src/**/*_test.ts\"",
+    "format:fix": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint:fix": "oxlint --type-aware --fix",
+    "lint:check": "oxlint --type-aware",
+    "type-check": "tsc",
+    "validate:fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run type-check",
+    "validate:check": "pnpm run format:check && pnpm run lint:check && pnpm run type-check",
+    "db:seed": "node --env-file=../.env main.ts --seed",
+    "grant-role": "node --env-file=../.env main.ts --grant-role",
+    "revoke-role": "node --env-file=../.env main.ts --revoke-role",
+    "open-api:generate": "node --env-file=../.env generate_open_api_spec.ts && oxfmt open-api.json",
+    "open-api:check": "pnpm run open-api:generate && test -z \"$(git status --porcelain open-api.json)\" && echo 'OpenAPI spec is up-to-date' || (echo 'OpenAPI spec is out-of-date, run: pnpm run open-api:generate' && exit 1)",
+    "open-api:lint": "pnpm dlx @stoplight/spectral-cli@6.17.1 lint open-api.json --ruleset .spectral.yaml --fail-severity warn"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.6",
+    "@hono/structured-logger": "1.0.0",
+    "@hono/zod-openapi": "1.6.3",
+    "@logtape/logtape": "2.4.2",
+    "croner": "11.0.0",
+    "hono": "4.13.16",
+    "hono-rate-limiter": "0.5.4",
+    "ioredis": "6.0.0",
+    "kysely": "0.29.8",
+    "kysely-postgres-js": "5.0.1",
+    "nodemailer": "10.3.1",
+    "openapi3-ts": "4.6.2",
+    "postgres": "4.0.0",
+    "sharp": "0.35.5",
+    "ua-parser-js": "2.0.10",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/nodemailer": "8.0.2",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=26.0.0"
+  }
+}

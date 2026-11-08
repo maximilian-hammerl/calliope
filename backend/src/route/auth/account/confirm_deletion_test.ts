@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
 import {
   addMember,
   clearRateLimits,
@@ -9,10 +9,10 @@ import {
   deleteUsers,
   postBody,
   request,
-} from "@/src/test/support.ts";
-import { flushBackgroundWork } from "@/src/util/background.ts";
-import { waitForMail } from "@/src/test/mailpit.ts";
-import { accountDeletionFixture } from "@/src/test/account_deletion.ts";
+} from "#/src/test/support.ts";
+import { flushBackgroundWork } from "#/src/util/background.ts";
+import { waitForMail } from "#/src/test/mailpit.ts";
+import { accountDeletionFixture } from "#/src/test/account_deletion.ts";
 
 // Its own account and mailbox, so the file next door cannot clear them.
 const {

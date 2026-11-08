@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,
@@ -8,8 +8,8 @@ import {
   registerUser,
   request,
   write,
-} from "@/src/test/support.ts";
-import { sendJson } from "@/src/test/auth.ts";
+} from "#/src/test/support.ts";
+import { sendJson } from "#/src/test/auth.ts";
 
 const viewer = "get-user-test-viewer";
 const subject = "get-user-test-subject";

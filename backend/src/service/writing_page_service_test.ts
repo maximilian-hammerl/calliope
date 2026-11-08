@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { type GroupId, mint, type PageId } from "@/src/scope/scoped_id.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { type GroupId, mint, type PageId } from "#/src/scope/scoped_id.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -9,7 +9,7 @@ import {
   getUserId,
   registerUser,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 import { WritingPageService } from "./writing_page_service.ts";
 
 // Scoped to this file, so a file running beside it cannot register or delete them.
@@ -194,7 +194,10 @@ test("pages are listed by activity, and ties by id", async () => {
   // Newest id first, and the same on every call.
   assert.deepEqual(
     tied.map((page) => page.id),
-    [...tied.map((page) => page.id)].sort().reverse(),
+    tied
+      .map((page) => page.id)
+      .sort()
+      .reverse(),
   );
   const again = await WritingPageService.listPages(groupId, authorId);
   assert.deepEqual(

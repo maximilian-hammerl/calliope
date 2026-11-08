@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import app from "@/src/app.ts";
-import { ACCOUNT_BANNED, INVALID_CREDENTIALS } from "@/src/http/response.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import app from "#/src/app.ts";
+import { ACCOUNT_BANNED, INVALID_CREDENTIALS } from "#/src/http/response.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -12,7 +12,7 @@ import {
   registerUser,
   request,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 // Its own accounts: the suite runs in parallel, so a shared name collides.
 const operator = "ban-test-operator";

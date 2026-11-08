@@ -1,12 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { User } from "@/src/service/user_service.ts";
+import type { User } from "#/src/service/user_service.ts";
 import {
   effectiveMemberPermission,
   FORUM_ROOT_PERMISSION,
   mayReadForumContent,
   mostRestrictive,
-} from "@/src/service/forum_permission.ts";
+} from "#/src/service/forum_permission.ts";
 
 const member: User = {
   id: "11111111-1111-7111-8111-111111111111",

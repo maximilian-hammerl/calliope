@@ -1,13 +1,13 @@
-import type { GroupId, MemberId } from "@/src/scope/scoped_id.ts";
+import type { GroupId, MemberId } from "#/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { withAvatar } from "@/src/query/user_avatar.ts";
-import { withAvatarUrl } from "@/src/http/avatar_url.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { withAvatar } from "#/src/query/user_avatar.ts";
+import { withAvatarUrl } from "#/src/http/avatar_url.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
 import type {
   UserInWritingGroup as DatabaseUserInWritingGroup,
   UserInWritingGroupRole,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 export type UserInWritingGroup = Pick<
   Selectable<DatabaseUserInWritingGroup>,

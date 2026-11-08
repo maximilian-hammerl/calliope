@@ -1,6 +1,6 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 import { getRequiredEnvVariable } from "./util/env.ts";
-import { APP_CONTACT, APP_DESCRIPTION, APP_NAME } from "@/src/branding.ts";
+import { APP_CONTACT, APP_DESCRIPTION, APP_NAME } from "#/src/branding.ts";
 
 export const API_VERSION = "0.1.0";
 

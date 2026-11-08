@@ -1,5 +1,5 @@
-import { APP_NAME } from "@/src/branding.ts";
-import type { Mail } from "@/src/mail/mailer.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import type { Mail } from "#/src/mail/mailer.ts";
 
 function validFor(lifetime: Temporal.Duration): string {
   const hours = lifetime.total({ unit: "hours" });

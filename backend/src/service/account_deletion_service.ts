@@ -1,12 +1,12 @@
-import { db } from "@/src/database/client.ts";
-import { verifyPassword } from "@/src/util/password.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { Mailer } from "@/src/mail/mailer.ts";
+import { db } from "#/src/database/client.ts";
+import { verifyPassword } from "#/src/util/password.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { Mailer } from "#/src/mail/mailer.ts";
 import {
   accountDeletionCompletedMail,
   accountDeletionConfirmationMail,
-} from "@/src/mail/account_deletion_mail.ts";
-import { TOKEN_LIFETIME, UserTokenService } from "@/src/service/user_token_service.ts";
+} from "#/src/mail/account_deletion_mail.ts";
+import { TOKEN_LIFETIME, UserTokenService } from "#/src/service/user_token_service.ts";
 
 const HOST_URL = getRequiredEnvVariable("HOST_URL");
 

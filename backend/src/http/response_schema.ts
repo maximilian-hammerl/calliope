@@ -15,8 +15,8 @@ import {
   WRITING_PAGE_SCHEMA,
   WRITING_POST_SCHEMA,
   WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+} from "#/src/database/schema.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
 
 /**
  * What the API returns for each resource: the table's own columns plus the name behind the

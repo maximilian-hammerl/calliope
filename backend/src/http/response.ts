@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 
 /**
  * Every declared response needs a content schema. A content-less one widens the handler's

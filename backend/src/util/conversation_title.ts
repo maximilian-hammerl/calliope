@@ -1,4 +1,4 @@
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 /**
  * "Storyidee: {title}" — the kind is part of the name so the chat list says what the

@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { SESSION_RESPONSE } from "@/src/http/response_schema.ts";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
-import { SESSION_LIFETIME, UserService } from "@/src/service/user_service.ts";
-import { userAgentParts } from "@/src/util/user_agent_parts.ts";
+import { SESSION_RESPONSE } from "#/src/http/response_schema.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
+import { SESSION_LIFETIME, UserService } from "#/src/service/user_service.ts";
+import { userAgentParts } from "#/src/util/user_agent_parts.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 export default new OpenAPIHono().openapi(
   createRoute({

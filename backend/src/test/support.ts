@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
  * Fixtures shared across the suite. Everything in `test/` is test-only: files ending in
  * `_test.ts` announce themselves, these do not, so the directory says it instead of the name.
  */
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { redis } from "@/src/redis/client.ts";
-import { RATE_LIMIT_KEY_PREFIX } from "@/src/middleware/rate_limit.ts";
-import "@/src/test/breach_check.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import type { PostDocument } from "@/src/document/document_schema.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { redis } from "#/src/redis/client.ts";
+import { RATE_LIMIT_KEY_PREFIX } from "#/src/middleware/rate_limit.ts";
+import "#/src/test/breach_check.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import type { PostDocument } from "#/src/document/document_schema.ts";
 
 /**
  * Registers a user, confirms their address, and returns the session cookie.

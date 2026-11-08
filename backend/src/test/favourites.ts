@@ -1,7 +1,7 @@
-import { db } from "@/src/database/client.ts";
-import { createGroup, deleteUsers, postBody, request } from "@/src/test/support.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { db } from "#/src/database/client.ts";
+import { createGroup, deleteUsers, postBody, request } from "#/src/test/support.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 
 /**
  * Three accounts per test file, named by `scope`. The suite runs `--parallel`, so shared names

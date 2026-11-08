@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers, registerUser, request } from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser, request } from "#/src/test/support.ts";
 
 const owner = "list-groups-owner";
 const outsider = "list-groups-outsider";

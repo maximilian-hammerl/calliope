@@ -1,18 +1,18 @@
-import type { FolderId, PageId, ThreadId } from "@/src/scope/scoped_id.ts";
+import type { FolderId, PageId, ThreadId } from "#/src/scope/scoped_id.ts";
 import type { ExpressionBuilder, NotNull } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { DB, ForumPermission } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { withFavourite } from "@/src/query/favourite.ts";
-import { listResultsWithCount, searchPattern } from "@/src/list/list_endpoint_query.ts";
-import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import { effectiveMemberPermission, isOperator } from "@/src/service/forum_permission.ts";
-import { planFolderMove } from "@/src/service/folder_move.ts";
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
-import type { PostDocument } from "@/src/document/document_schema.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
-import { WritingPostService } from "@/src/service/writing_post_service.ts";
-import type { Post } from "@/src/service/writing_post_service.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { DB, ForumPermission } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { withFavourite } from "#/src/query/favourite.ts";
+import { listResultsWithCount, searchPattern } from "#/src/list/list_endpoint_query.ts";
+import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
+import { effectiveMemberPermission, isOperator } from "#/src/service/forum_permission.ts";
+import { planFolderMove } from "#/src/service/folder_move.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import type { PostDocument } from "#/src/document/document_schema.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
+import { WritingPostService } from "#/src/service/writing_post_service.ts";
+import type { Post } from "#/src/service/writing_post_service.ts";
 
 /**
  * The public forum (#32): a writing group's tables scoped by `writing_group_id IS NULL`. Posts
@@ -296,7 +296,7 @@ async function searchThreads(user: User, query: ListQuery): Promise<ListResults<
       builder.where(
         "writingThread.title",
         "ilike",
-        // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` only runs this when it is set
         searchPattern(query.search!),
       ),
     );
@@ -314,7 +314,7 @@ async function searchPages(user: User, query: ListQuery): Promise<ListResults<Fo
     .$call((builder) => withFavourite(builder, "writing_page", "writingPage.id", user.id))
     .$if(query.search !== undefined, (builder) =>
       builder.where((eb) => {
-        // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+        // oxlint-disable-next-line no-non-null-assertion -- the `$if` only runs this when it is set
         const term = searchPattern(query.search!);
         return eb.or([
           eb("writingPage.title", "ilike", term),

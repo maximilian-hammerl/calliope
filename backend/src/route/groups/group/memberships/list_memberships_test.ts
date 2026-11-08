@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -8,7 +8,7 @@ import {
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "list-memberships-admin";
 const invitee = "list-memberships-invitee";

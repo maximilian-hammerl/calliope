@@ -7,7 +7,7 @@ import { Buffer } from "node:buffer";
  * could capture it, and it put the hashing cost on the database. Here it never leaves this
  * process.
  *
- * scrypt comes with Deno through `node:crypto`, so there is no dependency and nothing to
+ * scrypt comes with Node, in `node:crypto`, so there is no dependency and nothing to
  * build for the server's architecture, and unlike PBKDF2 it is memory-hard.
  */
 const ALGORITHM = "scrypt";

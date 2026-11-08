@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { APP_NAME } from "@/src/branding.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { describeError, logger } from "@/src/logging.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { describeError, logger } from "#/src/logging.ts";
 
 /**
  * Whether a password is already in circulation, asked of Have I Been Pwned. Only the first five

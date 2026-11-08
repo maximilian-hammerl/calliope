@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,10 +8,10 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { PAGE_CHANGED } from "@/src/http/response.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+} from "#/src/test/support.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { PAGE_CHANGED } from "#/src/http/response.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 const administrator = "pages-test-admin";
 const writer = "pages-test-writer";

@@ -1,8 +1,8 @@
-import { generate as uuidv7 } from "@std/uuid/v7";
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { AvatarOrigin } from "@/src/database/schema.ts";
-import { toAvatar } from "@/src/image/avatar_image.ts";
-import { FileStore } from "@/src/storage/file_store.ts";
+import { randomUUIDv7 } from "node:crypto";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { AvatarOrigin } from "#/src/database/schema.ts";
+import { toAvatar } from "#/src/image/avatar_image.ts";
+import { FileStore } from "#/src/storage/file_store.ts";
 
 export type Avatar = {
   fileId: string;
@@ -36,7 +36,7 @@ async function setAvatar(
   }
 
   // v7 like every other id here, and like the column's own default.
-  const fileId = uuidv7();
+  const fileId = randomUUIDv7();
   await FileStore.write(fileId, image);
 
   await transaction
@@ -103,13 +103,13 @@ async function sweepUnreferencedFiles(): Promise<number> {
       continue;
     }
 
-    // deno-lint-ignore no-await-in-loop -- a background pass, so nothing to gain from parallelism
+    // oxlint-disable-next-line no-await-in-loop -- a background pass, so nothing to gain from parallelism
     const changedAt = await FileStore.modifiedAt(fileId);
     if (changedAt === undefined || Temporal.Instant.compare(changedAt, deleteBefore) > 0) {
       continue;
     }
 
-    // deno-lint-ignore no-await-in-loop -- as above
+    // oxlint-disable-next-line no-await-in-loop -- as above
     await FileStore.remove(fileId);
     deleted += 1;
   }

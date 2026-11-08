@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import app from "@/src/app.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import app from "#/src/app.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "#/src/test/support.ts";
 
 const USER = "cross-site-probe";
 
@@ -30,7 +30,7 @@ test("a write refuses every body a cross-site request could send", async () => {
     "multipart/form-data; boundary=x",
     "text/plain",
   ]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await app.request("/api/groups", {
       method: "POST",
       headers: { cookie, "content-type": contentType, ...SAME_ORIGIN },
@@ -79,7 +79,7 @@ test("a forgeable write is refused from anywhere but this origin", async () => {
   const cookie = await registerUser(USER);
 
   for (const site of ["cross-site", "same-site", "none"]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await forgeable(cookie, { "sec-fetch-site": site });
     assert.equal(response.status, STATUS_CODE.Forbidden, `${site} was allowed`);
   }

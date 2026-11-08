@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { User } from "@/src/service/user_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
 
 const member: User = {
   id: "11111111-1111-7111-8111-111111111111",
@@ -82,7 +82,7 @@ test("an operator passes either rule, whatever the row grants", () => {
 
 test("an author act asked without its content is a bug, not a case", () => {
   assert.throws(
-    // deno-lint-ignore no-explicit-any -- the overloads refuse this, which is the point
+    // oxlint-disable-next-line no-explicit-any -- the overloads refuse this, which is the point
     () => (mayActInForum as any)(member, "write", "post:change"),
     { message: /decided by its author/u },
   );

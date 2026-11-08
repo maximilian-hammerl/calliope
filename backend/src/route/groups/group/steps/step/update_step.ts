@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { NEXT_STEP_RESPONSE } from "@/src/http/response_schema.ts";
-import { STEPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP_STEP } from "@/src/scope/chains.ts";
-import { WritingGroupNextStepService } from "@/src/service/writing_group_next_step_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { NEXT_STEP_RESPONSE } from "#/src/http/response_schema.ts";
+import { STEPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP_STEP } from "#/src/scope/chains.ts";
+import { WritingGroupNextStepService } from "#/src/service/writing_group_next_step_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_NEXT_STEP_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_NEXT_STEP_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const STEP_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,

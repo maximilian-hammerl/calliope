@@ -1,5 +1,5 @@
-import { APP_NAME } from "@/src/branding.ts";
-import type { Mail } from "@/src/mail/mailer.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import type { Mail } from "#/src/mail/mailer.ts";
 
 /**
  * Nothing to click. Its whole job is that a password changed behind somebody's back does not

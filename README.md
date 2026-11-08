@@ -24,7 +24,7 @@ the letter C and stay as they are — renaming is not yet a full rebrand.
 
 | Directory     | What it is                                                                      |
 |---------------|---------------------------------------------------------------------------------|
-| `backend/`    | Deno + Hono API, documented with OpenAPI                                        |
+| `backend/`    | Node + Hono API, documented with OpenAPI                                        |
 | `frontend/`   | Vue single page application, built with Vite                                    |
 | `database/`   | dbmate migrations, and the code generator for the backend's types               |
 | `deployment/` | Backup script, systemd units and the [deployment runbook](deployment/README.md) |
@@ -32,7 +32,7 @@ the letter C and stay as they are — renaming is not yet a full rebrand.
 
 ## Running it locally
 
-Requires [Deno](https://deno.com), [Node](https://nodejs.org), [pnpm](https://pnpm.io),
+Requires [Node](https://nodejs.org) 26, [pnpm](https://pnpm.io),
 [Docker](https://docs.docker.com/engine/install/) and
 [dbmate](https://github.com/amacneil/dbmate).
 
@@ -47,7 +47,7 @@ cd database && pnpm run migrations:migrate
 Then the backend on <http://localhost:8000>:
 
 ```bash
-cd backend && deno task dev
+cd backend && pnpm run dev
 ```
 
 and the frontend on <http://localhost:5173>:
@@ -67,7 +67,7 @@ All three projects have the same two entry points, `validate:check` to verify an
 to repair what can be repaired:
 
 ```bash
-cd backend  && deno task validate:check   # format, lint, type-check
+cd backend  && pnpm run validate:check   # format, lint, type-check
 cd database && pnpm run validate:check
 cd frontend && pnpm run validate:check
 ```
@@ -75,15 +75,15 @@ cd frontend && pnpm run validate:check
 The backend has two more. CI runs only the first, because Spectral does not yet read OpenAPI 3.2:
 
 ```bash
-deno task open-api:check   # regenerates open-api.json and fails if it changed
-deno task open-api:lint    # validates the document with Spectral
+pnpm run open-api:check   # regenerates open-api.json and fails if it changed
+pnpm run open-api:lint    # validates the document with Spectral
 ```
 
 The test suite needs Postgres, Redis and Mailpit running and the migrations applied — the
 password reset tests read the message they sent, because the token exists nowhere else:
 
 ```bash
-cd backend && deno task test
+cd backend && pnpm run test
 ```
 
 ## Deployment

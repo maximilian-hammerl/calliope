@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { CHAT_MEMBERSHIP_RESPONSE } from "@/src/http/response_schema.ts";
-import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { UserInChatGroupService } from "@/src/service/user_in_chat_group_service.ts";
-import { userExists } from "@/src/service/user_in_writing_group_service.ts";
-import { checkJoinedChatMember } from "@/src/route/chats/chat/chat_membership.ts";
+import { db } from "#/src/database/client.ts";
+import { CHAT_MEMBERSHIP_RESPONSE } from "#/src/http/response_schema.ts";
+import { CHATS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { UserInChatGroupService } from "#/src/service/user_in_chat_group_service.ts";
+import { userExists } from "#/src/service/user_in_writing_group_service.ts";
+import { checkJoinedChatMember } from "#/src/route/chats/chat/chat_membership.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { CHAT_GROUP_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { CHAT_GROUP_SCHEMA, USER_SCHEMA } from "#/src/database/schema.ts";
 
 const CHAT_PARAMS = z.object({ chatId: CHAT_GROUP_SCHEMA.shape.id });
 const INVITE_BODY = z.object({ userId: USER_SCHEMA.shape.id });

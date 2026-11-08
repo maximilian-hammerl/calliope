@@ -1,20 +1,20 @@
 import { createMiddleware } from "hono/factory";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import type { User } from "@/src/service/user_service.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import type { User } from "#/src/service/user_service.ts";
 import {
   type ForumFolder,
   type ForumPage,
   ForumService,
   type ForumThread,
-} from "@/src/service/forum_service.ts";
-import { earlier, pathId } from "@/src/scope/group_scope.ts";
+} from "#/src/service/forum_service.ts";
+import { earlier, pathId } from "#/src/scope/group_scope.ts";
 import {
   type FolderId,
   type PageId,
   type Resolved,
   resolved,
   type ThreadId,
-} from "@/src/scope/scoped_id.ts";
+} from "#/src/scope/scoped_id.ts";
 
 /** The forum's resolvers, as `group_scope.ts` describes them. Its posts use `postInThread`. */
 

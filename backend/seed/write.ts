@@ -1,26 +1,26 @@
-import { db, type Transaction } from "@/src/database/client.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
 import type { Insertable } from "kysely";
 import type {
   StoryIdea as StoryIdeaTable,
   WritingGroup as WritingGroupTable,
-} from "@/src/database/schema.ts";
-import { omitFromObject } from "@/src/util/object.ts";
-import { hashPassword } from "@/src/util/password.ts";
-import { PLATFORM_ROLES, PROFILES, USER, VERIFIED_USERNAMES } from "@/seed/accounts.ts";
-import { GROUPS } from "@/seed/writing_groups.ts";
-import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "@/seed/forum.ts";
-import type { GroupFixture } from "@/seed/writing_groups.ts";
-import { STORY_IDEAS } from "@/seed/story_ideas.ts";
-import type { StoryIdeaFixture } from "@/seed/story_ideas.ts";
-import { CHATS } from "@/seed/chats.ts";
-import type { ChatFixture } from "@/seed/chats.ts";
-import { BLOCKS } from "@/seed/blocks.ts";
-import { REPORTS } from "@/seed/reports.ts";
-import { FAVOURITES } from "@/seed/favourites.ts";
-import { notificationId } from "@/seed/ids.ts";
-import { FAVOURITE_COLUMN } from "@/src/query/favourite.ts";
-import type { FavouriteTargetType } from "@/src/query/favourite.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+} from "#/src/database/schema.ts";
+import { omitFromObject } from "#/src/util/object.ts";
+import { hashPassword } from "#/src/util/password.ts";
+import { PLATFORM_ROLES, PROFILES, USER, VERIFIED_USERNAMES } from "#/seed/accounts.ts";
+import { GROUPS } from "#/seed/writing_groups.ts";
+import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "#/seed/forum.ts";
+import type { GroupFixture } from "#/seed/writing_groups.ts";
+import { STORY_IDEAS } from "#/seed/story_ideas.ts";
+import type { StoryIdeaFixture } from "#/seed/story_ideas.ts";
+import { CHATS } from "#/seed/chats.ts";
+import type { ChatFixture } from "#/seed/chats.ts";
+import { BLOCKS } from "#/seed/blocks.ts";
+import { REPORTS } from "#/seed/reports.ts";
+import { FAVOURITES } from "#/seed/favourites.ts";
+import { notificationId } from "#/seed/ids.ts";
+import { FAVOURITE_COLUMN } from "#/src/query/favourite.ts";
+import type { FavouriteTargetType } from "#/src/query/favourite.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 
 /**
  * The ids are written by hand, so two of them can be the same by accident — a notification
@@ -235,7 +235,7 @@ async function writeAccounts(transaction: Transaction): Promise<void> {
         platformRole: PLATFORM_ROLES[name as keyof typeof PLATFORM_ROLES] ?? null,
         // Spread, so an account without a profile keeps every column null rather than empty
         // strings — null is what "not answered" means, and the page reads it that way.
-        ...(PROFILES[name as keyof typeof PROFILES] ?? {}),
+        ...PROFILES[name as keyof typeof PROFILES],
       })),
     )
     .execute();
@@ -327,7 +327,7 @@ async function writeGroups(transaction: Transaction): Promise<void> {
   for (const { group, folder } of folders) {
     const depth = folder.in === undefined ? 1 : (depthOf.get(folder.in) ?? 0) + 1;
     depthOf.set(folder.id, depth);
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: a child needs its parent's depth
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: a child needs its parent's depth
     await transaction
       .insertInto("writingFolder")
       .values({
@@ -433,7 +433,7 @@ async function writeForum(transaction: Transaction): Promise<void> {
 
     // Sequential on purpose: a child needs its parent's depth, and the trigger that derives
     // `effective_member_permission` reads the parent row, which has to be there already.
-    // deno-lint-ignore no-await-in-loop
+    // oxlint-disable-next-line no-await-in-loop
     await transaction
       .insertInto("writingFolder")
       .values({
@@ -688,7 +688,7 @@ async function writeFavourites(transaction: Transaction): Promise<void> {
       FAVOURITES.map((favourite) => ({
         id: favourite.id,
         userId: favourite.user,
-        ...{ [FAVOURITE_COLUMN[favourite.targetType]]: favourite.targetId },
+        [FAVOURITE_COLUMN[favourite.targetType]]: favourite.targetId,
       })),
     )
     .execute();

@@ -1,15 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { sessionProvenance } from "@/src/util/session_provenance.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
-import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
-import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
-import { EMAIL_ADDRESS_SCHEMA, notBlank } from "@/src/http/request_schema.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "#/src/text_limit.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import { BreachedPasswordService } from "#/src/service/breached_password_service.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { sessionProvenance } from "#/src/util/session_provenance.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
+import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
+import { EmailAddressVerificationService } from "#/src/service/email_address_verification_service.ts";
+import { EMAIL_ADDRESS_SCHEMA, notBlank } from "#/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -17,7 +17,7 @@ import {
   jsonContent,
   OK_RESPONSE,
   PASSWORD_BREACHED_BODY,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const REGISTER_BODY = USER_SCHEMA.pick({ username: true, emailAddress: true }).extend({
   // A name is what everybody else sees; „   " is three characters and so passed the minimum,

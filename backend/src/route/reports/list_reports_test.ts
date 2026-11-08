@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, getUserId, registerUser, request } from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, getUserId, registerUser, request } from "#/src/test/support.ts";
 import {
   aPostBy,
   cleanUpReports,
@@ -11,7 +11,7 @@ import {
   ownRow,
   reportFixture,
   rowsFor,
-} from "@/src/test/reports.ts";
+} from "#/src/test/reports.ts";
 
 const { operator, reporter, author, reportedText } = reportFixture("list");
 

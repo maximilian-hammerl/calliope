@@ -13,7 +13,7 @@ and consolidated into one direction.
 
 ## Sources
 
-- Local codebase folder `calliope/` — Deno + Kysely backend. Ground truth for the data model:
+- Local codebase folder `calliope/` — Node + Kysely backend. Ground truth for the data model:
   `calliope/backend/src/database/schema.ts` (users, sessions, writing_groups, roles, visibility).
   No frontend existed at the time this system was written; **there is no prior UI to copy.**
 - `calliope/docs/product-requirements-feature-specification.md` — product requirements & feature

@@ -1,19 +1,19 @@
 /**
  * Fixed development data, so nobody builds eight groups and nine members by hand.
  *
- *     deno task db:seed
+ *     pnpm run db:seed
  *
  * The fixtures themselves are in `seed/`; this file is the guard, the cleanup and the order.
  */
-import { db } from "@/src/database/client.ts";
-import { ENVIRONMENT, type Environment } from "@/src/environment.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { USER } from "@/seed/accounts.ts";
-import { GROUPS } from "@/seed/writing_groups.ts";
-import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "@/seed/forum.ts";
-import { CHATS } from "@/seed/chats.ts";
-import { REPORTS } from "@/seed/reports.ts";
-import { writeFixtures } from "@/seed/write.ts";
+import { db } from "#/src/database/client.ts";
+import { ENVIRONMENT, type Environment } from "#/src/environment.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { USER } from "#/seed/accounts.ts";
+import { GROUPS } from "#/seed/writing_groups.ts";
+import { FORUM_FOLDERS, FORUM_PAGES, FORUM_THREADS } from "#/seed/forum.ts";
+import { CHATS } from "#/seed/chats.ts";
+import { REPORTS } from "#/seed/reports.ts";
+import { writeFixtures } from "#/seed/write.ts";
 
 /** The one password every seeded account shares. Local only — see the guard below. */
 const PASSWORD = "calliope";
@@ -29,7 +29,7 @@ function assertSeedable(): void {
         " and ",
       )}.`,
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 
   const url = new URL(getRequiredEnvVariable("DATABASE_URL"));
@@ -37,11 +37,11 @@ function assertSeedable(): void {
   // accepting it would let the containerised seed wipe production without --force.
   const local = ["localhost", "127.0.0.1", "::1", "postgres"];
 
-  if (!local.includes(url.hostname) && !Deno.args.includes("--force")) {
+  if (!local.includes(url.hostname) && !process.argv.slice(2).includes("--force")) {
     console.error(
       `Refusing to seed ${url.hostname}: it does not look local. Pass --force to override.`,
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 }
 
@@ -136,7 +136,7 @@ async function removePreviousSeed(): Promise<void> {
   });
 
   for (const folder of seededFolders) {
-    // deno-lint-ignore no-await-in-loop -- deepest first, one level at a time
+    // oxlint-disable-next-line no-await-in-loop -- deepest first, one level at a time
     await db
       .transaction()
       .execute((transaction) =>
@@ -213,7 +213,7 @@ export async function seedDatabase() {
 
   console.log(summary());
 
-  Deno.exit(0);
+  process.exit(0);
 }
 
 if (import.meta.main) {

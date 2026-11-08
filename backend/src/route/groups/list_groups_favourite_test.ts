@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, createGroup, registerUser, request } from "@/src/test/support.ts";
-import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, createGroup, registerUser, request } from "#/src/test/support.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "#/src/test/favourites.ts";
 
 /**
  * Favourites in the groups list: the flag, the ordering ahead of whatever the reader sorted by,

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, getUserId, registerUser, request } from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, getUserId, registerUser, request } from "#/src/test/support.ts";
 import {
   aPublicGroup,
   cleanUpFavourites,
@@ -9,7 +9,7 @@ import {
   favouriteFixture,
   favouritesOf,
   setFavourite,
-} from "@/src/test/favourites.ts";
+} from "#/src/test/favourites.ts";
 
 const { owner, member, outsider } = favouriteFixture("clear");
 

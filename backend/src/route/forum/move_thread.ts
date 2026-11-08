@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_THREAD_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { FORUM_THREAD } from "@/src/scope/chains.ts";
-import { forumFolderOf } from "@/src/scope/forum_scope.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_THREAD_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { FORUM_THREAD } from "#/src/scope/chains.ts";
+import { forumFolderOf } from "#/src/scope/forum_scope.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { FORUM_ROOT_PERMISSION } from "#/src/service/forum_permission.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_FOLDER_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_THREAD_SCHEMA } from "#/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({ threadId: WRITING_THREAD_SCHEMA.shape.id });
 

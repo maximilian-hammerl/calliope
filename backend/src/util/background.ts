@@ -27,7 +27,7 @@ export function runInBackground(description: string, work: () => Promise<void>):
  */
 export async function flushBackgroundWork(): Promise<void> {
   while (pending.size > 0) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, each round can add tasks
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, each round can add tasks
     await Promise.all(pending);
   }
 }

@@ -1,17 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated_allowing_unverified_email_address.ts";
-import { EmailAddressVerificationService } from "@/src/service/email_address_verification_service.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
-import { EMAIL_ADDRESS_SCHEMA } from "@/src/http/request_schema.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated_allowing_unverified_email_address.ts";
+import { EmailAddressVerificationService } from "#/src/service/email_address_verification_service.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
+import { EMAIL_ADDRESS_SCHEMA } from "#/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const CHANGE_EMAIL_ADDRESS_BODY = z.object({
   emailAddress: EMAIL_ADDRESS_SCHEMA,

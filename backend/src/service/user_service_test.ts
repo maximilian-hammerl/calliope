@@ -1,6 +1,6 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { write } from "@/src/test/support.ts";
+import { write } from "#/src/test/support.ts";
 import { UserService } from "./user_service.ts";
 
 const username = "username";

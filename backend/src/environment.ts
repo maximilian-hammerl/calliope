@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
 
 export const ENVIRONMENTS = ["development", "testing", "staging", "production"] as const;
 

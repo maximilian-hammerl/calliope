@@ -10,8 +10,7 @@
     "perf": "error"
   },
   "rules": {
-    // What `deno lint` enforced here: its recommended set where the categories above leave a gap,
-    // then the rules it added on top.
+    // Beyond the categories: recommended rules they leave out, then the house rules.
     "eslint/no-empty": "error",
     "eslint/no-var": "error",
     "eslint/prefer-const": "error",
@@ -46,7 +45,6 @@
     "typescript/only-throw-error": "error",
     "typescript/switch-exhaustiveness-check": "error",
     "eslint/require-unicode-regexp": "error"
-    // Not carried over: `camelcase` and `prefer-ascii` have no oxlint equivalent, and
-    // `no-node-globals`, `no-process-global` and `no-sync-fn-in-async-fn` are about Deno itself.
+    // Without an oxlint equivalent: `camelcase` and `prefer-ascii`.
   }
 }

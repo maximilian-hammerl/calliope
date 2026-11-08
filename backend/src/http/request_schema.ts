@@ -5,8 +5,8 @@ import {
   STORY_SUBGENRE_SCHEMA,
   STORY_TROPE_SCHEMA,
   WRITING_FOLDER_SCHEMA,
-} from "@/src/database/schema.ts";
-import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
+} from "#/src/database/schema.ts";
+import { LIST_LIMIT, TEXT_LIMIT } from "#/src/text_limit.ts";
 
 /**
  * The one definition of an acceptable email address. Every route that takes one uses this,

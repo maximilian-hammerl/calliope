@@ -1,6 +1,6 @@
-import { USER } from "@/seed/accounts.ts";
-import { folderId, pageId, postId, threadId } from "@/seed/ids.ts";
-import type { ForumPermission } from "@/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { folderId, pageId, postId, threadId } from "#/seed/ids.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
 
 /**
  * The public forum (#32): the same tables with `writing_group_id` null, so this says only where

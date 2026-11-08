@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { hashPassword, verifyPassword } from "@/src/util/password.ts";
+import { hashPassword, verifyPassword } from "#/src/util/password.ts";
 
 const password = "ein-sicheres-passwort";
 
@@ -46,7 +46,7 @@ test("an unreadable stored hash does not match and does not throw", async () => 
     "scrypt$not-a-number$8$1$c2FsdA==$aGFzaA==",
     "argon2$16384$8$1$c2FsdA==$aGFzaA==",
   ]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     assert.equal(await verifyPassword(password, stored), false, stored);
   }
 });

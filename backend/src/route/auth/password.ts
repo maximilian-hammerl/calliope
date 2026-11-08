@@ -1,12 +1,12 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT, TEXT_MINIMUM } from "@/src/text_limit.ts";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { PasswordChangeService } from "@/src/service/password_change_service.ts";
-import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+import { TEXT_LIMIT, TEXT_MINIMUM } from "#/src/text_limit.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { BreachedPasswordService } from "#/src/service/breached_password_service.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { PasswordChangeService } from "#/src/service/password_change_service.ts";
+import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -16,7 +16,7 @@ import {
   jsonContent,
   OK_RESPONSE,
   PASSWORD_BREACHED_BODY,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const CHANGE_PASSWORD_BODY = z.object({
   currentPassword: z.string().min(1).max(TEXT_LIMIT.password),

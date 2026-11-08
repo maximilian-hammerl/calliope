@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { BLOCKS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
 
 const BLOCK_RESPONSE = z.object({
   blockedId: USER_SCHEMA.shape.id,

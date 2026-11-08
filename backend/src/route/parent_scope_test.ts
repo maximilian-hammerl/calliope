@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import openApi from "@/open-api.json" with { type: "json" };
+import { STATUS_CODE } from "#/src/http/status.ts";
+import openApi from "#/open-api.json" with { type: "json" };
 import {
   addMember,
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
-} from "@/src/test/support.ts";
-import { clearForum } from "@/src/test/forum.ts";
+} from "#/src/test/support.ts";
+import { clearForum } from "#/src/test/forum.ts";
 import {
   address,
   answer,
@@ -17,7 +17,7 @@ import {
   groupWithChildren,
   type Ids,
   REQUEST_BODIES,
-} from "@/src/test/route_fixtures.ts";
+} from "#/src/test/route_fixtures.ts";
 
 /**
  * Every route with a parent and a child in its path must refuse a child from somewhere else. The
@@ -168,7 +168,7 @@ for (const { operation, method, path, names } of nestedOperations()) {
       await answer(method, address(path, ids), found.attackerCookie, await body?.(rows));
 
     for (const probe of each) {
-      // deno-lint-ignore no-await-in-loop -- sequential: a probe that got through changes rows
+      // oxlint-disable-next-line no-await-in-loop -- sequential: a probe that got through changes rows
       const tried = await ask(probe.ids, probe.source.ids);
       assert.equal(tried.status, STATUS_CODE.NotFound, `${operation} with ${probe.label}`);
     }

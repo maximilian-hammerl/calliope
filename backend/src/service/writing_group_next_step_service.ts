@@ -1,7 +1,7 @@
-import type { GroupId, StepId } from "@/src/scope/scoped_id.ts";
+import type { GroupId, StepId } from "#/src/scope/scoped_id.ts";
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { WritingGroupNextStep as DatabaseStep } from "@/src/database/schema.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { WritingGroupNextStep as DatabaseStep } from "#/src/database/schema.ts";
 
 export type NextStep = Pick<
   Selectable<DatabaseStep>,

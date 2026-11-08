@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { GROUPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { VISIBLE_GROUP } from "@/src/scope/chains.ts";
-import { UserInWritingGroupService } from "@/src/service/user_in_writing_group_service.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import { BanService } from "@/src/service/ban_service.ts";
-import { BlockService } from "@/src/service/block_service.ts";
-import { conversationTitle } from "@/src/util/conversation_title.ts";
+import { db } from "#/src/database/client.ts";
+import { CHAT_GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { GROUPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { VISIBLE_GROUP } from "#/src/scope/chains.ts";
+import { UserInWritingGroupService } from "#/src/service/user_in_writing_group_service.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { BanService } from "#/src/service/ban_service.ts";
+import { BlockService } from "#/src/service/block_service.ts";
+import { conversationTitle } from "#/src/util/conversation_title.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 

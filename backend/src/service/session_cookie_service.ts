@@ -1,8 +1,8 @@
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { SESSION_LIFETIME, UserSession } from "./user_service.ts";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { formatToken, parseToken } from "@/src/util/token.ts";
+import { SESSION_LIFETIME, type UserSession } from "./user_service.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { formatToken, parseToken } from "#/src/util/token.ts";
 
 const SESSION_COOKIE_KEY = "session";
 

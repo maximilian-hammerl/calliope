@@ -6,7 +6,7 @@ paths:
 
 # The seed fixture
 
-`deno task db:seed` writes a fixed fixture: nine accounts sharing the password `calliope`,
+`pnpm run db:seed` writes a fixed fixture: nine accounts sharing the password `calliope`,
 seventeen writing groups (thirteen public), twenty-three story ideas, three chats, two blocks, and a
 forum. It refuses to run unless **both** guards agree — `PUBLIC_ENVIRONMENT` is `development` or
 `testing`, and the `DATABASE_URL` host is local; only the second takes `--force`. It runs in **one

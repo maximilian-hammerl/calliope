@@ -8,7 +8,7 @@
  * The output is shaped like what a member typed into a textarea, blocks separated by blank lines,
  * so `paragraphs()` on the frontend and both readers on this side keep working unchanged.
  */
-import type { DocumentNode, PostDocument } from "@/src/document/document_schema.ts";
+import type { DocumentNode, PostDocument } from "#/src/document/document_schema.ts";
 
 /**
  * Blocks that hold inline content and become one paragraph of the projection. Everything else with

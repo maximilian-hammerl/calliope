@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { withDeadline } from "@/src/util/async.ts";
+import { withDeadline } from "#/src/util/async.ts";
 
 // https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check
 // https://github.com/healthjson/schema

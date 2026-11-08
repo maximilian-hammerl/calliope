@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import { createGroup, deleteUsers, postBody, request, write } from "@/src/test/support.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import { createGroup, deleteUsers, postBody, request, write } from "#/src/test/support.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 /**
  * Four accounts and one reported text per test file, all named by `scope`. The suite runs

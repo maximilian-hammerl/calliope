@@ -1,6 +1,6 @@
-import { USER } from "@/seed/accounts.ts";
-import { pageId, postId, reportId, storyIdeaId } from "@/seed/ids.ts";
-import type { ReportCategory, ReportOutcome, ReportTargetType } from "@/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { pageId, postId, reportId, storyIdeaId } from "#/seed/ids.ts";
+import type { ReportCategory, ReportOutcome, ReportTargetType } from "#/src/database/schema.ts";
 
 /**
  * One report per state the queue can show, because the lifecycle is otherwise invisible: a fresh

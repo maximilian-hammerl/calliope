@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "@/src/test/support.ts";
-import app from "@/src/app.ts";
-import { sessionCookie } from "@/src/test/auth.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "#/src/test/support.ts";
+import app from "#/src/app.ts";
+import { sessionCookie } from "#/src/test/auth.ts";
 
 // `registerUser` verifies the address as well; these routes sit behind the strict middleware,
 // which refuses an unverified member with 403.

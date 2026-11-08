@@ -1,25 +1,25 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf } from "@/src/scope/forum_scope.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { FORUM_ROOT_PERMISSION } from "@/src/service/forum_permission.ts";
-import { PAGE_TITLE_SCHEMA } from "@/src/route/groups/group/pages/page_schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_PAGE_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { forumFolderOf } from "#/src/scope/forum_scope.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { FORUM_ROOT_PERMISSION } from "#/src/service/forum_permission.ts";
+import { PAGE_TITLE_SCHEMA } from "#/src/route/groups/group/pages/page_schema.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_PAGE_SCHEMA } from "#/src/database/schema.ts";
 
 const CREATE_PAGE_BODY = z.object({
   title: PAGE_TITLE_SCHEMA,

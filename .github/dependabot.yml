@@ -1,18 +1,6 @@
 version: 2
 
 updates:
-  - package-ecosystem: "deno"
-    directories:
-      - "/backend"
-    schedule:
-      interval: "daily"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "patch"
-          - "minor"
-
   # The pnpm workspace: its root holds the one lockfile and the catalog.
   - package-ecosystem: "npm"
     directory: "/"

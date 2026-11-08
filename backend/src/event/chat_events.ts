@@ -2,7 +2,7 @@
  * How a sent message reaches the streams of everyone else in the chat.
  *
  * Deliberately in-process: the sender's request and the recipients' open streams are held by
- * the same Deno process, because the backend runs as exactly one container. That makes this
+ * the same Node process, because the backend runs as exactly one container. That makes this
  * correct today and far simpler than the alternative — no second Redis connection, no
  * subscribe/unsubscribe lifecycle, no reconnect handling of its own.
  *

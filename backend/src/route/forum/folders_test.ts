@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   createGroup,
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { clearForum, createForumThread } from "@/src/test/forum.ts";
-import { makeOperator } from "@/src/test/reports.ts";
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
+} from "#/src/test/support.ts";
+import { clearForum, createForumThread } from "#/src/test/forum.ts";
+import { makeOperator } from "#/src/test/reports.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
 
 const member = "forum-folders-member";
 const operator = "forum-folders-operator";
@@ -142,10 +142,10 @@ test(`a folder nests at most ${MAX_FOLDER_DEPTH} levels deep`, async () => {
 
   let parentFolderId: string | undefined = undefined;
   for (let level = 1; level <= MAX_FOLDER_DEPTH; level++) {
-    // deno-lint-ignore no-await-in-loop -- each level needs the one above it
+    // oxlint-disable-next-line no-await-in-loop -- each level needs the one above it
     const response = await create(operatorCookie, `Ebene ${level}`, "write", parentFolderId);
     assert.equal(response.status, STATUS_CODE.Created);
-    // deno-lint-ignore no-await-in-loop -- as above
+    // oxlint-disable-next-line no-await-in-loop -- as above
     const folder = await response.json();
     parentFolderId = folder.id;
   }

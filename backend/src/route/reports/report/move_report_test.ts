@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import { clearRateLimits, deleteUsers, registerUser, request } from "@/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import { clearRateLimits, deleteUsers, registerUser, request } from "#/src/test/support.ts";
 import {
   aPostBy,
   cleanUpReports,
@@ -11,7 +11,7 @@ import {
   moveReport,
   ownRow,
   reportFixture,
-} from "@/src/test/reports.ts";
+} from "#/src/test/reports.ts";
 
 const { operator, otherOperator, reporter, author, reportedText } = reportFixture("move");
 

@@ -1,6 +1,6 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { ChatMessage as DatabaseChatMessage } from "@/src/database/schema.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { ChatMessage as DatabaseChatMessage } from "#/src/database/schema.ts";
 
 export type ChatMessage = Pick<
   Selectable<DatabaseChatMessage>,

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,7 +8,7 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "move-thread-admin";
 const writer = "move-thread-writer";

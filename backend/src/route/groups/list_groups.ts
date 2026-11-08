@@ -2,26 +2,26 @@ import {
   STORY_GENRES_FILTER,
   STORY_SUBGENRES_FILTER,
   STORY_TROPES_FILTER,
-} from "@/src/http/request_schema.ts";
+} from "#/src/http/request_schema.ts";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { listQuery } from "@/src/list/list_endpoint_query.ts";
-import { GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { GROUPS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
+import { listQuery } from "#/src/list/list_endpoint_query.ts";
+import { GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { GROUPS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { WritingGroupService } from "#/src/service/writing_group_service.ts";
+import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "#/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 import type {
   UserInWritingGroup as UserInWritingGroupTable,
   WritingGroup as WritingGroupTable,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 const SORT_ATTRIBUTES = ["createdAt", "lastActivityAt", "title", "invitedAt"] as const;
 
@@ -42,8 +42,7 @@ const SORT_COLUMN = {
   invitedAt: "userInWritingGroup.invitedAt",
 } as const satisfies Record<
   (typeof SORT_ATTRIBUTES)[number],
-  | `writingGroup.${keyof WritingGroupTable & string}`
-  | `userInWritingGroup.${keyof UserInWritingGroupTable & string}`
+  `writingGroup.${keyof WritingGroupTable}` | `userInWritingGroup.${keyof UserInWritingGroupTable}`
 >;
 
 const SORT_ATTRIBUTE = z

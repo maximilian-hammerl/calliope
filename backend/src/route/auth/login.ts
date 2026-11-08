@@ -1,11 +1,11 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { AUTH_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { sessionProvenance } from "@/src/util/session_provenance.ts";
-import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { AUTH_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { sessionProvenance } from "#/src/util/session_provenance.ts";
+import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
 import {
   ACCOUNT_BANNED_BODY,
   BAD_REQUEST_RESPONSE,
@@ -14,7 +14,7 @@ import {
   INVALID_CREDENTIALS_BODY,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const LOGIN_BODY = z.object({
   // Either identifier is accepted, so a member need not remember which they signed up with,

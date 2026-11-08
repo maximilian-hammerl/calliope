@@ -1,4 +1,4 @@
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
 
 /**
  * What moving a folder comes to, as a decision over rows rather than a query: a writing group's

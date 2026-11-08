@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "backend",
-      "runtimeExecutable": "deno",
+      "runtimeExecutable": "pnpm",
       "runtimeArgs": [
-        "task",
+        "run",
         "dev"
       ],
       "port": 8000,

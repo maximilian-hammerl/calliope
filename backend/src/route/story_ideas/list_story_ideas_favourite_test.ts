@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { clearRateLimits, registerUser } from "@/src/test/support.ts";
-import { createIdea, listIdeas } from "@/src/test/story_ideas.ts";
-import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
+import { clearRateLimits, registerUser } from "#/src/test/support.ts";
+import { createIdea, listIdeas } from "#/src/test/story_ideas.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "#/src/test/favourites.ts";
 
 /**
  * The board's favourite: the flag, the ordering ahead of whatever the reader sorted by, and that it

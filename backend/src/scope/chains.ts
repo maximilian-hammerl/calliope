@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import authenticated from "@/src/middleware/authenticated.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
 import {
   folderInGroup,
   joinedGroup,
@@ -9,8 +9,8 @@ import {
   stepInGroup,
   threadInGroup,
   visibleGroup,
-} from "@/src/scope/group_scope.ts";
-import { forumFolder, forumPage, forumThread } from "@/src/scope/forum_scope.ts";
+} from "#/src/scope/group_scope.ts";
+import { forumFolder, forumPage, forumThread } from "#/src/scope/forum_scope.ts";
 
 /**
  * A route's whole middleware, one per path shape, so the order the compiler cannot check is
@@ -21,7 +21,7 @@ import { forumFolder, forumPage, forumThread } from "@/src/scope/forum_scope.ts"
  * The list as the route takes it: each handler's own type, in order — what `as const` keeps —
  * but a mutable tuple, since `createRoute` refuses a readonly one held in a variable.
  */
-// deno-lint-ignore no-explicit-any -- a middleware of any context, as `createRoute` accepts
+// oxlint-disable-next-line no-explicit-any -- a middleware of any context, as `createRoute` accepts
 function chain<const T extends MiddlewareHandler<any>[]>(...middleware: T): T {
   return middleware;
 }

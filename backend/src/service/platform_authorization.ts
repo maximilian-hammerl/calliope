@@ -1,4 +1,4 @@
-import type { PlatformRole } from "@/src/database/schema.ts";
+import type { PlatformRole } from "#/src/database/schema.ts";
 
 /**
  * Roles on the account, for the site as a whole. The group-level twin of this file is

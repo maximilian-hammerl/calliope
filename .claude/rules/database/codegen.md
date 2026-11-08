@@ -10,7 +10,7 @@ paths:
 `kysely_zod_serializer.ts` emits both the Kysely types and the Zod schemas into
 `backend/src/database/schema.ts`. Column comments become `.describe()`; enum values and comments are
 escaped through `JSON.stringify`, so an apostrophe cannot break the file. Its output is not
-`deno fmt`-clean — format the backend after generating.
+oxfmt-clean — format the backend after generating.
 
 **`json` and `jsonb` map to `unknown`** in `typeMapping`, not to kysely-codegen's own `Json`. That
 type is a recursive union, and a recursive type in a route's response exhausts TypeScript's

@@ -1,20 +1,20 @@
 # Backend
 
-Deno, Hono and `@hono/zod-openapi` over Kysely and Postgres 18. The shared conventions are in the
+Node, Hono and `@hono/zod-openapi` over Kysely and Postgres 18. The shared conventions are in the
 root [AGENTS.md](../AGENTS.md); the reasoning behind each area is in `.claude/rules/backend/`,
 which loads when you open that area's files.
 
 ```bash
-deno task dev                 # --watch, on $BACKEND_PORT; stop it with kill -KILL on the process group
-deno task test                # --parallel, against the compose stack with migrations applied
-deno task validate:check      # format, lint, type-check  (validate:fix repairs what it can)
-deno task db:seed             # the fixture: nine accounts, password `calliope`
+pnpm run dev                  # --watch, on $BACKEND_PORT, under Node's permission model
+pnpm run test                 # every file in its own process, in parallel, against the compose stack
+pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc  (validate:fix repairs what it can)
+pnpm run db:seed              # the fixture: nine accounts, password `calliope`
 ```
 
 - **File names are `snake_case`**, tests beside their module as `<module>_test.ts`.
 - **Zod schemas are constants**: `REGISTER_BODY`, not `RegisterBody`. Infer types from them,
   `z.infer<typeof X_RESPONSE>`, rather than writing both.
-- `@/` points at the project root: `@/src/service/user_service.ts`.
+- `#/` points at the project root: `#/src/service/user_service.ts`.
 
 ## Where things live
 
@@ -114,7 +114,7 @@ a send**: `Mailer.sendInBackground`, or the response time becomes an account ora
 ## Tests
 
 One positive and one negative case per route, against real Postgres, Redis and Mailpit. **The suite
-runs `--parallel`**, so every file owns its identities: a shared fixture is a **factory taking a
+runs every file at once**, each in a process of its own, so every file owns its identities: a shared fixture is a **factory taking a
 scope** (`authFixture("login")`), never module-level constants. Never empty shared state
 (`deleteMailFor([address])`, not `deleteAllMail()`), never assert a global count (`includes`, or a
 baseline delta), scope every fixture query to its own account. `clearRateLimits()` spares

@@ -1,23 +1,23 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   createGroup,
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 import {
   clearForum,
   createForumFolder,
   createForumPage,
   createForumPost,
   createForumThread,
-} from "@/src/test/forum.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { setFavourite } from "@/src/test/favourites.ts";
-import { cleanUpReports, fileReport, makeOperator, ownRow } from "@/src/test/reports.ts";
+} from "#/src/test/forum.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { setFavourite } from "#/src/test/favourites.ts";
+import { cleanUpReports, fileReport, makeOperator, ownRow } from "#/src/test/reports.ts";
 
 const member = "forum-test-member";
 const operator = "forum-test-operator";

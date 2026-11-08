@@ -1,6 +1,6 @@
-import type { UserInChatGroupStatus } from "@/src/database/schema.ts";
-import { USER } from "@/seed/accounts.ts";
-import { chatId, messageId } from "@/seed/ids.ts";
+import type { UserInChatGroupStatus } from "#/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { chatId, messageId } from "#/seed/ids.ts";
 
 export type ChatFixture = {
   id: string;

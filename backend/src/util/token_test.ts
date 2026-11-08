@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatToken, generateToken, hashToken, parseToken } from "@/src/util/token.ts";
+import { formatToken, generateToken, hashToken, parseToken } from "#/src/util/token.ts";
 import { Buffer } from "node:buffer";
 
-test("every token is different", async () => {
-  const tokens = new Set(await Promise.all(Array.from({ length: 100 }, () => generateToken())));
+test("every token is different", () => {
+  const tokens = new Set(Array.from({ length: 100 }, () => generateToken()));
   assert.equal(tokens.size, 100);
 });
 

@@ -1,9 +1,9 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import { Hono } from "hono";
-import { redis } from "@/src/redis/client.ts";
-import { RATE_LIMIT_TEST_CLIENTS } from "@/src/test/support.ts";
+import { redis } from "#/src/redis/client.ts";
+import { RATE_LIMIT_TEST_CLIENTS } from "#/src/test/support.ts";
 import {
   RATE_LIMIT_KEY_PREFIX,
   READ_REQUESTS_PER_WINDOW,
@@ -34,7 +34,7 @@ function request(clientAddress: string, method: "GET" | "POST" = "GET") {
 /** Spends a whole budget, so what is left of the other one can be asked about. */
 async function exhaust(clientAddress: string, method: "GET" | "POST", requests: number) {
   for (let sent = 0; sent < requests; sent++) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: the counter is the thing here
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: the counter is the thing here
     assert.equal((await request(clientAddress, method)).status, STATUS_CODE.OK);
   }
 }

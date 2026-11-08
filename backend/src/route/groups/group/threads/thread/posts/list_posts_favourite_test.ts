@@ -6,8 +6,8 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
+} from "#/src/test/support.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "#/src/test/favourites.ts";
 
 /**
  * Posts are the one kind a favourite does **not** reorder, and the test that says so is the point

@@ -1,9 +1,9 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { write } from "@/src/test/support.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { write } from "#/src/test/support.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import { Hono } from "hono";
-import { type User, UserService } from "@/src/service/user_service.ts";
+import { type User, UserService } from "#/src/service/user_service.ts";
 import authenticated from "./authenticated.ts";
 import authenticatedAllowingUnverifiedEmailAddress from "./authenticated_allowing_unverified_email_address.ts";
 

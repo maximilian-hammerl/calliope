@@ -1,26 +1,26 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import type { User } from "@/src/service/user_service.ts";
-import type { UserInWritingGroupRole } from "@/src/database/schema.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import type { User } from "#/src/service/user_service.ts";
+import type { UserInWritingGroupRole } from "#/src/database/schema.ts";
 import {
   type VisibleWritingGroupGate,
   WritingGroupService,
-} from "@/src/service/writing_group_service.ts";
-import { type ThreadGate, WritingThreadService } from "@/src/service/writing_thread_service.ts";
-import { type Post, WritingPostService } from "@/src/service/writing_post_service.ts";
-import { type PageGate, WritingPageService } from "@/src/service/writing_page_service.ts";
-import { type Folder, WritingFolderService } from "@/src/service/writing_folder_service.ts";
+} from "#/src/service/writing_group_service.ts";
+import { type ThreadGate, WritingThreadService } from "#/src/service/writing_thread_service.ts";
+import { type Post, WritingPostService } from "#/src/service/writing_post_service.ts";
+import { type PageGate, WritingPageService } from "#/src/service/writing_page_service.ts";
+import { type Folder, WritingFolderService } from "#/src/service/writing_folder_service.ts";
 import {
   type NextStep,
   WritingGroupNextStepService,
-} from "@/src/service/writing_group_next_step_service.ts";
+} from "#/src/service/writing_group_next_step_service.ts";
 import {
   type UserInWritingGroup,
   UserInWritingGroupService,
-} from "@/src/service/user_in_writing_group_service.ts";
-import { invalidRequest } from "@/src/http/invalid_request.ts";
+} from "#/src/service/user_in_writing_group_service.ts";
+import { invalidRequest } from "#/src/http/invalid_request.ts";
 import {
   type FolderId,
   type GroupId,
@@ -32,7 +32,7 @@ import {
   resolved,
   type StepId,
   type ThreadId,
-} from "@/src/scope/scoped_id.ts";
+} from "#/src/scope/scoped_id.ts";
 
 /**
  * Resolvers for the ids in a path, one per level, taken as a chain from `chains.ts`. Each answers

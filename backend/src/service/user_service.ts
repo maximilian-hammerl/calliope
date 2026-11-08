@@ -1,21 +1,21 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { withAvatar } from "@/src/query/user_avatar.ts";
-import { avatarUrlOf } from "@/src/http/avatar_url.ts";
-import { emptyToNull } from "@/src/util/optional_text.ts";
-import { hashPassword, verifyPassword } from "@/src/util/password.ts";
-import { generateToken, hashToken } from "@/src/util/token.ts";
-import type { SessionProvenance } from "@/src/util/session_provenance.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { withAvatar } from "#/src/query/user_avatar.ts";
+import { avatarUrlOf } from "#/src/http/avatar_url.ts";
+import { emptyToNull } from "#/src/util/optional_text.ts";
+import { hashPassword, verifyPassword } from "#/src/util/password.ts";
+import { generateToken, hashToken } from "#/src/util/token.ts";
+import type { SessionProvenance } from "#/src/util/session_provenance.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
+} from "#/src/list/list_endpoint_query.ts";
 import type {
   User as DatabaseUser,
   UserSession as DatabaseUserSession,
-} from "@/src/database/schema.ts";
+} from "#/src/database/schema.ts";
 
 export type User = Pick<
   Selectable<DatabaseUser>,
@@ -322,7 +322,7 @@ async function listUsers(
         queryBuilder.where(
           "user.username",
           "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+          // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when the term is set
           searchPattern(query.search!),
         ),
       )

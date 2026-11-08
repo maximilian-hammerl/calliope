@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { db } from "@/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { db } from "#/src/database/client.ts";
 import {
   clearRateLimits,
   createGroup,
@@ -12,7 +12,7 @@ import {
   registerUser,
   request,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 // Its own accounts: the suite runs in parallel, so shared names collide.
 const reporter = "report-test-reporter";
@@ -314,7 +314,7 @@ test("reporting your own writing is refused, whatever kind it is", async () => {
     ["writing_post", written.id],
   ] as const) {
     assert.equal(
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
       (await report(authorCookie, targetType, targetId)).status,
       STATUS_CODE.Forbidden,
       `${targetType} should not be reportable by its own author`,

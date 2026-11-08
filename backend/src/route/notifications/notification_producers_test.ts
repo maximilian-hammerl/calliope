@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
 import {
   addMember,
   clearRateLimits,
@@ -11,7 +11,7 @@ import {
   postBody,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "producers-admin";
 const writer = "producers-writer";
@@ -58,7 +58,7 @@ test("a new thread tells the group but not its author", async () => {
 
   for (const cookie of [adminCookie, readerCookie]) {
     const [notification] = ofType(
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
       await notificationsOf(cookie),
       "new_writing_thread",
     );
@@ -80,7 +80,7 @@ test("a new page tells the group but not its author", async () => {
 
   for (const cookie of [adminCookie, readerCookie]) {
     const [notification] = ofType(
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
       await notificationsOf(cookie),
       "new_writing_page",
     );

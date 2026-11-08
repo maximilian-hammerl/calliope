@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -8,10 +8,10 @@ import {
   deleteUsers,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import { FOLDER_CYCLE, FOLDER_NOT_EMPTY, FOLDER_TOO_DEEP } from "@/src/http/response.ts";
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
+} from "#/src/test/support.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import { FOLDER_CYCLE, FOLDER_NOT_EMPTY, FOLDER_TOO_DEEP } from "#/src/http/response.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
 
 const administrator = "folders-test-admin";
 const writer = "folders-test-writer";
@@ -59,7 +59,7 @@ test("POST /api/groups/{groupId}/folders refuses a sixth level with 422", async 
 
   let deepest = await makeFolder(adminCookie, group.id, "Ebene 1");
   for (let level = 2; level <= MAX_FOLDER_DEPTH; level++) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: each level needs the one above
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: each level needs the one above
     deepest = await makeFolder(adminCookie, group.id, `Ebene ${level}`, deepest.id);
   }
 
@@ -323,7 +323,7 @@ test("PUT /folders/{folderId}/parent refuses a subtree that would be too deep", 
 
   let deepest = await makeFolder(adminCookie, group.id, "E1");
   for (const title of ["E2", "E3", "E4"]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: each level needs the one above
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: each level needs the one above
     deepest = await makeFolder(adminCookie, group.id, title, deepest.id);
   }
 

@@ -1,7 +1,7 @@
-import type { Transaction } from "@/src/database/client.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { resolveVisibleTarget } from "@/src/service/visible_target.ts";
-import { FAVOURITE_COLUMN, type FavouriteTargetType } from "@/src/query/favourite.ts";
+import type { Transaction } from "#/src/database/client.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { resolveVisibleTarget } from "#/src/service/visible_target.ts";
+import { FAVOURITE_COLUMN, type FavouriteTargetType } from "#/src/query/favourite.ts";
 
 /**
  * One member marking one thing to come back to, across all five kinds that have one. The union and

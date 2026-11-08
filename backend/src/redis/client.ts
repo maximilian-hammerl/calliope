@@ -1,7 +1,7 @@
 import { Redis } from "ioredis";
-import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import { addShutdownSignalListener } from "@/src/util/shutdown_signal.ts";
-import { type DatabaseHealth, probeDatabase } from "@/src/operations/database_health.ts";
+import { getRequiredEnvVariable } from "#/src/util/env.ts";
+import { addShutdownSignalListener } from "#/src/util/shutdown_signal.ts";
+import { type DatabaseHealth, probeDatabase } from "#/src/operations/database_health.ts";
 
 export const redis = new Redis(getRequiredEnvVariable("REDIS_URL"));
 

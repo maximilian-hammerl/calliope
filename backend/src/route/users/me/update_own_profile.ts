@@ -1,18 +1,18 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { USERS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { db } from "@/src/database/client.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { UserService } from "@/src/service/user_service.ts";
-import { USER_PROFILE_RESPONSE } from "@/src/http/response_schema.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { USERS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { db } from "#/src/database/client.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { UserService } from "#/src/service/user_service.ts";
+import { USER_PROFILE_RESPONSE } from "#/src/http/response_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 /** One answer each, so they share a bound; `aboutMe` is the one that invites prose. */
 const DETAIL = z.string().max(TEXT_LIMIT.profileDetail).nullish();

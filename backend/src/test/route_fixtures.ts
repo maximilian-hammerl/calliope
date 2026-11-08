@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
-import { db } from "@/src/database/client.ts";
-import { plainTextToDocument } from "@/src/document/document_text.ts";
-import type { ForumPermission } from "@/src/database/schema.ts";
-import { createGroup, postBody, request } from "@/src/test/support.ts";
+import { db } from "#/src/database/client.ts";
+import { plainTextToDocument } from "#/src/document/document_text.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import { createGroup, postBody, request } from "#/src/test/support.ts";
 import {
   createForumFolder,
   createForumPage,
   createForumPost,
   createForumThread,
-} from "@/src/test/forum.ts";
+} from "#/src/test/forum.ts";
 
 /** What `parent_scope_test.ts` and `stranger_access_test.ts` build their rows and requests from. */
 

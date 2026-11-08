@@ -19,7 +19,7 @@
  * trap is closed at the source; see the `typeMapping` note in `database/.kysely-codegenrc.ts`.
  */
 import { z } from "@hono/zod-openapi";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 
 /** A tree costs nothing to send and plenty to walk, so both dimensions are bounded. */
 const MAX_DEPTH = 20;

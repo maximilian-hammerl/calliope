@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
-import { createIdea, patchIdea, storyIdeaUsers } from "@/src/test/story_ideas.ts";
+} from "#/src/test/support.ts";
+import { createIdea, patchIdea, storyIdeaUsers } from "#/src/test/story_ideas.ts";
 
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author, bystander } = storyIdeaUsers("convo");

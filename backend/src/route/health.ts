@@ -1,12 +1,12 @@
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { APP_NAME } from "@/src/branding.ts";
-import { API_VERSION, OPERATIONS_TAG } from "@/src/open_api_specification.ts";
-import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
-import { databaseHealthCheck } from "@/src/database/client.ts";
-import { redisHealthCheck } from "@/src/redis/client.ts";
-import { COMMON_RESPONSES, jsonContent } from "@/src/http/response.ts";
-import { HEALTH_RESPONSE } from "@/src/operations/database_health.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { APP_NAME } from "#/src/branding.ts";
+import { API_VERSION, OPERATIONS_TAG } from "#/src/open_api_specification.ts";
+import { getOptionalEnvVariable, getRequiredEnvVariable } from "#/src/util/env.ts";
+import { databaseHealthCheck } from "#/src/database/client.ts";
+import { redisHealthCheck } from "#/src/redis/client.ts";
+import { COMMON_RESPONSES, jsonContent } from "#/src/http/response.ts";
+import { HEALTH_RESPONSE } from "#/src/operations/database_health.ts";
 
 const startup = Temporal.Now.zonedDateTimeISO();
 

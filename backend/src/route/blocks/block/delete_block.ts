@@ -1,9 +1,9 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { BlockService } from "@/src/service/block_service.ts";
+import { db } from "#/src/database/client.ts";
+import { BLOCKS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { BlockService } from "#/src/service/block_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -11,8 +11,8 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
   OK_RESPONSE,
-} from "@/src/http/response.ts";
-import { USER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { USER_SCHEMA } from "#/src/database/schema.ts";
 
 const BLOCK_PARAMS = z.object({ userId: USER_SCHEMA.shape.id });
 

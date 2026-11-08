@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   addMember,
   clearRateLimits,
@@ -10,7 +10,7 @@ import {
   registerUser,
   request,
   write,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const administrator = "update-post-admin";
 const writer = "update-post-writer";

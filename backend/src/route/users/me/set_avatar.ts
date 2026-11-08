@@ -1,19 +1,19 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { USERS_TAG } from "@/src/open_api_specification.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { AVATAR_ORIGIN_SCHEMA, USER_AVATAR_SCHEMA } from "@/src/database/schema.ts";
-import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
-import { avatarUrl } from "@/src/http/avatar_url.ts";
-import { TEXT_LIMIT, UPLOAD_BODY_LIMIT_BYTES } from "@/src/text_limit.ts";
+import { db } from "#/src/database/client.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { USERS_TAG } from "#/src/open_api_specification.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { AVATAR_ORIGIN_SCHEMA, USER_AVATAR_SCHEMA } from "#/src/database/schema.ts";
+import { UserAvatarService } from "#/src/service/user_avatar_service.ts";
+import { avatarUrl } from "#/src/http/avatar_url.ts";
+import { TEXT_LIMIT, UPLOAD_BODY_LIMIT_BYTES } from "#/src/text_limit.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 /**
  * The one non-JSON body in the API. Multipart rather than base64 in JSON, which would inflate a

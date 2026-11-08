@@ -1,5 +1,5 @@
-import { userId } from "@/seed/ids.ts";
-import type { ProfileColumn } from "@/src/service/user_service.ts";
+import { userId } from "#/seed/ids.ts";
+import type { ProfileColumn } from "#/src/service/user_service.ts";
 
 /**
  * Handles rather than first names: members of a writing community pick a pen name far more

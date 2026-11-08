@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { userAgentParts } from "@/src/util/user_agent_parts.ts";
+import { userAgentParts } from "#/src/util/user_agent_parts.ts";
 
 test("userAgentParts drops the parser's Mobile prefix, which deviceType already carries", () => {
   assert.deepEqual(

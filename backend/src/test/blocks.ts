@@ -1,4 +1,4 @@
-import { request } from "@/src/test/support.ts";
+import { request } from "#/src/test/support.ts";
 
 export const blocker = "block-test-blocker";
 export const blocked = "block-test-blocked";

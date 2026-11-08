@@ -1,14 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { forumFolderOf } from "@/src/scope/forum_scope.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "@/src/http/request_schema.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_FOLDER_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { forumFolderOf } from "#/src/scope/forum_scope.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "#/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -16,8 +16,8 @@ import {
   FOLDER_TOO_DEEP,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
-import { FORUM_PERMISSION_SCHEMA, WRITING_FOLDER_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { FORUM_PERMISSION_SCHEMA, WRITING_FOLDER_SCHEMA } from "#/src/database/schema.ts";
 
 const CREATE_FOLDER_BODY = z.object({
   title: FOLDER_TITLE_SCHEMA,

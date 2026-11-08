@@ -1,16 +1,16 @@
-import type { FolderId, GroupId, ThreadId } from "@/src/scope/scoped_id.ts";
+import type { FolderId, GroupId, ThreadId } from "#/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
-import type { WritingThread as DatabaseWritingThread } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { withFavourite } from "@/src/query/favourite.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
+import type { WritingThread as DatabaseWritingThread } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { withFavourite } from "#/src/query/favourite.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
+} from "#/src/list/list_endpoint_query.ts";
 
 /**
  * A thread found by a search, which can come from any group the member may see — so it says

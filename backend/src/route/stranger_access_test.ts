@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import sharp from "sharp";
-import openApi from "@/open-api.json" with { type: "json" };
-import app from "@/src/app.ts";
-import { db } from "@/src/database/client.ts";
-import type { ForumPermission } from "@/src/database/schema.ts";
+import openApi from "#/open-api.json" with { type: "json" };
+import app from "#/src/app.ts";
+import { db } from "#/src/database/client.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
 import {
   addMember,
   clearRateLimits,
@@ -15,8 +15,8 @@ import {
   request,
   SAME_ORIGIN,
   write,
-} from "@/src/test/support.ts";
-import { clearForum } from "@/src/test/forum.ts";
+} from "#/src/test/support.ts";
+import { clearForum } from "#/src/test/forum.ts";
 import {
   address,
   answer,
@@ -26,11 +26,11 @@ import {
   type Ids,
   missingId,
   REQUEST_BODIES,
-} from "@/src/test/route_fixtures.ts";
-import { fileReportOk, makeOperator } from "@/src/test/reports.ts";
-import { createIdea, patchIdea } from "@/src/test/story_ideas.ts";
-import { blockMember } from "@/src/test/blocks.ts";
-import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
+} from "#/src/test/route_fixtures.ts";
+import { fileReportOk, makeOperator } from "#/src/test/reports.ts";
+import { createIdea, patchIdea } from "#/src/test/story_ideas.ts";
+import { blockMember } from "#/src/test/blocks.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 
 /**
  * For every route with an id in its path: what a member with no part in the rows gets at each
@@ -571,7 +571,7 @@ async function fixture(keys: readonly Key[]): Promise<Fixture> {
 
   const trees: Tree[] = [];
   for (const key of keys) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose: trees share the owner
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose: trees share the owner
     trees.push(await tree(key, people));
   }
 
@@ -637,7 +637,7 @@ for (const { operation, method, path, keys } of operations()) {
     for (const tree of found.trees) {
       const ids = { ...tree.ids, ...test.params?.(tree) };
 
-      // deno-lint-ignore no-await-in-loop -- sequential: a control may change the rows
+      // oxlint-disable-next-line no-await-in-loop -- sequential: a control may change the rows
       const tried = await ask(tree, ids, found.strangerCookie);
       actual[tree.key] = tried.status;
 
@@ -645,7 +645,7 @@ for (const { operation, method, path, keys } of operations()) {
         const missing = Object.fromEntries(
           Object.entries(ids).map(([name, id]) => [name, name === "targetType" ? id : missingId()]),
         );
-        // deno-lint-ignore no-await-in-loop -- sequential on purpose, as above
+        // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, as above
         const nothing = await ask(tree, missing, found.strangerCookie);
         if (JSON.stringify(tried) !== JSON.stringify(nothing)) {
           telling.push(`${tree.key}: ${JSON.stringify(tried)}, missing ${JSON.stringify(nothing)}`);
@@ -654,7 +654,7 @@ for (const { operation, method, path, keys } of operations()) {
 
       // After the stranger, so a delete that got through leaves the controller nothing to delete.
       const controller = tree.controller === "owner" ? found.ownerCookie : found.operatorCookie;
-      // deno-lint-ignore no-await-in-loop -- sequential on purpose, as above
+      // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, as above
       const control = await ask(tree, ids, controller);
       const expected = test.control?.[tree.key];
       if (

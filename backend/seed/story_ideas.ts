@@ -1,7 +1,7 @@
 import type { Selectable } from "kysely";
-import type { StoryIdea as DatabaseStoryIdea, StoryLanguage } from "@/src/database/schema.ts";
-import { USER } from "@/seed/accounts.ts";
-import { storyIdeaId } from "@/seed/ids.ts";
+import type { StoryIdea as DatabaseStoryIdea, StoryLanguage } from "#/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { storyIdeaId } from "#/seed/ids.ts";
 
 /**
  * A fixture omits a column rather than writing null into it, so what it may leave out is optional

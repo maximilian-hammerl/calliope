@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { clearRateLimits, getUserId, registerUser, request } from "@/src/test/support.ts";
-import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
+import { clearRateLimits, getUserId, registerUser, request } from "#/src/test/support.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "#/src/test/favourites.ts";
 
 /**
  * The chats list's favourite: the flag, the ordering and that it is the reader's own. A chat is the

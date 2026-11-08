@@ -1,21 +1,21 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FOLDER_RESPONSE } from "@/src/http/response_schema.ts";
-import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { JOINED_GROUP } from "@/src/scope/chains.ts";
-import { folderOf } from "@/src/scope/group_scope.ts";
-import { MAX_FOLDER_DEPTH, WritingFolderService } from "@/src/service/writing_folder_service.ts";
-import { mayAct } from "@/src/service/writing_group_authorization.ts";
+import { db } from "#/src/database/client.ts";
+import { FOLDER_RESPONSE } from "#/src/http/response_schema.ts";
+import { FOLDERS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { JOINED_GROUP } from "#/src/scope/chains.ts";
+import { folderOf } from "#/src/scope/group_scope.ts";
+import { MAX_FOLDER_DEPTH, WritingFolderService } from "#/src/service/writing_folder_service.ts";
+import { mayAct } from "#/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FOLDER_TOO_DEEP,
   jsonContent,
-} from "@/src/http/response.ts";
-import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
-import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "@/src/http/request_schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "#/src/database/schema.ts";
+import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "#/src/http/request_schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 

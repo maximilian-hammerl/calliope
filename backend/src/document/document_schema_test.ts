@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { DocumentNode } from "@/src/document/document_schema.ts";
-import { DOCUMENT_SCHEMA, DOCUMENT_VOCABULARY } from "@/src/document/document_schema.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
+import type { DocumentNode } from "#/src/document/document_schema.ts";
+import { DOCUMENT_SCHEMA, DOCUMENT_VOCABULARY } from "#/src/document/document_schema.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
 
 /**
  * The document Tiptap emits for every node and mark, as the frontend's `tiptapVocabulary.spec.ts`

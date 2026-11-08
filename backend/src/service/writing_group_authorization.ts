@@ -1,4 +1,4 @@
-import type { UserInWritingGroupRole } from "@/src/database/schema.ts";
+import type { UserInWritingGroupRole } from "#/src/database/schema.ts";
 
 /**
  * Who may do what inside a writing group, as one table.

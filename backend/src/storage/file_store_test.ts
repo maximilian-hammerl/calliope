@@ -1,12 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { generate as uuidv7 } from "@std/uuid/v7";
+import { randomUUIDv7 } from "node:crypto";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { FileStore } from "./file_store.ts";
 
 const BYTES = new TextEncoder().encode("some bytes");
 
 function fileId(): string {
-  return uuidv7();
+  return randomUUIDv7();
 }
 
 test("what is written is what is read", async () => {
@@ -48,11 +49,11 @@ test("a name that is not a file id never becomes a path", async () => {
     // a v4 uuid: the column and the store both mean v7
     "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   ]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await assert.rejects(() => FileStore.read(name));
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await assert.rejects(() => FileStore.write(name, BYTES));
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await assert.rejects(() => FileStore.remove(name));
   }
 });
@@ -60,11 +61,11 @@ test("a name that is not a file id never becomes a path", async () => {
 /** A crash mid-write must not leave half a file under a name the database already points at. */
 test("a partial write is not listed as a file", async () => {
   const id = fileId();
-  await Deno.mkdir("./.file-storage", { recursive: true });
-  await Deno.writeFile(`./.file-storage/${id}.partial`, BYTES);
+  await mkdir("./.file-storage", { recursive: true });
+  await writeFile(`./.file-storage/${id}.partial`, BYTES);
 
   assert.equal((await FileStore.listFileIds()).includes(`${id}.partial`), false);
   assert.equal((await FileStore.listFileIds()).includes(id), false);
 
-  await Deno.remove(`./.file-storage/${id}.partial`);
+  await rm(`./.file-storage/${id}.partial`);
 });

@@ -1,18 +1,18 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
 import type {
   ChatGroup as DatabaseChatGroup,
   UserInChatGroupStatus,
-} from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
+} from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
-import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "@/src/query/favourite.ts";
+} from "#/src/list/list_endpoint_query.ts";
+import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "#/src/query/favourite.ts";
 
 export type ChatGroup = Pick<
   Selectable<DatabaseChatGroup>,
@@ -108,7 +108,7 @@ function listChatGroups(
         queryBuilder.where(
           "chatGroup.title",
           "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+          // oxlint-disable-next-line no-non-null-assertion -- the `$if` only runs this when it is set
           searchPattern(query.search!),
         ),
       )

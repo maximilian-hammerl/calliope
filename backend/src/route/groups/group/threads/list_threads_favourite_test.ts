@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { clearRateLimits, createGroup, registerUser, request } from "@/src/test/support.ts";
-import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
+import { clearRateLimits, createGroup, registerUser, request } from "#/src/test/support.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "#/src/test/favourites.ts";
 
 /**
  * Listing threads is not a list endpoint — it returns every thread with no paging and no sort of

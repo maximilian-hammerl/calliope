@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { clientAddress } from "@/src/util/client_address.ts";
+import { clientAddress } from "#/src/util/client_address.ts";
 
 /** Where a session came from. The user agent is kept as it arrived and parsed on read. */
 export type SessionProvenance = {

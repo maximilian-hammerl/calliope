@@ -37,9 +37,9 @@ test("a photograph becomes one square WebP", async () => {
 
 test("every accepted format is accepted", async () => {
   for (const format of ["png", "jpeg", "webp"] as const) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const source = await picture({ width: 300, height: 300, format });
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     const result = await toAvatar(source);
     assert.notEqual(result, undefined, `${format} was refused`);
   }
@@ -116,8 +116,8 @@ test("a picture is turned the way its EXIF says", async () => {
   });
 
   const redness = (from: number, to: number) => {
-    let red = 0,
-      blue = 0;
+    let red = 0;
+    let blue = 0;
     for (let y = from; y < to; y++) {
       for (let x = 0; x < info.width; x++) {
         const at = (y * info.width + x) * info.channels;

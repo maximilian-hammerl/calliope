@@ -87,7 +87,9 @@ services:
 
   backend:
     build:
-      context: ./backend
+      # The repository root, which holds the pnpm workspace's lockfile.
+      context: .
+      dockerfile: backend/Dockerfile
       # So the image creates the mount point with the runtime user's ownership; a volume Docker
       # creates on its own belongs to root and refuses the first upload.
       args:
@@ -100,9 +102,8 @@ services:
       # the seed guard and the notice the frontend shows must agree about which instance this is.
       PUBLIC_ENVIRONMENT: ${PUBLIC_ENVIRONMENT:?PUBLIC_ENVIRONMENT must be set}
       HOST_URL: ${HOST_URL:?set HOST_URL in .env}
-      # Reported as releaseId by the health endpoint. Runtime rather than a build argument:
-      # the backend image compiles a binary, and a value that changes every deploy would
-      # rebuild it from scratch every deploy.
+      # Reported as releaseId by the health endpoint. Runtime rather than a build argument: a
+      # value that changes every deploy would rebuild the image from scratch every deploy.
       PUBLIC_GIT_COMMIT: ${PUBLIC_GIT_COMMIT:-}
       PUBLIC_APP_NAME: ${PUBLIC_APP_NAME:-}
       APP_DESCRIPTION: ${APP_DESCRIPTION:-}
@@ -139,7 +140,7 @@ services:
     # /api/health reports 503 when a database is unreachable, so the container restarts rather
     # than serving errors. The binary asks itself: distroless has no shell for CMD-SHELL.
     healthcheck:
-      test: ["CMD", "/usr/bin/deno", "run", "--cached-only", "--no-prompt", "--permission-set=calliope", "main.ts", "--health-check"]
+      test: ["CMD", "/nodejs/bin/node", "main.ts", "--health-check"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,6 +1,6 @@
 import type { AnyColumnWithTable, SelectQueryBuilder } from "kysely";
-import type { DB, Favourite } from "@/src/database/schema.ts";
-import type { SortTerm } from "@/src/list/list_endpoint_query.ts";
+import type { DB, Favourite } from "#/src/database/schema.ts";
+import type { SortTerm } from "#/src/list/list_endpoint_query.ts";
 
 /**
  * **Import nothing from `service/` here.** Services import this and reach back through

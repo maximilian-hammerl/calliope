@@ -1,19 +1,19 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { notBlank } from "@/src/http/request_schema.ts";
-import { CHAT_GROUP_RESPONSE } from "@/src/http/response_schema.ts";
-import { CHATS_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { ChatGroupService } from "@/src/service/chat_group_service.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
+import { db } from "#/src/database/client.ts";
+import { notBlank } from "#/src/http/request_schema.ts";
+import { CHAT_GROUP_RESPONSE } from "#/src/http/response_schema.ts";
+import { CHATS_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { ChatGroupService } from "#/src/service/chat_group_service.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 const CREATE_CHAT_BODY = z.object({
   title: notBlank(z.string().min(1).max(TEXT_LIMIT.chatTitle)),

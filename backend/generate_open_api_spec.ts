@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import app from "./src/app.ts";
 import openApiSpecification from "./src/open_api_specification.ts";
 
@@ -16,8 +17,8 @@ if (import.meta.main) {
   delete spec.servers;
   delete spec.info.contact;
 
-  await Deno.writeTextFile(OPEN_API_SPEC_PATH, JSON.stringify(spec));
+  await writeFile(OPEN_API_SPEC_PATH, JSON.stringify(spec));
   console.log("Saved successfully");
 
-  Deno.exit();
+  process.exit();
 }

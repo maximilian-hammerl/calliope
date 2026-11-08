@@ -3,9 +3,9 @@ import type {
   UserInWritingGroupRole,
   UserInWritingGroupStatus,
   WritingGroup as DatabaseWritingGroup,
-} from "@/src/database/schema.ts";
-import { USER } from "@/seed/accounts.ts";
-import { folderId, groupId, pageId, postId, stepId, threadId } from "@/seed/ids.ts";
+} from "#/src/database/schema.ts";
+import { USER } from "#/seed/accounts.ts";
+import { folderId, groupId, pageId, postId, stepId, threadId } from "#/seed/ids.ts";
 
 type Member = {
   user: string;
@@ -97,7 +97,7 @@ const LONG_THREAD_WRITERS = [
 
 const LONG_THREAD_POSTS: Post[] = Array.from({ length: 105 }, (_, index) => ({
   id: postId(200 + index),
-  // deno-lint-ignore no-non-null-assertion -- a modulo of the length is always in range
+  // oxlint-disable-next-line no-non-null-assertion -- a modulo of the length is always in range
   by: LONG_THREAD_WRITERS[index % LONG_THREAD_WRITERS.length]!,
   text: `Aufstieg, Abschnitt ${index + 1}. Der Pfad wurde schmaler, und niemand sagte etwas.`,
 }));

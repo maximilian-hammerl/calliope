@@ -1,7 +1,7 @@
 import type { Context } from "hono";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { logger } from "@/src/logging.ts";
-import type { ErrorResponse } from "@/src/http/response.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { logger } from "#/src/logging.ts";
+import type { ErrorResponse } from "#/src/http/response.ts";
 
 type Issue = { path: string; message: string };
 

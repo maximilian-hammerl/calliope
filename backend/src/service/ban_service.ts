@@ -1,6 +1,6 @@
-import { db, type Transaction } from "@/src/database/client.ts";
-import { mayModeratePlatform } from "@/src/service/platform_authorization.ts";
-import type { PlatformRole } from "@/src/database/schema.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { mayModeratePlatform } from "#/src/service/platform_authorization.ts";
+import type { PlatformRole } from "#/src/database/schema.ts";
 
 /**
  * Banning an account for breaking the platform's rules. Three things it deliberately is not:

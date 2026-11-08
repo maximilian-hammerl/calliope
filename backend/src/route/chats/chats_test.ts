@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import { STATUS_CODE } from "@/src/http/status.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
 import {
   clearRateLimits,
   deleteUsers,
   getUserId,
   registerUser,
   request,
-} from "@/src/test/support.ts";
+} from "#/src/test/support.ts";
 
 const founder = "chats-founder";
 const invited = "chats-invited";
@@ -126,7 +126,7 @@ test("messages page by cursor, oldest reachable from newest", async () => {
   const { founderCookie, chat: created } = await chat();
 
   for (const text of ["eins", "zwei", "drei"]) {
-    // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
+    // oxlint-disable-next-line no-await-in-loop -- sequential on purpose, one case per iteration
     await request("POST", `/api/chats/${created.id}/messages`, founderCookie, {
       text,
     });

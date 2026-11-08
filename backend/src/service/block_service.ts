@@ -1,6 +1,6 @@
-import { db, type Transaction } from "@/src/database/client.ts";
-import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import { listResultsWithCount } from "@/src/list/list_endpoint_query.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import type { ListQuery, ListResults } from "#/src/list/list_endpoint_query.ts";
+import { listResultsWithCount } from "#/src/list/list_endpoint_query.ts";
 
 export type Block = {
   blockedId: string;

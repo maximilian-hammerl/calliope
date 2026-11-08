@@ -1,18 +1,18 @@
-import type { FolderId, GroupId, PageId } from "@/src/scope/scoped_id.ts";
+import type { FolderId, GroupId, PageId } from "#/src/scope/scoped_id.ts";
 import type { NotNull, Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { withFavourite } from "@/src/query/favourite.ts";
-import type { User } from "@/src/service/user_service.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { withFavourite } from "#/src/query/favourite.ts";
+import type { User } from "#/src/service/user_service.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
   searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
-import type { WritingPage as DatabaseWritingPage } from "@/src/database/schema.ts";
-import type { PostDocument } from "@/src/document/document_schema.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
+} from "#/src/list/list_endpoint_query.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
+import type { WritingPage as DatabaseWritingPage } from "#/src/database/schema.ts";
+import type { PostDocument } from "#/src/document/document_schema.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
 
 /** What the rail needs: everything but the prose, so listing a group is not a bulk download. */
 export type PageSummary =

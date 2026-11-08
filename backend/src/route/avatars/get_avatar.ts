@@ -1,15 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { USERS_TAG } from "@/src/open_api_specification.ts";
-import authenticated from "@/src/middleware/authenticated.ts";
-import { FileStore } from "@/src/storage/file_store.ts";
-import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { USERS_TAG } from "#/src/open_api_specification.ts";
+import authenticated from "#/src/middleware/authenticated.ts";
+import { FileStore } from "#/src/storage/file_store.ts";
+import { UserAvatarService } from "#/src/service/user_avatar_service.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   jsonContent,
-} from "@/src/http/response.ts";
+} from "#/src/http/response.ts";
 
 /**
  * An hour rather than a year: a new upload is a new address, so this only governs how long a

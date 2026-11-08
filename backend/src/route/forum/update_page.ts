@@ -1,15 +1,15 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { db } from "@/src/database/client.ts";
-import { FORUM_PAGE_RESPONSE } from "@/src/http/response_schema.ts";
-import { FORUM_TAG } from "@/src/open_api_specification.ts";
-import { STATUS_CODE } from "@/src/http/status.ts";
-import { FORUM_PAGE } from "@/src/scope/chains.ts";
-import { ForumService } from "@/src/service/forum_service.ts";
-import { documentToPlainText } from "@/src/document/document_text.ts";
-import { TEXT_LIMIT } from "@/src/text_limit.ts";
-import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import { PAGE_TITLE_SCHEMA } from "@/src/route/groups/group/pages/page_schema.ts";
-import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
+import { db } from "#/src/database/client.ts";
+import { FORUM_PAGE_RESPONSE } from "#/src/http/response_schema.ts";
+import { FORUM_TAG } from "#/src/open_api_specification.ts";
+import { STATUS_CODE } from "#/src/http/status.ts";
+import { FORUM_PAGE } from "#/src/scope/chains.ts";
+import { ForumService } from "#/src/service/forum_service.ts";
+import { documentToPlainText } from "#/src/document/document_text.ts";
+import { TEXT_LIMIT } from "#/src/text_limit.ts";
+import { mayActInForum } from "#/src/service/forum_authorization.ts";
+import { PAGE_TITLE_SCHEMA } from "#/src/route/groups/group/pages/page_schema.ts";
+import { DOCUMENT_SCHEMA } from "#/src/document/document_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -18,8 +18,8 @@ import {
   jsonContent,
   PAGE_CHANGED,
   PAGE_CHANGED_RESPONSE,
-} from "@/src/http/response.ts";
-import { WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
+} from "#/src/http/response.ts";
+import { WRITING_PAGE_SCHEMA } from "#/src/database/schema.ts";
 
 const PAGE_PARAMS = z.object({ pageId: WRITING_PAGE_SCHEMA.shape.id });
 

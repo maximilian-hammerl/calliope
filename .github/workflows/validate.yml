@@ -21,28 +21,31 @@ jobs:
         run: cp .example.env .env
         working-directory: .
 
-      - uses: denoland/setup-deno@v2
+      # Before setup-node, whose pnpm cache asks pnpm where its store is. Installs the version
+      # `packageManager` in the root package.json names.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
         with:
-          deno-version: v2.x
-          cache: true
-          cache-hash: ${{ hashFiles('backend/deno.lock') }}
+          node-version: 26
+          cache: pnpm
 
       - name: Install dependencies
-        run: deno install
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting, lints and types
-        run: deno task validate:check
+        run: pnpm run validate:check
 
       - name: Check the OpenAPI specification is up to date
-        run: deno task open-api:check
+        run: pnpm run open-api:check
 
       # Disabled until Spectral supports OpenAPI 3.2. The specification declares 3.2.0 so
       # that the list endpoints' `query` operations are legal, but Spectral only knows up to
       # 3.1 and silently falls back to validating against the 3.0 schema, which then rejects
-      # both the version string and the 3.1-only `webhooks` key. The task itself is kept, so
-      # `deno task open-api:lint` still runs locally once that changes.
+      # both the version string and the 3.1-only `webhooks` key. The script itself is kept, so
+      # `pnpm run open-api:lint` still runs locally once that changes.
       # - name: Lint the OpenAPI specification
-      #   run: deno task open-api:lint
+      #   run: pnpm run open-api:lint
 
       # dbmate is a plain binary rather than a package, so installing it lets the pipeline run
       # the repository's own scripts instead of restating their configuration.
@@ -58,15 +61,12 @@ jobs:
         run: docker compose up -d --wait
         working-directory: .
 
-      # Only to run the database's migration script, which calls dbmate and needs no install.
-      - uses: pnpm/action-setup@v6
-
       - name: Apply migrations
         run: pnpm run migrations:migrate
         working-directory: database
 
       - name: Run tests
-        run: deno task test
+        run: pnpm run test
 
   database:
     name: Database
@@ -90,11 +90,6 @@ jobs:
         with:
           node-version: 26
           cache: pnpm
-
-      # Only for `deno fmt`, which formats the generated types the way the backend expects them.
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -129,13 +124,17 @@ jobs:
           pnpm run migrations:migrate
 
       # Deleted first: kysely-codegen that cannot read its config still succeeds, writing elsewhere.
-      # Formatted from backend/, whose deno.jsonc the committed file follows.
-      - name: Check the generated types are up to date
+      - name: Generate the types
         run: |
           rm ../backend/src/database/schema.ts
           pnpm run types:generate
-          (cd ../backend && deno fmt src/database/schema.ts)
-          git diff --exit-code -- ../backend/src/database/schema.ts
+
+      # Formatted in backend/, whose formatter config the committed file follows.
+      - name: Check the generated types are up to date
+        working-directory: backend
+        run: |
+          pnpm exec oxfmt src/database/schema.ts
+          git diff --exit-code -- src/database/schema.ts
 
       - name: Run tests
         run: pnpm run test

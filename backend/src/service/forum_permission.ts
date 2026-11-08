@@ -1,5 +1,5 @@
-import type { ForumPermission } from "@/src/database/schema.ts";
-import type { User } from "@/src/service/user_service.ts";
+import type { ForumPermission } from "#/src/database/schema.ts";
+import type { User } from "#/src/service/user_service.ts";
 
 /**
  * What a leaf with no folder above it gets — #32's „only operators create by default", as a

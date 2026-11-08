@@ -1,14 +1,14 @@
 import type { Selectable } from "kysely";
-import { db, type Transaction } from "@/src/database/client.ts";
-import { withAvatar } from "@/src/query/user_avatar.ts";
-import { withAvatarUrl } from "@/src/http/avatar_url.ts";
-import type { UserInChatGroup as DatabaseUserInChatGroup } from "@/src/database/schema.ts";
-import { NotificationService } from "@/src/service/notification_service.ts";
+import { db, type Transaction } from "#/src/database/client.ts";
+import { withAvatar } from "#/src/query/user_avatar.ts";
+import { withAvatarUrl } from "#/src/http/avatar_url.ts";
+import type { UserInChatGroup as DatabaseUserInChatGroup } from "#/src/database/schema.ts";
+import { NotificationService } from "#/src/service/notification_service.ts";
 import {
   type ListQuery,
   type ListResults,
   listResultsWithCount,
-} from "@/src/list/list_endpoint_query.ts";
+} from "#/src/list/list_endpoint_query.ts";
 
 export type UserInChatGroup = Pick<
   Selectable<DatabaseUserInChatGroup>,
