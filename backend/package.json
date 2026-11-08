@@ -34,7 +34,7 @@
     "hono-rate-limiter": "0.5.4",
     "ioredis": "6.0.0",
     "kysely": "0.29.8",
-    "kysely-postgres-js": "5.0.1",
+    "kysely-postgres-js": "5.1.0",
     "nodemailer": "10.3.1",
     "openapi3-ts": "4.6.2",
     "postgres": "4.0.0",
