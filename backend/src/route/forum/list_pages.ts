@@ -5,7 +5,6 @@ import { STATUS_CODE } from "#/src/http/status.ts";
 import authenticated from "#/src/middleware/authenticated.ts";
 import { ForumService } from "#/src/service/forum_service.ts";
 import {
-  BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
@@ -31,7 +30,6 @@ export default new OpenAPIHono().openapi(
         description: "No valid session",
         content: jsonContent(ERROR_RESPONSE),
       },
-      ...BAD_REQUEST_RESPONSE,
       ...FORBIDDEN_RESPONSE,
       ...COMMON_RESPONSES,
     },

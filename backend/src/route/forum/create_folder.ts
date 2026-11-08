@@ -6,7 +6,7 @@ import { STATUS_CODE } from "#/src/http/status.ts";
 import authenticated from "#/src/middleware/authenticated.ts";
 import { forumFolderOf } from "#/src/scope/forum_scope.ts";
 import { ForumService } from "#/src/service/forum_service.ts";
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
 import { mayActInForum } from "#/src/service/forum_authorization.ts";
 import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "#/src/http/request_schema.ts";
 import {

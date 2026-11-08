@@ -2,14 +2,15 @@ import { db } from "#/src/database/client.ts";
 import { write } from "#/src/test/support.ts";
 import type { ForumPermission } from "#/src/database/schema.ts";
 import { plainTextToDocument } from "#/src/document/document_text.ts";
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
 
 /**
- * Forum content is inserted straight into the tables: no endpoint creates a folder yet (#32's
- * seventh slice), and `writing_group_id` being null is what makes a row the forum's.
+ * Forum content is inserted straight into the tables, so a test needs no operator to build what it
+ * reads; `writing_group_id` being null is what makes a row the forum's.
  *
  * **There is only one forum**, so a test cannot isolate itself by making its own — the seed's rows
- * are in every list. Each fixture records what it made and `clearForum` removes only that.
+ * and those of every test file running at the same time are in every list. Each fixture records
+ * what it made and `clearForum` removes only that.
  */
 
 const made: { folders: string[]; threads: string[]; pages: string[] } = {
@@ -68,7 +69,7 @@ export async function createForumThread(
   return thread;
 }
 
-/** Closes a thread to members. Straight to the column: changing a permission is slice 7. */
+/** Closes a thread to members, straight to the column like the fixtures above. */
 export async function closeForumThread(threadId: string): Promise<void> {
   await write((transaction) =>
     transaction
@@ -164,7 +165,7 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
 
   // Newest first, which is children before parents here: `parent_folder_id` is RESTRICT, and it
   // is checked per row rather than at the end of the statement, so one `in` would refuse.
-  for (const folderId of [...made.folders].reverse()) {
+  for (const folderId of made.folders.toReversed()) {
     // oxlint-disable-next-line no-await-in-loop
     await write((transaction) =>
       transaction.deleteFrom("writingFolder").where("id", "=", folderId).execute(),

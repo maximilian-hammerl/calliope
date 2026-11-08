@@ -74,6 +74,7 @@ export function mayActInForum(
   content?: Content,
 ): boolean {
   // An operator act names itself in the second position, because no row's grant bears on it.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the overloads say which it is
   const named = act ?? (permissionOrAct as OperatorAct);
 
   // The forum's equivalent of a group's administrator, and the only way in before a folder opens.
@@ -85,6 +86,7 @@ export function mayActInForum(
     return false;
   }
 
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the overloads give every act left a grant
   const permission = permissionOrAct as ForumPermission;
 
   if (RULE[named] === "write") {

@@ -39,7 +39,7 @@ function sendVerificationMail(user: { id: string; username: string; emailAddress
   });
 }
 
-export type VerifyEmailAddressResult = "verified" | "invalid_token";
+type VerifyEmailAddressResult = "verified" | "invalid_token";
 
 /**
  * Consuming the token and marking the address verified happen in one transaction, so a link
@@ -72,7 +72,7 @@ async function verifyEmailAddress(token: string): Promise<VerifyEmailAddressResu
   });
 }
 
-export type ChangeEmailAddressResult = "changed" | "already_verified" | "in_use";
+type ChangeEmailAddressResult = "changed" | "already_verified" | "in_use";
 
 /**
  * Corrects a mistyped address before it has ever been verified — the escape hatch that keeps

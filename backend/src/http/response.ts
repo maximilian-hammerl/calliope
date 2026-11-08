@@ -32,7 +32,7 @@ export const ACCOUNT_BANNED = "account_banned" as const;
  * Deliberately says nothing about why. The reason an operator recorded is a note for
  * operators; what the member is told is this one sentence, the same for everybody.
  */
-export const ACCOUNT_BANNED_MESSAGE = "Account banned" as const;
+const ACCOUNT_BANNED_MESSAGE = "Account banned" as const;
 
 /** Its own code because the form says this on the password field, not as a form error. */
 export const PASSWORD_BREACHED = "password_breached" as const;
@@ -84,12 +84,12 @@ export type ErrorResponse = z.infer<typeof ERROR_RESPONSE>;
  * has not necessarily spent the other — and the interface says something different for each: reads
  * exhausted means nothing works, writes exhausted means reading still does.
  */
-export const RATE_LIMIT_SCOPE = z.enum(["read", "write"]);
+const RATE_LIMIT_SCOPE = z.enum(["read", "write"]);
 
 export type RateLimitScope = z.infer<typeof RATE_LIMIT_SCOPE>;
 
 /** The 429's own body: the shared error shape plus which budget it was. */
-export const RATE_LIMIT_RESPONSE = ERROR_RESPONSE.extend({
+const RATE_LIMIT_RESPONSE = ERROR_RESPONSE.extend({
   scope: RATE_LIMIT_SCOPE,
 });
 

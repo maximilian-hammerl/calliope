@@ -725,7 +725,7 @@ test("the schema accepts nothing the fixture does not carry", () => {
     }
     (node.content ?? []).forEach(walk);
   };
-  walk(FIXTURE as DocumentNode);
+  walk(FIXTURE);
 
   assert.deepEqual(DOCUMENT_VOCABULARY.nodes, [...used.nodes].toSorted());
   assert.deepEqual(DOCUMENT_VOCABULARY.marks, [...used.marks].toSorted());

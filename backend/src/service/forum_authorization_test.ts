@@ -103,15 +103,7 @@ test("the forum's own shape is nobody's but an operator's", () => {
  * `author` rule already answers for both, which is why renaming needed no rule of its own.
  */
 test("a thread is renamed by its author, or by an operator", () => {
-  const somebodyElses = { createdBy: "someone-else", userId: member.id };
-
-  assert.equal(
-    mayActInForum(member, "write", "thread:change", {
-      createdBy: member.id,
-      userId: member.id,
-    }),
-    true,
-  );
+  assert.equal(mayActInForum(member, "write", "thread:change", theirs), true);
   assert.equal(mayActInForum(member, "write", "thread:change", somebodyElses), false);
   assert.equal(mayActInForum(operator, "write", "thread:change", somebodyElses), true);
 });

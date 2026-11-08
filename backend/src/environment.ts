@@ -1,9 +1,9 @@
 import * as z from "zod";
 import { getRequiredEnvVariable } from "#/src/util/env.ts";
 
-export const ENVIRONMENTS = ["development", "testing", "staging", "production"] as const;
+const ENVIRONMENTS = ["development", "testing", "staging", "production"] as const;
 
-export const ENVIRONMENT_SCHEMA = z.enum(ENVIRONMENTS);
+const ENVIRONMENT_SCHEMA = z.enum(ENVIRONMENTS);
 
 export type Environment = z.infer<typeof ENVIRONMENT_SCHEMA>;
 

@@ -7,7 +7,7 @@ which loads when you open that area's files.
 ```bash
 pnpm run dev                  # --watch, on $BACKEND_PORT, under Node's permission model
 pnpm run test                 # every file in its own process, in parallel, against the compose stack
-pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc  (validate:fix repairs what it can)
+pnpm run validate:check       # oxfmt, oxlint with type-aware rules, tsc, knip  (validate:fix repairs what it can)
 pnpm run db:seed              # the fixture: nine accounts, password `calliope`
 ```
 
@@ -43,8 +43,8 @@ before parameters, or `/me` is swallowed by `/:userId`.
 - **Every declared response needs `content`.** One content-less response widens the handler's
   return type to `Response` and **silently disables the body and status checks for the whole
   route**. Prefer `200 { ok: true }` over a bodyless 204 for the same reason. Spread
-  `...COMMON_RESPONSES` and `...BAD_REQUEST_RESPONSE` into every route, and `...FORBIDDEN_RESPONSE`
-  where the route has no 403 of its own.
+  `...COMMON_RESPONSES` into every route, `...BAD_REQUEST_RESPONSE` into every route that validates
+  a param, query or body, and `...FORBIDDEN_RESPONSE` where the route has no 403 of its own.
 - **A wrong password is `INVALID_CREDENTIALS_BODY`**, a constant, never a helper — a helper
   returning `c.json(…)` widens the return type the same way. Its `code: "invalid_credentials"` is
   how the frontend tells a wrong password from a lost session; a bare 401 signs the member out.
@@ -118,7 +118,7 @@ a send**: `Mailer.sendInBackground`, or the response time becomes an account ora
 One positive and one negative case per route, against real Postgres, Redis and Mailpit. **The suite
 runs every file at once**, each in a process of its own, so every file owns its identities: a shared fixture is a **factory taking a
 scope** (`authFixture("login")`), never module-level constants. Never empty shared state
-(`deleteMailFor([address])`, not `deleteAllMail()`), never assert a global count (`includes`, or a
+(`deleteMailFor([address])`, not `deleteAllMail()`), never assert a global count (a membership check, or a
 baseline delta), scope every fixture query to its own account. `clearRateLimits()` spares
 `RATE_LIMIT_TEST_CLIENTS`. Auth tests go through the app by hand, since registering is the thing under
 test. Prefer assertions that fail for the right reason — a *different* user still sees the group, not

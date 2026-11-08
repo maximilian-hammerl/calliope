@@ -32,12 +32,12 @@ export type User = Pick<
 >;
 
 /** What one member may see of another. Deliberately narrower than {@link User}. */
-export type PublicUser = Pick<Selectable<DatabaseUser>, "id" | "username" | "platformRole"> & {
+type PublicUser = Pick<Selectable<DatabaseUser>, "id" | "username" | "platformRole"> & {
   avatarUrl: string | null;
 };
 
 /** One list, so the select, the update and the response cannot drift apart. */
-export const PROFILE_COLUMNS = [
+const PROFILE_COLUMNS = [
   "aboutMe",
   "writingStyle",
   "postLength",
@@ -49,7 +49,7 @@ export const PROFILE_COLUMNS = [
 
 export type ProfileColumn = (typeof PROFILE_COLUMNS)[number];
 
-export type UserProfile = Pick<
+type UserProfile = Pick<
   Selectable<DatabaseUser>,
   "id" | "username" | "createdAt" | "platformRole" | ProfileColumn
 > & { avatarUrl: string | null };
