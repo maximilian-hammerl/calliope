@@ -4,7 +4,7 @@ import { flushBackgroundWork } from "#/src/util/background.ts";
 import { countMailFor, deleteMailFor, tokenFromMail, waitForMail } from "#/src/test/mailpit.ts";
 import { sendJson } from "#/src/test/auth.ts";
 
-export const password = "a-complex-password";
+const password = "a-complex-password";
 
 /**
  * One fixture per test file, named by `scope`. These constants used to be module-level, so
@@ -17,7 +17,6 @@ export function emailChangeFixture(scope: string) {
   const newAddress = `email-change-${scope}-moved@example.com`;
   const addresses = [currentAddress, newAddress];
 
-  /** Only this fixture's mail, so the file next door keeps what it is waiting for. */
   const clearMail = () => deleteMailFor(addresses);
   const mailCount = () => countMailFor(addresses);
 

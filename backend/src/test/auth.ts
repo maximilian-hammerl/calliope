@@ -46,7 +46,6 @@ export function sessionCookie(response: Response): string {
 export function authFixture(scope: string, ...alsoWrites: string[]) {
   const username = `route-${scope}-user`;
   const emailAddress = `${username}@example.com`;
-  /** Its own mailbox: `deleteAllMail` empties everyone's, including a message another file waits for. */
   const addresses = [emailAddress, ...alsoWrites];
   const clearMail = () => deleteMailFor(addresses);
   const mailCount = () => countMailFor(addresses);

@@ -1,6 +1,5 @@
 import { request } from "#/src/test/support.ts";
 import { TEXT_LIMIT } from "#/src/text_limit.ts";
-import type { StoryIdeaStatus } from "#/src/database/schema.ts";
 
 /**
  * Two names per test file, named by `scope`. Six files use these, and shared names had each
@@ -32,5 +31,3 @@ export const listIdeas = (cookie: string, body: Record<string, unknown> = {}) =>
 
 export const patchIdea = (cookie: string, ideaId: string, values: Record<string, unknown>) =>
   request("PATCH", `/api/story-ideas/${ideaId}`, cookie, values);
-
-export type SeenStatus = StoryIdeaStatus;
