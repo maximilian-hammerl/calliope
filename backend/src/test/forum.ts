@@ -164,7 +164,7 @@ export async function clearForum(usernames: string[] = []): Promise<void> {
 
   // Newest first, which is children before parents here: `parent_folder_id` is RESTRICT, and it
   // is checked per row rather than at the end of the statement, so one `in` would refuse.
-  for (const folderId of [...made.folders].reverse()) {
+  for (const folderId of made.folders.toReversed()) {
     // oxlint-disable-next-line no-await-in-loop
     await write((transaction) =>
       transaction.deleteFrom("writingFolder").where("id", "=", folderId).execute(),

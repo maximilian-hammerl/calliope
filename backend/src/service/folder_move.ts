@@ -74,8 +74,7 @@ export function planFolderMove(
   const subtree: Array<string> = [];
   const queue = [folderId];
   let height = 0;
-  while (queue.length > 0) {
-    const id = queue.shift() as string;
+  for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
     subtree.push(id);
     const row = byId.get(id);
     if (row !== undefined) {

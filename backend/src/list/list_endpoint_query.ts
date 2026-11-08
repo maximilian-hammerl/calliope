@@ -88,5 +88,5 @@ export async function listResultsWithCount<TB extends keyof DB, Result>(
       .executeTakeFirstOrThrow(),
   ]);
 
-  return { results, totalResults: Number(count) };
+  return { results, totalResults: count };
 }
