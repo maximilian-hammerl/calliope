@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { createTransport } from "nodemailer";
 import { APP_NAME } from "#/src/branding.ts";
 import { getOptionalEnvVariable, getRequiredEnvVariable } from "#/src/util/env.ts";
 import { runInBackground } from "#/src/util/background.ts";
@@ -15,7 +15,7 @@ if (!Number.isInteger(SMTP_PORT) || SMTP_PORT <= 0) {
   throw new Error(`SMTP_PORT is not a port number: ${SMTP_PORT}`);
 }
 
-const transport = nodemailer.createTransport({
+const transport = createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
   // Implicit TLS, as port 465 expects; false negotiates STARTTLS, which is what 587 wants.

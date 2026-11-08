@@ -123,8 +123,8 @@ app.use((c, next) =>
       c.req.path.endsWith("/avatar") && c.req.method === "PUT"
         ? UPLOAD_BODY_LIMIT_BYTES
         : REQUEST_BODY_LIMIT_BYTES,
-    onError: (c) =>
-      c.json(
+    onError: (context) =>
+      context.json(
         { error: "Request body too large" } satisfies ErrorResponse,
         STATUS_CODE.ContentTooLarge,
       ),

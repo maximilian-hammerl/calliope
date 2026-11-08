@@ -20,23 +20,23 @@ if (import.meta.main) {
 
   // The image is distroless, so the health check has nothing else to run. Exits before the
   // cron jobs below are scheduled.
-  const args = process.argv.slice(2);
+  const args = new Set(process.argv.slice(2));
 
-  if (args.includes("--health-check")) {
+  if (args.has("--health-check")) {
     await runHealthCheck(PORT);
   }
 
-  if (args.includes("--seed")) {
+  if (args.has("--seed")) {
     await seedDatabase();
   }
 
   // Both exit when done, like the seed above: these are commands the image can run, not
   // options that change how the server behaves.
-  if (args.includes("--grant-role")) {
+  if (args.has("--grant-role")) {
     await grantRole();
   }
 
-  if (args.includes("--revoke-role")) {
+  if (args.has("--revoke-role")) {
     await revokeRole();
   }
 

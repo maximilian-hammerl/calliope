@@ -4,9 +4,10 @@
   "env": {
     "node": true
   },
-  // Not yet `suspicious` and `perf`, which `database/` runs: here they report 131 findings more.
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
   },
   "rules": {
     // Beyond the categories: recommended rules they leave out, then the house rules.
@@ -20,6 +21,8 @@
     "eslint/eqeqeq": "error",
     "eslint/guard-for-in": "error",
     "eslint/no-await-in-loop": "error",
+    // `import type` counts too, unlike the default: `query/favourite.ts` imports nothing but types.
+    "import/no-cycle": ["error", { "ignoreTypes": false }],
     "eslint/no-eval": "error",
     "typescript/no-non-null-asserted-optional-chain": "error",
     "typescript/no-non-null-assertion": "error",
@@ -41,7 +44,19 @@
     ],
     "typescript/no-misused-promises": "error",
     "typescript/only-throw-error": "error",
-    "typescript/switch-exhaustiveness-check": "error"
+    "typescript/switch-exhaustiveness-check": "error",
+    // Outside the override below, the casts it finds are deliberate, such as Kysely references in
+    // generic helpers, Zod's internals, `Object.keys()` and a test's `response.json()`.
+    "typescript/no-unsafe-type-assertion": "off",
+    // It refuses the bare `return;` after a middleware's `next()`, which tsc's `noImplicitReturns`
+    // demands.
+    "typescript/consistent-return": "off",
+    // It would move helpers away from their one use, and break up the fixture factories that hand
+    // theirs out together.
+    "unicorn/consistent-function-scoping": "off",
+    // It wants rows mutated in place with `Object.assign`, for lists that are short: a page, a
+    // member's sessions, the seed.
+    "oxc/no-map-spread": "off"
     // Left out, each having been tried:
     // "explicit-function-return-type", "explicit-module-boundary-types" — Kysely builders infer
     //   types too large to write and they change with every select.
@@ -52,6 +67,20 @@
     //   correct, since Calliope is German.
   },
   "overrides": [
+    {
+      // Where a cast to a scoped id would skip its resolver, which `scope.md` forbids.
+      "files": ["src/route/**", "src/service/**", "src/middleware/**"],
+      "rules": {
+        "typescript/no-unsafe-type-assertion": "error"
+      }
+    },
+    {
+      // Tests may mint and cast, as `scope.md` allows.
+      "files": ["**/*_test.ts"],
+      "rules": {
+        "typescript/no-unsafe-type-assertion": "off"
+      }
+    },
     {
       // Command-line scripts, whose output is what they print.
       "files": ["grant_role.ts", "seed.ts", "generate_open_api_spec.ts"],

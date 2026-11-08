@@ -64,10 +64,7 @@ export default new OpenAPIHono().openapi(
 
     // `c.body` rather than `c.json`, which is why this route's success has no JSON schema. The
     // buffer, not the view: Hono's typed overloads take an `ArrayBuffer`.
-    const body = bytes.buffer.slice(
-      bytes.byteOffset,
-      bytes.byteOffset + bytes.byteLength,
-    ) as ArrayBuffer;
+    const body = bytes.slice().buffer;
 
     return c.body(body, STATUS_CODE.OK, {
       "content-type": "image/webp",
