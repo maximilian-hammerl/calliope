@@ -2121,43 +2121,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
-                }
-              }
-            }
-          },
           "413": {
             "description": "Request body too large",
             "content": {
@@ -3796,43 +3759,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
-                }
-              }
-            }
-          },
           "401": {
             "description": "No valid session",
             "content": {
@@ -4037,43 +3963,6 @@
                   "type": "object",
                   "properties": { "ok": { "type": "boolean", "enum": [true] } },
                   "required": ["ok"]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
                 }
               }
             }
@@ -26674,43 +26563,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
-                }
-              }
-            }
-          },
           "401": {
             "description": "No valid session",
             "content": {
@@ -32495,43 +32347,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
-                }
-              }
-            }
-          },
           "401": {
             "description": "No valid session",
             "content": {
@@ -34473,43 +34288,6 @@
                     }
                   },
                   "required": ["results"]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
                 }
               }
             }
@@ -37034,43 +36812,6 @@
                     }
                   },
                   "required": ["results"]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" },
-                    "issues": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "path": { "type": "string" },
-                          "message": { "type": "string" }
-                        },
-                        "required": ["path", "message"]
-                      }
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "invalid_credentials",
-                        "account_banned",
-                        "password_breached",
-                        "page_changed",
-                        "folder_not_empty",
-                        "folder_too_deep",
-                        "folder_cycle"
-                      ]
-                    }
-                  },
-                  "required": ["error"]
                 }
               }
             }

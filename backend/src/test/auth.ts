@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import app from "#/src/app.ts";
 import { flushBackgroundWork } from "#/src/util/background.ts";
 import { countMailFor, deleteMailFor } from "#/src/test/mailpit.ts";
+// oxlint-disable-next-line import/no-unassigned-import -- for its side effect, the stubbed check
 import "#/src/test/breach_check.ts";
 
 /**

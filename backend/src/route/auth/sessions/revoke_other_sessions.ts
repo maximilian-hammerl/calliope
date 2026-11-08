@@ -6,7 +6,6 @@ import authenticated from "#/src/middleware/authenticated.ts";
 import { SessionCookieService } from "#/src/service/session_cookie_service.ts";
 import { UserService } from "#/src/service/user_service.ts";
 import {
-  BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
   ERROR_RESPONSE,
   FORBIDDEN_RESPONSE,
@@ -34,7 +33,6 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       ...FORBIDDEN_RESPONSE,
-      ...BAD_REQUEST_RESPONSE,
       ...COMMON_RESPONSES,
     },
   }),

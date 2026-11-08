@@ -11,7 +11,7 @@ import { FAVOURITE_COLUMN, type FavouriteTargetType } from "#/src/query/favourit
 /** Every reference the unique index keys on, which is what `ON CONFLICT` has to name. */
 const TARGET_COLUMNS = Object.values(FAVOURITE_COLUMN);
 
-export type FavouriteRefusal = "not_found";
+type FavouriteRefusal = "not_found";
 
 /**
  * **You can only favourite what you can see**, through the same resolver reporting uses: answering

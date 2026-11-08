@@ -36,8 +36,8 @@ test("QUERY /api/users matches a substring, not just a prefix", async () => {
 
   assert.equal(page.totalResults, 2);
   assert.deepEqual(
-    page.results.map((user) => user.username).sort(),
-    [findable, alsoFindable].sort(),
+    page.results.map((user) => user.username).toSorted(),
+    [findable, alsoFindable].toSorted(),
   );
 });
 
@@ -63,7 +63,7 @@ test("QUERY /api/users returns a name, a picture, a role and nothing else", asyn
   // fails this instead of quietly joining the response.
   const [found] = page.results;
   assert.ok(found);
-  assert.deepEqual(Object.keys(found).sort(), ["avatarUrl", "id", "platformRole", "username"]);
+  assert.deepEqual(Object.keys(found).toSorted(), ["avatarUrl", "id", "platformRole", "username"]);
 });
 
 test("QUERY /api/users treats a wildcard as a literal character", async () => {

@@ -1,3 +1,4 @@
+/** @lintignore Unused, kept as the counterpart of `omitFromObject`. */
 export function pickFromObject<T extends object, K extends keyof T>(
   obj: T,
   ...keys: Array<K>
