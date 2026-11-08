@@ -21,3 +21,9 @@ allowBuilds:
   esbuild: false
   fsevents: false
   vue-demi: false
+
+# Agent skills that dependencies bring. LogTape's is its general manual: the backend's logging is
+# one module with its own rules in `.claude/rules/backend/operations.md`.
+permissions:
+  "@logtape/logtape":
+    skills: false
