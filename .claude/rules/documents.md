@@ -36,5 +36,4 @@ the library's — an extension renaming an attribute is a data migration.
 reader and writer cannot disagree about what a heading looks like. `PostEditor` is the Tiptap
 instance; `PostBody` renders without one — a hundred-post thread must not mount a hundred editors.
 `useDraft` autosaves the document on a debounce and compares with `sameDocument`; the composer
-starts collapsed and can be resized by dragging its top edge (#84). Send the `getJSON()` object,
-never a string — stringifying stores a `jsonb` *string*.
+starts collapsed and can be resized by dragging its top edge (#84).
