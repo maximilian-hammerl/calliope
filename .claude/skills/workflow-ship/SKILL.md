@@ -2,7 +2,7 @@
 name: workflow-ship
 description: How a change reaches main — a branch, the hand-over and the human's review, the commit, a pull request that merges itself once Validate passes, stacked pull requests — and, at the end, what is still open. Use when starting work on a change, and when the human says to commit, push, open a pull request, merge or ship.
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git fetch *), Bash(gh pr view *), Bash(gh pr checks *), Bash(gh run view *), Bash(gh issue view *)
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git fetch *), Bash(gh pr view *), Bash(gh pr checks *), Bash(gh run view *), Bash(gh issue view *), mcp__ccd_pr__get_status, mcp__ccd_pr__set_monitor
 ---
 
 `main` takes changes only through pull requests: a ruleset requires the three Validate jobs
@@ -53,14 +53,19 @@ If the human committed or pushed themselves, ask once before opening the pull re
 
 ## 4. Follow it
 
-In the desktop app, its pull-request pane follows the checks; bind the pull request to the session.
-Elsewhere, one background `gh pr checks <number> --watch`, not repeated polling.
+In the desktop app, bind the pull request to the session and turn Auto-fix on for it, unasked
+(`set_monitor` with `auto_fix` and `address_comments`): the app then wakes the session on a failed
+check, a conflict or a comment, and nothing has to watch. Elsewhere, one background
+`gh pr checks <number> --watch`, not repeated polling. When an Auto-fix event says to commit and
+push without asking, the rules below still decide.
 
 - **A failed check:** `gh run view <run> --log-failed`. A failure the change causes is fixed on the
   branch and handed over again (step 2), since the fix is reviewed like any change. One it doesn't
   cause (a flaky test): say so, and `gh run rerun <run> --failed`.
-- **A conflict:** merge `origin/main` into the branch. A resolution is a change: hand it over before
-  committing.
+- **A conflict:** merge `origin/main` into the branch. One with a single clear resolution — both
+  sides kept because they touch different things, or a generated file such as `pnpm-lock.yaml`
+  regenerated — is committed and pushed without a hand-over; say what it was. One that needs a choice
+  between the sides is handed over before committing.
 - **A comment from a person** asking for a change: `gh pr merge <number> --disable-auto`, and ask.
 
 ## 5. After the merge
