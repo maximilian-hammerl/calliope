@@ -102,3 +102,27 @@ test("every text a request must supply refuses whitespace alone", () => {
     `these accept whitespace alone; wrap them in notBlank(): ${unguarded.join(", ")}`,
   );
 });
+
+/**
+ * `defaultHook` answers a request that fails its schema with 400, outside the route's typed
+ * handler, so the compiler cannot tell when a route forgets to declare it.
+ */
+test("every operation that validates its input declares the 400", () => {
+  const undeclared: string[] = [];
+
+  for (const operations of Object.values(document.paths)) {
+    for (const operation of Object.values(operations)) {
+      const validates =
+        (operation.parameters?.length ?? 0) > 0 || operation.requestBody !== undefined;
+      if (validates && operation.responses?.["400"] === undefined) {
+        undeclared.push(operation.operationId ?? "?");
+      }
+    }
+  }
+
+  assert.deepEqual(
+    undeclared.toSorted(),
+    [],
+    `these validate input but declare no 400; spread BAD_REQUEST_RESPONSE: ${undeclared.join(", ")}`,
+  );
+});
