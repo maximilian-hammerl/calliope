@@ -224,8 +224,8 @@ importers:
         specifier: 0.29.8
         version: 0.29.8
       kysely-postgres-js:
-        specifier: 5.0.1
-        version: 5.0.1(kysely@0.29.8)(postgres@4.0.0)
+        specifier: 5.1.0
+        version: 5.1.0(kysely@0.29.8)(postgres@4.0.0)
       nodemailer:
         specifier: 10.3.1
         version: 10.3.1
@@ -3464,12 +3464,12 @@ packages:
       tedious:
         optional: true
 
-  kysely-postgres-js@5.0.1:
-    resolution: {integrity: sha512-3qY2qzXJszS35CMuknpon79CE5G7MfcTMoIQHuFmGsaQQ2rau3rwx7eNaRJkO9nhli8yQedQroBZ/VehzNJy4w==}
+  kysely-postgres-js@5.1.0:
+    resolution: {integrity: sha512-n5OLGrxyb89l+gpmC97tGN7vCt+KRcck1JG0hEunnWuk2oKCeBrmK+0ADu6lJwLfCCZAdSC1kEhqbUUyXWqbgw==}
     engines: {bun: '>=1.2', node: '>=22'}
     peerDependencies:
       kysely: '>= 0.29.0 < 1'
-      postgres: ^3.4.0
+      postgres: '>= 3.4.0 < 5'
     peerDependenciesMeta:
       postgres:
         optional: true
@@ -7565,7 +7565,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  kysely-postgres-js@5.0.1(kysely@0.29.8)(postgres@4.0.0):
+  kysely-postgres-js@5.1.0(kysely@0.29.8)(postgres@4.0.0):
     dependencies:
       kysely: 0.29.8
     optionalDependencies:
