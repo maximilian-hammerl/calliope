@@ -2,7 +2,7 @@
 name: workflow-validate
 description: Run what CI runs (.github/workflows/validate.yml) for the projects a change touches — format, lint, types, the OpenAPI and schema checks, the migration round trip and the tests — and report what passed, what failed and what did not run. Use before calling a change done, or when asked to check, validate or test. Pass --fix to repair what can be repaired first; backend, database or frontend to run only those.
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git merge-base *), Bash(git diff *), Bash(git ls-files *), Bash(git worktree list*), Bash(git hash-object *), Bash(docker compose ps*), Bash(docker compose -p * ps*), Bash(docker compose up -d --wait*), Bash(pnpm install), Bash(pnpm run db:up), Bash(pnpm run open-api:check), Bash(pnpm run open-api:generate), Bash(pnpm run migrations:status), Bash(pnpm run migrations:migrate), Bash(pnpm run test), Bash(pnpm exec oxfmt src/database/schema.ts), Bash(pnpm exec dbmate --env-file ../.env --url *calliope_scratch*), Bash(DATABASE_URL=*calliope_scratch* DBMATE_NO_DUMP_SCHEMA=true pnpm run migrations:*), Bash(DATABASE_URL=*calliope_scratch* pnpm run types:generate), Bash(pnpm run validate:*), Bash(pnpm run open-api:generate-client), Bash(pnpm run test:unit *)
+allowed-tools: Bash(git status *), Bash(git merge-base *), Bash(git diff *), Bash(git ls-files *), Bash(git worktree list*), Bash(git hash-object *), Bash(docker compose ps*), Bash(docker compose -p * ps*), Bash(docker compose up -d --wait*), Bash(pnpm install), Bash(pnpm run db:up), Bash(pnpm run open-api:check), Bash(pnpm run open-api:lint), Bash(pnpm run open-api:generate), Bash(pnpm run migrations:status), Bash(pnpm run migrations:migrate), Bash(pnpm run test), Bash(pnpm exec oxfmt src/database/schema.ts), Bash(pnpm exec dbmate --env-file ../.env --url *calliope_scratch*), Bash(DATABASE_URL=*calliope_scratch* DBMATE_NO_DUMP_SCHEMA=true pnpm run migrations:*), Bash(DATABASE_URL=*calliope_scratch* pnpm run types:generate), Bash(pnpm run validate:*), Bash(pnpm run open-api:generate-client), Bash(pnpm run test:unit *)
 ---
 
 `$ARGUMENTS` may hold `--fix` and any of `backend`, `database`, `frontend`. Keep going after a
@@ -15,9 +15,9 @@ failure, so the report is complete.
 
    | Changed | Run |
    | --- | --- |
-   | `backend/**` | `pnpm run validate:check`, `pnpm run open-api:check`, `pnpm run test` |
+   | `backend/**` | `pnpm run validate:check`, `pnpm run open-api:check`, `pnpm run open-api:lint`, `pnpm run test` |
    | `database/**` | `pnpm run validate:check`, `pnpm run test`, and step 5 |
-   | `database/migrations/**` | also the backend's three |
+   | `database/migrations/**` | also the backend's four |
    | `frontend/**` or `backend/open-api.json` | `pnpm run open-api:generate-client`, `pnpm run validate:check`, `pnpm run test:unit --run` |
    | only `*.md`, `docs/**` or `.claude/**` | nothing; say so |
    | anything else (`docker-compose.yaml`, `.example.env`, `.github/**`, …) | all three projects |

@@ -21,6 +21,8 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [STORY_IDEAS_TAG],
     summary: "Take one's own story idea off the board",
+    description:
+      "Only its author may. Chats started from it stay: they took its title, not a link to it.",
     operationId: "deleteStoryIdea",
     middleware: authenticated,
     request: { params: IDEA_PARAMS },

@@ -22,7 +22,7 @@
     "revoke-role": "node --env-file=../.env main.ts --revoke-role",
     "open-api:generate": "node --env-file=../.env generate_open_api_spec.ts && oxfmt open-api.json",
     "open-api:check": "pnpm run open-api:generate && test -z \"$(git status --porcelain open-api.json)\" && echo 'OpenAPI spec is up-to-date' || (echo 'OpenAPI spec is out-of-date, run: pnpm run open-api:generate' && exit 1)",
-    "open-api:lint": "pnpm dlx @stoplight/spectral-cli@6.17.1 lint open-api.json --ruleset .spectral.yaml --fail-severity warn"
+    "open-api:lint": "spectral lint open-api.json --ruleset .spectral.yaml --fail-severity warn"
   },
   "dependencies": {
     "@hono/node-server": "2.1.6",
@@ -43,6 +43,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@stoplight/spectral-cli": "6.17.1",
     "@types/node": "catalog:",
     "@types/nodemailer": "8.0.2",
     "oxfmt": "catalog:",

@@ -42,13 +42,8 @@ jobs:
       - name: Check the OpenAPI specification is up to date
         run: pnpm run open-api:check
 
-      # Disabled until Spectral supports OpenAPI 3.2. The specification declares 3.2.0 so
-      # that the list endpoints' `query` operations are legal, but Spectral only knows up to
-      # 3.1 and silently falls back to validating against the 3.0 schema, which then rejects
-      # both the version string and the 3.1-only `webhooks` key. The script itself is kept, so
-      # `pnpm run open-api:lint` still runs locally once that changes.
-      # - name: Lint the OpenAPI specification
-      #   run: pnpm run open-api:lint
+      - name: Lint the OpenAPI specification
+        run: pnpm run open-api:lint
 
       # `--wait` blocks on the healthchecks in the compose file, so nothing races the
       # databases becoming reachable.

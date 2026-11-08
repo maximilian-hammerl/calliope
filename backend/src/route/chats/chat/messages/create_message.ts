@@ -30,6 +30,8 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [CHATS_TAG],
     summary: "Send a message",
+    description:
+      "Only a joined member may write; an invited one accepts first. The other members get the message over the chat event stream; the sender has it in the response and is not sent it again.",
     operationId: "createMessage",
     middleware: authenticated,
     request: {

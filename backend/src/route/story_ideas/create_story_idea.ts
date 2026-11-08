@@ -63,6 +63,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [STORY_IDEAS_TAG],
     summary: "Post a story idea seeking writers",
+    description: "A subgenre needs its genre among `genres`, or the idea is refused with 400.",
     operationId: "createStoryIdea",
     middleware: authenticated,
     request: {
