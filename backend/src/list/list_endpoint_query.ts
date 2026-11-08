@@ -22,7 +22,7 @@ export type ListQuery = {
  * middle of a name rather than its start.
  */
 export function searchPattern(search: string): string {
-  return `%${search.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+  return `%${search.replace(/[\\%_]/gu, (character) => `\\${character}`)}%`;
 }
 
 export type ListResults<Result> = {

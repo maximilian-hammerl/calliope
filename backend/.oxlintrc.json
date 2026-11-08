@@ -31,6 +31,7 @@
     "eslint/no-throw-literal": "error",
     "eslint/no-useless-rename": "error",
     "eslint/one-var": ["error", "never"],
+    "eslint/require-unicode-regexp": "error",
     "typescript/triple-slash-reference": "error",
     // The server logs through `src/logging.ts`, so every line it writes is JSON.
     "eslint/no-console": "error",
@@ -61,8 +62,6 @@
     // "explicit-function-return-type", "explicit-module-boundary-types" — Kysely builders infer
     //   types too large to write and they change with every select.
     // "no-undef" — false positives on Temporal; `tsc` covers this properly.
-    // "require-unicode-regexp" — Zod writes a regex's flags into the OpenAPI pattern, so a `u`
-    //   added to satisfy it would change the document.
     // `camelcase` and `prefer-ascii` have no oxlint equivalent; the latter had 160 hits, all
     //   correct, since Calliope is German.
   },
