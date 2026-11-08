@@ -21,8 +21,7 @@ import { forumFolder, forumPage, forumThread } from "#/src/scope/forum_scope.ts"
  * The list as the route takes it: each handler's own type, in order — what `as const` keeps —
  * but a mutable tuple, since `createRoute` refuses a readonly one held in a variable.
  */
-// oxlint-disable-next-line no-explicit-any -- a middleware of any context, as `createRoute` accepts
-function chain<const T extends MiddlewareHandler<any>[]>(...middleware: T): T {
+function chain<const T extends MiddlewareHandler[]>(...middleware: T): T {
   return middleware;
 }
 

@@ -52,12 +52,14 @@ test("GET /api/auth/sessions parses each user agent and marks the one asking", a
   // Three: the one registering opened, plus the two signed in above.
   assert.equal(results.length, 3);
 
-  const parsed = results.map(
-    (session: ParsedSession) =>
-      `${session.browser}/${session.operatingSystem}/${session.deviceType}/${session.vendor}`,
+  const parsed = new Set(
+    results.map(
+      (session: ParsedSession) =>
+        `${session.browser}/${session.operatingSystem}/${session.deviceType}/${session.vendor}`,
+    ),
   );
-  assert.equal(parsed.includes("Safari/iOS/mobile/Apple"), true);
-  assert.equal(parsed.includes("Chrome/Windows/null/null"), true);
+  assert.equal(parsed.has("Safari/iOS/mobile/Apple"), true);
+  assert.equal(parsed.has("Chrome/Windows/null/null"), true);
 
   const current = results.filter((session: { current: boolean }) => session.current);
   assert.equal(current.length, 1);

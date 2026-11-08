@@ -10,7 +10,7 @@ import {
 } from "#/src/test/support.ts";
 import { clearForum, createForumThread } from "#/src/test/forum.ts";
 import { makeOperator } from "#/src/test/reports.ts";
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
 
 const member = "forum-folders-member";
 const operator = "forum-folders-operator";

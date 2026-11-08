@@ -15,6 +15,7 @@ import {
   jsonContent,
   OK_RESPONSE,
 } from "#/src/http/response.ts";
+import { assertUnreachable } from "#/src/util/assert_unreachable.ts";
 
 const BAN_USER_BODY = z.object({
   // Recorded for the operators, never shown to the member: what they are told is one fixed
@@ -79,6 +80,8 @@ export default new OpenAPIHono()
           return c.json({ error: "Already banned" }, STATUS_CODE.Conflict);
         case undefined:
           return c.json({ ok: true } as const, STATUS_CODE.OK);
+        default:
+          return assertUnreachable(refusal);
       }
     },
   )

@@ -11,7 +11,7 @@ import {
 } from "#/src/test/support.ts";
 import { plainTextToDocument } from "#/src/document/document_text.ts";
 import { FOLDER_CYCLE, FOLDER_NOT_EMPTY, FOLDER_TOO_DEEP } from "#/src/http/response.ts";
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH } from "#/src/service/folder_move.ts";
 
 const administrator = "folders-test-admin";
 const writer = "folders-test-writer";

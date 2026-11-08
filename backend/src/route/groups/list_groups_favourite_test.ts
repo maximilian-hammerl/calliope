@@ -105,9 +105,9 @@ test("without the filter nothing is hidden", async () => {
 
   await setFavourite(memberCookie, "writing_group", first.id);
 
-  const ids = (await rowsFor(memberCookie)).map((row) => row.id);
+  const ids = new Set((await rowsFor(memberCookie)).map((row) => row.id));
   for (const group of [first, middle, last]) {
-    assert(ids.includes(group.id), `${group.id} missing from the list`);
+    assert(ids.has(group.id), `${group.id} missing from the list`);
   }
 });
 

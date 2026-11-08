@@ -59,7 +59,7 @@ function titles(rows: Row[], made: ReadonlyArray<{ id: string }>): string[] {
   return rows
     .filter((row) => ids.has(row.id))
     .map((row) => row.title)
-    .sort();
+    .toSorted();
 }
 
 test("GET /api/forum/folders hides a hidden folder from a member and shows it to an operator", async () => {

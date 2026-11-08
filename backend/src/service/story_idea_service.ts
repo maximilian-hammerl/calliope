@@ -191,7 +191,12 @@ function filtered(query: StoryIdeaFilters) {
         ),
       )
       .$if(query.status !== "any", (queryBuilder) =>
-        queryBuilder.where("storyIdea.status", "=", query.status as StoryIdeaStatus),
+        queryBuilder.where(
+          "storyIdea.status",
+          "=",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the `$if` above only runs this when it is not `any`
+          query.status as StoryIdeaStatus,
+        ),
       )
       .$if(query.language !== undefined, (queryBuilder) =>
         // oxlint-disable-next-line no-non-null-assertion -- the `$if` above only runs this when it is set
