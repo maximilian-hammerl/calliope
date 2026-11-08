@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
+import { hash, randomBytes } from "node:crypto";
 import * as z from "zod";
-import { Buffer } from "node:buffer";
 
 /**
  * Session tokens and the tokens inside mailed links are both random secrets rather than
@@ -17,9 +16,8 @@ export function generateToken(): string {
 }
 
 /** Returned as a Buffer because that is how the generated schema types the bytea column. */
-export async function hashToken(token: string): Promise<Buffer> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
-  return Buffer.from(digest);
+export function hashToken(token: string): Buffer {
+  return hash("sha256", token, "buffer");
 }
 
 /**

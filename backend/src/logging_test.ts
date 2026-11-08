@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PostgresError } from "postgres";
+import { DatabaseError } from "pg";
 import { formatLogLine } from "#/src/logging.ts";
 
 function logged(properties: Record<string, unknown>): Record<string, unknown> {
@@ -26,16 +26,17 @@ test("an error is written as its name, message and stack", () => {
 });
 
 test("a database error keeps its stack and leaves the row's values out", () => {
-  // What postgres.js throws for a unique violation: its `toJSON` spreads every field and drops
-  // the stack.
-  const error = new PostgresError({
-    message: 'duplicate key value violates unique constraint "user_email_address_key"',
-    code: "23505",
-    detail: "Key (email_address)=(member@example.com) already exists.",
-  });
+  // What pg throws for a unique violation, which names the protocol message, "error".
+  const error = new DatabaseError(
+    'duplicate key value violates unique constraint "user_email_address_key"',
+    0,
+    "error",
+  );
+  error.code = "23505";
+  error.detail = "Key (email_address)=(member@example.com) already exists.";
 
   assert.deepEqual(logged({ error }).error, {
-    name: "PostgresError",
+    name: "error",
     message: 'duplicate key value violates unique constraint "user_email_address_key"',
     stack: error.stack,
     code: "23505",

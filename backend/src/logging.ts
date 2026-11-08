@@ -80,8 +80,7 @@ function loggable(key: string, value: unknown): unknown {
 
 /**
  * These fields and no others: drivers keep member data in fields of their own (a unique
- * violation's `detail` names the address, Kysely's `NoResultError` carries the query's values),
- * and postgres.js's `toJSON` would drop the stack, which is not enumerable.
+ * violation's `detail` names the address, Kysely's `NoResultError` carries the query's values).
  */
 function spellOutError(error: Error, depth = 0): LoggedError {
   const logged: LoggedError = { name: error.name, message: error.message, stack: error.stack };

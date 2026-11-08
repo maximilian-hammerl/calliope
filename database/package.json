@@ -28,13 +28,13 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/pg": "8.23.1",
+    "@types/pg": "catalog:",
     "dbmate": "2.37.0",
     "kysely-codegen": "0.20.0",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
-    "pg": "8.23.1",
+    "pg": "catalog:",
     "typescript": "catalog:"
   },
   "engines": {

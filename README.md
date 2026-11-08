@@ -33,7 +33,7 @@ the letter C and stay as they are — renaming is not yet a full rebrand.
 
 ## Running it locally
 
-Requires [Node](https://nodejs.org) 26, [pnpm](https://pnpm.io) and
+Requires [Node](https://nodejs.org) 26 (`.node-version` names it for mise, fnm and CI), [pnpm](https://pnpm.io) and
 [Docker](https://docs.docker.com/engine/install/).
 
 ```bash

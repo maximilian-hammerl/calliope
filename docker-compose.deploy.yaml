@@ -99,6 +99,12 @@ services:
     restart: unless-stopped
     logging: *logging
 
+    # What confines a compromised dependency, since Node's permission model only guards against
+    # our own mistakes: nothing writable but the uploads volume, no capabilities, none to gain.
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
     environment:
       # The backend reads this at boot and refuses to start without it, which is the point:
       # the seed guard and the notice the frontend shows must agree about which instance this is.

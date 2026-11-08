@@ -85,8 +85,6 @@ async function insertPost(
     // `text` is derived here rather than accepted, so it cannot disagree with the document.
     .values({
       writingThreadId: threadId,
-      // An object, not a string: `JSON.stringify` here would store a jsonb *string* rather
-      // than a document.
       document,
       text: documentToPlainText(document),
       isDraft,

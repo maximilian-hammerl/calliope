@@ -80,7 +80,7 @@ async function issueToken(
       userId,
       purpose,
       newEmailAddress,
-      hashedToken: await hashToken(secret),
+      hashedToken: hashToken(secret),
       expiresAt: now.add(TOKEN_LIFETIME).toString(),
     })
     .onConflict((oc) =>
@@ -117,7 +117,7 @@ async function consumeToken(
     .updateTable("userToken")
     .set({ consumedAt: now.toString() })
     .where("id", "=", parsed.id)
-    .where("hashedToken", "=", await hashToken(parsed.secret))
+    .where("hashedToken", "=", hashToken(parsed.secret))
     .where("purpose", "=", purpose)
     .where("consumedAt", "is", null)
     .where("expiresAt", ">", now.toString())
@@ -144,7 +144,7 @@ async function revokeToken(
   const result = await transaction
     .deleteFrom("userToken")
     .where("id", "=", parsed.id)
-    .where("hashedToken", "=", await hashToken(parsed.secret))
+    .where("hashedToken", "=", hashToken(parsed.secret))
     .where("purpose", "=", purpose)
     .where("consumedAt", "is", null)
     .executeTakeFirst();

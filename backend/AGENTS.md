@@ -86,13 +86,14 @@ has the rest, including the two collections that are deliberately GETs.
 - **Work that must follow the commit stays outside it** — the few services that send mail after
   writing open their own transaction. Expensive work stays outside too: `changePassword` hashes
   before opening one.
-- **Never raw SQL without asking.** The builder is checked; a template string is not. The two raw
-  fragments that exist are the liveness ping and `database/test/`. `sql.lit` is not a template and
-  is allowed where a string must be a literal — a partial index's predicate, see `reports.md`.
+- **Never raw SQL without asking.** The builder is checked; a template string is not. The raw
+  fragments that exist are the liveness ping, the enum-array lookup in `src/database/client.ts`,
+  and `database/test/`. `sql.lit` is not a template and is allowed where a string must be a
+  literal — a partial index's predicate, see `reports.md`.
 - **Every `switch` over a union ends in `default: return assertUnreachable(value)`**, so a new
   enum member is a compile error naming the missing case.
 - Timestamps a write sets come from the application clock, `Temporal.Now.instant().toString()`,
-  not `sql\`now()\`` — which is why raw SQL stays at two fragments. The cost: one can differ by
+  not `sql\`now()\`` — which is why raw SQL stays at those few fragments. The cost: one can differ by
   milliseconds from a `DEFAULT now()` column in the same row. Only `user` and `user_session` have
   `updated_at`.
 

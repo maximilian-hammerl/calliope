@@ -154,7 +154,7 @@ async function insertSessionForUser(
     .insertInto("userSession")
     .values({
       userId: user.id,
-      hashedToken: await hashToken(sessionToken),
+      hashedToken: hashToken(sessionToken),
       expiresAt: Temporal.Now.instant().add(SESSION_LIFETIME).toString(),
       userAgent: provenance.userAgent,
       ipAddress: provenance.ipAddress,
@@ -173,7 +173,7 @@ async function selectUserForSession(userSession: UserSession): Promise<User | un
     .selectFrom("userSession")
     .select(["id", "userId", "expiresAt"])
     .where("id", "=", userSession.id)
-    .where("hashedToken", "=", await hashToken(userSession.token))
+    .where("hashedToken", "=", hashToken(userSession.token))
     .executeTakeFirst();
 
   if (databaseUserSession === undefined) {
@@ -226,7 +226,7 @@ async function deleteSession(transaction: Transaction, userSession: UserSession)
   const result = await transaction
     .deleteFrom("userSession")
     .where("id", "=", userSession.id)
-    .where("hashedToken", "=", await hashToken(userSession.token))
+    .where("hashedToken", "=", hashToken(userSession.token))
     .executeTakeFirst();
 
   return result.numDeletedRows > 0n;

@@ -25,3 +25,5 @@ any of this. Gotchas it does not carry:
 - **`deploy.sh` detects an edited migration and rebuilds the database — on `testing` only**, and
   refuses elsewhere. See `database/AGENTS.md` for when editing in place stops being allowed.
 - The backend must stay a single instance: chat fan-out is in process.
+- **The backend's root file system is read-only**, with no capabilities: anything new it has to
+  write needs a volume, as the uploads have.
