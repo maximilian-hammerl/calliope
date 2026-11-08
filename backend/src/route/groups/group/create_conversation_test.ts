@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -14,24 +15,24 @@ const founder = "group-conversation-test-founder";
 const second = "group-conversation-test-zweite";
 const stranger = "group-conversation-test-stranger";
 
-Deno.test.beforeEach(() => clearRateLimits());
-Deno.test.afterEach(() => deleteUsers([founder, second, stranger]));
+beforeEach(() => clearRateLimits());
+afterEach(() => deleteUsers([founder, second, stranger]));
 
 const startConversation = (cookie: string, groupId: string) =>
   request("POST", `/api/groups/${groupId}/conversations`, cookie);
 
-Deno.test("POST /api/groups/{id}/conversations invites every joined administrator", async () => {
+test("POST /api/groups/{id}/conversations invites every joined administrator", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Offene Runde", "public");
   await addMember(cookie, group.id, second, "administrator");
 
   const other = await registerUser(stranger);
   const response = await startConversation(other, group.id);
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
 
   const chat = await response.json();
-  assertEquals(chat.title, "Gruppe: Offene Runde");
-  assertEquals(chat.status, "joined");
+  assert.equal(chat.title, "Gruppe: Offene Runde");
+  assert.equal(chat.status, "joined");
 
   const members = await (await request(
     "QUERY",
@@ -45,11 +46,11 @@ Deno.test("POST /api/groups/{id}/conversations invites every joined administrato
   );
 
   // The asker, joined — plus both administrators, each holding their own invitation.
-  assertEquals(byStatus.joined?.length, 1);
-  assertEquals(byStatus.invited?.length, 2);
+  assert.equal(byStatus.joined?.length, 1);
+  assert.equal(byStatus.invited?.length, 2);
 });
 
-Deno.test("POST /api/groups/{id}/conversations does not invite writers", async () => {
+test("POST /api/groups/{id}/conversations does not invite writers", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Mit Schreibern", "public");
   await addMember(cookie, group.id, second, "writer");
@@ -65,14 +66,14 @@ Deno.test("POST /api/groups/{id}/conversations does not invite writers", async (
   )).json();
 
   // Only the founder is invited: asking in is administrators' business.
-  assertEquals(members.results.length, 2);
+  assert.equal(members.results.length, 2);
   const invited = members.results.find(
     (member: { status: string }) => member.status === "invited",
   );
-  assertEquals(invited.username, founder);
+  assert.equal(invited.username, founder);
 });
 
-Deno.test("POST /api/groups/{id}/conversations skips a blocked administrator", async () => {
+test("POST /api/groups/{id}/conversations skips a blocked administrator", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Zwei Verwaltende", "public");
   const secondCookie = await addMember(
@@ -100,11 +101,11 @@ Deno.test("POST /api/groups/{id}/conversations skips a blocked administrator", a
   );
 
   // A group must not become unreachable because one administrator blocked one person.
-  assertEquals(invited.length, 1);
-  assertEquals(invited[0].username, founder);
+  assert.equal(invited.length, 1);
+  assert.equal(invited[0].username, founder);
 });
 
-Deno.test("POST /api/groups/{id}/conversations is refused when every administrator has blocked them", async () => {
+test("POST /api/groups/{id}/conversations is refused when every administrator has blocked them", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Alle blockiert", "public");
 
@@ -116,10 +117,10 @@ Deno.test("POST /api/groups/{id}/conversations is refused when every administrat
   const response = await startConversation(other, group.id);
 
   // Nobody left to ask, which is the same answer as a group with no administrator at all.
-  assertEquals(response.status, STATUS_CODE.Conflict);
+  assert.equal(response.status, STATUS_CODE.Conflict);
 });
 
-Deno.test("POST /api/groups/{id}/conversations hides a private group", async () => {
+test("POST /api/groups/{id}/conversations hides a private group", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Versteckt", "private");
 
@@ -127,20 +128,20 @@ Deno.test("POST /api/groups/{id}/conversations hides a private group", async () 
   const response = await startConversation(other, group.id);
 
   // 404, not 403: a private group's existence is nobody else's business.
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("POST /api/groups/{id}/conversations refuses somebody already in the group", async () => {
+test("POST /api/groups/{id}/conversations refuses somebody already in the group", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Schon drin", "public");
   const member = await addMember(cookie, group.id, stranger, "writer");
 
   const response = await startConversation(member, group.id);
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/groups/{id}/conversations refuses somebody holding an invitation", async () => {
+test("POST /api/groups/{id}/conversations refuses somebody holding an invitation", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Schon eingeladen", "public");
   const invited = await registerUser(stranger);
@@ -150,15 +151,15 @@ Deno.test("POST /api/groups/{id}/conversations refuses somebody holding an invit
     cookie,
     { userId: await getUserId(stranger), role: "writer" },
   );
-  assertEquals(invitation.status, STATUS_CODE.Created);
+  assert.equal(invitation.status, STATUS_CODE.Created);
 
   const response = await startConversation(invited, group.id);
 
   // They already have an invitation to answer; a conversation would ask for what is offered.
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/groups/{id}/conversations answers 409 when nobody administers the group", async () => {
+test("POST /api/groups/{id}/conversations answers 409 when nobody administers the group", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Verwaist", "public");
   await addMember(cookie, group.id, second, "writer");
@@ -169,19 +170,19 @@ Deno.test("POST /api/groups/{id}/conversations answers 409 when nobody administe
     `/api/groups/${group.id}/memberships/${await getUserId(founder)}`,
     cookie,
   );
-  assertEquals(leaving.status, STATUS_CODE.OK);
+  assert.equal(leaving.status, STATUS_CODE.OK);
 
   const other = await registerUser(stranger);
   const response = await startConversation(other, group.id);
 
-  assertEquals(response.status, STATUS_CODE.Conflict);
+  assert.equal(response.status, STATUS_CODE.Conflict);
 });
 
-Deno.test("POST /api/groups/{id}/conversations needs a session", async () => {
+test("POST /api/groups/{id}/conversations needs a session", async () => {
   const cookie = await registerUser(founder);
   const group = await createGroup(cookie, "Ohne Sitzung", "public");
 
   const response = await startConversation("", group.id);
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
 });

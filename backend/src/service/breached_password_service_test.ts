@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { after, test } from "node:test";
+import assert from "node:assert/strict";
 
 // SHA1("password") = 5BAA6 1E4C9B93F3F0682250B6CF8331B7EE68FD8, as the API returned it.
 const PREFIX = "5BAA6";
@@ -35,48 +36,48 @@ const BODY = [
   "0164EC3D5F2C6B4E4B5F4C1B9D3F7A8C9D0:0",
 ].join("\r\n");
 
-Deno.test("a suffix in the answer is a breach", () => {
-  assertEquals(parseRange(BODY, SUFFIX), true);
+test("a suffix in the answer is a breach", () => {
+  assert.equal(parseRange(BODY, SUFFIX), true);
 });
 
-Deno.test("a suffix that is not there is not", () => {
-  assertEquals(parseRange(BODY, "F".repeat(35)), false);
+test("a suffix that is not there is not", () => {
+  assert.equal(parseRange(BODY, "F".repeat(35)), false);
 });
 
 /** The one that matters: a padded entry is not a leak. */
-Deno.test("a padded entry is not a breach", () => {
-  assertEquals(parseRange(BODY, "0164EC3D5F2C6B4E4B5F4C1B9D3F7A8C9D0"), false);
+test("a padded entry is not a breach", () => {
+  assert.equal(parseRange(BODY, "0164EC3D5F2C6B4E4B5F4C1B9D3F7A8C9D0"), false);
 });
 
-Deno.test("the answer is CRLF, so the count must survive the line ending", () => {
-  assertEquals(parseRange(`${SUFFIX}:2\r\n`, SUFFIX), true);
+test("the answer is CRLF, so the count must survive the line ending", () => {
+  assert.equal(parseRange(`${SUFFIX}:2\r\n`, SUFFIX), true);
 });
 
-Deno.test("a malformed line is passed over rather than thrown on", () => {
-  assertEquals(parseRange(`nonsense\r\n\r\n:::\r\n${SUFFIX}:7`, SUFFIX), true);
-  assertEquals(parseRange("nonsense\r\n", SUFFIX), false);
+test("a malformed line is passed over rather than thrown on", () => {
+  assert.equal(parseRange(`nonsense\r\n\r\n:::\r\n${SUFFIX}:7`, SUFFIX), true);
+  assert.equal(parseRange("nonsense\r\n", SUFFIX), false);
 });
 
-Deno.test("the API answers in upper case, and so does the hash", () => {
-  assertEquals(parseRange(`${SUFFIX.toLowerCase()}:9`, SUFFIX), true);
+test("the API answers in upper case, and so does the hash", () => {
+  assert.equal(parseRange(`${SUFFIX.toLowerCase()}:9`, SUFFIX), true);
 });
 
 /** What the pure tests cannot see: that the five sent and the thirty-five kept are not swapped. */
-Deno.test("the prefix is sent and the suffix is matched", async () => {
-  assertEquals(await BreachedPasswordService.isBreached("password"), true);
-  assertEquals(
+test("the prefix is sent and the suffix is matched", async () => {
+  assert.equal(await BreachedPasswordService.isBreached("password"), true);
+  assert.equal(
     await BreachedPasswordService.isBreached("nobody-has-leaked-this"),
     false,
   );
   // Five out, thirty-five kept: any other split would ask for a prefix of another length.
-  assertEquals(asked, [PREFIX, "6F2D5"]);
+  assert.deepEqual(asked, [PREFIX, "6F2D5"]);
 });
 
 /** A service that is down must not stop anybody choosing a password. */
-Deno.test("a refusal lets the password through", async () => {
+test("a refusal lets the password through", async () => {
   answering = "error";
   try {
-    assertEquals(await BreachedPasswordService.isBreached("password"), false);
+    assert.equal(await BreachedPasswordService.isBreached("password"), false);
   } finally {
     answering = "range";
   }
@@ -84,4 +85,4 @@ Deno.test("a refusal lets the password through", async () => {
 
 // Not symmetrical with the setup above, which has to run before the tests are registered —
 // earlier than any hook.
-Deno.test.afterAll(() => server.shutdown());
+after(() => server.shutdown());

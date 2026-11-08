@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import {
@@ -17,10 +18,10 @@ const { emailAddress, username } = authFixture("body-limit");
  * limit rather than about registering, and it happens to use the register route because that
  * is the simplest way in.
  */
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([username]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([username]));
 
-Deno.test("a body beyond the limit is refused before it is parsed", async () => {
+test("a body beyond the limit is refused before it is parsed", async () => {
   // Previously this was stored: a 20 MB post reached the database intact.
   const response = await app.request("/api/auth/register", {
     method: "POST",
@@ -32,8 +33,8 @@ Deno.test("a body beyond the limit is refused before it is parsed", async () => 
     }),
   });
 
-  assertEquals(response.status, STATUS_CODE.ContentTooLarge);
-  assertEquals(await response.json(), { error: "Request body too large" });
+  assert.equal(response.status, STATUS_CODE.ContentTooLarge);
+  assert.deepEqual(await response.json(), { error: "Request body too large" });
 });
 
 async function upload(bytes: number): Promise<Response> {
@@ -59,12 +60,12 @@ async function upload(bytes: number): Promise<Response> {
  * Unauthenticated on purpose: the body limit runs before the session check, so a 401 is proof the
  * body was *not* refused for its size.
  */
-Deno.test("an upload may be larger than every other body", async () => {
+test("an upload may be larger than every other body", async () => {
   const response = await upload(2 * 1_048_576);
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
 });
 
-Deno.test("an upload beyond even that limit is refused", async () => {
+test("an upload beyond even that limit is refused", async () => {
   const response = await upload(UPLOAD_BODY_LIMIT_BYTES + 1_048_576);
-  assertEquals(response.status, STATUS_CODE.ContentTooLarge);
+  assert.equal(response.status, STATUS_CODE.ContentTooLarge);
 });

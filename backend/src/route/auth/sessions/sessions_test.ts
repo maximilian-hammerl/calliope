@@ -1,4 +1,5 @@
-import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -14,8 +15,8 @@ import { sessionCookie } from "@/src/test/auth.ts";
 const username = "route-sessions-user";
 const password = "a-complex-password";
 
-Deno.test.beforeEach(() => clearRateLimits());
-Deno.test.afterEach(() => deleteUsers([username]));
+beforeEach(() => clearRateLimits());
+afterEach(() => deleteUsers([username]));
 
 const IPHONE =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
@@ -33,7 +34,7 @@ async function signIn(userAgent: string, address: string): Promise<string> {
     },
     body: JSON.stringify({ login: username, password }),
   });
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   return sessionCookie(response);
 }
 
@@ -47,7 +48,7 @@ type ParsedSession = {
   vendor: string | null;
 };
 
-Deno.test("GET /api/auth/sessions parses each user agent and marks the one asking", async () => {
+test("GET /api/auth/sessions parses each user agent and marks the one asking", async () => {
   await registerUser(username);
   const phone = await signIn(IPHONE, "203.0.113.7");
   const desktop = await signIn(WINDOWS, "198.51.100.42");
@@ -55,33 +56,33 @@ Deno.test("GET /api/auth/sessions parses each user agent and marks the one askin
   const { results } = await (await listSessions(desktop)).json();
 
   // Three: the one registering opened, plus the two signed in above.
-  assertEquals(results.length, 3);
+  assert.equal(results.length, 3);
 
   const parsed = results.map((session: ParsedSession) =>
     `${session.browser}/${session.operatingSystem}/${session.deviceType}/${session.vendor}`
   );
-  assertEquals(parsed.includes("Safari/iOS/mobile/Apple"), true);
-  assertEquals(parsed.includes("Chrome/Windows/null/null"), true);
+  assert.equal(parsed.includes("Safari/iOS/mobile/Apple"), true);
+  assert.equal(parsed.includes("Chrome/Windows/null/null"), true);
 
   const current = results.filter((session: { current: boolean }) =>
     session.current
   );
-  assertEquals(current.length, 1);
-  assertEquals(current[0].browser, "Chrome");
-  assertEquals(current[0].operatingSystem, "Windows");
+  assert.equal(current.length, 1);
+  assert.equal(current[0].browser, "Chrome");
+  assert.equal(current[0].operatingSystem, "Windows");
   // Null rather than "desktop": the parser labels only what it can tell apart.
-  assertEquals(current[0].deviceType, null);
-  assertEquals(current[0].vendor, null);
-  assertEquals(current[0].ipAddress, "198.51.100.42");
+  assert.equal(current[0].deviceType, null);
+  assert.equal(current[0].vendor, null);
+  assert.equal(current[0].ipAddress, "198.51.100.42");
 
   // Derived from expiry rather than stored, so it has to be a real timestamp near now.
-  assertExists(current[0].lastUsedAt);
-  assertNotEquals(Number.isNaN(Date.parse(current[0].lastUsedAt)), true);
+  assert.ok(current[0].lastUsedAt);
+  assert.notEqual(Number.isNaN(Date.parse(current[0].lastUsedAt)), true);
 
-  assertEquals(phone.length > 0, true);
+  assert.equal(phone.length > 0, true);
 });
 
-Deno.test("DELETE /api/auth/sessions/others keeps the session asking and ends the rest", async () => {
+test("DELETE /api/auth/sessions/others keeps the session asking and ends the rest", async () => {
   await registerUser(username);
   const phone = await signIn(IPHONE, "203.0.113.7");
   const desktop = await signIn(WINDOWS, "198.51.100.42");
@@ -90,17 +91,17 @@ Deno.test("DELETE /api/auth/sessions/others keeps the session asking and ends th
     method: "DELETE",
     headers: { cookie: desktop, ...SAME_ORIGIN },
   });
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
   const { results } = await (await listSessions(desktop)).json();
-  assertEquals(results.length, 1);
-  assertEquals(results[0].current, true);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].current, true);
 
   // The phone is out: signing out elsewhere has to actually end the other sessions.
-  assertEquals((await listSessions(phone)).status, STATUS_CODE.Unauthorized);
+  assert.equal((await listSessions(phone)).status, STATUS_CODE.Unauthorized);
 });
 
-Deno.test("DELETE /api/auth/sessions/{id} ends one session", async () => {
+test("DELETE /api/auth/sessions/{id} ends one session", async () => {
   await registerUser(username);
   const phone = await signIn(IPHONE, "203.0.113.7");
   const desktop = await signIn(WINDOWS, "198.51.100.42");
@@ -114,14 +115,14 @@ Deno.test("DELETE /api/auth/sessions/{id} ends one session", async () => {
     method: "DELETE",
     headers: { cookie: desktop, ...SAME_ORIGIN },
   });
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 
   const remaining = await (await listSessions(desktop)).json();
-  assertEquals(remaining.results.length, 2);
-  assertEquals(phone.length > 0, true);
+  assert.equal(remaining.results.length, 2);
+  assert.equal(phone.length > 0, true);
 });
 
-Deno.test("DELETE /api/auth/sessions/{id} cannot reach another member's session", async () => {
+test("DELETE /api/auth/sessions/{id} cannot reach another member's session", async () => {
   await registerUser(username);
   const mine = await signIn(WINDOWS, "198.51.100.42");
 
@@ -136,15 +137,15 @@ Deno.test("DELETE /api/auth/sessions/{id} cannot reach another member's session"
     );
 
     // 404, not 403: whether somebody else holds this id is not this member's business.
-    assertEquals(response.status, STATUS_CODE.NotFound);
-    assertEquals((await listSessions(theirCookie)).status, STATUS_CODE.OK);
+    assert.equal(response.status, STATUS_CODE.NotFound);
+    assert.equal((await listSessions(theirCookie)).status, STATUS_CODE.OK);
   } finally {
     await deleteUsers([strangerName]);
   }
 });
 
-Deno.test("GET /api/auth/sessions needs a session", async () => {
+test("GET /api/auth/sessions needs a session", async () => {
   const response = await app.request("/api/auth/sessions");
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
 });

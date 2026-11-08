@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -16,10 +17,10 @@ import {
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author, bystander } = storyIdeaUsers("list");
 
-Deno.test.beforeEach(() => clearRateLimits());
-Deno.test.afterEach(() => deleteUsers([author, bystander]));
+beforeEach(() => clearRateLimits());
+afterEach(() => deleteUsers([author, bystander]));
 
-Deno.test("QUERY /api/story-ideas hides closed ideas by default", async () => {
+test("QUERY /api/story-ideas hides closed ideas by default", async () => {
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
 
@@ -31,19 +32,19 @@ Deno.test("QUERY /api/story-ideas hides closed ideas by default", async () => {
   const titles = page.results.map((idea: { title: string }) => idea.title);
 
   // §8.3's point: what is settled stops cluttering the board, but stays reachable by asking.
-  assertEquals(titles.includes("Offen"), true);
-  assertEquals(titles.includes("Zu"), false);
-  assertEquals(open.status, "open");
+  assert.equal(titles.includes("Offen"), true);
+  assert.equal(titles.includes("Zu"), false);
+  assert.equal(open.status, "open");
 
   const closedPage = await (await listIdeas(reader, { status: "closed" }))
     .json();
   const closedTitles = closedPage.results.map((idea: { title: string }) =>
     idea.title
   );
-  assertEquals(closedTitles.includes("Zu"), true);
+  assert.equal(closedTitles.includes("Zu"), true);
 });
 
-Deno.test("QUERY /api/story-ideas never shows the reader their own ideas", async () => {
+test("QUERY /api/story-ideas never shows the reader their own ideas", async () => {
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
 
@@ -55,11 +56,11 @@ Deno.test("QUERY /api/story-ideas never shows the reader their own ideas", async
 
   // The board is discovery: like a public group the reader is already in, their own idea is
   // not something to find. It lives on Meine Storyideen instead.
-  assertEquals(titles.includes("Fremde Idee"), true);
-  assertEquals(titles.includes("Eigene Idee"), false);
+  assert.equal(titles.includes("Fremde Idee"), true);
+  assert.equal(titles.includes("Eigene Idee"), false);
 });
 
-Deno.test("QUERY /api/story-ideas filters by language and searches the idea text", async () => {
+test("QUERY /api/story-ideas filters by language and searches the idea text", async () => {
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
 
@@ -80,19 +81,19 @@ Deno.test("QUERY /api/story-ideas filters by language and searches the idea text
   const englishTitles = english.results.map((idea: { title: string }) =>
     idea.title
   );
-  assertEquals(englishTitles.includes("English"), true);
-  assertEquals(englishTitles.includes("Deutsch"), false);
+  assert.equal(englishTitles.includes("English"), true);
+  assert.equal(englishTitles.includes("Deutsch"), false);
 
   const search = await (await listIdeas(reader, { search: "Turm aus Glas" }))
     .json();
   const searchTitles = search.results.map((idea: { title: string }) =>
     idea.title
   );
-  assertEquals(searchTitles.includes("Deutsch"), true);
-  assertEquals(searchTitles.includes("English"), false);
+  assert.equal(searchTitles.includes("Deutsch"), true);
+  assert.equal(searchTitles.includes("English"), false);
 });
 
-Deno.test("QUERY /api/story-ideas with author mine shows only one's own, closed included", async () => {
+test("QUERY /api/story-ideas with author mine shows only one's own, closed included", async () => {
   const cookie = await registerUser(author);
   const other = await registerUser(bystander);
 
@@ -106,19 +107,19 @@ Deno.test("QUERY /api/story-ideas with author mine shows only one's own, closed 
 
   // The author manages every idea they posted; hiding a closed one here would make closing
   // it irreversible in the interface.
-  assertEquals(titles, ["Meine, zu"]);
+  assert.deepEqual(titles, ["Meine, zu"]);
 });
 
-Deno.test("QUERY /api/story-ideas needs a session", async () => {
+test("QUERY /api/story-ideas needs a session", async () => {
   const response = await listIdeas("", {});
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
 });
 
 /**
  * The board narrows by the same vocabularies a group's does, through the same helper — so an
  * idea and the group it becomes cannot be findable by different things.
  */
-Deno.test("QUERY /api/story-ideas narrows the board to the genres asked for", async () => {
+test("QUERY /api/story-ideas narrows the board to the genres asked for", async () => {
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
 
@@ -138,11 +139,11 @@ Deno.test("QUERY /api/story-ideas narrows the board to the genres asked for", as
   })).json();
   const ids = page.results.map((idea: { id: string }) => idea.id);
 
-  assertEquals(ids.includes(fantasy.id), true);
-  assertEquals(ids.includes(western.id), false);
+  assert.equal(ids.includes(fantasy.id), true);
+  assert.equal(ids.includes(western.id), false);
 });
 
-Deno.test("QUERY /api/story-ideas widens within a field and narrows across two", async () => {
+test("QUERY /api/story-ideas widens within a field and narrows across two", async () => {
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
 
@@ -161,8 +162,8 @@ Deno.test("QUERY /api/story-ideas widens within a field and narrows across two",
     limit: 100,
   })).json();
   const eitherIds = either.results.map((idea: { id: string }) => idea.id);
-  assertEquals(eitherIds.includes(fantasy.id), true);
-  assertEquals(eitherIds.includes(western.id), true);
+  assert.equal(eitherIds.includes(fantasy.id), true);
+  assert.equal(eitherIds.includes(western.id), true);
 
   const both = await (await listIdeas(reader, {
     genres: ["fantasy", "western"],
@@ -170,11 +171,11 @@ Deno.test("QUERY /api/story-ideas widens within a field and narrows across two",
     limit: 100,
   })).json();
   const bothIds = both.results.map((idea: { id: string }) => idea.id);
-  assertEquals(bothIds.includes(fantasy.id), true);
-  assertEquals(bothIds.includes(western.id), false);
+  assert.equal(bothIds.includes(fantasy.id), true);
+  assert.equal(bothIds.includes(western.id), false);
 });
 
-Deno.test("QUERY /api/story-ideas/carousel is not narrowed by a board filter", async () => {
+test("QUERY /api/story-ideas/carousel is not narrowed by a board filter", async () => {
   const cookie = await registerUser(author);
   const reader = await registerUser(bystander);
   const western = await (await createIdea(cookie, {
@@ -189,5 +190,5 @@ Deno.test("QUERY /api/story-ideas/carousel is not narrowed by a board filter", a
       storyIdeaId: western.id,
     })).json();
 
-  assertEquals(step.storyIdea.id, western.id);
+  assert.equal(step.storyIdea.id, western.id);
 });

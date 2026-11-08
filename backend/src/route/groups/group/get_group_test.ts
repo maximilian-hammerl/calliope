@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -10,10 +11,10 @@ import {
 const owner = "get-group-owner";
 const outsider = "get-group-outsider";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([owner, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([owner, outsider]));
 
-Deno.test("GET /api/groups/{groupId} returns a public group to a non-member", async () => {
+test("GET /api/groups/{groupId} returns a public group to a non-member", async () => {
   const ownerCookie = await registerUser(owner);
   const created = await (await request("POST", "/api/groups", ownerCookie, {
     title: "Öffentlich",
@@ -28,11 +29,11 @@ Deno.test("GET /api/groups/{groupId} returns a public group to a non-member", as
     outsiderCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).id, created.id);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).id, created.id);
 });
 
-Deno.test("GET /api/groups/{groupId} reports a private group as missing to a non-member", async () => {
+test("GET /api/groups/{groupId} reports a private group as missing to a non-member", async () => {
   const ownerCookie = await registerUser(owner);
   const created = await (await request("POST", "/api/groups", ownerCookie, {
     title: "Privat",
@@ -47,6 +48,6 @@ Deno.test("GET /api/groups/{groupId} reports a private group as missing to a non
   );
 
   // 404 rather than 403, so that the group's existence does not leak.
-  assertEquals(response.status, STATUS_CODE.NotFound);
-  assertEquals(await response.json(), { error: "Group not found" });
+  assert.equal(response.status, STATUS_CODE.NotFound);
+  assert.deepEqual(await response.json(), { error: "Group not found" });
 });

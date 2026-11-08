@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 // Imported rather than read: a module load needs no file permission, and the test
 // task runs under the same restricted set the application does.
 import document from "@/open-api.json" with { type: "json" };
@@ -70,7 +71,7 @@ function requiredTextWithoutAPattern(
   }
 }
 
-Deno.test("every text a request must supply refuses whitespace alone", () => {
+test("every text a request must supply refuses whitespace alone", () => {
   const found = new Set<string>();
 
   for (const operations of Object.values(document.paths)) {
@@ -95,7 +96,7 @@ Deno.test("every text a request must supply refuses whitespace alone", () => {
     .filter((name) => !WHITESPACE_IS_LEGITIMATE.has(name))
     .toSorted();
 
-  assertEquals(
+  assert.deepEqual(
     unguarded,
     [],
     `these accept whitespace alone; wrap them in notBlank(): ${

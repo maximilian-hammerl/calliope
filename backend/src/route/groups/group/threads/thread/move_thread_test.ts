@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -12,8 +13,8 @@ import {
 const administrator = "move-thread-admin";
 const writer = "move-thread-writer";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, writer]));
 
 async function aGroupWithThreadAndFolder(cookie: string) {
   const group = await createGroup(cookie, "Weltenbau");
@@ -41,7 +42,7 @@ async function aGroupWithThreadAndFolder(cookie: string) {
   };
 }
 
-Deno.test("PUT /threads/{threadId}/folder moves it and leaves its activity alone", async () => {
+test("PUT /threads/{threadId}/folder moves it and leaves its activity alone", async () => {
   const cookie = await registerUser(administrator);
   const { group, thread, folder, groupActivityBefore } =
     await aGroupWithThreadAndFolder(cookie);
@@ -53,18 +54,18 @@ Deno.test("PUT /threads/{threadId}/folder moves it and leaves its activity alone
     { folderId: folder.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const moved = await response.json();
-  assertEquals(moved.folderId, folder.id);
+  assert.equal(moved.folderId, folder.id);
   // Moving is not writing: the thread keeps its place in the order, and its group does too.
-  assertEquals(moved.lastActivityAt, thread.lastActivityAt);
+  assert.equal(moved.lastActivityAt, thread.lastActivityAt);
 
   const groupAfter =
     await (await request("GET", `/api/groups/${group.id}`, cookie)).json();
-  assertEquals(groupAfter.lastActivityAt, groupActivityBefore);
+  assert.equal(groupAfter.lastActivityAt, groupActivityBefore);
 });
 
-Deno.test("PUT /threads/{threadId}/folder moves it back to the root", async () => {
+test("PUT /threads/{threadId}/folder moves it back to the root", async () => {
   const cookie = await registerUser(administrator);
   const { group, thread, folder } = await aGroupWithThreadAndFolder(cookie);
 
@@ -81,11 +82,11 @@ Deno.test("PUT /threads/{threadId}/folder moves it back to the root", async () =
     { folderId: null },
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals((await response.json()).folderId, null);
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.equal((await response.json()).folderId, null);
 });
 
-Deno.test("PUT /threads/{threadId}/folder refuses a folder from another group", async () => {
+test("PUT /threads/{threadId}/folder refuses a folder from another group", async () => {
   const cookie = await registerUser(administrator);
   const { group, thread } = await aGroupWithThreadAndFolder(cookie);
   const elsewhere = await createGroup(cookie, "Andere Gruppe");
@@ -103,10 +104,10 @@ Deno.test("PUT /threads/{threadId}/folder refuses a folder from another group", 
     { folderId: theirs.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("PUT /threads/{threadId}/folder refuses a writer who did not start it", async () => {
+test("PUT /threads/{threadId}/folder refuses a writer who did not start it", async () => {
   const cookie = await registerUser(administrator);
   const { group, thread, folder } = await aGroupWithThreadAndFolder(cookie);
   const writerCookie = await addMember(cookie, group.id, writer, "writer");
@@ -118,5 +119,5 @@ Deno.test("PUT /threads/{threadId}/folder refuses a writer who did not start it"
     { folderId: folder.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });

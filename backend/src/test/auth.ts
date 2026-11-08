@@ -1,4 +1,4 @@
-import { assertExists } from "@std/assert";
+import assert from "node:assert/strict";
 import app from "@/src/app.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { countMailFor, deleteMailFor } from "@/src/test/mailpit.ts";
@@ -33,7 +33,7 @@ export const postJson = (path: string, body?: unknown, cookie?: string) =>
 /** Returns the `session=...` pair of a Set-Cookie header, ready to send back. */
 export function sessionCookie(response: Response): string {
   const setCookie = response.headers.get("set-cookie");
-  assertExists(setCookie, "expected the response to set a session cookie");
+  assert.ok(setCookie, "expected the response to set a session cookie");
   return setCookie.split(";")[0] ?? setCookie;
 }
 

@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import {
@@ -10,10 +11,10 @@ import {
 
 const username = "create-group-test-user";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([username]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([username]));
 
-Deno.test("POST /api/groups creates a group and makes the creator its administrator", async () => {
+test("POST /api/groups creates a group and makes the creator its administrator", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -21,11 +22,11 @@ Deno.test("POST /api/groups creates a group and makes the creator its administra
     synopsis: "Ein gemeinsames Projekt",
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const group = await response.json();
-  assertEquals(group.title, "Fantasy-Projekt");
+  assert.equal(group.title, "Fantasy-Projekt");
   // Private unless the request asks otherwise.
-  assertEquals(group.visibility, "private");
+  assert.equal(group.visibility, "private");
 
   const membership = await db
     .selectFrom("userInWritingGroup")
@@ -34,8 +35,8 @@ Deno.test("POST /api/groups creates a group and makes the creator its administra
     .where("userInWritingGroup.writingGroupId", "=", group.id)
     .execute();
 
-  assertEquals(membership, [{ role: "administrator", username }]);
-  assertEquals(
+  assert.deepEqual(membership, [{ role: "administrator", username }]);
+  assert.equal(
     group.createdBy,
     (await db
       .selectFrom("user")
@@ -45,22 +46,22 @@ Deno.test("POST /api/groups creates a group and makes the creator its administra
   );
 });
 
-Deno.test("POST /api/groups rejects a body without a title", async () => {
+test("POST /api/groups rejects a body without a title", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
     synopsis: "Kein Titel",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assertEquals(body.error, "Invalid request");
-  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+  assert.equal(body.error, "Invalid request");
+  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
     "title",
   ]);
 });
 
-Deno.test("POST /api/groups stores the story metadata", async () => {
+test("POST /api/groups stores the story metadata", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -78,19 +79,19 @@ Deno.test("POST /api/groups stores the story metadata", async () => {
     perspective: "third_person_limited",
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const group = await response.json();
-  assertEquals(group.subtitle, "Was du vergisst");
-  assertEquals(group.storyStatus, "writing");
-  assertEquals(group.genres, ["fantasy", "mystery"]);
-  assertEquals(group.contentWarnings, ["grief"]);
-  assertEquals(group.perspective, "third_person_limited");
+  assert.equal(group.subtitle, "Was du vergisst");
+  assert.equal(group.storyStatus, "writing");
+  assert.deepEqual(group.genres, ["fantasy", "mystery"]);
+  assert.deepEqual(group.contentWarnings, ["grief"]);
+  assert.equal(group.perspective, "third_person_limited");
   // Free text, so it comes back as written rather than as a chosen value.
-  assertEquals(group.storyThemes, "Erinnerung, Schuld");
-  assertEquals(group.storySettings, "Eine Stadt, die nur nachts existiert");
+  assert.equal(group.storyThemes, "Erinnerung, Schuld");
+  assert.equal(group.storySettings, "Eine Stadt, die nur nachts existiert");
 });
 
-Deno.test("POST /api/groups defaults the metadata a member did not give", async () => {
+test("POST /api/groups defaults the metadata a member did not give", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -98,17 +99,17 @@ Deno.test("POST /api/groups defaults the metadata a member did not give", async 
     synopsis: "d",
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const group = await response.json();
   // Every field optional except the status, which every story has: a new one is being planned.
-  assertEquals(group.storyStatus, "planning");
-  assertEquals(group.subtitle, null);
-  assertEquals(group.tense, null);
-  assertEquals(group.genres, []);
-  assertEquals(group.tropes, []);
+  assert.equal(group.storyStatus, "planning");
+  assert.equal(group.subtitle, null);
+  assert.equal(group.tense, null);
+  assert.deepEqual(group.genres, []);
+  assert.deepEqual(group.tropes, []);
 });
 
-Deno.test("POST /api/groups refuses a value it is given twice", async () => {
+test("POST /api/groups refuses a value it is given twice", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -119,19 +120,19 @@ Deno.test("POST /api/groups refuses a value it is given twice", async () => {
 
   // Refused rather than de-duplicated: the values are closed, so a repeat is a client bug, and
   // quietly fixing it would answer 200 to a request the sender got wrong.
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
   // The second one is named, by value and by position.
-  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
     "genres.1",
   ]);
-  assertEquals(
+  assert.deepEqual(
     body.issues.map((issue: { message: string }) => issue.message),
     ["Duplicate value: fantasy"],
   );
 });
 
-Deno.test("POST /api/groups refuses a genre that is not one", async () => {
+test("POST /api/groups refuses a genre that is not one", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -141,14 +142,14 @@ Deno.test("POST /api/groups refuses a genre that is not one", async () => {
     genres: ["Fantasy"],
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assertEquals(body.issues.map((issue: { path: string }) => issue.path), [
+  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
     "genres.0",
   ]);
 });
 
-Deno.test("POST /api/groups refuses more tags than a rail can show", async () => {
+test("POST /api/groups refuses more tags than a rail can show", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -157,7 +158,7 @@ Deno.test("POST /api/groups refuses more tags than a rail can show", async () =>
     genres: Array.from({ length: 13 }, (_, index) => `Genre ${index}`),
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });
 
 /**
@@ -165,7 +166,7 @@ Deno.test("POST /api/groups refuses more tags than a rail can show", async () =>
  * genre already picked — so a group carrying one it did not pick could never be found by the
  * filter that offers it: seeing that chip means having picked the genre this group lacks.
  */
-Deno.test("POST /api/groups refuses a subgenre from a genre it does not carry", async () => {
+test("POST /api/groups refuses a subgenre from a genre it does not carry", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -175,12 +176,12 @@ Deno.test("POST /api/groups refuses a subgenre from a genre it does not carry", 
     subgenres: ["space_opera"],
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
   // The same shape a failed schema gives, though this rule is enforced below the schema: one kind
   // of 400 for a client to read, naming the field and the value.
   const body = await response.json();
-  assertEquals(body.error, "Invalid request");
-  assertEquals(body.issues, [
+  assert.equal(body.error, "Invalid request");
+  assert.deepEqual(body.issues, [
     {
       path: "subgenres",
       message:
@@ -189,7 +190,7 @@ Deno.test("POST /api/groups refuses a subgenre from a genre it does not carry", 
   ]);
 });
 
-Deno.test("POST /api/groups takes a subgenre of a genre it does carry", async () => {
+test("POST /api/groups takes a subgenre of a genre it does carry", async () => {
   const cookie = await registerUser(username);
 
   const response = await request("POST", "/api/groups", cookie, {
@@ -199,10 +200,10 @@ Deno.test("POST /api/groups takes a subgenre of a genre it does carry", async ()
     subgenres: ["space_opera", "contemporary_romance"],
   });
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
 });
 
-Deno.test("POST /api/groups refuses a title of only whitespace", async () => {
+test("POST /api/groups refuses a title of only whitespace", async () => {
   const cookie = await registerUser(username);
 
   // Not merely stored blank: the service trims, so this used to found a group with no title.
@@ -211,5 +212,5 @@ Deno.test("POST /api/groups refuses a title of only whitespace", async () => {
     synopsis: "d",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });

@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -19,8 +20,8 @@ import { makeOperator } from "@/src/test/reports.ts";
 const member = "forum-permissions-member";
 const operator = "forum-permissions-operator";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum([member, operator]);
   await deleteUsers([member, operator]);
 });
@@ -60,7 +61,7 @@ const threadsVisibleTo = async (cookie: string): Promise<Array<string>> => {
   ) => thread.title);
 };
 
-Deno.test("PUT /api/forum/permissions: one route for all three kinds, an operator's alone", async () => {
+test("PUT /api/forum/permissions: one route for all three kinds, an operator's alone", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const folder = await createForumFolder("Forenspiele", "write");
   const thread = await createForumThread("Wortkette", "write", folder.id);
@@ -78,12 +79,12 @@ Deno.test("PUT /api/forum/permissions: one route for all three kinds, an operato
       ["page", page.id],
     ] as const
   ) {
-    assertEquals(
+    assert.equal(
       // deno-lint-ignore no-await-in-loop -- three requests, one after another
       (await setPermission(memberCookie, kind, id, "hidden")).status,
       STATUS_CODE.Forbidden,
     );
-    assertEquals(
+    assert.equal(
       // deno-lint-ignore no-await-in-loop -- as above
       (await setPermission(operatorCookie, kind, id, "read")).status,
       STATUS_CODE.OK,
@@ -91,30 +92,30 @@ Deno.test("PUT /api/forum/permissions: one route for all three kinds, an operato
   }
 });
 
-Deno.test("hiding a folder hides everything in it, and re-opening it gives them back", async () => {
+test("hiding a folder hides everything in it, and re-opening it gives them back", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const folder = await createForumFolder("Forenspiele", "write");
   const title = scoped("Wortkette");
   await createForumThread(title, "write", folder.id);
 
-  assertEquals((await threadsVisibleTo(memberCookie)).includes(title), true);
+  assert.equal((await threadsVisibleTo(memberCookie)).includes(title), true);
 
-  assertEquals(
+  assert.equal(
     (await setPermission(operatorCookie, "folder", folder.id, "hidden")).status,
     STATUS_CODE.OK,
   );
-  assertEquals((await threadsVisibleTo(memberCookie)).includes(title), false);
+  assert.equal((await threadsVisibleTo(memberCookie)).includes(title), false);
   // The operator still sees it, which is what the mark in the tree is for.
-  assertEquals((await threadsVisibleTo(operatorCookie)).includes(title), true);
+  assert.equal((await threadsVisibleTo(operatorCookie)).includes(title), true);
 
-  assertEquals(
+  assert.equal(
     (await setPermission(operatorCookie, "folder", folder.id, "write")).status,
     STATUS_CODE.OK,
   );
-  assertEquals((await threadsVisibleTo(memberCookie)).includes(title), true);
+  assert.equal((await threadsVisibleTo(memberCookie)).includes(title), true);
 });
 
-Deno.test("closing a thread stops a member writing in it without hiding it", async () => {
+test("closing a thread stops a member writing in it without hiding it", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const folder = await createForumFolder("Bücherclub", "write");
   const title = scoped("Buch des Monats");
@@ -126,7 +127,7 @@ Deno.test("closing a thread stops a member writing in it without hiding it", asy
     memberCookie,
     postBody("Ich lese mit."),
   );
-  assertEquals(before.status, STATUS_CODE.Created);
+  assert.equal(before.status, STATUS_CODE.Created);
 
   await setPermission(operatorCookie, "thread", thread.id, "read");
 
@@ -136,12 +137,12 @@ Deno.test("closing a thread stops a member writing in it without hiding it", asy
     memberCookie,
     postBody("Doch nicht."),
   );
-  assertEquals(after.status, STATUS_CODE.Forbidden);
+  assert.equal(after.status, STATUS_CODE.Forbidden);
   // Still readable: closing is not hiding.
-  assertEquals((await threadsVisibleTo(memberCookie)).includes(title), true);
+  assert.equal((await threadsVisibleTo(memberCookie)).includes(title), true);
 });
 
-Deno.test("a permission is the row's own, so a folder above it still decides", async () => {
+test("a permission is the row's own, so a folder above it still decides", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const closed = await createForumFolder("Beendete Spiele", "read");
   const thread = await createForumThread(
@@ -151,7 +152,7 @@ Deno.test("a permission is the row's own, so a folder above it still decides", a
   );
 
   // Setting the thread to `write` cannot open what its folder closed.
-  assertEquals(
+  assert.equal(
     (await setPermission(operatorCookie, "thread", thread.id, "write")).status,
     STATUS_CODE.OK,
   );
@@ -162,10 +163,10 @@ Deno.test("a permission is the row's own, so a folder above it still decides", a
     memberCookie,
     postBody("Noch etwas?"),
   );
-  assertEquals(posted.status, STATUS_CODE.Forbidden);
+  assert.equal(posted.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("PUT /api/forum/threads/{threadId}/folder: the destination is asked as well as the thread", async () => {
+test("PUT /api/forum/threads/{threadId}/folder: the destination is asked as well as the thread", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const open = await createForumFolder("Forenspiele", "write");
   const readable = await createForumFolder("Ankündigungen", "read");
@@ -183,7 +184,7 @@ Deno.test("PUT /api/forum/threads/{threadId}/folder: the destination is asked as
     memberCookie,
     { folderId: readable.id },
   );
-  assertEquals(intoReadable.status, STATUS_CODE.Forbidden);
+  assert.equal(intoReadable.status, STATUS_CODE.Forbidden);
 
   // An operator may, since they may put things anywhere.
   const byOperator = await request(
@@ -192,17 +193,17 @@ Deno.test("PUT /api/forum/threads/{threadId}/folder: the destination is asked as
     operatorCookie,
     { folderId: readable.id },
   );
-  assertEquals(byOperator.status, STATUS_CODE.OK);
-  assertEquals((await byOperator.json()).effectiveMemberPermission, "read");
+  assert.equal(byOperator.status, STATUS_CODE.OK);
+  assert.equal((await byOperator.json()).effectiveMemberPermission, "read");
 });
 
-Deno.test("somebody else's thread is not theirs to move", async () => {
+test("somebody else's thread is not theirs to move", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const open = await createForumFolder("Forenspiele", "write");
   const second = await createForumFolder("Bücherclub", "write");
   const thread = await createForumThread("Nicht deins", "write", open.id);
 
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/threads/${thread.id}/folder`,
@@ -211,7 +212,7 @@ Deno.test("somebody else's thread is not theirs to move", async () => {
     )).status,
     STATUS_CODE.Forbidden,
   );
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/threads/${thread.id}/folder`,
@@ -222,7 +223,7 @@ Deno.test("somebody else's thread is not theirs to move", async () => {
   );
 });
 
-Deno.test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may move it", async () => {
+test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may move it", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const open = await createForumFolder("Bücherclub", "write");
   const second = await createForumFolder("Forenspiele", "write");
@@ -235,7 +236,7 @@ Deno.test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may 
   );
 
   // A page is written together, so this asks the page rather than who wrote it.
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/pages/${page.id}/folder`,
@@ -245,7 +246,7 @@ Deno.test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may 
     STATUS_CODE.OK,
   );
 
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/pages/${page.id}/folder`,
@@ -256,7 +257,7 @@ Deno.test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may 
   );
 
   // The root is an operator's, as creating there is.
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/pages/${page.id}/folder`,
@@ -265,7 +266,7 @@ Deno.test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may 
     )).status,
     STATUS_CODE.Forbidden,
   );
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/pages/${page.id}/folder`,
@@ -276,14 +277,14 @@ Deno.test("PUT /api/forum/pages/{pageId}/folder: whoever may write the page may 
   );
 });
 
-Deno.test("a hidden thread cannot be moved by a member who cannot see it", async () => {
+test("a hidden thread cannot be moved by a member who cannot see it", async () => {
   const [operatorCookie, memberCookie] = await operatorAndMember();
   const hidden = await createForumFolder("Werkstatt", "hidden");
   const open = await createForumFolder("Forenspiele", "write");
   const thread = await createForumThread("Entwurf", "write", hidden.id);
 
   // 404 rather than 403: it does not exist to them.
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/threads/${thread.id}/folder`,
@@ -292,7 +293,7 @@ Deno.test("a hidden thread cannot be moved by a member who cannot see it", async
     )).status,
     STATUS_CODE.NotFound,
   );
-  assertEquals(
+  assert.equal(
     (await request(
       "PUT",
       `/api/forum/threads/${thread.id}/folder`,
@@ -303,7 +304,7 @@ Deno.test("a hidden thread cannot be moved by a member who cannot see it", async
   );
 });
 
-Deno.test("a writing group's folder is not the forum's to set", async () => {
+test("a writing group's folder is not the forum's to set", async () => {
   const [operatorCookie] = await operatorAndMember();
   const group = await createGroup(operatorCookie, "Der Zauberzwerg");
   const groupFolder = await (await request(
@@ -312,11 +313,11 @@ Deno.test("a writing group's folder is not the forum's to set", async () => {
     operatorCookie,
     { title: "Weltenbau" },
   )).json();
-  assertEquals(typeof groupFolder.id, "string");
+  assert.equal(typeof groupFolder.id, "string");
 
   // The route is an operator's, and this operator founded the group — so what refuses is the
   // scope, not the act: a group's folders are the group's own to govern.
-  assertEquals(
+  assert.equal(
     (await setPermission(operatorCookie, "folder", groupFolder.id, "hidden"))
       .status,
     STATUS_CODE.NotFound,

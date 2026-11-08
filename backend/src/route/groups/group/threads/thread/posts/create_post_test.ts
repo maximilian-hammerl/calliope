@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -13,8 +14,8 @@ import {
 const administrator = "create-post-admin";
 const reader = "create-post-reader";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, reader]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, reader]));
 
 async function thread() {
   const adminCookie = await registerUser(administrator);
@@ -31,7 +32,7 @@ async function thread() {
   return { adminCookie, group, thread: created };
 }
 
-Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts names the author", async () => {
+test("POST /api/groups/{groupId}/threads/{threadId}/posts names the author", async () => {
   const { adminCookie, group, thread: created } = await thread();
 
   const response = await request(
@@ -43,11 +44,11 @@ Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts names the author"
 
   const post = await response.json();
   // Joined rather than stored, so a client never has to resolve the id itself.
-  assertEquals(post.createdByUsername, administrator);
-  assertEquals(post.createdBy !== undefined, true);
+  assert.equal(post.createdByUsername, administrator);
+  assert.equal(post.createdBy !== undefined, true);
 });
 
-Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts writes a published post", async () => {
+test("POST /api/groups/{groupId}/threads/{threadId}/posts writes a published post", async () => {
   const { adminCookie, group, thread: created } = await thread();
 
   const response = await request(
@@ -57,14 +58,14 @@ Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts writes a publishe
     postBody("Es war einmal"),
   );
 
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   const post = await response.json();
-  assertEquals(post.text, "Es war einmal");
+  assert.equal(post.text, "Es war einmal");
   // Published unless the author asks for a draft.
-  assertEquals(post.isDraft, false);
+  assert.equal(post.isDraft, false);
 });
 
-Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts refuses a reader", async () => {
+test("POST /api/groups/{groupId}/threads/{threadId}/posts refuses a reader", async () => {
   const { adminCookie, group, thread: created } = await thread();
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
@@ -75,5 +76,5 @@ Deno.test("POST /api/groups/{groupId}/threads/{threadId}/posts refuses a reader"
     postBody("Nein"),
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });

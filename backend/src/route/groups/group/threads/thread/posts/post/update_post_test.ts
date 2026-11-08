@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -15,8 +16,8 @@ const administrator = "update-post-admin";
 const writer = "update-post-writer";
 const other = "update-post-other";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer, other]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, writer, other]));
 
 async function draftByWriter() {
   const adminCookie = await registerUser(administrator);
@@ -41,7 +42,7 @@ async function draftByWriter() {
   return { adminCookie, writerCookie, group, posts, draft };
 }
 
-Deno.test("PATCH …/posts/{postId} publishes the author's own draft", async () => {
+test("PATCH …/posts/{postId} publishes the author's own draft", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
   const response = await request(
@@ -53,14 +54,14 @@ Deno.test("PATCH …/posts/{postId} publishes the author's own draft", async () 
     },
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const published = await response.json();
-  assertEquals(published.isDraft, false);
+  assert.equal(published.isDraft, false);
   // The text was left alone.
-  assertEquals(published.text, "Entwurf");
+  assert.equal(published.text, "Entwurf");
 });
 
-Deno.test("PATCH …/posts/{postId} dates a published post from its publication", async () => {
+test("PATCH …/posts/{postId} dates a published post from its publication", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
   // Backdated rather than waited for, like the avatar sweep's orphan. Both timestamps come from
@@ -86,10 +87,10 @@ Deno.test("PATCH …/posts/{postId} dates a published post from its publication"
   // sorts to the end of the thread rather than into the middle of it...
   assert(published.createdAt > longAgo);
   // ...and it does not announce itself as edited the moment it appears.
-  assertEquals(published.editedAt, null);
+  assert.equal(published.editedAt, null);
 });
 
-Deno.test("PATCH …/posts/{postId} does not mark an autosaved draft as edited", async () => {
+test("PATCH …/posts/{postId} does not mark an autosaved draft as edited", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
   // Every keystroke in the composer is one of these. None of them is an edit.
@@ -100,10 +101,10 @@ Deno.test("PATCH …/posts/{postId} does not mark an autosaved draft as edited",
     postBody("Weiter geschrieben."),
   )).json();
 
-  assertEquals(saved.editedAt, null);
+  assert.equal(saved.editedAt, null);
 });
 
-Deno.test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
+test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
   const published = await (await request(
@@ -121,11 +122,11 @@ Deno.test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
   )).json();
 
   // Publication must not have blunted the signal that actually means "edited".
-  assertEquals(edited.createdAt, published.createdAt);
+  assert.equal(edited.createdAt, published.createdAt);
   assert(edited.editedAt !== null);
 });
 
-Deno.test("PATCH …/posts/{postId} records who edited, not only when", async () => {
+test("PATCH …/posts/{postId} records who edited, not only when", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
   await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
@@ -139,10 +140,10 @@ Deno.test("PATCH …/posts/{postId} records who edited, not only when", async ()
     postBody("Doch anders."),
   )).json();
 
-  assertEquals(edited.editedByUsername, writer);
+  assert.equal(edited.editedByUsername, writer);
 });
 
-Deno.test("PATCH …/posts/{postId} names the administrator who edited another's post", async () => {
+test("PATCH …/posts/{postId} names the administrator who edited another's post", async () => {
   const { adminCookie, writerCookie, posts, draft } = await draftByWriter();
 
   await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
@@ -158,11 +159,11 @@ Deno.test("PATCH …/posts/{postId} names the administrator who edited another's
 
   // The whole point of the column: the author and the editor are different people, and a
   // reader is told which.
-  assertEquals(edited.createdByUsername, writer);
-  assertEquals(edited.editedByUsername, administrator);
+  assert.equal(edited.createdByUsername, writer);
+  assert.equal(edited.editedByUsername, administrator);
 });
 
-Deno.test("PATCH …/posts/{postId} leaves the editor unnamed until something is edited", async () => {
+test("PATCH …/posts/{postId} leaves the editor unnamed until something is edited", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
   const published = await (await request(
@@ -172,11 +173,11 @@ Deno.test("PATCH …/posts/{postId} leaves the editor unnamed until something is
     { isDraft: false },
   )).json();
 
-  assertEquals(published.editedAt, null);
-  assertEquals(published.editedByUsername, null);
+  assert.equal(published.editedAt, null);
+  assert.equal(published.editedByUsername, null);
 });
 
-Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {
+test("PATCH …/posts/{postId} refuses another writer", async () => {
   const { adminCookie, writerCookie, group, posts } = await draftByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
   const published = await (await request(
@@ -193,5 +194,5 @@ Deno.test("PATCH …/posts/{postId} refuses another writer", async () => {
     postBody("Übernommen"),
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });

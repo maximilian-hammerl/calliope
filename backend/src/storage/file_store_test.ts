@@ -1,4 +1,5 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import { generate as uuidv7 } from "@std/uuid/v7";
 import { FileStore } from "./file_store.ts";
 
@@ -8,36 +9,36 @@ function fileId(): string {
   return uuidv7();
 }
 
-Deno.test("what is written is what is read", async () => {
+test("what is written is what is read", async () => {
   const id = fileId();
   await FileStore.write(id, BYTES);
-  assertEquals(await FileStore.read(id), BYTES);
+  assert.deepEqual(await FileStore.read(id), BYTES);
   await FileStore.remove(id);
 });
 
-Deno.test("an absent file reads as undefined rather than throwing", async () => {
-  assertEquals(await FileStore.read(fileId()), undefined);
+test("an absent file reads as undefined rather than throwing", async () => {
+  assert.equal(await FileStore.read(fileId()), undefined);
 });
 
 /** The sweep and a member's own delete race, and both want the same end state. */
-Deno.test("removing what is not there is success", async () => {
+test("removing what is not there is success", async () => {
   await FileStore.remove(fileId());
 });
 
-Deno.test("a written file is listed, and a removed one is not", async () => {
+test("a written file is listed, and a removed one is not", async () => {
   const id = fileId();
   await FileStore.write(id, BYTES);
-  assertEquals((await FileStore.listFileIds()).includes(id), true);
+  assert.equal((await FileStore.listFileIds()).includes(id), true);
 
   await FileStore.remove(id);
-  assertEquals((await FileStore.listFileIds()).includes(id), false);
+  assert.equal((await FileStore.listFileIds()).includes(id), false);
 });
 
 /**
  * The column is already `uuid`, so this is the second lock. It is here because the store is what
  * turns a value into a path, and a path is where an escape would happen.
  */
-Deno.test("a name that is not a file id never becomes a path", async () => {
+test("a name that is not a file id never becomes a path", async () => {
   for (
     const name of [
       "../../etc/passwd",
@@ -50,25 +51,25 @@ Deno.test("a name that is not a file id never becomes a path", async () => {
     ]
   ) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
-    await assertRejects(() => FileStore.read(name));
+    await assert.rejects(() => FileStore.read(name));
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
-    await assertRejects(() => FileStore.write(name, BYTES));
+    await assert.rejects(() => FileStore.write(name, BYTES));
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
-    await assertRejects(() => FileStore.remove(name));
+    await assert.rejects(() => FileStore.remove(name));
   }
 });
 
 /** A crash mid-write must not leave half a file under a name the database already points at. */
-Deno.test("a partial write is not listed as a file", async () => {
+test("a partial write is not listed as a file", async () => {
   const id = fileId();
   await Deno.mkdir("./.file-storage", { recursive: true });
   await Deno.writeFile(`./.file-storage/${id}.partial`, BYTES);
 
-  assertEquals(
+  assert.equal(
     (await FileStore.listFileIds()).includes(`${id}.partial`),
     false,
   );
-  assertEquals((await FileStore.listFileIds()).includes(id), false);
+  assert.equal((await FileStore.listFileIds()).includes(id), false);
 
   await Deno.remove(`./.file-storage/${id}.partial`);
 });

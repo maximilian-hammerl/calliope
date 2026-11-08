@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -21,10 +22,8 @@ const writer = "folders-test-writer";
 const reader = "folders-test-reader";
 const stranger = "folders-test-stranger";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() =>
-  deleteUsers([administrator, writer, reader, stranger])
-);
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, writer, reader, stranger]));
 
 async function makeFolder(
   cookie: string,
@@ -38,34 +37,34 @@ async function makeFolder(
     cookie,
     { title, ...(parentFolderId === undefined ? {} : { parentFolderId }) },
   );
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
 
-Deno.test("POST /api/groups/{groupId}/folders adds a root folder", async () => {
+test("POST /api/groups/{groupId}/folders adds a root folder", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
 
   const folder = await makeFolder(adminCookie, group.id, "Weltenbau");
 
-  assertEquals(folder.title, "Weltenbau");
-  assertEquals(folder.parentFolderId, null);
-  assertEquals(folder.depth, 1);
-  assertEquals(folder.createdByUsername, administrator);
+  assert.equal(folder.title, "Weltenbau");
+  assert.equal(folder.parentFolderId, null);
+  assert.equal(folder.depth, 1);
+  assert.equal(folder.createdByUsername, administrator);
 });
 
-Deno.test("POST /api/groups/{groupId}/folders nests under a parent", async () => {
+test("POST /api/groups/{groupId}/folders nests under a parent", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const root = await makeFolder(adminCookie, group.id, "Weltenbau");
 
   const child = await makeFolder(adminCookie, group.id, "Stadt A", root.id);
 
-  assertEquals(child.depth, 2);
-  assertEquals(child.parentFolderId, root.id);
+  assert.equal(child.depth, 2);
+  assert.equal(child.parentFolderId, root.id);
 });
 
-Deno.test("POST /api/groups/{groupId}/folders refuses a sixth level with 422", async () => {
+test("POST /api/groups/{groupId}/folders refuses a sixth level with 422", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
 
@@ -87,11 +86,11 @@ Deno.test("POST /api/groups/{groupId}/folders refuses a sixth level with 422", a
     { title: "Zu tief", parentFolderId: deepest.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
-  assertEquals((await response.json()).code, FOLDER_TOO_DEEP);
+  assert.equal(response.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await response.json()).code, FOLDER_TOO_DEEP);
 });
 
-Deno.test("POST /api/groups/{groupId}/folders refuses a reader with 403", async () => {
+test("POST /api/groups/{groupId}/folders refuses a reader with 403", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
@@ -103,10 +102,10 @@ Deno.test("POST /api/groups/{groupId}/folders refuses a reader with 403", async 
     { title: "Sollte nicht gehen" },
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("POST /api/groups/{groupId}/folders refuses a parent from another group", async () => {
+test("POST /api/groups/{groupId}/folders refuses a parent from another group", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const elsewhere = await createGroup(adminCookie, "Andere Gruppe");
@@ -119,10 +118,10 @@ Deno.test("POST /api/groups/{groupId}/folders refuses a parent from another grou
     { title: "Kind", parentFolderId: theirs.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.NotFound);
+  assert.equal(response.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("GET /api/groups/{groupId}/folders lets a reader read, and hides a private group", async () => {
+test("GET /api/groups/{groupId}/folders lets a reader read, and hides a private group", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -134,18 +133,18 @@ Deno.test("GET /api/groups/{groupId}/folders lets a reader read, and hides a pri
     `/api/groups/${group.id}/folders`,
     readerCookie,
   );
-  assertEquals(theirs.status, STATUS_CODE.OK);
-  assertEquals((await theirs.json()).results.length, 1);
+  assert.equal(theirs.status, STATUS_CODE.OK);
+  assert.equal((await theirs.json()).results.length, 1);
 
   const outside = await request(
     "GET",
     `/api/groups/${group.id}/folders`,
     strangerCookie,
   );
-  assertEquals(outside.status, STATUS_CODE.NotFound);
+  assert.equal(outside.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("PUT /api/groups/{groupId}/folders/{folderId} renames and clears the description", async () => {
+test("PUT /api/groups/{groupId}/folders/{folderId} renames and clears the description", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const folder = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -156,8 +155,8 @@ Deno.test("PUT /api/groups/{groupId}/folders/{folderId} renames and clears the d
     adminCookie,
     { title: "Welt", description: "Was in der Welt gilt." },
   );
-  assertEquals(named.status, STATUS_CODE.OK);
-  assertEquals((await named.json()).description, "Was in der Welt gilt.");
+  assert.equal(named.status, STATUS_CODE.OK);
+  assert.equal((await named.json()).description, "Was in der Welt gilt.");
 
   const cleared = await request(
     "PUT",
@@ -165,10 +164,10 @@ Deno.test("PUT /api/groups/{groupId}/folders/{folderId} renames and clears the d
     adminCookie,
     { title: "Welt", description: null },
   );
-  assertEquals((await cleared.json()).description, null);
+  assert.equal((await cleared.json()).description, null);
 });
 
-Deno.test("PUT /api/groups/{groupId}/folders/{folderId} lets any writer rename it, but not a reader", async () => {
+test("PUT /api/groups/{groupId}/folders/{folderId} lets any writer rename it, but not a reader", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const folder = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -182,8 +181,8 @@ Deno.test("PUT /api/groups/{groupId}/folders/{folderId} lets any writer rename i
     writerCookie,
     { title: "Welt", description: null },
   );
-  assertEquals(byWriter.status, STATUS_CODE.OK);
-  assertEquals((await byWriter.json()).title, "Welt");
+  assert.equal(byWriter.status, STATUS_CODE.OK);
+  assert.equal((await byWriter.json()).title, "Welt");
 
   const byReader = await request(
     "PUT",
@@ -191,10 +190,10 @@ Deno.test("PUT /api/groups/{groupId}/folders/{folderId} lets any writer rename i
     readerCookie,
     { title: "Sollte nicht gehen", description: null },
   );
-  assertEquals(byReader.status, STATUS_CODE.Forbidden);
+  assert.equal(byReader.status, STATUS_CODE.Forbidden);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} lets any writer delete an empty one", async () => {
+test("DELETE /api/groups/{groupId}/folders/{folderId} lets any writer delete an empty one", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const folder = await makeFolder(adminCookie, group.id, "Leer");
@@ -206,10 +205,10 @@ Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} lets any writer delet
     writerCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} removes an empty folder", async () => {
+test("DELETE /api/groups/{groupId}/folders/{folderId} removes an empty folder", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const folder = await makeFolder(adminCookie, group.id, "Leer");
@@ -220,16 +219,16 @@ Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} removes an empty fold
     adminCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const { results } = await (await request(
     "GET",
     `/api/groups/${group.id}/folders`,
     adminCookie,
   )).json();
-  assertEquals(results.length, 0);
+  assert.equal(results.length, 0);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a page with 409", async () => {
+test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a page with 409", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const folder = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -244,8 +243,8 @@ Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a
       folderId: folder.id,
     },
   );
-  assertEquals(page.status, STATUS_CODE.Created);
-  assertEquals((await page.json()).folderId, folder.id);
+  assert.equal(page.status, STATUS_CODE.Created);
+  assert.equal((await page.json()).folderId, folder.id);
 
   const response = await request(
     "DELETE",
@@ -253,11 +252,11 @@ Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a
     adminCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.Conflict);
-  assertEquals((await response.json()).code, FOLDER_NOT_EMPTY);
+  assert.equal(response.status, STATUS_CODE.Conflict);
+  assert.equal((await response.json()).code, FOLDER_NOT_EMPTY);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a thread with 409", async () => {
+test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a thread with 409", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const folder = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -268,8 +267,8 @@ Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a
     adminCookie,
     { title: "Der lange Aufstieg", folderId: folder.id },
   );
-  assertEquals(thread.status, STATUS_CODE.Created);
-  assertEquals((await thread.json()).folderId, folder.id);
+  assert.equal(thread.status, STATUS_CODE.Created);
+  assert.equal((await thread.json()).folderId, folder.id);
 
   const response = await request(
     "DELETE",
@@ -277,10 +276,10 @@ Deno.test("DELETE /api/groups/{groupId}/folders/{folderId} refuses one holding a
     adminCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.Conflict);
+  assert.equal(response.status, STATUS_CODE.Conflict);
 });
 
-Deno.test("a thread or page in another group's folder is refused", async () => {
+test("a thread or page in another group's folder is refused", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const elsewhere = await createGroup(adminCookie, "Andere Gruppe");
@@ -292,7 +291,7 @@ Deno.test("a thread or page in another group's folder is refused", async () => {
     adminCookie,
     { title: "Fremd einsortiert", folderId: theirs.id },
   );
-  assertEquals(thread.status, STATUS_CODE.NotFound);
+  assert.equal(thread.status, STATUS_CODE.NotFound);
 
   const page = await request(
     "POST",
@@ -304,10 +303,10 @@ Deno.test("a thread or page in another group's folder is refused", async () => {
       folderId: theirs.id,
     },
   );
-  assertEquals(page.status, STATUS_CODE.NotFound);
+  assert.equal(page.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("PUT /folders/{folderId}/parent moves it under another folder", async () => {
+test("PUT /folders/{folderId}/parent moves it under another folder", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const weltenbau = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -326,13 +325,13 @@ Deno.test("PUT /folders/{folderId}/parent moves it under another folder", async 
     { parentFolderId: figuren.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const moved = await response.json();
-  assertEquals(moved.parentFolderId, figuren.id);
-  assertEquals(moved.depth, 2);
+  assert.equal(moved.parentFolderId, figuren.id);
+  assert.equal(moved.depth, 2);
 });
 
-Deno.test("PUT /folders/{folderId}/parent moves it to the root", async () => {
+test("PUT /folders/{folderId}/parent moves it to the root", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const weltenbau = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -350,13 +349,13 @@ Deno.test("PUT /folders/{folderId}/parent moves it to the root", async () => {
     { parentFolderId: null },
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const moved = await response.json();
-  assertEquals(moved.parentFolderId, null);
-  assertEquals(moved.depth, 1);
+  assert.equal(moved.parentFolderId, null);
+  assert.equal(moved.depth, 1);
 });
 
-Deno.test("PUT /folders/{folderId}/parent refuses a move into its own subtree", async () => {
+test("PUT /folders/{folderId}/parent refuses a move into its own subtree", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const weltenbau = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -374,11 +373,11 @@ Deno.test("PUT /folders/{folderId}/parent refuses a move into its own subtree", 
     { parentFolderId: stadt.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
-  assertEquals((await response.json()).code, FOLDER_CYCLE);
+  assert.equal(response.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await response.json()).code, FOLDER_CYCLE);
 });
 
-Deno.test("PUT /folders/{folderId}/parent refuses a subtree that would be too deep", async () => {
+test("PUT /folders/{folderId}/parent refuses a subtree that would be too deep", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
 
@@ -399,11 +398,11 @@ Deno.test("PUT /folders/{folderId}/parent refuses a subtree that would be too de
     { parentFolderId: deepest.id },
   );
 
-  assertEquals(response.status, STATUS_CODE.UnprocessableEntity);
-  assertEquals((await response.json()).code, FOLDER_TOO_DEEP);
+  assert.equal(response.status, STATUS_CODE.UnprocessableEntity);
+  assert.equal((await response.json()).code, FOLDER_TOO_DEEP);
 });
 
-Deno.test("PUT /folders/{folderId}/parent lets any writer move it, but not a reader", async () => {
+test("PUT /folders/{folderId}/parent lets any writer move it, but not a reader", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Weltenbau");
   const weltenbau = await makeFolder(adminCookie, group.id, "Weltenbau");
@@ -422,8 +421,8 @@ Deno.test("PUT /folders/{folderId}/parent lets any writer move it, but not a rea
     writerCookie,
     { parentFolderId: null },
   );
-  assertEquals(byWriter.status, STATUS_CODE.OK);
-  assertEquals((await byWriter.json()).depth, 1);
+  assert.equal(byWriter.status, STATUS_CODE.OK);
+  assert.equal((await byWriter.json()).depth, 1);
 
   const byReader = await request(
     "PUT",
@@ -431,5 +430,5 @@ Deno.test("PUT /folders/{folderId}/parent lets any writer move it, but not a rea
     readerCookie,
     { parentFolderId: weltenbau.id },
   );
-  assertEquals(byReader.status, STATUS_CODE.Forbidden);
+  assert.equal(byReader.status, STATUS_CODE.Forbidden);
 });

@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -17,11 +18,11 @@ import {
 
 const { owner, member, outsider } = favouriteFixture("set");
 
-Deno.test.beforeEach(clearRateLimits);
+beforeEach(clearRateLimits);
 
-Deno.test.afterEach(() => cleanUpFavourites([owner, member, outsider]));
+afterEach(() => cleanUpFavourites([owner, member, outsider]));
 
-Deno.test("PUT /api/favourites marks each kind, in the column that kind belongs to", async () => {
+test("PUT /api/favourites marks each kind, in the column that kind belongs to", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group, thread, post, page } = await aPublicGroup(
@@ -46,46 +47,48 @@ Deno.test("PUT /api/favourites marks each kind, in the column that kind belongs 
   ) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const { status } = await setFavourite(memberCookie, targetType, targetId);
-    assertEquals(status, STATUS_CODE.OK, `${targetType} was refused`);
+    assert.equal(status, STATUS_CODE.OK, `${targetType} was refused`);
   }
 
   const stored = await favouritesOf(await getUserId(member));
 
   // One row per thing, each with exactly one reference set — which is the whole of the table's
   // shape now that no column repeats the kind.
-  assertEquals(stored.length, 5);
+  assert.equal(stored.length, 5);
   for (const row of stored) {
-    assertEquals(
+    assert.equal(
       Object.values(row).filter((value) => value !== null).length,
       1,
       "a favourite named more or less than one thing",
     );
   }
-  assertEquals(
+  assert.deepEqual(
     stored.map((row) => row.writingGroupId).filter(Boolean),
     [group.id],
   );
-  assertEquals(stored.map((row) => row.storyIdeaId).filter(Boolean), [idea.id]);
+  assert.deepEqual(stored.map((row) => row.storyIdeaId).filter(Boolean), [
+    idea.id,
+  ]);
 });
 
-Deno.test("favouriting twice is the same as favouriting once", async () => {
+test("favouriting twice is the same as favouriting once", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group } = await aPublicGroup(ownerCookie, "Zweimal");
 
-  assertEquals(
+  assert.equal(
     (await setFavourite(memberCookie, "writing_group", group.id)).status,
     STATUS_CODE.OK,
   );
-  assertEquals(
+  assert.equal(
     (await setFavourite(memberCookie, "writing_group", group.id)).status,
     STATUS_CODE.OK,
   );
 
-  assertEquals((await favouritesOf(await getUserId(member))).length, 1);
+  assert.equal((await favouritesOf(await getUserId(member))).length, 1);
 });
 
-Deno.test("what a member cannot see cannot be favourited", async () => {
+test("what a member cannot see cannot be favourited", async () => {
   const ownerCookie = await registerUser(owner);
   const outsiderCookie = await registerUser(outsider);
 
@@ -99,44 +102,44 @@ Deno.test("what a member cannot see cannot be favourited", async () => {
 
   // 404 rather than 403, so favouriting cannot be used to find out that a private group's thread
   // exists — the same rule, through the same resolver, that reporting follows.
-  assertEquals(
+  assert.equal(
     (await setFavourite(outsiderCookie, "writing_group", group.id)).status,
     STATUS_CODE.NotFound,
   );
-  assertEquals(
+  assert.equal(
     (await setFavourite(outsiderCookie, "writing_thread", thread.id)).status,
     STATUS_CODE.NotFound,
   );
 
-  assertEquals((await favouritesOf(await getUserId(outsider))).length, 0);
+  assert.equal((await favouritesOf(await getUserId(outsider))).length, 0);
 });
 
-Deno.test("a member's own group is favouritable, unlike their own report", async () => {
+test("a member's own group is favouritable, unlike their own report", async () => {
   const ownerCookie = await registerUser(owner);
   const { group } = await aPublicGroup(ownerCookie, "Meine eigene");
 
   // Deliberately allowed: keeping your own group at the top of your own list is ordinary, and
   // nothing here is about somebody else the way reporting and marking-read are.
-  assertEquals(
+  assert.equal(
     (await setFavourite(ownerCookie, "writing_group", group.id)).status,
     STATUS_CODE.OK,
   );
 
-  assertEquals((await favouritesOf(await getUserId(owner))).length, 1);
+  assert.equal((await favouritesOf(await getUserId(owner))).length, 1);
 });
 
-Deno.test("one member's favourite is not another's", async () => {
+test("one member's favourite is not another's", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group } = await aPublicGroup(ownerCookie, "Geteilt");
 
   await setFavourite(memberCookie, "writing_group", group.id);
 
-  assertEquals((await favouritesOf(await getUserId(member))).length, 1);
-  assertEquals((await favouritesOf(await getUserId(owner))).length, 0);
+  assert.equal((await favouritesOf(await getUserId(member))).length, 1);
+  assert.equal((await favouritesOf(await getUserId(owner))).length, 0);
 });
 
-Deno.test("a favourite goes with the thing it names", async () => {
+test("a favourite goes with the thing it names", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group, thread, post } = await aPublicGroup(
@@ -145,9 +148,9 @@ Deno.test("a favourite goes with the thing it names", async () => {
   );
 
   await setFavourite(memberCookie, "writing_post", post.id);
-  assertEquals((await favouritesOf(await getUserId(member))).length, 1);
+  assert.equal((await favouritesOf(await getUserId(member))).length, 1);
 
-  assertEquals(
+  assert.equal(
     (await request(
       "DELETE",
       `/api/groups/${group.id}/threads/${thread.id}/posts/${post.id}`,
@@ -159,11 +162,11 @@ Deno.test("a favourite goes with the thing it names", async () => {
 
   // CASCADE, not SET NULL: a favourite of something deleted means nothing, which is the whole
   // reason this table needs no `target_type` where `report` does.
-  assertEquals((await favouritesOf(await getUserId(member))).length, 0);
+  assert.equal((await favouritesOf(await getUserId(member))).length, 0);
 });
 
-Deno.test("PUT /api/favourites needs a session", async () => {
-  assertEquals(
+test("PUT /api/favourites needs a session", async () => {
+  assert.equal(
     (await request(
       "PUT",
       "/api/favourites/writing_group/01a00000-0000-7000-8000-00000000ffff",
@@ -173,10 +176,10 @@ Deno.test("PUT /api/favourites needs a session", async () => {
   );
 });
 
-Deno.test("an unknown kind is refused by the schema", async () => {
+test("an unknown kind is refused by the schema", async () => {
   const memberCookie = await registerUser(member);
 
-  assertEquals(
+  assert.equal(
     (await setFavourite(
       memberCookie,
       "user",

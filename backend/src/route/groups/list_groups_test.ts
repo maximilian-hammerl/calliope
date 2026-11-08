@@ -1,4 +1,5 @@
-import { assertEquals, assertExists, assertFalse } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -13,8 +14,8 @@ const outsider = "list-groups-outsider";
 const FIRST_TITLE = "Aaa Schreibkreis";
 const SECOND_TITLE = "Zzz Schreibkreis";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([owner, outsider]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([owner, outsider]));
 
 async function createGroup(
   cookie: string,
@@ -26,7 +27,7 @@ async function createGroup(
     synopsis: "d",
     visibility,
   });
-  assertEquals(response.status, STATUS_CODE.Created);
+  assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
 
@@ -44,13 +45,13 @@ type Page = {
 /** The invitation tests need the id of the account being invited. */
 async function currentUserId(cookie: string): Promise<string> {
   const response = await request("GET", "/api/auth/me", cookie);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   return (await response.json()).id;
 }
 
 async function list(cookie: string, body: unknown = {}): Promise<Page> {
   const response = await request("QUERY", "/api/groups", cookie, body);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   return await response.json();
 }
 
@@ -64,7 +65,7 @@ function ownTitles(page: Page): Array<string> {
 // Totals count every group the user can see, so the assertions are relative to whatever
 // the database already holds rather than to an absolute number.
 
-Deno.test("QUERY /api/groups returns the user's own groups with a total", async () => {
+test("QUERY /api/groups returns the user's own groups with a total", async () => {
   const cookie = await registerUser(owner);
   const before = await list(cookie);
 
@@ -73,28 +74,28 @@ Deno.test("QUERY /api/groups returns the user's own groups with a total", async 
 
   const page = await list(cookie, { limit: 10, offset: 0 });
 
-  assertEquals(page.totalResults, before.totalResults + 2);
+  assert.equal(page.totalResults, before.totalResults + 2);
   // Newest first by default.
-  assertEquals(page.results.slice(0, 2).map((group) => group.title), [
+  assert.deepEqual(page.results.slice(0, 2).map((group) => group.title), [
     SECOND_TITLE,
     FIRST_TITLE,
   ]);
 });
 
-Deno.test("QUERY /api/groups applies its defaults to an empty body", async () => {
+test("QUERY /api/groups applies its defaults to an empty body", async () => {
   const cookie = await registerUser(owner);
   await createGroup(cookie, FIRST_TITLE, "private");
 
   // No paging or sorting given: the schema's defaults have to fill in.
   const page = await list(cookie, {});
 
-  assertEquals(page.results.length <= 20, true);
+  assert.equal(page.results.length <= 20, true);
   const [first] = page.results;
-  assertExists(first);
-  assertEquals(first.title, FIRST_TITLE);
+  assert.ok(first);
+  assert.equal(first.title, FIRST_TITLE);
 });
 
-Deno.test("QUERY /api/groups sorts by the requested attribute and order", async () => {
+test("QUERY /api/groups sorts by the requested attribute and order", async () => {
   const cookie = await registerUser(owner);
   await createGroup(cookie, SECOND_TITLE, "private");
   await createGroup(cookie, FIRST_TITLE, "private");
@@ -104,17 +105,17 @@ Deno.test("QUERY /api/groups sorts by the requested attribute and order", async 
     sortOrder: "asc",
     limit: 100,
   });
-  assertEquals(ownTitles(ascending), [FIRST_TITLE, SECOND_TITLE]);
+  assert.deepEqual(ownTitles(ascending), [FIRST_TITLE, SECOND_TITLE]);
 
   const descending = await list(cookie, {
     sortAttribute: "title",
     sortOrder: "desc",
     limit: 100,
   });
-  assertEquals(ownTitles(descending), [SECOND_TITLE, FIRST_TITLE]);
+  assert.deepEqual(ownTitles(descending), [SECOND_TITLE, FIRST_TITLE]);
 });
 
-Deno.test("QUERY /api/groups rejects an attribute it cannot sort by", async () => {
+test("QUERY /api/groups rejects an attribute it cannot sort by", async () => {
   const cookie = await registerUser(owner);
 
   const response = await request("QUERY", "/api/groups", cookie, {
@@ -122,14 +123,14 @@ Deno.test("QUERY /api/groups rejects an attribute it cannot sort by", async () =
   });
 
   // The enum is what keeps arbitrary column names away from `dynamic.ref`.
-  assertEquals(response.status, STATUS_CODE.BadRequest);
-  assertEquals(
+  assert.equal(response.status, STATUS_CODE.BadRequest);
+  assert.deepEqual(
     (await response.json()).issues.map((issue: { path: string }) => issue.path),
     ["sortAttribute"],
   );
 });
 
-Deno.test("QUERY /api/groups rejects a limit that is not a number", async () => {
+test("QUERY /api/groups rejects a limit that is not a number", async () => {
   const cookie = await registerUser(owner);
 
   // A JSON body carries real types, so a numeric string is simply wrong here.
@@ -137,14 +138,14 @@ Deno.test("QUERY /api/groups rejects a limit that is not a number", async () => 
     limit: "20",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
-  assertEquals(
+  assert.equal(response.status, STATUS_CODE.BadRequest);
+  assert.deepEqual(
     (await response.json()).issues.map((issue: { path: string }) => issue.path),
     ["limit"],
   );
 });
 
-Deno.test("QUERY /api/groups hides another user's private group", async () => {
+test("QUERY /api/groups hides another user's private group", async () => {
   const ownerCookie = await registerUser(owner);
   await createGroup(ownerCookie, FIRST_TITLE, "private");
   await createGroup(ownerCookie, SECOND_TITLE, "public");
@@ -154,11 +155,11 @@ Deno.test("QUERY /api/groups hides another user's private group", async () => {
   const page = await list(outsiderCookie, { limit: 100, membership: "any" });
   const titles = page.results.map((group) => group.title);
 
-  assertEquals(titles.includes(SECOND_TITLE), true);
-  assertFalse(titles.includes(FIRST_TITLE));
+  assert.equal(titles.includes(SECOND_TITLE), true);
+  assert.ok(!titles.includes(FIRST_TITLE));
 });
 
-Deno.test("QUERY /api/groups leaves out a public group the caller is not in", async () => {
+test("QUERY /api/groups leaves out a public group the caller is not in", async () => {
   const ownerCookie = await registerUser(owner);
   await createGroup(ownerCookie, SECOND_TITLE, "public");
 
@@ -167,22 +168,22 @@ Deno.test("QUERY /api/groups leaves out a public group the caller is not in", as
   // to it, which is what the old default conflated.
   const page = await list(outsiderCookie, { limit: 100 });
 
-  assertFalse(page.results.map((group) => group.title).includes(SECOND_TITLE));
+  assert.ok(!page.results.map((group) => group.title).includes(SECOND_TITLE));
 });
 
-Deno.test("QUERY /api/groups reports the caller's own standing in each group", async () => {
+test("QUERY /api/groups reports the caller's own standing in each group", async () => {
   const cookie = await registerUser(owner);
   await createGroup(cookie, FIRST_TITLE, "private");
 
   const [group] = (await list(cookie, { limit: 100 })).results;
-  assertExists(group);
+  assert.ok(group);
 
   // The founder joined their own group as its administrator.
-  assertEquals(group.status, "joined");
-  assertEquals(group.role, "administrator");
+  assert.equal(group.status, "joined");
+  assert.equal(group.role, "administrator");
 });
 
-Deno.test("QUERY /api/groups separates an invitation from a membership", async () => {
+test("QUERY /api/groups separates an invitation from a membership", async () => {
   const ownerCookie = await registerUser(owner);
   const group = await createGroup(ownerCookie, FIRST_TITLE, "private");
 
@@ -195,27 +196,29 @@ Deno.test("QUERY /api/groups separates an invitation from a membership", async (
     ownerCookie,
     { userId: outsiderId, role: "writer" },
   );
-  assertEquals(invited.status, STATUS_CODE.Created);
+  assert.equal(invited.status, STATUS_CODE.Created);
 
   // An invitation is not a membership: it belongs in neither the rail nor "Meine Gruppen".
-  assertFalse(ownTitles(await list(outsiderCookie, { limit: 100 })).length > 0);
+  assert.ok(
+    !(ownTitles(await list(outsiderCookie, { limit: 100 })).length > 0),
+  );
 
   const pending = await list(outsiderCookie, {
     limit: 100,
     membership: "invited",
   });
-  assertEquals(ownTitles(pending), [FIRST_TITLE]);
+  assert.deepEqual(ownTitles(pending), [FIRST_TITLE]);
   // The role being offered is stated while the invitation is pending; the status is what
   // says it may not be acted on yet.
   const [invitation] = pending.results;
-  assertExists(invitation);
-  assertEquals(invitation.status, "invited");
-  assertEquals(invitation.role, "writer");
+  assert.ok(invitation);
+  assert.equal(invitation.status, "invited");
+  assert.equal(invitation.role, "writer");
   // Dated by when the reader was asked, which is what the Einladungen list shows and sorts by.
-  assertExists(invitation.invitedAt);
+  assert.ok(invitation.invitedAt);
 });
 
-Deno.test("QUERY /api/groups sorts invitations by when they arrived", async () => {
+test("QUERY /api/groups sorts invitations by when they arrived", async () => {
   const ownerCookie = await registerUser(owner);
   const first = await createGroup(ownerCookie, FIRST_TITLE, "private");
   const second = await createGroup(ownerCookie, SECOND_TITLE, "private");
@@ -232,8 +235,8 @@ Deno.test("QUERY /api/groups sorts invitations by when they arrived", async () =
     });
 
   // Sequential, not concurrent: that is what gives the two memberships distinct timestamps.
-  assertEquals((await invite(first.id)).status, STATUS_CODE.Created);
-  assertEquals((await invite(second.id)).status, STATUS_CODE.Created);
+  assert.equal((await invite(first.id)).status, STATUS_CODE.Created);
+  assert.equal((await invite(second.id)).status, STATUS_CODE.Created);
 
   const newestFirst = await list(outsiderCookie, {
     limit: 100,
@@ -241,7 +244,7 @@ Deno.test("QUERY /api/groups sorts invitations by when they arrived", async () =
     sortAttribute: "invitedAt",
     sortOrder: "desc",
   });
-  assertEquals(ownTitles(newestFirst), [SECOND_TITLE, FIRST_TITLE]);
+  assert.deepEqual(ownTitles(newestFirst), [SECOND_TITLE, FIRST_TITLE]);
 
   const oldestFirst = await list(outsiderCookie, {
     limit: 100,
@@ -249,10 +252,10 @@ Deno.test("QUERY /api/groups sorts invitations by when they arrived", async () =
     sortAttribute: "invitedAt",
     sortOrder: "asc",
   });
-  assertEquals(ownTitles(oldestFirst), [FIRST_TITLE, SECOND_TITLE]);
+  assert.deepEqual(ownTitles(oldestFirst), [FIRST_TITLE, SECOND_TITLE]);
 });
 
-Deno.test("QUERY /api/groups discovers public groups the caller is not in", async () => {
+test("QUERY /api/groups discovers public groups the caller is not in", async () => {
   const ownerCookie = await registerUser(owner);
   await createGroup(ownerCookie, FIRST_TITLE, "private");
   await createGroup(ownerCookie, SECOND_TITLE, "public");
@@ -261,62 +264,64 @@ Deno.test("QUERY /api/groups discovers public groups the caller is not in", asyn
   const page = await list(outsiderCookie, { limit: 100, membership: "none" });
 
   // Only the public one, and with no standing of their own in it.
-  assertEquals(ownTitles(page), [SECOND_TITLE]);
+  assert.deepEqual(ownTitles(page), [SECOND_TITLE]);
   const [stranger] = page.results;
-  assertExists(stranger);
-  assertEquals(stranger.status, null);
-  assertEquals(stranger.role, null);
+  assert.ok(stranger);
+  assert.equal(stranger.status, null);
+  assert.equal(stranger.role, null);
 
   // The founder is in it, so it is not theirs to discover.
-  assertFalse(
-    ownTitles(await list(ownerCookie, { limit: 100, membership: "none" }))
+  assert.ok(
+    !ownTitles(await list(ownerCookie, { limit: 100, membership: "none" }))
       .includes(SECOND_TITLE),
   );
 });
 
-Deno.test("QUERY /api/groups rejects a membership filter it does not know", async () => {
+test("QUERY /api/groups rejects a membership filter it does not know", async () => {
   const cookie = await registerUser(owner);
 
   const response = await request("QUERY", "/api/groups", cookie, {
     membership: "everything",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
-  assertEquals(
+  assert.equal(response.status, STATUS_CODE.BadRequest);
+  assert.deepEqual(
     (await response.json()).issues.map((issue: { path: string }) => issue.path),
     ["membership"],
   );
 });
 
-Deno.test("QUERY /api/groups filters by a substring of the title", async () => {
+test("QUERY /api/groups filters by a substring of the title", async () => {
   const cookie = await registerUser(owner);
 
   await createGroup(cookie, FIRST_TITLE, "private");
   await createGroup(cookie, SECOND_TITLE, "private");
 
   // "Aaa" and "Zzz" differ; the shared word does not.
-  assertEquals(ownTitles(await list(cookie, { search: "Aaa" })), [FIRST_TITLE]);
-  assertEquals(
+  assert.deepEqual(ownTitles(await list(cookie, { search: "Aaa" })), [
+    FIRST_TITLE,
+  ]);
+  assert.equal(
     ownTitles(await list(cookie, { search: "Schreibkreis" })).length,
     2,
   );
 });
 
-Deno.test("QUERY /api/groups rejects a search term shorter than three characters", async () => {
+test("QUERY /api/groups rejects a search term shorter than three characters", async () => {
   const cookie = await registerUser(owner);
 
   const response = await request("QUERY", "/api/groups", cookie, {
     search: "Aa",
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });
 
 /**
  * The point of the vocabularies being enums: a board can be narrowed by them. Asserted through
  * `includes` rather than a count, because the suite runs in parallel and the seed is there too.
  */
-Deno.test("QUERY /api/groups narrows a board to the genres asked for", async () => {
+test("QUERY /api/groups narrows a board to the genres asked for", async () => {
   const cookie = await registerUser(owner);
 
   const fantasy = await (await request("POST", "/api/groups", cookie, {
@@ -337,11 +342,11 @@ Deno.test("QUERY /api/groups narrows a board to the genres asked for", async () 
   })).json();
   const ids = page.results.map((group: { id: string }) => group.id);
 
-  assertEquals(ids.includes(fantasy.id), true);
-  assertEquals(ids.includes(western.id), false);
+  assert.equal(ids.includes(fantasy.id), true);
+  assert.equal(ids.includes(western.id), false);
 });
 
-Deno.test("QUERY /api/groups takes either of two genres, and both fields together", async () => {
+test("QUERY /api/groups takes either of two genres, and both fields together", async () => {
   const cookie = await registerUser(owner);
 
   const fantasy = await (await request("POST", "/api/groups", cookie, {
@@ -362,8 +367,8 @@ Deno.test("QUERY /api/groups takes either of two genres, and both fields togethe
     limit: 100,
   })).json();
   const eitherIds = either.results.map((group: { id: string }) => group.id);
-  assertEquals(eitherIds.includes(fantasy.id), true);
-  assertEquals(eitherIds.includes(western.id), true);
+  assert.equal(eitherIds.includes(fantasy.id), true);
+  assert.equal(eitherIds.includes(western.id), true);
 
   // Two *fields* narrow against each other: fantasy that is also slow burn.
   const both = await (await request("QUERY", "/api/groups", cookie, {
@@ -372,11 +377,11 @@ Deno.test("QUERY /api/groups takes either of two genres, and both fields togethe
     limit: 100,
   })).json();
   const bothIds = both.results.map((group: { id: string }) => group.id);
-  assertEquals(bothIds.includes(fantasy.id), true);
-  assertEquals(bothIds.includes(western.id), false);
+  assert.equal(bothIds.includes(fantasy.id), true);
+  assert.equal(bothIds.includes(western.id), false);
 });
 
-Deno.test("QUERY /api/groups leaves the board alone when no genre is asked for", async () => {
+test("QUERY /api/groups leaves the board alone when no genre is asked for", async () => {
   const cookie = await registerUser(owner);
   const western = await (await request("POST", "/api/groups", cookie, {
     title: "Immer noch da",
@@ -389,20 +394,20 @@ Deno.test("QUERY /api/groups leaves the board alone when no genre is asked for",
     await (await request("QUERY", "/api/groups", cookie, { limit: 100 }))
       .json();
 
-  assertEquals(
+  assert.equal(
     page.results.map((group: { id: string }) => group.id).includes(western.id),
     true,
   );
 });
 
-Deno.test("QUERY /api/groups refuses a genre that is not one", async () => {
+test("QUERY /api/groups refuses a genre that is not one", async () => {
   const cookie = await registerUser(owner);
 
   const response = await request("QUERY", "/api/groups", cookie, {
     genres: ["Fantasy"],
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });
 
 /**
@@ -410,7 +415,7 @@ Deno.test("QUERY /api/groups refuses a genre that is not one", async () => {
  * genres, so twelve — enough for any one group — refused what the interface itself put on screen,
  * and the view drops its filters when a list fails: there was nothing left to click to undo it.
  */
-Deno.test("QUERY /api/groups takes more genres than a single group may carry", async () => {
+test("QUERY /api/groups takes more genres than a single group may carry", async () => {
   const cookie = await registerUser(owner);
 
   const response = await request("QUERY", "/api/groups", cookie, {
@@ -435,10 +440,10 @@ Deno.test("QUERY /api/groups takes more genres than a single group may carry", a
     ],
   });
 
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/groups still refuses more genres than a group may carry", async () => {
+test("POST /api/groups still refuses more genres than a group may carry", async () => {
   const cookie = await registerUser(owner);
 
   // The create bound stays where it was: twelve genres is already more than a story has.
@@ -462,5 +467,5 @@ Deno.test("POST /api/groups still refuses more genres than a group may carry", a
     ],
   });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });

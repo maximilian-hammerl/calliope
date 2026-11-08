@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
@@ -9,10 +10,10 @@ import {
   membershipTimestamps,
 } from "./support.ts";
 
-Deno.test.beforeEach(connect);
-Deno.test.afterEach(cleanUp);
+beforeEach(connect);
+afterEach(cleanUp);
 
-Deno.test("an invitation records when it was sent, and nothing else", async () => {
+test("an invitation records when it was sent, and nothing else", async () => {
   const userId = await insertUser("membership-invited");
   const groupId = await insertGroup("membership-invited-group");
 
@@ -20,10 +21,10 @@ Deno.test("an invitation records when it was sent, and nothing else", async () =
 
   const { invitedAt, joinedAt } = await membershipTimestamps(groupId, userId);
   assert(invitedAt !== null);
-  assertEquals(joinedAt, null, "nobody has joined yet");
+  assert.equal(joinedAt, null, "nobody has joined yet");
 });
 
-Deno.test("a member inserted as joined records both", async () => {
+test("a member inserted as joined records both", async () => {
   const userId = await insertUser("membership-founder");
   const groupId = await insertGroup("membership-founder-group");
 
@@ -35,7 +36,7 @@ Deno.test("a member inserted as joined records both", async () => {
   assert(joinedAt !== null);
 });
 
-Deno.test("accepting an invitation records when it was accepted", async () => {
+test("accepting an invitation records when it was accepted", async () => {
   const userId = await insertUser("membership-accept");
   const groupId = await insertGroup("membership-accept-group");
   await addMember(groupId, userId, "invited");
@@ -51,11 +52,11 @@ Deno.test("accepting an invitation records when it was accepted", async () => {
   );
 
   const joined = await membershipTimestamps(groupId, userId);
-  assertEquals(joined.invitedAt, invited.invitedAt, "the invitation stands");
+  assert.equal(joined.invitedAt, invited.invitedAt, "the invitation stands");
   assert(joined.joinedAt !== null);
 });
 
-Deno.test("a later change does not move the joining date", async () => {
+test("a later change does not move the joining date", async () => {
   const userId = await insertUser("membership-role");
   const groupId = await insertGroup("membership-role-group");
   await addMember(groupId, userId, "joined");
@@ -68,5 +69,5 @@ Deno.test("a later change does not move the joining date", async () => {
     [groupId, userId],
   );
 
-  assertEquals(await membershipTimestamps(groupId, userId), before);
+  assert.deepEqual(await membershipTimestamps(groupId, userId), before);
 });

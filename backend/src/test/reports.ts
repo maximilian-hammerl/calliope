@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
 import {
@@ -85,7 +85,7 @@ export async function fileReportOk(
   category = "harassment",
 ): Promise<void> {
   const response = await fileReport(cookie, targetType, targetId, category);
-  assertEquals(
+  assert.equal(
     response.status,
     STATUS_CODE.OK,
     `filing a report answered ${await response.text()}`,

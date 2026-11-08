@@ -24,13 +24,12 @@
   },
   "imports": {
     "kysely-codegen": "npm:kysely-codegen@0.20.0",
-    "@std/assert": "jsr:@std/assert@1.0.19",
     "@types/pg": "npm:@types/pg@8.23.1",
     "pg": "npm:pg@8.23.1",
     "typescript": "npm:typescript@6.0.3"
   },
-  // The full set, unlike backend/: no Kysely builders here and no German, so the five it
-  // leaves out all pass.
+  // All but `no-external-import`, which flags the `node:` modules the tests import: no Kysely
+  // builders here and no German, so the other four that backend/ leaves out all pass.
   "compilerOptions": {
     "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": true,
@@ -51,7 +50,6 @@
         "guard-for-in",
         "no-await-in-loop",
         "no-eval",
-        "no-external-import",
         "no-implicit-declare-namespace-export",
         "no-node-globals",
         "no-non-null-asserted-optional-chain",

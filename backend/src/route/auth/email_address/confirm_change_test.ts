@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { clearRateLimits, deleteUsers } from "@/src/test/support.ts";
@@ -21,11 +22,11 @@ const {
   username,
 } = emailChangeFixture("confirm");
 
-Deno.test.beforeEach(async () => {
+beforeEach(async () => {
   await clearRateLimits();
   await clearMail();
 });
-Deno.test.afterEach(() => deleteUsers([username]));
+afterEach(() => deleteUsers([username]));
 
 async function stageChange(): Promise<{ cookie: string; token: string }> {
   const cookie = await registerVerified();
@@ -33,37 +34,37 @@ async function stageChange(): Promise<{ cookie: string; token: string }> {
   return { cookie, token: (await linksFromMail()).confirm };
 }
 
-Deno.test("POST /api/auth/email-address/confirm moves the account", async () => {
+test("POST /api/auth/email-address/confirm moves the account", async () => {
   const { token } = await stageChange();
 
-  assertEquals((await confirmChange(token)).status, STATUS_CODE.OK);
-  assertEquals(await storedAddress(), newAddress);
+  assert.equal((await confirmChange(token)).status, STATUS_CODE.OK);
+  assert.equal(await storedAddress(), newAddress);
 
   // Signing in with the new address proves it is the account's, not just a stored string.
   const login = await postJson("/api/auth/login", {
     login: newAddress,
     password: "a-complex-password",
   });
-  assertEquals(login.status, STATUS_CODE.OK);
+  assert.equal(login.status, STATUS_CODE.OK);
 });
 
-Deno.test("POST /api/auth/email-address/confirm ends every session", async () => {
+test("POST /api/auth/email-address/confirm ends every session", async () => {
   const { cookie, token } = await stageChange();
 
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie } })).status,
     STATUS_CODE.OK,
   );
 
   await confirmChange(token);
 
-  assertEquals(
+  assert.equal(
     (await app.request("/api/auth/me", { headers: { cookie } })).status,
     STATUS_CODE.Unauthorized,
   );
 });
 
-Deno.test("POST /api/auth/email-address/confirm tells the old address afterwards", async () => {
+test("POST /api/auth/email-address/confirm tells the old address afterwards", async () => {
   const { token } = await stageChange();
   await clearMail();
 
@@ -71,17 +72,17 @@ Deno.test("POST /api/auth/email-address/confirm tells the old address afterwards
   await flushBackgroundWork();
 
   const notice = await waitForMail(currentAddress);
-  assertEquals(notice.to, currentAddress);
+  assert.equal(notice.to, currentAddress);
 });
 
-Deno.test("POST /api/auth/email-address/confirm spends the link once", async () => {
+test("POST /api/auth/email-address/confirm spends the link once", async () => {
   const { token } = await stageChange();
 
-  assertEquals((await confirmChange(token)).status, STATUS_CODE.OK);
-  assertEquals((await confirmChange(token)).status, STATUS_CODE.Gone);
+  assert.equal((await confirmChange(token)).status, STATUS_CODE.OK);
+  assert.equal((await confirmChange(token)).status, STATUS_CODE.Gone);
 });
 
-Deno.test("POST /api/auth/email-address/confirm keeps the old address when the new one was taken meanwhile", async () => {
+test("POST /api/auth/email-address/confirm keeps the old address when the new one was taken meanwhile", async () => {
   const { token } = await stageChange();
 
   const otherUsername = "confirm-change-other-user";
@@ -93,24 +94,24 @@ Deno.test("POST /api/auth/email-address/confirm keeps the old address when the n
 
   try {
     // The link stayed valid for an hour, and somebody registered the address inside it.
-    assertEquals((await confirmChange(token)).status, STATUS_CODE.Conflict);
-    assertEquals(await storedAddress(), currentAddress);
+    assert.equal((await confirmChange(token)).status, STATUS_CODE.Conflict);
+    assert.equal(await storedAddress(), currentAddress);
   } finally {
     await deleteUsers([otherUsername]);
   }
 });
 
-Deno.test("a cancelled change can no longer be confirmed", async () => {
+test("a cancelled change can no longer be confirmed", async () => {
   const { token } = await stageChange();
 
-  assertEquals((await cancelChange(token)).status, STATUS_CODE.OK);
-  assertEquals((await confirmChange(token)).status, STATUS_CODE.Gone);
-  assertEquals(await storedAddress(), currentAddress);
+  assert.equal((await cancelChange(token)).status, STATUS_CODE.OK);
+  assert.equal((await confirmChange(token)).status, STATUS_CODE.Gone);
+  assert.equal(await storedAddress(), currentAddress);
 });
 
-Deno.test("cancelling twice reports the second as gone", async () => {
+test("cancelling twice reports the second as gone", async () => {
   const { token } = await stageChange();
 
-  assertEquals((await cancelChange(token)).status, STATUS_CODE.OK);
-  assertEquals((await cancelChange(token)).status, STATUS_CODE.Gone);
+  assert.equal((await cancelChange(token)).status, STATUS_CODE.OK);
+  assert.equal((await cancelChange(token)).status, STATUS_CODE.Gone);
 });

@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -32,8 +33,8 @@ const operator = "forum-test-operator";
  */
 const REPORTED_TEXT = "Sei freundlich (forum).";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum([member, operator]);
   // `report`'s references are all ON DELETE SET NULL so a report outlives its target and its
   // reporter, which is exactly why deleting the accounts does not take these with it.
@@ -52,7 +53,7 @@ async function listOf(
   what: "folders" | "threads" | "pages",
 ): Promise<Row[]> {
   const response = await request("GET", `/api/forum/${what}`, cookie);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const { results } = await response.json();
   return results;
 }
@@ -69,7 +70,7 @@ function titles(rows: Row[], made: ReadonlyArray<{ id: string }>): string[] {
     .sort();
 }
 
-Deno.test("GET /api/forum/folders hides a hidden folder from a member and shows it to an operator", async () => {
+test("GET /api/forum/folders hides a hidden folder from a member and shows it to an operator", async () => {
   const memberCookie = await registerUser(member);
   const operatorCookie = await makeOperator(
     operator,
@@ -82,11 +83,11 @@ Deno.test("GET /api/forum/folders hides a hidden folder from a member and shows 
     await createForumFolder("Werkstatt", "hidden"),
   ];
 
-  assertEquals(titles(await listOf(memberCookie, "folders"), mine), [
+  assert.deepEqual(titles(await listOf(memberCookie, "folders"), mine), [
     "Ankündigungen",
     "Forenspiele",
   ]);
-  assertEquals(titles(await listOf(operatorCookie, "folders"), mine), [
+  assert.deepEqual(titles(await listOf(operatorCookie, "folders"), mine), [
     "Ankündigungen",
     "Forenspiele",
     "Werkstatt",
@@ -99,24 +100,24 @@ Deno.test("GET /api/forum/folders hides a hidden folder from a member and shows 
       row,
     ) => [row.title, row.effectiveMemberPermission]),
   );
-  assertEquals(asOperator.get("Werkstatt"), "hidden");
-  assertEquals(asOperator.get("Ankündigungen"), "read");
-  assertEquals(asOperator.get("Forenspiele"), "write");
+  assert.equal(asOperator.get("Werkstatt"), "hidden");
+  assert.equal(asOperator.get("Ankündigungen"), "read");
+  assert.equal(asOperator.get("Forenspiele"), "write");
 });
 
-Deno.test("a folder under a hidden one is gone as well, however it is set itself", async () => {
+test("a folder under a hidden one is gone as well, however it is set itself", async () => {
   const memberCookie = await registerUser(member);
 
   const hidden = await createForumFolder("Werkstatt", "hidden");
   const nested = await createForumFolder("Entwürfe", "write", hidden.id);
 
-  assertEquals(
+  assert.deepEqual(
     titles(await listOf(memberCookie, "folders"), [hidden, nested]),
     [],
   );
 });
 
-Deno.test("a top-level folder may grant `write`, which is what makes writing reachable", async () => {
+test("a top-level folder may grant `write`, which is what makes writing reachable", async () => {
   const memberCookie = await registerUser(member);
 
   const made = await createForumFolder("Forenspiele", "write");
@@ -124,10 +125,10 @@ Deno.test("a top-level folder may grant `write`, which is what makes writing rea
   const folder = (await listOf(memberCookie, "folders")).find((row) =>
     row.id === made.id
   );
-  assertEquals(folder?.effectiveMemberPermission, "write");
+  assert.equal(folder?.effectiveMemberPermission, "write");
 });
 
-Deno.test("GET /api/forum/threads reports what a member may do, and the root is read-only", async () => {
+test("GET /api/forum/threads reports what a member may do, and the root is read-only", async () => {
   const memberCookie = await registerUser(member);
 
   const writable = await createForumFolder("Forenspiele", "write");
@@ -144,12 +145,12 @@ Deno.test("GET /api/forum/threads reports what a member may do, and the root is 
     ) => [row.title, row.effectiveMemberPermission]),
   );
 
-  assertEquals(byTitle.get("Am Wurzelknoten"), "read");
-  assertEquals(byTitle.get("Im Spielforum"), "write");
-  assertEquals(byTitle.get("Bei den Ankündigungen"), "read");
+  assert.equal(byTitle.get("Am Wurzelknoten"), "read");
+  assert.equal(byTitle.get("Im Spielforum"), "write");
+  assert.equal(byTitle.get("Bei den Ankündigungen"), "read");
 });
 
-Deno.test("a thread is hidden by its own setting or by its folder's", async () => {
+test("a thread is hidden by its own setting or by its folder's", async () => {
   const memberCookie = await registerUser(member);
 
   const hiddenFolder = await createForumFolder("Werkstatt", "hidden");
@@ -161,12 +162,12 @@ Deno.test("a thread is hidden by its own setting or by its folder's", async () =
     await createForumThread("Ordner versteckt", "write", hiddenFolder.id),
   ];
 
-  assertEquals(titles(await listOf(memberCookie, "threads"), mine), [
+  assert.deepEqual(titles(await listOf(memberCookie, "threads"), mine), [
     "Sichtbar",
   ]);
 });
 
-Deno.test("GET /api/forum/threads/{threadId} answers 404 for a hidden thread rather than 403", async () => {
+test("GET /api/forum/threads/{threadId} answers 404 for a hidden thread rather than 403", async () => {
   const memberCookie = await registerUser(member);
   const operatorCookie = await makeOperator(
     operator,
@@ -180,17 +181,17 @@ Deno.test("GET /api/forum/threads/{threadId} answers 404 for a hidden thread rat
     `/api/forum/threads/${thread.id}`,
     memberCookie,
   );
-  assertEquals(refused.status, STATUS_CODE.NotFound);
+  assert.equal(refused.status, STATUS_CODE.NotFound);
 
   const allowed = await request(
     "GET",
     `/api/forum/threads/${thread.id}`,
     operatorCookie,
   );
-  assertEquals(allowed.status, STATUS_CODE.OK);
+  assert.equal(allowed.status, STATUS_CODE.OK);
 });
 
-Deno.test("QUERY /api/forum/threads/{threadId}/posts pages a thread's posts, and refuses a hidden one", async () => {
+test("QUERY /api/forum/threads/{threadId}/posts pages a thread's posts, and refuses a hidden one", async () => {
   const memberCookie = await registerUser(member);
   const memberId = await getUserId(member);
 
@@ -205,10 +206,10 @@ Deno.test("QUERY /api/forum/threads/{threadId}/posts pages a thread's posts, and
     memberCookie,
     { limit: 20, offset: 0 },
   );
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const page = await response.json();
-  assertEquals(page.totalResults, 1);
-  assertEquals(page.results[0].text, "Der erste Beitrag");
+  assert.equal(page.totalResults, 1);
+  assert.equal(page.results[0].text, "Der erste Beitrag");
 
   const refused = await request(
     "QUERY",
@@ -216,10 +217,10 @@ Deno.test("QUERY /api/forum/threads/{threadId}/posts pages a thread's posts, and
     memberCookie,
     { limit: 20, offset: 0 },
   );
-  assertEquals(refused.status, STATUS_CODE.NotFound);
+  assert.equal(refused.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("GET /api/forum/pages lists what a member may see, and one page carries its prose", async () => {
+test("GET /api/forum/pages lists what a member may see, and one page carries its prose", async () => {
   const memberCookie = await registerUser(member);
 
   const readable = await createForumFolder("Ankündigungen", "read");
@@ -235,7 +236,7 @@ Deno.test("GET /api/forum/pages lists what a member may see, and one page carrie
     "hidden",
   );
 
-  assertEquals(titles(await listOf(memberCookie, "pages"), [page, draft]), [
+  assert.deepEqual(titles(await listOf(memberCookie, "pages"), [page, draft]), [
     "Regeln",
   ]);
 
@@ -244,17 +245,17 @@ Deno.test("GET /api/forum/pages lists what a member may see, and one page carrie
     `/api/forum/pages/${page.id}`,
     memberCookie,
   );
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   const body = await response.json();
-  assertEquals(body.title, "Regeln");
+  assert.equal(body.title, "Regeln");
   // The folder is `read`, so the page cannot widen it back to `write`.
-  assertEquals(body.effectiveMemberPermission, "read");
-  assertExists(body.document);
+  assert.equal(body.effectiveMemberPermission, "read");
+  assert.ok(body.document);
   // `text` is the server's projection for search, and never leaves the server.
-  assertEquals(body.text, undefined);
+  assert.equal(body.text, undefined);
 });
 
-Deno.test("the forum and a writing group cannot see each other's rows", async () => {
+test("the forum and a writing group cannot see each other's rows", async () => {
   const memberCookie = await registerUser(member);
   const group = await createGroup(memberCookie, "Der Zauberzwerg");
 
@@ -297,20 +298,22 @@ Deno.test("the forum and a writing group cannot see each other's rows", async ()
   // either direction fails rather than only a missing row.
   const both = [...inGroup, ...inForum];
 
-  assertEquals(titles(await listOf(memberCookie, "folders"), both), [
+  assert.deepEqual(titles(await listOf(memberCookie, "folders"), both), [
     "Forenspiele",
   ]);
-  assertEquals(titles(await listOf(memberCookie, "threads"), both), [
+  assert.deepEqual(titles(await listOf(memberCookie, "threads"), both), [
     "Was schaust du gerade?",
   ]);
-  assertEquals(titles(await listOf(memberCookie, "pages"), both), ["Regeln"]);
+  assert.deepEqual(titles(await listOf(memberCookie, "pages"), both), [
+    "Regeln",
+  ]);
 
   const groupFolders = await request(
     "GET",
     `/api/groups/${group.id}/folders`,
     memberCookie,
   );
-  assertEquals(titles((await groupFolders.json()).results, both), [
+  assert.deepEqual(titles((await groupFolders.json()).results, both), [
     "Weltenbau",
   ]);
 
@@ -319,7 +322,7 @@ Deno.test("the forum and a writing group cannot see each other's rows", async ()
     `/api/groups/${group.id}/threads`,
     memberCookie,
   );
-  assertEquals(titles((await groupThreads.json()).results, both), [
+  assert.deepEqual(titles((await groupThreads.json()).results, both), [
     "Kapitel 1",
   ]);
 
@@ -329,29 +332,29 @@ Deno.test("the forum and a writing group cannot see each other's rows", async ()
     operator,
     await registerUser(operator),
   );
-  assertEquals(titles(await listOf(operatorCookie, "folders"), both), [
+  assert.deepEqual(titles(await listOf(operatorCookie, "folders"), both), [
     "Forenspiele",
   ]);
-  assertEquals(titles(await listOf(operatorCookie, "threads"), both), [
+  assert.deepEqual(titles(await listOf(operatorCookie, "threads"), both), [
     "Was schaust du gerade?",
   ]);
-  assertEquals(titles(await listOf(operatorCookie, "pages"), both), [
+  assert.deepEqual(titles(await listOf(operatorCookie, "pages"), both), [
     "Regeln",
   ]);
 });
 
-Deno.test("favouriting and reporting reach forum content, and refuse what is hidden", async () => {
+test("favouriting and reporting reach forum content, and refuse what is hidden", async () => {
   const memberCookie = await registerUser(member);
 
   const open = await createForumThread("Sichtbar", "read");
   const hidden = await createForumThread("Versteckt", "hidden");
   const page = await createForumPage("Regeln", REPORTED_TEXT, "read");
 
-  assertEquals(
+  assert.equal(
     (await setFavourite(memberCookie, "writing_thread", open.id)).status,
     STATUS_CODE.OK,
   );
-  assertEquals(
+  assert.equal(
     (await setFavourite(memberCookie, "writing_thread", hidden.id)).status,
     STATUS_CODE.NotFound,
   );
@@ -359,13 +362,13 @@ Deno.test("favouriting and reporting reach forum content, and refuse what is hid
   const favourited = (await listOf(memberCookie, "threads")).find((row) =>
     row.id === open.id
   );
-  assertEquals(favourited?.isFavourite, true);
+  assert.equal(favourited?.isFavourite, true);
 
-  assertEquals(
+  assert.equal(
     (await fileReport(memberCookie, "writing_page", page.id)).status,
     STATUS_CODE.OK,
   );
-  assertEquals(
+  assert.equal(
     (await fileReport(memberCookie, "writing_thread", hidden.id)).status,
     STATUS_CODE.NotFound,
   );
@@ -376,7 +379,7 @@ Deno.test("favouriting and reporting reach forum content, and refuse what is hid
     operator,
     await registerUser(operator),
   );
-  assertExists(await ownRow(operatorCookie, REPORTED_TEXT));
+  assert.ok(await ownRow(operatorCookie, REPORTED_TEXT));
 });
 
 /**
@@ -385,7 +388,7 @@ Deno.test("favouriting and reporting reach forum content, and refuse what is hid
  * to the group, exactly as the page service does, rather than trusting each route to have asked
  * first. That is what makes the non-null `writingGroupId` on `Thread` true rather than asserted.
  */
-Deno.test("a group's thread routes cannot reach a thread of the forum", async () => {
+test("a group's thread routes cannot reach a thread of the forum", async () => {
   const memberCookie = await registerUser(member);
   const group = await createGroup(memberCookie, "Der Zauberzwerg");
   const thread = await createForumThread("Wortkette", "write");
@@ -396,7 +399,7 @@ Deno.test("a group's thread routes cannot reach a thread of the forum", async ()
     memberCookie,
     { title: "Umbenannt" },
   );
-  assertEquals(renamed.status, STATUS_CODE.NotFound);
+  assert.equal(renamed.status, STATUS_CODE.NotFound);
 
   const moved = await request(
     "PUT",
@@ -404,14 +407,14 @@ Deno.test("a group's thread routes cannot reach a thread of the forum", async ()
     memberCookie,
     { folderId: null },
   );
-  assertEquals(moved.status, STATUS_CODE.NotFound);
+  assert.equal(moved.status, STATUS_CODE.NotFound);
 
   const deleted = await request(
     "DELETE",
     `/api/groups/${group.id}/threads/${thread.id}`,
     memberCookie,
   );
-  assertEquals(deleted.status, STATUS_CODE.NotFound);
+  assert.equal(deleted.status, STATUS_CODE.NotFound);
 
   // Still there, and still called what it was: a 404 that had already renamed it would pass the
   // three assertions above.
@@ -420,6 +423,6 @@ Deno.test("a group's thread routes cannot reach a thread of the forum", async ()
     `/api/forum/threads/${thread.id}`,
     memberCookie,
   );
-  assertEquals(still.status, STATUS_CODE.OK);
-  assertEquals((await still.json()).title, "Wortkette");
+  assert.equal(still.status, STATUS_CODE.OK);
+  assert.equal((await still.json()).title, "Wortkette");
 });

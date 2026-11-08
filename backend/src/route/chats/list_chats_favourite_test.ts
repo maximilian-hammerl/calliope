@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   clearRateLimits,
   getUserId,
@@ -18,9 +19,9 @@ import {
  */
 const { owner, member } = favouriteFixture("chats");
 
-Deno.test.beforeEach(clearRateLimits);
+beforeEach(clearRateLimits);
 
-Deno.test.afterEach(() => cleanUpFavourites([owner, member]));
+afterEach(() => cleanUpFavourites([owner, member]));
 
 type Row = { id: string; title: string; isFavourite: boolean };
 
@@ -51,7 +52,7 @@ async function twoChats(ownerCookie: string, memberName: string) {
   };
 }
 
-Deno.test("a chat's favourite is the reader's own", async () => {
+test("a chat's favourite is the reader's own", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first } = await twoChats(ownerCookie, member);
@@ -59,13 +60,13 @@ Deno.test("a chat's favourite is the reader's own", async () => {
   await setFavourite(memberCookie, "chat_group", first.id);
 
   const theirs = await rowsFor(ownerCookie);
-  assertEquals(theirs.find((row) => row.id === first.id)?.isFavourite, false);
+  assert.equal(theirs.find((row) => row.id === first.id)?.isFavourite, false);
 
   const mine = await rowsFor(memberCookie);
-  assertEquals(mine.find((row) => row.id === first.id)?.isFavourite, true);
+  assert.equal(mine.find((row) => row.id === first.id)?.isFavourite, true);
 });
 
-Deno.test("the chats list puts a favourite first, and narrows to it", async () => {
+test("the chats list puts a favourite first, and narrows to it", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { first } = await twoChats(ownerCookie, member);
@@ -73,9 +74,9 @@ Deno.test("the chats list puts a favourite first, and narrows to it", async () =
   await setFavourite(memberCookie, "chat_group", first.id);
 
   const rows = await rowsFor(memberCookie);
-  assertEquals(rows[0]?.id, first.id);
+  assert.equal(rows[0]?.id, first.id);
 
   const only = await rowsFor(memberCookie, { favourite: "only" });
   assert(only.every((row) => row.isFavourite));
-  assertEquals(only.map((row) => row.id), [first.id]);
+  assert.deepEqual(only.map((row) => row.id), [first.id]);
 });

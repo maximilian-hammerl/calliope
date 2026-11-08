@@ -1,4 +1,5 @@
-import { assertEquals, assertExists, assertFalse } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   clearRateLimits,
@@ -14,8 +15,8 @@ const searcher = "list-users-searcher";
 const findable = "list-users-quenya-one";
 const alsoFindable = "list-users-quenya-two";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([searcher, findable, alsoFindable]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([searcher, findable, alsoFindable]));
 
 type Page = {
   results: Array<
@@ -30,19 +31,19 @@ async function search(cookie: string, body: unknown) {
 
 async function searchOk(cookie: string, body: unknown): Promise<Page> {
   const response = await search(cookie, body);
-  assertEquals(response.status, STATUS_CODE.OK);
+  assert.equal(response.status, STATUS_CODE.OK);
   return await response.json();
 }
 
-Deno.test("QUERY /api/users matches a substring, not just a prefix", async () => {
+test("QUERY /api/users matches a substring, not just a prefix", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
   await registerUser(alsoFindable);
 
   const page = await searchOk(cookie, { search: "quenya" });
 
-  assertEquals(page.totalResults, 2);
-  assertEquals(
+  assert.equal(page.totalResults, 2);
+  assert.deepEqual(
     page.results.map((user) => user.username).sort(),
     [
       findable,
@@ -51,19 +52,19 @@ Deno.test("QUERY /api/users matches a substring, not just a prefix", async () =>
   );
 });
 
-Deno.test("QUERY /api/users ignores case", async () => {
+test("QUERY /api/users ignores case", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
 
   const page = await searchOk(cookie, { search: "QUENYA" });
 
-  assertEquals(page.totalResults, 1);
+  assert.equal(page.totalResults, 1);
   const [found] = page.results;
-  assertExists(found);
-  assertEquals(found.username, findable);
+  assert.ok(found);
+  assert.equal(found.username, findable);
 });
 
-Deno.test("QUERY /api/users returns a name, a picture, a role and nothing else", async () => {
+test("QUERY /api/users returns a name, a picture, a role and nothing else", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
 
@@ -72,8 +73,8 @@ Deno.test("QUERY /api/users returns a name, a picture, a role and nothing else",
   // Spelled out rather than checked for absence, so a column added to the table later
   // fails this instead of quietly joining the response.
   const [found] = page.results;
-  assertExists(found);
-  assertEquals(Object.keys(found).sort(), [
+  assert.ok(found);
+  assert.deepEqual(Object.keys(found).sort(), [
     "avatarUrl",
     "id",
     "platformRole",
@@ -81,7 +82,7 @@ Deno.test("QUERY /api/users returns a name, a picture, a role and nothing else",
   ]);
 });
 
-Deno.test("QUERY /api/users treats a wildcard as a literal character", async () => {
+test("QUERY /api/users treats a wildcard as a literal character", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
 
@@ -89,42 +90,42 @@ Deno.test("QUERY /api/users treats a wildcard as a literal character", async () 
   for (const term of ["%%%", "___"]) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const page = await searchOk(cookie, { search: term });
-    assertEquals(page.totalResults, 0, `${term} should match nothing`);
+    assert.equal(page.totalResults, 0, `${term} should match nothing`);
   }
 });
 
-Deno.test("QUERY /api/users rejects a term shorter than three characters", async () => {
+test("QUERY /api/users rejects a term shorter than three characters", async () => {
   const cookie = await registerUser(searcher);
 
   const response = await search(cookie, { search: "qu" });
 
-  assertEquals(response.status, STATUS_CODE.BadRequest);
+  assert.equal(response.status, STATUS_CODE.BadRequest);
 });
 
-Deno.test("QUERY /api/users lists members when no term is given", async () => {
+test("QUERY /api/users lists members when no term is given", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
 
   // Optional like on every other list endpoint, so the five behave alike.
   const page = await searchOk(cookie, {});
 
-  assertEquals(
+  assert.equal(
     page.results.some((user) => user.username === findable),
     true,
   );
 });
 
-Deno.test("QUERY /api/users needs a session", async () => {
+test("QUERY /api/users needs a session", async () => {
   const response = await request("QUERY", "/api/users", "", {
     search: "quenya",
   });
 
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertFalse(response.headers.has("set-cookie"));
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.ok(!response.headers.has("set-cookie"));
 });
 
 /** #101: without a role in the list, "ich bin Moderator" is a claim nobody can check. */
-Deno.test("QUERY /api/users carries the platform role, and null for an ordinary member", async () => {
+test("QUERY /api/users carries the platform role, and null for an ordinary member", async () => {
   const cookie = await registerUser(searcher);
   await registerUser(findable);
   await write((transaction) =>
@@ -138,11 +139,11 @@ Deno.test("QUERY /api/users carries the platform role, and null for an ordinary 
   const page = await searchOk(cookie, { search: "quenya-one" });
   const found = page.results.find((user) => user.username === findable);
 
-  assertExists(found);
-  assertEquals(found.platformRole, "moderator");
+  assert.ok(found);
+  assert.equal(found.platformRole, "moderator");
 
   const ordinary = await searchOk(cookie, { search: "searcher" });
-  assertEquals(
+  assert.equal(
     ordinary.results.find((user) => user.username === searcher)?.platformRole,
     null,
   );

@@ -1,4 +1,5 @@
-import { assertEquals, assertNotEquals } from "@std/assert";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import sharp from "sharp";
 import { AVATAR_SIZE, toAvatar } from "./avatar_image.ts";
 
@@ -21,25 +22,25 @@ async function picture(
   return new Uint8Array(encoded);
 }
 
-Deno.test("a photograph becomes one square WebP", async () => {
+test("a photograph becomes one square WebP", async () => {
   const result = await toAvatar(
     await picture({ width: 800, height: 600, format: "jpeg" }),
   );
-  assertNotEquals(result, undefined);
+  assert.notEqual(result, undefined);
 
   const { format, width, height } = await sharp(result).metadata();
-  assertEquals(format, "webp");
-  assertEquals(width, AVATAR_SIZE);
-  assertEquals(height, AVATAR_SIZE);
+  assert.equal(format, "webp");
+  assert.equal(width, AVATAR_SIZE);
+  assert.equal(height, AVATAR_SIZE);
 });
 
-Deno.test("every accepted format is accepted", async () => {
+test("every accepted format is accepted", async () => {
   for (const format of ["png", "jpeg", "webp"] as const) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const source = await picture({ width: 300, height: 300, format });
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const result = await toAvatar(source);
-    assertNotEquals(result, undefined, `${format} was refused`);
+    assert.notEqual(result, undefined, `${format} was refused`);
   }
 });
 
@@ -47,30 +48,30 @@ Deno.test("every accepted format is accepted", async () => {
  * Two guards refuse it independently — the format allowlist and `sharp.block` — and each was
  * checked alone. libvips carries librsvg, so with both neutralised this renders.
  */
-Deno.test("an SVG is refused", async () => {
+test("an SVG is refused", async () => {
   const svg = new TextEncoder().encode(
     `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>`,
   );
-  assertEquals(await toAvatar(svg), undefined);
+  assert.equal(await toAvatar(svg), undefined);
 });
 
-Deno.test("something that is not a picture is refused", async () => {
-  assertEquals(
+test("something that is not a picture is refused", async () => {
+  assert.equal(
     await toAvatar(new TextEncoder().encode("not an image at all")),
     undefined,
   );
 });
 
 /** A few hundred bytes declaring billions of pixels, refused before anything is drawn. */
-Deno.test("a decompression bomb is refused", async () => {
+test("a decompression bomb is refused", async () => {
   const bomb = new TextEncoder().encode(
     `<svg xmlns="http://www.w3.org/2000/svg" width="50000" height="50000"><rect width="100%" height="100%"/></svg>`,
   );
-  assertEquals(await toAvatar(bomb), undefined);
+  assert.equal(await toAvatar(bomb), undefined);
 });
 
 /** Re-encoding is what strips it, which matters because a phone photograph carries coordinates. */
-Deno.test("metadata does not survive", async () => {
+test("metadata does not survive", async () => {
   const withExif = new Uint8Array(
     await sharp({
       create: { width: 400, height: 400, channels: 3, background: "#ffffff" },
@@ -81,17 +82,17 @@ Deno.test("metadata does not survive", async () => {
       .jpeg()
       .toBuffer(),
   );
-  assertNotEquals((await sharp(withExif).metadata()).exif, undefined);
+  assert.notEqual((await sharp(withExif).metadata()).exif, undefined);
 
   const result = await toAvatar(withExif);
-  assertEquals((await sharp(result).metadata()).exif, undefined);
+  assert.equal((await sharp(result).metadata()).exif, undefined);
 });
 
 /**
  * A phone stores a rotated photograph as-shot plus an EXIF tag, and re-encoding drops the tag — so
  * without `.rotate()` the picture arrives turned a quarter.
  */
-Deno.test("a picture is turned the way its EXIF says", async () => {
+test("a picture is turned the way its EXIF says", async () => {
   const half = (colour: string) =>
     sharp({
       create: { width: 200, height: 200, channels: 3, background: colour },
@@ -127,6 +128,6 @@ Deno.test("a picture is turned the way its EXIF says", async () => {
     return red > blue;
   };
 
-  assertEquals(redness(0, 80), true, "the top should be red");
-  assertEquals(redness(112, info.height), false, "the bottom should be blue");
+  assert.equal(redness(0, 80), true, "the top should be red");
+  assert.equal(redness(112, info.height), false, "the bottom should be blue");
 });

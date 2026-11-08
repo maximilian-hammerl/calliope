@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { write } from "@/src/test/support.ts";
 import { UserService } from "./user_service.ts";
 
@@ -6,24 +7,24 @@ const username = "username";
 const password = "a-complex-password";
 const emailAddress = "user@example.com";
 
-Deno.test.afterEach(async () => {
+afterEach(async () => {
   await write((transaction) =>
     transaction
       .deleteFrom("user").where("username", "=", username).execute()
   );
 });
 
-Deno.test("Register and login user", async () => {
+test("Register and login user", async () => {
   const registeredUser = await write((transaction) =>
     UserService.insertUser(transaction, username, password, emailAddress)
   );
-  assertExists(registeredUser);
+  assert.ok(registeredUser);
 
   const loggedInUser = await UserService.selectUser(username, password);
-  assertExists(loggedInUser);
+  assert.ok(loggedInUser);
 });
 
-Deno.test("Register same user twice", async () => {
+test("Register same user twice", async () => {
   const registeredUser = await write((transaction) =>
     UserService.insertUser(
       transaction,
@@ -32,7 +33,7 @@ Deno.test("Register same user twice", async () => {
       emailAddress,
     )
   );
-  assertExists(registeredUser);
+  assert.ok(registeredUser);
 
   const alreadyRegisteredUser = await write((transaction) =>
     UserService.insertUser(
@@ -42,10 +43,10 @@ Deno.test("Register same user twice", async () => {
       emailAddress,
     )
   );
-  assertEquals(alreadyRegisteredUser, undefined);
+  assert.equal(alreadyRegisteredUser, undefined);
 });
 
-Deno.test("Verify token for user", async () => {
+test("Verify token for user", async () => {
   const registeredUser = await write((transaction) =>
     UserService.insertUser(
       transaction,
@@ -54,7 +55,7 @@ Deno.test("Verify token for user", async () => {
       emailAddress,
     )
   );
-  assertExists(registeredUser);
+  assert.ok(registeredUser);
 
   const sessionToken = await write((transaction) =>
     UserService.insertSessionForUser(
@@ -63,15 +64,15 @@ Deno.test("Verify token for user", async () => {
       { userAgent: undefined, ipAddress: undefined },
     )
   );
-  assertExists(sessionToken);
+  assert.ok(sessionToken);
 
   const userForToken = await UserService.selectUserForSession(
     sessionToken,
   );
-  assertExists(userForToken);
+  assert.ok(userForToken);
 });
 
-Deno.test("Delete session with the matching token", async () => {
+test("Delete session with the matching token", async () => {
   const registeredUser = await write((transaction) =>
     UserService.insertUser(
       transaction,
@@ -80,7 +81,7 @@ Deno.test("Delete session with the matching token", async () => {
       emailAddress,
     )
   );
-  assertExists(registeredUser);
+  assert.ok(registeredUser);
 
   const userSession = await write((transaction) =>
     UserService.insertSessionForUser(
@@ -93,16 +94,16 @@ Deno.test("Delete session with the matching token", async () => {
     )
   );
 
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       UserService.deleteSession(transaction, userSession)
     ),
     true,
   );
-  assertEquals(await UserService.selectUserForSession(userSession), undefined);
+  assert.equal(await UserService.selectUserForSession(userSession), undefined);
 });
 
-Deno.test("Keep session when the token does not match", async () => {
+test("Keep session when the token does not match", async () => {
   const registeredUser = await write((transaction) =>
     UserService.insertUser(
       transaction,
@@ -111,7 +112,7 @@ Deno.test("Keep session when the token does not match", async () => {
       emailAddress,
     )
   );
-  assertExists(registeredUser);
+  assert.ok(registeredUser);
 
   const userSession = await write((transaction) =>
     UserService.insertSessionForUser(
@@ -126,12 +127,12 @@ Deno.test("Keep session when the token does not match", async () => {
 
   // Knowing the session id must not be enough to end somebody else's session.
   const forged = { id: userSession.id, token: crypto.randomUUID() };
-  assertEquals(
+  assert.equal(
     await write((transaction) =>
       UserService.deleteSession(transaction, forged)
     ),
     false,
   );
 
-  assertExists(await UserService.selectUserForSession(userSession));
+  assert.ok(await UserService.selectUserForSession(userSession));
 });

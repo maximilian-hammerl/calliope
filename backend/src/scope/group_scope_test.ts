@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { Hono } from "hono";
 import {
   clearRateLimits,
@@ -17,13 +18,13 @@ import { joinedGroup, visibleGroup } from "@/src/scope/group_scope.ts";
 
 const OWNER = "group-scope-owner";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum([OWNER]);
   await deleteUsers([OWNER]);
 });
 
-Deno.test("each resolver refuses a malformed id with the validators' 400", async () => {
+test("each resolver refuses a malformed id with the validators' 400", async () => {
   const cookie = await registerUser(OWNER);
   const group = await groupWithChildren(cookie, "Gruppe");
   const forum = await forumWithChildren(
@@ -55,7 +56,7 @@ Deno.test("each resolver refuses a malformed id with the validators' 400", async
     return { status: response.status, body: await response.json() };
   };
   for (const [method, path, name] of cases) {
-    assertEquals(
+    assert.deepEqual(
       // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
       await answered(method, path),
       {
@@ -70,7 +71,7 @@ Deno.test("each resolver refuses a malformed id with the validators' 400", async
   }
 });
 
-Deno.test("a group's id is handed on as the database writes it, whatever case the path used", async () => {
+test("a group's id is handed on as the database writes it, whatever case the path used", async () => {
   const cookie = await registerUser(OWNER);
   const { groupId } = await groupWithChildren(cookie, "Gruppe");
   const user = await UserService.selectUser(OWNER, "a-complex-password");
@@ -100,6 +101,6 @@ Deno.test("a group's id is handed on as the database writes it, whatever case th
   };
   for (const probe of probes) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one resolver per iteration
-    assertEquals(await handedOn(probe), groupId);
+    assert.equal(await handedOn(probe), groupId);
   }
 });

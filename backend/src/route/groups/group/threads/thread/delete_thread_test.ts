@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import {
   addMember,
@@ -14,10 +15,10 @@ const administrator = "delete-thread-admin";
 const writer = "delete-thread-writer";
 const other = "delete-thread-other";
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(() => deleteUsers([administrator, writer, other]));
+beforeEach(clearRateLimits);
+afterEach(() => deleteUsers([administrator, writer, other]));
 
-Deno.test("DELETE /api/groups/{groupId}/threads/{threadId} deletes the thread and its posts", async () => {
+test("DELETE /api/groups/{groupId}/threads/{threadId} deletes the thread and its posts", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
@@ -43,8 +44,8 @@ Deno.test("DELETE /api/groups/{groupId}/threads/{threadId} deletes the thread an
     writerCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.OK);
-  assertEquals(await response.json(), { ok: true });
+  assert.equal(response.status, STATUS_CODE.OK);
+  assert.deepEqual(await response.json(), { ok: true });
 
   // The post went with it through the foreign key's cascade.
   const gone = await request(
@@ -52,10 +53,10 @@ Deno.test("DELETE /api/groups/{groupId}/threads/{threadId} deletes the thread an
     `/api/groups/${group.id}/threads/${thread.id}/posts/${post.id}`,
     adminCookie,
   );
-  assertEquals(gone.status, STATUS_CODE.NotFound);
+  assert.equal(gone.status, STATUS_CODE.NotFound);
 });
 
-Deno.test("DELETE /api/groups/{groupId}/threads/{threadId} refuses another writer", async () => {
+test("DELETE /api/groups/{groupId}/threads/{threadId} refuses another writer", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
@@ -75,5 +76,5 @@ Deno.test("DELETE /api/groups/{groupId}/threads/{threadId} refuses another write
     otherCookie,
   );
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
+  assert.equal(response.status, STATUS_CODE.Forbidden);
 });

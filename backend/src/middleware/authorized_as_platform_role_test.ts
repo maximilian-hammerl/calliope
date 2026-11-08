@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { write } from "@/src/test/support.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { Hono } from "hono";
@@ -34,7 +35,7 @@ async function createUserWithSession(platformRole: PlatformRole | null) {
   const user = await write((transaction) =>
     UserService.insertUser(transaction, username, password, emailAddress)
   );
-  assertExists(user, "fixture user could not be created");
+  assert.ok(user, "fixture user could not be created");
 
   await write((transaction) =>
     transaction
@@ -56,7 +57,7 @@ async function createUserWithSession(platformRole: PlatformRole | null) {
   return `session=${session.id}.${session.token}`;
 }
 
-Deno.test.afterEach(async () => {
+afterEach(async () => {
   await write((transaction) =>
     transaction
       .deleteFrom("user").where("username", "=", username).execute()
@@ -73,56 +74,56 @@ async function statusFor(
   return response.status;
 }
 
-Deno.test("authorizedAsModerator lets a moderator through", async () => {
-  assertEquals(await statusFor(moderatorApp, "moderator"), STATUS_CODE.OK);
+test("authorizedAsModerator lets a moderator through", async () => {
+  assert.equal(await statusFor(moderatorApp, "moderator"), STATUS_CODE.OK);
 });
 
-Deno.test("authorizedAsModerator lets an administrator through", async () => {
+test("authorizedAsModerator lets an administrator through", async () => {
   // The whole point of the pair: administrator is a superset, so every moderator gate opens
   // for one. Nothing else in the codebase would notice if that stopped being true.
-  assertEquals(await statusFor(moderatorApp, "administrator"), STATUS_CODE.OK);
+  assert.equal(await statusFor(moderatorApp, "administrator"), STATUS_CODE.OK);
 });
 
-Deno.test("authorizedAsModerator refuses a member with no role", async () => {
-  assertEquals(await statusFor(moderatorApp, null), STATUS_CODE.Forbidden);
+test("authorizedAsModerator refuses a member with no role", async () => {
+  assert.equal(await statusFor(moderatorApp, null), STATUS_CODE.Forbidden);
 });
 
-Deno.test("authorizedAsAdministrator refuses a moderator", async () => {
+test("authorizedAsAdministrator refuses a moderator", async () => {
   // The other half of the superset: a moderator must not reach what only an administrator may.
-  assertEquals(
+  assert.equal(
     await statusFor(administratorApp, "moderator"),
     STATUS_CODE.Forbidden,
   );
 });
 
-Deno.test("authorizedAsAdministrator lets an administrator through", async () => {
-  assertEquals(
+test("authorizedAsAdministrator lets an administrator through", async () => {
+  assert.equal(
     await statusFor(administratorApp, "administrator"),
     STATUS_CODE.OK,
   );
 });
 
-Deno.test("authorization alone refuses rather than throwing on an absent user", async () => {
+test("authorization alone refuses rather than throwing on an absent user", async () => {
   // Listing an authorizedAs… without an authentication middleware is a mistake, but it must
   // answer 401 rather than 500 on `undefined`.
   const response = await unguardedApp.request("/probe");
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertEquals(await response.json(), { error: "Unauthorized" });
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.deepEqual(await response.json(), { error: "Unauthorized" });
 });
 
-Deno.test("an operator gate refuses when there is no session at all", async () => {
+test("an operator gate refuses when there is no session at all", async () => {
   // 401 rather than 403 here: there is nobody to refuse yet, which is a different answer from
   // "you are signed in and may not".
   const response = await moderatorApp.request("/probe");
-  assertEquals(response.status, STATUS_CODE.Unauthorized);
-  assertEquals(await response.json(), { error: "Unauthorized" });
+  assert.equal(response.status, STATUS_CODE.Unauthorized);
+  assert.deepEqual(await response.json(), { error: "Unauthorized" });
 });
 
-Deno.test("an operator gate refuses an unverified address before the role", async () => {
+test("an operator gate refuses an unverified address before the role", async () => {
   const user = await write((transaction) =>
     UserService.insertUser(transaction, username, password, emailAddress)
   );
-  assertExists(user);
+  assert.ok(user);
   // A role on an account that has never proven its address must not open the gate.
   await write((transaction) =>
     transaction
@@ -143,6 +144,8 @@ Deno.test("an operator gate refuses an unverified address before the role", asyn
     headers: { cookie: `session=${session.id}.${session.token}` },
   });
 
-  assertEquals(response.status, STATUS_CODE.Forbidden);
-  assertEquals(await response.json(), { error: "Email address not verified" });
+  assert.equal(response.status, STATUS_CODE.Forbidden);
+  assert.deepEqual(await response.json(), {
+    error: "Email address not verified",
+  });
 });

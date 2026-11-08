@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import {
   clearRateLimits,
   createGroup,
@@ -19,9 +20,9 @@ import {
  */
 const { owner, member, outsider } = favouriteFixture("posts");
 
-Deno.test.beforeEach(clearRateLimits);
+beforeEach(clearRateLimits);
 
-Deno.test.afterEach(() => cleanUpFavourites([owner, member, outsider]));
+afterEach(() => cleanUpFavourites([owner, member, outsider]));
 
 type Row = { id: string; text: string; isFavourite: boolean };
 
@@ -65,7 +66,7 @@ async function aThreadWithPosts(cookie: string) {
   };
 }
 
-Deno.test("a favourited post stays where it was written", async () => {
+test("a favourited post stays where it was written", async () => {
   const ownerCookie = await registerUser(owner);
   const { group, thread, first, second, third } = await aThreadWithPosts(
     ownerCookie,
@@ -76,12 +77,12 @@ Deno.test("a favourited post stays where it was written", async () => {
   // Oldest first, unchanged. Hoisting the favourite here would put the end of the chapter above
   // its beginning, which is why posts are the kind that does not reorder.
   const posts = await postsOf(ownerCookie, group.id, thread.id);
-  assertEquals(posts.map((row) => row.id), [first.id, second.id, third.id]);
-  assertEquals(posts[2]?.isFavourite, true);
-  assertEquals(posts[0]?.isFavourite, false);
+  assert.deepEqual(posts.map((row) => row.id), [first.id, second.id, third.id]);
+  assert.equal(posts[2]?.isFavourite, true);
+  assert.equal(posts[0]?.isFavourite, false);
 });
 
-Deno.test("the thread can be narrowed to favourited posts", async () => {
+test("the thread can be narrowed to favourited posts", async () => {
   const ownerCookie = await registerUser(owner);
   const { group, thread, first, third } = await aThreadWithPosts(ownerCookie);
 
@@ -95,10 +96,10 @@ Deno.test("the thread can be narrowed to favourited posts", async () => {
   assert(kept.every((row) => row.isFavourite));
   // Still in reading order among themselves, which is what the filter is for: coming back to the
   // parts of a chapter somebody marked.
-  assertEquals(kept.map((row) => row.id), [first.id, third.id]);
+  assert.deepEqual(kept.map((row) => row.id), [first.id, third.id]);
 });
 
-Deno.test("a post's favourite is the reader's own", async () => {
+test("a post's favourite is the reader's own", async () => {
   const ownerCookie = await registerUser(owner);
   const memberCookie = await registerUser(member);
   const { group, thread, first } = await aThreadWithPosts(ownerCookie);
@@ -106,8 +107,8 @@ Deno.test("a post's favourite is the reader's own", async () => {
   await setFavourite(memberCookie, "writing_post", first.id);
 
   const theirs = await postsOf(ownerCookie, group.id, thread.id);
-  assertEquals(theirs.find((row) => row.id === first.id)?.isFavourite, false);
+  assert.equal(theirs.find((row) => row.id === first.id)?.isFavourite, false);
 
   const mine = await postsOf(memberCookie, group.id, thread.id);
-  assertEquals(mine.find((row) => row.id === first.id)?.isFavourite, true);
+  assert.equal(mine.find((row) => row.id === first.id)?.isFavourite, true);
 });

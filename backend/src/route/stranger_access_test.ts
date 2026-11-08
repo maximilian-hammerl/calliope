@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { afterEach, beforeEach, test } from "node:test";
+import assert from "node:assert/strict";
 import sharp from "sharp";
 import openApi from "@/open-api.json" with { type: "json" };
 import app from "@/src/app.ts";
@@ -42,8 +43,8 @@ const STRANGER = "stranger-access-stranger";
 const OPERATOR = "stranger-access-operator";
 const USERNAMES = [OWNER, MEMBER, STRANGER, OPERATOR];
 
-Deno.test.beforeEach(clearRateLimits);
-Deno.test.afterEach(async () => {
+beforeEach(clearRateLimits);
+afterEach(async () => {
   await clearForum(USERNAMES);
   // Neither goes with its creator — both keep their rows with the account nulled.
   const ours = db.selectFrom("user").select("id").where(
@@ -476,13 +477,13 @@ async function ideaTree(
   key: "open idea" | "closed idea",
 ): Promise<Tree> {
   const response = await createIdea(people.ownerCookie);
-  assertEquals(response.status, 201);
+  assert.equal(response.status, 201);
   const idea = await response.json();
   if (key === "closed idea") {
     const closed = await patchIdea(people.ownerCookie, idea.id, {
       status: "closed",
     });
-    assertEquals(closed.status, 200);
+    assert.equal(closed.status, 200);
   }
 
   return {
@@ -527,7 +528,7 @@ async function avatarTree(people: People): Promise<Tree> {
     headers: { cookie: people.ownerCookie, ...SAME_ORIGIN },
     body: form,
   });
-  assertEquals(response.status, 200);
+  assert.equal(response.status, 200);
   const { avatarUrl } = await response.json();
 
   return {
@@ -625,14 +626,14 @@ async function fixture(keys: readonly Key[]): Promise<Fixture> {
   };
 }
 
-Deno.test("every route with an id in its path has a case", () => {
+test("every route with an id in its path has a case", () => {
   const found = operations();
-  assertEquals(
+  assert.deepEqual(
     found.filter(({ keys }) => keys === undefined).map(({ path }) => path),
     [],
     "Add these paths' prefix to SCOPES, with the rows their routes are tried on",
   );
-  assertEquals(
+  assert.deepEqual(
     found.map(({ operation }) => operation).sort(),
     Object.keys(CASES).sort(),
     "Add a case for each new route, and remove the case of a route that is gone",
@@ -643,7 +644,7 @@ Deno.test("every route with an id in its path has a case", () => {
       CASES[operation]?.body === undefined
     )
     .map(({ operation }) => operation);
-  assertEquals(
+  assert.deepEqual(
     withoutBody,
     [],
     "Add these operations' bodies to REQUEST_BODIES in `test/route_fixtures.ts`",
@@ -655,7 +656,7 @@ for (const { operation, method, path, keys } of operations()) {
     continue;
   }
 
-  Deno.test(`${operation}, tried by a stranger`, async () => {
+  test(`${operation}, tried by a stranger`, async () => {
     const found = await fixture(keys);
     const test = CASES[operation];
     assert(test !== undefined, `${operation} has no case`);
@@ -712,17 +713,17 @@ for (const { operation, method, path, keys } of operations()) {
       }
     }
 
-    assertEquals(
+    assert.deepEqual(
       actual,
       test.stranger,
       `${operation}: what a stranger gets, per tree`,
     );
-    assertEquals(
+    assert.deepEqual(
       telling,
       [],
       `${operation}: a stranger can tell rows they cannot see from rows that do not exist`,
     );
-    assertEquals(
+    assert.deepEqual(
       refused,
       [],
       `${operation}: the rows' controller was refused, so the request is malformed`,
