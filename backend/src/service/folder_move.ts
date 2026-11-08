@@ -1,5 +1,3 @@
-import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
-
 /**
  * What moving a folder comes to, as a decision over rows rather than a query: a writing group's
  * folders and the public forum's live in one table and nest by the same rules, so the tree logic
@@ -8,6 +6,12 @@ import { MAX_FOLDER_DEPTH } from "#/src/service/writing_folder_service.ts";
  * Pure on purpose. The queries — which rows, and the lock over them — belong to the caller,
  * because that is the part that differs.
  */
+
+/**
+ * The deepest a member may nest: Weltenbau → Stadt → Viertel → Gebäude → Raum. Mirrors the CHECK
+ * on `writing_folder.depth`; change both.
+ */
+export const MAX_FOLDER_DEPTH = 5;
 
 /** All a move needs off a row. Both services select exactly these three. */
 export type FolderPlacement = {
