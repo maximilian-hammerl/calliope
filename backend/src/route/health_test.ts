@@ -26,10 +26,10 @@ test("GET /api/health reports every database separately", async () => {
   const response = await app.request("/api/health");
   const databases: Array<DatabaseHealth> = (await response.json()).databases;
 
-  assert.deepEqual(databases.map((database) => database.name), [
-    "postgres",
-    "redis",
-  ]);
+  assert.deepEqual(
+    databases.map((database) => database.name),
+    ["postgres", "redis"],
+  );
 
   for (const database of databases) {
     assert.equal(database.health, true);

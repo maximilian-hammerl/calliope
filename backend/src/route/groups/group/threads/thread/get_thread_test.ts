@@ -20,12 +20,9 @@ afterEach(() => deleteUsers([administrator, reader, outsider]));
 async function groupWithThread() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, { title: "Kapitel 1" })
+  ).json();
 
   return { adminCookie, group, thread };
 }

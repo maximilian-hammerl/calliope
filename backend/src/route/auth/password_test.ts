@@ -3,20 +3,11 @@ import assert from "node:assert/strict";
 import { BreachedPasswordService } from "@/src/service/breached_password_service.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  write,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, write } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { TEXT_MINIMUM } from "@/src/text_limit.ts";
 import { PASSWORD_BREACHED } from "@/src/http/response.ts";
-import {
-  deleteMailFor,
-  tokenFromMail,
-  waitForMail,
-} from "@/src/test/mailpit.ts";
+import { deleteMailFor, tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import { postJson, sendJson } from "@/src/test/auth.ts";
 
 const username = "password-change-test-user";
@@ -40,18 +31,18 @@ async function signedIn(): Promise<string> {
   return cookie;
 }
 
-const changePassword = (
-  cookie: string,
-  from: string = currentPassword,
-  to: string = newPassword,
-) =>
-  sendJson("PATCH", "/api/auth/password", {
-    currentPassword: from,
-    newPassword: to,
-  }, cookie);
+const changePassword = (cookie: string, from: string = currentPassword, to: string = newPassword) =>
+  sendJson(
+    "PATCH",
+    "/api/auth/password",
+    {
+      currentPassword: from,
+      newPassword: to,
+    },
+    cookie,
+  );
 
-const login = (password: string) =>
-  postJson("/api/auth/login", { login: username, password });
+const login = (password: string) => postJson("/api/auth/login", { login: username, password });
 
 test("PATCH /api/auth/password replaces the password", async () => {
   const cookie = await signedIn();
@@ -82,21 +73,16 @@ test("PATCH /api/auth/password keeps this session and ends the others", async ()
   assert.ok(setCookie, "the second login should have started a session");
   const otherCookie = setCookie.split(";")[0] ?? setCookie;
   assert.equal(
-    (await app.request("/api/auth/me", { headers: { cookie: otherCookie } }))
-      .status,
+    (await app.request("/api/auth/me", { headers: { cookie: otherCookie } })).status,
     STATUS_CODE.OK,
   );
 
   await changePassword(cookie);
 
   // The tab doing the work survives; everything else is evicted.
+  assert.equal((await app.request("/api/auth/me", { headers: { cookie } })).status, STATUS_CODE.OK);
   assert.equal(
-    (await app.request("/api/auth/me", { headers: { cookie } })).status,
-    STATUS_CODE.OK,
-  );
-  assert.equal(
-    (await app.request("/api/auth/me", { headers: { cookie: otherCookie } }))
-      .status,
+    (await app.request("/api/auth/me", { headers: { cookie: otherCookie } })).status,
     STATUS_CODE.Unauthorized,
   );
 });
@@ -147,7 +133,7 @@ test("PATCH /api/auth/password is refused while the address is unverified", asyn
       .updateTable("user")
       .set({ emailAddressVerifiedAt: null })
       .where("username", "=", username)
-      .execute()
+      .execute(),
   );
 
   assert.equal((await changePassword(cookie)).status, STATUS_CODE.Forbidden);
@@ -168,7 +154,10 @@ test("PATCH /api/auth/password refuses a new password below the minimum", async 
 
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const issues: { path: string }[] = (await response.json()).issues;
-  assert.equal(issues.some((issue) => issue.path === "newPassword"), true);
+  assert.equal(
+    issues.some((issue) => issue.path === "newPassword"),
+    true,
+  );
   // Refused on the way in, so the old password still works.
   assert.equal((await login(currentPassword)).status, STATUS_CODE.OK);
 });
@@ -176,10 +165,8 @@ test("PATCH /api/auth/password refuses a new password below the minimum", async 
 test("PATCH /api/auth/password refuses a new password from a known breach", async (t) => {
   const cookie = await signedIn();
 
-  const isBreached = t.mock.method(
-    BreachedPasswordService,
-    "isBreached",
-    () => Promise.resolve(true),
+  const isBreached = t.mock.method(BreachedPasswordService, "isBreached", () =>
+    Promise.resolve(true),
   );
 
   const response = await changePassword(cookie, currentPassword, newPassword);

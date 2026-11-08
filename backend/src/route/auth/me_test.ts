@@ -45,14 +45,12 @@ test("GET /api/auth/me rejects a request without a session", async () => {
 test("GET /api/auth/me treats a malformed session cookie as no session", async () => {
   // The id half reaches a uuid column. Passing it through unchecked made every request with
   // a corrupted cookie answer 500 rather than simply being unauthenticated.
-  for (
-    const cookie of [
-      "session=abc",
-      "session=abc.def",
-      "session=.only-a-secret",
-      "session=01a019ee-ab02-7a82-9796-3767b50ed584",
-    ]
-  ) {
+  for (const cookie of [
+    "session=abc",
+    "session=abc.def",
+    "session=.only-a-secret",
+    "session=01a019ee-ab02-7a82-9796-3767b50ed584",
+  ]) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await app.request("/api/auth/me", { headers: { cookie } });
 

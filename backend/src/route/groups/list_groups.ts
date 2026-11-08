@@ -10,11 +10,7 @@ import { GROUPS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
-import {
-  FAVOURITE_FILTER,
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -27,12 +23,7 @@ import type {
   WritingGroup as WritingGroupTable,
 } from "@/src/database/schema.ts";
 
-const SORT_ATTRIBUTES = [
-  "createdAt",
-  "lastActivityAt",
-  "title",
-  "invitedAt",
-] as const;
+const SORT_ATTRIBUTES = ["createdAt", "lastActivityAt", "title", "invitedAt"] as const;
 
 /**
  * Public attribute names mapped to qualified columns, so the API never exposes the schema and
@@ -65,13 +56,10 @@ const SORT_ATTRIBUTE = z
  * is "Meine Gruppen" and a group somebody merely may read is not theirs. `none` is the
  * discovery list, `any` the older behaviour of everything they are allowed to see.
  */
-const MEMBERSHIP = z
-  .enum(["joined", "invited", "none", "any"])
-  .default("joined")
-  .meta({
-    description:
-      "Which groups relative to the caller: ones they have joined, ones they have been invited to, public ones they are not in, or everything they may see.",
-  });
+const MEMBERSHIP = z.enum(["joined", "invited", "none", "any"]).default("joined").meta({
+  description:
+    "Which groups relative to the caller: ones they have joined, ones they have been invited to, public ones they are not in, or everything they may see.",
+});
 
 const LIST_GROUPS_BODY = listQuerySchema(
   SORT_ATTRIBUTE,

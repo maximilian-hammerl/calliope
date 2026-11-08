@@ -20,7 +20,8 @@ import { LIST_LIMIT, TEXT_LIMIT } from "@/src/text_limit.ts";
  *
  * Lower-cased on the way in, so the UNIQUE constraint cannot be sidestepped by changing case.
  */
-export const EMAIL_ADDRESS_SCHEMA = z.email({ pattern: z.regexes.html5Email })
+export const EMAIL_ADDRESS_SCHEMA = z
+  .email({ pattern: z.regexes.html5Email })
   .max(TEXT_LIMIT.emailAddress)
   .toLowerCase();
 
@@ -86,20 +87,14 @@ const FILTER = LIST_LIMIT.storyVocabularyFilter;
 export const STORY_GENRES_SCHEMA = storyValues(STORY_GENRE_SCHEMA, TAGS);
 export const STORY_SUBGENRES_SCHEMA = storyValues(STORY_SUBGENRE_SCHEMA, TAGS);
 export const STORY_TROPES_SCHEMA = storyValues(STORY_TROPE_SCHEMA, TAGS);
-export const STORY_CONTENT_WARNINGS_SCHEMA = storyValues(
-  STORY_CONTENT_WARNING_SCHEMA,
-  TAGS,
-);
+export const STORY_CONTENT_WARNINGS_SCHEMA = storyValues(STORY_CONTENT_WARNING_SCHEMA, TAGS);
 
 /**
  * The same values, bounded for asking rather than for claiming. A board's own vocabulary is
  * longer than any one story's, so the create body's bound refuses filters the interface offers.
  */
 export const STORY_GENRES_FILTER = storyValues(STORY_GENRE_SCHEMA, FILTER);
-export const STORY_SUBGENRES_FILTER = storyValues(
-  STORY_SUBGENRE_SCHEMA,
-  FILTER,
-);
+export const STORY_SUBGENRES_FILTER = storyValues(STORY_SUBGENRE_SCHEMA, FILTER);
 export const STORY_TROPES_FILTER = storyValues(STORY_TROPE_SCHEMA, FILTER);
 
 /**

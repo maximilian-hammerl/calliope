@@ -60,9 +60,9 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Your own idea" }, STATUS_CODE.Forbidden);
     }
 
-    await db.transaction().execute((transaction) =>
-      StoryIdeaService.markRead(transaction, ideaId, user.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => StoryIdeaService.markRead(transaction, ideaId, user.id));
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

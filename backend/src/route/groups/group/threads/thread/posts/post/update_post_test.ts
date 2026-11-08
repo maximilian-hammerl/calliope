@@ -23,21 +23,15 @@ async function draftByWriter() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Beitrag");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    {
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, adminCookie, {
       title: "Kapitel 1",
-    },
-  )).json();
+    })
+  ).json();
   const posts = `/api/groups/${group.id}/threads/${thread.id}/posts`;
-  const draft = await (await request(
-    "POST",
-    posts,
-    writerCookie,
-    postBody("Entwurf", { isDraft: true }),
-  )).json();
+  const draft = await (
+    await request("POST", posts, writerCookie, postBody("Entwurf", { isDraft: true }))
+  ).json();
 
   return { adminCookie, writerCookie, group, posts, draft };
 }
@@ -45,14 +39,9 @@ async function draftByWriter() {
 test("PATCH …/posts/{postId} publishes the author's own draft", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
-  const response = await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    {
-      isDraft: false,
-    },
-  );
+  const response = await request("PATCH", `${posts}/${draft.id}`, writerCookie, {
+    isDraft: false,
+  });
 
   assert.equal(response.status, STATUS_CODE.OK);
   const published = await response.json();
@@ -67,21 +56,20 @@ test("PATCH …/posts/{postId} dates a published post from its publication", asy
   // Backdated rather than waited for, like the avatar sweep's orphan. Both timestamps come from
   // the database clock and are serialised to the millisecond, so a draft published in the same
   // millisecond it was written ties — and the assertion below is a strict `>` on purpose.
-  const longAgo = Temporal.Now.instant().subtract({ hours: 3 * 24 }).toString();
+  const longAgo = Temporal.Now.instant()
+    .subtract({ hours: 3 * 24 })
+    .toString();
   await write((transaction) =>
     transaction
       .updateTable("writingPost")
       .set({ createdAt: longAgo })
       .where("id", "=", draft.id)
-      .execute()
+      .execute(),
   );
 
-  const published = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    { isDraft: false },
-  )).json();
+  const published = await (
+    await request("PATCH", `${posts}/${draft.id}`, writerCookie, { isDraft: false })
+  ).json();
 
   // The draft may have been sitting for days while it was written. Its post is new, so it
   // sorts to the end of the thread rather than into the middle of it...
@@ -94,12 +82,9 @@ test("PATCH …/posts/{postId} does not mark an autosaved draft as edited", asyn
   const { writerCookie, posts, draft } = await draftByWriter();
 
   // Every keystroke in the composer is one of these. None of them is an edit.
-  const saved = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    postBody("Weiter geschrieben."),
-  )).json();
+  const saved = await (
+    await request("PATCH", `${posts}/${draft.id}`, writerCookie, postBody("Weiter geschrieben."))
+  ).json();
 
   assert.equal(saved.editedAt, null);
 });
@@ -107,19 +92,13 @@ test("PATCH …/posts/{postId} does not mark an autosaved draft as edited", asyn
 test("PATCH …/posts/{postId} marks a real edit as edited", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
-  const published = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    { isDraft: false },
-  )).json();
+  const published = await (
+    await request("PATCH", `${posts}/${draft.id}`, writerCookie, { isDraft: false })
+  ).json();
 
-  const edited = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    postBody("Doch anders."),
-  )).json();
+  const edited = await (
+    await request("PATCH", `${posts}/${draft.id}`, writerCookie, postBody("Doch anders."))
+  ).json();
 
   // Publication must not have blunted the signal that actually means "edited".
   assert.equal(edited.createdAt, published.createdAt);
@@ -133,12 +112,9 @@ test("PATCH …/posts/{postId} records who edited, not only when", async () => {
     isDraft: false,
   });
 
-  const edited = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    postBody("Doch anders."),
-  )).json();
+  const edited = await (
+    await request("PATCH", `${posts}/${draft.id}`, writerCookie, postBody("Doch anders."))
+  ).json();
 
   assert.equal(edited.editedByUsername, writer);
 });
@@ -150,12 +126,14 @@ test("PATCH …/posts/{postId} names the administrator who edited another's post
     isDraft: false,
   });
 
-  const edited = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    adminCookie,
-    postBody("Von der Verwaltung geändert."),
-  )).json();
+  const edited = await (
+    await request(
+      "PATCH",
+      `${posts}/${draft.id}`,
+      adminCookie,
+      postBody("Von der Verwaltung geändert."),
+    )
+  ).json();
 
   // The whole point of the column: the author and the editor are different people, and a
   // reader is told which.
@@ -166,12 +144,9 @@ test("PATCH …/posts/{postId} names the administrator who edited another's post
 test("PATCH …/posts/{postId} leaves the editor unnamed until something is edited", async () => {
   const { writerCookie, posts, draft } = await draftByWriter();
 
-  const published = await (await request(
-    "PATCH",
-    `${posts}/${draft.id}`,
-    writerCookie,
-    { isDraft: false },
-  )).json();
+  const published = await (
+    await request("PATCH", `${posts}/${draft.id}`, writerCookie, { isDraft: false })
+  ).json();
 
   assert.equal(published.editedAt, null);
   assert.equal(published.editedByUsername, null);
@@ -180,12 +155,9 @@ test("PATCH …/posts/{postId} leaves the editor unnamed until something is edit
 test("PATCH …/posts/{postId} refuses another writer", async () => {
   const { adminCookie, writerCookie, group, posts } = await draftByWriter();
   const otherCookie = await addMember(adminCookie, group.id, other, "writer");
-  const published = await (await request(
-    "POST",
-    posts,
-    writerCookie,
-    postBody("Veröffentlicht"),
-  )).json();
+  const published = await (
+    await request("POST", posts, writerCookie, postBody("Veröffentlicht"))
+  ).json();
 
   const response = await request(
     "PATCH",

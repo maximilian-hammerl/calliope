@@ -33,10 +33,7 @@ export const forumThread = createMiddleware<{
     return id;
   }
 
-  const thread = await ForumService.selectThread(
-    earlier(c.get("user"), "user"),
-    id,
-  );
+  const thread = await ForumService.selectThread(earlier(c.get("user"), "user"), id);
   if (thread === undefined) {
     return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
   }
@@ -71,9 +68,7 @@ export async function forumFolderOf(
   folderId: string,
 ): Promise<ScopedForumFolder | undefined> {
   const folder = await ForumService.selectFolder(user, folderId);
-  return folder === undefined
-    ? undefined
-    : resolved<ForumFolder, FolderId>(folder);
+  return folder === undefined ? undefined : resolved<ForumFolder, FolderId>(folder);
 }
 
 export const forumPage = createMiddleware<{
@@ -84,10 +79,7 @@ export const forumPage = createMiddleware<{
     return id;
   }
 
-  const page = await ForumService.selectPageForReader(
-    earlier(c.get("user"), "user"),
-    id,
-  );
+  const page = await ForumService.selectPageForReader(earlier(c.get("user"), "user"), id);
   if (page === undefined) {
     return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
   }

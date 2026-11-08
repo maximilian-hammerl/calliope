@@ -2,10 +2,7 @@ import { HTTPException } from "hono/http-exception";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import type { ErrorResponse } from "@/src/http/response.ts";
 import type { StoryGenre, StorySubgenre } from "@/src/database/schema.ts";
-import {
-  SUBGENRE_GENRE,
-  subgenresOutsideGenres,
-} from "@/src/story_metadata.ts";
+import { SUBGENRE_GENRE, subgenresOutsideGenres } from "@/src/story_metadata.ts";
 
 /**
  * Refuses a row whose subgenres sit under no genre it carries.
@@ -35,15 +32,12 @@ export function refuseOrphanedSubgenres(
 
   const issues = orphaned.map((subgenre) => ({
     path: "subgenres",
-    message: `${subgenre} belongs to ${
-      SUBGENRE_GENRE[subgenre]
-    }, which is not among the genres`,
+    message: `${subgenre} belongs to ${SUBGENRE_GENRE[subgenre]}, which is not among the genres`,
   }));
 
   throw new HTTPException(STATUS_CODE.BadRequest, {
-    res: Response.json(
-      { error: "Invalid request", issues } satisfies ErrorResponse,
-      { status: STATUS_CODE.BadRequest },
-    ),
+    res: Response.json({ error: "Invalid request", issues } satisfies ErrorResponse, {
+      status: STATUS_CODE.BadRequest,
+    }),
   });
 }

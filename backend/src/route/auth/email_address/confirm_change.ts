@@ -29,8 +29,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Conflict]: {
-        description:
-          "Another account took this address while the link was outstanding",
+        description: "Another account took this address while the link was outstanding",
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.Gone]: {
@@ -44,23 +43,15 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { token } = c.req.valid("json");
 
-    const result = await EmailAddressChangeService.confirmEmailAddressChange(
-      token,
-    );
+    const result = await EmailAddressChangeService.confirmEmailAddressChange(token);
 
     switch (result) {
       case "changed":
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       case "in_use":
-        return c.json(
-          { error: "Another account already uses this address" },
-          STATUS_CODE.Conflict,
-        );
+        return c.json({ error: "Another account already uses this address" }, STATUS_CODE.Conflict);
       case "invalid_token":
-        return c.json(
-          { error: "The link is no longer valid" },
-          STATUS_CODE.Gone,
-        );
+        return c.json({ error: "The link is no longer valid" }, STATUS_CODE.Gone);
       default:
         return assertUnreachable(result);
     }

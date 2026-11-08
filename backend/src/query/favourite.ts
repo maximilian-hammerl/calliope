@@ -44,12 +44,9 @@ export const FAVOURITES_FIRST: SortTerm = {
  * inline template literal widens to `string` and Kysely refuses it.
  */
 const FAVOURITE_REFERENCE = Object.fromEntries(
-  FAVOURITE_TARGET_TYPES.map((kind) => [
-    kind,
-    `favourite.${FAVOURITE_COLUMN[kind]}`,
-  ]),
+  FAVOURITE_TARGET_TYPES.map((kind) => [kind, `favourite.${FAVOURITE_COLUMN[kind]}`]),
 ) as {
-  [Kind in FavouriteTargetType]: `favourite.${typeof FAVOURITE_COLUMN[Kind]}`;
+  [Kind in FavouriteTargetType]: `favourite.${(typeof FAVOURITE_COLUMN)[Kind]}`;
 };
 
 /**
@@ -65,17 +62,15 @@ export function withFavourite<TB extends keyof DB, Output>(
   // Kysely cannot resolve a reference against a table set it has not seen, so a helper generic over
   // the builder must assert them. The casts are the price of writing the join once.
   return queryBuilder
-    .leftJoin(
-      "favourite",
-      (join) =>
-        join
-          .onRef(FAVOURITE_REFERENCE[kind] as never, "=", targetId as never)
-          .on("favourite.userId" as never, "=", readerId as never),
+    .leftJoin("favourite", (join) =>
+      join
+        .onRef(FAVOURITE_REFERENCE[kind] as never, "=", targetId as never)
+        .on("favourite.userId" as never, "=", readerId as never),
     )
     .select((eb) =>
-      eb("favourite.id" as never, "is not", null).$castTo<boolean>().as(
-        IS_FAVOURITE,
-      )
+      eb("favourite.id" as never, "is not", null)
+        .$castTo<boolean>()
+        .as(IS_FAVOURITE),
     );
 }
 

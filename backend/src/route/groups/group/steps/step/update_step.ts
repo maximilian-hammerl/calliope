@@ -12,10 +12,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_NEXT_STEP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_NEXT_STEP_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const STEP_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -70,14 +67,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await db.transaction().execute((transaction) =>
-      WritingGroupNextStepService.setCompleted(
-        transaction,
-        c.get("step").id,
-        done,
-        user.id,
-      )
-    );
+    const updated = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingGroupNextStepService.setCompleted(transaction, c.get("step").id, done, user.id),
+      );
     // Deleted between the check above and the update: a race, answered like any other miss.
     if (updated === undefined) {
       return c.json({ error: "Step not found" }, STATUS_CODE.NotFound);

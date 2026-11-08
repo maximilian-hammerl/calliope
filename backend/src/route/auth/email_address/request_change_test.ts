@@ -60,15 +60,9 @@ test("POST /api/auth/email-address/change mails paths the frontend has", async (
   // Both pointed at `/confirm-email-change` while the router only had
   // `/confirm-email-address-change`, so every link opened a blank page and nothing failed.
   // The frontend pins the same two paths in `router/__tests__/mailedPaths.spec.ts`.
+  assert.ok((await waitForMail(newAddress)).text.includes("/confirm-email-address-change?token="));
   assert.ok(
-    (await waitForMail(newAddress)).text.includes(
-      "/confirm-email-address-change?token=",
-    ),
-  );
-  assert.ok(
-    (await waitForMail(currentAddress)).text.includes(
-      "/cancel-email-address-change?token=",
-    ),
+    (await waitForMail(currentAddress)).text.includes("/cancel-email-address-change?token="),
   );
 });
 

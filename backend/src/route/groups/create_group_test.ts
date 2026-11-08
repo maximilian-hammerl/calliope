@@ -2,12 +2,7 @@ import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, request } from "@/src/test/support.ts";
 
 const username = "create-group-test-user";
 
@@ -38,11 +33,13 @@ test("POST /api/groups creates a group and makes the creator its administrator",
   assert.deepEqual(membership, [{ role: "administrator", username }]);
   assert.equal(
     group.createdBy,
-    (await db
-      .selectFrom("user")
-      .select("id")
-      .where("username", "=", username)
-      .executeTakeFirstOrThrow()).id,
+    (
+      await db
+        .selectFrom("user")
+        .select("id")
+        .where("username", "=", username)
+        .executeTakeFirstOrThrow()
+    ).id,
   );
 });
 
@@ -56,9 +53,10 @@ test("POST /api/groups rejects a body without a title", async () => {
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
   assert.equal(body.error, "Invalid request");
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "title",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["title"],
+  );
 });
 
 test("POST /api/groups stores the story metadata", async () => {
@@ -123,9 +121,10 @@ test("POST /api/groups refuses a value it is given twice", async () => {
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
   // The second one is named, by value and by position.
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "genres.1",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["genres.1"],
+  );
   assert.deepEqual(
     body.issues.map((issue: { message: string }) => issue.message),
     ["Duplicate value: fantasy"],
@@ -144,9 +143,10 @@ test("POST /api/groups refuses a genre that is not one", async () => {
 
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "genres.0",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["genres.0"],
+  );
 });
 
 test("POST /api/groups refuses more tags than a rail can show", async () => {
@@ -184,8 +184,7 @@ test("POST /api/groups refuses a subgenre from a genre it does not carry", async
   assert.deepEqual(body.issues, [
     {
       path: "subgenres",
-      message:
-        "space_opera belongs to science_fiction, which is not among the genres",
+      message: "space_opera belongs to science_fiction, which is not among the genres",
     },
   ]);
 });

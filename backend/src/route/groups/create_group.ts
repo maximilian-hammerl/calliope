@@ -22,40 +22,36 @@ import {
   STORY_TROPES_SCHEMA,
 } from "@/src/http/request_schema.ts";
 
-const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA
-  .pick({
-    title: true,
-    subtitle: true,
-    synopsis: true,
-    visibility: true,
-    storyStatus: true,
-    tense: true,
-    perspective: true,
-    language: true,
-  })
-  .extend({
-    // The column only requires text; an empty title is not useful.
-    title: notBlank(
-      WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle),
-    ),
-    subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
-    synopsis: WRITING_GROUP_SCHEMA.shape.synopsis.max(TEXT_LIMIT.groupSynopsis),
-    // Private unless asked otherwise, per the "private by default" principle.
-    visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
-    // The column's own default, restated so omitting the field is legal rather than a 400.
-    storyStatus: WRITING_GROUP_SCHEMA.shape.storyStatus.default("planning"),
-    language: WRITING_GROUP_SCHEMA.shape.language.default("german"),
-    // Free text rather than a list: collaborative fiction mixes tense and person across
-    // chapters and characters more than any fixed set would survive.
-    genres: STORY_GENRES_SCHEMA,
-    subgenres: STORY_SUBGENRES_SCHEMA,
-    tropes: STORY_TROPES_SCHEMA,
-    contentWarnings: STORY_CONTENT_WARNINGS_SCHEMA,
-    tense: WRITING_GROUP_SCHEMA.shape.tense.nullish(),
-    perspective: WRITING_GROUP_SCHEMA.shape.perspective.nullish(),
-    storyThemes: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
-    storySettings: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
-  });
+const CREATE_GROUP_BODY = WRITING_GROUP_SCHEMA.pick({
+  title: true,
+  subtitle: true,
+  synopsis: true,
+  visibility: true,
+  storyStatus: true,
+  tense: true,
+  perspective: true,
+  language: true,
+}).extend({
+  // The column only requires text; an empty title is not useful.
+  title: notBlank(WRITING_GROUP_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.groupTitle)),
+  subtitle: z.string().max(TEXT_LIMIT.groupSubtitle).nullish(),
+  synopsis: WRITING_GROUP_SCHEMA.shape.synopsis.max(TEXT_LIMIT.groupSynopsis),
+  // Private unless asked otherwise, per the "private by default" principle.
+  visibility: WRITING_GROUP_SCHEMA.shape.visibility.default("private"),
+  // The column's own default, restated so omitting the field is legal rather than a 400.
+  storyStatus: WRITING_GROUP_SCHEMA.shape.storyStatus.default("planning"),
+  language: WRITING_GROUP_SCHEMA.shape.language.default("german"),
+  // Free text rather than a list: collaborative fiction mixes tense and person across
+  // chapters and characters more than any fixed set would survive.
+  genres: STORY_GENRES_SCHEMA,
+  subgenres: STORY_SUBGENRES_SCHEMA,
+  tropes: STORY_TROPES_SCHEMA,
+  contentWarnings: STORY_CONTENT_WARNINGS_SCHEMA,
+  tense: WRITING_GROUP_SCHEMA.shape.tense.nullish(),
+  perspective: WRITING_GROUP_SCHEMA.shape.perspective.nullish(),
+  storyThemes: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
+  storySettings: z.string().max(TEXT_LIMIT.storyMetadataText).nullish(),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -93,7 +89,7 @@ export default new OpenAPIHono().openapi(
         subtitle: values.subtitle ?? null,
         tense: values.tense ?? null,
         perspective: values.perspective ?? null,
-      })
+      }),
     );
 
     return c.json(writingGroup, STATUS_CODE.Created);

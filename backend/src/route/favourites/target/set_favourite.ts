@@ -57,14 +57,11 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId } = c.req.valid("param");
 
-    const refusal = await db.transaction().execute((transaction) =>
-      FavouriteService.setFavourite(
-        transaction,
-        c.get("user"),
-        targetType,
-        targetId,
-      )
-    );
+    const refusal = await db
+      .transaction()
+      .execute((transaction) =>
+        FavouriteService.setFavourite(transaction, c.get("user"), targetType, targetId),
+      );
 
     return refusal === "not_found"
       ? c.json({ error: "Not found" }, STATUS_CODE.NotFound)

@@ -69,9 +69,11 @@ export default new OpenAPIHono().openapi(
       return c.json(ACCOUNT_BANNED_BODY, STATUS_CODE.Forbidden);
     }
 
-    const sessionToken = await db.transaction().execute((transaction) =>
-      UserService.insertSessionForUser(transaction, user, sessionProvenance(c))
-    );
+    const sessionToken = await db
+      .transaction()
+      .execute((transaction) =>
+        UserService.insertSessionForUser(transaction, user, sessionProvenance(c)),
+      );
     SessionCookieService.setUserSession(c, sessionToken);
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);

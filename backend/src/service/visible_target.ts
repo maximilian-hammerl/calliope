@@ -1,8 +1,5 @@
 import { db } from "@/src/database/client.ts";
-import type {
-  ForumPermission,
-  ReportTargetType,
-} from "@/src/database/schema.ts";
+import type { ForumPermission, ReportTargetType } from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { WritingGroupService } from "@/src/service/writing_group_service.ts";
@@ -54,18 +51,13 @@ async function inScope(
   },
 ): Promise<boolean> {
   if (row.writingGroupId !== null) {
-    return await WritingGroupService.selectVisibleWritingGroup(
-      user,
-      row.writingGroupId,
-    ) !== undefined;
+    return (
+      (await WritingGroupService.selectVisibleWritingGroup(user, row.writingGroupId)) !== undefined
+    );
   }
 
   // The CHECK makes the fallback unreachable; it is here so the failure is closed rather than open.
-  return mayReadForumContent(
-    user,
-    row.memberPermission ?? "hidden",
-    row.effectiveMemberPermission,
-  );
+  return mayReadForumContent(user, row.memberPermission ?? "hidden", row.effectiveMemberPermission);
 }
 
 /**
@@ -105,13 +97,8 @@ export async function resolveVisibleTarget(
 
   switch (targetType) {
     case "writing_group": {
-      const group = await WritingGroupService.selectVisibleWritingGroup(
-        user,
-        targetId,
-      );
-      return group === undefined
-        ? undefined
-        : seen(group.createdBy, () => group.title);
+      const group = await WritingGroupService.selectVisibleWritingGroup(user, targetId);
+      return group === undefined ? undefined : seen(group.createdBy, () => group.title);
     }
 
     case "writing_thread": {
@@ -132,9 +119,7 @@ export async function resolveVisibleTarget(
         return undefined;
       }
 
-      return await inScope(user, thread)
-        ? seen(thread.createdBy, () => thread.title)
-        : undefined;
+      return (await inScope(user, thread)) ? seen(thread.createdBy, () => thread.title) : undefined;
     }
 
     case "writing_page": {
@@ -149,10 +134,7 @@ export async function resolveVisibleTarget(
         ])
         // The prose, not the title: a page has a body, so an operator reading the queue after
         // it is deleted needs what it said. Only when somebody asked, as a post's is.
-        .$if(
-          withExcerpt,
-          (queryBuilder) => queryBuilder.select("writingPage.text"),
-        )
+        .$if(withExcerpt, (queryBuilder) => queryBuilder.select("writingPage.text"))
         .where("writingPage.id", "=", targetId)
         .executeTakeFirst();
 
@@ -160,19 +142,13 @@ export async function resolveVisibleTarget(
         return undefined;
       }
 
-      return await inScope(user, page)
-        ? seen(page.createdBy, () => page.text ?? "")
-        : undefined;
+      return (await inScope(user, page)) ? seen(page.createdBy, () => page.text ?? "") : undefined;
     }
 
     case "writing_post": {
       const post = await db
         .selectFrom("writingPost")
-        .innerJoin(
-          "writingThread",
-          "writingThread.id",
-          "writingPost.writingThreadId",
-        )
+        .innerJoin("writingThread", "writingThread.id", "writingPost.writingThreadId")
         .leftJoin("writingFolder", "writingFolder.id", "writingThread.folderId")
         .select([
           "writingPost.isDraft",
@@ -184,10 +160,7 @@ export async function resolveVisibleTarget(
           "writingFolder.effectiveMemberPermission",
         ])
         // Only when somebody asked. This is the column the opt-in exists for.
-        .$if(
-          withExcerpt,
-          (queryBuilder) => queryBuilder.select("writingPost.text"),
-        )
+        .$if(withExcerpt, (queryBuilder) => queryBuilder.select("writingPost.text"))
         .where("writingPost.id", "=", targetId)
         .executeTakeFirst();
 
@@ -196,23 +169,17 @@ export async function resolveVisibleTarget(
         return undefined;
       }
 
-      return await inScope(user, post)
-        ? seen(post.createdBy, () => post.text ?? "")
-        : undefined;
+      return (await inScope(user, post)) ? seen(post.createdBy, () => post.text ?? "") : undefined;
     }
 
     case "story_idea": {
       const idea = await StoryIdeaService.selectStoryIdeaGate(targetId);
-      return idea === undefined
-        ? undefined
-        : seen(idea.createdBy, () => idea.title);
+      return idea === undefined ? undefined : seen(idea.createdBy, () => idea.title);
     }
 
     case "chat_group": {
       const chat = await ChatGroupService.selectChatGroup(user, targetId);
-      return chat === undefined
-        ? undefined
-        : seen(chat.createdBy, () => chat.title ?? "");
+      return chat === undefined ? undefined : seen(chat.createdBy, () => chat.title ?? "");
     }
 
     case "chat_message": {
@@ -226,21 +193,14 @@ export async function resolveVisibleTarget(
         return undefined;
       }
 
-      const chat = await ChatGroupService.selectChatGroup(
-        user,
-        message.chatGroupId,
-      );
-      return chat === undefined
-        ? undefined
-        : seen(message.createdBy, () => message.text);
+      const chat = await ChatGroupService.selectChatGroup(user, message.chatGroupId);
+      return chat === undefined ? undefined : seen(message.createdBy, () => message.text);
     }
 
     case "user": {
       const profile = await UserService.selectUserProfile(targetId);
       // The reported account answers for itself.
-      return profile === undefined
-        ? undefined
-        : seen(profile.id, () => profile.username);
+      return profile === undefined ? undefined : seen(profile.id, () => profile.username);
     }
 
     default:

@@ -1,10 +1,7 @@
 // @ts-types="@types/nodemailer"
 import nodemailer from "nodemailer";
 import { APP_NAME } from "@/src/branding.ts";
-import {
-  getOptionalEnvVariable,
-  getRequiredEnvVariable,
-} from "@/src/util/env.ts";
+import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
 import { runInBackground } from "@/src/util/background.ts";
 
 /** Read at startup, so a misconfigured deployment fails then rather than on the first send. */
@@ -26,9 +23,7 @@ const transport = nodemailer.createTransport({
   secure: SMTP_SECURE,
   // Mailpit wants no credentials, so an absent username is the development default rather
   // than a misconfiguration.
-  auth: SMTP_USERNAME === undefined
-    ? undefined
-    : { user: SMTP_USERNAME, pass: SMTP_PASSWORD },
+  auth: SMTP_USERNAME === undefined ? undefined : { user: SMTP_USERNAME, pass: SMTP_PASSWORD },
   // Reuses the connection: opening one measured thirty seconds against the production relay.
   pool: true,
 });

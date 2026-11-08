@@ -31,10 +31,7 @@ test("a subscriber receives what is published to it", () => {
 test("one member may have several streams, and each gets it", () => {
   const received: Array<string> = [];
   const first = subscribeToChatEvents("annelie", () => received.push("phone"));
-  const second = subscribeToChatEvents(
-    "annelie",
-    () => received.push("laptop"),
-  );
+  const second = subscribeToChatEvents("annelie", () => received.push("laptop"));
 
   publishChatEvent(["annelie"], event);
 

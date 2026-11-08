@@ -41,9 +41,7 @@ export function listQuerySchema<
      */
     // Non-blank for the reason every other required text is: „   " is three characters, so it
     // passed the minimum and set every list scanning for spaces.
-    search: notBlank(
-      z.string().min(TEXT_MINIMUM.search).max(TEXT_LIMIT.search),
-    ).optional(),
+    search: notBlank(z.string().min(TEXT_MINIMUM.search).max(TEXT_LIMIT.search)).optional(),
     offset: z.number().int().min(0).default(0),
     sortAttribute,
     sortOrder: SORT_ORDER.default(defaultSortOrder),

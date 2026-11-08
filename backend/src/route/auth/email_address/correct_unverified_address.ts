@@ -39,8 +39,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Forbidden]: {
-        description:
-          "The address is already verified and cannot be changed here",
+        description: "The address is already verified and cannot be changed here",
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.Conflict]: {
@@ -55,25 +54,18 @@ export default new OpenAPIHono().openapi(
     const { emailAddress } = c.req.valid("json");
     const user = c.get("user");
 
-    const result = await EmailAddressVerificationService
-      .changeUnverifiedEmailAddress(
-        user.id,
-        emailAddress,
-      );
+    const result = await EmailAddressVerificationService.changeUnverifiedEmailAddress(
+      user.id,
+      emailAddress,
+    );
 
     switch (result) {
       case "changed":
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       case "already_verified":
-        return c.json(
-          { error: "This address has already been verified" },
-          STATUS_CODE.Forbidden,
-        );
+        return c.json({ error: "This address has already been verified" }, STATUS_CODE.Forbidden);
       case "in_use":
-        return c.json(
-          { error: "Another account already uses this address" },
-          STATUS_CODE.Conflict,
-        );
+        return c.json({ error: "Another account already uses this address" }, STATUS_CODE.Conflict);
       default:
         return assertUnreachable(result);
     }

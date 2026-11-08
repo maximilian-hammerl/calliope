@@ -10,9 +10,7 @@ export type Avatar = {
   credit: string | null;
 };
 
-export type SetAvatarResult =
-  | { kind: "set"; fileId: string }
-  | { kind: "not_an_image" };
+export type SetAvatarResult = { kind: "set"; fileId: string } | { kind: "not_an_image" };
 
 async function selectAvatar(userId: string): Promise<Avatar | undefined> {
   return await db
@@ -55,7 +53,7 @@ async function setAvatar(
         origin: declaration.origin,
         credit: declaration.credit,
         createdAt: Temporal.Now.instant().toString(),
-      })
+      }),
     )
     .execute();
 
@@ -72,10 +70,7 @@ async function isInUse(fileId: string): Promise<boolean> {
   return row !== undefined;
 }
 
-async function deleteAvatar(
-  transaction: Transaction,
-  userId: string,
-): Promise<boolean> {
+async function deleteAvatar(transaction: Transaction, userId: string): Promise<boolean> {
   const result = await transaction
     .deleteFrom("userAvatar")
     .where("userId", "=", userId)
@@ -97,9 +92,7 @@ async function sweepUnreferencedFiles(): Promise<number> {
   }
 
   const referenced = new Set(
-    (await db.selectFrom("userAvatar").select("fileId").execute()).map((row) =>
-      row.fileId
-    ),
+    (await db.selectFrom("userAvatar").select("fileId").execute()).map((row) => row.fileId),
   );
 
   const deleteBefore = Temporal.Now.instant().subtract(UNREFERENCED_GRACE);
@@ -112,10 +105,7 @@ async function sweepUnreferencedFiles(): Promise<number> {
 
     // deno-lint-ignore no-await-in-loop -- a background pass, so nothing to gain from parallelism
     const changedAt = await FileStore.modifiedAt(fileId);
-    if (
-      changedAt === undefined ||
-      Temporal.Instant.compare(changedAt, deleteBefore) > 0
-    ) {
+    if (changedAt === undefined || Temporal.Instant.compare(changedAt, deleteBefore) > 0) {
       continue;
     }
 

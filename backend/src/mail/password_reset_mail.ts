@@ -2,14 +2,17 @@ import { APP_NAME } from "@/src/branding.ts";
 import type { Mail } from "@/src/mail/mailer.ts";
 
 /** Text only: an HTML part would be a second copy of the same three lines to keep in step. */
-export function passwordResetMail(
-  { username, emailAddress, link, lifetime }: {
-    username: string;
-    emailAddress: string;
-    link: string;
-    lifetime: Temporal.Duration;
-  },
-): Mail {
+export function passwordResetMail({
+  username,
+  emailAddress,
+  link,
+  lifetime,
+}: {
+  username: string;
+  emailAddress: string;
+  link: string;
+  lifetime: Temporal.Duration;
+}): Mail {
   const hours = lifetime.total({ unit: "hours" });
   const validFor = hours === 1 ? "eine Stunde" : `${hours} Stunden`;
 

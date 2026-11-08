@@ -10,9 +10,9 @@ export function scheduleCronJobs() {
     "0 * * * *",
     { signal: getAbortSignalForShutdown() },
     async () => {
-      const deletedSessions = await db.transaction().execute((transaction) =>
-        UserService.deleteExpiredSessions(transaction)
-      );
+      const deletedSessions = await db
+        .transaction()
+        .execute((transaction) => UserService.deleteExpiredSessions(transaction));
       console.log(`Deleted ${deletedSessions} expired session(s)`);
     },
   );
@@ -34,9 +34,9 @@ export function scheduleCronJobs() {
     "30 * * * *",
     { signal: getAbortSignalForShutdown() },
     async () => {
-      const deletedTokens = await db.transaction().execute((transaction) =>
-        UserTokenService.deleteExpiredTokens(transaction)
-      );
+      const deletedTokens = await db
+        .transaction()
+        .execute((transaction) => UserTokenService.deleteExpiredTokens(transaction));
       console.log(`Deleted ${deletedTokens} expired user token(s)`);
     },
   );

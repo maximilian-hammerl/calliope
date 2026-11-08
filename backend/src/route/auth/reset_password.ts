@@ -65,10 +65,7 @@ export default new OpenAPIHono().openapi(
       // One answer for all three cases: which of them it was is only useful to somebody
       // guessing tokens.
       case "invalid_token":
-        return c.json(
-          { error: "The link is no longer valid" },
-          STATUS_CODE.Gone,
-        );
+        return c.json({ error: "The link is no longer valid" }, STATUS_CODE.Gone);
       default:
         return assertUnreachable(result);
     }

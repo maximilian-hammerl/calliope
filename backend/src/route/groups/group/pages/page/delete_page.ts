@@ -12,10 +12,7 @@ import {
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
 
 const PAGE_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -62,9 +59,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    await db.transaction().execute((transaction) =>
-      WritingPageService.deletePage(transaction, group.id, c.get("page").id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) =>
+        WritingPageService.deletePage(transaction, group.id, c.get("page").id),
+      );
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

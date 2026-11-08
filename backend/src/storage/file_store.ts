@@ -77,14 +77,10 @@ async function listFileIds(): Promise<string[]> {
 }
 
 /** When the bytes last changed, which is how the sweep tells an orphan from an upload in flight. */
-async function modifiedAt(
-  fileId: string,
-): Promise<Temporal.Instant | undefined> {
+async function modifiedAt(fileId: string): Promise<Temporal.Instant | undefined> {
   try {
     const { mtime } = await Deno.stat(pathFor(fileId));
-    return mtime === null
-      ? undefined
-      : Temporal.Instant.fromEpochMilliseconds(mtime.getTime());
+    return mtime === null ? undefined : Temporal.Instant.fromEpochMilliseconds(mtime.getTime());
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
       return undefined;

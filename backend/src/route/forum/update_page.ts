@@ -79,17 +79,14 @@ export default new OpenAPIHono().openapi(
     }
 
     if (!mayActInForum(user, page.effectiveMemberPermission, "page:change")) {
-      return c.json(
-        { error: "You cannot change this page" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot change this page" }, STATUS_CODE.Forbidden);
     }
 
     const outcome = await db.transaction().execute((transaction) =>
       ForumService.updatePage(transaction, user, page.id, loadedAt, {
         title,
         document,
-      })
+      }),
     );
     if (outcome === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);

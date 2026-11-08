@@ -8,11 +8,7 @@ import {
   registerUser,
   request,
 } from "@/src/test/support.ts";
-import {
-  createIdea,
-  patchIdea,
-  storyIdeaUsers,
-} from "@/src/test/story_ideas.ts";
+import { createIdea, patchIdea, storyIdeaUsers } from "@/src/test/story_ideas.ts";
 
 // Its own two accounts, so another file's cleanup cannot delete them.
 const { author, bystander } = storyIdeaUsers("convo");
@@ -26,8 +22,7 @@ const startConversation = (cookie: string, ideaId: string) =>
 test("POST /api/story-ideas/{id}/conversations invites the author into a titled chat", async () => {
   const cookie = await registerUser(author);
   const other = await registerUser(bystander);
-  const idea = await (await createIdea(cookie, { title: "Leuchtturm" }))
-    .json();
+  const idea = await (await createIdea(cookie, { title: "Leuchtturm" })).json();
 
   const response = await startConversation(other, idea.id);
   assert.equal(response.status, STATUS_CODE.Created);
@@ -37,19 +32,15 @@ test("POST /api/story-ideas/{id}/conversations invites the author into a titled 
   // The asker is in their own chat outright; it is the author who has to consent.
   assert.equal(chat.status, "joined");
 
-  const authorChats = await (await request("QUERY", "/api/chats", cookie, {}))
-    .json();
-  const invitation = authorChats.results.find(
-    (entry: { id: string }) => entry.id === chat.id,
-  );
+  const authorChats = await (await request("QUERY", "/api/chats", cookie, {})).json();
+  const invitation = authorChats.results.find((entry: { id: string }) => entry.id === chat.id);
   assert.equal(invitation.status, "invited");
 });
 
 test("POST /api/story-ideas/{id}/conversations cuts the title to the chat limit", async () => {
   const cookie = await registerUser(author);
   const other = await registerUser(bystander);
-  const idea = await (await createIdea(cookie, { title: "x".repeat(120) }))
-    .json();
+  const idea = await (await createIdea(cookie, { title: "x".repeat(120) })).json();
 
   const chat = await (await startConversation(other, idea.id)).json();
 
@@ -96,8 +87,7 @@ test("POST /api/story-ideas/{id}/conversations is refused when either has blocke
 
   // And the idea is not offered to them in the first place. Asserted by id, not by an empty
   // board: other tests and the seed fixture share this database.
-  const board = await (await request("QUERY", "/api/story-ideas", other, {}))
-    .json();
+  const board = await (await request("QUERY", "/api/story-ideas", other, {})).json();
   const ids = board.results.map((entry: { id: string }) => entry.id);
   assert.equal(ids.includes(idea.id), false);
 });
@@ -105,10 +95,7 @@ test("POST /api/story-ideas/{id}/conversations is refused when either has blocke
 test("POST /api/story-ideas/{id}/conversations answers 404 for an unknown idea", async () => {
   const other = await registerUser(bystander);
 
-  const response = await startConversation(
-    other,
-    "01a00000-0000-7000-8000-00000000dead",
-  );
+  const response = await startConversation(other, "01a00000-0000-7000-8000-00000000dead");
 
   assert.equal(response.status, STATUS_CODE.NotFound);
 });

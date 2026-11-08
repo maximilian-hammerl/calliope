@@ -1,16 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  clearRateLimits,
-  createGroup,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
-import {
-  cleanUpFavourites,
-  favouriteFixture,
-  setFavourite,
-} from "@/src/test/favourites.ts";
+import { clearRateLimits, createGroup, registerUser, request } from "@/src/test/support.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
 
 /**
  * Listing threads is not a list endpoint — it returns every thread with no paging and no sort of
@@ -27,20 +18,14 @@ afterEach(() => cleanUpFavourites([owner, member, outsider]));
 type Row = { id: string; title: string; isFavourite: boolean };
 
 const threadsOf = async (cookie: string, groupId: string) =>
-  (await (await request("GET", `/api/groups/${groupId}/threads`, cookie))
-    .json()).results as Row[];
+  (await (await request("GET", `/api/groups/${groupId}/threads`, cookie)).json()).results as Row[];
 
 /** Three threads written in order, so the ordering is known before a favourite. */
 async function aGroupWithThreads(cookie: string) {
   const group = await createGroup(cookie, "Favoriten im Strip", "public");
 
   const make = async (title: string) =>
-    await (await request(
-      "POST",
-      `/api/groups/${group.id}/threads`,
-      cookie,
-      { title },
-    )).json();
+    await (await request("POST", `/api/groups/${group.id}/threads`, cookie, { title })).json();
 
   return {
     group,
@@ -52,26 +37,22 @@ async function aGroupWithThreads(cookie: string) {
 
 test("a favourite marks a thread without moving it", async () => {
   const ownerCookie = await registerUser(owner);
-  const { group, oldest, middle, newest } = await aGroupWithThreads(
-    ownerCookie,
-  );
+  const { group, oldest, middle, newest } = await aGroupWithThreads(ownerCookie);
 
   const before = await threadsOf(ownerCookie, group.id);
-  assert.deepEqual(before.map((row) => row.id), [
-    newest.id,
-    middle.id,
-    oldest.id,
-  ]);
+  assert.deepEqual(
+    before.map((row) => row.id),
+    [newest.id, middle.id, oldest.id],
+  );
 
   await setFavourite(ownerCookie, "writing_thread", oldest.id);
 
   const after = await threadsOf(ownerCookie, group.id);
   // Most recently written in first, favourite or not: the mark is the only thing that changed.
-  assert.deepEqual(after.map((row) => row.id), [
-    newest.id,
-    middle.id,
-    oldest.id,
-  ]);
+  assert.deepEqual(
+    after.map((row) => row.id),
+    [newest.id, middle.id, oldest.id],
+  );
   assert.equal(after.find((row) => row.id === oldest.id)?.isFavourite, true);
 });
 
@@ -88,7 +69,10 @@ test("the favourite mark is the reader's own", async () => {
   assert.equal(theirs.find((row) => row.id === oldest.id)?.isFavourite, true);
   assert.equal(ours.find((row) => row.id === oldest.id)?.isFavourite, false);
   // Nobody's favourite changes anybody's order, including their own.
-  assert.deepEqual(theirs.map((row) => row.id), ours.map((row) => row.id));
+  assert.deepEqual(
+    theirs.map((row) => row.id),
+    ours.map((row) => row.id),
+  );
 });
 
 test("a thread's own page carries the flag", async () => {
@@ -97,10 +81,8 @@ test("a thread's own page carries the flag", async () => {
 
   await setFavourite(ownerCookie, "writing_thread", oldest.id);
 
-  const thread = await (await request(
-    "GET",
-    `/api/groups/${group.id}/threads/${oldest.id}`,
-    ownerCookie,
-  )).json();
+  const thread = await (
+    await request("GET", `/api/groups/${group.id}/threads/${oldest.id}`, ownerCookie)
+  ).json();
   assert.equal(thread.isFavourite, true);
 });

@@ -18,19 +18,16 @@ import { writeFixtures } from "@/seed/write.ts";
 /** The one password every seeded account shares. Local only — see the guard below. */
 const PASSWORD = "calliope";
 
-const SEEDABLE: ReadonlyArray<Environment> = [
-  "development",
-  "testing",
-] as const;
+const SEEDABLE: ReadonlyArray<Environment> = ["development", "testing"] as const;
 
 function assertSeedable(): void {
   // Accounts here share one password, so an environment that keeps what people write must
   // never get them — not even with --force, which is exactly the flag somebody reaches for.
   if (!SEEDABLE.includes(ENVIRONMENT)) {
     console.error(
-      `Refusing to seed: PUBLIC_ENVIRONMENT is "${ENVIRONMENT}". Seed data is only for ${
-        SEEDABLE.join(" and ")
-      }.`,
+      `Refusing to seed: PUBLIC_ENVIRONMENT is "${ENVIRONMENT}". Seed data is only for ${SEEDABLE.join(
+        " and ",
+      )}.`,
     );
     Deno.exit(1);
   }
@@ -57,14 +54,22 @@ async function removePreviousSeed(): Promise<void> {
   await db.transaction().execute((transaction) =>
     transaction
       .deleteFrom("report")
-      .where("id", "in", REPORTS.map((report) => report.id))
-      .execute()
+      .where(
+        "id",
+        "in",
+        REPORTS.map((report) => report.id),
+      )
+      .execute(),
   );
   await db.transaction().execute((transaction) =>
     transaction
       .deleteFrom("writingGroup")
-      .where("id", "in", GROUPS.map((group) => group.id))
-      .execute()
+      .where(
+        "id",
+        "in",
+        GROUPS.map((group) => group.id),
+      )
+      .execute(),
   );
   // The forum's rows have no group to cascade from — that absence is what makes them the
   // forum's (#32) — so each kind goes explicitly, leaves before the folders holding them.
@@ -78,13 +83,18 @@ async function removePreviousSeed(): Promise<void> {
       query
         .selectFrom("writingFolder")
         .select(["id", "depth"])
-        .where("id", "in", FORUM_FOLDERS.map((folder) => folder.id))
+        .where(
+          "id",
+          "in",
+          FORUM_FOLDERS.map((folder) => folder.id),
+        )
         .unionAll(
           query
             .selectFrom("writingFolder as child")
             .innerJoin("subtree", "subtree.id", "child.parentFolderId")
             .select(["child.id", "child.depth"]),
-        ))
+        ),
+    )
     .selectFrom("subtree")
     .select(["id", "depth"])
     // Deepest first: `RESTRICT` is checked per row, so a parent cannot go before its children.
@@ -100,9 +110,13 @@ async function removePreviousSeed(): Promise<void> {
       .deleteFrom("writingPage")
       .where((eb) =>
         eb.or([
-          eb("id", "in", FORUM_PAGES.map((page) => page.id)),
+          eb(
+            "id",
+            "in",
+            FORUM_PAGES.map((page) => page.id),
+          ),
           ...(folderIds.length > 0 ? [eb("folderId", "in", folderIds)] : []),
-        ])
+        ]),
       )
       .execute();
 
@@ -110,25 +124,34 @@ async function removePreviousSeed(): Promise<void> {
       .deleteFrom("writingThread")
       .where((eb) =>
         eb.or([
-          eb("id", "in", FORUM_THREADS.map((thread) => thread.id)),
+          eb(
+            "id",
+            "in",
+            FORUM_THREADS.map((thread) => thread.id),
+          ),
           ...(folderIds.length > 0 ? [eb("folderId", "in", folderIds)] : []),
-        ])
+        ]),
       )
       .execute();
   });
 
   for (const folder of seededFolders) {
     // deno-lint-ignore no-await-in-loop -- deepest first, one level at a time
-    await db.transaction().execute((transaction) =>
-      transaction
-        .deleteFrom("writingFolder").where("id", "=", folder.id).execute()
-    );
+    await db
+      .transaction()
+      .execute((transaction) =>
+        transaction.deleteFrom("writingFolder").where("id", "=", folder.id).execute(),
+      );
   }
   await db.transaction().execute((transaction) =>
     transaction
       .deleteFrom("chatGroup")
-      .where("id", "in", CHATS.map((chat) => chat.id))
-      .execute()
+      .where(
+        "id",
+        "in",
+        CHATS.map((chat) => chat.id),
+      )
+      .execute(),
   );
   // By name as well as by id: on id alone, an account somebody made by hand under a seeded
   // name would block every re-run.
@@ -136,12 +159,9 @@ async function removePreviousSeed(): Promise<void> {
     transaction
       .deleteFrom("user")
       .where((eb) =>
-        eb.or([
-          eb("id", "in", Object.values(USER)),
-          eb("username", "in", Object.keys(USER)),
-        ])
+        eb.or([eb("id", "in", Object.values(USER)), eb("username", "in", Object.keys(USER))]),
       )
-      .execute()
+      .execute(),
   );
 }
 
@@ -151,34 +171,25 @@ function summary(): string {
     .filter((name) => name !== "unverified")
     .map((name) => {
       const groups = GROUPS.filter((group) =>
-        group.members.some((member) => member.user === USER[name])
+        group.members.some((member) => member.user === USER[name]),
       );
       const founded = groups.filter((group) => group.by === USER[name]).length;
       const roles = new Set(
         groups.flatMap((group) =>
           group.members
             .filter((member) => member.user === USER[name])
-            .map((member) =>
-              `${member.status === "invited" ? "invited " : ""}${member.role}`
-            )
+            .map((member) => `${member.status === "invited" ? "invited " : ""}${member.role}`),
         ),
       );
-      const where = groups.length === 0
-        ? "no groups"
-        : `${groups.length} group(s), ${[...roles].join(" / ")}`;
-      return `  ${name.padEnd(15)}${
-        founded > 0 ? `founded ${founded}, ` : ""
-      }${where}`;
+      const where =
+        groups.length === 0 ? "no groups" : `${groups.length} group(s), ${[...roles].join(" / ")}`;
+      return `  ${name.padEnd(15)}${founded > 0 ? `founded ${founded}, ` : ""}${where}`;
     })
     .join("\n");
 
   const entries = [
-    GROUPS.find((group) =>
-      group.visibility === "public" && group.members.length > 3
-    ),
-    GROUPS.find((group) =>
-      group.visibility === "private" && group.threads !== undefined
-    ),
+    GROUPS.find((group) => group.visibility === "public" && group.members.length > 3),
+    GROUPS.find((group) => group.visibility === "private" && group.threads !== undefined),
     GROUPS.find((group) => group.threads === undefined),
   ];
 

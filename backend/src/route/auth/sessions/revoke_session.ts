@@ -46,13 +46,15 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const ended = await db.transaction().execute((transaction) =>
-      UserService.deleteSessionForUser(
-        transaction,
-        c.get("user").id,
-        c.req.valid("param").sessionId,
-      )
-    );
+    const ended = await db
+      .transaction()
+      .execute((transaction) =>
+        UserService.deleteSessionForUser(
+          transaction,
+          c.get("user").id,
+          c.req.valid("param").sessionId,
+        ),
+      );
 
     // 404 rather than 403: whether somebody else's session has this id is not this member's
     // business either way.

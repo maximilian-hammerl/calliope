@@ -66,10 +66,14 @@ const ERROR_CODE = z.enum([
  */
 export const ERROR_RESPONSE = z.object({
   error: z.string(),
-  issues: z.array(z.object({
-    path: z.string(),
-    message: z.string(),
-  })).optional(),
+  issues: z
+    .array(
+      z.object({
+        path: z.string(),
+        message: z.string(),
+      }),
+    )
+    .optional(),
   code: ERROR_CODE.optional(),
 });
 

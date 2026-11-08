@@ -47,9 +47,7 @@ test("POST /api/auth/register reports every schema violation", async () => {
   // the order follows the schema's keys and carries no meaning, and one field may fail more than
   // one check — an empty username is both too short and blank.
   assert.deepEqual(
-    [
-      ...new Set(body.issues.map((issue: { path: string }) => issue.path)),
-    ].toSorted(),
+    [...new Set(body.issues.map((issue: { path: string }) => issue.path))].toSorted(),
     ["emailAddress", "password", "username"],
   );
 });
@@ -91,9 +89,10 @@ test("POST /api/auth/register refuses an oversized field", async () => {
 
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "username",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["username"],
+  );
 });
 
 test("POST /api/auth/register refuses a two-character username", async () => {
@@ -107,9 +106,10 @@ test("POST /api/auth/register refuses a two-character username", async () => {
 
   assert.equal(response.status, STATUS_CODE.BadRequest);
   const body = await response.json();
-  assert.deepEqual(body.issues.map((issue: { path: string }) => issue.path), [
-    "username",
-  ]);
+  assert.deepEqual(
+    body.issues.map((issue: { path: string }) => issue.path),
+    ["username"],
+  );
 });
 
 test("POST /api/auth/register refuses a password below the minimum", async () => {
@@ -138,10 +138,8 @@ test("POST /api/auth/register accepts a password exactly at the minimum", async 
 });
 
 test("POST /api/auth/register refuses a password from a known breach", async (t) => {
-  const isBreached = t.mock.method(
-    BreachedPasswordService,
-    "isBreached",
-    () => Promise.resolve(true),
+  const isBreached = t.mock.method(BreachedPasswordService, "isBreached", () =>
+    Promise.resolve(true),
   );
 
   const response = await postJson("/api/auth/register", {
@@ -152,7 +150,8 @@ test("POST /api/auth/register refuses a password from a known breach", async (t)
 
   assert.equal(response.status, STATUS_CODE.UnprocessableEntity);
   assert.equal((await response.json()).code, PASSWORD_BREACHED);
-  assert.deepEqual(isBreached.mock.calls.map((call) => call.arguments), [
-    [password],
-  ]);
+  assert.deepEqual(
+    isBreached.mock.calls.map((call) => call.arguments),
+    [[password]],
+  );
 });

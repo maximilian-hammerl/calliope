@@ -1,10 +1,5 @@
 import type { SelectQueryBuilder } from "kysely";
-import type {
-  DB,
-  StoryGenre,
-  StorySubgenre,
-  StoryTrope,
-} from "@/src/database/schema.ts";
+import type { DB, StoryGenre, StorySubgenre, StoryTrope } from "@/src/database/schema.ts";
 
 /**
  * What a member may narrow a board by. Absent means "not asked", never "none" — the same rule the
@@ -57,34 +52,19 @@ export function withStoryVocabulary<TB extends keyof DB, Output>(
   // Kysely cannot resolve a reference against a table set it has not seen, so a helper generic
   // over the builder must assert them — the same price `withFavourite` pays for its join.
   return queryBuilder
-    .$if(
-      chosen(filter.genres),
-      (builder) =>
-        builder.where((eb) =>
-          eb(
-            eb.ref(column.genres as never),
-            "&&",
-            eb.val(filter.genres) as never,
-          )
-        ),
+    .$if(chosen(filter.genres), (builder) =>
+      builder.where((eb) =>
+        eb(eb.ref(column.genres as never), "&&", eb.val(filter.genres) as never),
+      ),
     )
     .$if(chosen(filter.subgenres), (builder) =>
       builder.where((eb) =>
-        eb(
-          eb.ref(column.subgenres as never),
-          "&&",
-          eb.val(filter.subgenres) as never,
-        )
-      ))
-    .$if(
-      chosen(filter.tropes),
-      (builder) =>
-        builder.where((eb) =>
-          eb(
-            eb.ref(column.tropes as never),
-            "&&",
-            eb.val(filter.tropes) as never,
-          )
-        ),
+        eb(eb.ref(column.subgenres as never), "&&", eb.val(filter.subgenres) as never),
+      ),
+    )
+    .$if(chosen(filter.tropes), (builder) =>
+      builder.where((eb) =>
+        eb(eb.ref(column.tropes as never), "&&", eb.val(filter.tropes) as never),
+      ),
     );
 }

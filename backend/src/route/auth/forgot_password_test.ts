@@ -8,13 +8,8 @@ import { waitForMail } from "@/src/test/mailpit.ts";
 import { authFixture, postJson } from "@/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
-const {
-  clearMail,
-  emailAddress,
-  mailCount,
-  registerAndDiscardVerificationMail,
-  username,
-} = authFixture("forgot");
+const { clearMail, emailAddress, mailCount, registerAndDiscardVerificationMail, username } =
+  authFixture("forgot");
 
 beforeEach(async () => {
   await clearRateLimits();
@@ -22,8 +17,7 @@ beforeEach(async () => {
 });
 afterEach(() => deleteUsers([username]));
 
-const forgotPassword = (login: string) =>
-  postJson("/api/auth/forgot-password", { login });
+const forgotPassword = (login: string) => postJson("/api/auth/forgot-password", { login });
 
 test("POST /api/auth/forgot-password mails a link to a registered address", async () => {
   await registerAndDiscardVerificationMail();
@@ -38,11 +32,7 @@ test("POST /api/auth/forgot-password mails a link to a registered address", asyn
   assert.ok(mail.subject.includes("Calliope"));
   assert.ok(mail.text.includes(username));
   // The link has to point at the frontend route that spends the token, not at the API.
-  assert.ok(
-    mail.text.includes(
-      `${getRequiredEnvVariable("HOST_URL")}/reset-password?token=`,
-    ),
-  );
+  assert.ok(mail.text.includes(`${getRequiredEnvVariable("HOST_URL")}/reset-password?token=`));
 });
 
 test("POST /api/auth/forgot-password answers the same way for an unknown address", async () => {

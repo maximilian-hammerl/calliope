@@ -6,10 +6,7 @@ import { REPORT_SCHEMA, USER_SCHEMA } from "@/src/database/schema.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { authorizedAsModerator } from "@/src/middleware/authorized_as_platform_role.ts";
 import { ReportService } from "@/src/service/report_service.ts";
-import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -99,9 +96,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await ReportService.listReports(
-      listQuery(c.req.valid("json")),
-    );
+    const page = await ReportService.listReports(listQuery(c.req.valid("json")));
     return c.json(page, STATUS_CODE.OK);
   },
 );

@@ -2,13 +2,12 @@ import type { Selectable } from "kysely";
 import { db, type Transaction } from "@/src/database/client.ts";
 import type { ChatMessage as DatabaseChatMessage } from "@/src/database/schema.ts";
 
-export type ChatMessage =
-  & Pick<
-    Selectable<DatabaseChatMessage>,
-    "id" | "chatGroupId" | "text" | "createdBy" | "createdAt"
-  >
+export type ChatMessage = Pick<
+  Selectable<DatabaseChatMessage>,
+  "id" | "chatGroupId" | "text" | "createdBy" | "createdAt"
+> &
   // Null once the author's account is gone: what they wrote outlives it.
-  & { createdByUsername: string | null };
+  { createdByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "chatMessage.id",
@@ -52,7 +51,7 @@ async function listMessages(
 
   return {
     results,
-    nextCursor: rows.length > limit ? results.at(-1)?.id ?? null : null,
+    nextCursor: rows.length > limit ? (results.at(-1)?.id ?? null) : null,
   };
 }
 

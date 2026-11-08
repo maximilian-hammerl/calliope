@@ -37,9 +37,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const read = await db.transaction().execute((transaction) =>
-      NotificationService.markAllRead(transaction, c.get("user").id)
-    );
+    const read = await db
+      .transaction()
+      .execute((transaction) => NotificationService.markAllRead(transaction, c.get("user").id));
 
     return c.json({ read }, STATUS_CODE.OK);
   },

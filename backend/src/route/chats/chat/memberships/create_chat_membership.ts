@@ -71,7 +71,7 @@ export default new OpenAPIHono().openapi(
         : c.json({ error: access.error }, STATUS_CODE.Forbidden);
     }
 
-    if (!await userExists(userId)) {
+    if (!(await userExists(userId))) {
       return c.json({ error: "User not found" }, STATUS_CODE.NotFound);
     }
 
@@ -79,23 +79,17 @@ export default new OpenAPIHono().openapi(
     // A ban refuses contact the same way, and answers the same neutral refusal: an inviter
     // must not learn that a moderation action was taken against somebody else.
     if (
-      await BlockService.isBlockedBetween(user.id, userId) ||
-      await BanService.isBanned(userId)
+      (await BlockService.isBlockedBetween(user.id, userId)) ||
+      (await BanService.isBanned(userId))
     ) {
-      return c.json(
-        { error: "Contact is not possible" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Contact is not possible" }, STATUS_CODE.Forbidden);
     }
 
-    const invitation = await db.transaction().execute((transaction) =>
-      UserInChatGroupService.insertInvitation(
-        transaction,
-        chatId,
-        userId,
-        user.id,
-      )
-    );
+    const invitation = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInChatGroupService.insertInvitation(transaction, chatId, userId, user.id),
+      );
 
     if (invitation === undefined) {
       return c.json(

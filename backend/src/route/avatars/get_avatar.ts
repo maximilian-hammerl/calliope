@@ -52,7 +52,7 @@ export default new OpenAPIHono().openapi(
 
     // The row, not the file: the bytes outlive it so a restore cannot break, but a picture somebody
     // has removed — or that went with a deleted account — must stop being served at once.
-    if (!await UserAvatarService.isInUse(fileId)) {
+    if (!(await UserAvatarService.isInUse(fileId))) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 

@@ -16,9 +16,7 @@ export type StepId = Scoped<"step">;
 export type MemberId = Scoped<"member">;
 
 /** A row as a resolver hands it on: the same row, its id scoped. */
-export type Resolved<Row extends { id: string }, Id extends string> =
-  & Omit<Row, "id">
-  & { id: Id };
+export type Resolved<Row extends { id: string }, Id extends string> = Omit<Row, "id"> & { id: Id };
 
 export function mint<Id extends Scoped<string>>(id: string): Id {
   return id as Id;

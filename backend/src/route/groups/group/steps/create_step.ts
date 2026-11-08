@@ -14,20 +14,13 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_NEXT_STEP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_NEXT_STEP_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
-const CREATE_STEP_BODY = WRITING_GROUP_NEXT_STEP_SCHEMA
-  .pick({ text: true })
-  .extend({
-    text: notBlank(
-      WRITING_GROUP_NEXT_STEP_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.stepText),
-    ),
-  });
+const CREATE_STEP_BODY = WRITING_GROUP_NEXT_STEP_SCHEMA.pick({ text: true }).extend({
+  text: notBlank(WRITING_GROUP_NEXT_STEP_SCHEMA.shape.text.min(1).max(TEXT_LIMIT.stepText)),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -74,14 +67,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const step = await db.transaction().execute((transaction) =>
-      WritingGroupNextStepService.insertStep(
-        transaction,
-        group.id,
-        text,
-        user.id,
-      )
-    );
+    const step = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingGroupNextStepService.insertStep(transaction, group.id, text, user.id),
+      );
     return c.json(step, STATUS_CODE.Created);
   },
 );

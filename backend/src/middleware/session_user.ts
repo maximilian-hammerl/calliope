@@ -7,9 +7,7 @@ import { SessionCookieService } from "@/src/service/session_cookie_service.ts";
  * address has been verified. One copy, so a change to how a session is read cannot apply to
  * the strict path and not the permissive one.
  */
-export async function resolveSessionUser(
-  c: Context,
-): Promise<User | undefined> {
+export async function resolveSessionUser(c: Context): Promise<User | undefined> {
   const sessionToken = SessionCookieService.getUserSession(c);
 
   if (sessionToken === undefined) {

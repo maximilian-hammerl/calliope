@@ -39,17 +39,15 @@ test("a written file is listed, and a removed one is not", async () => {
  * turns a value into a path, and a path is where an escape would happen.
  */
 test("a name that is not a file id never becomes a path", async () => {
-  for (
-    const name of [
-      "../../etc/passwd",
-      "..",
-      "a/b",
-      "",
-      "01a00000-0000-7000-8000",
-      // a v4 uuid: the column and the store both mean v7
-      "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    ]
-  ) {
+  for (const name of [
+    "../../etc/passwd",
+    "..",
+    "a/b",
+    "",
+    "01a00000-0000-7000-8000",
+    // a v4 uuid: the column and the store both mean v7
+    "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  ]) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     await assert.rejects(() => FileStore.read(name));
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
@@ -65,10 +63,7 @@ test("a partial write is not listed as a file", async () => {
   await Deno.mkdir("./.file-storage", { recursive: true });
   await Deno.writeFile(`./.file-storage/${id}.partial`, BYTES);
 
-  assert.equal(
-    (await FileStore.listFileIds()).includes(`${id}.partial`),
-    false,
-  );
+  assert.equal((await FileStore.listFileIds()).includes(`${id}.partial`), false);
   assert.equal((await FileStore.listFileIds()).includes(id), false);
 
   await Deno.remove(`./.file-storage/${id}.partial`);

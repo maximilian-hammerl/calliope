@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  getUserId,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
+import { clearRateLimits, getUserId, registerUser, request } from "@/src/test/support.ts";
 import {
   aPostBy,
   cleanUpReports,
@@ -24,16 +19,12 @@ beforeEach(clearRateLimits);
 
 afterEach(() => cleanUpReports([operator, reporter, author]));
 
-const registerOperator = async () =>
-  makeOperator(operator, await registerUser(operator));
+const registerOperator = async () => makeOperator(operator, await registerUser(operator));
 
 test("QUERY /api/reports is refused unless you are an operator", async () => {
   const memberCookie = await registerUser(reporter);
 
-  assert.equal(
-    (await listReports(memberCookie)).status,
-    STATUS_CODE.Forbidden,
-  );
+  assert.equal((await listReports(memberCookie)).status, STATUS_CODE.Forbidden);
 });
 
 test("the queue names who is answerable, not only what was said", async () => {
@@ -85,12 +76,14 @@ test("deleting the reported post keeps the author, so it can still be acted on",
 
   await fileReportOk(reporterCookie, "writing_post", post.id);
   assert.equal(
-    (await request(
-      "DELETE",
-      `/api/groups/${group.id}/threads/${thread.id}/posts/${post.id}`,
-      authorCookie,
-      undefined,
-    )).status,
+    (
+      await request(
+        "DELETE",
+        `/api/groups/${group.id}/threads/${thread.id}/posts/${post.id}`,
+        authorCookie,
+        undefined,
+      )
+    ).status,
     STATUS_CODE.OK,
   );
 

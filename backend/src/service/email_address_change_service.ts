@@ -7,10 +7,7 @@ import {
   emailAddressChangeConfirmationMail,
   emailAddressChangeRequestedMail,
 } from "@/src/mail/email_address_change_mail.ts";
-import {
-  TOKEN_LIFETIME,
-  UserTokenService,
-} from "@/src/service/user_token_service.ts";
+import { TOKEN_LIFETIME, UserTokenService } from "@/src/service/user_token_service.ts";
 
 const HOST_URL = getRequiredEnvVariable("HOST_URL");
 
@@ -47,17 +44,11 @@ async function requestEmailAddressChange(
 
   const user = await db
     .selectFrom("user")
-    .select([
-      "id",
-      "username",
-      "emailAddress",
-      "emailAddressVerifiedAt",
-      "hashedPassword",
-    ])
+    .select(["id", "username", "emailAddress", "emailAddressVerifiedAt", "hashedPassword"])
     .where("id", "=", userId)
     .executeTakeFirstOrThrow();
 
-  if (!await verifyPassword(password, user.hashedPassword)) {
+  if (!(await verifyPassword(password, user.hashedPassword))) {
     return "wrong_password";
   }
 
@@ -83,7 +74,7 @@ async function requestEmailAddressChange(
       userId,
       purpose: "email_address_change",
       newEmailAddress: normalisedAddress,
-    })
+    }),
   );
 
   // The cooldown swallowed it, so a link is already on its way to somewhere.
@@ -91,38 +82,37 @@ async function requestEmailAddressChange(
     return "requested";
   }
 
-  Mailer.sendInBackground(emailAddressChangeConfirmationMail({
-    username: user.username,
-    newEmailAddress: normalisedAddress,
-    link: link("/confirm-email-address-change", token),
-    lifetime: TOKEN_LIFETIME,
-  }));
+  Mailer.sendInBackground(
+    emailAddressChangeConfirmationMail({
+      username: user.username,
+      newEmailAddress: normalisedAddress,
+      link: link("/confirm-email-address-change", token),
+      lifetime: TOKEN_LIFETIME,
+    }),
+  );
 
   // The same token cancels, which is safe because cancelling only restores what is already
   // true. It saves a second kind of token and a second thing to expire.
-  Mailer.sendInBackground(emailAddressChangeRequestedMail({
-    username: user.username,
-    currentEmailAddress: user.emailAddress,
-    newEmailAddress: normalisedAddress,
-    link: link("/cancel-email-address-change", token),
-    lifetime: TOKEN_LIFETIME,
-  }));
+  Mailer.sendInBackground(
+    emailAddressChangeRequestedMail({
+      username: user.username,
+      currentEmailAddress: user.emailAddress,
+      newEmailAddress: normalisedAddress,
+      link: link("/cancel-email-address-change", token),
+      lifetime: TOKEN_LIFETIME,
+    }),
+  );
 
   return "requested";
 }
 
-export type ConfirmEmailAddressChangeResult =
-  | "changed"
-  | "invalid_token"
-  | "in_use";
+export type ConfirmEmailAddressChangeResult = "changed" | "invalid_token" | "in_use";
 
 /**
  * Applies the change. Consuming the token, moving the address and ending every other session
  * are one transaction, so the account cannot end up half-moved.
  */
-async function confirmEmailAddressChange(
-  token: string,
-): Promise<ConfirmEmailAddressChangeResult> {
+async function confirmEmailAddressChange(token: string): Promise<ConfirmEmailAddressChangeResult> {
   const outcome = await db.transaction().execute(async (transaction) => {
     const consumed = await UserTokenService.consumeToken(
       transaction,
@@ -172,10 +162,7 @@ async function confirmEmailAddressChange(
 
     // Everyone else is evicted. If the request came from somebody who should not have been
     // signed in, this is where they lose it.
-    await transaction
-      .deleteFrom("userSession")
-      .where("userId", "=", userId)
-      .execute();
+    await transaction.deleteFrom("userSession").where("userId", "=", userId).execute();
 
     return {
       username: user.username,
@@ -194,9 +181,11 @@ async function confirmEmailAddressChange(
 
 /** The cancel link from the notice sent to the old address. */
 async function cancelEmailAddressChange(token: string): Promise<boolean> {
-  return await db.transaction().execute((transaction) =>
-    UserTokenService.revokeToken(transaction, token, "email_address_change")
-  );
+  return await db
+    .transaction()
+    .execute((transaction) =>
+      UserTokenService.revokeToken(transaction, token, "email_address_change"),
+    );
 }
 
 export const EmailAddressChangeService = {

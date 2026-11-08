@@ -5,10 +5,7 @@ import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { JOINED_GROUP_FOLDER } from "@/src/scope/chains.ts";
 import { folderOf } from "@/src/scope/group_scope.ts";
-import {
-  MAX_FOLDER_DEPTH,
-  WritingFolderService,
-} from "@/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH, WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -18,10 +15,7 @@ import {
   FOLDER_TOO_DEEP,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const FOLDER_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -39,8 +33,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [FOLDERS_TAG],
     summary: "Move a folder under another one, or to the root",
-    description:
-      `Everything inside it moves with it. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels — which depends on its deepest descendant, not on the folder.`,
+    description: `Everything inside it moves with it. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels — which depends on its deepest descendant, not on the folder.`,
     operationId: "moveFolder",
     middleware: JOINED_GROUP_FOLDER,
     request: {
@@ -65,8 +58,7 @@ export default new OpenAPIHono().openapi(
         content: jsonContent(ERROR_RESPONSE),
       },
       [STATUS_CODE.UnprocessableEntity]: {
-        description:
-          "The target is inside it, or the subtree would be too deep",
+        description: "The target is inside it, or the subtree would be too deep",
         content: jsonContent(ERROR_RESPONSE),
       },
       ...BAD_REQUEST_RESPONSE,
@@ -84,21 +76,21 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const parent = parentFolderId === null
-      ? null
-      : await folderOf(group.id, parentFolderId);
+    const parent = parentFolderId === null ? null : await folderOf(group.id, parentFolderId);
     if (parent === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      WritingFolderService.moveFolder(
-        transaction,
-        group.id,
-        c.get("folder").id,
-        parent?.id ?? null,
-      )
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingFolderService.moveFolder(
+          transaction,
+          group.id,
+          c.get("folder").id,
+          parent?.id ?? null,
+        ),
+      );
 
     if (outcome === undefined || outcome.kind === "noSuchParent") {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);

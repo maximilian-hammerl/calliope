@@ -12,14 +12,8 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
-import {
-  FOLDER_DESCRIPTION_SCHEMA,
-  FOLDER_TITLE_SCHEMA,
-} from "@/src/http/request_schema.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "@/src/http/request_schema.ts";
 
 const FOLDER_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -39,8 +33,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [FOLDERS_TAG],
     summary: "Rename a folder, or change what it says",
-    description:
-      "Where a folder sits is not changed here — moving one is its own operation.",
+    description: "Where a folder sits is not changed here — moving one is its own operation.",
     operationId: "updateFolder",
     middleware: JOINED_GROUP_FOLDER,
     request: {
@@ -79,14 +72,14 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const updated = await db.transaction().execute((transaction) =>
-      WritingFolderService.updateFolder(
-        transaction,
-        group.id,
-        c.get("folder").id,
-        { title, description },
-      )
-    );
+    const updated = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingFolderService.updateFolder(transaction, group.id, c.get("folder").id, {
+          title,
+          description,
+        }),
+      );
     if (updated === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }

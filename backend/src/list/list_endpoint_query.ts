@@ -38,9 +38,7 @@ export type SortTerm = { attribute: string; order: SortOrder };
  * `ListQuery` carries the list a query is actually built from. Routes hand the validated body
  * through here, which is the one place the two shapes meet.
  */
-export function listQuery<
-  Body extends { sortAttribute: string; sortOrder: SortOrder },
->(
+export function listQuery<Body extends { sortAttribute: string; sortOrder: SortOrder }>(
   body: Body,
 ): Omit<Body, "sortAttribute" | "sortOrder"> & { sort: SortTerm[] } {
   const { sortAttribute, sortOrder, ...rest } = body;
@@ -75,12 +73,8 @@ export async function listResultsWithCount<TB extends keyof DB, Result>(
 
   const page = sort.reduce(
     (builder, term) =>
-      builder.orderBy(
-        db.dynamic.ref(term.attribute),
-        (orderBy) =>
-          term.order === "asc"
-            ? orderBy.asc().nullsLast()
-            : orderBy.desc().nullsLast(),
+      builder.orderBy(db.dynamic.ref(term.attribute), (orderBy) =>
+        term.order === "asc" ? orderBy.asc().nullsLast() : orderBy.desc().nullsLast(),
       ),
     queryBuilder,
   );
@@ -89,9 +83,7 @@ export async function listResultsWithCount<TB extends keyof DB, Result>(
     page.limit(query.limit).offset(query.offset).execute(),
     db
       // Ordering and paging would only make the count more expensive or wrong.
-      .selectFrom(
-        queryBuilder.clearOrderBy().clearLimit().clearOffset().as("results"),
-      )
+      .selectFrom(queryBuilder.clearOrderBy().clearLimit().clearOffset().as("results"))
       .select((eb) => eb.fn.countAll<number>().as("count"))
       .executeTakeFirstOrThrow(),
   ]);

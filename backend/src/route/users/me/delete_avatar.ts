@@ -38,9 +38,9 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    await db.transaction().execute((transaction) =>
-      UserAvatarService.deleteAvatar(transaction, c.get("user").id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => UserAvatarService.deleteAvatar(transaction, c.get("user").id));
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

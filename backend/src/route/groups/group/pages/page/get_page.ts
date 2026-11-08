@@ -11,10 +11,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
 
 const PAGE_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,

@@ -56,13 +56,13 @@ export default new OpenAPIHono().openapi(
     if (userId === user.id) {
       return c.json({ error: "Cannot block yourself" }, STATUS_CODE.Forbidden);
     }
-    if (!await userExists(userId)) {
+    if (!(await userExists(userId))) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    await db.transaction().execute((transaction) =>
-      BlockService.insertBlock(transaction, user.id, userId)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => BlockService.insertBlock(transaction, user.id, userId));
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

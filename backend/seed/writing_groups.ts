@@ -5,14 +5,7 @@ import type {
   WritingGroup as DatabaseWritingGroup,
 } from "@/src/database/schema.ts";
 import { USER } from "@/seed/accounts.ts";
-import {
-  folderId,
-  groupId,
-  pageId,
-  postId,
-  stepId,
-  threadId,
-} from "@/seed/ids.ts";
+import { folderId, groupId, pageId, postId, stepId, threadId } from "@/seed/ids.ts";
 
 type Member = {
   user: string;
@@ -49,9 +42,8 @@ type GroupColumns = Selectable<DatabaseWritingGroup>;
  * compile error rather than as a column the seed silently stops filling. Only what is not a
  * column is written out: the founder and the nested rows `write.ts` turns into their own inserts.
  */
-export type GroupFixture =
-  & Pick<GroupColumns, "id" | "title" | "synopsis" | "visibility">
-  & Given<
+export type GroupFixture = Pick<GroupColumns, "id" | "title" | "synopsis" | "visibility"> &
+  Given<
     GroupColumns,
     | "subtitle"
     | "language"
@@ -64,8 +56,7 @@ export type GroupFixture =
     | "storySettings"
     | "tense"
     | "perspective"
-  >
-  & {
+  > & {
     /** Founder. Also has to appear in `members` as a joined administrator; `write.ts` checks. */
     by: string;
     members: Member[];
@@ -73,18 +64,14 @@ export type GroupFixture =
      * Folders, deepest last: `write.ts` inserts them in order and derives `depth` from the
      * parent, so a child may only name a folder written before it.
      */
-    folders?: Array<
-      {
-        id: string;
-        title: string;
-        by: string;
-        in?: string;
-        description?: string;
-      }
-    >;
-    pages?: Array<
-      { id: string; title: string; by: string; in?: string; text: string }
-    >;
+    folders?: Array<{
+      id: string;
+      title: string;
+      by: string;
+      in?: string;
+      description?: string;
+    }>;
+    pages?: Array<{ id: string; title: string; by: string; in?: string; text: string }>;
     threads?: Array<{
       id: string;
       title: string;
@@ -112,9 +99,7 @@ const LONG_THREAD_POSTS: Post[] = Array.from({ length: 105 }, (_, index) => ({
   id: postId(200 + index),
   // deno-lint-ignore no-non-null-assertion -- a modulo of the length is always in range
   by: LONG_THREAD_WRITERS[index % LONG_THREAD_WRITERS.length]!,
-  text: `Aufstieg, Abschnitt ${
-    index + 1
-  }. Der Pfad wurde schmaler, und niemand sagte etwas.`,
+  text: `Aufstieg, Abschnitt ${index + 1}. Der Pfad wurde schmaler, und niemand sagte etwas.`,
 }));
 
 /**
@@ -148,8 +133,7 @@ const FURTHER_CHAPTERS: NonNullable<GroupFixture["threads"]> = [
     {
       id: postId(400 + index),
       by: index % 2 === 0 ? USER.kommafehler : USER.randnotiz,
-      text:
-        "They agreed on the punctuation and on nothing else, which was progress of a kind.",
+      text: "They agreed on the punctuation and on nothing else, which was progress of a kind.",
     },
   ],
 }));
@@ -175,14 +159,12 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(1),
             by: USER.tintenfleck,
-            text:
-              "Kapitel eins beginnt mit einer Tür, die niemand geschlossen hat.",
+            text: "Kapitel eins beginnt mit einer Tür, die niemand geschlossen hat.",
           },
           {
             id: postId(2),
             by: USER.tintenfleck,
-            text:
-              "Dahinter ein Flur, und am Ende des Flurs noch eine Gliederung.",
+            text: "Dahinter ein Flur, und am Ende des Flurs noch eine Gliederung.",
           },
         ],
       },
@@ -191,8 +173,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
   {
     id: groupId(2),
     title: "Pride and Punctuation",
-    subtitle:
-      "It is a truth universally acknowledged that a comma changes everything",
+    subtitle: "It is a truth universally acknowledged that a comma changes everything",
     synopsis:
       "A public group writing in English. Two of us so far, and we argue about semicolons " +
       "more than about the plot.",
@@ -216,14 +197,12 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(3),
             by: USER.randnotiz,
-            text:
-              "She had read the letter twice, and disliked it more the second time.",
+            text: "She had read the letter twice, and disliked it more the second time.",
           },
           {
             id: postId(4),
             by: USER.kommafehler,
-            text:
-              "He had written it once, and disliked it immediately; that was the difference between them.",
+            text: "He had written it once, and disliked it immediately; that was the difference between them.",
           },
         ],
       },
@@ -269,8 +248,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
         title: "Der Berg",
         by: USER.federkiel,
         in: folderId(1),
-        text:
-          "Der Berg ist kleiner als sein Ruf. Wer oben ankommt, merkt es zuerst am Wind.",
+        text: "Der Berg ist kleiner als sein Ruf. Wer oben ankommt, merkt es zuerst am Wind.",
       },
       {
         id: pageId(2),
@@ -284,16 +262,14 @@ const WRITTEN_GROUPS: GroupFixture[] = [
         title: "Der Zwerg",
         by: USER.nachtschreiber,
         in: folderId(3),
-        text:
-          "Klein, zauberhaft, und mit einer Liste, auf der sein Name nicht stand.",
+        text: "Klein, zauberhaft, und mit einer Liste, auf der sein Name nicht stand.",
       },
       {
         // At the root, so the tree shows a leaf above the folders as the ordering intends.
         id: pageId(4),
         title: "Wie wir hier schreiben",
         by: USER.federkiel,
-        text:
-          "Ein Beitrag pro Szene. Wer eine Figur übernimmt, sagt es vorher an.",
+        text: "Ein Beitrag pro Szene. Wer eine Figur übernimmt, sagt es vorher an.",
       },
     ],
     members: [
@@ -312,22 +288,19 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(5),
             by: USER.federkiel,
-            text:
-              "Der Zug hielt an einem Bahnsteig, der kürzer war als der Zug selbst.",
+            text: "Der Zug hielt an einem Bahnsteig, der kürzer war als der Zug selbst.",
           },
           {
             id: postId(6),
             by: USER.tintenfleck,
-            text:
-              "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
+            text: "Oben empfing ihn ein Zwerg mit einer Liste. Sein Name stand nicht darauf.",
           },
           // No author: the account was deleted, and the writing stayed. Without this the
           // "Gelöschtes Konto" state is only reachable by deleting an account mid-test.
           {
             id: postId(7),
             by: null,
-            text:
-              "Sieben Jahre, sagte der Zwerg, seien hier oben eine Woche. Niemand widersprach.",
+            text: "Sieben Jahre, sagte der Zwerg, seien hier oben eine Woche. Niemand widersprach.",
           },
         ],
       },
@@ -396,8 +369,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(9),
             by: USER.lesezeichen,
-            text:
-              "Das Haus stand tiefer als der Weg, und im Herbst stand es im Wasser.",
+            text: "Das Haus stand tiefer als der Weg, und im Herbst stand es im Wasser.",
           },
           {
             id: postId(10),
@@ -444,15 +416,13 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(12),
             by: USER.zeilensprung,
-            text:
-              "Sie hatte sich vorgenommen, nichts zu streichen. Das nahmen sich alle vor, sagte der Lektor.",
+            text: "Sie hatte sich vorgenommen, nichts zu streichen. Das nahmen sich alle vor, sagte der Lektor.",
           },
           // Unpublished, so the composer has something to restore and the draft rules show.
           {
             id: postId(13),
             by: USER.tintenfleck,
-            text:
-              "Noch nicht fertig — was, wenn das Manuskript sie schon kennt?",
+            text: "Noch nicht fertig — was, wenn das Manuskript sie schon kennt?",
             isDraft: true,
           },
         ],
@@ -507,14 +477,12 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(15),
             by: USER.zeilensprung,
-            text:
-              "Liebe A., der Garten ist größer als das Haus, und das Haus ist zu groß.",
+            text: "Liebe A., der Garten ist größer als das Haus, und das Haus ist zu groß.",
           },
           {
             id: postId(16),
             by: USER.tintenfleck,
-            text:
-              "Liebe E., schreib mir, wenn der Garten anfängt, zurückzuschreiben.",
+            text: "Liebe E., schreib mir, wenn der Garten anfängt, zurückzuschreiben.",
           },
           {
             id: postId(17),
@@ -540,8 +508,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
     id: groupId(8),
     title: "Die Verwandtschaft",
     subtitle: "Eines Morgens war die Familie da",
-    synopsis:
-      "Privat, zwei Verwalterinnen, und die nächsten Schritte sind größtenteils abgehakt.",
+    synopsis: "Privat, zwei Verwalterinnen, und die nächsten Schritte sind größtenteils abgehakt.",
     visibility: "private",
     storyStatus: "finished",
     genres: ["literary"],
@@ -562,8 +529,7 @@ const WRITTEN_GROUPS: GroupFixture[] = [
           {
             id: postId(18),
             by: USER.kommafehler,
-            text:
-              "Als er erwachte, saß die ganze Verwandtschaft am Fußende des Bettes und wartete.",
+            text: "Als er erwachte, saß die ganze Verwandtschaft am Fußende des Bettes und wartete.",
           },
         ],
       },
@@ -607,10 +573,7 @@ const DISCOVERABLE_TITLES = [
   "Der Steppenwolf lernt Absätze",
 ] as const;
 
-const DISCOVERABLE_GROUPS: GroupFixture[] = DISCOVERABLE_TITLES.map((
-  title,
-  index,
-) => ({
+const DISCOVERABLE_GROUPS: GroupFixture[] = DISCOVERABLE_TITLES.map((title, index) => ({
   id: groupId(20 + index),
   title,
   synopsis:
@@ -620,7 +583,4 @@ const DISCOVERABLE_GROUPS: GroupFixture[] = DISCOVERABLE_TITLES.map((
   members: [{ user: USER.silbenmeer, role: "administrator" }],
 }));
 
-export const GROUPS: GroupFixture[] = [
-  ...WRITTEN_GROUPS,
-  ...DISCOVERABLE_GROUPS,
-];
+export const GROUPS: GroupFixture[] = [...WRITTEN_GROUPS, ...DISCOVERABLE_GROUPS];

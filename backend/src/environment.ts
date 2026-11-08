@@ -1,12 +1,7 @@
 import * as z from "zod";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 
-export const ENVIRONMENTS = [
-  "development",
-  "testing",
-  "staging",
-  "production",
-] as const;
+export const ENVIRONMENTS = ["development", "testing", "staging", "production"] as const;
 
 export const ENVIRONMENT_SCHEMA = z.enum(ENVIRONMENTS);
 
@@ -17,11 +12,7 @@ function readEnvironment(): Environment {
   const parsed = ENVIRONMENT_SCHEMA.safeParse(value);
 
   if (!parsed.success) {
-    throw new Error(
-      `PUBLIC_ENVIRONMENT must be one of ${
-        ENVIRONMENTS.join(", ")
-      }, not "${value}"`,
-    );
+    throw new Error(`PUBLIC_ENVIRONMENT must be one of ${ENVIRONMENTS.join(", ")}, not "${value}"`);
   }
 
   return parsed.data;

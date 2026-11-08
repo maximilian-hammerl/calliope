@@ -48,9 +48,11 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { ideaId } = c.req.valid("param");
 
-    const deleted = await db.transaction().execute((transaction) =>
-      StoryIdeaService.deleteStoryIdea(transaction, ideaId, c.get("user").id)
-    );
+    const deleted = await db
+      .transaction()
+      .execute((transaction) =>
+        StoryIdeaService.deleteStoryIdea(transaction, ideaId, c.get("user").id),
+      );
 
     if (deleted) {
       return c.json({ ok: true } as const, STATUS_CODE.OK);

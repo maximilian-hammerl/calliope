@@ -58,8 +58,7 @@ export const FORUM_FOLDERS: ForumFolderFixture[] = [
     title: "Fragen & Vorschläge",
     by: USER.tintenfleck,
     may: "write",
-    description:
-      "Der Gegenpart zum Ordner darüber: hier fragt und schlägt vor, wer mag.",
+    description: "Der Gegenpart zum Ordner darüber: hier fragt und schlägt vor, wer mag.",
   },
   {
     id: folderId(13),
@@ -152,12 +151,7 @@ const WORD_CHAIN = [
   "Buchdeckel",
 ];
 
-const CHAIN_AUTHORS = [
-  USER.randnotiz,
-  USER.silbenmeer,
-  USER.zeilensprung,
-  USER.federkiel,
-];
+const CHAIN_AUTHORS = [USER.randnotiz, USER.silbenmeer, USER.zeilensprung, USER.federkiel];
 
 // Numbered from 41: the group fixture owns 1–10 and, for Pride and Punctuation's ten chapters,
 // 30–39. `assertDistinctIds` is what caught the overlap rather than a wrong row in the interface.
@@ -171,14 +165,12 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(501),
         by: USER.kommafehler,
-        text:
-          "Ich finde die Gruppe nicht wieder, in der ich letzte Woche gelesen habe. Gibt es einen Verlauf?",
+        text: "Ich finde die Gruppe nicht wieder, in der ich letzte Woche gelesen habe. Gibt es einen Verlauf?",
       },
       {
         id: postId(502),
         by: USER.randnotiz,
-        text:
-          "Setz sie als Favorit, dann steht sie oben in deiner Liste. Einen Verlauf gibt es nicht.",
+        text: "Setz sie als Favorit, dann steht sie oben in deiner Liste. Einen Verlauf gibt es nicht.",
       },
       {
         id: postId(503),
@@ -196,14 +188,12 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(504),
         by: USER.zeilensprung,
-        text:
-          "Ich hätte gern eine Notiz an einer Gruppe, die nur ich sehe. Für den Faden, in dem ich den Überblick verliere.",
+        text: "Ich hätte gern eine Notiz an einer Gruppe, die nur ich sehe. Für den Faden, in dem ich den Überblick verliere.",
       },
       {
         id: postId(505),
         by: USER.lesezeichen,
-        text:
-          "Und einen Entwurf, der über mehrere Tage stehen bleibt. Bei mir wird ein Beitrag selten an einem Abend fertig.",
+        text: "Und einen Entwurf, der über mehrere Tage stehen bleibt. Bei mir wird ein Beitrag selten an einem Abend fertig.",
       },
     ],
   },
@@ -216,14 +206,12 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(506),
         by: USER.tintenfleck,
-        text:
-          "Ein Beitrag pro Person, höchstens tausend Wörter. Häng ihn hier an, nicht in die Infos.",
+        text: "Ein Beitrag pro Person, höchstens tausend Wörter. Häng ihn hier an, nicht in die Infos.",
       },
       {
         id: postId(507),
         by: USER.federkiel,
-        text:
-          "Meiner spielt an einem Bahnhof, an dem seit vierzig Jahren kein Zug gehalten hat.",
+        text: "Meiner spielt an einem Bahnhof, an dem seit vierzig Jahren kein Zug gehalten hat.",
       },
       {
         id: postId(508),
@@ -241,8 +229,7 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(509),
         by: USER.tintenfleck,
-        text:
-          "Ausgezählt wird, sobald alle Beiträge stehen. Bis dahin ist hier Platz zum Streiten.",
+        text: "Ausgezählt wird, sobald alle Beiträge stehen. Bis dahin ist hier Platz zum Streiten.",
       },
     ],
   },
@@ -268,8 +255,7 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(511),
         by: USER.silbenmeer,
-        text:
-          "Bei mir regnet es seit drei Tagen, und ich habe seit drei Tagen kein Wort geschrieben. Zusammenhang unklar.",
+        text: "Bei mir regnet es seit drei Tagen, und ich habe seit drei Tagen kein Wort geschrieben. Zusammenhang unklar.",
       },
       {
         id: postId(512),
@@ -290,8 +276,7 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(513),
         by: USER.silbenmeer,
-        text:
-          "Wer geht, darf das hier hinschreiben. Geantwortet wird nicht — wer etwas sagen möchte, schreibt persönlich.",
+        text: "Wer geht, darf das hier hinschreiben. Geantwortet wird nicht — wer etwas sagen möchte, schreibt persönlich.",
       },
     ],
   },
@@ -304,8 +289,7 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(514),
         by: USER.lesezeichen,
-        text:
-          "Ich zeichne die Figuren, über die hier geschrieben wird. Wer eine möchte, sagt Bescheid.",
+        text: "Ich zeichne die Figuren, über die hier geschrieben wird. Wer eine möchte, sagt Bescheid.",
       },
       {
         id: postId(515),
@@ -323,8 +307,7 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(516),
         by: USER.federkiel,
-        text:
-          "Ich schreibe seit zwölf Jahren an demselben Roman und habe kein Interesse daran, ihn zu beenden.",
+        text: "Ich schreibe seit zwölf Jahren an demselben Roman und habe kein Interesse daran, ihn zu beenden.",
       },
     ],
   },
@@ -363,8 +346,7 @@ export const FORUM_THREADS: ForumThreadFixture[] = [
       {
         id: postId(560),
         by: USER.randnotiz,
-        text:
-          "Vier Silben, zwei davon gelogen. Das Spiel ist vorbei, die Lösung stand hier.",
+        text: "Vier Silben, zwei davon gelogen. Das Spiel ist vorbei, die Lösung stand hier.",
       },
     ],
   },
@@ -375,56 +357,49 @@ export const FORUM_PAGES: ForumPageFixture[] = [
     id: pageId(11),
     title: "Willkommen im Forum",
     by: USER.tintenfleck,
-    text:
-      "Hier wird öffentlich geschrieben: über das Schreiben, über alles daneben, und manchmal reihum in einem Spiel.\n\nWas in einer Schreibgruppe entsteht, bleibt dort. Dieses Forum ist das andere: der Teil, den alle sehen.",
+    text: "Hier wird öffentlich geschrieben: über das Schreiben, über alles daneben, und manchmal reihum in einem Spiel.\n\nWas in einer Schreibgruppe entsteht, bleibt dort. Dieses Forum ist das andere: der Teil, den alle sehen.",
   },
   {
     id: pageId(12),
     title: "Forenregeln",
     by: USER.tintenfleck,
     in: folderId(11),
-    text:
-      "Sei freundlich. Lies, bevor du antwortest. Wer sich nicht daran hält, wird gemeldet und dann nicht mehr gefragt.\n\nWas hier steht, gilt im ganzen Forum. Was in einer Gruppe gilt, entscheidet die Gruppe.",
+    text: "Sei freundlich. Lies, bevor du antwortest. Wer sich nicht daran hält, wird gemeldet und dann nicht mehr gefragt.\n\nWas hier steht, gilt im ganzen Forum. Was in einer Gruppe gilt, entscheidet die Gruppe.",
   },
   {
     id: pageId(13),
     title: "Quellenangaben",
     by: USER.tintenfleck,
     in: folderId(11),
-    text:
-      "Wenn du ein Bild, einen Text oder eine Idee von jemand anderem zeigst, schreib dazu, woher es kommt — Name, wo du es gefunden hast, und ob du fragen musstest.\n\nBei einem eigenen Bild reicht „von mir“. Das Feld beim Profilbild fragt genau danach.",
+    text: "Wenn du ein Bild, einen Text oder eine Idee von jemand anderem zeigst, schreib dazu, woher es kommt — Name, wo du es gefunden hast, und ob du fragen musstest.\n\nBei einem eigenen Bild reicht „von mir“. Das Feld beim Profilbild fragt genau danach.",
   },
   {
     id: pageId(14),
     title: "Triggerwarnungen",
     by: USER.randnotiz,
     in: folderId(11),
-    text:
-      "Setz eine Warnung an den Anfang, nicht ans Ende. Eine Warnung, die man erst nach der Stelle liest, ist keine.\n\nGruppen tragen ihre Warnungen im Steckbrief. Im Forum schreibst du sie in den ersten Beitrag.",
+    text: "Setz eine Warnung an den Anfang, nicht ans Ende. Eine Warnung, die man erst nach der Stelle liest, ist keine.\n\nGruppen tragen ihre Warnungen im Steckbrief. Im Forum schreibst du sie in den ersten Beitrag.",
   },
   {
     id: pageId(15),
     title: "Wie Schreibgruppen funktionieren",
     by: USER.tintenfleck,
     in: folderId(11),
-    text:
-      "Eine Gruppe ist der private Teil: Themen, Seiten, Ordner und ein Steckbrief zur Geschichte. Wer schreiben will, braucht eine Einladung.\n\nEine öffentliche Gruppe kann jede und jeder sofort mitlesen. Eine private sieht nur, wer drin ist.",
+    text: "Eine Gruppe ist der private Teil: Themen, Seiten, Ordner und ein Steckbrief zur Geschichte. Wer schreiben will, braucht eine Einladung.\n\nEine öffentliche Gruppe kann jede und jeder sofort mitlesen. Eine private sieht nur, wer drin ist.",
   },
   {
     id: pageId(16),
     title: "Glossar",
     by: USER.randnotiz,
     in: folderId(11),
-    text:
-      "Gruppe — der private Ort, an dem geschrieben wird.\nThema — ein Faden aus Beiträgen.\nSeite — ein Text ohne Antworten, den alle bearbeiten dürfen.\nStoryidee — ein Vorschlag, aus dem eine Gruppe werden kann.\nOrdner — was Themen und Seiten sortiert.",
+    text: "Gruppe — der private Ort, an dem geschrieben wird.\nThema — ein Faden aus Beiträgen.\nSeite — ein Text ohne Antworten, den alle bearbeiten dürfen.\nStoryidee — ein Vorschlag, aus dem eine Gruppe werden kann.\nOrdner — was Themen und Seiten sortiert.",
   },
   {
     id: pageId(17),
     title: "Häufige Fragen",
     by: USER.randnotiz,
     in: folderId(11),
-    text:
-      "**Wie trete ich einer Gruppe bei?** Über „Gruppen entdecken“, und dann über eine Anfrage an die Gruppe selbst.\n\n**Kann ich meinen Namen ändern?** Nein. Der Name bleibt, damit ein alter Beitrag noch derselben Person gehört.\n\n**Wie lösche ich eine Gruppe?** Gar nicht — eine Gruppe verschwindet, sobald die letzte Person sie verlässt.\n\n**Wo finde ich Mitschreibende?** Unter „Storyideen“. Dafür ist das Forum nicht der Ort.",
+    text: "**Wie trete ich einer Gruppe bei?** Über „Gruppen entdecken“, und dann über eine Anfrage an die Gruppe selbst.\n\n**Kann ich meinen Namen ändern?** Nein. Der Name bleibt, damit ein alter Beitrag noch derselben Person gehört.\n\n**Wie lösche ich eine Gruppe?** Gar nicht — eine Gruppe verschwindet, sobald die letzte Person sie verlässt.\n\n**Wo finde ich Mitschreibende?** Unter „Storyideen“. Dafür ist das Forum nicht der Ort.",
   },
   {
     id: pageId(20),
@@ -433,8 +408,7 @@ export const FORUM_PAGES: ForumPageFixture[] = [
     in: folderId(16),
     // The one page a member may edit: everything else is closed by its folder or by itself, so
     // without this nothing shows a page carrying „Seite bearbeiten" rather than the read-only note.
-    text:
-      "Was hier hineingehört: Wörterbücher, Namenslisten, alles, was beim Schreiben hilft. Ergänzen darf jede und jeder.\n\nNoch ziemlich leer. Trag ein, was du benutzt.",
+    text: "Was hier hineingehört: Wörterbücher, Namenslisten, alles, was beim Schreiben hilft. Ergänzen darf jede und jeder.\n\nNoch ziemlich leer. Trag ein, was du benutzt.",
   },
   {
     id: pageId(18),
@@ -444,15 +418,13 @@ export const FORUM_PAGES: ForumPageFixture[] = [
     // Read inside a folder that grants `write`, which is the case a member could not otherwise
     // see: the room is open, this one page is not.
     may: "read",
-    text:
-      "Ein Beitrag pro Person, höchstens tausend Wörter, bis zum 31. August.\n\nThema ist „ein Ort, an dem niemand mehr wohnt“. Gewertet wird von allen, die mitgeschrieben haben.",
+    text: "Ein Beitrag pro Person, höchstens tausend Wörter, bis zum 31. August.\n\nThema ist „ein Ort, an dem niemand mehr wohnt“. Gewertet wird von allen, die mitgeschrieben haben.",
   },
   {
     id: pageId(19),
     title: "Werkstattnotizen",
     by: USER.tintenfleck,
     in: folderId(20),
-    text:
-      "Ideen für das nächste Forenspiel. Steht hier, solange der Ordner versteckt ist.",
+    text: "Ideen für das nächste Forenspiel. Steht hier, solange der Ordner versteckt ist.",
   },
 ];

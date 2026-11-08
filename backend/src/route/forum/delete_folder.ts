@@ -61,9 +61,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      ForumService.deleteFolder(transaction, c.get("folder").id)
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) => ForumService.deleteFolder(transaction, c.get("folder").id));
 
     if (outcome === "notFound") {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);

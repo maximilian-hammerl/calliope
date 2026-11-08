@@ -5,11 +5,7 @@ import { FORUM_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { FORUM_THREAD } from "@/src/scope/chains.ts";
 import { WritingPostService } from "@/src/service/writing_post_service.ts";
-import {
-  FAVOURITE_FILTER,
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -17,23 +13,23 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_POST_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_POST_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({ threadId: WRITING_THREAD_SCHEMA.shape.id });
 
-const SORT_ATTRIBUTE = WRITING_POST_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = WRITING_POST_SCHEMA.keyof()
   .extract(["createdAt"])
   .default("createdAt")
   .transform((attribute) => `writingPost.${attribute}` as const);
 
-const LIST_POSTS_BODY = listQuerySchema(SORT_ATTRIBUTE, {
-  favourite: FAVOURITE_FILTER,
-  isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
-}, "asc");
+const LIST_POSTS_BODY = listQuerySchema(
+  SORT_ATTRIBUTE,
+  {
+    favourite: FAVOURITE_FILTER,
+    isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
+  },
+  "asc",
+);
 
 /**
  * The group's endpoint with a different gate: `listPosts` is scoped to a thread and never asked

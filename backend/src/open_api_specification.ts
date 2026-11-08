@@ -45,26 +45,21 @@ type Tag =
 
 // Type safe tags to descriptions mapping, so there cannot be new tags without descriptions
 const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
-  [OPERATIONS_TAG]:
-    "Liveness of the application and the databases it depends on",
+  [OPERATIONS_TAG]: "Liveness of the application and the databases it depends on",
 
   [AUTH_TAG]: "Registration, sessions and sign-out",
 
   [GROUPS_TAG]: "Managing writing groups and their visibility",
-  [STORY_IDEAS_TAG]:
-    "The public board of story ideas seeking writers, and their lifecycle",
-  [BLOCKS_TAG]:
-    "Refusing contact from another member, and the list of who is refused",
-  [REPORTS_TAG]:
-    "Reporting something to the operators, with the reason it is being reported",
+  [STORY_IDEAS_TAG]: "The public board of story ideas seeking writers, and their lifecycle",
+  [BLOCKS_TAG]: "Refusing contact from another member, and the list of who is refused",
+  [REPORTS_TAG]: "Reporting something to the operators, with the reason it is being reported",
   [FAVOURITES_TAG]:
     "A member's own favourites, across groups, threads, posts, pages, story ideas and chats",
   [MEMBERSHIPS_TAG]:
     "Managing who belongs to a writing group, in which role, and their invitations",
 
   [THREADS_TAG]: "Managing the threads of a writing group",
-  [STEPS_TAG]:
-    "The next steps a group has agreed on, ticked off as the story gets there",
+  [STEPS_TAG]: "The next steps a group has agreed on, ticked off as the story gets there",
   [POSTS_TAG]: "Managing the posts of a thread, published or draft",
   [PAGES_TAG]:
     "A group's reference pages: material that is written and revised rather than replied to",
@@ -72,8 +67,7 @@ const TAGS_WITH_DESCRIPTIONS: Record<Tag, string> = {
     "The folders a group nests its threads and pages in, named by the members themselves",
   [FORUM_TAG]:
     "The public forum: its folders, the threads and pages in them, and the posts to a thread",
-  [USERS_TAG]:
-    "Finding other members by name, so they can be invited to a group",
+  [USERS_TAG]: "Finding other members by name, so they can be invited to a group",
   [CHATS_TAG]: "Chats between members, and the messages in them",
   [NOTIFICATIONS_TAG]:
     "What happened to a member: invitations, role changes, and activity in their groups",

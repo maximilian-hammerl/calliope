@@ -47,9 +47,9 @@ afterEach(async () => {
           eb("reporterId", "in", fixtureUsers),
           eb("reportedUserId", "in", fixtureUsers),
           eb("reportedAuthorId", "in", fixtureUsers),
-        ])
+        ]),
       )
-      .execute()
+      .execute(),
   );
 
   await deleteUsers([reporter, author, outsider]);
@@ -70,22 +70,12 @@ const report = (
   });
 
 async function thread(cookie: string, groupId: string, title: string) {
-  const response = await request(
-    "POST",
-    `/api/groups/${groupId}/threads`,
-    cookie,
-    { title },
-  );
+  const response = await request("POST", `/api/groups/${groupId}/threads`, cookie, { title });
   assert.equal(response.status, STATUS_CODE.Created);
   return await response.json();
 }
 
-async function post(
-  cookie: string,
-  groupId: string,
-  threadId: string,
-  text: string,
-) {
+async function post(cookie: string, groupId: string, threadId: string, text: string) {
   const response = await request(
     "POST",
     `/api/groups/${groupId}/threads/${threadId}/posts`,
@@ -106,7 +96,7 @@ const storedFor = (targetId: string) =>
         eb("reportedWritingPageId", "=", targetId),
         eb("reportedWritingGroupId", "=", targetId),
         eb("reportedUserId", "=", targetId),
-      ])
+      ]),
     )
     .executeTakeFirst();
 
@@ -116,17 +106,9 @@ test("POST /api/reports copies what was reported into the report", async () => {
 
   const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
   const created = await thread(authorCookie, group.id, "Ein Thread");
-  const written = await post(
-    authorCookie,
-    group.id,
-    created.id,
-    REPORTED_TEXT,
-  );
+  const written = await post(authorCookie, group.id, created.id, REPORTED_TEXT);
 
-  assert.equal(
-    (await report(reporterCookie, "writing_post", written.id)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await report(reporterCookie, "writing_post", written.id)).status, STATUS_CODE.OK);
 
   const stored = await storedFor(written.id);
   assert.ok(stored);
@@ -144,22 +126,19 @@ test("a report survives the post it is about", async () => {
 
   const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
   const created = await thread(authorCookie, group.id, "Ein Thread");
-  const written = await post(
-    authorCookie,
-    group.id,
-    created.id,
-    REPORTED_TEXT,
-  );
+  const written = await post(authorCookie, group.id, created.id, REPORTED_TEXT);
   await report(reporterCookie, "writing_post", written.id);
 
   // Deleting your own post the moment it is reported must not erase the evidence.
   assert.equal(
-    (await request(
-      "DELETE",
-      `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
-      authorCookie,
-      undefined,
-    )).status,
+    (
+      await request(
+        "DELETE",
+        `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
+        authorCookie,
+        undefined,
+      )
+    ).status,
     STATUS_CODE.OK,
   );
 
@@ -199,13 +178,9 @@ test("reporting the same thing under the same category rewrites the reason", asy
   const authorId = await getUserId(author);
 
   // Half a sentence submitted by a stray Enter, then said properly.
+  assert.equal((await report(reporterCookie, "user", authorId, "Beleidig")).status, STATUS_CODE.OK);
   assert.equal(
-    (await report(reporterCookie, "user", authorId, "Beleidig")).status,
-    STATUS_CODE.OK,
-  );
-  assert.equal(
-    (await report(reporterCookie, "user", authorId, "Beleidigend, mehrfach."))
-      .status,
+    (await report(reporterCookie, "user", authorId, "Beleidigend, mehrfach.")).status,
     STATUS_CODE.OK,
   );
 
@@ -226,19 +201,11 @@ test("reporting the same thing under another category is a second claim", async 
   const authorId = await getUserId(author);
 
   assert.equal(
-    (await report(reporterCookie, "user", authorId, "Beleidigend"))
-      .status,
+    (await report(reporterCookie, "user", authorId, "Beleidigend")).status,
     STATUS_CODE.OK,
   );
   assert.equal(
-    (await report(
-      reporterCookie,
-      "user",
-      authorId,
-      "Und abgeschrieben.",
-      "plagiarism",
-    ))
-      .status,
+    (await report(reporterCookie, "user", authorId, "Und abgeschrieben.", "plagiarism")).status,
     STATUS_CODE.OK,
   );
 
@@ -252,10 +219,7 @@ test("reporting the same thing under another category is a second claim", async 
   // category is in the index key for exactly this: while it was not, noticing a second thing
   // wrong overwrote the first report and lost it.
   assert.equal(stored.length, 2);
-  assert.deepEqual(
-    stored.map((row) => row.category).toSorted(),
-    ["harassment", "plagiarism"],
-  );
+  assert.deepEqual(stored.map((row) => row.category).toSorted(), ["harassment", "plagiarism"]);
 });
 
 test("re-reporting keeps the excerpt from when it was first reported", async () => {
@@ -264,23 +228,20 @@ test("re-reporting keeps the excerpt from when it was first reported", async () 
 
   const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
   const created = await thread(authorCookie, group.id, "Ein Thread");
-  const written = await post(
-    authorCookie,
-    group.id,
-    created.id,
-    REPORTED_TEXT,
-  );
+  const written = await post(authorCookie, group.id, created.id, REPORTED_TEXT);
 
   await report(reporterCookie, "writing_post", written.id, "Kurz");
 
   // The author edits it to something innocuous, then the reporter says more.
   assert.equal(
-    (await request(
-      "PATCH",
-      `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
-      authorCookie,
-      postBody("Harmlos."),
-    )).status,
+    (
+      await request(
+        "PATCH",
+        `/api/groups/${group.id}/threads/${created.id}/posts/${written.id}`,
+        authorCookie,
+        postBody("Harmlos."),
+      )
+    ).status,
     STATUS_CODE.OK,
   );
   await report(reporterCookie, "writing_post", written.id, "Ausführlicher");
@@ -302,10 +263,7 @@ test("a second member reporting the same thing is its own report", async () => {
 
   // The count of separate reporters is the signal an operator wants; only one member filing
   // twice is the slip worth refusing.
-  assert.equal(
-    (await report(outsiderCookie, "user", authorId)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await report(outsiderCookie, "user", authorId)).status, STATUS_CODE.OK);
 });
 
 test("two members reporting the same thing can both still delete their accounts", async () => {
@@ -321,10 +279,7 @@ test("two members reporting the same thing can both still delete their accounts"
   // failed the *deletion* — a member unable to leave because somebody else reported the same
   // thing they did. The index only covers live reporters for this reason.
   await write((transaction) =>
-    transaction
-      .deleteFrom("user")
-      .where("username", "in", [reporter, outsider])
-      .execute()
+    transaction.deleteFrom("user").where("username", "in", [reporter, outsider]).execute(),
   );
 
   const surviving = await db
@@ -332,11 +287,7 @@ test("two members reporting the same thing can both still delete their accounts"
     .select(db.fn.countAll().as("count"))
     .where("reportedUserId", "=", authorId)
     .executeTakeFirstOrThrow();
-  assert.equal(
-    Number(surviving.count),
-    2,
-    "the reports went with their reporters",
-  );
+  assert.equal(Number(surviving.count), 2, "the reports went with their reporters");
 });
 
 test("reporting your own account is refused", async () => {
@@ -353,22 +304,15 @@ test("reporting your own writing is refused, whatever kind it is", async () => {
 
   const group = await createGroup(authorCookie, "Eigene Gruppe", "public");
   const created = await thread(authorCookie, group.id, "Eigener Thread");
-  const written = await post(
-    authorCookie,
-    group.id,
-    created.id,
-    "Eigener Text.",
-  );
+  const written = await post(authorCookie, group.id, created.id, "Eigener Text.");
 
   // One check covers every kind because each resolves an author, so all three go through the
   // same refusal rather than three copies of it.
-  for (
-    const [targetType, targetId] of [
-      ["writing_group", group.id],
-      ["writing_thread", created.id],
-      ["writing_post", written.id],
-    ] as const
-  ) {
+  for (const [targetType, targetId] of [
+    ["writing_group", group.id],
+    ["writing_thread", created.id],
+    ["writing_post", written.id],
+  ] as const) {
     assert.equal(
       // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
       (await report(authorCookie, targetType, targetId)).status,
@@ -384,18 +328,10 @@ test("somebody else's writing in the same group is still reportable", async () =
 
   const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
   const created = await thread(authorCookie, group.id, "Ein Thread");
-  const written = await post(
-    authorCookie,
-    group.id,
-    created.id,
-    REPORTED_TEXT,
-  );
+  const written = await post(authorCookie, group.id, created.id, REPORTED_TEXT);
 
   // The refusal must not have been widened into "anything in a group you wrote in".
-  assert.equal(
-    (await report(reporterCookie, "writing_post", written.id)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await report(reporterCookie, "writing_post", written.id)).status, STATUS_CODE.OK);
 });
 
 test("POST /api/reports needs a session", async () => {
@@ -414,17 +350,14 @@ test("a page can be reported, and the queue keeps its prose", async () => {
   const reporterCookie = await registerUser(reporter);
   const group = await createGroup(authorCookie, "Öffentliche Gruppe", "public");
 
-  const page = await (await request(
-    "POST",
-    `/api/groups/${group.id}/pages`,
-    authorCookie,
-    { title: "Die Bergstadt", document: plainTextToDocument(REPORTED_TEXT) },
-  )).json();
+  const page = await (
+    await request("POST", `/api/groups/${group.id}/pages`, authorCookie, {
+      title: "Die Bergstadt",
+      document: plainTextToDocument(REPORTED_TEXT),
+    })
+  ).json();
 
-  assert.equal(
-    (await report(reporterCookie, "writing_page", page.id)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await report(reporterCookie, "writing_page", page.id)).status, STATUS_CODE.OK);
 
   const stored = await storedFor(page.id);
   assert.ok(stored);
@@ -438,12 +371,12 @@ test("a page in a private group cannot be reported by an outsider", async () => 
   const authorCookie = await registerUser(author);
   const reporterCookie = await registerUser(reporter);
   const group = await createGroup(authorCookie, "Private Gruppe", "private");
-  const page = await (await request(
-    "POST",
-    `/api/groups/${group.id}/pages`,
-    authorCookie,
-    { title: "Geheim", document: plainTextToDocument(REPORTED_TEXT) },
-  )).json();
+  const page = await (
+    await request("POST", `/api/groups/${group.id}/pages`, authorCookie, {
+      title: "Geheim",
+      document: plainTextToDocument(REPORTED_TEXT),
+    })
+  ).json();
 
   // The same answer a thing that does not exist gets, so reporting cannot be used to discover it.
   assert.equal(

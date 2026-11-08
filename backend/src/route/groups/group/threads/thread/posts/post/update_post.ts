@@ -30,13 +30,14 @@ const POST_PARAMS = z.object({
 // Setting isDraft to false is how a draft gets published.
 // `text` is derived from the document by the server, so it is not accepted here either.
 //
-const UPDATE_POST_BODY = z.object({
-  document: DOCUMENT_SCHEMA.optional(),
-  isDraft: WRITING_POST_SCHEMA.shape.isDraft.optional(),
-}).refine(
-  (changes) => Object.values(changes).some((value) => value !== undefined),
-  { message: "Provide at least one field to update" },
-);
+const UPDATE_POST_BODY = z
+  .object({
+    document: DOCUMENT_SCHEMA.optional(),
+    isDraft: WRITING_POST_SCHEMA.shape.isDraft.optional(),
+  })
+  .refine((changes) => Object.values(changes).some((value) => value !== undefined), {
+    message: "Provide at least one field to update",
+  });
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -85,8 +86,7 @@ export default new OpenAPIHono().openapi(
       if (text.length === 0 || text.length > TEXT_LIMIT.documentText) {
         return c.json(
           {
-            error:
-              `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
+            error: `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
           },
           STATUS_CODE.BadRequest,
         );
@@ -106,17 +106,11 @@ export default new OpenAPIHono().openapi(
     }
 
     const updated = await db.transaction().execute((transaction) =>
-      WritingPostService.updatePost(
-        transaction,
-        post.id,
-        changes,
-        post.isDraft,
-        {
-          writingGroupId: group.id,
-          writingThreadId: c.get("thread").id,
-          actorId: user.id,
-        },
-      )
+      WritingPostService.updatePost(transaction, post.id, changes, post.isDraft, {
+        writingGroupId: group.id,
+        writingThreadId: c.get("thread").id,
+        actorId: user.id,
+      }),
     );
     if (updated === undefined) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);

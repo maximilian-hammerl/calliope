@@ -32,33 +32,25 @@ async function demotedAfterWriting() {
   const group = await createGroup(adminCookie, "Übernommenes Konto");
   const theirCookie = await addMember(adminCookie, group.id, member, "writer");
 
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    theirCookie,
-    { title: "Ihr Thread" },
-  )).json();
-  const post = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads/${thread.id}/posts`,
-    theirCookie,
-    postBody("Ihr Beitrag."),
-  )).json();
-  const step = await (await request(
-    "POST",
-    `/api/groups/${group.id}/steps`,
-    theirCookie,
-    { text: "Ihr Schritt" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, theirCookie, { title: "Ihr Thread" })
+  ).json();
+  const post = await (
+    await request(
+      "POST",
+      `/api/groups/${group.id}/threads/${thread.id}/posts`,
+      theirCookie,
+      postBody("Ihr Beitrag."),
+    )
+  ).json();
+  const step = await (
+    await request("POST", `/api/groups/${group.id}/steps`, theirCookie, { text: "Ihr Schritt" })
+  ).json();
 
-  const memberships = await (await request(
-    "GET",
-    `/api/groups/${group.id}/memberships`,
-    adminCookie,
-  )).json();
-  const theirs = memberships.results.find(
-    (row: { username: string }) => row.username === member,
-  );
+  const memberships = await (
+    await request("GET", `/api/groups/${group.id}/memberships`, adminCookie)
+  ).json();
+  const theirs = memberships.results.find((row: { username: string }) => row.username === member);
 
   const demoted = await request(
     "PATCH",
@@ -118,11 +110,7 @@ test("a demoted member cannot rename or delete the thread they started", async (
 test("a demoted member cannot delete the step they wrote", async () => {
   const { group, step, theirCookie } = await demotedAfterWriting();
 
-  const response = await request(
-    "DELETE",
-    `/api/groups/${group.id}/steps/${step.id}`,
-    theirCookie,
-  );
+  const response = await request("DELETE", `/api/groups/${group.id}/steps/${step.id}`, theirCookie);
 
   assert.equal(response.status, STATUS_CODE.Forbidden);
 });
@@ -131,11 +119,7 @@ test("what they wrote is still there, and an administrator can still act on it",
   const { group, thread, post, adminCookie } = await demotedAfterWriting();
 
   // The point of freezing rather than deleting: the writing stays with the group.
-  const read = await request(
-    "GET",
-    `/api/groups/${group.id}/threads/${thread.id}`,
-    adminCookie,
-  );
+  const read = await request("GET", `/api/groups/${group.id}/threads/${thread.id}`, adminCookie);
   assert.equal(read.status, STATUS_CODE.OK);
 
   const removed = await request(

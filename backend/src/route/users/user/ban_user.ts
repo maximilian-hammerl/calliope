@@ -49,8 +49,7 @@ export default new OpenAPIHono()
           content: jsonContent(ERROR_RESPONSE),
         },
         [STATUS_CODE.Forbidden]: {
-          description:
-            "Not an operator, or the target holds a platform role and cannot be banned",
+          description: "Not an operator, or the target holds a platform role and cannot be banned",
           content: jsonContent(ERROR_RESPONSE),
         },
         [STATUS_CODE.NotFound]: {
@@ -69,25 +68,15 @@ export default new OpenAPIHono()
       const { userId } = c.req.valid("param");
       const { reason } = c.req.valid("json");
 
-      const refusal = await BanService.banUser(
-        userId,
-        reason,
-        c.get("user").id,
-      );
+      const refusal = await BanService.banUser(userId, reason, c.get("user").id);
 
       switch (refusal) {
         case "not_found":
           return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
         case "is_an_operator":
-          return c.json(
-            { error: "An operator cannot be banned" },
-            STATUS_CODE.Forbidden,
-          );
+          return c.json({ error: "An operator cannot be banned" }, STATUS_CODE.Forbidden);
         case "already_banned":
-          return c.json(
-            { error: "Already banned" },
-            STATUS_CODE.Conflict,
-          );
+          return c.json({ error: "Already banned" }, STATUS_CODE.Conflict);
         case undefined:
           return c.json({ ok: true } as const, STATUS_CODE.OK);
       }
@@ -129,9 +118,9 @@ export default new OpenAPIHono()
       const { userId } = c.req.valid("param");
 
       if (
-        await db.transaction().execute((transaction) =>
-          BanService.liftBan(transaction, userId)
-        ) === "not_found"
+        (await db
+          .transaction()
+          .execute((transaction) => BanService.liftBan(transaction, userId))) === "not_found"
       ) {
         return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
       }

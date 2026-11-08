@@ -27,13 +27,11 @@ const THREAD_PARAMS = z.object({
 });
 
 // `text` is not here on purpose: it is derived from the document by the server.
-const CREATE_POST_BODY = WRITING_POST_SCHEMA
-  .pick({ isDraft: true })
-  .extend({
-    document: DOCUMENT_SCHEMA,
-    // Published unless the author says otherwise.
-    isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
-  });
+const CREATE_POST_BODY = WRITING_POST_SCHEMA.pick({ isDraft: true }).extend({
+  document: DOCUMENT_SCHEMA,
+  // Published unless the author says otherwise.
+  isDraft: WRITING_POST_SCHEMA.shape.isDraft.default(false),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -81,8 +79,7 @@ export default new OpenAPIHono().openapi(
     if (text.length === 0 || text.length > TEXT_LIMIT.documentText) {
       return c.json(
         {
-          error:
-            `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
+          error: `A post holds between 1 and ${TEXT_LIMIT.documentText} characters`,
         },
         STATUS_CODE.BadRequest,
       );
@@ -95,16 +92,18 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const post = await db.transaction().execute((transaction) =>
-      WritingPostService.insertPost(
-        transaction,
-        group.id,
-        c.get("thread").id,
-        document,
-        isDraft,
-        user.id,
-      )
-    );
+    const post = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingPostService.insertPost(
+          transaction,
+          group.id,
+          c.get("thread").id,
+          document,
+          isDraft,
+          user.id,
+        ),
+      );
 
     return c.json(post, STATUS_CODE.Created);
   },

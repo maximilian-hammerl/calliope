@@ -3,10 +3,7 @@ import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { runInBackground } from "@/src/util/background.ts";
 import { Mailer } from "@/src/mail/mailer.ts";
 import { emailAddressVerificationMail } from "@/src/mail/email_address_verification_mail.ts";
-import {
-  TOKEN_LIFETIME,
-  UserTokenService,
-} from "@/src/service/user_token_service.ts";
+import { TOKEN_LIFETIME, UserTokenService } from "@/src/service/user_token_service.ts";
 
 const HOST_URL = getRequiredEnvVariable("HOST_URL");
 
@@ -17,32 +14,29 @@ function verificationLink(token: string): string {
 }
 
 /** Never awaited: registering must not fail because a mail server was slow or unreachable. */
-function sendVerificationMail(
-  user: { id: string; username: string; emailAddress: string },
-): void {
-  runInBackground(
-    "Issuing an email address verification link",
-    async () => {
-      const token = await db.transaction().execute((transaction) =>
-        UserTokenService.issueToken(transaction, {
-          userId: user.id,
-          purpose: "email_address_verification",
-        })
-      );
+function sendVerificationMail(user: { id: string; username: string; emailAddress: string }): void {
+  runInBackground("Issuing an email address verification link", async () => {
+    const token = await db.transaction().execute((transaction) =>
+      UserTokenService.issueToken(transaction, {
+        userId: user.id,
+        purpose: "email_address_verification",
+      }),
+    );
 
-      // The cooldown swallowed it, which means one is already on its way.
-      if (token === undefined) {
-        return;
-      }
+    // The cooldown swallowed it, which means one is already on its way.
+    if (token === undefined) {
+      return;
+    }
 
-      Mailer.sendInBackground(emailAddressVerificationMail({
+    Mailer.sendInBackground(
+      emailAddressVerificationMail({
         username: user.username,
         emailAddress: user.emailAddress,
         link: verificationLink(token),
         lifetime: TOKEN_LIFETIME,
-      }));
-    },
-  );
+      }),
+    );
+  });
 }
 
 export type VerifyEmailAddressResult = "verified" | "invalid_token";
@@ -53,9 +47,7 @@ export type VerifyEmailAddressResult = "verified" | "invalid_token";
  *
  * No session is started: the link may well be opened in a browser that is not the member's.
  */
-async function verifyEmailAddress(
-  token: string,
-): Promise<VerifyEmailAddressResult> {
+async function verifyEmailAddress(token: string): Promise<VerifyEmailAddressResult> {
   return await db.transaction().execute(async (transaction) => {
     const consumed = await UserTokenService.consumeToken(
       transaction,
@@ -80,10 +72,7 @@ async function verifyEmailAddress(
   });
 }
 
-export type ChangeEmailAddressResult =
-  | "changed"
-  | "already_verified"
-  | "in_use";
+export type ChangeEmailAddressResult = "changed" | "already_verified" | "in_use";
 
 /**
  * Corrects a mistyped address before it has ever been verified — the escape hatch that keeps

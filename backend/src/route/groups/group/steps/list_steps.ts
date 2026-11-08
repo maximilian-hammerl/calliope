@@ -31,9 +31,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "The group's steps",
-        content: jsonContent(
-          z.object({ results: z.array(NEXT_STEP_RESPONSE) }),
-        ),
+        content: jsonContent(z.object({ results: z.array(NEXT_STEP_RESPONSE) })),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
@@ -49,9 +47,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const results = await WritingGroupNextStepService.listSteps(
-      c.get("group").id,
-    );
+    const results = await WritingGroupNextStepService.listSteps(c.get("group").id);
     return c.json({ results }, STATUS_CODE.OK);
   },
 );

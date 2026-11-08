@@ -19,20 +19,16 @@ import {
   PASSWORD_BREACHED_BODY,
 } from "@/src/http/response.ts";
 
-const REGISTER_BODY = USER_SCHEMA
-  .pick({ username: true, emailAddress: true })
-  .extend({
-    // A name is what everybody else sees; „   " is three characters and so passed the minimum,
-    // and a member registered under a name that renders as nothing anywhere it appears.
-    username: notBlank(
-      USER_SCHEMA.shape.username
-        .min(TEXT_MINIMUM.username)
-        .max(TEXT_LIMIT.username),
-    ),
-    emailAddress: EMAIL_ADDRESS_SCHEMA,
-    // Never stored as given, so it has no column of its own.
-    password: z.string().min(TEXT_MINIMUM.password).max(TEXT_LIMIT.password),
-  });
+const REGISTER_BODY = USER_SCHEMA.pick({ username: true, emailAddress: true }).extend({
+  // A name is what everybody else sees; „   " is three characters and so passed the minimum,
+  // and a member registered under a name that renders as nothing anywhere it appears.
+  username: notBlank(
+    USER_SCHEMA.shape.username.min(TEXT_MINIMUM.username).max(TEXT_LIMIT.username),
+  ),
+  emailAddress: EMAIL_ADDRESS_SCHEMA,
+  // Never stored as given, so it has no column of its own.
+  password: z.string().min(TEXT_MINIMUM.password).max(TEXT_LIMIT.password),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -74,12 +70,7 @@ export default new OpenAPIHono().openapi(
     // unverified, because without one there is no way back in to correct a typo — so an account
     // written without its session is exactly the orphan this is here to prevent.
     const registered = await db.transaction().execute(async (transaction) => {
-      const user = await UserService.insertUser(
-        transaction,
-        username,
-        password,
-        emailAddress,
-      );
+      const user = await UserService.insertUser(transaction, username, password, emailAddress);
 
       if (user === undefined) {
         return undefined;
@@ -96,10 +87,7 @@ export default new OpenAPIHono().openapi(
     });
 
     if (registered === undefined) {
-      return c.json(
-        { error: "Username or email address already in use" },
-        STATUS_CODE.Conflict,
-      );
+      return c.json({ error: "Username or email address already in use" }, STATUS_CODE.Conflict);
     }
 
     const { user, sessionToken } = registered;

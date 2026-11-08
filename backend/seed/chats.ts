@@ -98,16 +98,12 @@ export const CHATS: ChatFixture[] = [
     id: chatId(3),
     title: "Storyidee: Briefe aus dem Leuchtturm",
     by: USER.silbenmeer,
-    members: [
-      { user: USER.silbenmeer },
-      { user: USER.zeilensprung, status: "invited" },
-    ],
+    members: [{ user: USER.silbenmeer }, { user: USER.zeilensprung, status: "invited" }],
     messages: [
       {
         id: messageId(8),
         by: USER.silbenmeer,
-        text:
-          "Ich würde gern den zweiten Wächter schreiben, wenn der Platz noch frei ist.",
+        text: "Ich würde gern den zweiten Wächter schreiben, wenn der Platz noch frei ist.",
       },
     ],
   },

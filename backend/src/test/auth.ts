@@ -11,12 +11,7 @@ import "@/src/test/breach_check.ts";
  */
 export const password = "a-complex-password";
 
-export function sendJson(
-  method: string,
-  path: string,
-  body?: unknown,
-  cookie?: string,
-) {
+export function sendJson(method: string, path: string, body?: unknown, cookie?: string) {
   return app.request(path, {
     method,
     headers: {
@@ -50,8 +45,7 @@ export function authFixture(scope: string, ...alsoWrites: string[]) {
   const clearMail = () => deleteMailFor(addresses);
   const mailCount = () => countMailFor(addresses);
 
-  const register = () =>
-    postJson("/api/auth/register", { username, password, emailAddress });
+  const register = () => postJson("/api/auth/register", { username, password, emailAddress });
 
   /**
    * Registers, then drops the verification mail registering sends. Both mails go to the same

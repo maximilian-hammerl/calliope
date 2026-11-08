@@ -20,12 +20,9 @@ test("POST /api/groups/{groupId}/threads starts a thread", async () => {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Fäden");
 
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    adminCookie,
-    { title: "Kapitel 1" },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/threads`, adminCookie, {
+    title: "Kapitel 1",
+  });
 
   assert.equal(response.status, STATUS_CODE.Created);
   const thread = await response.json();
@@ -38,12 +35,9 @@ test("POST /api/groups/{groupId}/threads refuses a reader", async () => {
   const group = await createGroup(adminCookie, "Fäden");
   const readerCookie = await addMember(adminCookie, group.id, reader, "reader");
 
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    readerCookie,
-    { title: "Kapitel 1" },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/threads`, readerCookie, {
+    title: "Kapitel 1",
+  });
 
   assert.equal(response.status, STATUS_CODE.Forbidden);
 });

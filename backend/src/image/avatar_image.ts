@@ -16,9 +16,7 @@ const ACCEPTED_FORMATS: ReadonlySet<string> = new Set(["jpeg", "png", "webp"]);
  * One square WebP, or `undefined` for anything that is not a picture we accept. Re-encoding is
  * also what strips EXIF, and a phone photograph carries where it was taken.
  */
-export async function toAvatar(
-  bytes: Uint8Array,
-): Promise<Uint8Array | undefined> {
+export async function toAvatar(bytes: Uint8Array): Promise<Uint8Array | undefined> {
   try {
     const image = sharp(bytes);
     const { format } = await image.metadata();

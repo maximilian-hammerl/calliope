@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, request } from "@/src/test/support.ts";
 
 const owner = "list-groups-owner";
 const outsider = "list-groups-outsider";
@@ -17,11 +12,7 @@ const SECOND_TITLE = "Zzz Schreibkreis";
 beforeEach(clearRateLimits);
 afterEach(() => deleteUsers([owner, outsider]));
 
-async function createGroup(
-  cookie: string,
-  title: string,
-  visibility: "public" | "private",
-) {
+async function createGroup(cookie: string, title: string, visibility: "public" | "private") {
   const response = await request("POST", "/api/groups", cookie, {
     title,
     synopsis: "d",
@@ -76,10 +67,10 @@ test("QUERY /api/groups returns the user's own groups with a total", async () =>
 
   assert.equal(page.totalResults, before.totalResults + 2);
   // Newest first by default.
-  assert.deepEqual(page.results.slice(0, 2).map((group) => group.title), [
-    SECOND_TITLE,
-    FIRST_TITLE,
-  ]);
+  assert.deepEqual(
+    page.results.slice(0, 2).map((group) => group.title),
+    [SECOND_TITLE, FIRST_TITLE],
+  );
 });
 
 test("QUERY /api/groups applies its defaults to an empty body", async () => {
@@ -190,18 +181,14 @@ test("QUERY /api/groups separates an invitation from a membership", async () => 
   const outsiderCookie = await registerUser(outsider);
   const outsiderId = await currentUserId(outsiderCookie);
 
-  const invited = await request(
-    "POST",
-    `/api/groups/${group.id}/memberships`,
-    ownerCookie,
-    { userId: outsiderId, role: "writer" },
-  );
+  const invited = await request("POST", `/api/groups/${group.id}/memberships`, ownerCookie, {
+    userId: outsiderId,
+    role: "writer",
+  });
   assert.equal(invited.status, STATUS_CODE.Created);
 
   // An invitation is not a membership: it belongs in neither the rail nor "Meine Gruppen".
-  assert.ok(
-    !(ownTitles(await list(outsiderCookie, { limit: 100 })).length > 0),
-  );
+  assert.ok(!(ownTitles(await list(outsiderCookie, { limit: 100 })).length > 0));
 
   const pending = await list(outsiderCookie, {
     limit: 100,
@@ -272,8 +259,7 @@ test("QUERY /api/groups discovers public groups the caller is not in", async () 
 
   // The founder is in it, so it is not theirs to discover.
   assert.ok(
-    !ownTitles(await list(ownerCookie, { limit: 100, membership: "none" }))
-      .includes(SECOND_TITLE),
+    !ownTitles(await list(ownerCookie, { limit: 100, membership: "none" })).includes(SECOND_TITLE),
   );
 });
 
@@ -298,13 +284,8 @@ test("QUERY /api/groups filters by a substring of the title", async () => {
   await createGroup(cookie, SECOND_TITLE, "private");
 
   // "Aaa" and "Zzz" differ; the shared word does not.
-  assert.deepEqual(ownTitles(await list(cookie, { search: "Aaa" })), [
-    FIRST_TITLE,
-  ]);
-  assert.equal(
-    ownTitles(await list(cookie, { search: "Schreibkreis" })).length,
-    2,
-  );
+  assert.deepEqual(ownTitles(await list(cookie, { search: "Aaa" })), [FIRST_TITLE]);
+  assert.equal(ownTitles(await list(cookie, { search: "Schreibkreis" })).length, 2);
 });
 
 test("QUERY /api/groups rejects a search term shorter than three characters", async () => {
@@ -324,22 +305,28 @@ test("QUERY /api/groups rejects a search term shorter than three characters", as
 test("QUERY /api/groups narrows a board to the genres asked for", async () => {
   const cookie = await registerUser(owner);
 
-  const fantasy = await (await request("POST", "/api/groups", cookie, {
-    title: "Nur Fantasy hier",
-    synopsis: "d",
-    genres: ["fantasy"],
-    tropes: ["slow_burn"],
-  })).json();
-  const western = await (await request("POST", "/api/groups", cookie, {
-    title: "Nur Western hier",
-    synopsis: "d",
-    genres: ["western"],
-  })).json();
+  const fantasy = await (
+    await request("POST", "/api/groups", cookie, {
+      title: "Nur Fantasy hier",
+      synopsis: "d",
+      genres: ["fantasy"],
+      tropes: ["slow_burn"],
+    })
+  ).json();
+  const western = await (
+    await request("POST", "/api/groups", cookie, {
+      title: "Nur Western hier",
+      synopsis: "d",
+      genres: ["western"],
+    })
+  ).json();
 
-  const page = await (await request("QUERY", "/api/groups", cookie, {
-    genres: ["fantasy"],
-    limit: 100,
-  })).json();
+  const page = await (
+    await request("QUERY", "/api/groups", cookie, {
+      genres: ["fantasy"],
+      limit: 100,
+    })
+  ).json();
   const ids = page.results.map((group: { id: string }) => group.id);
 
   assert.equal(ids.includes(fantasy.id), true);
@@ -349,33 +336,41 @@ test("QUERY /api/groups narrows a board to the genres asked for", async () => {
 test("QUERY /api/groups takes either of two genres, and both fields together", async () => {
   const cookie = await registerUser(owner);
 
-  const fantasy = await (await request("POST", "/api/groups", cookie, {
-    title: "Fantasy, langsam",
-    synopsis: "d",
-    genres: ["fantasy"],
-    tropes: ["slow_burn"],
-  })).json();
-  const western = await (await request("POST", "/api/groups", cookie, {
-    title: "Western, ohne Trope",
-    synopsis: "d",
-    genres: ["western"],
-  })).json();
+  const fantasy = await (
+    await request("POST", "/api/groups", cookie, {
+      title: "Fantasy, langsam",
+      synopsis: "d",
+      genres: ["fantasy"],
+      tropes: ["slow_burn"],
+    })
+  ).json();
+  const western = await (
+    await request("POST", "/api/groups", cookie, {
+      title: "Western, ohne Trope",
+      synopsis: "d",
+      genres: ["western"],
+    })
+  ).json();
 
   // Two genres widen: somebody browsing both wants either.
-  const either = await (await request("QUERY", "/api/groups", cookie, {
-    genres: ["fantasy", "western"],
-    limit: 100,
-  })).json();
+  const either = await (
+    await request("QUERY", "/api/groups", cookie, {
+      genres: ["fantasy", "western"],
+      limit: 100,
+    })
+  ).json();
   const eitherIds = either.results.map((group: { id: string }) => group.id);
   assert.equal(eitherIds.includes(fantasy.id), true);
   assert.equal(eitherIds.includes(western.id), true);
 
   // Two *fields* narrow against each other: fantasy that is also slow burn.
-  const both = await (await request("QUERY", "/api/groups", cookie, {
-    genres: ["fantasy", "western"],
-    tropes: ["slow_burn"],
-    limit: 100,
-  })).json();
+  const both = await (
+    await request("QUERY", "/api/groups", cookie, {
+      genres: ["fantasy", "western"],
+      tropes: ["slow_burn"],
+      limit: 100,
+    })
+  ).json();
   const bothIds = both.results.map((group: { id: string }) => group.id);
   assert.equal(bothIds.includes(fantasy.id), true);
   assert.equal(bothIds.includes(western.id), false);
@@ -383,21 +378,18 @@ test("QUERY /api/groups takes either of two genres, and both fields together", a
 
 test("QUERY /api/groups leaves the board alone when no genre is asked for", async () => {
   const cookie = await registerUser(owner);
-  const western = await (await request("POST", "/api/groups", cookie, {
-    title: "Immer noch da",
-    synopsis: "d",
-    genres: ["western"],
-  })).json();
+  const western = await (
+    await request("POST", "/api/groups", cookie, {
+      title: "Immer noch da",
+      synopsis: "d",
+      genres: ["western"],
+    })
+  ).json();
 
   // Absent means "not asked", never "none" — an untouched filter must not empty the list.
-  const page =
-    await (await request("QUERY", "/api/groups", cookie, { limit: 100 }))
-      .json();
+  const page = await (await request("QUERY", "/api/groups", cookie, { limit: 100 })).json();
 
-  assert.equal(
-    page.results.map((group: { id: string }) => group.id).includes(western.id),
-    true,
-  );
+  assert.equal(page.results.map((group: { id: string }) => group.id).includes(western.id), true);
 });
 
 test("QUERY /api/groups refuses a genre that is not one", async () => {

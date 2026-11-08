@@ -1,10 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { DocumentNode } from "@/src/document/document_schema.ts";
-import {
-  DOCUMENT_SCHEMA,
-  DOCUMENT_VOCABULARY,
-} from "@/src/document/document_schema.ts";
+import { DOCUMENT_SCHEMA, DOCUMENT_VOCABULARY } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 
 /**
@@ -14,125 +11,125 @@ import { documentToPlainText } from "@/src/document/document_text.ts";
  * asks what the editor produces, this one asks what the schema accepts. They may drift.
  */
 const FIXTURE = {
-  "type": "doc",
-  "content": [
+  type: "doc",
+  content: [
     {
-      "type": "heading",
-      "attrs": {
-        "textAlign": "center",
-        "level": 2,
+      type: "heading",
+      attrs: {
+        textAlign: "center",
+        level: 2,
       },
-      "content": [
+      content: [
         {
-          "type": "text",
-          "text": "Überschrift",
+          type: "text",
+          text: "Überschrift",
         },
       ],
     },
     {
-      "type": "paragraph",
-      "attrs": {
-        "textAlign": null,
+      type: "paragraph",
+      attrs: {
+        textAlign: null,
       },
-      "content": [
+      content: [
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "bold",
+              type: "bold",
             },
           ],
-          "text": "fett",
+          text: "fett",
         },
         {
-          "type": "text",
-          "text": " ",
+          type: "text",
+          text: " ",
         },
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "italic",
+              type: "italic",
             },
           ],
-          "text": "kursiv",
+          text: "kursiv",
         },
         {
-          "type": "text",
-          "text": " ",
+          type: "text",
+          text: " ",
         },
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "underline",
+              type: "underline",
             },
           ],
-          "text": "unterstrichen",
+          text: "unterstrichen",
         },
         {
-          "type": "text",
-          "text": " ",
+          type: "text",
+          text: " ",
         },
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "strike",
+              type: "strike",
             },
           ],
-          "text": "durchgestrichen",
+          text: "durchgestrichen",
         },
         {
-          "type": "text",
-          "text": " ",
+          type: "text",
+          text: " ",
         },
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "code",
+              type: "code",
             },
           ],
-          "text": "code",
+          text: "code",
         },
         {
-          "type": "text",
-          "text": " ",
+          type: "text",
+          text: " ",
         },
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "link",
-              "attrs": {
-                "href": "https://example.org",
-                "target": "_blank",
-                "rel": "noopener noreferrer nofollow",
-                "class": null,
-                "title": null,
+              type: "link",
+              attrs: {
+                href: "https://example.org",
+                target: "_blank",
+                rel: "noopener noreferrer nofollow",
+                class: null,
+                title: null,
               },
             },
           ],
-          "text": "Link",
+          text: "Link",
         },
       ],
     },
     {
-      "type": "bulletList",
-      "content": [
+      type: "bulletList",
+      content: [
         {
-          "type": "listItem",
-          "content": [
+          type: "listItem",
+          content: [
             {
-              "type": "paragraph",
-              "attrs": {
-                "textAlign": null,
+              type: "paragraph",
+              attrs: {
+                textAlign: null,
               },
-              "content": [
+              content: [
                 {
-                  "type": "text",
-                  "text": "Punkt",
+                  type: "text",
+                  text: "Punkt",
                 },
               ],
             },
@@ -141,24 +138,24 @@ const FIXTURE = {
       ],
     },
     {
-      "type": "orderedList",
-      "attrs": {
-        "start": 3,
-        "type": null,
+      type: "orderedList",
+      attrs: {
+        start: 3,
+        type: null,
       },
-      "content": [
+      content: [
         {
-          "type": "listItem",
-          "content": [
+          type: "listItem",
+          content: [
             {
-              "type": "paragraph",
-              "attrs": {
-                "textAlign": null,
+              type: "paragraph",
+              attrs: {
+                textAlign: null,
               },
-              "content": [
+              content: [
                 {
-                  "type": "text",
-                  "text": "Nummer",
+                  type: "text",
+                  text: "Nummer",
                 },
               ],
             },
@@ -167,113 +164,113 @@ const FIXTURE = {
       ],
     },
     {
-      "type": "blockquote",
-      "content": [
+      type: "blockquote",
+      content: [
         {
-          "type": "paragraph",
-          "attrs": {
-            "textAlign": null,
+          type: "paragraph",
+          attrs: {
+            textAlign: null,
           },
-          "content": [
+          content: [
             {
-              "type": "text",
-              "text": "Zitat",
+              type: "text",
+              text: "Zitat",
             },
           ],
         },
       ],
     },
     {
-      "type": "codeBlock",
-      "attrs": {
-        "language": "ts",
+      type: "codeBlock",
+      attrs: {
+        language: "ts",
       },
-      "content": [
+      content: [
         {
-          "type": "text",
-          "text": "const x = 1",
+          type: "text",
+          text: "const x = 1",
         },
       ],
     },
     {
-      "type": "horizontalRule",
+      type: "horizontalRule",
     },
     {
-      "type": "paragraph",
-      "attrs": {
-        "textAlign": null,
+      type: "paragraph",
+      attrs: {
+        textAlign: null,
       },
-      "content": [
+      content: [
         {
-          "type": "text",
-          "text": "Zeile",
+          type: "text",
+          text: "Zeile",
         },
         {
-          "type": "hardBreak",
+          type: "hardBreak",
         },
         {
-          "type": "text",
-          "text": "danach",
+          type: "text",
+          text: "danach",
         },
       ],
     },
     {
-      "type": "image",
-      "attrs": {
-        "src": "/api/files/karte.png",
-        "alt": "Karte",
-        "title": "Titel",
-        "width": null,
-        "height": null,
+      type: "image",
+      attrs: {
+        src: "/api/files/karte.png",
+        alt: "Karte",
+        title: "Titel",
+        width: null,
+        height: null,
       },
     },
     {
-      "type": "table",
-      "content": [
+      type: "table",
+      content: [
         {
-          "type": "tableRow",
-          "content": [
+          type: "tableRow",
+          content: [
             {
-              "type": "tableHeader",
-              "attrs": {
-                "colspan": 1,
-                "rowspan": 1,
-                "colwidth": null,
-                "align": null,
+              type: "tableHeader",
+              attrs: {
+                colspan: 1,
+                rowspan: 1,
+                colwidth: null,
+                align: null,
               },
-              "content": [
+              content: [
                 {
-                  "type": "paragraph",
-                  "attrs": {
-                    "textAlign": null,
+                  type: "paragraph",
+                  attrs: {
+                    textAlign: null,
                   },
-                  "content": [
+                  content: [
                     {
-                      "type": "text",
-                      "text": "Kopf",
+                      type: "text",
+                      text: "Kopf",
                     },
                   ],
                 },
               ],
             },
             {
-              "type": "tableCell",
-              "attrs": {
-                "colspan": 1,
-                "rowspan": 1,
-                "colwidth": null,
-                "align": null,
+              type: "tableCell",
+              attrs: {
+                colspan: 1,
+                rowspan: 1,
+                colwidth: null,
+                align: null,
               },
-              "content": [
+              content: [
                 {
-                  "type": "paragraph",
-                  "attrs": {
-                    "textAlign": null,
+                  type: "paragraph",
+                  attrs: {
+                    textAlign: null,
                   },
-                  "content": [
+                  content: [
                     {
-                      "type": "text",
-                      "text": "Zelle",
+                      type: "text",
+                      text: "Zelle",
                     },
                   ],
                 },
@@ -284,26 +281,26 @@ const FIXTURE = {
       ],
     },
     {
-      "type": "paragraph",
-      "attrs": {
-        "textAlign": null,
+      type: "paragraph",
+      attrs: {
+        textAlign: null,
       },
-      "content": [
+      content: [
         {
-          "type": "text",
-          "marks": [
+          type: "text",
+          marks: [
             {
-              "type": "textStyle",
-              "attrs": {
-                "color": "#aa3311",
-                "backgroundColor": "#f0e8d8",
-                "fontFamily": "Newsreader",
-                "fontSize": "18px",
-                "lineHeight": "1.6",
+              type: "textStyle",
+              attrs: {
+                color: "#aa3311",
+                backgroundColor: "#f0e8d8",
+                fontFamily: "Newsreader",
+                fontSize: "18px",
+                lineHeight: "1.6",
               },
             },
           ],
-          "text": "gestaltet",
+          text: "gestaltet",
         },
       ],
     },
@@ -316,9 +313,7 @@ test("the schema accepts every node and mark the editor emits", () => {
   assert.deepEqual(
     result.success
       ? []
-      : result.error.issues.map((issue) =>
-        `${issue.path.join(".")}: ${issue.message}`
-      ),
+      : result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),
     [],
   );
 });
@@ -335,127 +330,199 @@ test("the projection of that fixture reads as prose", () => {
 test("the schema refuses what it does not know", () => {
   const cases: Array<[string, unknown]> = [
     ["an unknown node", { type: "doc", content: [{ type: "script" }] }],
-    ["an unknown mark", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{ type: "text", text: "a", marks: [{ type: "blink" }] }],
-      }],
-    }],
-    ["an unknown attribute", {
-      type: "doc",
-      content: [{ type: "paragraph", attrs: { onclick: "x" } }],
-    }],
-    ["a mailto: link, which a forum post has no use for", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{
-            type: "link",
-            attrs: { href: "mailto:someone@example.org" },
-          }],
-        }],
-      }],
-    }],
-    ["a link that is not a URL at all", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{ type: "link", attrs: { href: "example.org" } }],
-        }],
-      }],
-    }],
-    ["a javascript: link", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }],
-        }],
-      }],
-    }],
-    ["a colour that closes a declaration", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{
-            type: "textStyle",
-            attrs: { color: "red; content: url(x)" },
-          }],
-        }],
-      }],
-    }],
-    ["an absolute image source", {
-      type: "doc",
-      content: [{
-        type: "image",
-        attrs: { src: "https://elsewhere.example/x.png" },
-      }],
-    }],
-    ["a colour that fetches", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{ type: "textStyle", attrs: { color: "url(https://x/y)" } }],
-        }],
-      }],
-    }],
-    ["a font family that closes a declaration", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{
-            type: "textStyle",
-            attrs: { fontFamily: "Arial; background: url(x)" },
-          }],
-        }],
-      }],
-    }],
-    ["a line height that carries a second declaration", {
-      type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{ type: "textStyle", attrs: { lineHeight: "1;color:red" } }],
-        }],
-      }],
-    }],
+    [
+      "an unknown mark",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: "a", marks: [{ type: "blink" }] }],
+          },
+        ],
+      },
+    ],
+    [
+      "an unknown attribute",
+      {
+        type: "doc",
+        content: [{ type: "paragraph", attrs: { onclick: "x" } }],
+      },
+    ],
+    [
+      "a mailto: link, which a forum post has no use for",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [
+                  {
+                    type: "link",
+                    attrs: { href: "mailto:someone@example.org" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      "a link that is not a URL at all",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [{ type: "link", attrs: { href: "example.org" } }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      "a javascript: link",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      "a colour that closes a declaration",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [
+                  {
+                    type: "textStyle",
+                    attrs: { color: "red; content: url(x)" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      "an absolute image source",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "image",
+            attrs: { src: "https://elsewhere.example/x.png" },
+          },
+        ],
+      },
+    ],
+    [
+      "a colour that fetches",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [{ type: "textStyle", attrs: { color: "url(https://x/y)" } }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      "a font family that closes a declaration",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [
+                  {
+                    type: "textStyle",
+                    attrs: { fontFamily: "Arial; background: url(x)" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      "a line height that carries a second declaration",
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "a",
+                marks: [{ type: "textStyle", attrs: { lineHeight: "1;color:red" } }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
     ["an empty document", { type: "doc", content: [] }],
-    ["an empty text node", {
-      type: "doc",
-      content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }],
-    }],
-    ["a heading past level six", {
-      type: "doc",
-      content: [{ type: "heading", attrs: { level: 7, textAlign: null } }],
-    }],
+    [
+      "an empty text node",
+      {
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }],
+      },
+    ],
+    [
+      "a heading past level six",
+      {
+        type: "doc",
+        content: [{ type: "heading", attrs: { level: 7, textAlign: null } }],
+      },
+    ],
   ];
 
   // Asserted as a set rather than a step each: `safeParse` is synchronous, so stepping would
   // only add an `await` in a loop, and this names every case that wrongly passed at once.
   assert.deepEqual(
-    cases.filter(([, value]) => DOCUMENT_SCHEMA.safeParse(value).success).map(
-      ([name]) => name,
-    ),
+    cases.filter(([, value]) => DOCUMENT_SCHEMA.safeParse(value).success).map(([name]) => name),
     [],
   );
 });
@@ -473,14 +540,18 @@ test("the schema accepts a paste out of another program", () => {
   function styled(attrs: Record<string, unknown>): unknown {
     return {
       type: "doc",
-      content: [{
-        type: "paragraph",
-        content: [{
-          type: "text",
-          text: "a",
-          marks: [{ type: "textStyle", attrs }],
-        }],
-      }],
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "a",
+              marks: [{ type: "textStyle", attrs }],
+            },
+          ],
+        },
+      ],
     };
   }
 
@@ -524,9 +595,7 @@ test("the schema accepts a paste out of another program", () => {
   ];
 
   assert.deepEqual(
-    cases.filter(([, value]) => !DOCUMENT_SCHEMA.safeParse(value).success).map((
-      [name],
-    ) => name),
+    cases.filter(([, value]) => !DOCUMENT_SCHEMA.safeParse(value).success).map(([name]) => name),
     [],
   );
 });
@@ -538,10 +607,7 @@ test("the schema refuses a tree too deep to walk", () => {
     node = { type: "blockquote", content: [node] };
   }
 
-  assert.equal(
-    DOCUMENT_SCHEMA.safeParse({ type: "doc", content: [node] }).success,
-    false,
-  );
+  assert.equal(DOCUMENT_SCHEMA.safeParse({ type: "doc", content: [node] }).success, false);
 });
 
 /**
@@ -566,16 +632,23 @@ function doc(...content: DocumentNode[]): DocumentNode {
 
 test("the projection keeps the text of a nested list", () => {
   assert.equal(
-    documentToPlainText(doc({
-      type: "bulletList",
-      content: [{
-        type: "listItem",
-        content: [paragraph("Aussen"), {
-          type: "bulletList",
-          content: [{ type: "listItem", content: [paragraph("INNEN")] }],
-        }],
-      }],
-    })),
+    documentToPlainText(
+      doc({
+        type: "bulletList",
+        content: [
+          {
+            type: "listItem",
+            content: [
+              paragraph("Aussen"),
+              {
+                type: "bulletList",
+                content: [{ type: "listItem", content: [paragraph("INNEN")] }],
+              },
+            ],
+          },
+        ],
+      }),
+    ),
     "Aussen\n\nINNEN",
   );
 });
@@ -583,10 +656,7 @@ test("the projection keeps the text of a nested list", () => {
 test("the projection keeps a quotation and what follows it", () => {
   assert.equal(
     documentToPlainText(
-      doc(
-        { type: "blockquote", content: [paragraph("Zitat")] },
-        paragraph("Danach"),
-      ),
+      doc({ type: "blockquote", content: [paragraph("Zitat")] }, paragraph("Danach")),
     ),
     "Zitat\n\nDanach",
   );
@@ -594,26 +664,34 @@ test("the projection keeps a quotation and what follows it", () => {
 
 test("the projection reads a table row as one line", () => {
   assert.equal(
-    documentToPlainText(doc({
-      type: "table",
-      content: [{
-        type: "tableRow",
-        content: [cell(paragraph("A")), cell(paragraph("B"))],
-      }],
-    })),
+    documentToPlainText(
+      doc({
+        type: "table",
+        content: [
+          {
+            type: "tableRow",
+            content: [cell(paragraph("A")), cell(paragraph("B"))],
+          },
+        ],
+      }),
+    ),
     "A\tB",
   );
 });
 
 test("the projection keeps both blocks of a cell holding two", () => {
   assert.equal(
-    documentToPlainText(doc({
-      type: "table",
-      content: [{
-        type: "tableRow",
-        content: [cell(paragraph("Eins"), paragraph("Zwei"))],
-      }],
-    })),
+    documentToPlainText(
+      doc({
+        type: "table",
+        content: [
+          {
+            type: "tableRow",
+            content: [cell(paragraph("Eins"), paragraph("Zwei"))],
+          },
+        ],
+      }),
+    ),
     "Eins Zwei",
   );
 });

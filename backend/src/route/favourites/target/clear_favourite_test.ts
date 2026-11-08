@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  getUserId,
-  registerUser,
-  request,
-} from "@/src/test/support.ts";
+import { clearRateLimits, getUserId, registerUser, request } from "@/src/test/support.ts";
 import {
   aPublicGroup,
   cleanUpFavourites,
@@ -61,9 +56,11 @@ test("a favourite can be removed after it stops being visible", async () => {
   await setFavourite(memberCookie, "writing_group", group.id);
 
   assert.equal(
-    (await request("PATCH", `/api/groups/${group.id}`, ownerCookie, {
-      visibility: "private",
-    })).status,
+    (
+      await request("PATCH", `/api/groups/${group.id}`, ownerCookie, {
+        visibility: "private",
+      })
+    ).status,
     STATUS_CODE.OK,
   );
 
@@ -100,11 +97,13 @@ test("removing cannot reach another member's favourite", async () => {
 
 test("DELETE /api/favourites needs a session", async () => {
   assert.equal(
-    (await request(
-      "DELETE",
-      "/api/favourites/writing_group/01a00000-0000-7000-8000-00000000ffff",
-      "",
-    )).status,
+    (
+      await request(
+        "DELETE",
+        "/api/favourites/writing_group/01a00000-0000-7000-8000-00000000ffff",
+        "",
+      )
+    ).status,
     STATUS_CODE.Unauthorized,
   );
 });

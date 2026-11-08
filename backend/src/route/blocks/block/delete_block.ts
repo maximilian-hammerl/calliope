@@ -46,13 +46,11 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const removed = await db.transaction().execute((transaction) =>
-      BlockService.deleteBlock(
-        transaction,
-        c.get("user").id,
-        c.req.valid("param").userId,
-      )
-    );
+    const removed = await db
+      .transaction()
+      .execute((transaction) =>
+        BlockService.deleteBlock(transaction, c.get("user").id, c.req.valid("param").userId),
+      );
 
     if (!removed) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);

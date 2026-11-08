@@ -4,10 +4,7 @@ import { BLOCKS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { BlockService } from "@/src/service/block_service.ts";
-import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -59,10 +56,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const page = await BlockService.listBlocks(
-      c.get("user").id,
-      listQuery(c.req.valid("json")),
-    );
+    const page = await BlockService.listBlocks(c.get("user").id, listQuery(c.req.valid("json")));
     return c.json(page, STATUS_CODE.OK);
   },
 );

@@ -30,9 +30,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "The group's pages",
-        content: jsonContent(
-          z.object({ results: z.array(PAGE_SUMMARY_RESPONSE) }),
-        ),
+        content: jsonContent(z.object({ results: z.array(PAGE_SUMMARY_RESPONSE) })),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",
@@ -48,10 +46,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const results = await WritingPageService.listPages(
-      c.get("group").id,
-      c.get("user").id,
-    );
+    const results = await WritingPageService.listPages(c.get("group").id, c.get("user").id);
     return c.json({ results }, STATUS_CODE.OK);
   },
 );

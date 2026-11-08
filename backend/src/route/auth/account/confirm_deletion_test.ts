@@ -62,12 +62,9 @@ test("POST /api/auth/account/deletion/confirm keeps the writing and drops the na
   const group = await createGroup(cookie, "Bleibt bestehen");
   await addMember(cookie, group.id, other, "writer");
 
-  const thread = await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    cookie,
-    { title: "Ein Kapitel" },
-  );
+  const thread = await request("POST", `/api/groups/${group.id}/threads`, cookie, {
+    title: "Ein Kapitel",
+  });
   assert.equal(thread.status, STATUS_CODE.Created);
   const { id: threadId } = await thread.json();
 
@@ -172,14 +169,11 @@ test("POST /api/auth/account/deletion/confirm refuses a token it never issued", 
 
   // Malformed rather than merely wrong: the id half reaches a uuid column, where an
   // unparsed value is a database error instead of a miss.
-  const responses = await Promise.all(
-    ["nonsense", "not-a-uuid.secret", ""].map(confirmDeletion),
-  );
+  const responses = await Promise.all(["nonsense", "not-a-uuid.secret", ""].map(confirmDeletion));
 
   for (const response of responses) {
     assert.equal(
-      response.status === STATUS_CODE.Gone ||
-        response.status === STATUS_CODE.BadRequest,
+      response.status === STATUS_CODE.Gone || response.status === STATUS_CODE.BadRequest,
       true,
       `answered ${response.status}`,
     );

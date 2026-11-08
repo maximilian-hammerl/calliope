@@ -9,5 +9,4 @@ export const blockMember = (cookie: string, userId: string) =>
 export const unblockMember = (cookie: string, userId: string) =>
   request("DELETE", `/api/blocks/${userId}`, cookie);
 
-export const listBlocks = (cookie: string) =>
-  request("QUERY", "/api/blocks", cookie, {});
+export const listBlocks = (cookie: string) => request("QUERY", "/api/blocks", cookie, {});

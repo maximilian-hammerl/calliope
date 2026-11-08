@@ -4,15 +4,9 @@ import { db, type Transaction } from "@/src/database/client.ts";
 import type { DB, ForumPermission } from "@/src/database/schema.ts";
 import type { User } from "@/src/service/user_service.ts";
 import { withFavourite } from "@/src/query/favourite.ts";
-import {
-  listResultsWithCount,
-  searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
+import { listResultsWithCount, searchPattern } from "@/src/list/list_endpoint_query.ts";
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import {
-  effectiveMemberPermission,
-  isOperator,
-} from "@/src/service/forum_permission.ts";
+import { effectiveMemberPermission, isOperator } from "@/src/service/forum_permission.ts";
 import { planFolderMove } from "@/src/service/folder_move.ts";
 import { MAX_FOLDER_DEPTH } from "@/src/service/writing_folder_service.ts";
 import type { PostDocument } from "@/src/document/document_schema.ts";
@@ -87,10 +81,7 @@ function withEffectivePermission<
   const { folderPermission, ...rest } = row;
   return {
     ...rest,
-    effectiveMemberPermission: effectiveMemberPermission(
-      rest.memberPermission,
-      folderPermission,
-    ),
+    effectiveMemberPermission: effectiveMemberPermission(rest.memberPermission, folderPermission),
   };
 }
 
@@ -98,9 +89,7 @@ function withEffectivePermission<
  * A leaf is excluded by its own setting or by its folder's. The `IS NULL` arm is the root: a
  * comparison with null is null, so `<> 'hidden'` alone would drop those rows.
  */
-function leafNotHidden(
-  eb: ExpressionBuilder<DB, "writingThread" | "writingFolder">,
-) {
+function leafNotHidden(eb: ExpressionBuilder<DB, "writingThread" | "writingFolder">) {
   return eb.and([
     eb("writingThread.memberPermission", "<>", "hidden"),
     eb.or([
@@ -110,9 +99,7 @@ function leafNotHidden(
   ]);
 }
 
-function pageNotHidden(
-  eb: ExpressionBuilder<DB, "writingPage" | "writingFolder">,
-) {
+function pageNotHidden(eb: ExpressionBuilder<DB, "writingPage" | "writingFolder">) {
   return eb.and([
     eb("writingPage.memberPermission", "<>", "hidden"),
     eb.or([
@@ -123,35 +110,29 @@ function pageNotHidden(
 }
 
 function forumFolders(user: User, executor: typeof db | Transaction = db) {
-  return executor
-    .selectFrom("writingFolder")
-    .leftJoin("user", "user.id", "writingFolder.createdBy")
-    .select([
-      "writingFolder.id",
-      "writingFolder.parentFolderId",
-      "writingFolder.depth",
-      "writingFolder.title",
-      "writingFolder.description",
-      "writingFolder.createdBy",
-      "writingFolder.createdAt",
-      "writingFolder.memberPermission",
-      "writingFolder.effectiveMemberPermission",
-      "user.username as createdByUsername",
-    ])
-    .where("writingFolder.writingGroupId", "is", null)
-    // Not null once the scope is the forum's; the table's CHECK is what makes that true.
-    .$narrowType<
-      { memberPermission: NotNull; effectiveMemberPermission: NotNull }
-    >()
-    .$if(
-      !isOperator(user),
-      (builder) =>
-        builder.where(
-          "writingFolder.effectiveMemberPermission",
-          "<>",
-          "hidden",
-        ),
-    );
+  return (
+    executor
+      .selectFrom("writingFolder")
+      .leftJoin("user", "user.id", "writingFolder.createdBy")
+      .select([
+        "writingFolder.id",
+        "writingFolder.parentFolderId",
+        "writingFolder.depth",
+        "writingFolder.title",
+        "writingFolder.description",
+        "writingFolder.createdBy",
+        "writingFolder.createdAt",
+        "writingFolder.memberPermission",
+        "writingFolder.effectiveMemberPermission",
+        "user.username as createdByUsername",
+      ])
+      .where("writingFolder.writingGroupId", "is", null)
+      // Not null once the scope is the forum's; the table's CHECK is what makes that true.
+      .$narrowType<{ memberPermission: NotNull; effectiveMemberPermission: NotNull }>()
+      .$if(!isOperator(user), (builder) =>
+        builder.where("writingFolder.effectiveMemberPermission", "<>", "hidden"),
+      )
+  );
 }
 
 /** The gate a create resolves its parent through, so a group's folder id cannot be borrowed. */
@@ -214,9 +195,7 @@ function forumThreads(user: User, executor: typeof db | Transaction = db) {
 /** Threads of the forum, most recently written in first — the tree nests them by `folderId`. */
 async function listThreads(user: User): Promise<ForumThread[]> {
   const threads = await forumThreads(user)
-    .$call((builder) =>
-      withFavourite(builder, "writing_thread", "writingThread.id", user.id)
-    )
+    .$call((builder) => withFavourite(builder, "writing_thread", "writingThread.id", user.id))
     .orderBy("writingThread.lastActivityAt", "desc")
     .orderBy("writingThread.id", "desc")
     .execute();
@@ -231,9 +210,7 @@ async function selectThread(
   executor: typeof db | Transaction = db,
 ): Promise<ForumThread | undefined> {
   const thread = await forumThreads(user, executor)
-    .$call((builder) =>
-      withFavourite(builder, "writing_thread", "writingThread.id", user.id)
-    )
+    .$call((builder) => withFavourite(builder, "writing_thread", "writingThread.id", user.id))
     .where("writingThread.id", "=", threadId)
     .executeTakeFirst();
 
@@ -262,7 +239,8 @@ function forumPages(user: User, executor: typeof db | Transaction = db) {
       "user.username as createdByUsername",
       // A subquery rather than a second alias on `user`, for the reason the group's page service
       // gives: another join widens the builder's table set, and this is a key lookup.
-      eb.selectFrom("user as editor")
+      eb
+        .selectFrom("user as editor")
         .select("editor.username")
         .whereRef("editor.id", "=", "writingPage.updatedBy")
         .as("updatedByUsername"),
@@ -275,9 +253,7 @@ function forumPages(user: User, executor: typeof db | Transaction = db) {
 /** Pages of the forum — announcements, FAQs and rules — most recently written in first. */
 async function listPages(user: User): Promise<ForumPageSummary[]> {
   const pages = await forumPages(user)
-    .$call((builder) =>
-      withFavourite(builder, "writing_page", "writingPage.id", user.id)
-    )
+    .$call((builder) => withFavourite(builder, "writing_page", "writingPage.id", user.id))
     .orderBy("writingPage.lastActivityAt", "desc")
     .orderBy("writingPage.id", "desc")
     .execute();
@@ -292,12 +268,8 @@ async function selectPageForReader(
   executor: typeof db | Transaction = db,
 ): Promise<ForumPage | undefined> {
   const page = await forumPages(user, executor)
-    .$call((builder) =>
-      withFavourite(builder, "writing_page", "writingPage.id", user.id)
-    )
-    .select((eb) =>
-      eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
-    )
+    .$call((builder) => withFavourite(builder, "writing_page", "writingPage.id", user.id))
+    .select((eb) => eb.ref("writingPage.document").$castTo<PostDocument>().as("document"))
     .where("writingPage.id", "=", pageId)
     .executeTakeFirst();
 
@@ -317,23 +289,16 @@ async function selectPageForReader(
  * The forum is one place, so there is no title to join and say which: the section a result appears
  * under is what tells the reader where it is.
  */
-async function searchThreads(
-  user: User,
-  query: ListQuery,
-): Promise<ListResults<ForumThread>> {
+async function searchThreads(user: User, query: ListQuery): Promise<ListResults<ForumThread>> {
   const threads = forumThreads(user)
-    .$call((builder) =>
-      withFavourite(builder, "writing_thread", "writingThread.id", user.id)
-    )
-    .$if(
-      query.search !== undefined,
-      (builder) =>
-        builder.where(
-          "writingThread.title",
-          "ilike",
-          // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
-          searchPattern(query.search!),
-        ),
+    .$call((builder) => withFavourite(builder, "writing_thread", "writingThread.id", user.id))
+    .$if(query.search !== undefined, (builder) =>
+      builder.where(
+        "writingThread.title",
+        "ilike",
+        // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
+        searchPattern(query.search!),
+      ),
     );
 
   const found = await listResultsWithCount(threads, query);
@@ -344,14 +309,9 @@ async function searchThreads(
  * As the group's does, this matches the title *and* the prose through the `text` projection: the
  * row still carries only the title, like every other kind's.
  */
-async function searchPages(
-  user: User,
-  query: ListQuery,
-): Promise<ListResults<ForumPageSummary>> {
+async function searchPages(user: User, query: ListQuery): Promise<ListResults<ForumPageSummary>> {
   const pages = forumPages(user)
-    .$call((builder) =>
-      withFavourite(builder, "writing_page", "writingPage.id", user.id)
-    )
+    .$call((builder) => withFavourite(builder, "writing_page", "writingPage.id", user.id))
     .$if(query.search !== undefined, (builder) =>
       builder.where((eb) => {
         // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
@@ -360,7 +320,8 @@ async function searchPages(
           eb("writingPage.title", "ilike", term),
           eb("writingPage.text", "ilike", term),
         ]);
-      }));
+      }),
+    );
 
   const found = await listResultsWithCount(pages, query);
   return { ...found, results: found.results.map(withEffectivePermission) };
@@ -438,9 +399,7 @@ async function updateFolder(
     .returning("id")
     .executeTakeFirst();
 
-  return updated === undefined
-    ? undefined
-    : await selectFolder(user, folderId, transaction);
+  return updated === undefined ? undefined : await selectFolder(user, folderId, transaction);
 }
 
 async function moveFolder(
@@ -479,9 +438,7 @@ async function moveFolder(
 
   const folder = await selectFolder(user, folderId, transaction);
   if (folder === undefined) {
-    throw new Error(
-      `Folder ${folderId} could not be read back after moving it`,
-    );
+    throw new Error(`Folder ${folderId} could not be read back after moving it`);
   }
   return { kind: "moved", folder };
 }
@@ -508,25 +465,34 @@ async function deleteFolder(
     .where("writingGroupId", "is", null)
     .where("id", "=", folderId)
     .where((eb) =>
-      eb.not(eb.exists(
-        eb.selectFrom("writingFolder as child")
-          .select("child.id")
-          .whereRef("child.parentFolderId", "=", "writingFolder.id"),
-      ))
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("writingFolder as child")
+            .select("child.id")
+            .whereRef("child.parentFolderId", "=", "writingFolder.id"),
+        ),
+      ),
     )
     .where((eb) =>
-      eb.not(eb.exists(
-        eb.selectFrom("writingPage")
-          .select("writingPage.id")
-          .whereRef("writingPage.folderId", "=", "writingFolder.id"),
-      ))
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("writingPage")
+            .select("writingPage.id")
+            .whereRef("writingPage.folderId", "=", "writingFolder.id"),
+        ),
+      ),
     )
     .where((eb) =>
-      eb.not(eb.exists(
-        eb.selectFrom("writingThread")
-          .select("writingThread.id")
-          .whereRef("writingThread.folderId", "=", "writingFolder.id"),
-      ))
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("writingThread")
+            .select("writingThread.id")
+            .whereRef("writingThread.folderId", "=", "writingFolder.id"),
+        ),
+      ),
     )
     .executeTakeFirst();
 
@@ -550,14 +516,9 @@ async function deleteFolder(
  * (#32's slice 7) for the reason one pair sets a favourite over five: the act is identical
  * whatever it names, and three routes saying the same thing would reach the client as three hooks.
  */
-export const FORUM_PERMISSION_TARGET_TYPES = [
-  "folder",
-  "thread",
-  "page",
-] as const;
+export const FORUM_PERMISSION_TARGET_TYPES = ["folder", "thread", "page"] as const;
 
-export type ForumPermissionTargetType =
-  typeof FORUM_PERMISSION_TARGET_TYPES[number];
+export type ForumPermissionTargetType = (typeof FORUM_PERMISSION_TARGET_TYPES)[number];
 
 const PERMISSION_TABLE = {
   folder: "writingFolder",
@@ -608,9 +569,7 @@ async function moveThread(
     .returning("id")
     .executeTakeFirst();
 
-  return moved === undefined
-    ? undefined
-    : await selectThread(user, threadId, transaction);
+  return moved === undefined ? undefined : await selectThread(user, threadId, transaction);
 }
 
 async function movePage(
@@ -627,9 +586,7 @@ async function movePage(
     .returning("id")
     .executeTakeFirst();
 
-  return moved === undefined
-    ? undefined
-    : await selectPageForReader(user, pageId, transaction);
+  return moved === undefined ? undefined : await selectPageForReader(user, pageId, transaction);
 }
 
 /**
@@ -690,12 +647,7 @@ async function insertPost(
     .returning(["id"])
     .executeTakeFirstOrThrow();
 
-  const post = await WritingPostService.selectPost(
-    threadId,
-    id,
-    createdBy,
-    transaction,
-  );
+  const post = await WritingPostService.selectPost(threadId, id, createdBy, transaction);
   if (post === undefined) {
     throw new Error(`Post ${id} was written and could not be read back`);
   }

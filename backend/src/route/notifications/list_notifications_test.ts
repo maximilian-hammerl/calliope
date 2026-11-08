@@ -24,12 +24,10 @@ async function invitation() {
   const invitedCookie = await registerUser(invited);
   const invitedId = await getUserId(invited);
 
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/memberships`,
-    adminCookie,
-    { userId: invitedId, role: "writer" },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
+    userId: invitedId,
+    role: "writer",
+  });
   assert.equal(response.status, STATUS_CODE.Created);
 
   return { adminCookie, invitedCookie, invitedId, group };
@@ -72,16 +70,14 @@ test("a member sees nothing of another group's notifications", async () => {
 test("the unread count is reported with the current user", async () => {
   const { invitedCookie } = await invitation();
 
-  const before = await (await request("GET", "/api/auth/me", invitedCookie))
-    .json();
+  const before = await (await request("GET", "/api/auth/me", invitedCookie)).json();
   assert.equal(before.unreadNotifications, 1);
 
   const read = await request("POST", "/api/notifications/read", invitedCookie);
   assert.equal(read.status, STATUS_CODE.OK);
   assert.equal((await read.json()).read, 1);
 
-  const after = await (await request("GET", "/api/auth/me", invitedCookie))
-    .json();
+  const after = await (await request("GET", "/api/auth/me", invitedCookie)).json();
   assert.equal(after.unreadNotifications, 0);
   // The notification itself stays; only its unread state changed.
   assert.equal((await list(invitedCookie)).totalResults, 1);
@@ -91,10 +87,7 @@ test("unreadOnly leaves out what has been read", async () => {
   const { invitedCookie } = await invitation();
   await request("POST", "/api/notifications/read", invitedCookie);
 
-  assert.equal(
-    (await list(invitedCookie, { unreadOnly: true })).totalResults,
-    0,
-  );
+  assert.equal((await list(invitedCookie, { unreadOnly: true })).totalResults, 0);
   assert.equal((await list(invitedCookie)).totalResults, 1);
 });
 

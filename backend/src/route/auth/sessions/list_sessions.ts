@@ -44,19 +44,22 @@ export default new OpenAPIHono().openapi(
     const currentSessionId = SessionCookieService.getUserSession(c)?.id;
     const sessions = await UserService.selectSessionsForUser(c.get("user").id);
 
-    return c.json({
-      results: sessions.map((session) => ({
-        id: session.id,
-        // Parsed here, not stored: a label could only ever be in one language.
-        ...userAgentParts(session.userAgent),
-        ipAddress: session.ipAddress,
-        createdAt: session.createdAt,
-        // Derived, not stored: expiry is pushed to now plus the lifetime on use.
-        lastUsedAt: Temporal.Instant.from(session.expiresAt)
-          .subtract(SESSION_LIFETIME)
-          .toString(),
-        current: session.id === currentSessionId,
-      })),
-    }, STATUS_CODE.OK);
+    return c.json(
+      {
+        results: sessions.map((session) => ({
+          id: session.id,
+          // Parsed here, not stored: a label could only ever be in one language.
+          ...userAgentParts(session.userAgent),
+          ipAddress: session.ipAddress,
+          createdAt: session.createdAt,
+          // Derived, not stored: expiry is pushed to now plus the lifetime on use.
+          lastUsedAt: Temporal.Instant.from(session.expiresAt)
+            .subtract(SESSION_LIFETIME)
+            .toString(),
+          current: session.id === currentSessionId,
+        })),
+      },
+      STATUS_CODE.OK,
+    );
   },
 );

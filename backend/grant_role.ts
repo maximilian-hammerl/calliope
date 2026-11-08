@@ -26,18 +26,17 @@ function argumentAfter(flag: string): string | undefined {
   return value?.startsWith("--") ? undefined : value;
 }
 
-async function setRole(
-  username: string,
-  role: PlatformRole | null,
-): Promise<void> {
-  const updated = await db.transaction().execute((transaction) =>
-    transaction
-      .updateTable("user")
-      .set({ platformRole: role })
-      .where("username", "=", username)
-      .returning(["username", "platformRole"])
-      .executeTakeFirst()
-  );
+async function setRole(username: string, role: PlatformRole | null): Promise<void> {
+  const updated = await db
+    .transaction()
+    .execute((transaction) =>
+      transaction
+        .updateTable("user")
+        .set({ platformRole: role })
+        .where("username", "=", username)
+        .returning(["username", "platformRole"])
+        .executeTakeFirst(),
+    );
 
   if (updated === undefined) {
     fail(`No account named "${username}".`);
@@ -57,9 +56,7 @@ export async function grantRole(): Promise<void> {
   const role = Deno.args[Deno.args.indexOf("--grant-role") + 2];
 
   if (username === undefined || role === undefined) {
-    fail(
-      `Usage: --grant-role <username> <${PLATFORM_ROLES.join("|")}>`,
-    );
+    fail(`Usage: --grant-role <username> <${PLATFORM_ROLES.join("|")}>`);
   }
 
   if (!PLATFORM_ROLES.includes(role as PlatformRole)) {

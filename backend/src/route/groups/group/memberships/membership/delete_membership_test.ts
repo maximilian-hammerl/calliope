@@ -46,11 +46,7 @@ test("DELETE /api/groups/{groupId}/memberships/{userId} refuses a non-administra
   await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: memberId,
   });
-  await request(
-    "POST",
-    `/api/groups/${group.id}/memberships/me/accept`,
-    memberCookie,
-  );
+  await request("POST", `/api/groups/${group.id}/memberships/me/accept`, memberCookie);
 
   // A joined member is still not an administrator.
   const response = await request(
@@ -73,11 +69,7 @@ test("DELETE /api/groups/{groupId}/memberships/{userId} lets a member leave", as
   await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
     userId: memberId,
   });
-  await request(
-    "POST",
-    `/api/groups/${group.id}/memberships/me/accept`,
-    memberCookie,
-  );
+  await request("POST", `/api/groups/${group.id}/memberships/me/accept`, memberCookie);
 
   // A writer, not an administrator: allowed only because the row is their own.
   const response = await request(

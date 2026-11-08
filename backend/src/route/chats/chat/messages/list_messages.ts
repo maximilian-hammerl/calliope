@@ -4,10 +4,7 @@ import { CHATS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { ChatMessageService } from "@/src/service/chat_message_service.ts";
-import {
-  cursorQuerySchema,
-  cursorResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { cursorQuerySchema, cursorResponseSchema } from "@/src/list/list_endpoint.ts";
 import { checkJoinedChatMember } from "@/src/route/chats/chat/chat_membership.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -65,10 +62,7 @@ export default new OpenAPIHono().openapi(
         : c.json({ error: access.error }, STATUS_CODE.Forbidden);
     }
 
-    const page = await ChatMessageService.listMessages(
-      chatId,
-      c.req.valid("json"),
-    );
+    const page = await ChatMessageService.listMessages(chatId, c.req.valid("json"));
 
     return c.json(page, STATUS_CODE.OK);
   },

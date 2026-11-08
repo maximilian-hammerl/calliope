@@ -13,27 +13,25 @@ import {
 } from "@/src/list/list_endpoint_query.ts";
 import { type FavouriteFilter, withFavourite } from "@/src/query/favourite.ts";
 
-export type Post =
-  & Pick<
-    Selectable<DatabaseWritingPost>,
-    | "id"
-    | "writingThreadId"
-    | "text"
-    | "isDraft"
-    | "createdBy"
-    | "createdAt"
-    | "editedAt"
-    | "editedBy"
-  >
+export type Post = Pick<
+  Selectable<DatabaseWritingPost>,
+  | "id"
+  | "writingThreadId"
+  | "text"
+  | "isDraft"
+  | "createdBy"
+  | "createdAt"
+  | "editedAt"
+  | "editedBy"
+> &
   // Not picked from the table, where the column is `unknown` by design — see the `typeMapping`
   // note in `database/.kysely-codegenrc.ts`. This is the type that says what is in there.
-  & { document: PostDocument }
-  & {
-    /** The reader's own favourite, visible to nobody else. */
-    isFavourite: boolean;
-  }
+  { document: PostDocument } & {
+  /** The reader's own favourite, visible to nobody else. */
+  isFavourite: boolean;
+} &
   // Both null once that account is deleted, because the columns are ON DELETE SET NULL.
-  & { createdByUsername: string | null; editedByUsername: string | null };
+  { createdByUsername: string | null; editedByUsername: string | null };
 
 const SELECTED_COLUMNS = [
   "writingPost.id",
@@ -56,9 +54,7 @@ function postWithAuthorById(
   return executor
     .selectFrom("writingPost")
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .$call((builder) =>
-      withFavourite(builder, "writing_post", "writingPost.id", viewerId)
-    )
+    .$call((builder) => withFavourite(builder, "writing_post", "writingPost.id", viewerId))
     .select((eb) => [
       ...SELECTED_COLUMNS,
       // Cast rather than selected plainly: the column's generated type is `unknown`, and
@@ -67,7 +63,8 @@ function postWithAuthorById(
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
-      eb.selectFrom("user as editor")
+      eb
+        .selectFrom("user as editor")
         .select("editor.username")
         .whereRef("editor.id", "=", "writingPost.editedBy")
         .as("editedByUsername"),
@@ -111,8 +108,7 @@ async function insertPost(
   }
 
   // Re-read rather than RETURNING, which cannot reach the joined author name.
-  return await postWithAuthorById(id, createdBy, transaction)
-    .executeTakeFirstOrThrow();
+  return await postWithAuthorById(id, createdBy, transaction).executeTakeFirstOrThrow();
 }
 
 /**
@@ -123,10 +119,7 @@ function readableBy(viewerId: string, executor: typeof db | Transaction = db) {
   return executor
     .selectFrom("writingPost")
     .where((eb) =>
-      eb.or([
-        eb("writingPost.isDraft", "=", false),
-        eb("writingPost.createdBy", "=", viewerId),
-      ])
+      eb.or([eb("writingPost.isDraft", "=", false), eb("writingPost.createdBy", "=", viewerId)]),
     );
 }
 
@@ -134,15 +127,10 @@ function readableBy(viewerId: string, executor: typeof db | Transaction = db) {
  * The author's name is joined in rather than stored, so it follows a rename. The join is
  * left: an account that has been deleted leaves the post behind with no author.
  */
-function postsWithAuthor(
-  viewerId: string,
-  executor: typeof db | Transaction = db,
-) {
+function postsWithAuthor(viewerId: string, executor: typeof db | Transaction = db) {
   return readableBy(viewerId, executor)
     .leftJoin("user", "user.id", "writingPost.createdBy")
-    .$call((builder) =>
-      withFavourite(builder, "writing_post", "writingPost.id", viewerId)
-    )
+    .$call((builder) => withFavourite(builder, "writing_post", "writingPost.id", viewerId))
     .select((eb) => [
       ...SELECTED_COLUMNS,
       // Cast rather than selected plainly: the column's generated type is `unknown`, and
@@ -151,7 +139,8 @@ function postsWithAuthor(
       "user.username as createdByUsername",
       // A subquery rather than a second join on `user`: an alias widens the builder's table
       // set past what `listResultsWithCount` accepts, and this is a primary-key lookup.
-      eb.selectFrom("user as editor")
+      eb
+        .selectFrom("user as editor")
         .select("editor.username")
         .whereRef("editor.id", "=", "writingPost.editedBy")
         .as("editedByUsername"),
@@ -184,9 +173,8 @@ function listPosts(
     postsWithAuthor(viewerId)
       .where("writingPost.writingThreadId", "=", threadId)
       .where("writingPost.isDraft", "=", query.isDraft)
-      .$if(
-        query.favourite === "only",
-        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      .$if(query.favourite === "only", (queryBuilder) =>
+        queryBuilder.where("favourite.id", "is not", null),
       )
       // The body rather than a title: a post has none.
       .$if(query.search !== undefined, (queryBuilder) =>
@@ -195,7 +183,8 @@ function listPosts(
           "ilike",
           // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
           searchPattern(query.search!),
-        )),
+        ),
+      ),
     query,
   );
 }
@@ -234,9 +223,9 @@ async function updatePost(
       // Both columns move together, or the projection would describe a body it no longer has.
       ...(document !== undefined
         ? {
-          document,
-          text: documentToPlainText(document),
-        }
+            document,
+            text: documentToPlainText(document),
+          }
         : {}),
       // A post is born when it is published, not when its draft was first autosaved: a
       // piece drafted over three days would otherwise appear dated three days ago and sort
@@ -246,9 +235,9 @@ async function updatePost(
       // member's post, and the reader is told which of the two happened.
       ...(isEditingPublished
         ? {
-          editedAt: Temporal.Now.instant().toString(),
-          editedBy: context.actorId,
-        }
+            editedAt: Temporal.Now.instant().toString(),
+            editedBy: context.actorId,
+          }
         : {}),
     })
     .where("id", "=", postId)
@@ -270,14 +259,14 @@ async function updatePost(
     });
   }
 
-  return await postWithAuthorById(updated.id, context.actorId, transaction)
-    .executeTakeFirstOrThrow();
+  return await postWithAuthorById(
+    updated.id,
+    context.actorId,
+    transaction,
+  ).executeTakeFirstOrThrow();
 }
 
-async function deletePost(
-  transaction: Transaction,
-  postId: PostId,
-): Promise<boolean> {
+async function deletePost(transaction: Transaction, postId: PostId): Promise<boolean> {
   const deletion = await transaction
     .deleteFrom("writingPost")
     .where("id", "=", postId)

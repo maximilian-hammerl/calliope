@@ -5,10 +5,7 @@ import { FOLDERS_TAG } from "@/src/open_api_specification.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { JOINED_GROUP } from "@/src/scope/chains.ts";
 import { folderOf } from "@/src/scope/group_scope.ts";
-import {
-  MAX_FOLDER_DEPTH,
-  WritingFolderService,
-} from "@/src/service/writing_folder_service.ts";
+import { MAX_FOLDER_DEPTH, WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import { mayAct } from "@/src/service/writing_group_authorization.ts";
 import {
   BAD_REQUEST_RESPONSE,
@@ -17,14 +14,8 @@ import {
   FOLDER_TOO_DEEP,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
-import {
-  FOLDER_DESCRIPTION_SCHEMA,
-  FOLDER_TITLE_SCHEMA,
-} from "@/src/http/request_schema.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
+import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "@/src/http/request_schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
@@ -41,8 +32,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [FOLDERS_TAG],
     summary: "Add a folder to a group",
-    description:
-      `Nests under \`parentFolderId\`, or sits at the root without one. At most ${MAX_FOLDER_DEPTH} levels deep.`,
+    description: `Nests under \`parentFolderId\`, or sits at the root without one. At most ${MAX_FOLDER_DEPTH} levels deep.`,
     operationId: "createFolder",
     middleware: JOINED_GROUP,
     request: {
@@ -86,19 +76,25 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const parent = parentFolderId === undefined || parentFolderId === null
-      ? null
-      : await folderOf(group.id, parentFolderId);
+    const parent =
+      parentFolderId === undefined || parentFolderId === null
+        ? null
+        : await folderOf(group.id, parentFolderId);
     if (parent === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
     const outcome = await db.transaction().execute((transaction) =>
-      WritingFolderService.insertFolder(transaction, group.id, {
-        title,
-        description: description ?? null,
-        parentFolderId: parent?.id ?? null,
-      }, user.id)
+      WritingFolderService.insertFolder(
+        transaction,
+        group.id,
+        {
+          title,
+          description: description ?? null,
+          parentFolderId: parent?.id ?? null,
+        },
+        user.id,
+      ),
     );
 
     if (outcome.kind === "noSuchParent") {

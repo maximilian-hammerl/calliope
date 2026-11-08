@@ -12,10 +12,7 @@ import {
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_NEXT_STEP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_NEXT_STEP_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const STEP_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -28,8 +25,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [STEPS_TAG],
     summary: "Delete a step the current user created or administers",
-    description:
-      "Completed steps are never removed on their own; this is the only way one leaves.",
+    description: "Completed steps are never removed on their own; this is the only way one leaves.",
     operationId: "deleteStep",
     middleware: JOINED_GROUP_STEP,
     request: { params: STEP_PARAMS },
@@ -70,9 +66,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    await db.transaction().execute((transaction) =>
-      WritingGroupNextStepService.deleteStep(transaction, step.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => WritingGroupNextStepService.deleteStep(transaction, step.id));
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

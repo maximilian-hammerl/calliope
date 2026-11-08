@@ -14,10 +14,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
 import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { PAGE_TITLE_SCHEMA } from "./page_schema.ts";
@@ -88,23 +85,24 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const folder = folderId === undefined || folderId === null
-      ? null
-      : await folderOf(group.id, folderId);
+    const folder =
+      folderId === undefined || folderId === null ? null : await folderOf(group.id, folderId);
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    const page = await db.transaction().execute((transaction) =>
-      WritingPageService.insertPage(
-        transaction,
-        group.id,
-        title,
-        document,
-        user.id,
-        folder?.id ?? null,
-      )
-    );
+    const page = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingPageService.insertPage(
+          transaction,
+          group.id,
+          title,
+          document,
+          user.id,
+          folder?.id ?? null,
+        ),
+      );
     return c.json(page, STATUS_CODE.Created);
   },
 );

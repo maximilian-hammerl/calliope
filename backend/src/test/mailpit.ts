@@ -1,7 +1,4 @@
-import {
-  getOptionalEnvVariable,
-  getRequiredEnvVariable,
-} from "@/src/util/env.ts";
+import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
 import { retry } from "@/src/util/async.ts";
 
 /**
@@ -37,9 +34,7 @@ const addressedTo = (addresses: string[]) => (message: MailpitMessage) =>
  * for one test process and wipes another's pending message when two run at once.
  */
 export async function deleteMailFor(addresses: string[]): Promise<void> {
-  const ids = (await listMail()).filter(addressedTo(addresses)).map((it) =>
-    it.ID
-  );
+  const ids = (await listMail()).filter(addressedTo(addresses)).map((it) => it.ID);
   if (ids.length === 0) {
     return;
   }
@@ -59,7 +54,7 @@ export async function countMailFor(addresses: string[]): Promise<number> {
 
 async function listMail(): Promise<Array<MailpitMessage>> {
   const response = await fetch(`${MAILPIT_URL}/api/v1/messages`);
-  const { messages } = await response.json() as { messages: MailpitMessage[] };
+  const { messages } = (await response.json()) as { messages: MailpitMessage[] };
   return messages;
 }
 
@@ -76,27 +71,29 @@ export type ReceivedMail = {
 
 /** Polls: `flushBackgroundWork` settles the send, but Mailpit still has to index it. */
 export async function waitForMail(address: string): Promise<ReceivedMail> {
-  return await retry(async () => {
-    const message = (await listMail())
-      .find((it) => it.To.some((to) => to.Address === address));
+  return await retry(
+    async () => {
+      const message = (await listMail()).find((it) => it.To.some((to) => to.Address === address));
 
-    if (message === undefined) {
-      throw new Error(`no mail for ${address} yet`);
-    }
+      if (message === undefined) {
+        throw new Error(`no mail for ${address} yet`);
+      }
 
-    const response = await fetch(`${MAILPIT_URL}/api/v1/message/${message.ID}`);
-    const { Text } = await response.json() as { Text: string };
+      const response = await fetch(`${MAILPIT_URL}/api/v1/message/${message.ID}`);
+      const { Text } = (await response.json()) as { Text: string };
 
-    return {
-      from: message.From.Address,
-      to: address,
-      subject: message.Subject,
-      text: Text,
-    };
-    // Doubling from 20ms over 8 attempts gave up after ~2.5s, which an idle machine never
-    // needed and a loaded one — two test processes and a backend — regularly exceeded.
-    // Capping the delay keeps it just as quick when the mail is already there.
-  }, { minTimeout: 20, maxTimeout: 500, maxAttempts: 20 });
+      return {
+        from: message.From.Address,
+        to: address,
+        subject: message.Subject,
+        text: Text,
+      };
+      // Doubling from 20ms over 8 attempts gave up after ~2.5s, which an idle machine never
+      // needed and a loaded one — two test processes and a backend — regularly exceeded.
+      // Capping the delay keeps it just as quick when the mail is already there.
+    },
+    { minTimeout: 20, maxTimeout: 500, maxAttempts: 20 },
+  );
 }
 
 /** The link is the only URL in these messages, so this cannot pick up the wrong one. */

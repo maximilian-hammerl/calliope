@@ -1,13 +1,7 @@
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { db } from "@/src/database/client.ts";
-import {
-  createGroup,
-  deleteUsers,
-  postBody,
-  request,
-  write,
-} from "@/src/test/support.ts";
+import { createGroup, deleteUsers, postBody, request, write } from "@/src/test/support.ts";
 import { TEXT_LIMIT } from "@/src/text_limit.ts";
 
 /**
@@ -21,9 +15,7 @@ export function reportFixture(scope: string) {
   // A long scope pushes the name past TEXT_LIMIT.username, and registration then fails in
   // whichever test happens to run first rather than saying what is wrong.
   if (`report-${scope}-operator2`.length > TEXT_LIMIT.username) {
-    throw new Error(
-      `Scope "${scope}" makes a username longer than ${TEXT_LIMIT.username}`,
-    );
+    throw new Error(`Scope "${scope}" makes a username longer than ${TEXT_LIMIT.username}`);
   }
 
   return {
@@ -41,24 +33,18 @@ export function reportFixture(scope: string) {
  * Registers the operator and gives them the role. A moderator rather than an administrator,
  * because everything here is authorised as the lower of the two.
  */
-export async function makeOperator(
-  username: string,
-  cookie: string,
-): Promise<string> {
+export async function makeOperator(username: string, cookie: string): Promise<string> {
   await write((transaction) =>
     transaction
       .updateTable("user")
       .set({ platformRole: "moderator" })
       .where("username", "=", username)
-      .execute()
+      .execute(),
   );
   return cookie;
 }
 
-export const listReports = (
-  cookie: string,
-  body: Record<string, unknown> = {},
-) =>
+export const listReports = (cookie: string, body: Record<string, unknown> = {}) =>
   request("QUERY", "/api/reports", cookie, { limit: 50, offset: 0, ...body });
 
 export const fileReport = (
@@ -92,11 +78,8 @@ export async function fileReportOk(
   );
 }
 
-export const moveReport = (
-  cookie: string,
-  reportId: string,
-  body: Record<string, unknown>,
-) => request("PATCH", `/api/reports/${reportId}`, cookie, body);
+export const moveReport = (cookie: string, reportId: string, body: Record<string, unknown>) =>
+  request("PATCH", `/api/reports/${reportId}`, cookie, body);
 
 export type Row = {
   id: string;
@@ -115,36 +98,30 @@ export type Row = {
   targetExists: boolean;
 };
 
-export const rowsFor = async (
-  cookie: string,
-  body?: Record<string, unknown>,
-) => (await (await listReports(cookie, body)).json()).results as Row[];
+export const rowsFor = async (cookie: string, body?: Record<string, unknown>) =>
+  (await (await listReports(cookie, body)).json()).results as Row[];
 
 /** The caller's own report of the reported post, found by what that post says. */
 export const ownRow = async (
   cookie: string,
   reportedText: string,
   body?: Record<string, unknown>,
-) =>
-  (await rowsFor(cookie, body)).find((row) =>
-    row.targetExcerpt === reportedText
-  );
+) => (await rowsFor(cookie, body)).find((row) => row.targetExcerpt === reportedText);
 
 /** A public group with one post in it, so there is something with an author to report. */
 export async function aPostBy(cookie: string, reportedText: string) {
   const group = await createGroup(cookie, "Warteschlangenprobe", "public");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    cookie,
-    { title: "Thread" },
-  )).json();
-  const post = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads/${thread.id}/posts`,
-    cookie,
-    postBody(reportedText),
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, cookie, { title: "Thread" })
+  ).json();
+  const post = await (
+    await request(
+      "POST",
+      `/api/groups/${group.id}/threads/${thread.id}/posts`,
+      cookie,
+      postBody(reportedText),
+    )
+  ).json();
   return { group, thread, post };
 }
 
@@ -153,10 +130,7 @@ export async function aPostBy(cookie: string, reportedText: string) {
  * `report` — another file's rows are in there too, and the suite runs in parallel.
  */
 export async function cleanUpReports(usernames: string[]) {
-  const fixtureUsers = db
-    .selectFrom("user")
-    .select("id")
-    .where("username", "in", usernames);
+  const fixtureUsers = db.selectFrom("user").select("id").where("username", "in", usernames);
 
   // Also by `operatorId`, because a report an operator only ever *closed* has none of the three
   // references below pointing at this fixture.
@@ -169,9 +143,9 @@ export async function cleanUpReports(usernames: string[]) {
           eb("reportedUserId", "in", fixtureUsers),
           eb("reportedAuthorId", "in", fixtureUsers),
           eb("operatorId", "in", fixtureUsers),
-        ])
+        ]),
       )
-      .execute()
+      .execute(),
   );
 
   await deleteUsers(usernames);

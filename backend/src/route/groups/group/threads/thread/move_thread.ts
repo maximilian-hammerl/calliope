@@ -13,10 +13,7 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -81,22 +78,22 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const folder = folderId === null
-      ? null
-      : await folderOf(group.id, folderId);
+    const folder = folderId === null ? null : await folderOf(group.id, folderId);
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    const moved = await db.transaction().execute((transaction) =>
-      WritingThreadService.moveThread(
-        transaction,
-        group.id,
-        thread.id,
-        folder?.id ?? null,
-        user.id,
-      )
-    );
+    const moved = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingThreadService.moveThread(
+          transaction,
+          group.id,
+          thread.id,
+          folder?.id ?? null,
+          user.id,
+        ),
+      );
     if (moved === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

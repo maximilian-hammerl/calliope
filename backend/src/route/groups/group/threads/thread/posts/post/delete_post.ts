@@ -72,9 +72,9 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    await db.transaction().execute((transaction) =>
-      WritingPostService.deletePost(transaction, post.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => WritingPostService.deletePost(transaction, post.id));
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

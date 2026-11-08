@@ -5,20 +5,10 @@ import { db } from "@/src/database/client.ts";
 import { clearRateLimits, deleteUsers, write } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
 import { tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
-import {
-  authFixture,
-  postJson,
-  sendJson,
-  sessionCookie,
-} from "@/src/test/auth.ts";
+import { authFixture, postJson, sendJson, sessionCookie } from "@/src/test/auth.ts";
 
 // Its own account, so a file running beside this one cannot register or delete it.
-const {
-  clearMail,
-  emailAddress,
-  register,
-  username,
-} = authFixture("verify");
+const { clearMail, emailAddress, register, username } = authFixture("verify");
 
 beforeEach(async () => {
   await clearRateLimits();
@@ -30,12 +20,9 @@ afterEach(() => deleteUsers([username]));
 const listGroups = (cookie: string) =>
   sendJson("QUERY", "/api/groups", { page: 1, pageSize: 10 }, cookie);
 
-const verify = (token: string) =>
-  postJson("/api/auth/verify-email-address", { token });
+const verify = (token: string) => postJson("/api/auth/verify-email-address", { token });
 
-async function registerAndReadLink(): Promise<
-  { cookie: string; token: string }
-> {
+async function registerAndReadLink(): Promise<{ cookie: string; token: string }> {
   const cookie = sessionCookie(await register());
   await flushBackgroundWork();
   return { cookie, token: tokenFromMail(await waitForMail(emailAddress)) };
@@ -91,7 +78,7 @@ test("POST /api/auth/verify-email-address rejects an expired token", async () =>
         expiresAt: Temporal.Now.instant().subtract({ minutes: 1 }).toString(),
       })
       .where("purpose", "=", "email_address_verification")
-      .execute()
+      .execute(),
   );
 
   assert.equal((await verify(token)).status, STATUS_CODE.Gone);
@@ -124,20 +111,15 @@ test("POST /api/auth/resend-email-address-verification sends another link", asyn
         createdAt: Temporal.Now.instant().subtract({ minutes: 5 }).toString(),
       })
       .where("purpose", "=", "email_address_verification")
-      .execute()
+      .execute(),
   );
 
-  const response = await postJson(
-    "/api/auth/resend-email-address-verification",
-    undefined,
-    cookie,
-  );
+  const response = await postJson("/api/auth/resend-email-address-verification", undefined, cookie);
   assert.equal(response.status, STATUS_CODE.OK);
 
   await flushBackgroundWork();
   assert.equal(
-    (await verify(tokenFromMail(await waitForMail(emailAddress))))
-      .status,
+    (await verify(tokenFromMail(await waitForMail(emailAddress)))).status,
     STATUS_CODE.OK,
   );
 });

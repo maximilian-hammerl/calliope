@@ -95,14 +95,11 @@ export default new OpenAPIHono().openapi(
     const { reportId } = c.req.valid("param");
     const body = c.req.valid("json");
 
-    const refusal = await db.transaction().execute((transaction) =>
-      ReportService.moveReport(
-        transaction,
-        reportId,
-        move(body),
-        c.get("user").id,
-      )
-    );
+    const refusal = await db
+      .transaction()
+      .execute((transaction) =>
+        ReportService.moveReport(transaction, reportId, move(body), c.get("user").id),
+      );
 
     switch (refusal) {
       case undefined:
@@ -112,10 +109,7 @@ export default new OpenAPIHono().openapi(
       case "already_closed":
         return c.json({ error: "Already closed" }, STATUS_CODE.Conflict);
       case "held_by_another":
-        return c.json(
-          { error: "Another operator has this report" },
-          STATUS_CODE.Conflict,
-        );
+        return c.json({ error: "Another operator has this report" }, STATUS_CODE.Conflict);
       default:
         return assertUnreachable(refusal);
     }

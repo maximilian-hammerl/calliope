@@ -60,30 +60,26 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId, category, reason } = c.req.valid("json");
 
-    const refusal = await db.transaction().execute((transaction) =>
-      ReportService.insertReport(
-        transaction,
-        c.get("user"),
-        targetType,
-        targetId,
-        category,
-        reason,
-      )
-    );
+    const refusal = await db
+      .transaction()
+      .execute((transaction) =>
+        ReportService.insertReport(
+          transaction,
+          c.get("user"),
+          targetType,
+          targetId,
+          category,
+          reason,
+        ),
+      );
 
     switch (refusal) {
       case "not_found":
         return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
       case "own_account":
-        return c.json(
-          { error: "You cannot report your own account" },
-          STATUS_CODE.Forbidden,
-        );
+        return c.json({ error: "You cannot report your own account" }, STATUS_CODE.Forbidden);
       case "own_content":
-        return c.json(
-          { error: "You cannot report your own content" },
-          STATUS_CODE.Forbidden,
-        );
+        return c.json({ error: "You cannot report your own content" }, STATUS_CODE.Forbidden);
       case undefined:
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       default:

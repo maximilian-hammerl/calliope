@@ -63,14 +63,12 @@ export default new OpenAPIHono().openapi(
     const { title, document, folderId } = c.req.valid("json");
     const user = c.get("user");
 
-    const folder = (folderId !== undefined && folderId !== null)
-      ? await forumFolderOf(user, folderId)
-      : null;
+    const folder =
+      folderId !== undefined && folderId !== null ? await forumFolderOf(user, folderId) : null;
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
-    const permission = folder?.effectiveMemberPermission ??
-      FORUM_ROOT_PERMISSION;
+    const permission = folder?.effectiveMemberPermission ?? FORUM_ROOT_PERMISSION;
 
     // The bound is on the prose, not the serialisation — see `document_schema.ts`. No minimum:
     // a page is named by its title, so an empty one is a stub somebody has yet to fill.
@@ -82,21 +80,14 @@ export default new OpenAPIHono().openapi(
     }
 
     if (!mayActInForum(user, permission, "page:create")) {
-      return c.json(
-        { error: "You cannot add a page here" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot add a page here" }, STATUS_CODE.Forbidden);
     }
 
-    const page = await db.transaction().execute((transaction) =>
-      ForumService.insertPage(
-        transaction,
-        user,
-        title,
-        document,
-        folder?.id ?? null,
-      )
-    );
+    const page = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.insertPage(transaction, user, title, document, folder?.id ?? null),
+      );
 
     return c.json(page, STATUS_CODE.Created);
   },

@@ -31,10 +31,7 @@ type Listener = (event: ChatEvent) => void;
 const listenersByUser = new Map<string, Set<Listener>>();
 
 /** Returns the function that stops listening; the route calls it when the stream closes. */
-export function subscribeToChatEvents(
-  userId: string,
-  listener: Listener,
-): () => void {
+export function subscribeToChatEvents(userId: string, listener: Listener): () => void {
   const listeners = listenersByUser.get(userId) ?? new Set<Listener>();
   listeners.add(listener);
   listenersByUser.set(userId, listeners);
@@ -53,10 +50,7 @@ export function subscribeToChatEvents(
  * already committed by the time this runs, so a listener that cannot be written to has only
  * lost its live update — the next fetch shows the message anyway.
  */
-export function publishChatEvent(
-  recipientIds: Array<string>,
-  event: ChatEvent,
-): void {
+export function publishChatEvent(recipientIds: Array<string>, event: ChatEvent): void {
   for (const recipientId of recipientIds) {
     for (const listener of listenersByUser.get(recipientId) ?? []) {
       try {

@@ -54,9 +54,9 @@ export default new OpenAPIHono().openapi(
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);
     }
 
-    await db.transaction().execute((transaction) =>
-      StoryIdeaService.clearRead(transaction, ideaId, user.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) => StoryIdeaService.clearRead(transaction, ideaId, user.id));
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },
 );

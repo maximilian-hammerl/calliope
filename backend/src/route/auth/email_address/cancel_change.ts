@@ -38,9 +38,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { token } = c.req.valid("json");
 
-    const cancelled = await EmailAddressChangeService.cancelEmailAddressChange(
-      token,
-    );
+    const cancelled = await EmailAddressChangeService.cancelEmailAddressChange(token);
 
     return cancelled
       ? c.json({ ok: true } as const, STATUS_CODE.OK)

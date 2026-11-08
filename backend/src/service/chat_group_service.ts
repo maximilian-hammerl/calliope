@@ -12,27 +12,21 @@ import {
   listResultsWithCount,
   searchPattern,
 } from "@/src/list/list_endpoint_query.ts";
-import {
-  type FavouriteFilter,
-  FAVOURITES_FIRST,
-  withFavourite,
-} from "@/src/query/favourite.ts";
+import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "@/src/query/favourite.ts";
 
-export type ChatGroup =
-  & Pick<
-    Selectable<DatabaseChatGroup>,
-    "id" | "title" | "createdBy" | "createdAt" | "lastActivityAt"
-  >
-  & {
-    /** This member's own standing: an invitation is visible but not yet a conversation. */
-    status: UserInChatGroupStatus;
-    /** Null once the founder's account is gone; the chat outlives it. */
-    createdByUsername: string | null;
-    /** How many messages arrived after this member last read, for their list entry. */
-    unreadMessages: number;
-    /** The reader's own favourite, visible to nobody else. */
-    isFavourite: boolean;
-  };
+export type ChatGroup = Pick<
+  Selectable<DatabaseChatGroup>,
+  "id" | "title" | "createdBy" | "createdAt" | "lastActivityAt"
+> & {
+  /** This member's own standing: an invitation is visible but not yet a conversation. */
+  status: UserInChatGroupStatus;
+  /** Null once the founder's account is gone; the chat outlives it. */
+  createdByUsername: string | null;
+  /** How many messages arrived after this member last read, for their list entry. */
+  unreadMessages: number;
+  /** The reader's own favourite, visible to nobody else. */
+  isFavourite: boolean;
+};
 
 const SELECTED_COLUMNS = [
   "chatGroup.id",
@@ -55,7 +49,8 @@ function chatsOf(user: User, executor: typeof db | Transaction = db) {
     .innerJoin("userInChatGroup", (join) =>
       join
         .onRef("userInChatGroup.chatGroupId", "=", "chatGroup.id")
-        .on("userInChatGroup.userId", "=", user.id));
+        .on("userInChatGroup.userId", "=", user.id),
+    );
 }
 
 /**
@@ -67,9 +62,7 @@ function chatsOf(user: User, executor: typeof db | Transaction = db) {
 function chatsWithDetail(user: User, executor: typeof db | Transaction = db) {
   return chatsOf(user, executor)
     .leftJoin("user", "user.id", "chatGroup.createdBy")
-    .$call((builder) =>
-      withFavourite(builder, "chat_group", "chatGroup.id", user.id)
-    )
+    .$call((builder) => withFavourite(builder, "chat_group", "chatGroup.id", user.id))
     .select((eb) => [
       ...SELECTED_COLUMNS,
       "userInChatGroup.status",
@@ -78,30 +71,28 @@ function chatsWithDetail(user: User, executor: typeof db | Transaction = db) {
       // the chat: the same chat is a different number of unread messages per person.
       // Wrapped in coalesce so the type is not nullable: a correlated subquery is optional to
       // Kysely even where COUNT always returns a row.
-      eb.fn.coalesce(
-        eb
-          .selectFrom("chatMessage")
-          .whereRef("chatMessage.chatGroupId", "=", "chatGroup.id")
-          .where((inner) =>
-            inner.or([
-              inner("userInChatGroup.lastReadAt", "is", null),
-              inner.eb(
-                "chatMessage.createdAt",
-                ">",
-                inner.ref("userInChatGroup.lastReadAt"),
-              ),
-            ])
-          )
-          // Your own messages are not news to you.
-          .where((inner) =>
-            inner.or([
-              inner("chatMessage.createdBy", "is", null),
-              inner("chatMessage.createdBy", "!=", user.id),
-            ])
-          )
-          .select((inner) => inner.fn.countAll<number>().as("count")),
-        eb.lit(0),
-      ).as("unreadMessages"),
+      eb.fn
+        .coalesce(
+          eb
+            .selectFrom("chatMessage")
+            .whereRef("chatMessage.chatGroupId", "=", "chatGroup.id")
+            .where((inner) =>
+              inner.or([
+                inner("userInChatGroup.lastReadAt", "is", null),
+                inner.eb("chatMessage.createdAt", ">", inner.ref("userInChatGroup.lastReadAt")),
+              ]),
+            )
+            // Your own messages are not news to you.
+            .where((inner) =>
+              inner.or([
+                inner("chatMessage.createdBy", "is", null),
+                inner("chatMessage.createdBy", "!=", user.id),
+              ]),
+            )
+            .select((inner) => inner.fn.countAll<number>().as("count")),
+          eb.lit(0),
+        )
+        .as("unreadMessages"),
     ]);
 }
 
@@ -119,10 +110,10 @@ function listChatGroups(
           "ilike",
           // deno-lint-ignore no-non-null-assertion -- the `$if` only runs this when it is set
           searchPattern(query.search!),
-        ))
-      .$if(
-        query.favourite === "only",
-        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+        ),
+      )
+      .$if(query.favourite === "only", (queryBuilder) =>
+        queryBuilder.where("favourite.id", "is not", null),
       ),
     query,
     FAVOURITES_FIRST,
@@ -147,12 +138,7 @@ async function selectChatGroup(
   chatGroupId: string,
 ): Promise<ChatGroupGate | undefined> {
   return await chatsOf(user)
-    .select([
-      "chatGroup.id",
-      "chatGroup.title",
-      "chatGroup.createdBy",
-      "userInChatGroup.status",
-    ])
+    .select(["chatGroup.id", "chatGroup.title", "chatGroup.createdBy", "userInChatGroup.status"])
     .where("chatGroup.id", "=", chatGroupId)
     .executeTakeFirst();
 }
@@ -186,11 +172,13 @@ async function insertChatGroup(
   if (inviteeIds.length > 0) {
     await transaction
       .insertInto("userInChatGroup")
-      .values(inviteeIds.map((userId) => ({
-        userId,
-        chatGroupId: chatGroup.id,
-        status: "invited" as const,
-      })))
+      .values(
+        inviteeIds.map((userId) => ({
+          userId,
+          chatGroupId: chatGroup.id,
+          status: "invited" as const,
+        })),
+      )
       .execute();
 
     await NotificationService.insertChatInvitationNotifications(transaction, {

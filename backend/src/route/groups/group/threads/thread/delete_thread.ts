@@ -12,10 +12,7 @@ import {
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -72,9 +69,11 @@ export default new OpenAPIHono().openapi(
     }
 
     // Posts go with it through the foreign key's cascade.
-    await db.transaction().execute((transaction) =>
-      WritingThreadService.deleteThread(transaction, group.id, thread.id)
-    );
+    await db
+      .transaction()
+      .execute((transaction) =>
+        WritingThreadService.deleteThread(transaction, group.id, thread.id),
+      );
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

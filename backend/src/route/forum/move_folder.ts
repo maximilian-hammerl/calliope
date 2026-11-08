@@ -34,8 +34,7 @@ export default new OpenAPIHono().openapi(
     path: "/",
     tags: [FORUM_TAG],
     summary: "Move a folder of the public forum, or take it to the root",
-    description:
-      `Operators only. Everything inside it moves with it, and every permission below is reduced along the new path — so moving a room into a closed one closes what it holds. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels, which depends on its deepest descendant.`,
+    description: `Operators only. Everything inside it moves with it, and every permission below is reduced along the new path — so moving a room into a closed one closes what it holds. Refused when the target is the folder itself or something inside it, and when the subtree would reach past ${MAX_FOLDER_DEPTH} levels, which depends on its deepest descendant.`,
     operationId: "moveForumFolder",
     middleware: FORUM_FOLDER,
     request: {
@@ -75,21 +74,16 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const parent = parentFolderId === null
-      ? null
-      : await forumFolderOf(user, parentFolderId);
+    const parent = parentFolderId === null ? null : await forumFolderOf(user, parentFolderId);
     if (parent === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      ForumService.moveFolder(
-        transaction,
-        user,
-        c.get("folder").id,
-        parent?.id ?? null,
-      )
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.moveFolder(transaction, user, c.get("folder").id, parent?.id ?? null),
+      );
 
     if (outcome === undefined || outcome.kind === "noSuchParent") {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);

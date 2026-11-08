@@ -2,10 +2,7 @@ import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { APP_NAME } from "@/src/branding.ts";
 import { API_VERSION, OPERATIONS_TAG } from "@/src/open_api_specification.ts";
-import {
-  getOptionalEnvVariable,
-  getRequiredEnvVariable,
-} from "@/src/util/env.ts";
+import { getOptionalEnvVariable, getRequiredEnvVariable } from "@/src/util/env.ts";
 import { databaseHealthCheck } from "@/src/database/client.ts";
 import { redisHealthCheck } from "@/src/redis/client.ts";
 import { COMMON_RESPONSES, jsonContent } from "@/src/http/response.ts";
@@ -24,10 +21,7 @@ async function response() {
   const now = Temporal.Now.zonedDateTimeISO();
 
   // Probed together, so one slow database does not add to the other's latency.
-  const databases = await Promise.all([
-    databaseHealthCheck(),
-    redisHealthCheck(),
-  ]);
+  const databases = await Promise.all([databaseHealthCheck(), redisHealthCheck()]);
 
   return {
     application: {
@@ -41,9 +35,7 @@ async function response() {
     },
     health: {
       // A non-essential database being down does not make the application unhealthy.
-      databases: databases.every((database) =>
-        !database.essential || database.health
-      ),
+      databases: databases.every((database) => !database.essential || database.health),
     },
     databases,
   };
@@ -74,9 +66,6 @@ export default new OpenAPIHono().openapi(
     const body = await response();
 
     // The body carries the detail, but probes and load balancers only read the status.
-    return c.json(
-      body,
-      body.health.databases ? STATUS_CODE.OK : STATUS_CODE.ServiceUnavailable,
-    );
+    return c.json(body, body.health.databases ? STATUS_CODE.OK : STATUS_CODE.ServiceUnavailable);
   },
 );

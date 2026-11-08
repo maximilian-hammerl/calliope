@@ -15,10 +15,7 @@ import {
   PAGE_CHANGED,
   PAGE_CHANGED_RESPONSE,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
 import { DOCUMENT_SCHEMA } from "@/src/document/document_schema.ts";
 import { documentToPlainText } from "@/src/document/document_text.ts";
 import { PAGE_TITLE_SCHEMA } from "../page_schema.ts";
@@ -101,16 +98,18 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      WritingPageService.updatePage(
-        transaction,
-        group.id,
-        c.get("page").id,
-        loadedAt,
-        { title, document },
-        user.id,
-      )
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingPageService.updatePage(
+          transaction,
+          group.id,
+          c.get("page").id,
+          loadedAt,
+          { title, document },
+          user.id,
+        ),
+      );
     if (outcome === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }

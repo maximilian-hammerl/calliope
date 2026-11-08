@@ -39,9 +39,12 @@ if (import.meta.main) {
 
   scheduleCronJobs();
 
-  Deno.serve({
-    hostname: HOSTNAME,
-    port: PORT,
-    signal: getAbortSignalForShutdown(),
-  }, app.fetch);
+  Deno.serve(
+    {
+      hostname: HOSTNAME,
+      port: PORT,
+      signal: getAbortSignalForShutdown(),
+    },
+    app.fetch,
+  );
 }

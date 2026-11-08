@@ -5762,12 +5762,7 @@
                   "offset": { "type": "integer", "minimum": 0, "default": 0 },
                   "sortAttribute": {
                     "type": "string",
-                    "enum": [
-                      "createdAt",
-                      "lastActivityAt",
-                      "title",
-                      "invitedAt"
-                    ],
+                    "enum": ["createdAt", "lastActivityAt", "title", "invitedAt"],
                     "default": "createdAt"
                   },
                   "sortOrder": {
@@ -18741,13 +18736,7 @@
                           "description": "The build running behind that version — the deployed commit. Absent when the deploy did not stamp one."
                         }
                       },
-                      "required": [
-                        "name",
-                        "datetime",
-                        "startup",
-                        "uptime",
-                        "hostname"
-                      ],
+                      "required": ["name", "datetime", "startup", "uptime", "hostname"],
                       "description": "General information about application and current version"
                     },
                     "health": {
@@ -18954,13 +18943,7 @@
                           "description": "The build running behind that version — the deployed commit. Absent when the deploy did not stamp one."
                         }
                       },
-                      "required": [
-                        "name",
-                        "datetime",
-                        "startup",
-                        "uptime",
-                        "hostname"
-                      ],
+                      "required": ["name", "datetime", "startup", "uptime", "hostname"],
                       "description": "General information about application and current version"
                     },
                     "health": {
@@ -26590,12 +26573,7 @@
                             "enum": ["administrator", "moderator", null]
                           }
                         },
-                        "required": [
-                          "id",
-                          "username",
-                          "avatarUrl",
-                          "platformRole"
-                        ]
+                        "required": ["id", "username", "avatarUrl", "platformRole"]
                       }
                     }
                   },
@@ -27198,13 +27176,7 @@
                   },
                   "origin": {
                     "type": "string",
-                    "enum": [
-                      "licence",
-                      "other",
-                      "own_work",
-                      "permission",
-                      "public_domain"
-                    ]
+                    "enum": ["licence", "other", "own_work", "permission", "public_domain"]
                   },
                   "credit": { "type": "string", "maxLength": 4000 },
                   "confirmed": { "type": "string", "enum": ["true"] }
@@ -32796,12 +32768,7 @@
                               },
                               "role": {
                                 "type": ["string", "null"],
-                                "enum": [
-                                  "administrator",
-                                  "reader",
-                                  "writer",
-                                  null
-                                ]
+                                "enum": ["administrator", "reader", "writer", null]
                               },
                               "invitedAt": {
                                 "type": ["string", "null"],
@@ -33352,12 +33319,7 @@
                                 "enum": ["administrator", "moderator", null]
                               }
                             },
-                            "required": [
-                              "id",
-                              "username",
-                              "avatarUrl",
-                              "platformRole"
-                            ]
+                            "required": ["id", "username", "avatarUrl", "platformRole"]
                           }
                         }
                       },

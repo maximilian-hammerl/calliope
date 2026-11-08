@@ -64,10 +64,7 @@ export default new OpenAPIHono().openapi(
     // A member has the group itself to talk in, and an invited person has an invitation to
     // answer — a conversation on top would ask for what is already offered.
     if (group.status !== null) {
-      return c.json(
-        { error: "Already part of this group" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Already part of this group" }, STATUS_CODE.Forbidden);
     }
 
     // Blocked administrators are skipped rather than refused: one administrator's block must
@@ -83,20 +80,19 @@ export default new OpenAPIHono().openapi(
 
     // The ungoverned-group hole (roadmap item 1) seen from outside: nobody left to ask.
     if (administratorIds.length === 0) {
-      return c.json(
-        { error: "Nobody administers this group" },
-        STATUS_CODE.Conflict,
-      );
+      return c.json({ error: "Nobody administers this group" }, STATUS_CODE.Conflict);
     }
 
-    const chat = await db.transaction().execute((transaction) =>
-      ChatGroupService.insertChatGroup(
-        transaction,
-        user,
-        conversationTitle("Gruppe", group.title),
-        administratorIds,
-      )
-    );
+    const chat = await db
+      .transaction()
+      .execute((transaction) =>
+        ChatGroupService.insertChatGroup(
+          transaction,
+          user,
+          conversationTitle("Gruppe", group.title),
+          administratorIds,
+        ),
+      );
 
     return c.json(chat, STATUS_CODE.Created);
   },

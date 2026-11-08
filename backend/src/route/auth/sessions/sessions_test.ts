@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  SAME_ORIGIN,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "@/src/test/support.ts";
 import app from "@/src/app.ts";
 import { sessionCookie } from "@/src/test/auth.ts";
 
@@ -38,8 +33,7 @@ async function signIn(userAgent: string, address: string): Promise<string> {
   return sessionCookie(response);
 }
 
-const listSessions = (cookie: string) =>
-  app.request("/api/auth/sessions", { headers: { cookie } });
+const listSessions = (cookie: string) => app.request("/api/auth/sessions", { headers: { cookie } });
 
 type ParsedSession = {
   browser: string | null;
@@ -58,15 +52,14 @@ test("GET /api/auth/sessions parses each user agent and marks the one asking", a
   // Three: the one registering opened, plus the two signed in above.
   assert.equal(results.length, 3);
 
-  const parsed = results.map((session: ParsedSession) =>
-    `${session.browser}/${session.operatingSystem}/${session.deviceType}/${session.vendor}`
+  const parsed = results.map(
+    (session: ParsedSession) =>
+      `${session.browser}/${session.operatingSystem}/${session.deviceType}/${session.vendor}`,
   );
   assert.equal(parsed.includes("Safari/iOS/mobile/Apple"), true);
   assert.equal(parsed.includes("Chrome/Windows/null/null"), true);
 
-  const current = results.filter((session: { current: boolean }) =>
-    session.current
-  );
+  const current = results.filter((session: { current: boolean }) => session.current);
   assert.equal(current.length, 1);
   assert.equal(current[0].browser, "Chrome");
   assert.equal(current[0].operatingSystem, "Windows");
@@ -107,9 +100,7 @@ test("DELETE /api/auth/sessions/{id} ends one session", async () => {
   const desktop = await signIn(WINDOWS, "198.51.100.42");
 
   const { results } = await (await listSessions(desktop)).json();
-  const other = results.find((session: { current: boolean }) =>
-    !session.current
-  );
+  const other = results.find((session: { current: boolean }) => !session.current);
 
   const response = await app.request(`/api/auth/sessions/${other.id}`, {
     method: "DELETE",
@@ -131,10 +122,10 @@ test("DELETE /api/auth/sessions/{id} cannot reach another member's session", asy
   const theirSessions = await (await listSessions(theirCookie)).json();
 
   try {
-    const response = await app.request(
-      `/api/auth/sessions/${theirSessions.results[0].id}`,
-      { method: "DELETE", headers: { cookie: mine, ...SAME_ORIGIN } },
-    );
+    const response = await app.request(`/api/auth/sessions/${theirSessions.results[0].id}`, {
+      method: "DELETE",
+      headers: { cookie: mine, ...SAME_ORIGIN },
+    });
 
     // 404, not 403: whether somebody else holds this id is not this member's business.
     assert.equal(response.status, STATUS_CODE.NotFound);

@@ -13,10 +13,7 @@ import {
   jsonContent,
   OK_RESPONSE,
 } from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const FOLDER_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
@@ -69,13 +66,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const outcome = await db.transaction().execute((transaction) =>
-      WritingFolderService.deleteFolder(
-        transaction,
-        group.id,
-        c.get("folder").id,
-      )
-    );
+    const outcome = await db
+      .transaction()
+      .execute((transaction) =>
+        WritingFolderService.deleteFolder(transaction, group.id, c.get("folder").id),
+      );
 
     // Gone since the read above: a 404, rather than a refusal about contents it no longer has.
     if (outcome === undefined) {

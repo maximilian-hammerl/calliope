@@ -8,46 +8,38 @@ import type {
 import { emptyToNull } from "@/src/util/optional_text.ts";
 import { refuseOrphanedSubgenres } from "@/src/http/story_metadata_refusal.ts";
 import type { ListQuery, ListResults } from "@/src/list/list_endpoint_query.ts";
-import {
-  listResultsWithCount,
-  searchPattern,
-} from "@/src/list/list_endpoint_query.ts";
+import { listResultsWithCount, searchPattern } from "@/src/list/list_endpoint_query.ts";
 import type { StoryVocabularyFilter } from "@/src/query/story_vocabulary.ts";
 import { withStoryVocabulary } from "@/src/query/story_vocabulary.ts";
-import {
-  type FavouriteFilter,
-  FAVOURITES_FIRST,
-  withFavourite,
-} from "@/src/query/favourite.ts";
+import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "@/src/query/favourite.ts";
 
-export type StoryIdea =
-  & Pick<
-    Selectable<DatabaseStoryIdea>,
-    | "id"
-    | "title"
-    | "subtitle"
-    | "teaser"
-    | "synopsis"
-    | "genres"
-    | "subgenres"
-    | "tropes"
-    | "contentWarnings"
-    | "storyThemes"
-    | "storySettings"
-    | "tense"
-    | "perspective"
-    | "language"
-    | "lookingFor"
-    | "partySize"
-    | "status"
-    | "createdBy"
-    | "createdAt"
-  >
+export type StoryIdea = Pick<
+  Selectable<DatabaseStoryIdea>,
+  | "id"
+  | "title"
+  | "subtitle"
+  | "teaser"
+  | "synopsis"
+  | "genres"
+  | "subgenres"
+  | "tropes"
+  | "contentWarnings"
+  | "storyThemes"
+  | "storySettings"
+  | "tense"
+  | "perspective"
+  | "language"
+  | "lookingFor"
+  | "partySize"
+  | "status"
+  | "createdBy"
+  | "createdAt"
+> &
   // Never null: created_by is NOT NULL and CASCADE, so an idea cannot outlive its author.
-  & { createdByUsername: string }
+  { createdByUsername: string } &
   // The reading member's own state, null while unread. Never anybody else's: what a member
   // has read is theirs, and a count of readers is the statistic the research rejected.
-  & {
+  {
     isRead: boolean;
     /** The reader's own favourite, visible to nobody else. */
     isFavourite: boolean;
@@ -85,9 +77,8 @@ const SELECTED_COLUMNS = [
 ] as const;
 
 /** What a member may set. Only the title and the two texts are required; see the request body. */
-export type StoryIdeaValues =
-  & Pick<Selectable<DatabaseStoryIdea>, "title" | "teaser" | "synopsis">
-  & Partial<
+export type StoryIdeaValues = Pick<Selectable<DatabaseStoryIdea>, "title" | "teaser" | "synopsis"> &
+  Partial<
     Pick<
       Selectable<DatabaseStoryIdea>,
       | "subtitle"
@@ -111,32 +102,20 @@ function toRow(values: Partial<StoryIdeaValues>) {
   return {
     ...(values.title === undefined ? {} : { title: values.title.trim() }),
     ...(values.teaser === undefined ? {} : { teaser: values.teaser.trim() }),
-    ...(values.synopsis === undefined
-      ? {}
-      : { synopsis: values.synopsis.trim() }),
-    ...(values.subtitle === undefined
-      ? {}
-      : { subtitle: emptyToNull(values.subtitle) }),
+    ...(values.synopsis === undefined ? {} : { synopsis: values.synopsis.trim() }),
+    ...(values.subtitle === undefined ? {} : { subtitle: emptyToNull(values.subtitle) }),
     ...(values.genres === undefined ? {} : { genres: values.genres }),
     ...(values.subgenres === undefined ? {} : { subgenres: values.subgenres }),
     ...(values.tropes === undefined ? {} : { tropes: values.tropes }),
-    ...(values.contentWarnings === undefined
-      ? {}
-      : { contentWarnings: values.contentWarnings }),
-    ...(values.storyThemes === undefined
-      ? {}
-      : { storyThemes: emptyToNull(values.storyThemes) }),
+    ...(values.contentWarnings === undefined ? {} : { contentWarnings: values.contentWarnings }),
+    ...(values.storyThemes === undefined ? {} : { storyThemes: emptyToNull(values.storyThemes) }),
     ...(values.storySettings === undefined
       ? {}
       : { storySettings: emptyToNull(values.storySettings) }),
     ...(values.tense === undefined ? {} : { tense: values.tense ?? null }),
-    ...(values.perspective === undefined
-      ? {}
-      : { perspective: values.perspective ?? null }),
+    ...(values.perspective === undefined ? {} : { perspective: values.perspective ?? null }),
     ...(values.language === undefined ? {} : { language: values.language }),
-    ...(values.lookingFor === undefined
-      ? {}
-      : { lookingFor: emptyToNull(values.lookingFor) }),
+    ...(values.lookingFor === undefined ? {} : { lookingFor: emptyToNull(values.lookingFor) }),
     ...(values.partySize === undefined ? {} : { partySize: values.partySize }),
     ...(values.status === undefined ? {} : { status: values.status }),
   };
@@ -150,24 +129,18 @@ function withAuthor(readerId: string, executor: typeof db | Transaction = db) {
   return executor
     .selectFrom("storyIdea")
     .innerJoin("user", "user.id", "storyIdea.createdBy")
-    .leftJoin(
-      "storyIdeaReader",
-      (join) =>
-        join
-          .onRef("storyIdeaReader.storyIdeaId", "=", "storyIdea.id")
-          .on("storyIdeaReader.userId", "=", readerId),
+    .leftJoin("storyIdeaReader", (join) =>
+      join
+        .onRef("storyIdeaReader.storyIdeaId", "=", "storyIdea.id")
+        .on("storyIdeaReader.userId", "=", readerId),
     )
-    .$call((builder) =>
-      withFavourite(builder, "story_idea", "storyIdea.id", readerId)
-    )
+    .$call((builder) => withFavourite(builder, "story_idea", "storyIdea.id", readerId))
     .select((eb) => [
       ...SELECTED_COLUMNS,
       "user.username as createdByUsername",
       // `$castTo` for the reason `report`'s `targetExists` needs it: `IS NOT NULL` already *is*
       // a boolean in Postgres, and only Kysely's type needs correcting.
-      eb("storyIdeaReader.userId", "is not", null).$castTo<boolean>().as(
-        "isRead",
-      ),
+      eb("storyIdeaReader.userId", "is not", null).$castTo<boolean>().as("isRead"),
     ]);
 }
 
@@ -200,59 +173,41 @@ export type StoryIdeaFilters = StoryVocabularyFilter & {
 function filtered(query: StoryIdeaFilters) {
   // The carousel shares this chain and passes no vocabulary, so nothing here narrows its set —
   // which is what keeps "a neighbour the board would hide" from becoming reachable.
-  return withStoryVocabulary(withAuthor(query.readerId), "storyIdea", query)
-    .$if(query.createdBy !== undefined, (queryBuilder) =>
-      // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-      queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!))
-    .$if(
-      (query.hiddenAuthorIds ?? []).length > 0,
-      (queryBuilder) =>
-        queryBuilder.where(
-          "storyIdea.createdBy",
-          "not in",
-          query.hiddenAuthorIds ?? [],
-        ),
-    )
-    .$if(
-      query.excludeCreatedBy !== undefined,
-      (queryBuilder) =>
+  return (
+    withStoryVocabulary(withAuthor(query.readerId), "storyIdea", query)
+      .$if(query.createdBy !== undefined, (queryBuilder) =>
+        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        queryBuilder.where("storyIdea.createdBy", "=", query.createdBy!),
+      )
+      .$if((query.hiddenAuthorIds ?? []).length > 0, (queryBuilder) =>
+        queryBuilder.where("storyIdea.createdBy", "not in", query.hiddenAuthorIds ?? []),
+      )
+      .$if(query.excludeCreatedBy !== undefined, (queryBuilder) =>
         queryBuilder.where(
           "storyIdea.createdBy",
           "!=",
           // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
           query.excludeCreatedBy!,
         ),
-    )
-    .$if(
-      query.status !== "any",
-      (queryBuilder) =>
-        queryBuilder.where(
-          "storyIdea.status",
-          "=",
-          query.status as StoryIdeaStatus,
-        ),
-    )
-    .$if(query.language !== undefined, (queryBuilder) =>
-      // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-      queryBuilder.where("storyIdea.language", "=", query.language!))
-    // Unread is the missing row, so both directions filter on the join rather than on a value.
-    .$if(
-      query.readerState === "unread",
-      (queryBuilder) =>
+      )
+      .$if(query.status !== "any", (queryBuilder) =>
+        queryBuilder.where("storyIdea.status", "=", query.status as StoryIdeaStatus),
+      )
+      .$if(query.language !== undefined, (queryBuilder) =>
+        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        queryBuilder.where("storyIdea.language", "=", query.language!),
+      )
+      // Unread is the missing row, so both directions filter on the join rather than on a value.
+      .$if(query.readerState === "unread", (queryBuilder) =>
         queryBuilder.where("storyIdeaReader.userId", "is", null),
-    )
-    .$if(
-      query.readerState === "read",
-      (queryBuilder) =>
+      )
+      .$if(query.readerState === "read", (queryBuilder) =>
         queryBuilder.where("storyIdeaReader.userId", "is not", null),
-    )
-    .$if(
-      query.favourite === "only",
-      (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
-    )
-    .$if(
-      query.search !== undefined,
-      (queryBuilder) =>
+      )
+      .$if(query.favourite === "only", (queryBuilder) =>
+        queryBuilder.where("favourite.id", "is not", null),
+      )
+      .$if(query.search !== undefined, (queryBuilder) =>
         queryBuilder.where((eb) =>
           eb.or([
             // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
@@ -261,23 +216,25 @@ function filtered(query: StoryIdeaFilters) {
             eb("storyIdea.teaser", "ilike", searchPattern(query.search!)),
             // deno-lint-ignore no-non-null-assertion -- as above
             eb("storyIdea.synopsis", "ilike", searchPattern(query.search!)),
-          ])
+          ]),
         ),
-    )
-    .$if(query.id !== undefined, (queryBuilder) =>
-      // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
-      queryBuilder.where("storyIdea.id", "=", query.id!))
-    .$if(query.olderThanId !== undefined, (queryBuilder) =>
-      // deno-lint-ignore no-non-null-assertion -- as above
-      queryBuilder.where("storyIdea.id", "<", query.olderThanId!))
-    .$if(query.newerThanId !== undefined, (queryBuilder) =>
-      // deno-lint-ignore no-non-null-assertion -- as above
-      queryBuilder.where("storyIdea.id", ">", query.newerThanId!));
+      )
+      .$if(query.id !== undefined, (queryBuilder) =>
+        // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when it is set
+        queryBuilder.where("storyIdea.id", "=", query.id!),
+      )
+      .$if(query.olderThanId !== undefined, (queryBuilder) =>
+        // deno-lint-ignore no-non-null-assertion -- as above
+        queryBuilder.where("storyIdea.id", "<", query.olderThanId!),
+      )
+      .$if(query.newerThanId !== undefined, (queryBuilder) =>
+        // deno-lint-ignore no-non-null-assertion -- as above
+        queryBuilder.where("storyIdea.id", ">", query.newerThanId!),
+      )
+  );
 }
 
-function listStoryIdeas(
-  query: ListQuery & StoryIdeaFilters,
-): Promise<ListResults<StoryIdea>> {
+function listStoryIdeas(query: ListQuery & StoryIdeaFilters): Promise<ListResults<StoryIdea>> {
   return listResultsWithCount(filtered(query), query, FAVOURITES_FIRST);
 }
 /**
@@ -296,17 +253,10 @@ export type StoryIdeaGate = {
   status: StoryIdeaStatus;
 };
 
-async function selectStoryIdeaGate(
-  ideaId: string,
-): Promise<StoryIdeaGate | undefined> {
+async function selectStoryIdeaGate(ideaId: string): Promise<StoryIdeaGate | undefined> {
   return await db
     .selectFrom("storyIdea")
-    .select([
-      "storyIdea.id",
-      "storyIdea.title",
-      "storyIdea.createdBy",
-      "storyIdea.status",
-    ])
+    .select(["storyIdea.id", "storyIdea.title", "storyIdea.createdBy", "storyIdea.status"])
     .where("storyIdea.id", "=", ideaId)
     .executeTakeFirst();
 }
@@ -317,9 +267,7 @@ async function selectStoryIdea(
   readerId: string,
   executor: typeof db | Transaction = db,
 ): Promise<StoryIdea | undefined> {
-  return await withAuthor(readerId, executor)
-    .where("storyIdea.id", "=", ideaId)
-    .executeTakeFirst();
+  return await withAuthor(readerId, executor).where("storyIdea.id", "=", ideaId).executeTakeFirst();
 }
 
 async function insertStoryIdea(
@@ -371,10 +319,7 @@ async function updateStoryIdea(
       .executeTakeFirst();
 
     if (before !== undefined) {
-      refuseOrphanedSubgenres(
-        values.genres ?? before.genres,
-        values.subgenres ?? before.subgenres,
-      );
+      refuseOrphanedSubgenres(values.genres ?? before.genres, values.subgenres ?? before.subgenres);
     }
   }
 
@@ -412,28 +357,18 @@ async function deleteStoryIdea(
  * Upsert, because a member setting a state twice is not an error: the second one wins and the
  * first row is simply overwritten.
  */
-async function markRead(
-  transaction: Transaction,
-  ideaId: string,
-  userId: string,
-): Promise<void> {
+async function markRead(transaction: Transaction, ideaId: string, userId: string): Promise<void> {
   await transaction
     .insertInto("storyIdeaReader")
     .values({ storyIdeaId: ideaId, userId })
     // A row is the whole of the fact, so a second click has nothing to overwrite — but it must
     // not fail either, and marking read is the one action that fires without being asked for.
-    .onConflict((conflict) =>
-      conflict.columns(["storyIdeaId", "userId"]).doNothing()
-    )
+    .onConflict((conflict) => conflict.columns(["storyIdeaId", "userId"]).doNothing())
     .execute();
 }
 
 /** Back to unread, which is the absence of a row rather than a value. */
-async function clearRead(
-  transaction: Transaction,
-  ideaId: string,
-  userId: string,
-): Promise<void> {
+async function clearRead(transaction: Transaction, ideaId: string, userId: string): Promise<void> {
   await transaction
     .deleteFrom("storyIdeaReader")
     .where("storyIdeaId", "=", ideaId)
@@ -486,12 +421,15 @@ async function selectCarousel(
 
   // Read state is ignored for the anchor alone: marking the idea on screen as read must not
   // invalidate the URL the member is sitting on. Every other part of the set still holds.
-  const anchor = anchorId === undefined ? undefined : await filtered({
-    ...set,
-    readerState: "any",
-    favourite: "any",
-    id: anchorId,
-  }).executeTakeFirst();
+  const anchor =
+    anchorId === undefined
+      ? undefined
+      : await filtered({
+          ...set,
+          readerState: "any",
+          favourite: "any",
+          id: anchorId,
+        }).executeTakeFirst();
 
   if (anchorId !== undefined && anchor === undefined) {
     return undefined;
@@ -511,9 +449,9 @@ async function selectCarousel(
     anchorId === undefined
       ? undefined
       : filtered({ ...set, newerThanId: storyIdea.id })
-        .orderBy("storyIdea.id", "asc")
-        .limit(1)
-        .executeTakeFirst(),
+          .orderBy("storyIdea.id", "asc")
+          .limit(1)
+          .executeTakeFirst(),
     filtered({ ...set, olderThanId: storyIdea.id })
       .orderBy("storyIdea.id", "desc")
       .limit(1)

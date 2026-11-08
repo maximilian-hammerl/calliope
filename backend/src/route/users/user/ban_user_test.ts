@@ -33,7 +33,7 @@ async function registerOperator(
       .updateTable("user")
       .set({ platformRole })
       .where("username", "=", operator)
-      .execute()
+      .execute(),
   );
   return cookie;
 }
@@ -109,15 +109,10 @@ test("a session that outlived a ban is refused", async () => {
       .updateTable("user")
       .set({ bannedAt: Temporal.Now.instant().toString(), banReason: "Spam" })
       .where("id", "=", offenderId)
-      .execute()
+      .execute(),
   );
 
-  const response = await request(
-    "GET",
-    "/api/auth/me",
-    offenderCookie,
-    undefined,
-  );
+  const response = await request("GET", "/api/auth/me", offenderCookie, undefined);
 
   assert.equal(response.status, STATUS_CODE.Forbidden);
   assert.equal((await response.json()).code, ACCOUNT_BANNED);
@@ -151,7 +146,7 @@ test("an operator cannot be banned", async () => {
       .updateTable("user")
       .set({ platformRole: "moderator" })
       .where("username", "=", bystander)
-      .execute()
+      .execute(),
   );
 
   // Which also settles banning yourself: an operator holds a role, so an operator is unbannable
@@ -178,10 +173,7 @@ test("lifting a ban restores sign-in", async () => {
   await ban(operatorCookie, offenderId);
   assert.equal((await signIn(offender)).status, STATUS_CODE.Forbidden);
 
-  assert.equal(
-    (await liftBan(operatorCookie, offenderId)).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await liftBan(operatorCookie, offenderId)).status, STATUS_CODE.OK);
 
   const response = await signIn(offender);
   assert.equal(response.status, STATUS_CODE.OK);
@@ -205,9 +197,7 @@ test("a banned account drops out of the member list and the search", async () =>
     const response = await request("QUERY", "/api/search", operatorCookie, {
       search: offender,
     });
-    return (await response.json()).users.results.map((u: { id: string }) =>
-      u.id
-    );
+    return (await response.json()).users.results.map((u: { id: string }) => u.id);
   };
 
   assert((await listed()).includes(offenderId), "not listed before the ban");
@@ -227,12 +217,7 @@ test("a banned account's profile still answers", async () => {
 
   // Deliberately unlike the lists: whoever already has the link — a group they wrote in, a
   // post of theirs — must still be able to see whose name that is.
-  const response = await request(
-    "GET",
-    `/api/users/${offenderId}`,
-    operatorCookie,
-    undefined,
-  );
+  const response = await request("GET", `/api/users/${offenderId}`, operatorCookie, undefined);
 
   assert.equal(response.status, STATUS_CODE.OK);
   assert.equal((await response.json()).username, offender);
@@ -245,18 +230,12 @@ test("only an operator is told that an account is banned", async () => {
   const memberCookie = await registerUser(bystander);
   await ban(operatorCookie, offenderId);
 
-  const asOperator = await (await request(
-    "GET",
-    `/api/users/${offenderId}`,
-    operatorCookie,
-    undefined,
-  )).json();
-  const asMember = await (await request(
-    "GET",
-    `/api/users/${offenderId}`,
-    memberCookie,
-    undefined,
-  )).json();
+  const asOperator = await (
+    await request("GET", `/api/users/${offenderId}`, operatorCookie, undefined)
+  ).json();
+  const asMember = await (
+    await request("GET", `/api/users/${offenderId}`, memberCookie, undefined)
+  ).json();
 
   assert.equal(asOperator.isBanned, true);
   // Absent, not false: an ordinary member is told nothing either way.
@@ -274,12 +253,10 @@ test("a banned account cannot be invited to a group", async () => {
   // Without this the invitation succeeds and waits for ever: a banned account cannot sign in,
   // so it can never answer. The refusal is the same neutral one a block gives, so the inviter
   // learns nothing about a moderation action taken against somebody else.
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/memberships`,
-    operatorCookie,
-    { userId: offenderId, role: "writer" },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/memberships`, operatorCookie, {
+    userId: offenderId,
+    role: "writer",
+  });
 
   assert.equal(response.status, STATUS_CODE.Forbidden);
   assert.equal((await response.json()).error, "Contact is not possible");
@@ -291,8 +268,5 @@ test("banning an already banned account is a conflict", async () => {
   const offenderId = await getUserId(offender);
 
   assert.equal((await ban(operatorCookie, offenderId)).status, STATUS_CODE.OK);
-  assert.equal(
-    (await ban(operatorCookie, offenderId)).status,
-    STATUS_CODE.Conflict,
-  );
+  assert.equal((await ban(operatorCookie, offenderId)).status, STATUS_CODE.Conflict);
 });

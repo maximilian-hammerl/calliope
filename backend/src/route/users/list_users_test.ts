@@ -1,13 +1,7 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  request,
-  write,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, request, write } from "@/src/test/support.ts";
 
 const searcher = "list-users-searcher";
 // The distinctive middle syllable is what the substring tests look for; no prefix of it
@@ -19,9 +13,7 @@ beforeEach(clearRateLimits);
 afterEach(() => deleteUsers([searcher, findable, alsoFindable]));
 
 type Page = {
-  results: Array<
-    { id: string; username: string; platformRole: string | null }
-  >;
+  results: Array<{ id: string; username: string; platformRole: string | null }>;
   totalResults: number;
 };
 
@@ -45,10 +37,7 @@ test("QUERY /api/users matches a substring, not just a prefix", async () => {
   assert.equal(page.totalResults, 2);
   assert.deepEqual(
     page.results.map((user) => user.username).sort(),
-    [
-      findable,
-      alsoFindable,
-    ].sort(),
+    [findable, alsoFindable].sort(),
   );
 });
 
@@ -74,12 +63,7 @@ test("QUERY /api/users returns a name, a picture, a role and nothing else", asyn
   // fails this instead of quietly joining the response.
   const [found] = page.results;
   assert.ok(found);
-  assert.deepEqual(Object.keys(found).sort(), [
-    "avatarUrl",
-    "id",
-    "platformRole",
-    "username",
-  ]);
+  assert.deepEqual(Object.keys(found).sort(), ["avatarUrl", "id", "platformRole", "username"]);
 });
 
 test("QUERY /api/users treats a wildcard as a literal character", async () => {
@@ -133,7 +117,7 @@ test("QUERY /api/users carries the platform role, and null for an ordinary membe
       .updateTable("user")
       .set({ platformRole: "moderator" })
       .where("username", "=", findable)
-      .execute()
+      .execute(),
   );
 
   const page = await searchOk(cookie, { search: "quenya-one" });
@@ -143,8 +127,5 @@ test("QUERY /api/users carries the platform role, and null for an ordinary membe
   assert.equal(found.platformRole, "moderator");
 
   const ordinary = await searchOk(cookie, { search: "searcher" });
-  assert.equal(
-    ordinary.results.find((user) => user.username === searcher)?.platformRole,
-    null,
-  );
+  assert.equal(ordinary.results.find((user) => user.username === searcher)?.platformRole, null);
 });

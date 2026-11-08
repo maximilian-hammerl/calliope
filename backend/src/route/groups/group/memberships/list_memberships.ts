@@ -56,9 +56,7 @@ export default new OpenAPIHono().openapi(
     },
   }),
   async (c) => {
-    const results = await UserInWritingGroupService.selectMemberships(
-      c.get("group").id,
-    );
+    const results = await UserInWritingGroupService.selectMemberships(c.get("group").id);
 
     return c.json({ results }, STATUS_CODE.OK);
   },

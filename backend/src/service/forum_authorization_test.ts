@@ -39,15 +39,9 @@ test("a page is changed by whoever may write there, not by whoever wrote it", ()
 
 test("a post belongs to whoever wrote it", () => {
   assert.equal(mayActInForum(member, "write", "post:change", theirs), true);
-  assert.equal(
-    mayActInForum(member, "write", "post:change", somebodyElses),
-    false,
-  );
+  assert.equal(mayActInForum(member, "write", "post:change", somebodyElses), false);
   assert.equal(mayActInForum(member, "write", "post:delete", theirs), true);
-  assert.equal(
-    mayActInForum(member, "write", "post:delete", somebodyElses),
-    false,
-  );
+  assert.equal(mayActInForum(member, "write", "post:delete", somebodyElses), false);
 });
 
 test("closing a folder freezes what was written in it", () => {
@@ -79,16 +73,9 @@ test("a post whose author is gone is left to the operators", () => {
 test("an operator passes either rule, whatever the row grants", () => {
   assert.equal(mayActInForum(operator, "hidden", "thread:create"), true);
   assert.equal(mayActInForum(operator, "read", "page:change"), true);
+  assert.equal(mayActInForum(operator, "hidden", "post:delete", somebodyElses), true);
   assert.equal(
-    mayActInForum(operator, "hidden", "post:delete", somebodyElses),
-    true,
-  );
-  assert.equal(
-    mayActInForum(
-      { ...member, platformRole: "administrator" },
-      "read",
-      "page:create",
-    ),
+    mayActInForum({ ...member, platformRole: "administrator" }, "read", "page:create"),
     true,
   );
 });
@@ -125,12 +112,6 @@ test("a thread is renamed by its author, or by an operator", () => {
     }),
     true,
   );
-  assert.equal(
-    mayActInForum(member, "write", "thread:change", somebodyElses),
-    false,
-  );
-  assert.equal(
-    mayActInForum(operator, "write", "thread:change", somebodyElses),
-    true,
-  );
+  assert.equal(mayActInForum(member, "write", "thread:change", somebodyElses), false);
+  assert.equal(mayActInForum(operator, "write", "thread:change", somebodyElses), true);
 });

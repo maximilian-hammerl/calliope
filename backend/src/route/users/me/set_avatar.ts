@@ -3,10 +3,7 @@ import { db } from "@/src/database/client.ts";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import { USERS_TAG } from "@/src/open_api_specification.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
-import {
-  AVATAR_ORIGIN_SCHEMA,
-  USER_AVATAR_SCHEMA,
-} from "@/src/database/schema.ts";
+import { AVATAR_ORIGIN_SCHEMA, USER_AVATAR_SCHEMA } from "@/src/database/schema.ts";
 import { UserAvatarService } from "@/src/service/user_avatar_service.ts";
 import { avatarUrl } from "@/src/http/avatar_url.ts";
 import { TEXT_LIMIT, UPLOAD_BODY_LIMIT_BYTES } from "@/src/text_limit.ts";
@@ -32,8 +29,7 @@ const SET_AVATAR_BODY = z.object({
   }),
   origin: AVATAR_ORIGIN_SCHEMA,
   // Multipart carries no types: everything arrives as a string.
-  credit: USER_AVATAR_SCHEMA.shape.credit.unwrap().max(TEXT_LIMIT.avatarCredit)
-    .optional(),
+  credit: USER_AVATAR_SCHEMA.shape.credit.unwrap().max(TEXT_LIMIT.avatarCredit).optional(),
   confirmed: z.literal("true"),
 });
 
@@ -88,20 +84,14 @@ export default new OpenAPIHono().openapi(
     }
 
     const bytes = new Uint8Array(await image.arrayBuffer());
-    const result = await db.transaction().execute((transaction) =>
-      UserAvatarService.setAvatar(
-        transaction,
-        c.get("user").id,
-        bytes,
-        declaration,
-      )
-    );
+    const result = await db
+      .transaction()
+      .execute((transaction) =>
+        UserAvatarService.setAvatar(transaction, c.get("user").id, bytes, declaration),
+      );
 
     return result.kind === "not_an_image"
-      ? c.json(
-        { error: "That is not a picture we can read" },
-        STATUS_CODE.UnprocessableEntity,
-      )
+      ? c.json({ error: "That is not a picture we can read" }, STATUS_CODE.UnprocessableEntity)
       : c.json({ avatarUrl: avatarUrl(result.fileId) }, STATUS_CODE.OK);
   },
 );

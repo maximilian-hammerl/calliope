@@ -35,11 +35,7 @@ function isRead(c: Context): boolean {
   return isReadMethod(c.req.method);
 }
 
-function budget(
-  scope: RateLimitScope,
-  limit: number,
-  countsThisRequest: (c: Context) => boolean,
-) {
+function budget(scope: RateLimitScope, limit: number, countsThisRequest: (c: Context) => boolean) {
   return rateLimiter({
     windowMs: WINDOW.total("milliseconds"),
     limit,
@@ -60,8 +56,4 @@ function budget(
 
 export const readRateLimit = budget("read", READ_REQUESTS_PER_WINDOW, isRead);
 
-export const writeRateLimit = budget(
-  "write",
-  WRITE_REQUESTS_PER_WINDOW,
-  (c) => !isRead(c),
-);
+export const writeRateLimit = budget("write", WRITE_REQUESTS_PER_WINDOW, (c) => !isRead(c));

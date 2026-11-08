@@ -14,23 +14,16 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_GROUP_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_GROUP_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({
   groupId: WRITING_GROUP_SCHEMA.shape.id,
   threadId: WRITING_THREAD_SCHEMA.shape.id,
 });
 
-const UPDATE_THREAD_BODY = WRITING_THREAD_SCHEMA
-  .pick({ title: true })
-  .extend({
-    title: notBlank(
-      WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
-    ),
-  });
+const UPDATE_THREAD_BODY = WRITING_THREAD_SCHEMA.pick({ title: true }).extend({
+  title: notBlank(WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle)),
+});
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -86,9 +79,15 @@ export default new OpenAPIHono().openapi(
     }
 
     const updated = await db.transaction().execute((transaction) =>
-      WritingThreadService.updateThread(transaction, group.id, thread.id, {
-        title,
-      }, user.id)
+      WritingThreadService.updateThread(
+        transaction,
+        group.id,
+        thread.id,
+        {
+          title,
+        },
+        user.id,
+      ),
     );
     if (updated === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);

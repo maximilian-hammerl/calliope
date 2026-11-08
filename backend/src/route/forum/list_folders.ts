@@ -27,9 +27,7 @@ export default new OpenAPIHono().openapi(
     responses: {
       [STATUS_CODE.OK]: {
         description: "The forum's folders",
-        content: jsonContent(
-          z.object({ results: z.array(FORUM_FOLDER_RESPONSE) }),
-        ),
+        content: jsonContent(z.object({ results: z.array(FORUM_FOLDER_RESPONSE) })),
       },
       [STATUS_CODE.Unauthorized]: {
         description: "No valid session",

@@ -15,10 +15,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_PAGE_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_PAGE_SCHEMA } from "@/src/database/schema.ts";
 
 const PAGE_PARAMS = z.object({ pageId: WRITING_PAGE_SCHEMA.shape.id });
 
@@ -64,31 +61,24 @@ export default new OpenAPIHono().openapi(
     const page = c.get("page");
 
     if (!mayActInForum(user, page.effectiveMemberPermission, "page:move")) {
-      return c.json(
-        { error: "You cannot move this page" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot move this page" }, STATUS_CODE.Forbidden);
     }
 
-    const folder = folderId === null
-      ? null
-      : await forumFolderOf(user, folderId);
+    const folder = folderId === null ? null : await forumFolderOf(user, folderId);
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
 
-    const destination = folder?.effectiveMemberPermission ??
-      FORUM_ROOT_PERMISSION;
+    const destination = folder?.effectiveMemberPermission ?? FORUM_ROOT_PERMISSION;
     if (!mayActInForum(user, destination, "page:create")) {
-      return c.json(
-        { error: "You cannot put a page there" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot put a page there" }, STATUS_CODE.Forbidden);
     }
 
-    const moved = await db.transaction().execute((transaction) =>
-      ForumService.movePage(transaction, user, page.id, folder?.id ?? null)
-    );
+    const moved = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.movePage(transaction, user, page.id, folder?.id ?? null),
+      );
     if (moved === undefined) {
       return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
     }

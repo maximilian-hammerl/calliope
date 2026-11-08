@@ -10,13 +10,12 @@ import {
   listResultsWithCount,
 } from "@/src/list/list_endpoint_query.ts";
 
-export type UserInChatGroup =
-  & Pick<
-    Selectable<DatabaseUserInChatGroup>,
-    "userId" | "chatGroupId" | "status" | "invitedAt" | "joinedAt"
-  >
+export type UserInChatGroup = Pick<
+  Selectable<DatabaseUserInChatGroup>,
+  "userId" | "chatGroupId" | "status" | "invitedAt" | "joinedAt"
+> &
   // Never null: the membership is cascade-deleted with its user.
-  & { username: string; avatarUrl: string | null };
+  { username: string; avatarUrl: string | null };
 
 const SELECTED_COLUMNS = [
   "userInChatGroup.userId",
@@ -39,11 +38,7 @@ async function listMembers(
   query: ListQuery,
 ): Promise<ListResults<UserInChatGroup>> {
   const found = await listResultsWithCount(
-    membersWithUsername().where(
-      "userInChatGroup.chatGroupId",
-      "=",
-      chatGroupId,
-    ),
+    membersWithUsername().where("userInChatGroup.chatGroupId", "=", chatGroupId),
     query,
   );
 

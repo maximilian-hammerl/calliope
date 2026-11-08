@@ -41,18 +41,13 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { token } = c.req.valid("json");
 
-    const result = await EmailAddressVerificationService.verifyEmailAddress(
-      token,
-    );
+    const result = await EmailAddressVerificationService.verifyEmailAddress(token);
 
     switch (result) {
       case "verified":
         return c.json({ ok: true } as const, STATUS_CODE.OK);
       case "invalid_token":
-        return c.json(
-          { error: "The link is no longer valid" },
-          STATUS_CODE.Gone,
-        );
+        return c.json({ error: "The link is no longer valid" }, STATUS_CODE.Gone);
       default:
         return assertUnreachable(result);
     }

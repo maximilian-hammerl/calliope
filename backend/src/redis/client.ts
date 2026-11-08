@@ -1,10 +1,7 @@
 import { Redis } from "ioredis";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
 import { addShutdownSignalListener } from "@/src/util/shutdown_signal.ts";
-import {
-  type DatabaseHealth,
-  probeDatabase,
-} from "@/src/operations/database_health.ts";
+import { type DatabaseHealth, probeDatabase } from "@/src/operations/database_health.ts";
 
 export const redis = new Redis(getRequiredEnvVariable("REDIS_URL"));
 
@@ -31,8 +28,7 @@ addShutdownSignalListener(closeRedisConnection);
  * the keys as separate arguments instead, so `evalsha` has to be adapted.
  */
 export const rateLimiterRedisClient = {
-  scriptLoad: (script: string) =>
-    redis.script("LOAD", script) as Promise<string>,
+  scriptLoad: (script: string) => redis.script("LOAD", script) as Promise<string>,
   evalsha: <TArgs extends unknown[], TData = unknown>(
     sha1: string,
     keys: string[],

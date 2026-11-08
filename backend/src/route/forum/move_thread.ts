@@ -15,10 +15,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_FOLDER_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_FOLDER_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const THREAD_PARAMS = z.object({ threadId: WRITING_THREAD_SCHEMA.shape.id });
 
@@ -78,26 +75,22 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const folder = folderId !== null
-      ? await forumFolderOf(user, folderId)
-      : null;
+    const folder = folderId !== null ? await forumFolderOf(user, folderId) : null;
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
-    const destination = folder?.effectiveMemberPermission ??
-      FORUM_ROOT_PERMISSION;
+    const destination = folder?.effectiveMemberPermission ?? FORUM_ROOT_PERMISSION;
 
     // The same permission starting a thread there needs, because that is the same act.
     if (!mayActInForum(user, destination, "thread:create")) {
-      return c.json(
-        { error: "You cannot put a thread there" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot put a thread there" }, STATUS_CODE.Forbidden);
     }
 
-    const moved = await db.transaction().execute((transaction) =>
-      ForumService.moveThread(transaction, user, thread.id, folder?.id ?? null)
-    );
+    const moved = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.moveThread(transaction, user, thread.id, folder?.id ?? null),
+      );
     if (moved === undefined) {
       return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
     }

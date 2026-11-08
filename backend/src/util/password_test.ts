@@ -9,10 +9,7 @@ test("a hashed password verifies against itself", async () => {
 });
 
 test("a wrong password does not verify", async () => {
-  assert.equal(
-    await verifyPassword("falsch", await hashPassword(password)),
-    false,
-  );
+  assert.equal(await verifyPassword("falsch", await hashPassword(password)), false);
 });
 
 test("the same password hashes differently every time", async () => {
@@ -41,16 +38,14 @@ test("a password longer than 72 bytes is not truncated", async () => {
 
 test("an unreadable stored hash does not match and does not throw", async () => {
   // Including a bcrypt hash, which is what rows held before this change.
-  for (
-    const stored of [
-      "",
-      "nonsense",
-      "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyDD.9Rr53pC3W",
-      "scrypt$0$8$1$c2FsdA==$aGFzaA==",
-      "scrypt$not-a-number$8$1$c2FsdA==$aGFzaA==",
-      "argon2$16384$8$1$c2FsdA==$aGFzaA==",
-    ]
-  ) {
+  for (const stored of [
+    "",
+    "nonsense",
+    "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyDD.9Rr53pC3W",
+    "scrypt$0$8$1$c2FsdA==$aGFzaA==",
+    "scrypt$not-a-number$8$1$c2FsdA==$aGFzaA==",
+    "argon2$16384$8$1$c2FsdA==$aGFzaA==",
+  ]) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     assert.equal(await verifyPassword(password, stored), false, stored);
   }

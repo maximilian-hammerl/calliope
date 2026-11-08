@@ -6,10 +6,7 @@ import { STATUS_CODE } from "@/src/http/status.ts";
 import { FORUM_FOLDER } from "@/src/scope/chains.ts";
 import { ForumService } from "@/src/service/forum_service.ts";
 import { mayActInForum } from "@/src/service/forum_authorization.ts";
-import {
-  FOLDER_DESCRIPTION_SCHEMA,
-  FOLDER_TITLE_SCHEMA,
-} from "@/src/http/request_schema.ts";
+import { FOLDER_DESCRIPTION_SCHEMA, FOLDER_TITLE_SCHEMA } from "@/src/http/request_schema.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -74,9 +71,11 @@ export default new OpenAPIHono().openapi(
       );
     }
 
-    const folder = await db.transaction().execute((transaction) =>
-      ForumService.updateFolder(transaction, user, c.get("folder").id, values)
-    );
+    const folder = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.updateFolder(transaction, user, c.get("folder").id, values),
+      );
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }

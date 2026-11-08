@@ -20,9 +20,7 @@ import {
 import { WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const CREATE_THREAD_BODY = z.object({
-  title: notBlank(
-    WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle),
-  ),
+  title: notBlank(WRITING_THREAD_SCHEMA.shape.title.min(1).max(TEXT_LIMIT.threadTitle)),
   /** Absent puts it at the forum's root, which only an operator may write to. */
   folderId: WRITING_THREAD_SCHEMA.shape.folderId.optional(),
 });
@@ -64,25 +62,22 @@ export default new OpenAPIHono().openapi(
 
     // The folder decides, and at the root the forum's constant does — which is what makes
     // creating an operator's act until a folder opens.
-    const folder = (folderId !== undefined && folderId !== null)
-      ? await forumFolderOf(user, folderId)
-      : null;
+    const folder =
+      folderId !== undefined && folderId !== null ? await forumFolderOf(user, folderId) : null;
     if (folder === undefined) {
       return c.json({ error: "Folder not found" }, STATUS_CODE.NotFound);
     }
-    const permission = folder?.effectiveMemberPermission ??
-      FORUM_ROOT_PERMISSION;
+    const permission = folder?.effectiveMemberPermission ?? FORUM_ROOT_PERMISSION;
 
     if (!mayActInForum(user, permission, "thread:create")) {
-      return c.json(
-        { error: "You cannot start a thread here" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot start a thread here" }, STATUS_CODE.Forbidden);
     }
 
-    const thread = await db.transaction().execute((transaction) =>
-      ForumService.insertThread(transaction, user, title, folder?.id ?? null)
-    );
+    const thread = await db
+      .transaction()
+      .execute((transaction) =>
+        ForumService.insertThread(transaction, user, title, folder?.id ?? null),
+      );
 
     return c.json(thread, STATUS_CODE.Created);
   },

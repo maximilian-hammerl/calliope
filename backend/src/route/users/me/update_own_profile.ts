@@ -31,10 +31,9 @@ const UPDATE_OWN_PROFILE_BODY = z
     writingBoundaries: DETAIL,
     genres: DETAIL,
   })
-  .refine(
-    (changes) => Object.values(changes).some((value) => value !== undefined),
-    { message: "Provide at least one field to update" },
-  );
+  .refine((changes) => Object.values(changes).some((value) => value !== undefined), {
+    message: "Provide at least one field to update",
+  });
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -70,9 +69,11 @@ export default new OpenAPIHono().openapi(
   }),
   async (c) => {
     const user = c.get("user");
-    const profile = await db.transaction().execute((transaction) =>
-      UserService.updateProfile(transaction, user.id, c.req.valid("json"))
-    );
+    const profile = await db
+      .transaction()
+      .execute((transaction) =>
+        UserService.updateProfile(transaction, user.id, c.req.valid("json")),
+      );
 
     if (profile === undefined) {
       return c.json({ error: "Not found" }, STATUS_CODE.NotFound);

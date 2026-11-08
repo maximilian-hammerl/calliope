@@ -7,11 +7,7 @@ import {
   registerUser,
   request,
 } from "@/src/test/support.ts";
-import {
-  cleanUpFavourites,
-  favouriteFixture,
-  setFavourite,
-} from "@/src/test/favourites.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
 
 /**
  * Posts are the one kind a favourite does **not** reorder, and the test that says so is the point
@@ -32,30 +28,32 @@ const postsOf = async (
   threadId: string,
   body: Record<string, unknown> = {},
 ) =>
-  (await (await request(
-    "QUERY",
-    `/api/groups/${groupId}/threads/${threadId}/posts`,
-    cookie,
-    { limit: 50, offset: 0, ...body },
-  )).json()).results as Row[];
+  (
+    await (
+      await request("QUERY", `/api/groups/${groupId}/threads/${threadId}/posts`, cookie, {
+        limit: 50,
+        offset: 0,
+        ...body,
+      })
+    ).json()
+  ).results as Row[];
 
 /** A thread with three posts, written in the order a thread is read. */
 async function aThreadWithPosts(cookie: string) {
   const group = await createGroup(cookie, "Favoriten im Thread", "public");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    cookie,
-    { title: "Kapitel" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, cookie, { title: "Kapitel" })
+  ).json();
 
   const write = async (text: string) =>
-    await (await request(
-      "POST",
-      `/api/groups/${group.id}/threads/${thread.id}/posts`,
-      cookie,
-      postBody(text),
-    )).json();
+    await (
+      await request(
+        "POST",
+        `/api/groups/${group.id}/threads/${thread.id}/posts`,
+        cookie,
+        postBody(text),
+      )
+    ).json();
 
   return {
     group,
@@ -68,16 +66,17 @@ async function aThreadWithPosts(cookie: string) {
 
 test("a favourited post stays where it was written", async () => {
   const ownerCookie = await registerUser(owner);
-  const { group, thread, first, second, third } = await aThreadWithPosts(
-    ownerCookie,
-  );
+  const { group, thread, first, second, third } = await aThreadWithPosts(ownerCookie);
 
   await setFavourite(ownerCookie, "writing_post", third.id);
 
   // Oldest first, unchanged. Hoisting the favourite here would put the end of the chapter above
   // its beginning, which is why posts are the kind that does not reorder.
   const posts = await postsOf(ownerCookie, group.id, thread.id);
-  assert.deepEqual(posts.map((row) => row.id), [first.id, second.id, third.id]);
+  assert.deepEqual(
+    posts.map((row) => row.id),
+    [first.id, second.id, third.id],
+  );
   assert.equal(posts[2]?.isFavourite, true);
   assert.equal(posts[0]?.isFavourite, false);
 });
@@ -96,7 +95,10 @@ test("the thread can be narrowed to favourited posts", async () => {
   assert(kept.every((row) => row.isFavourite));
   // Still in reading order among themselves, which is what the filter is for: coming back to the
   // parts of a chapter somebody marked.
-  assert.deepEqual(kept.map((row) => row.id), [first.id, third.id]);
+  assert.deepEqual(
+    kept.map((row) => row.id),
+    [first.id, third.id],
+  );
 });
 
 test("a post's favourite is the reader's own", async () => {

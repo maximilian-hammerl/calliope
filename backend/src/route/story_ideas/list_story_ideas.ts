@@ -11,11 +11,7 @@ import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { StoryIdeaService } from "@/src/service/story_idea_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
-import {
-  FAVOURITE_FILTER,
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { FAVOURITE_FILTER, listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -25,8 +21,7 @@ import {
 } from "@/src/http/response.ts";
 import { STORY_IDEA_SCHEMA } from "@/src/database/schema.ts";
 
-const SORT_ATTRIBUTE = STORY_IDEA_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = STORY_IDEA_SCHEMA.keyof()
   .extract(["createdAt", "title"])
   // Newest first: the daily loop the interviews describe is "die neuen Gesuche durchgehen".
   .default("createdAt")
@@ -39,9 +34,7 @@ const STATUS_FILTER = z.enum(["open", "closed", "any"]).default("open");
  * `any` rather than `unread` by default: the board's own default filter is a frontend
  * decision, and an endpoint that hid read ideas unless asked would surprise every other caller.
  */
-const READER_STATE_FILTER = z
-  .enum(["read", "unread", "any"])
-  .default("any");
+const READER_STATE_FILTER = z.enum(["read", "unread", "any"]).default("any");
 
 const LIST_STORY_IDEAS_BODY = listQuerySchema(
   SORT_ATTRIBUTE,

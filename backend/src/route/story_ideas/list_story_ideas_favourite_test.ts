@@ -2,11 +2,7 @@ import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { clearRateLimits, registerUser } from "@/src/test/support.ts";
 import { createIdea, listIdeas } from "@/src/test/story_ideas.ts";
-import {
-  cleanUpFavourites,
-  favouriteFixture,
-  setFavourite,
-} from "@/src/test/favourites.ts";
+import { cleanUpFavourites, favouriteFixture, setFavourite } from "@/src/test/favourites.ts";
 
 /**
  * The board's favourite: the flag, the ordering ahead of whatever the reader sorted by, and that it
@@ -22,22 +18,30 @@ afterEach(() => cleanUpFavourites([owner, member]));
 type Row = { id: string; title: string; isFavourite: boolean };
 
 const rowsFor = async (cookie: string, body: Record<string, unknown> = {}) =>
-  (await (await listIdeas(cookie, {
-    limit: 50,
-    offset: 0,
-    readerState: "any",
-    status: "any",
-    ...body,
-  })).json()).results as Row[];
+  (
+    await (
+      await listIdeas(cookie, {
+        limit: 50,
+        offset: 0,
+        readerState: "any",
+        status: "any",
+        ...body,
+      })
+    ).json()
+  ).results as Row[];
 
 /** Two ideas by one author, so a second member has something of somebody else's to mark. */
 async function twoIdeas(cookie: string) {
-  const first = await (await createIdea(cookie, {
-    title: "favourite-ideas Anfang",
-  })).json();
-  const second = await (await createIdea(cookie, {
-    title: "favourite-ideas Zuletzt",
-  })).json();
+  const first = await (
+    await createIdea(cookie, {
+      title: "favourite-ideas Anfang",
+    })
+  ).json();
+  const second = await (
+    await createIdea(cookie, {
+      title: "favourite-ideas Zuletzt",
+    })
+  ).json();
   return { first, second };
 }
 
@@ -83,5 +87,8 @@ test("the board puts a favourite first, and narrows to it", async () => {
     favourite: "only",
   });
   assert(only.every((row) => row.isFavourite));
-  assert.deepEqual(only.map((row) => row.id), [first.id]);
+  assert.deepEqual(
+    only.map((row) => row.id),
+    [first.id],
+  );
 });

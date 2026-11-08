@@ -47,17 +47,12 @@ beforeEach(clearRateLimits);
 afterEach(async () => {
   await clearForum(USERNAMES);
   // Neither goes with its creator — both keep their rows with the account nulled.
-  const ours = db.selectFrom("user").select("id").where(
-    "username",
-    "in",
-    USERNAMES,
+  const ours = db.selectFrom("user").select("id").where("username", "in", USERNAMES);
+  await write((transaction) =>
+    transaction.deleteFrom("report").where("reporterId", "in", ours).execute(),
   );
   await write((transaction) =>
-    transaction.deleteFrom("report").where("reporterId", "in", ours).execute()
-  );
-  await write((transaction) =>
-    transaction.deleteFrom("chatGroup").where("createdBy", "in", ours)
-      .execute()
+    transaction.deleteFrom("chatGroup").where("createdBy", "in", ours).execute(),
   );
   await deleteUsers(USERNAMES);
 });
@@ -96,13 +91,7 @@ const SCOPES: ReadonlyArray<{ prefix: string; keys: readonly Key[] }> = [
 ];
 
 /** Rows the stranger may not even see: then their answer must match a missing id's. */
-const UNSEEN: ReadonlySet<Key> = new Set([
-  "private",
-  "hidden",
-  "chat",
-  "session",
-  "report",
-]);
+const UNSEEN: ReadonlySet<Key> = new Set(["private", "hidden", "chat", "session", "report"]);
 
 type Tree = {
   key: Key;
@@ -387,8 +376,7 @@ function operations(): Operation[] {
     for (const [method, definition] of Object.entries(item)) {
       const upper = method.toUpperCase();
       const bodyRequired =
-        (definition as { requestBody?: { required?: boolean } }).requestBody
-          ?.required === true;
+        (definition as { requestBody?: { required?: boolean } }).requestBody?.required === true;
       found.push({
         operation: `${upper} ${path}`,
         method: upper,
@@ -409,22 +397,14 @@ type People = {
 };
 
 /** A group of the owner's with one of everything, and the member joined to it. */
-async function groupTree(
-  people: People,
-  key: "private" | "public",
-): Promise<Tree> {
+async function groupTree(people: People, key: "private" | "public"): Promise<Tree> {
   const ids = await groupWithChildren(people.ownerCookie, "Fremde Gruppe", key);
   const memberships = `/api/groups/${ids.groupId}/memberships`;
   await createdOk(people.ownerCookie, memberships, {
     userId: people.memberId,
     role: "writer",
   });
-  await createdOk(
-    people.memberCookie,
-    `${memberships}/me/accept`,
-    undefined,
-    200,
-  );
+  await createdOk(people.memberCookie, `${memberships}/me/accept`, undefined, 200);
 
   return {
     key,
@@ -434,10 +414,7 @@ async function groupTree(
   };
 }
 
-async function forumTree(
-  key: ForumPermission,
-  people: People,
-): Promise<Tree> {
+async function forumTree(key: ForumPermission, people: People): Promise<Tree> {
   const ids = await forumWithChildren(`Thema (${key})`, key, people.ownerId);
   return {
     key,
@@ -456,12 +433,7 @@ async function chatTree(people: People): Promise<Tree> {
   await createdOk(people.ownerCookie, `${base}/memberships`, {
     userId: people.memberId,
   });
-  await createdOk(
-    people.memberCookie,
-    `${base}/memberships/me/accept`,
-    undefined,
-    200,
-  );
+  await createdOk(people.memberCookie, `${base}/memberships/me/accept`, undefined, 200);
   await createdOk(people.ownerCookie, `${base}/messages`, { text: "Hallo" });
 
   return {
@@ -472,10 +444,7 @@ async function chatTree(people: People): Promise<Tree> {
   };
 }
 
-async function ideaTree(
-  people: People,
-  key: "open idea" | "closed idea",
-): Promise<Tree> {
+async function ideaTree(people: People, key: "open idea" | "closed idea"): Promise<Tree> {
   const response = await createIdea(people.ownerCookie);
   assert.equal(response.status, 201);
   const idea = await response.json();
@@ -496,17 +465,10 @@ async function ideaTree(
 
 /** A second session of the owner's, so revoking it leaves the one the control signs in with. */
 async function sessionTree(people: People): Promise<Tree> {
-  await createdOk(
-    "",
-    "/api/auth/login",
-    { login: OWNER, password: "a-complex-password" },
-    200,
-  );
+  await createdOk("", "/api/auth/login", { login: OWNER, password: "a-complex-password" }, 200);
   const listed = await request("GET", "/api/auth/sessions", people.ownerCookie);
   const { results } = await listed.json();
-  const other = results.find((session: { current: boolean }) =>
-    !session.current
-  );
+  const other = results.find((session: { current: boolean }) => !session.current);
   assert(other !== undefined, "the owner has a second session");
 
   return { key: "session", controller: "owner", ids: { sessionId: other.id } };
@@ -515,12 +477,11 @@ async function sessionTree(people: People): Promise<Tree> {
 async function avatarTree(people: People): Promise<Tree> {
   const image = await sharp({
     create: { width: 64, height: 64, channels: 3, background: "#8a6a3a" },
-  }).png().toBuffer();
+  })
+    .png()
+    .toBuffer();
   const form = new FormData();
-  form.append(
-    "image",
-    new File([new Uint8Array(image)], "a.png", { type: "image/png" }),
-  );
+  form.append("image", new File([new Uint8Array(image)], "a.png", { type: "image/png" }));
   form.append("origin", "own_work");
   form.append("confirmed", "true");
   const response = await app.request("/api/users/me/avatar", {
@@ -594,10 +555,7 @@ async function tree(key: Key, people: People): Promise<Tree> {
 /** Only the trees a route is tried on: each costs its own requests. */
 async function fixture(keys: readonly Key[]): Promise<Fixture> {
   const ownerCookie = await registerUser(OWNER);
-  const operatorCookie = await makeOperator(
-    OPERATOR,
-    await registerUser(OPERATOR),
-  );
+  const operatorCookie = await makeOperator(OPERATOR, await registerUser(OPERATOR));
   const people: People = {
     ownerCookie,
     ownerId: await getUserId(OWNER),
@@ -639,9 +597,11 @@ test("every route with an id in its path has a case", () => {
     "Add a case for each new route, and remove the case of a route that is gone",
   );
   const withoutBody = found
-    .filter(({ bodyRequired, operation }) =>
-      bodyRequired && REQUEST_BODIES[operation] === undefined &&
-      CASES[operation]?.body === undefined
+    .filter(
+      ({ bodyRequired, operation }) =>
+        bodyRequired &&
+        REQUEST_BODIES[operation] === undefined &&
+        CASES[operation]?.body === undefined,
     )
     .map(({ operation }) => operation);
   assert.deepEqual(
@@ -662,10 +622,12 @@ for (const { operation, method, path, keys } of operations()) {
     assert(test !== undefined, `${operation} has no case`);
 
     const body = (tree: Tree) =>
-      test.body !== undefined ? test.body(tree) : REQUEST_BODIES[operation]?.({
-        ...tree.ids,
-        inviteeId: found.strangerId,
-      });
+      test.body !== undefined
+        ? test.body(tree)
+        : REQUEST_BODIES[operation]?.({
+            ...tree.ids,
+            inviteeId: found.strangerId,
+          });
     const ask = async (tree: Tree, ids: Ids, cookie: string) =>
       await answer(method, address(path, ids), cookie, await body(tree));
 
@@ -681,26 +643,17 @@ for (const { operation, method, path, keys } of operations()) {
 
       if (UNSEEN.has(tree.key)) {
         const missing = Object.fromEntries(
-          Object.entries(ids).map(([name, id]) => [
-            name,
-            name === "targetType" ? id : missingId(),
-          ]),
+          Object.entries(ids).map(([name, id]) => [name, name === "targetType" ? id : missingId()]),
         );
         // deno-lint-ignore no-await-in-loop -- sequential on purpose, as above
         const nothing = await ask(tree, missing, found.strangerCookie);
         if (JSON.stringify(tried) !== JSON.stringify(nothing)) {
-          telling.push(
-            `${tree.key}: ${JSON.stringify(tried)}, missing ${
-              JSON.stringify(nothing)
-            }`,
-          );
+          telling.push(`${tree.key}: ${JSON.stringify(tried)}, missing ${JSON.stringify(nothing)}`);
         }
       }
 
       // After the stranger, so a delete that got through leaves the controller nothing to delete.
-      const controller = tree.controller === "owner"
-        ? found.ownerCookie
-        : found.operatorCookie;
+      const controller = tree.controller === "owner" ? found.ownerCookie : found.operatorCookie;
       // deno-lint-ignore no-await-in-loop -- sequential on purpose, as above
       const control = await ask(tree, ids, controller);
       const expected = test.control?.[tree.key];
@@ -713,11 +666,7 @@ for (const { operation, method, path, keys } of operations()) {
       }
     }
 
-    assert.deepEqual(
-      actual,
-      test.stranger,
-      `${operation}: what a stranger gets, per tree`,
-    );
+    assert.deepEqual(actual, test.stranger, `${operation}: what a stranger gets, per tree`);
     assert.deepEqual(
       telling,
       [],

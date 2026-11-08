@@ -8,10 +8,7 @@
  */
 const pending = new Set<Promise<void>>();
 
-export function runInBackground(
-  description: string,
-  work: () => Promise<void>,
-): void {
+export function runInBackground(description: string, work: () => Promise<void>): void {
   const task = work()
     .catch((error: unknown) => {
       console.error(`${description} failed:`, error);

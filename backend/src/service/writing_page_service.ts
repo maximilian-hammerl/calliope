@@ -18,20 +18,12 @@ import { documentToPlainText } from "@/src/document/document_text.ts";
 export type PageSummary =
   // Not null, unlike the column: it is nullable because the public forum reuses this table (#32),
   // and every read in here is scoped to one group. `$narrowType` is where that is asserted.
-  & { writingGroupId: string }
-  & Pick<
+  { writingGroupId: string } & Pick<
     Selectable<DatabaseWritingPage>,
-    | "id"
-    | "title"
-    | "createdBy"
-    | "createdAt"
-    | "lastActivityAt"
-    | "folderId"
-    | "updatedBy"
-  >
-  // Null once an account is gone: both columns are ON DELETE SET NULL.
-  & { createdByUsername: string | null; updatedByUsername: string | null }
-  & {
+    "id" | "title" | "createdBy" | "createdAt" | "lastActivityAt" | "folderId" | "updatedBy"
+  > &
+    // Null once an account is gone: both columns are ON DELETE SET NULL.
+    { createdByUsername: string | null; updatedByUsername: string | null } & {
     /** The reader's own favourite, visible to nobody else. */
     isFavourite: boolean;
   };
@@ -61,16 +53,8 @@ const SELECTED_COLUMNS = [
  * fact about the pair, and the join is bound to their id so no query here can see another
  * member's.
  */
-function pagesForReader(
-  readerId: string,
-  executor: typeof db | Transaction = db,
-) {
-  return withFavourite(
-    pagesWithNames(executor),
-    "writing_page",
-    "writingPage.id",
-    readerId,
-  );
+function pagesForReader(readerId: string, executor: typeof db | Transaction = db) {
+  return withFavourite(pagesWithNames(executor), "writing_page", "writingPage.id", readerId);
 }
 
 /**
@@ -85,7 +69,8 @@ function pagesWithNames(executor: typeof db | Transaction = db) {
     .select((eb) => [
       ...SELECTED_COLUMNS,
       "user.username as createdByUsername",
-      eb.selectFrom("user as editor")
+      eb
+        .selectFrom("user as editor")
         .select("editor.username")
         .whereRef("editor.id", "=", "writingPage.updatedBy")
         .as("updatedByUsername"),
@@ -96,10 +81,7 @@ function pagesWithNames(executor: typeof db | Transaction = db) {
  * Every page of a group, most recently written in first — the tree assembles them by `folderId`,
  * and orders leaves by activity the way a thread's strip did.
  */
-async function listPages(
-  writingGroupId: GroupId,
-  readerId: string,
-): Promise<PageSummary[]> {
+async function listPages(writingGroupId: GroupId, readerId: string): Promise<PageSummary[]> {
   return await pagesForReader(readerId)
     .where("writingPage.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
@@ -113,14 +95,9 @@ async function listPages(
 }
 
 /** Scoped to the group, so a page id from another group cannot be reached through it. */
-async function selectPage(
-  writingGroupId: GroupId,
-  pageId: string,
-): Promise<PageGate | undefined> {
+async function selectPage(writingGroupId: GroupId, pageId: string): Promise<PageGate | undefined> {
   return await pagesWithNames()
-    .select((eb) =>
-      eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
-    )
+    .select((eb) => eb.ref("writingPage.document").$castTo<PostDocument>().as("document"))
     .where("writingPage.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingPage.id", "=", pageId)
@@ -162,9 +139,7 @@ async function insertPage(
 
   // Re-read rather than RETURNING, which cannot reach the joined names.
   const page = await pagesWithNames(transaction)
-    .select((eb) =>
-      eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
-    )
+    .select((eb) => eb.ref("writingPage.document").$castTo<PostDocument>().as("document"))
     .where("writingPage.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingPage.id", "=", id)
@@ -183,9 +158,7 @@ async function selectPageForReader(
   executor: typeof db | Transaction = db,
 ): Promise<Page | undefined> {
   return await pagesForReader(readerId, executor)
-    .select((eb) =>
-      eb.ref("writingPage.document").$castTo<PostDocument>().as("document")
-    )
+    .select((eb) => eb.ref("writingPage.document").$castTo<PostDocument>().as("document"))
     .where("writingPage.writingGroupId", "=", writingGroupId)
     .$narrowType<{ writingGroupId: NotNull }>()
     .where("writingPage.id", "=", pageId)
@@ -203,39 +176,27 @@ export type FoundPage = PageSummary & { writingGroupTitle: string };
  * this is the one place a leaf can match on something the result row does not show; the row still
  * carries only the title, as every other kind's does.
  */
-function listVisiblePages(
-  user: User,
-  query: ListQuery,
-): Promise<ListResults<FoundPage>> {
+function listVisiblePages(user: User, query: ListQuery): Promise<ListResults<FoundPage>> {
   let pages = pagesForReader(user.id)
-    .innerJoin(
-      "writingGroup",
-      "writingGroup.id",
-      "writingPage.writingGroupId",
-    )
+    .innerJoin("writingGroup", "writingGroup.id", "writingPage.writingGroupId")
     .$narrowType<{ writingGroupId: NotNull }>()
-    .leftJoin(
-      "userInWritingGroup",
-      (join) =>
-        join
-          .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
-          .on("userInWritingGroup.userId", "=", user.id),
+    .leftJoin("userInWritingGroup", (join) =>
+      join
+        .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+        .on("userInWritingGroup.userId", "=", user.id),
     )
     .where((eb) =>
       eb.or([
         eb("writingGroup.visibility", "=", "public"),
         eb("userInWritingGroup.userId", "is not", null),
-      ])
+      ]),
     )
     .select("writingGroup.title as writingGroupTitle");
 
   if (query.search !== undefined) {
     const term = searchPattern(query.search);
     pages = pages.where((eb) =>
-      eb.or([
-        eb("writingPage.title", "ilike", term),
-        eb("writingPage.text", "ilike", term),
-      ])
+      eb.or([eb("writingPage.title", "ilike", term), eb("writingPage.text", "ilike", term)]),
     );
   }
 
@@ -276,12 +237,7 @@ async function updatePage(
     .executeTakeFirst();
 
   // The editor's own favourite, because the response carries it like every other page does.
-  const page = await selectPageForReader(
-    writingGroupId,
-    pageId,
-    updatedBy,
-    transaction,
-  );
+  const page = await selectPageForReader(writingGroupId, pageId, updatedBy, transaction);
   if (page === undefined) {
     return undefined;
   }
@@ -306,12 +262,7 @@ async function movePage(
     .where("id", "=", pageId)
     .execute();
 
-  return await selectPageForReader(
-    writingGroupId,
-    pageId,
-    readerId,
-    transaction,
-  );
+  return await selectPageForReader(writingGroupId, pageId, readerId, transaction);
 }
 
 async function deletePage(

@@ -18,12 +18,10 @@ const IDEA_PARAMS = z.object({ ideaId: STORY_IDEA_SCHEMA.shape.id });
 
 // `.partial()` after the defaults, so an omitted field stays undefined and means unchanged —
 // a default materialising on PATCH is how tags once got cleared by every partial update.
-const UPDATE_STORY_IDEA_BODY = STORY_IDEA_BODY
-  .partial()
-  .refine(
-    (changes) => Object.values(changes).some((value) => value !== undefined),
-    { message: "Provide at least one field to update" },
-  );
+const UPDATE_STORY_IDEA_BODY = STORY_IDEA_BODY.partial().refine(
+  (changes) => Object.values(changes).some((value) => value !== undefined),
+  { message: "Provide at least one field to update" },
+);
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -63,14 +61,16 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { ideaId } = c.req.valid("param");
 
-    const updated = await db.transaction().execute((transaction) =>
-      StoryIdeaService.updateStoryIdea(
-        transaction,
-        ideaId,
-        c.get("user").id,
-        c.req.valid("json"),
-      )
-    );
+    const updated = await db
+      .transaction()
+      .execute((transaction) =>
+        StoryIdeaService.updateStoryIdea(
+          transaction,
+          ideaId,
+          c.get("user").id,
+          c.req.valid("json"),
+        ),
+      );
 
     if (updated !== undefined) {
       return c.json(updated, STATUS_CODE.OK);

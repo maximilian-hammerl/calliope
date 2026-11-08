@@ -35,8 +35,7 @@ export default new OpenAPIHono().openapi(
     },
     responses: {
       [STATUS_CODE.OK]: {
-        description:
-          "Deletion requested, and a link sent to the address on file",
+        description: "Deletion requested, and a link sent to the address on file",
         content: jsonContent(OK_RESPONSE),
       },
       [STATUS_CODE.Unauthorized]: {
@@ -50,10 +49,7 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { password } = c.req.valid("json");
 
-    const result = await AccountDeletionService.requestAccountDeletion(
-      c.get("user").id,
-      password,
-    );
+    const result = await AccountDeletionService.requestAccountDeletion(c.get("user").id, password);
 
     switch (result) {
       case "requested":

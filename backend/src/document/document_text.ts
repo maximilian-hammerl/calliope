@@ -8,10 +8,7 @@
  * The output is shaped like what a member typed into a textarea, blocks separated by blank lines,
  * so `paragraphs()` on the frontend and both readers on this side keep working unchanged.
  */
-import type {
-  DocumentNode,
-  PostDocument,
-} from "@/src/document/document_schema.ts";
+import type { DocumentNode, PostDocument } from "@/src/document/document_schema.ts";
 
 /**
  * Blocks that hold inline content and become one paragraph of the projection. Everything else with
@@ -80,11 +77,12 @@ export function plainTextToDocument(text: string): PostDocument {
     type: "doc",
     // A `doc` may not be empty and neither may a `text` node, so an empty string becomes one
     // paragraph holding nothing rather than no content at all.
-    content: paragraphs.length === 0 ? [{ type: "paragraph" }] : paragraphs.map(
-      (block) => ({
-        type: "paragraph",
-        content: [{ type: "text", text: block }],
-      }),
-    ),
+    content:
+      paragraphs.length === 0
+        ? [{ type: "paragraph" }]
+        : paragraphs.map((block) => ({
+            type: "paragraph",
+            content: [{ type: "text", text: block }],
+          })),
   };
 }

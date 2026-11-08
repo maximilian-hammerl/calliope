@@ -7,25 +7,19 @@ import { Buffer } from "node:buffer";
 
 import type { ColumnType } from "kysely";
 
-export type ArrayType<T> = ArrayTypeImpl<T> extends (infer U)[] ? U[]
-  : ArrayTypeImpl<T>;
+export type ArrayType<T> = ArrayTypeImpl<T> extends (infer U)[] ? U[] : ArrayTypeImpl<T>;
 
-export type ArrayTypeImpl<T> = T extends ColumnType<infer S, infer I, infer U>
-  ? ColumnType<S[], I[], U[]>
-  : T[];
+export type ArrayTypeImpl<T> =
+  T extends ColumnType<infer S, infer I, infer U> ? ColumnType<S[], I[], U[]> : T[];
 
-export type AvatarOrigin =
-  | "licence"
-  | "other"
-  | "own_work"
-  | "permission"
-  | "public_domain";
+export type AvatarOrigin = "licence" | "other" | "own_work" | "permission" | "public_domain";
 
 export type ForumPermission = "hidden" | "read" | "write";
 
-export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
-  ? ColumnType<S, I | undefined, U>
-  : ColumnType<T, T | undefined, T>;
+export type Generated<T> =
+  T extends ColumnType<infer S, infer I, infer U>
+    ? ColumnType<S, I | undefined, U>
+    : ColumnType<T, T | undefined, T>;
 
 export type NotificationType =
   | "invitation_accepted"
@@ -535,21 +529,13 @@ import * as z from "zod";
 const int16 = z.int().min(-32768).max(32767);
 
 export const WRITING_GROUP_VISIBILITIES = ["private", "public"] as const;
-export const WRITING_GROUP_VISIBILITY_SCHEMA = z.enum(
-  WRITING_GROUP_VISIBILITIES,
-);
+export const WRITING_GROUP_VISIBILITY_SCHEMA = z.enum(WRITING_GROUP_VISIBILITIES);
 
 export const STORY_LANGUAGES = ["english", "german"] as const;
 export const STORY_LANGUAGE_SCHEMA = z.enum(STORY_LANGUAGES);
 
-export const WRITING_GROUP_STORY_STATUSES = [
-  "finished",
-  "planning",
-  "writing",
-] as const;
-export const WRITING_GROUP_STORY_STATUS_SCHEMA = z.enum(
-  WRITING_GROUP_STORY_STATUSES,
-);
+export const WRITING_GROUP_STORY_STATUSES = ["finished", "planning", "writing"] as const;
+export const WRITING_GROUP_STORY_STATUS_SCHEMA = z.enum(WRITING_GROUP_STORY_STATUSES);
 
 export const STORY_GENRES = [
   "action",
@@ -718,24 +704,14 @@ export const STORY_CONTENT_WARNINGS = [
 ] as const;
 export const STORY_CONTENT_WARNING_SCHEMA = z.enum(STORY_CONTENT_WARNINGS);
 
-export const USER_IN_WRITING_GROUP_ROLES = [
-  "administrator",
-  "reader",
-  "writer",
-] as const;
-export const USER_IN_WRITING_GROUP_ROLE_SCHEMA = z.enum(
-  USER_IN_WRITING_GROUP_ROLES,
-);
+export const USER_IN_WRITING_GROUP_ROLES = ["administrator", "reader", "writer"] as const;
+export const USER_IN_WRITING_GROUP_ROLE_SCHEMA = z.enum(USER_IN_WRITING_GROUP_ROLES);
 
 export const USER_IN_WRITING_GROUP_STATUSES = ["invited", "joined"] as const;
-export const USER_IN_WRITING_GROUP_STATUS_SCHEMA = z.enum(
-  USER_IN_WRITING_GROUP_STATUSES,
-);
+export const USER_IN_WRITING_GROUP_STATUS_SCHEMA = z.enum(USER_IN_WRITING_GROUP_STATUSES);
 
 export const USER_IN_CHAT_GROUP_STATUSES = ["invited", "joined"] as const;
-export const USER_IN_CHAT_GROUP_STATUS_SCHEMA = z.enum(
-  USER_IN_CHAT_GROUP_STATUSES,
-);
+export const USER_IN_CHAT_GROUP_STATUS_SCHEMA = z.enum(USER_IN_CHAT_GROUP_STATUSES);
 
 export const NOTIFICATION_TYPES = [
   "invitation_accepted",

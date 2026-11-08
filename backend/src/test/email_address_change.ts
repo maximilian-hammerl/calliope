@@ -1,12 +1,7 @@
 import { db } from "@/src/database/client.ts";
 import { registerUser } from "@/src/test/support.ts";
 import { flushBackgroundWork } from "@/src/util/background.ts";
-import {
-  countMailFor,
-  deleteMailFor,
-  tokenFromMail,
-  waitForMail,
-} from "@/src/test/mailpit.ts";
+import { countMailFor, deleteMailFor, tokenFromMail, waitForMail } from "@/src/test/mailpit.ts";
 import { sendJson } from "@/src/test/auth.ts";
 
 export const password = "a-complex-password";
@@ -34,15 +29,16 @@ export function emailChangeFixture(scope: string) {
     return cookie;
   }
 
-  const requestChange = (
-    cookie: string,
-    address: string,
-    withPassword: string = password,
-  ) =>
-    sendJson("POST", "/api/auth/email-address/change", {
-      emailAddress: address,
-      password: withPassword,
-    }, cookie);
+  const requestChange = (cookie: string, address: string, withPassword: string = password) =>
+    sendJson(
+      "POST",
+      "/api/auth/email-address/change",
+      {
+        emailAddress: address,
+        password: withPassword,
+      },
+      cookie,
+    );
 
   const confirmChange = (token: string) =>
     sendJson("POST", "/api/auth/email-address/confirm", { token });
@@ -73,9 +69,7 @@ export function emailChangeFixture(scope: string) {
   }
 
   /** The two links the request sends: one to confirm, one to call it off. */
-  async function linksFromMail(): Promise<
-    { confirm: string; cancel: string }
-  > {
+  async function linksFromMail(): Promise<{ confirm: string; cancel: string }> {
     await flushBackgroundWork();
     return {
       confirm: tokenFromMail(await waitForMail(newAddress)),

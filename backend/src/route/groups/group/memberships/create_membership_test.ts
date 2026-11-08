@@ -21,12 +21,9 @@ test("POST /api/groups/{groupId}/memberships invites a user", async () => {
   await registerUser(invitee);
   const group = await createGroup(adminCookie, "Einladung");
 
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/memberships`,
-    adminCookie,
-    { userId: await getUserId(invitee) },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/memberships`, adminCookie, {
+    userId: await getUserId(invitee),
+  });
 
   assert.equal(response.status, STATUS_CODE.Created);
   const membership = await response.json();
@@ -41,12 +38,9 @@ test("POST /api/groups/{groupId}/memberships refuses a non-administrator", async
   const group = await createGroup(adminCookie, "Einladung", "public");
 
   // The invitee can see the public group, but cannot invite anyone to it.
-  const response = await request(
-    "POST",
-    `/api/groups/${group.id}/memberships`,
-    inviteeCookie,
-    { userId: await getUserId(invitee) },
-  );
+  const response = await request("POST", `/api/groups/${group.id}/memberships`, inviteeCookie, {
+    userId: await getUserId(invitee),
+  });
 
   assert.equal(response.status, STATUS_CODE.Forbidden);
   assert.deepEqual(await response.json(), {

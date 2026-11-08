@@ -16,18 +16,16 @@ import {
   ERROR_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  USER_IN_WRITING_GROUP_SCHEMA,
-  WRITING_GROUP_SCHEMA,
-} from "@/src/database/schema.ts";
+import { USER_IN_WRITING_GROUP_SCHEMA, WRITING_GROUP_SCHEMA } from "@/src/database/schema.ts";
 
 const GROUP_PARAMS = z.object({ groupId: WRITING_GROUP_SCHEMA.shape.id });
 
 // `status` is deliberately absent: an invitation is always created as such, and only the
 // invited user can turn it into a membership.
-const CREATE_MEMBERSHIP_BODY = USER_IN_WRITING_GROUP_SCHEMA
-  .pick({ userId: true, role: true })
-  .extend({ role: USER_IN_WRITING_GROUP_SCHEMA.shape.role.default("writer") });
+const CREATE_MEMBERSHIP_BODY = USER_IN_WRITING_GROUP_SCHEMA.pick({
+  userId: true,
+  role: true,
+}).extend({ role: USER_IN_WRITING_GROUP_SCHEMA.shape.role.default("writer") });
 
 export default new OpenAPIHono().openapi(
   createRoute({
@@ -75,13 +73,10 @@ export default new OpenAPIHono().openapi(
     const group = c.get("group");
 
     if (group.role !== "administrator") {
-      return c.json(
-        { error: "Only administrators can invite users" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Only administrators can invite users" }, STATUS_CODE.Forbidden);
     }
 
-    if (!await userExists(userId)) {
+    if (!(await userExists(userId))) {
       return c.json({ error: "User not found" }, STATUS_CODE.NotFound);
     }
 
@@ -89,24 +84,17 @@ export default new OpenAPIHono().openapi(
     // A ban refuses contact the same way, and answers the same neutral refusal: an inviter
     // must not learn that a moderation action was taken against somebody else.
     if (
-      await BlockService.isBlockedBetween(user.id, userId) ||
-      await BanService.isBanned(userId)
+      (await BlockService.isBlockedBetween(user.id, userId)) ||
+      (await BanService.isBanned(userId))
     ) {
-      return c.json(
-        { error: "Contact is not possible" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "Contact is not possible" }, STATUS_CODE.Forbidden);
     }
 
-    const invitation = await db.transaction().execute((transaction) =>
-      UserInWritingGroupService.insertInvitation(
-        transaction,
-        group.id,
-        userId,
-        role,
-        user.id,
-      )
-    );
+    const invitation = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInWritingGroupService.insertInvitation(transaction, group.id, userId, role, user.id),
+      );
 
     if (invitation === undefined) {
       return c.json(

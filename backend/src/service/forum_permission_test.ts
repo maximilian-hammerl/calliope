@@ -48,11 +48,7 @@ test("a leaf's own `hidden` hides it inside a folder anyone may write", () => {
 test("an operator reads everything, and is told what members get", () => {
   assert.equal(mayReadForumContent(operator, "hidden", "hidden"), true);
   assert.equal(
-    mayReadForumContent(
-      { ...member, platformRole: "administrator" },
-      "hidden",
-      null,
-    ),
+    mayReadForumContent({ ...member, platformRole: "administrator" }, "hidden", null),
     true,
   );
 

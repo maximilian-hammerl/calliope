@@ -49,9 +49,11 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { title } = c.req.valid("json");
 
-    const chat = await db.transaction().execute((transaction) =>
-      ChatGroupService.insertChatGroup(transaction, c.get("user"), title)
-    );
+    const chat = await db
+      .transaction()
+      .execute((transaction) =>
+        ChatGroupService.insertChatGroup(transaction, c.get("user"), title),
+      );
 
     return c.json(chat, STATUS_CODE.Created);
   },

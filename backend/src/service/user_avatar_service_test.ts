@@ -6,12 +6,7 @@ import { db } from "@/src/database/client.ts";
 import { FileStore } from "@/src/storage/file_store.ts";
 import { toAvatar } from "@/src/image/avatar_image.ts";
 import { UserAvatarService } from "./user_avatar_service.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  write,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, write } from "@/src/test/support.ts";
 
 const USERNAMES = [
   "avatar-set",
@@ -29,7 +24,9 @@ async function picture(): Promise<Uint8Array> {
   return new Uint8Array(
     await sharp({
       create: { width: 300, height: 300, channels: 3, background: "#8a6a3a" },
-    }).png().toBuffer(),
+    })
+      .png()
+      .toBuffer(),
   );
 }
 
@@ -50,7 +47,7 @@ test("a picture is stored, and its bytes are on disk", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
 
   assert.equal(result.kind, "set");
@@ -69,15 +66,10 @@ test("what is not a picture is refused before anything is written", async () => 
   assert.equal(await toAvatar(notAnImage), undefined);
 
   const result = await write((transaction) =>
-    UserAvatarService.setAvatar(
-      transaction,
-      id,
-      notAnImage,
-      {
-        origin: "own_work",
-        credit: null,
-      },
-    )
+    UserAvatarService.setAvatar(transaction, id, notAnImage, {
+      origin: "own_work",
+      credit: null,
+    }),
   );
 
   assert.equal(result.kind, "not_an_image");
@@ -91,7 +83,7 @@ test("replacing a picture moves the row and leaves the old file", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const first = await UserAvatarService.selectAvatar(id);
   assert.ok(first);
@@ -100,7 +92,7 @@ test("replacing a picture moves the row and leaves the old file", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "licence",
       credit: "CC BY 4.0",
-    })
+    }),
   );
   const second = await UserAvatarService.selectAvatar(id);
   assert.ok(second);
@@ -117,17 +109,12 @@ test("deleting removes the row and leaves the file to the sweep", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const avatar = await UserAvatarService.selectAvatar(id);
   assert.ok(avatar);
 
-  assert.equal(
-    await write((transaction) =>
-      UserAvatarService.deleteAvatar(transaction, id)
-    ),
-    true,
-  );
+  assert.equal(await write((transaction) => UserAvatarService.deleteAvatar(transaction, id)), true);
   assert.equal(await UserAvatarService.selectAvatar(id), undefined);
   assert.notEqual(await FileStore.read(avatar.fileId), undefined);
 });
@@ -139,7 +126,7 @@ test("the sweep spares a referenced file and a recent orphan", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const avatar = await UserAvatarService.selectAvatar(id);
   assert.ok(avatar);
@@ -180,7 +167,7 @@ test("the sweep spares a referenced file whatever its age", async () => {
     UserAvatarService.setAvatar(transaction, id, await picture(), {
       origin: "own_work",
       credit: null,
-    })
+    }),
   );
   const avatar = await UserAvatarService.selectAvatar(id);
   assert.ok(avatar);

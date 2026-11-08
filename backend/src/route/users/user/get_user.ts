@@ -58,12 +58,15 @@ export default new OpenAPIHono().openapi(
     const reader = c.get("user");
     const isBlocked = await BlockService.isBlockedByUser(reader.id, userId);
 
-    return c.json({
-      ...profile,
-      isBlocked,
-      ...(mayModeratePlatform(reader.platformRole)
-        ? { isBanned: await BanService.isBanned(userId) }
-        : {}),
-    }, STATUS_CODE.OK);
+    return c.json(
+      {
+        ...profile,
+        isBlocked,
+        ...(mayModeratePlatform(reader.platformRole)
+          ? { isBanned: await BanService.isBanned(userId) }
+          : {}),
+      },
+      STATUS_CODE.OK,
+    );
   },
 );

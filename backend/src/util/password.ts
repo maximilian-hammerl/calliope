@@ -55,7 +55,7 @@ function derive(
         p: parameters.parallelisation,
         maxmem: MAX_MEMORY,
       },
-      (error, key) => error ? reject(error) : resolve(key),
+      (error, key) => (error ? reject(error) : resolve(key)),
     );
   });
 }
@@ -81,10 +81,7 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 /** Never throws on a malformed or foreign hash: an unreadable record simply does not match. */
-export async function verifyPassword(
-  password: string,
-  stored: string,
-): Promise<boolean> {
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const parts = stored.split("$");
   const [algorithm, cost, blockSize, parallelisation, salt, hash] = parts;
 
@@ -113,12 +110,7 @@ export async function verifyPassword(
   const expected = Buffer.from(hash, "base64");
   let actual: Uint8Array;
   try {
-    actual = await derive(
-      password,
-      Buffer.from(salt, "base64"),
-      parameters,
-      expected.length,
-    );
+    actual = await derive(password, Buffer.from(salt, "base64"), parameters, expected.length);
   } catch {
     // Parameters that scrypt refuses, for example a cost that is not a power of two.
     return false;

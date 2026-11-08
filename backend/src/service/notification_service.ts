@@ -1,9 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { sql } from "kysely";
-import type {
-  NotificationType,
-  WritingGroupVisibility,
-} from "@/src/database/schema.ts";
+import type { NotificationType, WritingGroupVisibility } from "@/src/database/schema.ts";
 import { db, type Transaction } from "@/src/database/client.ts";
 import { assertUnreachable } from "@/src/util/assert_unreachable.ts";
 import { NOTIFICATION_RESPONSE } from "@/src/http/response_schema.ts";
@@ -33,9 +30,7 @@ export type Notification = z.infer<typeof NOTIFICATION_RESPONSE>;
  */
 function required<Value>(value: Value | null, column: string): Value {
   if (value === null) {
-    throw new Error(
-      `notification.${column} is null on a row whose type requires it`,
-    );
+    throw new Error(`notification.${column} is null on a row whose type requires it`);
   }
   return value;
 }
@@ -104,10 +99,7 @@ function toNotification(row: NotificationRow): Notification {
         ...writingGroup(),
         type: row.type,
         writingThreadId: required(row.writingThreadId, "writingThreadId"),
-        writingThreadTitle: required(
-          row.writingThreadTitle,
-          "writingThreadTitle",
-        ),
+        writingThreadTitle: required(row.writingThreadTitle, "writingThreadTitle"),
       };
     case "new_writing_post":
       return {
@@ -115,10 +107,7 @@ function toNotification(row: NotificationRow): Notification {
         ...writingGroup(),
         type: row.type,
         writingThreadId: required(row.writingThreadId, "writingThreadId"),
-        writingThreadTitle: required(
-          row.writingThreadTitle,
-          "writingThreadTitle",
-        ),
+        writingThreadTitle: required(row.writingThreadTitle, "writingThreadTitle"),
         writingPostId: required(row.writingPostId, "writingPostId"),
       };
     case "new_writing_page":
@@ -148,57 +137,45 @@ function toNotification(row: NotificationRow): Notification {
  * so there is nothing here to filter out.
  */
 function notificationsFor(recipientId: string) {
-  return db
-    .selectFrom("notification")
-    // Left, not inner: a notification belongs to a writing group or to a chat, never both,
-    // so an inner join on either would drop the other kind entirely. The composite foreign
-    // keys already guarantee that whichever one is set has a membership behind it, which is
-    // what makes access need no `where` of its own.
-    .leftJoin(
-      "userInWritingGroup",
-      (join) =>
+  return (
+    db
+      .selectFrom("notification")
+      // Left, not inner: a notification belongs to a writing group or to a chat, never both,
+      // so an inner join on either would drop the other kind entirely. The composite foreign
+      // keys already guarantee that whichever one is set has a membership behind it, which is
+      // what makes access need no `where` of its own.
+      .leftJoin("userInWritingGroup", (join) =>
         join
-          .onRef(
-            "userInWritingGroup.writingGroupId",
-            "=",
-            "notification.writingGroupId",
-          )
+          .onRef("userInWritingGroup.writingGroupId", "=", "notification.writingGroupId")
           .onRef("userInWritingGroup.userId", "=", "notification.recipientId"),
-    )
-    .leftJoin(
-      "writingGroup",
-      "writingGroup.id",
-      "notification.writingGroupId",
-    )
-    .leftJoin("chatGroup", "chatGroup.id", "notification.chatGroupId")
-    // No alias: this is the only join to `user` here, and an alias would add a table
-    // key the shared list helper cannot accept.
-    .leftJoin("user", "user.id", "notification.actorId")
-    .leftJoin(
-      "writingThread",
-      "writingThread.id",
-      "notification.writingThreadId",
-    )
-    .leftJoin("writingPage", "writingPage.id", "notification.writingPageId")
-    .where("notification.recipientId", "=", recipientId)
-    .select([
-      "notification.id",
-      "notification.type",
-      "notification.occurredAt",
-      "notification.readAt",
-      "user.username as actorUsername",
-      "notification.writingGroupId",
-      "writingGroup.title as writingGroupTitle",
-      "writingGroup.visibility",
-      "userInWritingGroup.role",
-      "notification.writingThreadId",
-      "writingThread.title as writingThreadTitle",
-      "notification.writingPageId",
-      "writingPage.title as writingPageTitle",
-      "notification.writingPostId",
-      "notification.chatGroupId",
-      "chatGroup.title as chatGroupTitle",
-    ]);
+      )
+      .leftJoin("writingGroup", "writingGroup.id", "notification.writingGroupId")
+      .leftJoin("chatGroup", "chatGroup.id", "notification.chatGroupId")
+      // No alias: this is the only join to `user` here, and an alias would add a table
+      // key the shared list helper cannot accept.
+      .leftJoin("user", "user.id", "notification.actorId")
+      .leftJoin("writingThread", "writingThread.id", "notification.writingThreadId")
+      .leftJoin("writingPage", "writingPage.id", "notification.writingPageId")
+      .where("notification.recipientId", "=", recipientId)
+      .select([
+        "notification.id",
+        "notification.type",
+        "notification.occurredAt",
+        "notification.readAt",
+        "user.username as actorUsername",
+        "notification.writingGroupId",
+        "writingGroup.title as writingGroupTitle",
+        "writingGroup.visibility",
+        "userInWritingGroup.role",
+        "notification.writingThreadId",
+        "writingThread.title as writingThreadTitle",
+        "notification.writingPageId",
+        "writingPage.title as writingPageTitle",
+        "notification.writingPostId",
+        "notification.chatGroupId",
+        "chatGroup.title as chatGroupTitle",
+      ])
+  );
 }
 
 async function listNotifications(
@@ -222,7 +199,7 @@ async function listNotifications(
         // A deleted account leaves its notifications with no actor; those stay readable.
         eb("notification.actorId", "is", null),
         eb("notification.actorId", "not in", hiddenActorIds),
-      ])
+      ]),
     );
   }
 
@@ -249,10 +226,7 @@ async function countUnread(recipientId: string): Promise<number> {
  * making somebody dismiss each line is the kind of chore that turns a notification list into
  * a task list.
  */
-async function markAllRead(
-  transaction: Transaction,
-  recipientId: string,
-): Promise<number> {
+async function markAllRead(transaction: Transaction, recipientId: string): Promise<number> {
   const result = await transaction
     .updateTable("notification")
     .set({ readAt: Temporal.Now.instant().toString() })
@@ -311,7 +285,7 @@ async function insertRoleChangeNotification(
           // A fresh change is worth seeing again, however the last one was left.
           readAt: null,
           actorId: change.actorId,
-        })
+        }),
     )
     .execute();
 }
@@ -329,24 +303,24 @@ async function insertGroupActivityNotifications(
    */
   activity:
     | {
-      type: "new_writing_thread";
-      writingGroupId: string;
-      writingThreadId: string;
-      actorId: string;
-    }
+        type: "new_writing_thread";
+        writingGroupId: string;
+        writingThreadId: string;
+        actorId: string;
+      }
     | {
-      type: "new_writing_post";
-      writingGroupId: string;
-      writingThreadId: string;
-      writingPostId: string;
-      actorId: string;
-    }
+        type: "new_writing_post";
+        writingGroupId: string;
+        writingThreadId: string;
+        writingPostId: string;
+        actorId: string;
+      }
     | {
-      type: "new_writing_page";
-      writingGroupId: string;
-      writingPageId: string;
-      actorId: string;
-    },
+        type: "new_writing_page";
+        writingGroupId: string;
+        writingPageId: string;
+        actorId: string;
+      },
 ): Promise<void> {
   const recipients = await transaction
     .selectFrom("userInWritingGroup")
@@ -362,21 +336,17 @@ async function insertGroupActivityNotifications(
 
   await transaction
     .insertInto("notification")
-    .values(recipients.map(({ userId }) => ({
-      recipientId: userId,
-      type: activity.type,
-      actorId: activity.actorId,
-      writingGroupId: activity.writingGroupId,
-      writingThreadId: "writingThreadId" in activity
-        ? activity.writingThreadId
-        : null,
-      writingPostId: "writingPostId" in activity
-        ? activity.writingPostId
-        : null,
-      writingPageId: "writingPageId" in activity
-        ? activity.writingPageId
-        : null,
-    })))
+    .values(
+      recipients.map(({ userId }) => ({
+        recipientId: userId,
+        type: activity.type,
+        actorId: activity.actorId,
+        writingGroupId: activity.writingGroupId,
+        writingThreadId: "writingThreadId" in activity ? activity.writingThreadId : null,
+        writingPostId: "writingPostId" in activity ? activity.writingPostId : null,
+        writingPageId: "writingPageId" in activity ? activity.writingPageId : null,
+      })),
+    )
     .execute();
 }
 
@@ -393,9 +363,7 @@ async function insertInvitationAcceptedNotification(
   },
 ): Promise<void> {
   // A founder was invited by nobody, and nobody is told about their own doing.
-  if (
-    acceptance.invitedBy === null || acceptance.invitedBy === acceptance.actorId
-  ) {
+  if (acceptance.invitedBy === null || acceptance.invitedBy === acceptance.actorId) {
     return;
   }
 
@@ -436,12 +404,14 @@ async function insertVisibilityChangeNotifications(
 
   await transaction
     .insertInto("notification")
-    .values(recipients.map(({ userId }) => ({
-      recipientId: userId,
-      writingGroupId: change.writingGroupId,
-      actorId: change.actorId,
-      type: "visibility_changed_in_writing_group" as const,
-    })))
+    .values(
+      recipients.map(({ userId }) => ({
+        recipientId: userId,
+        writingGroupId: change.writingGroupId,
+        actorId: change.actorId,
+        type: "visibility_changed_in_writing_group" as const,
+      })),
+    )
     .onConflict((oc) =>
       oc
         .columns(["recipientId", "writingGroupId"])
@@ -451,7 +421,7 @@ async function insertVisibilityChangeNotifications(
           occurredAt: Temporal.Now.instant().toString(),
           readAt: null,
           actorId: change.actorId,
-        })
+        }),
     )
     .execute();
 }
@@ -467,12 +437,14 @@ async function insertChatInvitationNotifications(
 ): Promise<void> {
   await transaction
     .insertInto("notification")
-    .values(invitation.recipientIds.map((recipientId) => ({
-      recipientId,
-      chatGroupId: invitation.chatGroupId,
-      actorId: invitation.actorId,
-      type: "invited_to_chat_group" as const,
-    })))
+    .values(
+      invitation.recipientIds.map((recipientId) => ({
+        recipientId,
+        chatGroupId: invitation.chatGroupId,
+        actorId: invitation.actorId,
+        type: "invited_to_chat_group" as const,
+      })),
+    )
     .execute();
 }
 

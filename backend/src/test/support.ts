@@ -23,9 +23,7 @@ import type { PostDocument } from "@/src/document/document_schema.ts";
  * A test is an entry point like a route, so it opens the transaction a write asks for:
  * `await write((transaction) => UserService.insertUser(transaction, …))`.
  */
-export function write<T>(
-  task: (transaction: Transaction) => Promise<T>,
-): Promise<T> {
+export function write<T>(task: (transaction: Transaction) => Promise<T>): Promise<T> {
   return db.transaction().execute(task);
 }
 
@@ -48,7 +46,7 @@ export async function registerUser(username: string): Promise<string> {
       .updateTable("user")
       .set({ emailAddressVerifiedAt: Temporal.Now.instant().toString() })
       .where("username", "=", username)
-      .execute()
+      .execute(),
   );
 
   return setCookie.split(";")[0] ?? setCookie;
@@ -113,11 +111,7 @@ export async function addMember(
   );
   assert.equal(invitation.status, STATUS_CODE.Created);
 
-  const acceptance = await request(
-    "POST",
-    `/api/groups/${groupId}/memberships/me/accept`,
-    cookie,
-  );
+  const acceptance = await request("POST", `/api/groups/${groupId}/memberships/me/accept`, cookie);
   assert.equal(acceptance.status, STATUS_CODE.OK);
 
   return cookie;
@@ -128,19 +122,13 @@ export async function addMember(
  * nullable and set to null instead — so their groups have to go first.
  */
 export async function deleteUsers(usernames: Array<string>): Promise<void> {
-  const userIds = db
-    .selectFrom("user")
-    .select("id")
-    .where("username", "in", usernames);
+  const userIds = db.selectFrom("user").select("id").where("username", "in", usernames);
 
   await write((transaction) =>
-    transaction
-      .deleteFrom("writingGroup").where("createdBy", "in", userIds)
-      .execute()
+    transaction.deleteFrom("writingGroup").where("createdBy", "in", userIds).execute(),
   );
   await write((transaction) =>
-    transaction
-      .deleteFrom("user").where("username", "in", usernames).execute()
+    transaction.deleteFrom("user").where("username", "in", usernames).execute(),
   );
 }
 
@@ -154,8 +142,9 @@ export async function deleteUsers(usernames: Array<string>): Promise<void> {
 export const RATE_LIMIT_TEST_CLIENTS = "198.51.100.";
 
 export async function clearRateLimits(): Promise<void> {
-  const keys = (await redis.keys(`${RATE_LIMIT_KEY_PREFIX}*`))
-    .filter((key) => !key.includes(RATE_LIMIT_TEST_CLIENTS));
+  const keys = (await redis.keys(`${RATE_LIMIT_KEY_PREFIX}*`)).filter(
+    (key) => !key.includes(RATE_LIMIT_TEST_CLIENTS),
+  );
   if (keys.length > 0) {
     await redis.del(...keys);
   }

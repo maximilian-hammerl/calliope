@@ -8,22 +8,10 @@ import {
   type VisibleWritingGroupGate,
   WritingGroupService,
 } from "@/src/service/writing_group_service.ts";
-import {
-  type ThreadGate,
-  WritingThreadService,
-} from "@/src/service/writing_thread_service.ts";
-import {
-  type Post,
-  WritingPostService,
-} from "@/src/service/writing_post_service.ts";
-import {
-  type PageGate,
-  WritingPageService,
-} from "@/src/service/writing_page_service.ts";
-import {
-  type Folder,
-  WritingFolderService,
-} from "@/src/service/writing_folder_service.ts";
+import { type ThreadGate, WritingThreadService } from "@/src/service/writing_thread_service.ts";
+import { type Post, WritingPostService } from "@/src/service/writing_post_service.ts";
+import { type PageGate, WritingPageService } from "@/src/service/writing_page_service.ts";
+import { type Folder, WritingFolderService } from "@/src/service/writing_folder_service.ts";
 import {
   type NextStep,
   WritingGroupNextStepService,
@@ -57,9 +45,7 @@ const ID = z.uuidv7();
 export function pathId(c: Context, name: string): string | Response {
   const raw = c.req.param(name);
   if (raw === undefined) {
-    throw new Error(
-      `No :${name} in ${c.req.routePath}: the resolver is mounted wrong`,
-    );
+    throw new Error(`No :${name} in ${c.req.routePath}: the resolver is mounted wrong`);
   }
   return ID.safeParse(raw).success
     ? raw
@@ -69,20 +55,16 @@ export function pathId(c: Context, name: string): string | Response {
 /** What an earlier middleware set. Missing means the route lists them in the wrong order. */
 export function earlier<T>(value: T | undefined, name: string): T {
   if (value === undefined) {
-    throw new Error(
-      `"${name}" is not resolved yet: check the route's middleware order`,
-    );
+    throw new Error(`"${name}" is not resolved yet: check the route's middleware order`);
   }
   return value;
 }
 
 /** A group the member may see — a public one, or one they belong to. */
-export type VisibleGroup =
-  & Resolved<Omit<VisibleWritingGroupGate, "role">, GroupId>
-  & {
-    /** Only a joined member's: an invitation grants nothing yet. */
-    role: UserInWritingGroupRole | undefined;
-  };
+export type VisibleGroup = Resolved<Omit<VisibleWritingGroupGate, "role">, GroupId> & {
+  /** Only a joined member's: an invitation grants nothing yet. */
+  role: UserInWritingGroupRole | undefined;
+};
 
 /** A group the member has joined, as every write asks for. */
 export type JoinedGroup = { id: GroupId; role: UserInWritingGroupRole };
@@ -98,9 +80,7 @@ export type GroupFolder = Resolved<Folder, FolderId>;
 export type GroupStep = Resolved<NextStep, StepId>;
 
 /** A membership, joined or invited; a user id alone scopes nothing, so this carries its own. */
-export type GroupMember =
-  & Omit<UserInWritingGroup, "userId">
-  & { userId: MemberId };
+export type GroupMember = Omit<UserInWritingGroup, "userId"> & { userId: MemberId };
 
 export const visibleGroup = createMiddleware<{
   Variables: { user: User; group: VisibleGroup };
@@ -135,10 +115,7 @@ export const joinedGroup = createMiddleware<{
     return id;
   }
 
-  const role = await WritingGroupService.selectRoleForUser(
-    earlier(c.get("user"), "user"),
-    id,
-  );
+  const role = await WritingGroupService.selectRoleForUser(earlier(c.get("user"), "user"), id);
   if (role === undefined) {
     return c.json({ error: "Group not found" }, STATUS_CODE.NotFound);
   }
@@ -157,10 +134,7 @@ export const threadInGroup = createMiddleware<{
     return id;
   }
 
-  const thread = await WritingThreadService.selectThread(
-    earlier(c.get("group"), "group").id,
-    id,
-  );
+  const thread = await WritingThreadService.selectThread(earlier(c.get("group"), "group").id, id);
   if (thread === undefined) {
     return c.json({ error: "Thread not found" }, STATUS_CODE.NotFound);
   }
@@ -204,10 +178,7 @@ export const pageInGroup = createMiddleware<{
     return id;
   }
 
-  const page = await WritingPageService.selectPage(
-    earlier(c.get("group"), "group").id,
-    id,
-  );
+  const page = await WritingPageService.selectPage(earlier(c.get("group"), "group").id, id);
   if (page === undefined) {
     return c.json({ error: "Page not found" }, STATUS_CODE.NotFound);
   }

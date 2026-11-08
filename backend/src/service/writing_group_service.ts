@@ -18,38 +18,33 @@ import {
 } from "@/src/list/list_endpoint_query.ts";
 import type { StoryVocabularyFilter } from "@/src/query/story_vocabulary.ts";
 import { withStoryVocabulary } from "@/src/query/story_vocabulary.ts";
-import {
-  type FavouriteFilter,
-  FAVOURITES_FIRST,
-  withFavourite,
-} from "@/src/query/favourite.ts";
+import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "@/src/query/favourite.ts";
 
-export type WritingGroup =
-  & Pick<
-    Selectable<DatabaseWritingGroup>,
-    | "id"
-    | "title"
-    | "subtitle"
-    | "synopsis"
-    | "visibility"
-    | "storyStatus"
-    | "genres"
-    | "subgenres"
-    | "tropes"
-    | "contentWarnings"
-    | "storyThemes"
-    | "storySettings"
-    | "tense"
-    | "perspective"
-    | "language"
-    | "createdBy"
-    | "createdAt"
-    | "lastActivityAt"
-  >
+export type WritingGroup = Pick<
+  Selectable<DatabaseWritingGroup>,
+  | "id"
+  | "title"
+  | "subtitle"
+  | "synopsis"
+  | "visibility"
+  | "storyStatus"
+  | "genres"
+  | "subgenres"
+  | "tropes"
+  | "contentWarnings"
+  | "storyThemes"
+  | "storySettings"
+  | "tense"
+  | "perspective"
+  | "language"
+  | "createdBy"
+  | "createdAt"
+  | "lastActivityAt"
+> &
   // Null once the author has deleted their account, because created_by is ON DELETE SET NULL.
-  & { createdByUsername: string | null }
+  { createdByUsername: string | null } &
   // The reader's own standing, null for a public group they are not part of.
-  & {
+  {
     status: UserInWritingGroupStatus | null;
     role: UserInWritingGroupRole | null;
     /** Null unless the reader was invited to this group; the invitations list dates rows by it. */
@@ -92,9 +87,8 @@ const SELECTED_COLUMNS = [
  * What a member may set about the story. Every field optional except the two that were always
  * required, so a group created before any of this existed is still describable.
  */
-export type WritingGroupValues =
-  & Pick<Selectable<DatabaseWritingGroup>, "title" | "synopsis">
-  & Partial<
+export type WritingGroupValues = Pick<Selectable<DatabaseWritingGroup>, "title" | "synopsis"> &
+  Partial<
     Pick<
       Selectable<DatabaseWritingGroup>,
       | "subtitle"
@@ -116,34 +110,20 @@ export type WritingGroupValues =
 function toRow(values: Partial<WritingGroupValues>) {
   return {
     ...(values.title === undefined ? {} : { title: values.title.trim() }),
-    ...(values.subtitle === undefined
-      ? {}
-      : { subtitle: emptyToNull(values.subtitle) }),
-    ...(values.synopsis === undefined
-      ? {}
-      : { synopsis: values.synopsis.trim() }),
-    ...(values.visibility === undefined
-      ? {}
-      : { visibility: values.visibility }),
-    ...(values.storyStatus === undefined
-      ? {}
-      : { storyStatus: values.storyStatus }),
+    ...(values.subtitle === undefined ? {} : { subtitle: emptyToNull(values.subtitle) }),
+    ...(values.synopsis === undefined ? {} : { synopsis: values.synopsis.trim() }),
+    ...(values.visibility === undefined ? {} : { visibility: values.visibility }),
+    ...(values.storyStatus === undefined ? {} : { storyStatus: values.storyStatus }),
     ...(values.genres === undefined ? {} : { genres: values.genres }),
     ...(values.subgenres === undefined ? {} : { subgenres: values.subgenres }),
     ...(values.tropes === undefined ? {} : { tropes: values.tropes }),
-    ...(values.contentWarnings === undefined
-      ? {}
-      : { contentWarnings: values.contentWarnings }),
-    ...(values.storyThemes === undefined
-      ? {}
-      : { storyThemes: emptyToNull(values.storyThemes) }),
+    ...(values.contentWarnings === undefined ? {} : { contentWarnings: values.contentWarnings }),
+    ...(values.storyThemes === undefined ? {} : { storyThemes: emptyToNull(values.storyThemes) }),
     ...(values.storySettings === undefined
       ? {}
       : { storySettings: emptyToNull(values.storySettings) }),
     ...(values.tense === undefined ? {} : { tense: values.tense ?? null }),
-    ...(values.perspective === undefined
-      ? {}
-      : { perspective: values.perspective ?? null }),
+    ...(values.perspective === undefined ? {} : { perspective: values.perspective ?? null }),
     ...(values.language === undefined ? {} : { language: values.language }),
   };
 }
@@ -203,23 +183,23 @@ async function insertWritingGroup(
  * membership join is left, so public groups are returned to non-members too.
  */
 function visibleToUser(user: User) {
-  return db
-    .selectFrom("writingGroup")
-    .leftJoin(
-      "userInWritingGroup",
-      (join) =>
+  return (
+    db
+      .selectFrom("writingGroup")
+      .leftJoin("userInWritingGroup", (join) =>
         join
           .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
           .on("userInWritingGroup.userId", "=", user.id),
-    )
-    // Left as well: an account that has been deleted leaves the group behind with no author.
-    .leftJoin("user", "user.id", "writingGroup.createdBy")
-    .where((eb) =>
-      eb.or([
-        eb("writingGroup.visibility", "=", "public"),
-        eb("userInWritingGroup.userId", "is not", null),
-      ])
-    );
+      )
+      // Left as well: an account that has been deleted leaves the group behind with no author.
+      .leftJoin("user", "user.id", "writingGroup.createdBy")
+      .where((eb) =>
+        eb.or([
+          eb("writingGroup.visibility", "=", "public"),
+          eb("userInWritingGroup.userId", "is not", null),
+        ]),
+      )
+  );
 }
 
 /** The author's name is joined in rather than stored, so it follows a rename. */
@@ -273,40 +253,28 @@ async function selectWritingGroupForReader(
   writingGroupId: string,
 ): Promise<WritingGroup | undefined> {
   return await visibleToUser(user)
-    .$call((builder) =>
-      withFavourite(builder, "writing_group", "writingGroup.id", user.id)
-    )
-    .select([
-      ...SELECTED_COLUMNS,
-      AUTHOR_COLUMN,
-      ...OWN_MEMBERSHIP_COLUMNS,
-    ])
+    .$call((builder) => withFavourite(builder, "writing_group", "writingGroup.id", user.id))
+    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
     .where("writingGroup.id", "=", writingGroupId)
     .executeTakeFirst();
 }
 
 function listVisibleWritingGroups(
   user: User,
-  query: ListQuery & StoryVocabularyFilter & {
-    membership: MembershipFilter;
-    favourite: FavouriteFilter;
-  },
+  query: ListQuery &
+    StoryVocabularyFilter & {
+      membership: MembershipFilter;
+      favourite: FavouriteFilter;
+    },
 ): Promise<ListResults<WritingGroup>> {
   return listResultsWithCount(
     visibleToUser(user)
-      .$call((builder) =>
-        withFavourite(builder, "writing_group", "writingGroup.id", user.id)
-      )
+      .$call((builder) => withFavourite(builder, "writing_group", "writingGroup.id", user.id))
       .$call((builder) => withStoryVocabulary(builder, "writingGroup", query))
-      .select([
-        ...SELECTED_COLUMNS,
-        AUTHOR_COLUMN,
-        ...OWN_MEMBERSHIP_COLUMNS,
-      ])
+      .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
       // Only the reader's own favourites, which narrows like every other filter here.
-      .$if(
-        query.favourite === "only",
-        (queryBuilder) => queryBuilder.where("favourite.id", "is not", null),
+      .$if(query.favourite === "only", (queryBuilder) =>
+        queryBuilder.where("favourite.id", "is not", null),
       )
       // Narrows what visibleToUser allows; it never widens it, so a private group the reader
       // has nothing to do with stays out however this is set. One $if per value rather than
@@ -315,36 +283,29 @@ function listVisibleWritingGroups(
       .$if(
         query.membership === "none",
         // A public group the reader has no membership row for at all.
-        (queryBuilder) =>
-          queryBuilder.where("userInWritingGroup.userId", "is", null),
+        (queryBuilder) => queryBuilder.where("userInWritingGroup.userId", "is", null),
       )
-      .$if(
-        query.membership === "invited",
-        (queryBuilder) =>
-          queryBuilder.where("userInWritingGroup.status", "=", "invited"),
+      .$if(query.membership === "invited", (queryBuilder) =>
+        queryBuilder.where("userInWritingGroup.status", "=", "invited"),
       )
-      .$if(
-        query.membership === "joined",
-        (queryBuilder) =>
-          queryBuilder.where("userInWritingGroup.status", "=", "joined"),
+      .$if(query.membership === "joined", (queryBuilder) =>
+        queryBuilder.where("userInWritingGroup.status", "=", "joined"),
       )
       // Title and description both, since a group is as often remembered by what it is
       // about as by what it is called.
-      .$if(
-        query.search !== undefined,
-        (queryBuilder) =>
-          queryBuilder.where((eb) =>
-            eb.or([
+      .$if(query.search !== undefined, (queryBuilder) =>
+        queryBuilder.where((eb) =>
+          eb.or([
+            // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
+            eb("writingGroup.title", "ilike", searchPattern(query.search!)),
+            eb(
+              "writingGroup.synopsis",
+              "ilike",
               // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
-              eb("writingGroup.title", "ilike", searchPattern(query.search!)),
-              eb(
-                "writingGroup.synopsis",
-                "ilike",
-                // deno-lint-ignore no-non-null-assertion -- the `$if` above only runs this when the term is set
-                searchPattern(query.search!),
-              ),
-            ])
-          ),
+              searchPattern(query.search!),
+            ),
+          ]),
+        ),
       ),
     query,
     FAVOURITES_FIRST,
@@ -395,10 +356,7 @@ async function updateWritingGroup(
 
   // Against the row this update produces, not against the request: changing only the genres
   // would otherwise leave whatever subgenres are already stored sitting under none of them.
-  refuseOrphanedSubgenres(
-    changes.genres ?? before.genres,
-    changes.subgenres ?? before.subgenres,
-  );
+  refuseOrphanedSubgenres(changes.genres ?? before.genres, changes.subgenres ?? before.subgenres);
 
   const updated = await transaction
     .updateTable("writingGroup")
@@ -414,17 +372,11 @@ async function updateWritingGroup(
     return undefined;
   }
 
-  if (
-    changes.visibility !== undefined &&
-    changes.visibility !== before.visibility
-  ) {
-    await NotificationService.insertVisibilityChangeNotifications(
-      transaction,
-      {
-        writingGroupId,
-        actorId: changedBy,
-      },
-    );
+  if (changes.visibility !== undefined && changes.visibility !== before.visibility) {
+    await NotificationService.insertVisibilityChangeNotifications(transaction, {
+      writingGroupId,
+      actorId: changedBy,
+    });
   }
 
   // Re-read rather than RETURNING, which cannot reach the joined author name — nor the
@@ -432,21 +384,13 @@ async function updateWritingGroup(
   return await transaction
     .selectFrom("writingGroup")
     .leftJoin("user", "user.id", "writingGroup.createdBy")
-    .leftJoin(
-      "userInWritingGroup",
-      (join) =>
-        join
-          .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
-          .on("userInWritingGroup.userId", "=", changedBy),
+    .leftJoin("userInWritingGroup", (join) =>
+      join
+        .onRef("userInWritingGroup.writingGroupId", "=", "writingGroup.id")
+        .on("userInWritingGroup.userId", "=", changedBy),
     )
-    .$call((builder) =>
-      withFavourite(builder, "writing_group", "writingGroup.id", changedBy)
-    )
-    .select([
-      ...SELECTED_COLUMNS,
-      AUTHOR_COLUMN,
-      ...OWN_MEMBERSHIP_COLUMNS,
-    ])
+    .$call((builder) => withFavourite(builder, "writing_group", "writingGroup.id", changedBy))
+    .select([...SELECTED_COLUMNS, AUTHOR_COLUMN, ...OWN_MEMBERSHIP_COLUMNS])
     .where("writingGroup.id", "=", updated.id)
     .executeTakeFirstOrThrow();
 }

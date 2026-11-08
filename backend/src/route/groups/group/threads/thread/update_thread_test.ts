@@ -21,12 +21,9 @@ async function threadByWriter() {
   const adminCookie = await registerUser(administrator);
   const group = await createGroup(adminCookie, "Faden");
   const writerCookie = await addMember(adminCookie, group.id, writer, "writer");
-  const thread = await (await request(
-    "POST",
-    `/api/groups/${group.id}/threads`,
-    writerCookie,
-    { title: "Vorher" },
-  )).json();
+  const thread = await (
+    await request("POST", `/api/groups/${group.id}/threads`, writerCookie, { title: "Vorher" })
+  ).json();
 
   return { adminCookie, writerCookie, group, thread };
 }

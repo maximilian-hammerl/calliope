@@ -42,14 +42,11 @@ export default new OpenAPIHono().openapi(
   async (c) => {
     const { targetType, targetId } = c.req.valid("param");
 
-    await db.transaction().execute((transaction) =>
-      FavouriteService.clearFavourite(
-        transaction,
-        c.get("user"),
-        targetType,
-        targetId,
-      )
-    );
+    await db
+      .transaction()
+      .execute((transaction) =>
+        FavouriteService.clearFavourite(transaction, c.get("user"), targetType, targetId),
+      );
 
     return c.json({ ok: true } as const, STATUS_CODE.OK);
   },

@@ -12,10 +12,7 @@ import {
   FORBIDDEN_RESPONSE,
   jsonContent,
 } from "@/src/http/response.ts";
-import {
-  WRITING_POST_SCHEMA,
-  WRITING_THREAD_SCHEMA,
-} from "@/src/database/schema.ts";
+import { WRITING_POST_SCHEMA, WRITING_THREAD_SCHEMA } from "@/src/database/schema.ts";
 
 const POST_PARAMS = z.object({
   threadId: WRITING_THREAD_SCHEMA.shape.id,
@@ -56,22 +53,17 @@ export default new OpenAPIHono().openapi(
     const post = c.get("post");
 
     if (
-      !mayActInForum(
-        user,
-        c.get("thread").effectiveMemberPermission,
-        "post:delete",
-        { createdBy: post.createdBy, userId: user.id },
-      )
+      !mayActInForum(user, c.get("thread").effectiveMemberPermission, "post:delete", {
+        createdBy: post.createdBy,
+        userId: user.id,
+      })
     ) {
-      return c.json(
-        { error: "You cannot remove this post" },
-        STATUS_CODE.Forbidden,
-      );
+      return c.json({ error: "You cannot remove this post" }, STATUS_CODE.Forbidden);
     }
 
-    const removed = await db.transaction().execute((transaction) =>
-      WritingPostService.deletePost(transaction, post.id)
-    );
+    const removed = await db
+      .transaction()
+      .execute((transaction) => WritingPostService.deletePost(transaction, post.id));
     if (!removed) {
       return c.json({ error: "Post not found" }, STATUS_CODE.NotFound);
     }

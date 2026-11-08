@@ -68,12 +68,7 @@ test("an account whose password predates the minimum can still sign in", async (
   const shortUsername = "login-short-password-user";
   await deleteUsers([shortUsername]);
   await write((transaction) =>
-    UserService.insertUser(
-      transaction,
-      shortUsername,
-      short,
-      `${shortUsername}@example.test`,
-    )
+    UserService.insertUser(transaction, shortUsername, short, `${shortUsername}@example.test`),
   );
 
   const response = await postJson("/api/auth/login", {

@@ -1,13 +1,5 @@
 import { USER } from "@/seed/accounts.ts";
-import {
-  chatId,
-  favouriteId,
-  groupId,
-  pageId,
-  postId,
-  storyIdeaId,
-  threadId,
-} from "@/seed/ids.ts";
+import { chatId, favouriteId, groupId, pageId, postId, storyIdeaId, threadId } from "@/seed/ids.ts";
 import type { FavouriteTargetType } from "@/src/query/favourite.ts";
 
 /**

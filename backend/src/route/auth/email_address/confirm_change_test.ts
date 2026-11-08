@@ -51,10 +51,7 @@ test("POST /api/auth/email-address/confirm moves the account", async () => {
 test("POST /api/auth/email-address/confirm ends every session", async () => {
   const { cookie, token } = await stageChange();
 
-  assert.equal(
-    (await app.request("/api/auth/me", { headers: { cookie } })).status,
-    STATUS_CODE.OK,
-  );
+  assert.equal((await app.request("/api/auth/me", { headers: { cookie } })).status, STATUS_CODE.OK);
 
   await confirmChange(token);
 

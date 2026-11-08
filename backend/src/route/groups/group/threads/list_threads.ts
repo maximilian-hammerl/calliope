@@ -53,10 +53,7 @@ export default new OpenAPIHono().openapi(
   // Whatever the reader may *see*, which `visibleGroup` settles: a public group's writing is
   // readable by the community, which is what makes it public rather than merely listed.
   async (c) => {
-    const results = await WritingThreadService.selectThreads(
-      c.get("group").id,
-      c.get("user").id,
-    );
+    const results = await WritingThreadService.selectThreads(c.get("group").id, c.get("user").id);
 
     return c.json({ results }, STATUS_CODE.OK);
   },

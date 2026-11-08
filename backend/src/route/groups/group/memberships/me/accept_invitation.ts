@@ -54,27 +54,23 @@ export default new OpenAPIHono().openapi(
     const { groupId } = c.req.valid("param");
     const user = c.get("user");
 
-    const accepted = await db.transaction().execute((transaction) =>
-      UserInWritingGroupService.acceptInvitation(transaction, groupId, user.id)
-    );
+    const accepted = await db
+      .transaction()
+      .execute((transaction) =>
+        UserInWritingGroupService.acceptInvitation(transaction, groupId, user.id),
+      );
 
     if (accepted !== undefined) {
       return c.json(accepted, STATUS_CODE.OK);
     }
 
     // Nothing was updated: either there is no membership, or it is already joined.
-    const membership = await UserInWritingGroupService.selectMembership(
-      groupId,
-      user.id,
-    );
+    const membership = await UserInWritingGroupService.selectMembership(groupId, user.id);
 
     if (membership === undefined) {
       return c.json({ error: "Invitation not found" }, STATUS_CODE.NotFound);
     }
 
-    return c.json(
-      { error: "The invitation has already been accepted" },
-      STATUS_CODE.Conflict,
-    );
+    return c.json({ error: "The invitation has already been accepted" }, STATUS_CODE.Conflict);
   },
 );

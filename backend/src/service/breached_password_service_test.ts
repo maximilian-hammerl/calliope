@@ -18,16 +18,12 @@ const server = Deno.serve({ port: 0, onListen: () => {} }, (request) => {
   if (answering === "error") {
     return new Response("no", { status: 500 });
   }
-  return new Response(
-    prefix === PREFIX ? `${SUFFIX}:52372427\r\n${PADDING}` : PADDING,
-  );
+  return new Response(prefix === PREFIX ? `${SUFFIX}:52372427\r\n${PADDING}` : PADDING);
 });
 
 // The service reads its URL once, at import, so the server has to exist before it is loaded.
 Deno.env.set("PWNED_PASSWORDS_URL", `http://localhost:${server.addr.port}`);
-const { BreachedPasswordService, parseRange } = await import(
-  "./breached_password_service.ts"
-);
+const { BreachedPasswordService, parseRange } = await import("./breached_password_service.ts");
 
 /** Shaped like the real answer: CRLF, with a padded entry among the real ones. */
 const BODY = [
@@ -65,10 +61,7 @@ test("the API answers in upper case, and so does the hash", () => {
 /** What the pure tests cannot see: that the five sent and the thirty-five kept are not swapped. */
 test("the prefix is sent and the suffix is matched", async () => {
   assert.equal(await BreachedPasswordService.isBreached("password"), true);
-  assert.equal(
-    await BreachedPasswordService.isBreached("nobody-has-leaked-this"),
-    false,
-  );
+  assert.equal(await BreachedPasswordService.isBreached("nobody-has-leaked-this"), false);
   // Five out, thirty-five kept: any other split would ask for a prefix of another length.
   assert.deepEqual(asked, [PREFIX, "6F2D5"]);
 });

@@ -25,11 +25,7 @@ test("GET /api/groups/{groupId}/memberships lists members and invitations", asyn
     userId: await getUserId(invitee),
   });
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/memberships`,
-    adminCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/memberships`, adminCookie);
 
   assert.equal(response.status, STATUS_CODE.OK);
   const { results } = await response.json();
@@ -42,10 +38,10 @@ test("GET /api/groups/{groupId}/memberships lists members and invitations", asyn
     results.map((m: { username: string }) => m.username),
     [administrator, invitee].toSorted(),
   );
-  assert.deepEqual(
-    results.map((m: { status: string }) => m.status).toSorted(),
-    ["invited", "joined"],
-  );
+  assert.deepEqual(results.map((m: { status: string }) => m.status).toSorted(), [
+    "invited",
+    "joined",
+  ]);
 });
 
 test("GET /api/groups/{groupId}/memberships hides a private group from an outsider", async () => {
@@ -53,11 +49,7 @@ test("GET /api/groups/{groupId}/memberships hides a private group from an outsid
   const outsiderCookie = await registerUser(outsider);
   const group = await createGroup(adminCookie, "Mitglieder");
 
-  const response = await request(
-    "GET",
-    `/api/groups/${group.id}/memberships`,
-    outsiderCookie,
-  );
+  const response = await request("GET", `/api/groups/${group.id}/memberships`, outsiderCookie);
 
   assert.equal(response.status, STATUS_CODE.NotFound);
 });

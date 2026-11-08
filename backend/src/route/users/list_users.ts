@@ -6,10 +6,7 @@ import { STATUS_CODE } from "@/src/http/status.ts";
 import authenticated from "@/src/middleware/authenticated.ts";
 import { UserService } from "@/src/service/user_service.ts";
 import { BlockService } from "@/src/service/block_service.ts";
-import {
-  listQuerySchema,
-  listResponseSchema,
-} from "@/src/list/list_endpoint.ts";
+import { listQuerySchema, listResponseSchema } from "@/src/list/list_endpoint.ts";
 import {
   BAD_REQUEST_RESPONSE,
   COMMON_RESPONSES,
@@ -21,8 +18,7 @@ import { USER_SCHEMA } from "@/src/database/schema.ts";
 
 // Public attribute names are mapped to qualified columns, so the API never exposes the
 // schema, and only these values can ever reach `dynamic.ref`.
-const SORT_ATTRIBUTE = USER_SCHEMA
-  .keyof()
+const SORT_ATTRIBUTE = USER_SCHEMA.keyof()
   .extract(["username", "createdAt"])
   .default("username")
   .transform((attribute) => `user.${attribute}` as const);

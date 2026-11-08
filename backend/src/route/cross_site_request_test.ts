@@ -3,12 +3,7 @@ import assert from "node:assert/strict";
 import { STATUS_CODE } from "@/src/http/status.ts";
 import app from "@/src/app.ts";
 import { getRequiredEnvVariable } from "@/src/util/env.ts";
-import {
-  clearRateLimits,
-  deleteUsers,
-  registerUser,
-  SAME_ORIGIN,
-} from "@/src/test/support.ts";
+import { clearRateLimits, deleteUsers, registerUser, SAME_ORIGIN } from "@/src/test/support.ts";
 
 const USER = "cross-site-probe";
 
@@ -30,13 +25,11 @@ test("a write refuses every body a cross-site request could send", async () => {
   // The three a form may set, plus `text/plain` carrying valid JSON — the one that needs no
   // preflight and would otherwise be smuggled straight past the schema. 415, not 400: the route
   // declares only `application/json`, so the body is never validated at all.
-  for (
-    const contentType of [
-      "application/x-www-form-urlencoded",
-      "multipart/form-data; boundary=x",
-      "text/plain",
-    ]
-  ) {
+  for (const contentType of [
+    "application/x-www-form-urlencoded",
+    "multipart/form-data; boundary=x",
+    "text/plain",
+  ]) {
     // deno-lint-ignore no-await-in-loop -- sequential on purpose, one case per iteration
     const response = await app.request("/api/groups", {
       method: "POST",
@@ -141,9 +134,5 @@ test("a CORS preflight still succeeds", async () => {
       "access-control-request-headers": "content-type",
     },
   });
-  assert.equal(
-    response.status < 400,
-    true,
-    `preflight answered ${response.status}`,
-  );
+  assert.equal(response.status < 400, true, `preflight answered ${response.status}`);
 });
