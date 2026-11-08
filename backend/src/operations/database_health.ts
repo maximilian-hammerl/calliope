@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { withDeadline } from "#/src/util/async.ts";
+import { logger } from "#/src/logging.ts";
 
 // https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check
 // https://github.com/healthjson/schema
@@ -82,7 +83,7 @@ export async function probeDatabase(
       latency: performance.now() - start,
     };
   } catch (error) {
-    console.error(`Health check for ${name} failed`, error);
+    logger.error("Health check failed", { database: name, error });
 
     return {
       name,

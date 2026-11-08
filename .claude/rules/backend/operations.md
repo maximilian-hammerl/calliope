@@ -39,7 +39,11 @@ tests are silent. **One line per request** (method, path, status, duration) — 
 tying them together left a production 400 naming no route. **A refusal is logged where it is
 produced, in the `defaultHook`**, which *returns* rather than throws, so `onError` never sees it; the
 line carries the mapped `{path, message}` issues and no value a member typed. JSON lines in every
-environment; `describeError` spells an error out because `JSON.stringify(new Error())` is `{}`. The
+environment, for everything the server says: `console` is for the command-line scripts only, which
+the lint enforces. An `Error` goes in as a property, and `logging.ts` writes its name, message,
+stack, code and cause and nothing else: drivers keep row values and query parameters in fields of
+their own (a unique violation's `detail` names the address), and postgres.js's `toJSON` drops the
+stack. The
 level comes from `PUBLIC_ENVIRONMENT`: `trace` in development, `debug` on testing, `info` beyond — a
 healthy `/api/health` logs at `trace` because the container polls it every ten seconds. LogTape's
 meta logger is pinned to `warning`.

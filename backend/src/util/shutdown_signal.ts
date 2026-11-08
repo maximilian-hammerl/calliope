@@ -1,3 +1,5 @@
+import { logger } from "#/src/logging.ts";
+
 export function addShutdownSignalListener(
   listener: (signal: NodeJS.Signals) => void | Promise<void>,
   shutdownSignals: Array<NodeJS.Signals> = ["SIGINT", "SIGTERM", "SIGQUIT", "SIGHUP"],
@@ -16,7 +18,7 @@ export function addShutdownSignalListener(
       Promise.resolve()
         .then(() => listener(signal))
         .catch((error: unknown) => {
-          console.error(`A shutdown step failed on ${signal}:`, error);
+          logger.error("A shutdown step failed", { signal, error });
         });
     });
   }

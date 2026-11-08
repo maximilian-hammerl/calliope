@@ -24,6 +24,12 @@ allowBuilds:
   fsevents: false
   vue-demi: false
 
+# Agent skills that dependencies bring. LogTape's is its general manual: the backend's logging is
+# one module with its own rules in `.claude/rules/backend/operations.md`.
+permissions:
+  "@logtape/logtape":
+    skills: false
+
 # Until asteasolutions/zod-to-openapi#401 is released: a regex's `pattern` from its `.source`,
 # since `toString()` leaves the flags in. `backend/Dockerfile` (and its `.dockerignore`) and
 # `docker-compose.deploy.yaml` copy `patches/` too; remove them with it.

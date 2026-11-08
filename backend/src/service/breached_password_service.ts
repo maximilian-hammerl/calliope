@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { APP_NAME } from "#/src/branding.ts";
 import { getRequiredEnvVariable } from "#/src/util/env.ts";
-import { describeError, logger } from "#/src/logging.ts";
+import { logger } from "#/src/logging.ts";
 
 /**
  * Whether a password is already in circulation, asked of Have I Been Pwned. Only the first five
@@ -43,7 +43,7 @@ async function fetchRange(prefix: string): Promise<string | undefined> {
     // Inside the `try`: the signal covers the body, and a stalled stream rejects here.
     return await response.text();
   } catch (error) {
-    logger.warn("Breach check unavailable", describeError(error));
+    logger.warn("Breach check unavailable", { error });
     return undefined;
   }
 }

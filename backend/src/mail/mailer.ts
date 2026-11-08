@@ -48,7 +48,8 @@ async function send(mail: Mail): Promise<void> {
 
 /** Never awaited by a handler; see `util/background.ts`. Failures are only logged. */
 function sendInBackground(mail: Mail): void {
-  runInBackground(`Sending "${mail.subject}" to ${mail.to}`, () => send(mail));
+  // No address in the description; a rejected send's error message can still name it.
+  runInBackground(`Sending "${mail.subject}"`, () => send(mail));
 }
 
 export const Mailer = {

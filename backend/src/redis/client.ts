@@ -1,6 +1,7 @@
 import { Redis } from "ioredis";
 import { getRequiredEnvVariable } from "#/src/util/env.ts";
 import { addShutdownSignalListener } from "#/src/util/shutdown_signal.ts";
+import { logger } from "#/src/logging.ts";
 import { type DatabaseHealth, probeDatabase } from "#/src/operations/database_health.ts";
 
 export const redis = new Redis(getRequiredEnvVariable("REDIS_URL"));
@@ -8,7 +9,7 @@ export const redis = new Redis(getRequiredEnvVariable("REDIS_URL"));
 // Without a listener ioredis emits an unhandled `error` event and takes the process down,
 // which would stop the health endpoint from ever reporting Redis as unreachable.
 redis.on("error", (error) => {
-  console.error("Redis connection error", error);
+  logger.error("Redis connection error", { error });
 });
 
 export function redisHealthCheck(): Promise<DatabaseHealth> {
@@ -16,9 +17,9 @@ export function redisHealthCheck(): Promise<DatabaseHealth> {
 }
 
 async function closeRedisConnection(): Promise<void> {
-  console.log("Closing Redis connection before shutdown");
+  logger.info("Closing Redis connection before shutdown");
   await redis.quit();
-  console.log("Successfully closed Redis connection");
+  logger.info("Successfully closed Redis connection");
 }
 
 addShutdownSignalListener(closeRedisConnection);
