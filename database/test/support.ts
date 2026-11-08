@@ -1,13 +1,12 @@
-// @ts-types="@types/pg"
-import pg from "pg";
+import { Client } from "pg";
 
-const DATABASE_URL = Deno.env.get("DATABASE_URL");
+const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   throw new Error("Missing DATABASE_URL, cannot run tests");
 }
 
-export const client = new pg.Client({
+export const client = new Client({
   connectionString: DATABASE_URL,
 });
 
@@ -36,20 +35,12 @@ export const TEST_PREFIX = "db-test-";
 export async function cleanUp(): Promise<void> {
   // Reports outlive their reporter on purpose - the references are SET NULL, not CASCADE - so
   // deleting the accounts leaves them behind. They go by what the fixture wrote into them.
-  await client.query(`DELETE FROM public.report WHERE target_excerpt LIKE $1`, [
-    `${TEST_PREFIX}%`,
-  ]);
+  await client.query(`DELETE FROM public.report WHERE target_excerpt LIKE $1`, [`${TEST_PREFIX}%`]);
 
   // Users cascade to their memberships, and groups to their threads and posts.
-  await client.query(`DELETE FROM public."user" WHERE username LIKE $1`, [
-    `${TEST_PREFIX}%`,
-  ]);
-  await client.query(`DELETE FROM public.writing_group WHERE title LIKE $1`, [
-    `${TEST_PREFIX}%`,
-  ]);
-  await client.query(`DELETE FROM public.chat_group WHERE title LIKE $1`, [
-    `${TEST_PREFIX}%`,
-  ]);
+  await client.query(`DELETE FROM public."user" WHERE username LIKE $1`, [`${TEST_PREFIX}%`]);
+  await client.query(`DELETE FROM public.writing_group WHERE title LIKE $1`, [`${TEST_PREFIX}%`]);
+  await client.query(`DELETE FROM public.chat_group WHERE title LIKE $1`, [`${TEST_PREFIX}%`]);
 }
 
 /**
@@ -102,9 +93,7 @@ export async function membershipTimestamps(
   groupId: string,
   userId: string,
 ): Promise<{ invitedAt: number | null; joinedAt: number | null }> {
-  const { rows } = await client.query<
-    { invited_at: number | null; joined_at: number | null }
-  >(
+  const { rows } = await client.query<{ invited_at: number | null; joined_at: number | null }>(
     `SELECT extract(epoch from invited_at) AS invited_at,
             extract(epoch from joined_at)  AS joined_at
      FROM public.user_in_writing_group
@@ -132,7 +121,10 @@ export async function insertThread(
 
 export async function insertPost(
   threadId: string,
-  { isDraft = false, authorId = null }: {
+  {
+    isDraft = false,
+    authorId = null,
+  }: {
     isDraft?: boolean;
     authorId?: string | null;
   } = {},
@@ -146,10 +138,12 @@ export async function insertPost(
       threadId,
       JSON.stringify({
         type: "doc",
-        content: [{
-          type: "paragraph",
-          content: [{ type: "text", text: "Ein Absatz." }],
-        }],
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: "Ein Absatz." }],
+          },
+        ],
       }),
       isDraft,
       authorId,
@@ -172,10 +166,7 @@ export async function countRows(table: string, id: string): Promise<number> {
  * regardless of the actual instant. The epoch keeps the column's microsecond resolution,
  * which two writes in the same millisecond need.
  */
-export async function lastActivityOf(
-  table: string,
-  id: string,
-): Promise<number> {
+export async function lastActivityOf(table: string, id: string): Promise<number> {
   const { rows } = await client.query<{ epoch: string }>(
     `SELECT extract(epoch FROM last_activity_at)::text AS epoch
      FROM public.${table} WHERE id = $1`,
@@ -188,7 +179,10 @@ export async function lastActivityOf(
 export async function insertNotification(
   groupId: string,
   recipientId: string,
-  { actorId = null, type = "invited_to_writing_group" }: {
+  {
+    actorId = null,
+    type = "invited_to_writing_group",
+  }: {
     actorId?: string | null;
     type?: string;
   } = {},
@@ -217,9 +211,7 @@ export async function countNotifications(recipientId: string): Promise<number> {
 export async function notificationTimestamps(
   recipientId: string,
 ): Promise<{ createdAt: number; occurredAt: number }> {
-  const { rows } = await client.query<
-    { created_at: number; occurred_at: number }
-  >(
+  const { rows } = await client.query<{ created_at: number; occurred_at: number }>(
     `SELECT extract(epoch from created_at)  AS created_at,
             extract(epoch from occurred_at) AS occurred_at
      FROM public.notification WHERE recipient_id = $1`,

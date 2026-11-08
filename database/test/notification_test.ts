@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
   client,
+  close,
   connect,
   countNotifications,
   firstRow,
@@ -15,6 +16,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 /** An administrator, a member they can act on, and the group both belong to. */
@@ -30,9 +32,7 @@ async function group(
 }
 
 test("a notification does not outlive the membership it is about", async () => {
-  const { actorId, recipientId, groupId } = await group(
-    "notification-membership",
-  );
+  const { actorId, recipientId, groupId } = await group("notification-membership");
   await insertNotification(groupId, recipientId, { actorId });
 
   // Withdrawing the invitation, which is what removing the membership row is.
@@ -58,22 +58,16 @@ test("a notification for a group you do not belong to cannot be stored", async (
 });
 
 test("deleting the group takes its notifications with it", async () => {
-  const { actorId, recipientId, groupId } = await group(
-    "notification-group-gone",
-  );
+  const { actorId, recipientId, groupId } = await group("notification-group-gone");
   await insertNotification(groupId, recipientId, { actorId });
 
-  await client.query(`DELETE FROM public.writing_group WHERE id = $1`, [
-    groupId,
-  ]);
+  await client.query(`DELETE FROM public.writing_group WHERE id = $1`, [groupId]);
 
   assert.equal(await countNotifications(recipientId), 0);
 });
 
 test("a deleted account leaves its notifications readable", async () => {
-  const { actorId, recipientId, groupId } = await group(
-    "notification-actor-gone",
-  );
+  const { actorId, recipientId, groupId } = await group("notification-actor-gone");
   await insertNotification(groupId, recipientId, { actorId });
 
   await client.query(`DELETE FROM public.user WHERE id = $1`, [actorId]);
@@ -90,34 +84,37 @@ test("a deleted account leaves its notifications readable", async () => {
 test("nobody is told about their own doing", async () => {
   const { recipientId, groupId } = await group("notification-self");
 
-  await assert.rejects(
-    () => insertNotification(groupId, recipientId, { actorId: recipientId }),
-    { message: /notification_actor_is_not_recipient/u },
-  );
+  await assert.rejects(() => insertNotification(groupId, recipientId, { actorId: recipientId }), {
+    message: /notification_actor_is_not_recipient/u,
+  });
 });
 
 test("a type may only carry the subjects it is about", async () => {
-  const { actorId, recipientId, groupId } = await group(
-    "notification-subjects",
-  );
+  const { actorId, recipientId, groupId } = await group("notification-subjects");
   const threadId = await insertThread(groupId, "Kapitel 1", actorId);
 
   // An invitation has nothing to do with a thread.
-  await assert.rejects(() =>
-    client.query(
-      `INSERT INTO public.notification
+  await assert.rejects(
+    () =>
+      client.query(
+        `INSERT INTO public.notification
            (recipient_id, writing_group_id, type, writing_thread_id)
          VALUES ($1, $2, 'invited_to_writing_group', $3)`,
-      [recipientId, groupId, threadId],
-    ), { message: /notification_subject_matches_type/u });
+        [recipientId, groupId, threadId],
+      ),
+    { message: /notification_subject_matches_type/u },
+  );
 
   // And one about a thread cannot leave it out.
-  await assert.rejects(() =>
-    client.query(
-      `INSERT INTO public.notification (recipient_id, writing_group_id, type)
+  await assert.rejects(
+    () =>
+      client.query(
+        `INSERT INTO public.notification (recipient_id, writing_group_id, type)
          VALUES ($1, $2, 'new_writing_thread')`,
-      [recipientId, groupId],
-    ), { message: /notification_subject_matches_type/u });
+        [recipientId, groupId],
+      ),
+    { message: /notification_subject_matches_type/u },
+  );
 });
 
 test("a role change collapses onto one notification per membership", async () => {
@@ -129,15 +126,12 @@ test("a role change collapses onto one notification per membership", async () =>
     actorId,
     type: "role_changed_in_writing_group",
   });
-  await client.query(
-    `UPDATE public.notification SET read_at = now() WHERE recipient_id = $1`,
-    [recipientId],
-  );
+  await client.query(`UPDATE public.notification SET read_at = now() WHERE recipient_id = $1`, [
+    recipientId,
+  ]);
 
   // A second change by a different administrator updates the row rather than adding one.
-  const { rows } = await client.query<
-    { occurred_at: string; actor_id: string }
-  >(
+  const { rows } = await client.query<{ occurred_at: string; actor_id: string }>(
     `INSERT INTO public.notification (recipient_id, writing_group_id, type, actor_id)
      VALUES ($1, $2, 'role_changed_in_writing_group', $3)
      ON CONFLICT (recipient_id, writing_group_id)
@@ -162,13 +156,11 @@ test("a role change collapses onto one notification per membership", async () =>
 });
 
 test("occurrence notifications are not collapsed", async () => {
-  const { actorId, recipientId, groupId } = await group(
-    "notification-occurrences",
-  );
+  const { actorId, recipientId, groupId } = await group("notification-occurrences");
   const threadId = await insertThread(groupId, "Kapitel 1", actorId);
 
   for (let index = 0; index < 2; index++) {
-    // deno-lint-ignore no-await-in-loop -- the second insert must land after the first
+    // oxlint-disable-next-line no-await-in-loop -- the second insert must land after the first
     await client.query(
       `INSERT INTO public.notification
          (recipient_id, writing_group_id, type, actor_id, writing_thread_id)

@@ -20,43 +20,43 @@ const HELPER_SCHEMAS: Record<string, string> = {
 
 const DATATYPE_TYPES_TO_ZOD_SCHEMAS: Record<string, string> = {
   // We use uuidv7 in this project
-  "uuid": "z.uuidv7()",
+  uuid: "z.uuidv7()",
 
-  "bool": "z.boolean()",
-  "boolean": "z.boolean()",
+  bool: "z.boolean()",
+  boolean: "z.boolean()",
 
-  "bytea": "z.instanceof(Uint8Array)",
+  bytea: "z.instanceof(Uint8Array)",
 
-  "smallint": "int16",
-  "int2": "int16",
-  "int2multirange": "z.string()",
-  "int": "int32",
-  "integer": "int32",
-  "int4": "int32",
-  "int4multirange": "z.string()",
-  "bigint": "z.bigint()",
-  "int8": "z.bigint()",
-  "int8multirange": "z.string()",
-  "decimal": "z.number()",
-  "numeric": "z.number()",
-  "real": "z.number()",
-  "float4": "z.number()",
+  smallint: "int16",
+  int2: "int16",
+  int2multirange: "z.string()",
+  int: "int32",
+  integer: "int32",
+  int4: "int32",
+  int4multirange: "z.string()",
+  bigint: "z.bigint()",
+  int8: "z.bigint()",
+  int8multirange: "z.string()",
+  decimal: "z.number()",
+  numeric: "z.number()",
+  real: "z.number()",
+  float4: "z.number()",
   "double precision": "z.number()",
-  "float8": "z.number()",
+  float8: "z.number()",
 
-  "text": "z.string()",
-  "varchar": "z.string()",
-  "char": "z.string()",
-  "bpchar": "z.string()",
+  text: "z.string()",
+  varchar: "z.string()",
+  char: "z.string()",
+  bpchar: "z.string()",
 
-  "timestamp": "z.iso.datetime({ local: true })",
-  "timestamptz": "z.iso.datetime({ offset: true })",
-  "date": "z.iso.date()",
-  "time": "z.iso.time()",
-  "interval": "z.string()",
+  timestamp: "z.iso.datetime({ local: true })",
+  timestamptz: "z.iso.datetime({ offset: true })",
+  date: "z.iso.date()",
+  time: "z.iso.time()",
+  interval: "z.string()",
 
-  "json": "z.unknown()",
-  "jsonb": "z.unknown()",
+  json: "z.unknown()",
+  jsonb: "z.unknown()",
 };
 
 // https://github.com/RobinBlomberg/kysely-codegen/releases/tag/0.18.0 -> 'Custom serializers and dialects'
@@ -70,17 +70,14 @@ export class ZodSerializer implements Serializer {
 
     // Serialized first, because which helpers are needed is only known afterwards.
     const usedHelperSchemas = new Set<string>();
-    const tables = this.serializeTables(
-      metadata.tables,
-      enumNames,
-      usedHelperSchemas,
-      options,
-    );
+    const tables = this.serializeTables(metadata.tables, enumNames, usedHelperSchemas, options);
 
-    return 'import * as z from "zod";\n\n' +
+    return (
+      'import * as z from "zod";\n\n' +
       this.serializeHelperSchemas(usedHelperSchemas) +
       this.serializeEnums(metadata.enums) +
-      tables;
+      tables
+    );
   }
 
   private serializeHelperSchemas(usedHelperSchemas: Set<string>): string {
@@ -106,10 +103,13 @@ export class ZodSerializer implements Serializer {
     if (options?.overrides?.columns !== undefined) {
       const override =
         options.overrides.columns[`${schema}.${table}.${column.name}`] ??
-          options.overrides.columns[`${table}.${column.name}`] ??
-          options.overrides.columns[column.name];
+        options.overrides.columns[`${table}.${column.name}`] ??
+        options.overrides.columns[column.name];
+      if (typeof override === "string") {
+        return override;
+      }
       if (override !== undefined) {
-        return String(override);
+        throw new Error(`The override for ${column.name} must be a Zod schema written out`);
       }
     }
 
@@ -158,20 +158,16 @@ export class ZodSerializer implements Serializer {
     let output = `export const ${zodSchemaName} = z.object({\n`;
 
     for (const column of table.columns) {
-      const columnName = options?.camelCase
-        ? toKyselyCamelCase(column.name)
-        : column.name;
+      const columnName = options?.camelCase ? toKyselyCamelCase(column.name) : column.name;
 
-      output += `  ${columnName}: ${
-        this.getZodSchemaForColumn(
-          table.schema ?? "public",
-          table.name,
-          column,
-          enumNames,
-          usedHelperSchemas,
-          options,
-        )
-      },\n`;
+      output += `  ${columnName}: ${this.getZodSchemaForColumn(
+        table.schema ?? "public",
+        table.name,
+        column,
+        enumNames,
+        usedHelperSchemas,
+        options,
+      )},\n`;
     }
 
     output += `});`;
@@ -188,25 +184,17 @@ export class ZodSerializer implements Serializer {
     let output = "";
 
     for (const table of tables) {
-      output += this.serializeTable(
-        table,
-        enumNames,
-        usedHelperSchemas,
-        options,
-      ) + "\n\n";
+      output += this.serializeTable(table, enumNames, usedHelperSchemas, options) + "\n\n";
     }
 
     return output;
   }
 
-  private serializeEnum(
-    enumNameWithSchema: string,
-    enumEntries: Array<string>,
-  ): string {
+  private serializeEnum(enumNameWithSchema: string, enumEntries: Array<string>): string {
     const enumName = this.getEnumName(enumNameWithSchema);
 
     let enumPluralName: string;
-    switch (enumName.at(-1)) {
+    switch (enumName.slice(-1)) {
       case "s":
         enumPluralName = `${enumName}es`;
         break;
@@ -219,9 +207,9 @@ export class ZodSerializer implements Serializer {
     const zodArrayName = enumPluralName.toUpperCase();
 
     // Escaped, so a quote or a backslash in a value cannot break the output.
-    let output = `export const ${zodArrayName} = [${
-      enumEntries.map((entry) => JSON.stringify(entry)).join(", ")
-    }] as const;\n`;
+    let output = `export const ${zodArrayName} = [${enumEntries
+      .map((entry) => JSON.stringify(entry))
+      .join(", ")}] as const;\n`;
 
     const zodSchemaName = this.databaseEntityToZodSchemaName(enumName);
     output += `export const ${zodSchemaName} = z.enum(${zodArrayName});`;
@@ -232,9 +220,7 @@ export class ZodSerializer implements Serializer {
   private serializeEnums(enums: EnumCollection): string {
     let output = "";
 
-    for (
-      const [enumNameWithSchema, enumEntries] of Object.entries(enums.enums)
-    ) {
+    for (const [enumNameWithSchema, enumEntries] of Object.entries(enums.enums)) {
       if (enumEntries === undefined) {
         continue;
       }
@@ -252,10 +238,11 @@ export class ZodSerializer implements Serializer {
   }
 
   private getEnumName(enumNameWithSchema: string): string {
-    const [_schemaName, enumName] = enumNameWithSchema.split(".") as [
-      string,
-      string,
-    ];
+    const [, enumName] = enumNameWithSchema.split(".");
+
+    if (enumName === undefined) {
+      throw new Error(`Not a schema-qualified enum: ${enumNameWithSchema}`);
+    }
 
     return enumName;
   }

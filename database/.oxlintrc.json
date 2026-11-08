@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import"],
+  "env": {
+    "node": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "rules": {
+    // What `deno lint` enforced here: its recommended set where the categories above leave a gap,
+    // then the rules it added on top.
+    "eslint/no-empty": "error",
+    "eslint/no-var": "error",
+    "eslint/prefer-const": "error",
+    "eslint/require-await": "error",
+    "typescript/ban-ts-comment": "error",
+    "typescript/no-explicit-any": "error",
+    "eslint/default-param-last": "error",
+    "eslint/eqeqeq": "error",
+    "typescript/explicit-function-return-type": "error",
+    "typescript/explicit-module-boundary-types": "error",
+    "eslint/guard-for-in": "error",
+    "eslint/no-await-in-loop": "error",
+    "eslint/no-eval": "error",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-non-null-assertion": "error",
+    "eslint/no-self-compare": "error",
+    "eslint/no-sparse-arrays": "error",
+    "eslint/no-throw-literal": "error",
+    "eslint/no-undef": "error",
+    "eslint/no-useless-rename": "error",
+    "eslint/one-var": ["error", "never"],
+    "typescript/triple-slash-reference": "error",
+    // What it could not: these need the types, which `--type-aware` brings.
+    // `node:test` runs a top-level `test()` without anyone awaiting the promise it returns.
+    "typescript/no-floating-promises": [
+      "error",
+      {
+        "allowForKnownSafeCalls": [{ "from": "package", "name": "test", "package": "node:test" }]
+      }
+    ],
+    "typescript/no-misused-promises": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/switch-exhaustiveness-check": "error",
+    "eslint/require-unicode-regexp": "error"
+    // Not carried over: `camelcase` and `prefer-ascii` have no oxlint equivalent, and
+    // `no-node-globals`, `no-process-global` and `no-sync-fn-in-async-fn` are about Deno itself.
+  }
+}

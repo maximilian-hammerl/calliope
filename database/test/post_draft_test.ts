@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
   client,
+  close,
   connect,
   insertGroup,
   insertPost,
@@ -13,6 +14,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 /** A member, their group and a thread in it: the setting every test here needs. */
@@ -49,10 +51,9 @@ test("writing a draft leaves the thread and its group untouched", async () => {
   );
 
   // Every autosave is one of these; none of them may move the thread.
-  await client.query(
-    `UPDATE public.writing_post SET text = 'Weiter geschrieben.' WHERE id = $1`,
-    [postId],
-  );
+  await client.query(`UPDATE public.writing_post SET text = 'Weiter geschrieben.' WHERE id = $1`, [
+    postId,
+  ]);
 
   assert.equal(
     await lastActivityOf("writing_thread", threadId),
@@ -71,17 +72,14 @@ test("publishing a draft moves the thread and its group", async () => {
   const threadBefore = await lastActivityOf("writing_thread", threadId);
   const groupBefore = await lastActivityOf("writing_group", groupId);
 
-  await client.query(
-    `UPDATE public.writing_post SET is_draft = false WHERE id = $1`,
-    [postId],
-  );
+  await client.query(`UPDATE public.writing_post SET is_draft = false WHERE id = $1`, [postId]);
 
   assert(
-    await lastActivityOf("writing_thread", threadId) > threadBefore,
+    (await lastActivityOf("writing_thread", threadId)) > threadBefore,
     "clearing the draft flag is the moment the writing becomes public",
   );
   assert(
-    await lastActivityOf("writing_group", groupId) > groupBefore,
+    (await lastActivityOf("writing_group", groupId)) > groupBefore,
     "and it should propagate up to the group",
   );
 });
@@ -107,7 +105,7 @@ test("deleting a published post still moves the thread", async () => {
   await client.query(`DELETE FROM public.writing_post WHERE id = $1`, [postId]);
 
   assert(
-    await lastActivityOf("writing_thread", threadId) > before,
+    (await lastActivityOf("writing_thread", threadId)) > before,
     "the published behaviour must survive the draft exemption",
   );
 });
@@ -116,10 +114,9 @@ test("a member has at most one draft per thread", async () => {
   const { userId, threadId } = await scenario("draft-unique");
   await insertPost(threadId, { isDraft: true, authorId: userId });
 
-  await assert.rejects(
-    () => insertPost(threadId, { isDraft: true, authorId: userId }),
-    { message: /writing_post_one_draft_per_author/u },
-  );
+  await assert.rejects(() => insertPost(threadId, { isDraft: true, authorId: userId }), {
+    message: /writing_post_one_draft_per_author/u,
+  });
 });
 
 test("the one-draft rule is per member and per thread", async () => {

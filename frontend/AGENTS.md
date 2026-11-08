@@ -95,8 +95,10 @@ read the parameter at mount.
 
 ## knip and the lint record
 
-knip runs in `validate:check` and fails on stale config (`--treat-config-hints-as-errors`). Only the
-generated `ui/**/index.ts` barrels are ignored, so an unused `ui/` component is still reported.
+knip runs at the end of `validate:check`, from the workspace root over every project there, and
+fails on stale config (`--treat-config-hints-as-errors`); its config is the root's `knip.jsonc`.
+Only the generated `ui/**/index.ts` barrels are ignored, so an unused `ui/` component is still
+reported.
 `knip --production` is a manual audit for exports that exist only for tests. `.oxlintrc.json` lists
 every rule that was tried and rejected, with what it cost — read it before proposing one.
 

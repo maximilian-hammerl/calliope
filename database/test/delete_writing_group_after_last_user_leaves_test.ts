@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
@@ -14,9 +14,10 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
-const removeMember = (groupId: string, userId: string) =>
+const removeMember = (groupId: string, userId: string): Promise<unknown> =>
   client.query(
     `DELETE FROM public.user_in_writing_group WHERE writing_group_id = $1 AND user_id = $2`,
     [groupId, userId],
@@ -65,10 +66,9 @@ test("removing every member in one statement removes the group once", async () =
 
   // The trigger is per statement, so this fires it once with both departures in its
   // transition table rather than once per row.
-  await client.query(
-    `DELETE FROM public.user_in_writing_group WHERE writing_group_id = $1`,
-    [groupId],
-  );
+  await client.query(`DELETE FROM public.user_in_writing_group WHERE writing_group_id = $1`, [
+    groupId,
+  ]);
 
   assert.equal(await countRows("writing_group", groupId), 0);
 });
@@ -99,5 +99,3 @@ test("a group whose members belong to other groups too is unaffected", async () 
   assert.equal(await countRows("writing_group", leaving), 0);
   assert.equal(await countRows("writing_group", other), 1);
 });
-
-globalThis.addEventListener("unload", () => void close());

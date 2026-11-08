@@ -1,5 +1,12 @@
 {
   "name": "calliope",
   "private": true,
-  "packageManager": "pnpm@12.14.0"
+  "packageManager": "pnpm@12.14.0",
+  "scripts": {
+    "knip:check": "knip --treat-config-hints-as-errors",
+    "knip:fix": "knip --fix"
+  },
+  "devDependencies": {
+    "knip": "6.44.1"
+  }
 }

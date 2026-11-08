@@ -44,8 +44,8 @@ jobs:
       # - name: Lint the OpenAPI specification
       #   run: deno task open-api:lint
 
-      # dbmate is a plain binary rather than a Deno dependency, so installing it lets the
-      # pipeline run the repository's own tasks instead of restating their configuration.
+      # dbmate is a plain binary rather than a package, so installing it lets the pipeline run
+      # the repository's own scripts instead of restating their configuration.
       - name: Install dbmate
         run: |
           curl -fsSL -o /usr/local/bin/dbmate \
@@ -58,8 +58,11 @@ jobs:
         run: docker compose up -d --wait
         working-directory: .
 
+      # Only to run the database's migration script, which calls dbmate and needs no install.
+      - uses: pnpm/action-setup@v6
+
       - name: Apply migrations
-        run: deno task migrations:migrate
+        run: pnpm run migrations:migrate
         working-directory: database
 
       - name: Run tests
@@ -79,20 +82,28 @@ jobs:
         run: cp .example.env .env
         working-directory: .
 
+      # Before setup-node, whose pnpm cache asks pnpm where its store is. Installs the version
+      # `packageManager` in the root package.json names.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+
+      # Only for `deno fmt`, which formats the generated types the way the backend expects them.
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-          cache: true
-          cache-hash: ${{ hashFiles('database/deno.lock') }}
 
       - name: Install dependencies
-        run: deno install
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting, lints and types
-        run: deno task validate:check
+        run: pnpm run validate:check
 
-      # dbmate is a plain binary rather than a Deno dependency, so installing it lets the
-      # pipeline run the repository's own tasks instead of restating their configuration.
+      # dbmate is a plain binary rather than a package, so installing it lets the pipeline run
+      # the repository's own scripts instead of restating their configuration.
       - name: Install dbmate
         run: |
           curl -fsSL -o /usr/local/bin/dbmate \
@@ -107,27 +118,27 @@ jobs:
       # assumed. Rolling all the way down and up again proves every `migrate:down` really
       # reverses its `migrate:up` — a trigger function left behind breaks the next deploy.
       - name: Apply migrations
-        run: deno task migrations:migrate
+        run: pnpm run migrations:migrate
 
       - name: Check the migrations roll back and forward again
         run: |
           # One rollback per migration file, so this neither stops short of the oldest one
           # nor runs past it. A failure here is a `migrate:down` that does not reverse its
           # `migrate:up`, and it has to fail the step rather than be swallowed.
-          for migration in migrations/*.sql; do deno task migrations:rollback; done
-          deno task migrations:migrate
+          for migration in migrations/*.sql; do pnpm run migrations:rollback; done
+          pnpm run migrations:migrate
 
       # Deleted first: kysely-codegen that cannot read its config still succeeds, writing elsewhere.
       # Formatted from backend/, whose deno.jsonc the committed file follows.
       - name: Check the generated types are up to date
         run: |
           rm ../backend/src/database/schema.ts
-          deno task types:generate
+          pnpm run types:generate
           (cd ../backend && deno fmt src/database/schema.ts)
           git diff --exit-code -- ../backend/src/database/schema.ts
 
       - name: Run tests
-        run: deno task test
+        run: pnpm run test
 
   frontend:
     name: Frontend
@@ -157,7 +168,8 @@ jobs:
       - name: Generate the API client
         run: pnpm run open-api:generate-client
 
-      # Includes knip, which detects unused dependencies, exports and files — see knip.jsonc.
+      # Ends with knip over the whole workspace, which detects unused dependencies, exports, files
+      # and catalog entries — see knip.jsonc at the root.
       - name: Check formatting, lints, types and unused code
         run: pnpm run validate:check
 

@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, test } from "node:test";
+import { after, afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addMember,
   cleanUp,
   client,
+  close,
   connect,
   insertGroup,
   insertUser,
@@ -11,6 +12,7 @@ import {
 } from "./support.ts";
 
 beforeEach(connect);
+after(close);
 afterEach(cleanUp);
 
 test("an invitation records when it was sent, and nothing else", async () => {

@@ -1,12 +1,6 @@
 import { type Config, TypeScriptSerializer } from "kysely-codegen";
 import { ZodSerializer } from "./kysely_zod_serializer.ts";
 
-const DATABASE_URL = Deno.env.get("DATABASE_URL");
-
-if (!DATABASE_URL) {
-  throw new Error("Missing DATABASE_URL, cannot generate types");
-}
-
 /**
  * Columns whose database type does not map to a schema on its own. Each entry gives the
  * TypeScript type and the zod schema for one column.
@@ -32,36 +26,28 @@ const config: Config = {
     interval: "string",
     numeric: "number",
   },
-  url: Deno.env.get("DATABASE_URL"),
+  // Read after `--env-file`, which kysely-codegen loads only once this file has been imported.
+  url: "env(DATABASE_URL)",
   // The TypeScript types and the zod schemas are generated from the same introspection,
   // so they cannot drift from each other or from the database.
   serializer: {
     serializeFile: (metadata, dialect, options) => {
-      const typeScriptTypes = new TypeScriptSerializer().serializeFile(
-        metadata,
-        dialect,
-        {
-          ...options,
-          overrides: {
-            ...options?.overrides,
-            columns: Object.fromEntries(
-              Object.entries(columnOverrides).map((
-                [column, { typeScript }],
-              ) => [column, typeScript]),
-            ),
-          },
+      const typeScriptTypes = new TypeScriptSerializer().serializeFile(metadata, dialect, {
+        ...options,
+        overrides: {
+          ...options?.overrides,
+          columns: Object.fromEntries(
+            Object.entries(columnOverrides).map(([column, { typeScript }]) => [column, typeScript]),
+          ),
         },
-      );
+      });
 
       const zodSchemas = new ZodSerializer().serializeFile(metadata, dialect, {
         ...options,
         overrides: {
           ...options?.overrides,
           columns: Object.fromEntries(
-            Object.entries(columnOverrides).map(([column, { zod }]) => [
-              column,
-              zod,
-            ]),
+            Object.entries(columnOverrides).map(([column, { zod }]) => [column, zod]),
           ),
         },
       });
