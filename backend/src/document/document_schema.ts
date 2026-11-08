@@ -43,23 +43,24 @@ function unset<T extends z.ZodType>(schema: T) {
 // interpolated into CSS — the renderer binds them as style properties — but the two things that
 // must stay impossible are `;`, which would open a second declaration, and `url(`, which would
 // fetch from a member's post. That is why these are a union of known forms rather than a charset
-// permissive enough to keep `(` for `rgb()`.
-const HEX = /#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}/;
-const NUMBER = /\d{1,3}(\.\d+)?%?/;
+// permissive enough to keep `(` for `rgb()`. CSS ignores case here, so both cases are spelled out.
+const HEX = /#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}/u;
+const NUMBER = /\d{1,3}(\.\d+)?%?/u;
 /** Both syntaxes: `rgb(0, 0, 0)` and the modern `rgb(0 0 0 / 87%)`. */
 const FUNCTIONAL = new RegExp(
-  `(rgb|rgba|hsl|hsla)\\(\\s*${NUMBER.source}(\\s*,\\s*|\\s+)${NUMBER.source}(\\s*,\\s*|\\s+)${NUMBER.source}` +
+  `([rR][gG][bB][aA]?|[hH][sS][lL][aA]?)\\(\\s*${NUMBER.source}(\\s*,\\s*|\\s+)${NUMBER.source}(\\s*,\\s*|\\s+)${NUMBER.source}` +
     `((\\s*,\\s*|\\s*/\\s*)${NUMBER.source})?\\s*\\)`,
+  "u",
 );
 /** `transparent`, `red`, `currentcolor` — a keyword the browser ignores if it does not know it. */
-const KEYWORD = /[a-z]{3,20}/;
+const KEYWORD = /[a-zA-Z]{3,20}/u;
 
 const COLOUR = unset(
   z
     .string()
     .max(60)
     .regex(
-      new RegExp(`^(${HEX.source}|${FUNCTIONAL.source}|${KEYWORD.source})$`, "i"),
+      new RegExp(`^(${HEX.source}|${FUNCTIONAL.source}|${KEYWORD.source})$`, "u"),
       "Not a colour",
     ),
 );
@@ -75,14 +76,14 @@ const FONT_FAMILY = unset(
 
 const LENGTH_UNIT = "px|pt|rem|em|%|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax";
 const FONT_SIZE = unset(
-  z.string().regex(new RegExp(`^\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})$`), "Not a length"),
+  z.string().regex(new RegExp(`^\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})$`, "u"), "Not a length"),
 );
 
 /** Unitless as the editor emits it, or as a paste or a stylesheet writes it. */
 const LINE_HEIGHT = unset(
   z
     .string()
-    .regex(new RegExp(`^(normal|\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})?)$`), "Not a line height"),
+    .regex(new RegExp(`^(normal|\\d{1,3}(\\.\\d+)?(${LENGTH_UNIT})?)$`, "u"), "Not a line height"),
 );
 
 const TEXT_ALIGN = unset(z.enum(["left", "center", "right", "justify"]));
@@ -97,8 +98,6 @@ const SAFE_TOKEN = unset(
  * The one place JSON storage does *not* remove the injection risk: a link is a URL the reader's
  * browser will follow, so the scheme is an allowlist. `javascript:` and `data:` are what this
  * refuses; `mailto:` is refused too, because a forum post is not where an address belongs.
- *
- * Note the protocol is matched **without** its colon — `/^https?:$/` would reject every URL.
  */
 const HREF = z.httpUrl().max(2_000);
 

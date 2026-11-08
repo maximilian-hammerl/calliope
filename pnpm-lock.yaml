@@ -183,6 +183,9 @@ catalogs:
       specifier: 4.6.7
       version: 4.6.7
 
+patchedDependencies:
+  '@asteasolutions/zod-to-openapi@9.1.0': e973977d0d07372e4033271147837e0229e41cd1c50c9af83d2776ee82a5e262
+
 importers:
 
   .:
@@ -3851,7 +3854,7 @@ snapshots:
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.3
 
-  '@asteasolutions/zod-to-openapi@9.1.0(zod@4.6.7)':
+  '@asteasolutions/zod-to-openapi@9.1.0(patch_hash=e973977d0d07372e4033271147837e0229e41cd1c50c9af83d2776ee82a5e262)(zod@4.6.7)':
     dependencies:
       openapi3-ts: 4.6.2
       zod: 4.6.7
@@ -4220,7 +4223,7 @@ snapshots:
 
   '@hono/zod-openapi@1.6.3(hono@4.13.16)(zod@4.6.7)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 9.1.0(zod@4.6.7)
+      '@asteasolutions/zod-to-openapi': 9.1.0(patch_hash=e973977d0d07372e4033271147837e0229e41cd1c50c9af83d2776ee82a5e262)(zod@4.6.7)
       '@hono/zod-validator': 0.9.1(hono@4.13.16)(zod@4.6.7)
       hono: 4.13.16
       openapi3-ts: 4.6.2

@@ -47,7 +47,7 @@ function idNames(path: string, parameters: Parameter[]): string[] {
       .filter((parameter) => parameter.in === "path" && parameter.schema?.enum)
       .map((parameter) => parameter.name),
   );
-  return [...path.matchAll(/\{(\w+)\}/g)].flatMap(([, name]) =>
+  return [...path.matchAll(/\{(\w+)\}/gu)].flatMap(([, name]) =>
     name === undefined || kinds.has(name) ? [] : [name],
   );
 }

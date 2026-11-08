@@ -527,6 +527,24 @@ test("the schema refuses what it does not know", () => {
   );
 });
 
+function styled(attrs: Record<string, unknown>): unknown {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "a",
+            marks: [{ type: "textStyle", attrs }],
+          },
+        ],
+      },
+    ],
+  };
+}
+
 /**
  * Every case here was a **400 on the testing instance**, from one member pasting text written
  * somewhere else. The composer stayed jammed until the paste was deleted, because a document that
@@ -537,24 +555,6 @@ test("the schema refuses what it does not know", () => {
  * actually decides.
  */
 test("the schema accepts a paste out of another program", () => {
-  function styled(attrs: Record<string, unknown>): unknown {
-    return {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            {
-              type: "text",
-              text: "a",
-              marks: [{ type: "textStyle", attrs }],
-            },
-          ],
-        },
-      ],
-    };
-  }
-
   const cases: Array<[string, unknown]> = [
     // Tiptap emits "" for an attribute it parsed and found unset, which is most of them.
     [
@@ -596,6 +596,15 @@ test("the schema accepts a paste out of another program", () => {
 
   assert.deepEqual(
     cases.filter(([, value]) => !DOCUMENT_SCHEMA.safeParse(value).success).map(([name]) => name),
+    [],
+  );
+});
+
+test("the schema accepts a colour in any case, as CSS does", () => {
+  const colours = ["#AA3311", "#Aa3311", "RGB(0, 0, 0)", "Hsla(0 0% 0% / 50%)", "CurrentColor"];
+
+  assert.deepEqual(
+    colours.filter((color) => !DOCUMENT_SCHEMA.safeParse(styled({ color })).success),
     [],
   );
 });

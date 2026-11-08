@@ -98,7 +98,7 @@ export async function waitForMail(address: string): Promise<ReceivedMail> {
 
 /** The link is the only URL in these messages, so this cannot pick up the wrong one. */
 export function tokenFromMail(mail: ReceivedMail): string {
-  const link = mail.text.match(/https?:\/\/\S+/)?.[0];
+  const link = mail.text.match(/https?:\/\/\S+/u)?.[0];
 
   if (link === undefined) {
     throw new Error(`no link in the message:\n${mail.text}`);

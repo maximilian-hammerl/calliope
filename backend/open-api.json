@@ -136,12 +136,12 @@
                             "rel": {
                               "type": ["string", "null"],
                               "maxLength": 100,
-                              "pattern": "^[\\w\\s-]*$/u"
+                              "pattern": "^[\\w\\s-]*$"
                             },
                             "class": {
                               "type": ["string", "null"],
                               "maxLength": 100,
-                              "pattern": "^[\\w\\s-]*$/u"
+                              "pattern": "^[\\w\\s-]*$"
                             },
                             "title": { "type": ["string", "null"], "maxLength": 500 }
                           },
@@ -162,18 +162,18 @@
                             "color": {
                               "type": ["string", "null"],
                               "maxLength": 60,
-                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                              "pattern": "^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|([rR][gG][bB][aA]?|[hH][sS][lL][aA]?)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-zA-Z]{3,20})$"
                             },
                             "backgroundColor": {
                               "type": ["string", "null"],
                               "maxLength": 60,
-                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                              "pattern": "^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|([rR][gG][bB][aA]?|[hH][sS][lL][aA]?)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-zA-Z]{3,20})$"
                             },
                             "fontFamily": {
                               "type": ["string", "null"],
                               "minLength": 1,
                               "maxLength": 200,
-                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$/u"
+                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$"
                             },
                             "fontSize": {
                               "type": ["string", "null"],
@@ -310,7 +310,7 @@
                   "language": {
                     "type": ["string", "null"],
                     "maxLength": 100,
-                    "pattern": "^[\\w\\s-]*$/u"
+                    "pattern": "^[\\w\\s-]*$"
                   }
                 },
                 "additionalProperties": false
@@ -382,12 +382,12 @@
                             "rel": {
                               "type": ["string", "null"],
                               "maxLength": 100,
-                              "pattern": "^[\\w\\s-]*$/u"
+                              "pattern": "^[\\w\\s-]*$"
                             },
                             "class": {
                               "type": ["string", "null"],
                               "maxLength": 100,
-                              "pattern": "^[\\w\\s-]*$/u"
+                              "pattern": "^[\\w\\s-]*$"
                             },
                             "title": { "type": ["string", "null"], "maxLength": 500 }
                           },
@@ -408,18 +408,18 @@
                             "color": {
                               "type": ["string", "null"],
                               "maxLength": 60,
-                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                              "pattern": "^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|([rR][gG][bB][aA]?|[hH][sS][lL][aA]?)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-zA-Z]{3,20})$"
                             },
                             "backgroundColor": {
                               "type": ["string", "null"],
                               "maxLength": 60,
-                              "pattern": "^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|(rgb|rgba|hsl|hsla)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-z]{3,20})$/i"
+                              "pattern": "^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|([rR][gG][bB][aA]?|[hH][sS][lL][aA]?)\\(\\s*\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?(\\s*,\\s*|\\s+)\\d{1,3}(\\.\\d+)?%?((\\s*,\\s*|\\s*\\/\\s*)\\d{1,3}(\\.\\d+)?%?)?\\s*\\)|[a-zA-Z]{3,20})$"
                             },
                             "fontFamily": {
                               "type": ["string", "null"],
                               "minLength": 1,
                               "maxLength": 200,
-                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$/u"
+                              "pattern": "^[\\p{L}\\p{N}\\s,'\"._-]+$"
                             },
                             "fontSize": {
                               "type": ["string", "null"],
@@ -451,7 +451,7 @@
               "attrs": {
                 "type": "object",
                 "properties": {
-                  "src": { "type": "string", "maxLength": 2000, "pattern": "^\\/[\\w\\-./]*$/u" },
+                  "src": { "type": "string", "maxLength": 2000, "pattern": "^\\/[\\w\\-./]*$" },
                   "alt": { "type": ["string", "null"], "maxLength": 1000 },
                   "title": { "type": ["string", "null"], "maxLength": 500 },
                   "width": { "type": ["integer", "null"], "minimum": 1, "maximum": 10000 },
