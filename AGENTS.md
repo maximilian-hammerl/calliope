@@ -38,6 +38,10 @@ and how to run it is in [README.md](README.md); what it should become is in [doc
   one lockfile; each project's scripts run with `pnpm run …` from its own directory.
 - **Run `/workflow-validate`** before considering anything done: what CI runs, for the projects
   you changed.
+- **Export only what another module imports.** knip enforces it, with the root's `knip.jsonc`, and
+  fails on stale config: the frontend's `validate:check` runs it over the whole workspace, the
+  backend's over the backend. Something kept on purpose carries `/** @lintignore <why> */`.
+  `knip --production` is a manual audit for exports that exist only for tests.
 - **Pin exact dependency versions.** No `^` or `~` in a `package.json`. `pnpm add` writes an exact
   version (`savePrefix` in `pnpm-workspace.yaml`); check what `shadcn-vue add` wrote. A version more than one project uses goes in
   the workspace's `catalog`, and each project names it `catalog:`.

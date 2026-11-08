@@ -5,7 +5,7 @@ import type { DB } from "#/src/database/schema.ts";
  * Written once, like `withFavourite`: five queries select a person, and a join spread over five of
  * them is five chances to forget one. The URL a client is given is `http/avatar_url.ts`.
  */
-export const AVATAR_FILE_ID = "avatarFileId" as const;
+const AVATAR_FILE_ID = "avatarFileId" as const;
 
 export function withAvatar<TB extends keyof DB, Output>(
   queryBuilder: SelectQueryBuilder<DB, TB, Output>,

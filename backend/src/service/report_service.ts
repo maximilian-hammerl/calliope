@@ -31,7 +31,7 @@ const TARGET_COLUMN = {
   user: "reportedUserId",
 } as const satisfies Record<ReportTargetType, string>;
 
-export type ReportRefusal = "not_found" | "own_account" | "own_content";
+type ReportRefusal = "not_found" | "own_account" | "own_content";
 
 async function insertReport(
   transaction: Transaction,
@@ -138,7 +138,7 @@ async function insertReport(
 const TARGET_STILL_EXISTS = Object.values(TARGET_COLUMN);
 
 /** What the queue shows, which is the row plus who filed it and whether the target is still there. */
-export type Report = {
+type Report = {
   id: string;
   targetType: ReportTargetType;
   targetExcerpt: string;
@@ -161,7 +161,7 @@ export type Report = {
   targetExists: boolean;
 };
 
-export type ReportFilters = {
+type ReportFilters = {
   status?: ReportStatus;
   category?: ReportCategory;
   targetType?: ReportTargetType;
@@ -241,7 +241,7 @@ export type ReportMove =
   | { toStatus: "in_progress" }
   | { toStatus: "closed"; outcome: ReportOutcome; note: string };
 
-export type ReportMoveRefusal = "not_found" | "already_closed" | "held_by_another";
+type ReportMoveRefusal = "not_found" | "already_closed" | "held_by_another";
 
 /**
  * Moves a report and records the move in the same statement, because the record *is* the row: the

@@ -17,11 +17,7 @@ function link(path: string, token: string): string {
   return url.toString();
 }
 
-export type RequestEmailAddressChangeResult =
-  | "requested"
-  | "wrong_password"
-  | "in_use"
-  | "not_verified";
+type RequestEmailAddressChangeResult = "requested" | "wrong_password" | "in_use" | "not_verified";
 
 /**
  * Stages a change: nothing about the account moves until the link sent to the new address is
@@ -106,7 +102,7 @@ async function requestEmailAddressChange(
   return "requested";
 }
 
-export type ConfirmEmailAddressChangeResult = "changed" | "invalid_token" | "in_use";
+type ConfirmEmailAddressChangeResult = "changed" | "invalid_token" | "in_use";
 
 /**
  * Applies the change. Consuming the token, moving the address and ending every other session

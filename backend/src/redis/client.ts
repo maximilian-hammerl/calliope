@@ -15,7 +15,7 @@ export function redisHealthCheck(): Promise<DatabaseHealth> {
   return probeDatabase("redis", true, () => redis.ping());
 }
 
-export async function closeRedisConnection(): Promise<void> {
+async function closeRedisConnection(): Promise<void> {
   console.log("Closing Redis connection before shutdown");
   await redis.quit();
   console.log("Successfully closed Redis connection");

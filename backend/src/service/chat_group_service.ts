@@ -14,7 +14,7 @@ import {
 } from "#/src/list/list_endpoint_query.ts";
 import { type FavouriteFilter, FAVOURITES_FIRST, withFavourite } from "#/src/query/favourite.ts";
 
-export type ChatGroup = Pick<
+type ChatGroup = Pick<
   Selectable<DatabaseChatGroup>,
   "id" | "title" | "createdBy" | "createdAt" | "lastActivityAt"
 > & {
@@ -125,7 +125,7 @@ function listChatGroups(
  * four callers use this as a gate and only one reads anything off it — `title` for the excerpt of
  * a reported chat, `createdBy` for who answers for it.
  */
-export type ChatGroupGate = {
+type ChatGroupGate = {
   id: string;
   title: string;
   createdBy: string | null;
