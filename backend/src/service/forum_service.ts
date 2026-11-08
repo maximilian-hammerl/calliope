@@ -50,7 +50,7 @@ export type ForumThread = Permitted & {
   isFavourite: boolean;
 };
 
-export type ForumPageSummary = Permitted & {
+type ForumPageSummary = Permitted & {
   id: string;
   /** As a thread's: what was chosen here, which a folder above may still be reducing. */
   memberPermission: ForumPermission;
@@ -334,7 +334,7 @@ async function searchPages(user: User, query: ListQuery): Promise<ListResults<Fo
  * `effective_member_permission` is never supplied here — the database derives it, and a move or a
  * permission change carries the whole subtree with it. See `20260904100000_forum_effective_permission.sql`.
  */
-export type CreateFolderOutcome =
+type CreateFolderOutcome =
   | { kind: "created"; folder: ForumFolder }
   | { kind: "noSuchParent" }
   | { kind: "tooDeep" };
@@ -442,13 +442,13 @@ async function moveFolder(
   return { kind: "moved", folder };
 }
 
-export type MoveFolderOutcome =
+type MoveFolderOutcome =
   | { kind: "moved"; folder: ForumFolder }
   | { kind: "noSuchParent" }
   | { kind: "cycle" }
   | { kind: "tooDeep" };
 
-export type DeleteFolderOutcome = "deleted" | "notEmpty" | "notFound";
+type DeleteFolderOutcome = "deleted" | "notEmpty" | "notFound";
 
 /**
  * Only an empty folder goes, as a group's does: deleting a subtree is unrecoverable with no edit
@@ -517,7 +517,7 @@ async function deleteFolder(
  */
 export const FORUM_PERMISSION_TARGET_TYPES = ["folder", "thread", "page"] as const;
 
-export type ForumPermissionTargetType = (typeof FORUM_PERMISSION_TARGET_TYPES)[number];
+type ForumPermissionTargetType = (typeof FORUM_PERMISSION_TARGET_TYPES)[number];
 
 const PERMISSION_TABLE = {
   folder: "writingFolder",
@@ -685,9 +685,7 @@ async function insertPage(
 }
 
 /** The page either way: on „stale" it is who saved first, which the refusal names. */
-export type UpdateOutcome =
-  | { kind: "updated"; page: ForumPage }
-  | { kind: "stale"; page: ForumPage };
+type UpdateOutcome = { kind: "updated"; page: ForumPage } | { kind: "stale"; page: ForumPage };
 
 /**
  * A page is one body changed in place, so two editors race: the write is conditional on the
