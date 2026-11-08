@@ -3,7 +3,7 @@ name: workflow-review
 description: Review a change to calliope — uncommitted changes, a branch against main, or a GitHub pull request — for bugs and for breaks of calliope's written rules (the AGENTS.md files, the .claude/rules/ notes for the touched paths, the design system), and report verified findings as must fix, should fix and can fix, each with its options and a recommendation. Use when asked to review a change, a branch or a PR, or before handing a change over.
 argument-hint: "[<branch> | pr <number>]"
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(gh pr view *), Bash(gh pr diff *), Bash(gh issue view *), Bash(grep *), Bash(dbmate --env-file ../.env --url *calliope_review*)
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(gh pr view *), Bash(gh pr diff *), Bash(gh issue view *), Bash(grep *), Bash(pnpm exec dbmate --env-file ../.env --url *calliope_review*)
 ---
 
 A review reports only what it has checked and leaves every decision to the human. It changes no
@@ -39,8 +39,9 @@ regenerates was stale, which is a finding, and stays regenerated, since that is 
 
 A throwaway worktree is set up as `/workflow-validate` step 3 says, with one difference: its
 `.env` copy always names `calliope_review` in `DATABASE_URL` (`<review>`), so the tests run on the
-target's migrations and never on the human's database. `dbmate --env-file ../.env --url
-"<review>" up` in its `database/` creates and migrates it.
+target's migrations and never on the human's database.
+`pnpm exec dbmate --env-file ../.env --url "<review>" up` in its `database/` creates and
+migrates it.
 
 ## 3. Hunt: one agent per angle
 
@@ -178,4 +179,4 @@ End by asking which to apply, answered by id and option ("M1, S2: B"); the other
 3. Hand over as for any change, without offering another review, and commit only after a confirmed
    review (root `AGENTS.md`).
 4. Once nothing in the review's worktree waits for review or a commit, remove it, and drop its
-   database first (`dbmate --env-file ../.env --url "<review>" drop` in its `database/`).
+   database first (`pnpm exec dbmate --env-file ../.env --url "<review>" drop` in its `database/`).
