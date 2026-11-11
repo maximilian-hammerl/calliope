@@ -92,6 +92,7 @@ cd backend && pnpm run test
 
 ## Deployment
 
+A push to `main` deploys `testing`: once Validate's three checks pass, its `Deploy to testing` job runs
 `./deployment/deploy.sh --environment testing` on the server. Besides pulling and rebuilding, it rebuilds the database
 after an edited migration and recreates containers when the compose file or the `Caddyfile` changed.
 The [deployment runbook](deployment/README.md) covers provisioning a fresh machine, the backup timer, and how to restore

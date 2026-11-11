@@ -92,6 +92,9 @@ port 80 reachable and DNS already pointing here.
 
 ## Redeploying
 
+A push to `main` redeploys `testing` by itself — see [Deploying on a merge](#deploying-on-a-merge).
+By hand, on the server:
+
 ```bash
 cd /opt/calliope
 ./deployment/deploy.sh --environment testing
@@ -207,6 +210,70 @@ this is a loud failure rather than a quiet one, and why the unconditional recrea
 costs a moment of downtime on every deploy, not just a second — is not worth it here.
 
 Reconsider if the frontend build ever starts deleting `dist` outright.
+
+## Deploying on a merge
+
+Validate's last job, `Deploy to testing`, runs once the three checks pass on a push to `main`. It
+connects as root with a key whose only command is `deployment/ssh-deploy.sh testing`, which starts
+`calliope-deploy@testing.service` — `deploy.sh --environment testing` — and prints its log when it
+ends. Like a deploy by hand, it empties `testing` minutes after an edited migration merges.
+Staging and production have no job.
+
+Because the deploy runs in the unit rather than in the SSH session, a dropped connection or a
+cancelled job cannot stop it between dropping and recreating the database. A job that finds the
+unit still running refuses rather than joining it, and a deploy still running after 25 minutes is
+stopped.
+
+The job skips itself when `main` has already moved on: `deploy.sh` deploys the newest commit, and
+that commit's own run deploys it once its checks pass.
+
+Every run is in the journal: `journalctl -u calliope-deploy@testing.service`. A deploy by hand
+while one is running races it. While one runs, `systemctl is-active calliope-deploy@testing.service`
+prints `activating`, and exits 3 just as it does when none is.
+
+### Setting it up
+
+Once per server, the unit:
+
+```bash
+install -m 0644 /opt/calliope/deployment/calliope-deploy@.service /etc/systemd/system/
+systemctl daemon-reload
+```
+
+A key pair, made on your own machine in an empty directory, not in a clone of this public
+repository:
+
+```bash
+cd "$(mktemp -d)"
+ssh-keygen -t ed25519 -N '' -C calliope-deploy -f calliope-deploy
+```
+
+Its public half goes into the server's `/root/.ssh/authorized_keys` behind the forced command.
+Whatever the client asks to run is ignored, and `restrict` takes away forwarding and a terminal:
+
+```text
+command="/opt/calliope/deployment/ssh-deploy.sh testing",restrict ssh-ed25519 AAAA… calliope-deploy
+```
+
+In GitHub, create the environment `testing` (Settings → Environments) and limit its deployment
+branches to `main`, so no other branch's workflow can read the key. Then, with `<host>` the
+server's name:
+
+```bash
+gh secret set DEPLOY_SSH_KEY --repo maximilian-hammerl/calliope --env testing < calliope-deploy
+gh variable set DEPLOY_SSH_HOST --repo maximilian-hammerl/calliope --env testing --body 'root@<host>'
+gh variable set DEPLOY_SSH_KNOWN_HOSTS --repo maximilian-hammerl/calliope --env testing --body "<host> $(ssh root@<host> cat /etc/ssh/ssh_host_ed25519_key.pub)"
+```
+
+The host key comes over your own connection, which already trusts it; `ssh-keyscan` would trust
+whatever answers.
+
+Then re-run the deploy job of the latest Validate run on `main` (`gh run rerun <run> --failed`).
+Delete the key pair only once that passes, since a wrong secret is fixed with the same key:
+
+```bash
+rm calliope-deploy calliope-deploy.pub
+```
 
 ## The backend must stay a single instance
 

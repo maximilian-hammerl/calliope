@@ -2,7 +2,7 @@
 name: workflow-ship
 description: How a change reaches main — a branch, the hand-over and the human's review, the commit, a pull request that merges itself once Validate passes, stacked pull requests — and, at the end, what is still open. Use when starting work on a change, and when the human says to commit, push, open a pull request, merge or ship.
 user-invocable: true
-allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git fetch *), Bash(gh pr view *), Bash(gh pr checks *), Bash(gh run view *), Bash(gh issue view *), mcp__ccd_pr__get_status, mcp__ccd_pr__set_monitor
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git fetch *), Bash(gh pr view *), Bash(gh pr checks *), Bash(gh run view *), Bash(gh run list *), Bash(gh run watch *), Bash(gh issue view *), mcp__ccd_pr__get_status, mcp__ccd_pr__set_monitor
 ---
 
 `main` takes changes only through pull requests: a ruleset requires the three Validate jobs
@@ -29,7 +29,9 @@ Done means `/workflow-validate` passed. Then hand over:
 2. what changed and why;
 3. what ran, with results, and what didn't;
 4. where to review first: the risky or non-obvious parts;
-5. a proposed commit message in [Conventional Commits](https://www.conventionalcommits.org) style:
+5. if it edits, renames or removes a migration already on `main`: that merging it empties
+   `testing`, every account included;
+6. a proposed commit message in [Conventional Commits](https://www.conventionalcommits.org) style:
    `<type>[(<scope>)][!]: <description>`, the description lower case and imperative
    (`feat(frontend): add a swipe to the carousel`), a body saying why, and the `Co-Authored-By`
    trailer. The types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`,
@@ -76,8 +78,13 @@ Auto-fix event says to commit and push without asking, the rules below still dec
    <branch>` equals the pull request's `headRefOid`: after a squash git doesn't see the branch as
    merged, so this is what shows nothing on it is lost. A worktree the desktop app made is the
    app's to clean up (`git rev-parse --git-dir` and `--git-common-dir` differ).
-2. **The deploy is the human's:** `./deployment/deploy.sh --environment testing` on the server
-   (`deployment/README.md`). Say that it is still to do.
+2. **The deploy:** the merge deploys `testing` through Validate's `Deploy to testing` job, in the
+   push run on `main`, which step 4 doesn't follow. Find it with `gh pr view <number> --json
+   mergeCommit`, then `gh run list --workflow validate.yml --commit <sha>`, and follow it with one
+   background `gh run watch <run> --exit-status`. Say which it was: deployed; skipped for a newer
+   commit (green, with a notice saying so); cancelled while waiting behind a newer one; not run
+   because a check failed on `main` (shown as skipped); or failed, with the first error from
+   `gh run view <run> --log-failed`.
 
 ## 6. What's still open
 
