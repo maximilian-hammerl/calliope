@@ -29,7 +29,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
-    "dbmate": "2.37.0",
+    "dbmate": "2.38.1",
     "kysely-codegen": "0.20.0",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
