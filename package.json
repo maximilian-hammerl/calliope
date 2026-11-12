@@ -10,6 +10,6 @@
     "stack:prune": "scripts/stack.sh prune"
   },
   "devDependencies": {
-    "knip": "6.44.2"
+    "knip": "6.45.0"
   }
 }
