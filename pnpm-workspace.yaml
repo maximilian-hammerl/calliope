@@ -15,9 +15,9 @@ minimumReleaseAgeStrict: false
 catalog:
   "@types/node": 26.6.6
   "@types/pg": 8.23.1
-  oxfmt: 0.78.0
-  oxlint: 1.93.0
-  oxlint-tsgolint: 7.0.2006
+  oxfmt: 0.79.0
+  oxlint: 1.94.0
+  oxlint-tsgolint: 7.0.2007
   pg: 8.23.1
   typescript: 6.0.3
   zod: 4.6.7
